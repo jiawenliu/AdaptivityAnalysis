@@ -1,0 +1,2062 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\input{prelude}
+\input{ldef}
+\begin{document}
+
+\title{Adaptive Analysis}
+\maketitle
+
+% \begin{enumerate}
+% \item [Type] the premise $\Delta;\psi_a; \Phi_a  \vDash  {\cleq{I' }{I} \land I' \in \beta}$ will generate the constraint $\forall \Delta. \forall \Psi_a. (\Phi \to \cleq{I' }{I} \land I' \in \beta ) $, where $\beta : array \, bool$ and $I' \in \beta$ is the same as $\beta[I'] = true$.  Z3 will first check this constraint from the premise and if the  result is valid, we keep on checking, otherwise, exit immediately. The reason why we can first check the premise is that $I' \leq I$ and $I' \in \beta$ do not rely on the new generated existential variables in $\Psi_1$ and $\Psi_2$. Right now what I am doing is generating this premise constraint using why3 array module. \\
+
+% \item [let] I remove the separation logic in the let because it will bring non-determinism in the algorithmic typing rules of let. The corresponding algorithmic typing rules follows.
+
+% \item [fix extension] using fix-extension rule in the last page, I plan to add one more annotation of fix with two unary type into the core language.
+
+
+% \end{enumerate}
+
+ \begin{figure}[h]
+ $$
+ \begin{array}{rcl}
+     \text{Types} & \quad & \tau ::= b \sep \tau \multimap \tau' \sep !_n \tau \sep
+     \tau \times \tau \sep \tforallN{i}{\tau} \sep query \\[2mm]
+
+     \text{Term} & \quad & t ::= c \sep \fix{t} \sep \app{t}{t} \sep !t \sep (t,t) \sep  \letx{!x}{t}{t} \sep \Lambda.t \sep t[] \sep \abs{x}{t} \sep  M(t) \sep x \sep q \sep\\
+     && \quad   \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  \sep \letx{(x_1,x_2)}{t}{t} \\[2mm]
+      
+     \text{Normal Form} &\quad & F ::=  c \sep \fix{t} \sep !t \sep (F_1, F_2) \sep \Lambda. t \sep \abs{x}{t} \sep M(F) \sep x \sep q \sep \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b_i}  \\[2mm]
+
+	\text{Tree} &\quad& T_b :: = c \sep M(T_{query}) \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{b_i}\}_{c_i \in b} \\
+
+	\text{} &\quad& T_{query} :: = q \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{query_i}\}_{c_i \in b} \\[2mm]
+     \text{Depth} &\quad&   \depth(c) = 0 \\
+       &\quad& \depth(!t) = \depth(t) \\
+           &\quad&      \depth( \app{t_1}{t_2} ) = \max(\depth(t_1), \depth(t_2)) \\
+            &\quad&  \depth(M(t)) = 1 + \depth(t) \\
+             &\quad&  \depth(\abs{x}{t}) = \depth(t) \\
+              &\quad& \depth(x) = 0 \\
+              & \quad & \depth(q) = 0 \\
+              & \quad & \depth((t_1, t_2)) = \max(\depth(t_1), \depth(t_2))\\
+              & \quad & \depth(\letx{(x_1, x_2)}{t}{t'}) = \max(\depth(t), \depth(t'))\\
+              & \quad & \depth(\letx{!x}{t}{t'}) = \max(\depth(t), \depth(t'))\\
+              & \quad & \depth(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) = \max(\depth(t), \depth(t_i))\\
+            & \quad & \depth(\Lambda.t) = \depth(t)\\
+              & \quad & \depth(t\, []) = \depth(t)\\
+\end{array}
+$$
+\caption{syntax}
+\end{figure}
+
+
+
+\begin{figure}
+\boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }\\
+\boxed{  \Gamma :: = \emptyset \sep \Gamma, x : \tau \sep \Gamma, x : [\tau]_p   }
+
+\begin{mathpar}
+  \inferrule*[right = const]
+   {\empty}
+   {\Gamma \jtype{n,m}{}{c}{b}  }
+   
+   \and
+    \inferrule*[right = abs]
+   {\Gamma, x: \tau_1 \jtype{n}{}{t}{\tau_2}}
+   { \Gamma \jtype{n,m}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
+   
+   \and
+   \inferrule*[right = pr]
+   {[\Gamma] \jtype{n}{}{t}{\tau}}
+   {\Delta, p + [\Gamma] \jtype{n}{}{!t}{!_p \tau}  }
+%   \boxed{
+%   \inferrule*[right = pr]
+%   {[\Gamma] \jtype{n}{}{t}{\tau}}
+%   {p + [\Gamma]\textbf{} \jtype{n}{}{!t}{!_p \tau}  }}
+   
+   \and
+    \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, x:\tau \jtype{n}{}{x}{\tau}  } 
+   
+   \and
+   \inferrule*[ right = MT ]
+   {[\Gamma] \jtype{n}{}{t}{query}}
+   {\Delta, 1 + [\Gamma] \jtype{n+1}{}{M(t)}{b}  }
+   
+   \and
+    \inferrule*[right = query]
+   {\empty}
+   {\Gamma \jtype{n}{}{q}{query}  }
+   
+   \and
+%     \inferrule*[ right = app ]
+%   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma \jtype{n_2}{}{t_2}{\tau_1}}
+%   { \Gamma_2 \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+  \inferrule*[ right = app ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \multimap \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
+   { \max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+   
+   \and 
+   
+   \inferrule*[ right = der ]
+   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+   { \Gamma , x: [\tau]_0 \jtype{n }{}{t }{\tau }  }
+   \boxed{
+   \inferrule*[ right = der ]
+   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+   { \Gamma , x: [\tau]_1 \jtype{n }{}{t }{\tau }  }
+ }
+   
+   \and 
+   
+   \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   
+   \and 
+   \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+   
+   \and
+     \inferrule*[right = pair]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+ 
+   \and
+    \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+   
+   \and
+    \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+   
+   \inferrule*[right = iabs]
+  { 
+    \inferrule*[]
+    {}
+    {i::\mathbb{N};\Gamma \jtype{n}{}{t}{ \tau } }
+    \and
+    \inferrule*[]
+    {}
+    { i \notin \fiv{\Gamma }  } 
+  }
+  { \Gamma \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+  
+   \inferrule*[ right =  iapp]
+  { 
+    \inferrule*[]
+    {}
+    { \Gamma  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } }
+    \and
+    \inferrule*[]
+    {}
+    { \jiterm{I}{ \mathbb{N} } } 
+  }
+  {\Gamma \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+
+  \inferrule*[right = sub]
+  { 
+   { \Gamma \jtype{n}{}{t}{\tau} } \\
+   { \Gamma \subseteq \Gamma' } \\
+   { \vDash n \leq n' } \\
+   { \tau \subseteq \tau' }
+  }
+  { \Gamma' \jtype{n'}{}{t}{\tau'} }
+\end{mathpar}
+\caption{Typing judgment}
+\end{figure}
+
+\clearpage
+
+\begin{figure}
+ \begin{mathpar}
+  
+  \inferrule*[right= S-ID]
+  { }
+  { \tau \subseteq \tau  }
+  \and
+  \inferrule*[right = S-B]
+  { 
+   {A \subseteq B}
+   \\
+   { q \leq p }
+  }
+  { !_p A \subseteq !_q B  }
+  \and
+  \inferrule*[right =  S-ARROW]
+  { {A' \subseteq A}
+    \\
+    {B \subseteq B'}
+  }
+  { A \multimap B \subseteq A' \multimap B' }
+  \and
+  \inferrule*[right = S-D ]
+  {
+    { A \subseteq B }\\
+    { q \leq p }
+  }
+  { [A]_p \subseteq [B]_q }
+  
+  \and
+  \inferrule*[right = S-IDC]
+  { }
+  { \Gamma \subseteq \Gamma }
+  
+  \and
+  \inferrule*[right = S-Ctx]
+  {
+  {B \subseteq A  }\\
+  {\Gamma \subseteq \Delta}
+  }
+  {\Gamma, x: A \subseteq \Delta, x: B }
+  
+ \end{mathpar}
+ \caption{sub typing}
+\end{figure}
+
+
+
+\begin{figure}
+\boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }
+\boxed{  \Gamma :: = \emptyset \sep \Gamma, [\tau]_p   } \\
+\boxed{ \max \big( (x:[\tau]_{p_1},\Gamma_1 ),(x:[\tau]_{p_2},\Gamma_2) \big ) \triangleq x:[\tau]_{\max(p_1,p_2)}, \max(\Gamma_1,\Gamma_2) \qquad
+\max(\emptyset, \Gamma_2) \triangleq \Gamma_2  \qquad \max(\Gamma_1, \emptyset) \triangleq \Gamma_1 
+}
+
+\begin{mathpar}
+  \inferrule*[right = const]
+   {\empty}
+   {\Gamma \jtype{0}{}{c}{b}  }
+   
+   \and
+    \inferrule*[right = abs]
+   {\Gamma, x: [\tau_1]_{0} \jtype{n}{}{t}{\tau_2}}
+   { \Gamma \jtype{n}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
+   
+   \and
+   \inferrule*[right = pr]
+   {\Gamma \jtype{n}{}{t}{\tau}}
+   {p + \Gamma \jtype{n}{}{!t}{!_p \tau}  }
+   
+   \and
+    \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, x:[\tau]_p \jtype{0}{}{x}{\tau}  } 
+   
+   \and
+   \inferrule*[ right = MT ]
+   {\Gamma \jtype{n}{}{t}{query}}
+   {1 + \Gamma \jtype{n+1}{}{M(t)}{b}  }
+   
+   \and
+    \inferrule*[right = query]
+   {\empty}
+   {\Gamma \jtype{0}{}{q}{query}  }
+   
+   \and
+    \inferrule*[ right = app ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+   
+   \and 
+   
+%   \inferrule*[ right = der ]
+%   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+%   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
+   
+%   \and 
+   
+   \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   
+   \and 
+   \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+   
+   \and
+     \inferrule*[right = pair]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+ 
+   \and
+    \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
+   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+   
+   \and
+    \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
+   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+   
+   \inferrule*[right = iabs]
+  { 
+    \inferrule*[]
+    {}
+    {i::\mathbb{N};\Gamma \jtype{n}{}{t}{ \tau } }
+    \and
+    \inferrule*[]
+    {}
+    { i \notin FV(\Gamma )  } 
+  }
+  { \Gamma \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+  
+   \inferrule*[ right =  iapp]
+  { 
+    \inferrule*[]
+    {}
+    { \Gamma  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } }
+    \and
+    \inferrule*[]
+    {}
+    { \jiterm{I}{ \mathbb{N} } } 
+  }
+  {\Gamma \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+\end{mathpar}
+\caption{Typing judgment (with only discharged variables in the context) }
+\end{figure}
+
+\clearpage
+
+
+
+\begin{figure}
+\boxed{\eval{t }{v }{m}}
+\begin{mathpar}
+ \inferrule*[ right=E-const]
+  { }
+  { \eval{ c   }{ c  }{0}}   
+  
+  \and
+
+ \inferrule*[ right=E-query]
+  { }
+  { \eval{  q  }{ q  }{0}}   
+  
+  \and
+
+ \inferrule*[ right=E-ABS]
+  { }
+  { \eval{ \abs{x}{t}   }{ \abs{x}{t}  }{0}}   
+  
+  \and
+  
+  \inferrule*[ right=E-bang]
+  { }
+  { \eval{ ! t   }{ ! t  }{0}}   
+  
+  \and
+  
+   \inferrule*[ right=E-pair]
+  {   
+    { \eval{ t_1  }{ F_1  }{m_1} }
+    \\
+    { \eval{ t_2  }{ F_2  }{m_2} } 
+  }
+  { \eval{  (t_1,t_2)  }{ (F_1,F_2)  }{ m_1+m_2  } }  
+  
+  \and
+
+   \inferrule*[ right=E-app]
+  {   
+    { \eval{ t_1  }{ \abs{x}{t}  }{m_1} }
+    \\
+    { \eval{ t_2  }{ F  }{m_2} } 
+    \\
+    { \eval{t[F/x] }{ F'}{m_3 } }
+  }
+  { \eval{ \app{t_1}{t_2}  }{ F'  }{ m_1+m_2+m_3  } }  
+ 
+ \boxed{ 
+   \inferrule*[ right=E-let-bang]
+  {   
+    { \eval{ t_1  }{ !t_3  }{m_1} } 
+    \\
+    {\eval{t_3}{F'}{m_2}}
+    \\
+    { \eval{t_2[F'/x] }{ F}{m_3 } }
+  }
+  { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_2+m_3  } }  
+}
+
+ \inferrule*[ right=E-let-bang]
+  {   
+    { \eval{ t_1  }{ !t_3  }{m_1} } 
+    \\
+    { \eval{t_2[!t_3 /x] }{ F}{m_3 } }
+  }
+  { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_2+m_3  } } 
+  
+  \inferrule*[ right=E-let-p]
+  {   
+    { \eval{ t  }{ (F_1,F_2)  }{m_1} } 
+    \\
+    { \eval{t'[F_1/x_1][F_2/x_2] }{ F}{m_3 } }
+  }
+  { \eval{  \letx{(x_1,x_2)}{t}{t'}  }{ F  }{ m_1+m_2+m_3  } } 
+  
+ 
+
+  \inferrule*[ right=E-case]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ F }{m }  }
+    \\
+    \inferrule*[]
+    {}
+    { \eval{ t_i  }{ F_i   }{ m_i }  }
+  }
+  { \eval{ \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  }{ \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b}  }{  m + m_i } }
+  
+    \inferrule*[ right=E-fix]
+  { 
+  }
+  { \eval{  \fix{t}  }{ \fix{t}  }{ m } }
+  
+      \inferrule*[ right=E-x]
+  { 
+  \empty
+  }
+  { \eval{  x  }{ x  }{ 0 } }
+  
+      \inferrule*[ right=E-ILAM]
+  { 
+    \empty
+  }
+  { \eval{  \Lambda. t  }{  \Lambda. t }{ 0 } }
+  
+      \inferrule*[ right=E-iapp]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ \Lambda. t' }{m }  }
+  }
+  { \eval{  t[]  }{  t' }{  m } }
+  
+      \inferrule*[ right=E-mech]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ F }{m }  }
+  }
+  { \eval{  M(t)  }{ M(F)  }{  m } }
+  
+\end{mathpar}
+\end{figure}
+
+
+\begin{figure*}
+$$
+\begin{array}{rcl}
+      \llu{\tau}{\epsilon}  &\quad &  = \{ \, e \, | \, \exists F: e \Downarrow F \land F \in   \llu{\tau}{v} \,  \}  \\[2mm]
+      \llu{b}{v} &\quad &  = \{ \,  F  \, | \, F = T_b \}  \\[2mm]
+      \llu{query}{v} &\quad &  = \{ \,  F \, |  \, F = T_{query} \}  \\[2mm]
+      \llu{\tau_1 \rightarrow \tau_2}{v} & \quad & = \{\, \abs{x}{t} \, | \, \forall v \in\llu{\tau}{v}. t[v/x] \in \llu{\tau_2}{\epsilon} \, \} \\[2mm]
+      \llu{ \ !_n \tau}{v} & \quad & = \{\, !t \, | \, t \in \llu{\tau}{\epsilon} \, \} \\[2mm]
+      \llu{\tforallN{i}{\tau}}{v}  & \quad & = \{  \Lambda. t \, | \, \forall I. \vdash i :: \mathbb{N}. t[I/i] \in \llu{\tau}{\epsilon}   \}  \\[2mm]
+      \llu{\tau_1 * \tau_2}{v}  & \quad & = \{  (F_1, F_2) \, | \, F_1 \in \llu{\tau_1}{v} \land F_2 \in \llu{\tau_2}{v}     \} \\[2mm]
+      \llu{\cdot}{} &\quad & = \{ \emptyset \} \\[2mm]
+    %   \llu{\Gamma, x : [\tau]_p}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \llu{\Gamma, x : [\tau]_p}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{!_p \tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \llu{\Gamma, x : \tau}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \gamma \vDash \Gamma &\quad & \triangleq dom(\gamma) = dom(\Gamma) \land \forall x \in dom(\Gamma). \gamma(x) \in \llu{\Gamma(x)}{v}
+\end{array}
+$$
+\caption{denotations}
+\end{figure*}
+
+\clearpage
+
+
+\begin{lemma} $ $
+	\label{lem:1}
+    \begin{enumerate}
+\item If $\jtype{n,m}{}{F}{b} $ then $ \exists T_{b} : F = T_{b}$.\\
+\item If $\jtype{n,m}{}{F}{query} $ then $ \exists T_{query} : F = T_{query}$
+\end{enumerate}
+	
+	
+\end{lemma}
+
+\clearpage
+\begin{lemma}[Depth Definition] 
+	\label{lem:2}
+	If $\Gamma \jtype{n,m}{}{t}{\tau} $ then $\depth(t) \leq n$\\
+\end{lemma}
+\begin{proof}
+ It is proved by the induction on the structure of the typing derivation.\\
+ \noindent \textbf{Case} 
+ \[
+ \inferrule*[right = pr]
+   {\Gamma \jtype{n}{}{t}{\tau} ~(\star) } 
+   {p + \Gamma \jtype{n}{}{!t}{!_p \tau}  }
+ \]
+ TS: $\depth(!t) \leq n $.\\
+ By IH on $(\star)$, we get $\depth(t) \leq n $ \\
+ This case is proved because $\depth(!t)= \depth(t)$.
+ 
+ \noindent \textbf{Case} 
+ \[
+  \inferrule*[right = const]
+   {\empty}
+   {\Gamma \jtype{0}{}{c}{b}  }
+ \]
+ TS: $\depth(c) \leq 0$ \\
+ It is already proved by the definition of $\depth(c)$.
+ 
+  \noindent \textbf{Case} 
+  \[
+   \inferrule*[right = abs]
+   {\Gamma, x: [\tau_1]_{0} \jtype{n}{}{t}{\tau_2} ~(\star)}
+   { \Gamma \jtype{n}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
+  \]
+  TS: $\depth(\abs{x}{t}) \leq n $. \\
+  By IH on ~($\star$) instantiating the context with $\Gamma, x: [\tau]_0 $, we get : $\depth(t) \leq n $. \\
+    This case is proved by the definition of $\depth(\abs{x}{t})$.
+  
+   \noindent \textbf{Case} 
+  \[
+   \inferrule*[ right = MT ]
+   {\Gamma \jtype{n}{}{t}{query} ~ (\star) }
+   {1 + \Gamma \jtype{n+1}{}{M(t)}{b}  }
+  \]
+   TS: $\depth( M(t) ) \leq n+1 $. \\
+   By IH on ($\star$), we get $\depth(t) \leq n $. \\
+   It is proved by the definition of $\depth(M(t)) = \depth(t) + 1 $.
+   
+   \noindent \textbf{Case} 
+   \[
+    \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, x:[\tau]_p \jtype{0}{}{x}{\tau}  } 
+   \]
+   TS: $\depth(x) \leq 0$. \\
+   It is proved by the definition of $\depth(x)$. \\
+   
+    \noindent \textbf{Case} 
+    \[
+     \inferrule*[ right = app ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} ~ (\star) \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}~(\diamond)}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+    \]
+    TS: $\depth(\app{t_1}{t_2}) \leq \max(n_1,n_2) $. \\
+    By IH on ($\star$) and ($\diamond$), we get: $\depth(t_1) \leq n_1~(\star\star) $ and $\depth(t_2) \leq n_2 (\diamond\diamond)$. \\
+    Unfold the definition of $\depth(\app{t_1}{t_2}) = \max(\depth(t_1), \depth(t_2))$.\\
+    This case is proved by the ($\star\star$) and ($\diamond\diamond$).
+    
+    \noindent \textbf{Case}
+ \[
+ \inferrule*[right = query]
+   {\empty}
+   {\Gamma \jtype{0}{}{q}{query}  }
+   \]
+TS: $\depth(q) \leq 0$.\\
+This is proved by the definition of $\depth(q)$.
+
+ \noindent \textbf{Case} 
+   \[
+   \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} ~ (\star) \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}  ~ (\diamond)}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   \]
+   To show: $\depth(\letx{!x}{t}{t'}) \leq \max(n_1,n_2)$.\\
+     By induction Hypothesis on ($\star$) and ($\diamond$), we get:
+   $\depth(t) \leq n_1~(\star\star)$ and $\depth(t') \leq n_2 ~ (\diamond\diamond)$.\\
+   Unfolding the definition of $\depth(\letx{!x}{t}{t'}) = \max(\depth(t), \depth(t'))$.\\
+   This case is proved by the ($\star\star$) and ($\diamond\diamond$).
+   
+ \noindent \textbf{Case} 
+   \[   
+   \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } ~ (\star)  \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}  ~ (\diamond)}
+   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+    \]
+     To show: $\depth(\letx{(x_1, x_2)}{t}{t'}) \leq \max(n_1,n_2)$.\\
+     By induction Hypothesis on ($\star$) and ($\diamond$), we get:
+   $\depth(t) \leq n_1~(\star\star)$ and $\depth(t') \leq n_2 ~ (\diamond\diamond)$.\\
+   Unfolding the definition of $\depth(\letx{(x_1, x_2)}{t}{t'}) = \max(\depth(t), \depth(t'))$.\\
+   This case is proved by the ($\star\star$) and ($\diamond\diamond$).
+ 
+ \noindent \textbf{Case} 
+   \[
+     \inferrule*[right = pair]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} ~ (\star)  \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2} ~ (\diamond)}
+   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+    \]
+    To show: $\depth((t_1, t_2)) \leq \max(n_1,n_2)$.\\
+    By induction Hypothesis on ($\star$) and ($\diamond$), we get:
+    $\depth(t_1) \leq n_1~(\star\star)$ and $\depth(t_2) \leq n_2 ~ (\diamond\diamond)$.\\
+    Unfolding the definition of $\depth((t_1, t_2)) = \max(\depth(t_1), \depth(t_2))$.\\
+    This case is proved by the ($\star\star$) and ($\diamond\diamond$).
+ 
+ \noindent \textbf{Case} 
+   \[
+    \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} ~ (\star) \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} ~ (\diamond) }
+   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+   \]
+    To show: $\depth( \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} ) \leq \max(n_1,n_2)$.\\
+    By induction Hypothesis on ($\star$) and ($\diamond$), we get:
+    $\depth(t) \leq n_1~(\star\star)$ and $\depth(t_i) \leq n_2 ~ (\diamond\diamond)$.\\
+    Unfolding the definition of $\depth(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) = \max(\depth(t), \depth(t_i))$.\\
+    This case is proved by the ($\star\star$) and ($\diamond\diamond$).
+   
+ \noindent \textbf{Case} 
+   \[   
+    \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} ~ (\star)  \\ \Gamma_2 \jtype{n_2}{}{t_i}{query}~ (\diamond)  }
+   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+   \]
+    To show: $\depth( \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} ) \leq \max(n_1,n_2)$.\\
+    By induction Hypothesis on ($\star$) and ($\diamond$), we get:
+    $\depth(t) \leq n_1~(\star\star)$ and $\depth(t_i) \leq n_2 ~ (\diamond\diamond)$.\\
+    Unfolding the definition of $\depth(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) = \max(\depth(t), \depth(t_i))$.\\
+    This case is proved by the ($\star\star$) and ($\diamond\diamond$).
+  
+ \noindent \textbf{Case} 
+   \[
+   \inferrule*[right = iabs]
+  { 
+    \inferrule*[]
+    {}
+    {i::\mathbb{N};\Gamma \jtype{n}{}{t}{ \tau } ~ (\diamond)  }
+    \and
+    \inferrule*[]
+    {}
+    { i \notin FV(\Gamma )  } 
+  }
+  { \Gamma \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+    \]
+    To show: $\depth( \Lambda.t ) \leq n$.\\
+    By induction Hypothesis on ($\diamond$), we get:
+    $\depth(t) \leq n ~ (\diamond\diamond)$.\\
+    Unfolding the definition of $\depth( \Lambda.t ) = \depth(t)$.\\
+    This case is proved by the ($\diamond\diamond$).
+    
+ \noindent \textbf{Case} 
+   \[ 
+   \inferrule*[ right =  iapp]
+  { 
+    \inferrule*[]
+    {}
+    { \Gamma  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } ~ (\diamond) }
+    \and
+    \inferrule*[]
+    {}
+    { \jiterm{I}{ \mathbb{N} } } 
+  }
+  {\Gamma \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+\]
+    To show: $\depth(t\, []) \leq n$.\\
+    By induction Hypothesis on ($\diamond$), we get:
+    $\depth(t) \leq n ~ (\diamond\diamond)$.\\
+    Unfolding the definition of $\depth(t\, []) = \depth(t)$.\\
+    This case is proved by the ($\diamond\diamond$).
+  
+\end{proof}
+
+\begin{lemma}[Depth Weakening1] 
+	\label{lem:deweaken1}
+	$\Gamma \jtype{n_1,m}{}{e}{\tau} \land n_1 \leq n_2 \implies \Gamma \jtype{n_2,m}{}{e}{\tau}$\\
+\end{lemma}
+
+\begin{lemma}[Depth Weakening2] 
+	\label{lem:deweaken2}
+	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \implies \Gamma, x:[\tau]_{p_2} \jtype{n}{}{e}{\tau} $\\
+	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \land \Gamma \subseteq \Gamma' \land n \leq n' \implies \Gamma', x:[\tau]_{p_2} \jtype{n'}{}{e}{\tau} $\\
+\end{lemma}
+
+\begin{lemma}[Context weakening - 1]
+    \label{lem:coweaken1}
+    $\Gamma \jtype{n,m}{}{e}{\tau}  \implies \Gamma, x:\tau \jtype{n,m}{}{e}{\tau} $\\
+\end{lemma}
+
+\begin{lemma}[Context weakening - 2]
+    \label{lem:coweaken2}
+    $\Gamma \jtype{n,m}{}{e}{\tau}  \implies \Gamma, x:[\tau]_p \jtype{n,m}{}{e}{\tau} $\\
+\end{lemma}
+
+\begin{lemma}[Context exchange]
+    \label{lem:coex}
+    $\Gamma, x : \tau_1, \Delta, y : \tau_2 \jtype{n,m}{}{e}{\tau}  \implies \Gamma, y : \tau_2, \Delta, x : \tau_1 \jtype{n,m}{}{e}{\tau} $\\
+\end{lemma}
+
+\begin{lemma}
+	\label{lem:sub}
+	If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash \Gamma$, then $ \cdot \jtype{n}{}{\gamma(t)}{\tau} $\\
+\end{lemma}
+
+\begin{theorem}[Type Safety]
+	If $\cdot \jtype{n,m}{}{t}{\tau} $ then $ \exists F. t \Downarrow F \land \jtype{n,m}{}{F}{\tau}$
+\end{theorem}
+  \begin{proof}
+   We prove this theorem by prove Normalization and Preservation.
+  \end{proof}
+
+\begin{corollary}
+\label{corollary}
+	If $ \cdot\jtype{n,m}{}{t}{b} $ then $ \exists T_b. t \Downarrow T_b \land \depth(T_b) \leq n$
+\end{corollary}
+  
+
+\clearpage
+
+\begin{theorem}[Normalization] 
+	If $\cdot\jtype{n,m}{}{t}{\tau} $ then $ \exists F: e \Downarrow F$
+\end{theorem}
+We prove two theorems instead.
+
+\begin{theorem}
+If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F}{}$.
+\end{theorem}
+\begin{proof}
+  It is proved by unfolding the definition of $\llu{\tau}{\epsilon}$.
+\end{proof}
+ 
+\begin{theorem}
+ If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash{\Gamma}$, then $\gamma(t) \in \llu{\tau}{\epsilon} $.
+\end{theorem} 
+
+
+
+ \begin{proof}  Proof by induction on  $\Gamma \jtype{n}{}{t}{\tau} $\\
+ We have $ \gamma \vDash \Gamma ~(\spadesuit) $. \\
+   \noindent \textbf{Case} 
+ \[
+  \inferrule*[right = abs]
+   {\Gamma, x: [\tau_1]_{0} \jtype{n}{}{t_1}{\tau_2} \ \ (\star)}
+   { \Gamma \jtype{n}{}{\abs{x}{t_1}}{\tau_1 \multimap \tau_2}  }
+ \]
+ TS : $ \gamma(\abs{x}{t}) \in \llu{\tau_1 \multimap \tau_2}{\epsilon} $ \\
+ Because $\gamma(\abs{x}{t}) =\abs{x}{\gamma(t)} $ is value, unfold the definition of $\llu{\tau_1 \multimap \tau_2}{\epsilon}$, STS: $ \gamma(\abs{x}{t_1}) \in \llu{\tau_1 \multimap \tau_2}{v} $\\
+ Unfold the definition of $\llu{\tau_1 \multimap \tau_2}{v}$, STS: $\forall v. v \in \llu{\tau_1}{v}. \gamma(t_1)[v/x] \in \llu{\tau_2}{\epsilon}  $.\\
+ Pick $v$ s.t $ v \in \llu{\tau_1}{v}$. STS: $\gamma(t_1)[v/x] \in \llu{\tau_2}{\epsilon} $.\\
+ We have $\gamma[x \rightarrow v] \vDash \Gamma, x: [\tau_1]_0 \ \ (\diamond) $ because $\gamma \vDash \Gamma$ and $ v \in \llu{\tau_1}{v} $(the assumption). \\
+ By IH on $(\star)$ and $(\diamond)$, we have : \\
+   $$ \gamma[v/x](t_1) \in \llu{\tau_2}{\epsilon}  $$
+ Because $\gamma[v/x] (t_1) = . \gamma(t_1[v/x])$, this case is proved.\\
+ 
+ \noindent \textbf{Case} 
+ \[
+ \inferrule*[right = pr]
+   {\Gamma \jtype{n}{}{t}{\tau}~(\star)}
+   {p + \Gamma \jtype{n}{}{!t}{!_p \tau}  }
+ \]
+ We assume $ \gamma \vDash p+\Gamma  $, by the definition of $\gamma$, we know $\gamma \vDash \Gamma ~(\spadesuit) $. \\
+ TS : $ \gamma(!t) \in \llu{!_p \tau}{\epsilon} $ \\
+ Because $\gamma ( !t)= ! \gamma(t) $ is value, unfold the definition of $\llu{!_p \tau}{\epsilon}$, STS: $ ! \gamma(t) \in \llu{!_p \tau}{v} $\\
+ Unfold the definition of $\llu{!_p \tau}{v} $, STS: $\gamma (t) \in \llu{\tau}{\epsilon}$. \\
+ It is proved by IH on ($\star$) and the assumption ($\spadesuit$) 
+ 
+  \noindent \textbf{Case} 
+  \[
+    \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau}~(\star) \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}~(\diamond)}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+  \]
+  We assume $\gamma \vDash \max(\Gamma_1,\Gamma_2 ) ~(\spadesuit) $.
+  TS: $ \gamma ( \letx{!x}{t}{t'} ) \in \llu{ \tau'}{\epsilon} $. \\
+  Unfold $ \llu{ \tau'}{\epsilon} $, STS: $\exists F. \eval{\gamma ( \letx{!x}{t}{t'} )}{F}{} \land F \in \llu{ \tau'}{v} $.\\
+  By using Lemma ~\ref{lem:weaken2} and Lemma~\ref{lem:weaken3} on ($\star$), we get: $ \max(\Gamma_1,\Gamma_2) \jtype{n_1}{}{t}{!_p \tau}~(1)$.\\
+  By using Lemma ~\ref{lem:weaken2} and Lemma~\ref{lem:weaken3} on ($\diamond$), we get: $ \max(\Gamma_1,\Gamma_2),x : [\tau]_p \jtype{n_2}{}{t'}{\tau'  }~(2) $.  \\
+  By IH on (1), we know: $ \gamma(t) \in \llu{ !_p \tau}{\epsilon}~(3) $. \\
+  Unfold (3), we get: $\exists F. \eval{\gamma(t)}{F}{} \land F \in \llu{ !_p \tau}{v} \implies \exists t_1. t_1 \in \llu{ \tau}{\epsilon} \land \eval{\gamma(t)}{(!t_1)}{} ~(4) $.  \\
+  Pick $ t_1 $, $t_1 \in  \llu{\tau}{\epsilon} \implies \exists v. \eval{t_1}{v}{} \land v \in \llu{\tau}{v}~(5) $. \\
+  Pick $v \in \llu{ \tau}{v}$, st. $ \gamma[v/x] \vDash \max(\Gamma_1,\Gamma_2), x:[\tau]_p $.\\
+  By IH on (2) and $\gamma[v/x] \vDash \max(\Gamma_1,\Gamma_2), x:[\tau]_p $, we know : 
+  $\gamma[v/x] (t') \in  \llu{ \tau'}{\epsilon} ~ (6) $.\\
+    From (6), we know: $ \exists F. \eval{\gamma[v/x] (t')}{F}{} \land F \in \llu{\tau'}{v} ~(7)  $.\\
+    It is proved by using (4),(5),(7) and the following evaluation rule \rname{E-LET-BANG}.
+   \[
+   \inferrule*[ right=E-let-bang]
+  {   
+    { \eval{ \gamma(t) }{ !t_1  }{m_1} } 
+    \\
+    {\eval{t_1}{v}{m_2}}\\
+    { \eval{\gamma[v/x](t') }{ F}{m_3 } }
+  }
+  { \eval{  \letx{!x}{\gamma(t)}{\gamma(t')}  }{ F  }{ m_1+m_2+m_3  } }  
+   \]
+  
+  
+   \noindent \textbf{Case} 
+   \[
+     \inferrule*[ right = MT ]
+   {\Gamma \jtype{n}{}{t}{query}~(\star)}
+   {1 + \Gamma \jtype{n+1}{}{M(t)}{b}  }
+   \]
+   Assume $\gamma \vDash{1+\Gamma} \implies \gamma \vDash{\Gamma}~(\spadesuit)$.\\
+   TS: $\gamma(M(t)) \in \llu{b}{\epsilon}$.\\
+   STS: $\exists F. \eval{M(\gamma(t))}{F}{} \land F \in \llu{b}{v} \implies \exists T_{b}. \eval{M(\gamma(t))}{T_{b}}{}$.\\
+   By IH on ($\star$) and ($\spadesuit$), we get : $ \gamma(t) \in \llu{query}{\epsilon}~(1)$.\\
+   Unfold (1), we know: $\exists F. \eval{\gamma(t)}{F}{} \land F \in \llu{query}{v} \implies F = T_{query} ~(2) $. 
+   
+   It is proved by \rname{E-MECH} and (2), $T_b =M( T_{query})$.
+   \[
+     \inferrule*[ right=E-mech]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  \gamma(t)  }{ T_{query} }{m }  }
+  }
+  { \eval{  M(t)  }{ M(T_{query})  }{  m } }
+   \]
+  
+    
+     \noindent \textbf{Case} 
+     \[
+      \inferrule*[ right = case-query]
+   {\Gamma \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
+   {\Gamma \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+     \]
+ 
+ \end{proof}
+
+\clearpage
+
+\begin{theorem}[Preservation]
+	If $\cdot\jtype{n}{}{t}{\tau} \land t \Downarrow F$ then $ \jtype{n}{}{F}{\tau} $
+\end{theorem}
+\begin{proof}
+  By induction on typing derivation of $\cdot \jtype{n}{}{t}{\tau} $.\\
+  
+  \noindent \textbf{Case}
+  \[
+   \inferrule*[right = const]
+   {\empty}
+   {\cdot \jtype{n}{}{c}{b}  }
+  \]
+  $t$ is $c$, From \rname{E-CONST}, we know $F$ is $c$, It is proved.\\
+ 
+ For the cases \rname{ABS},\rname{QUERY},\rname{ILAM},\rname{VAR},\rname{PR}, the proof are similar as the one for \rname{CONST} because $t$ in these cases are values.\\
+ 
+ \noindent \textbf{Case}
+ \[
+  \inferrule*[ right = MT ]
+   {\cdot \jtype{n_1}{}{t_1}{query}~(\star)}
+   {\cdot \jtype{n_1+1}{}{M(t_1)}{b}  }
+ \]
+  $t$ is $M(t_1)$, from the rule \rname{E-MECH}, we get: 
+  \[
+      \inferrule*[ right=E-mech]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t_1  }{ F }{m }~(\diamond)  }
+  }
+  { \eval{  M(t_1)  }{ M(F)  }{  m } }
+  \]
+  
+  By ih on ($\star$) and ($\diamond$), we get : 
+  $ \cdot \jtype{n_1}{}{F}{query} $. \\
+  Using the rule \rname{MT}, we conclude $\cdot \jtype{n_1+1}{}{M(F)}{b} $. This case is proved.\\
+  
+  \noindent \textbf{Case}
+  \[
+  \inferrule*[right = pair]
+   {\cdot \jtype{n_1}{}{t_1}{\tau_1}~(\star) \\ \cdot \jtype{n_2}{}{t_2}{\tau_2}~(\diamond) }
+   { \cdot \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+  \]
+  $t$ is $(t_1,t_2)$, from the evaluation rule \rname{E-PAIR}, we know:
+  
+  \[
+   \inferrule*[ right=E-pair]
+  {   
+    { \eval{ t_1  }{ F_1  }{m_1}~(\star\star) }
+    \\
+    { \eval{ t_2  }{ F_2  }{m_2}~(\diamond\diamond) } 
+  }
+  { \eval{  (t_1,t_2)  }{ (F_1,F_2)  }{ m_1+m_2  } } 
+  \]
+  By ih on ($\star$) and ($\star\star$), we get: $ \cdot \jtype{n_1}{}{F_1}{\tau_1} $.\\
+  By ih on ($\diamond$) and ($\diamond\diamond$), we get: $ \cdot \jtype{n_2}{}{F_2}{\tau_2} $.\\
+  This case is proved by using the rule \rname{PAIR}.\\
+  
+   \noindent \textbf{Case}
+   \[
+   \inferrule*[ right = app ]
+   {\cdot \jtype{n_1}{}{t_1}{\tau_1 \multimap \tau_2}~(\star) \\ \cdot \jtype{n_2}{}{t_2}{\tau_1}~(\diamond)}
+   { \cdot \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+   \]
+   $t$ is $\app{t_1}{t_2}$, from the evaluation rule \rname{E-APP}, we know:
+   \[
+    \inferrule*[ right=E-app]
+  {   
+    { \eval{ t_1  }{ \abs{x}{t'}  }{m_1} ~(\star\star) }
+    \\
+    { \eval{ t_2  }{ F  }{m_2}~(\diamond\diamond) } 
+    \\
+    { \eval{t'[F/x] }{ F'}{m_3 }~(\heartsuit) }
+  }
+  { \eval{ \app{t_1}{t_2}  }{ F'  }{ m_1+m_2+m_3  } }
+   \]
+   By ih on ($\star$) and ($\star\star$), we get: $ \cdot \jtype{n_1}{}{\abs{x}{t'}}{\tau_1 \multimap \tau_2}~(\spadesuit) $.\\
+   By inversion on ($\spadesuit$), we get: $x:\tau_1 \jtype{n_1}{}{t'}{\tau_2}(\spadesuit\spadesuit)$.\\
+  By ih on ($\diamond$) and ($\diamond\diamond$), we get: $ \cdot \jtype{n_2}{}{F}{\tau_1} ~(\clubsuit)$.\\
+  From Theorem Substitution with ($\spadesuit\spadesuit$) and ($\clubsuit$), we get: $\cdot \jtype{\max(n_1,n_2)}{}{t'[F/x]}{\tau_2}~(\heartsuit\heartsuit) $.\\
+  By ih on ($\heartsuit$) and ($\heartsuit\heartsuit$), we conclude: $ \cdot \jtype{\max(n_1,n_2)}{}{F'}{\tau_2}$.\\
+  It proves this case.\\
+  
+   \noindent \textbf{Case}
+   \[
+   \inferrule*[ right = let ]
+   {\cdot \jtype{n_1}{}{t_1}{!_p \tau}~(\star) \\ \cdot, x: [\tau]_p \jtype{n_2}{}{t_2}{\tau'}~(\diamond) }
+   { \cdot \jtype{\max(n_1,n_2)}{}{\letx{!x}{t_1}{t_2}}{\tau'}  }
+   \]
+   In this case, $t$ is $\letx{!x}{t_1}{t_2} $. From the evaluation rule, we know:\\
+   \[
+   \inferrule*[ right=E-let-bang]
+  {   
+    { \eval{ t_1  }{ !t_3  }{m_1} ~(\star\star)} 
+    \\
+    {\eval{t_3}{F'}{m_2}~(\diamond\diamond) }
+    \\
+    { \eval{t_2[F'/x] }{ F}{m_3 } }
+  }
+  { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_2+m_3  } }  
+   \]
+    By ih on ($\star$) and ($\star\star$), we get: $ \cdot \jtype{n_1}{}{!t_3 }{!_p \tau}~(\spadesuit) $.\\
+     By inversion on ($\spadesuit$), we get: $\cdot \jtype{n_1}{}{t_3}{\tau}(\spadesuit\spadesuit)$.\\
+   By ih on ($\spadesuit\spadesuit $) and ($\diamond\diamond$), we get: $ \cdot \jtype{n_2}{}{F'}{\tau} ~(\clubsuit)$.\\
+
+\noindent \textbf{Case}
+\[
+ \inferrule*[ right = case-const ]
+   {\cdot \jtype{n_1}{}{t'}{b}~(\star) \\ \cdot \jtype{n_2}{}{t_i}{b}~(\diamond) }
+   {\cdot \jtype{\max(n_1,n_2)}{}{\tcaseof{t'}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+In this case, $t$ is $ \tcaseof{t'} \{c_i \Rightarrow t_i\}_{c_i \in b} $.\\
+From the evaluation rule, we get:
+
+\[
+\inferrule*[ right=E-case]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t'  }{ F' }{m } ~(\star\star) }
+    \\
+    \inferrule*[]
+    {}
+    { \eval{ t_i  }{ F_i   }{ m_i } ~(\diamond\diamond)  }
+  }
+  { \eval{ \tcaseof{t'}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  }{ \tcaseof{F'}\ \{c_i \Rightarrow F_i\}_{c_i \in b}  }{  m + m_i } }
+ \] 
+  By ih on ($\star$) and ($\star\star$), we get: $ \cdot \jtype{n_1}{}{F' }{b}~(\spadesuit) $.\\
+  By ih on ($\diamond$) and ($\diamond\diamond$), we get: $ \cdot \jtype{n_2}{}{F_i}{b} ~(\clubsuit)$.\\
+ By the rule \rname{CASE-CONST}, we conclude :$ \cdot  \jtype{\max(n_1,n_2)}{}{ \tcaseof{F'}\ \{c_i \Rightarrow F_i\}_{c_i \in b} }{b}$.\\
+ This case is proved.\\
+ 
+ \noindent \textbf{Case}
+ \[
+    \inferrule*[ right = case-query]
+   {\cdot \jtype{n_1}{}{t'}{b}~(\star) \\ \cdot \jtype{n_2}{}{t_i}{query}~(\diamond) }
+   {\cdot \jtype{\max(n_1,n_2)}{}{\tcaseof{t'}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+ \]
+ In this case, $t$ is $ \tcaseof{t'} \{c_i \Rightarrow t_i\}_{c_i \in b} $.\\
+From the evaluation rule, we get:
+
+\[
+\inferrule*[ right=E-case]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t'  }{ F' }{m } ~(\star\star) }
+    \\
+    \inferrule*[]
+    {}
+    { \eval{ t_i  }{ F_i   }{ m_i } ~(\diamond\diamond)  }
+  }
+  { \eval{ \tcaseof{t'}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  }{ \tcaseof{F'}\ \{c_i \Rightarrow F_i\}_{c_i \in b}  }{  m + m_i } }
+ \] 
+  By ih on ($\star$) and ($\star\star$), we get: $ \cdot \jtype{n_1}{}{F' }{b}~(\spadesuit) $.\\
+  By ih on ($\diamond$) and ($\diamond\diamond$), we get: $ \cdot \jtype{n_2}{}{F_i}{query} ~(\clubsuit)$.\\
+ By the rule \rname{CASE-QUERY}, we conclude :$ \cdot  \jtype{\max(n_1,n_2)}{}{ \tcaseof{F'}\ \{c_i \Rightarrow F_i\}_{c_i \in b} }{query}$.\\
+ This case is proved.\\
+ 
+ \noindent \textbf{Case}
+ \[
+ \inferrule*[ right = let-p ]
+   {\cdot \jtype{n_1}{}{t_1}{\tau_1 \times \tau_2 }~(\star) \\  x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t_1'}{\tau'}~(\diamond) }
+   { \cdot  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t_1}{t_1'} }{\tau'}  }
+ \]
+ In this case, $t$ is $ \letx{(x_1,x_2)}{t_1}{t_1'} $.
+ From the evalutation rule, we get:
+ \[
+ \inferrule*[ right=E-LET-P]
+  {   
+    { \eval{ t_1  }{ (F_1,F_2)  }{m_1}~(\star\star) } 
+    \\
+    { \eval{t_1'[F_1/x_1][F_2/x_2] }{ F}{m_3 }~(\heartsuit) }
+  }
+  { \eval{  \letx{(x_1,x_2)}{t_1}{t_1'}  }{ F  }{ m_1+m_2+m_3  } }
+  \]
+ By ih on ($\star$) and ($\star\star$), we know: $ \cdot \jtype{n_1}{}{(F_1,F_2)}{\tau_1 \times \tau_2}~(\spadesuit) $. \\
+ By inversion on ($\spadesuit$), we get : $\cdot \jtype{n_1'}{}{F_1}{\tau_1} ~(\clubsuit)$ and $\cdot \jtype{n_2'}{}{F_2}{\tau_2} ~(\clubsuit\clubsuit)$ where $\max(n_1',n_2') = n_1$.\\
+ By Theorem Substitution twice with ($\clubsuit$) and ($\clubsuit\clubsuit$) on ($\diamond$), we get $\cdot \jtype{\max(n_1',\max(n_2',n_2))}{}{t_1'[F_1/x_1][F_2/x_2]}{\tau'} ~(\heartsuit\heartsuit)$.\\
+ It is proved by ih on $(\heartsuit\heartsuit)$ and ($\heartsuit$).\\
+ 
+ \noindent \textbf{Case}
+ \[
+     \inferrule*[right = pair]
+   {\cdot \jtype{n_1}{}{t_1}{\tau_1} \\ \cdot \jtype{n_2}{}{t_2}{\tau_2}}
+   { \cdot  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }\]
+   In this case, $t$ is $(t_1,t_2)$. From the evaluation rule we get :
+   
+   \[  
+   \inferrule*[ right=E-pair]
+  {   
+    { \eval{ t_1  }{ F_1  }{m_1} }
+    \\
+    { \eval{ t_2  }{ F_2  }{m_2} } 
+  }
+  { \eval{  (t_1,t_2)  }{ (F_1,F_2)  }{ m_1+m_2  } } 
+  \]
+  By ih, we know : $ \cdot \jtype{n_1}{}{F_1}{\tau_1}$ and $ \cdot \jtype{n_2}{}{F_2}{\tau_2}$. \\
+  This case is proved by using the rule \rname{PAIR}.\\
+   
+ 
+\end{proof}
+
+
+
+\clearpage
+\begin{theorem} [Substitution]
+	If $\Gamma \jtype{n_1}{}{t_1}{\tau_1}$  and   $\Delta, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$ then $\max( \Gamma,\Delta) \jtype{\max{(p + n_1, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+\end{theorem}
+\begin{proof}
+  The theorem is proved by induction on the typing derivation of the second premise  $\Gamma, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$. \\
+   
+  \noindent \textbf{Case}
+  \[
+   \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, x:[\tau_1]_p \jtype{0}{}{x}{\tau_1}  } 
+  \]
+  where $t_2 = x$ and $\tau_2 = \tau_1$.\\
+  Assume we know: $\Gamma \jtype{n_1}{}{t_1}{\tau_1} \ \ (\star) $ \\
+  TS: $\Gamma \jtype{\max(p+n_1,0 )}{}{t_2[t_1/x]}{\tau_1}$ \\
+  STS: $\Gamma \jtype{\max(p+n_1,0)}{}{x[t_1/x]}{\tau_1} \Rightarrow \Gamma \jtype{\max(p+n_1,0)}{}{t_1}{\tau_1}$ \\
+  It is proved by using Lemma ~\ref{lem:weaken} on $(\star)$ because $n_1 \leq \max(p+n_1, 0)$.\\
+  
+  \noindent \textbf{Case}
+  \[
+   \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, y:[\tau_2]_{p'} , x:[\tau_1]_p \jtype{0}{}{y}{\tau_2}  }
+  \]
+ 
+  Assume we know: $\Gamma, y: [\tau_2]_{p'} \jtype{n_1}{}{t_1}{\tau_1} \ \ (\star) $ \\
+  TS: $\Gamma, y: [\tau_2]_{p'} \jtype{\max(p+n_1,0 )}{}{y[t_1/x]}{\tau_2}$ \\
+  STS: $\Gamma, y: [\tau_2]_{p'} \jtype{\max(p+n_1,0)}{}{y}{\tau_2} $ \\
+  From \rname{VAR}, we get : $ \Gamma, y: [\tau_2]_{p'} \jtype{0}{}{y}{\tau_2} ~(\diamond) $.
+  It is proved by using Lemma ~\ref{lem:weaken} on $(\diamond)$.\\
+  
+    \noindent \textbf{Case}
+     \[
+   \inferrule*[ right = MT ]
+   {\Gamma, x: [\tau_1]_{p} \jtype{n}{}{t}{query} \ \ (\star\star)}
+   {1 + \Gamma, x: [\tau_1]_{p+1} \jtype{n+1}{}{M(t)}{b}  }
+  \]
+  Assume we know: $1+\Gamma \jtype{n_1}{}{t_1}{\tau_1} \ \ (\star) $ \\
+   We know that $\Gamma \jtype{n_1}{}{t_1}{\tau_1 } $ by Lemma ~\ref{lem:weaken2} on the assumption $(\star)$.\\
+   We also know that $n+1=n_2$.\\
+   TS:  $1+\Gamma \jtype{\max(p+n_1+1,n_2)}{}{ (M(t)) [t_1/x]}{b}$ \\
+   By IH on $(\star\star)$, we know: $ \Gamma \jtype{\max(n_1+p, n) }{}{t[t_1/x] }{query} \ \ (\diamond) $\\
+   By rule MT, we know that : 
+     \[
+   \inferrule*[ right = MT ]
+   {\Gamma \jtype{\max(n_1+p, n) }{}{t[t_1/x] }{query} }
+   {1 + \Gamma \jtype{  1+ \max(n_1+p, n) }{}{M(t[t_1/x])}{b}  }
+  \]
+  
+   We obtain: $ 1 + \Gamma \jtype{  \max(n_1+p+1, n+1) }{}{M(t[t_1/x])}{b} \Rightarrow 
+     1 + \Gamma \jtype{  \max(n_1+p+1, n_2) }{}{\big ( M(t) \big )[t_1/x]}{b} $\\
+     This case is proved.\\
+     
+   \noindent \textbf{Case}
+   
+   \[
+   \inferrule*[right = pr]
+   {\Gamma, x:[\tau_1]_{p} \jtype{n_2}{}{t}{\tau} \ \ (\star\star)}
+   {p' + \Gamma, x:[\tau_1]_{p+p'} \jtype{n_2}{}{!t}{!_{p'} \tau}  }
+   \]
+   We assume $p'+ \Gamma \jtype{n_1}{}{t_1}{\tau_1}$.
+   by Lemma \ref{lem:weaken2}, we know $  \Gamma \jtype{n_1}{}{t_1}{\tau_1}$ $(\star)$.\\
+   TS: $ p'+ \Gamma \jtype{\max(n_1+p+p', n_2)}{}{!t[t_1/x]}{!_{p'} \tau } $\\
+   
+   By IH on $(\star\star)$ along with $(\star)$, we know:
+   $ \Gamma \jtype{\max(n_1+p,n_2)}{}{t[t_1/x]}{\tau} \ \ (\diamond)$\\
+   By rule \rname{PR}, we know: 
+     \[
+   \inferrule*[right = pr]
+   {\Gamma \jtype{\max(n_1+p,n_2)}{}{t[t_1/x]}{\tau} }
+   {p' + \Gamma \jtype{ \max(n_1+p,n_2) }{}{!t[t_1/x]}{!_{p'} \tau} \ \ (\diamond \diamond)  }
+   \]
+   This case is proved by Lemma \ref{lem:weaken} on $(\diamond\diamond)$. \\
+  
+  \noindent \textbf{Case}
+   \[
+     \inferrule*[right = query]
+   {\empty}
+   {\Gamma, x: [\tau_1]_p \jtype{0}{}{q}{query}  }
+   \]   
+   TS: $\Gamma \jtype{\max(p+n_1, n_2)}{}{q[t_1/x]}{query} \Rightarrow \Gamma \jtype{\max(p+n_1, n_2)}{}{q }{query} $.\\
+   Using rule \rname{QUERY}, we get $\Gamma \jtype{0}{}{q}{QUERY}$,
+   This case is proved by Lemma \ref{lem:weaken} on it.\\
+   
+  \noindent \textbf{Case} 
+   \[
+    \inferrule*[ right = let ]
+   {\Gamma_1, y : [\tau_1]_{p} \jtype{n}{}{t}{!_{p_1} \tau} \ \ (\diamond) \\ \Gamma_2, y : [\tau_1]_{p}, x: [\tau]_{p_1} \jtype{n'}{}{t'}{\tau'} \ \ (\diamond \diamond) }
+   { \max(\Gamma_1,\Gamma_2 ), y : [\tau_1]_{p} \jtype{\max(n,n')}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   \]
+   We assume $ \max(\Gamma_1,\Gamma_2) \jtype{n_1}{}{t_1}{\tau}~(\star)$.\\
+   
+   TS: $ \max(\Gamma_1,\Gamma_2) \jtype{ \max( n_1 + p, \max(n,n') ) }{}{ (\letx{!x}{t}{t'} ) [t_1/y] }{ \tau' } $\\
+   By Lemma~\ref{lem:weaken2}, Lemma~\ref{lem:weaken3}, we can extend the context of $(\diamond)$, to $\max(\Gamma_1,\Gamma_2)$:\\
+   $\max(\Gamma_1,\Gamma_2), y : [\tau_1]_{p} \jtype{n}{}{t}{!_{p_1} \tau}$$(\diamond')$.\\
+   Similarly, from ($\diamond\diamond$)we get: $ \max(\Gamma_1,\Gamma_2), y : [\tau_1]_{p}, x: [\tau]_{p_1} \jtype{n'}{}{t'}{\tau'} ~(\diamond\diamond') $. \\
+   By IH on $(\diamond')$, we get:
+   $ \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1+p, n)}{}{t[t_1/y]}{!_{p_1} \tau} \ \ (\spadesuit) $\\
+    By IH on $(\diamond\diamond')$, we get:
+   $ \max(\Gamma_1,\Gamma_2),x:[\tau]_{p_1} \jtype{\max(n_1+p, n')}{}{t'[t_1/y]}{ \tau'} \ \  (\clubsuit ) $\\
+   By rule \rname{let}, we get:
+    \[
+    \inferrule*[ right = let ]
+   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1+p, n)}{}{t[t_1/y]}{!_{p_1} \tau} \ \ (\spadesuit) \\ \max(\Gamma_1,\Gamma_2),x:[\tau]_{p_1} \jtype{\max(n_1+p, n')}{}{t'[t_1/y]}{ \tau'} \ \  (\clubsuit ) }
+   { \Gamma \jtype{\max( \max(n_1+p, n)  ,\max(n_1+p, n'))}{}{\letx{!x}{t[t_1/y]}{t'[t_1/y]}}{\tau'}  }
+   \]
+   Because $\max( \max(n_1+p, n)  ,\max(n_1+p, n')) = \max( n_1 + p, \max(n,n') ) $, this case is proved.\\
+   
+    \noindent \textbf{Case} 
+   \[
+      \inferrule*[right = abs]
+   {\Gamma, y:[\tau]_p, x: [\tau_1]_{0} \jtype{n}{}{t}{\tau_2} (\diamond)}
+   { \Gamma, y: [\tau]_p \jtype{n}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
+   \]
+   We assume $ \Gamma \jtype{n_1}{}{t_1}{\tau}~(\star) $.\\
+   By Lemma ~\ref{lem:weaken3}, we get: $ \Gamma, x:[\tau_1]_0  \jtype{n_1}{}{t_1}{\tau_1}$.\\
+   TS: $ \Gamma \jtype{\max(n_1+p , n)}{}{\abs{x}{t[t_1/y]}}{\tau_1 \multimap \tau_2 } $.\\
+   By IH on ($\diamond$), we get: $ \Gamma, x:[\tau_1]_0 \jtype{\max(n_1+p,n )}{}{t[t_1/y]}{\tau_2}~(\spadesuit) $.\\ 
+   It is proved by the rule \rname{ABS} and $(\spadesuit)$.
+   
+   \noindent \textbf{Case} 
+   \[
+    \inferrule*[ right = app ]
+   {\Gamma_1, x:[\tau]_p \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2}~(\diamond) \\ \Gamma_2, x:[\tau]_p \jtype{n_2}{}{t_2}{\tau_1}~(\diamond\diamond) }
+   { \max(\Gamma_1,\Gamma_2),x : [\tau]_p \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+   \]
+   We assume $ \max(\Gamma_1,\Gamma_2) \jtype{n}{}{t}{\tau} $.\\
+   By Lemma \ref{lem:weaken2}, Lemma \ref{lem:weaken3}, we extend the 
+   
+   
+   \noindent \textbf{Case} 
+   \[
+      \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+   \]
+   
+   
+\end{proof}
+
+
+\clearpage
+
+% \begin{theorem}[Progress] 
+% 	If $ \jtype{n}{}{t}{\tau}$, then $\exists F.\eval{ t  }{ F}{}$.
+% \end{theorem}
+% We prove two theorems instead.
+ 
+% \begin{theorem}
+%  If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash{\Gamma}$, then $\gamma(t) \in \llu{\tau}{\epsilon} $.
+% \end{theorem} 
+
+% \begin{theorem}
+% If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F}{}$.
+% \end{theorem}
+
+
+% \begin{proof}
+% Proof by induction on $t$.\\
+% \noindent \textbf{Case} 
+%  $$
+%  c \sep \fix{t} \sep !t \sep (F_1, F_2) \sep \Lambda. t \sep \abs{x}{t} \sep M(F) \sep x \sep q \sep \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b_i} 
+% $$
+% these cases are proved directly by applying the Normal form definition.\\ 
+% \noindent \textbf{Case} 
+% $$
+% \app{t_1}{t_2} 
+% $$
+
+% We know there is a typing derivation for $\Gamma \jtype{n}{}{t_1 \, t_2}{\tau}$.
+% \[
+%   \inferrule*[ right = app ]
+%   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} ~(\star) \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1} ~(\diamond)}
+%   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+% \]
+
+% By IH on ($\star$),($\diamond$), we get :
+%   $\exists F_1. \eval{ t_1  }{ F_1}{} $ and $\exists F_2. \eval{ t_2  }{ F_2}{} $. 
+  
+%   We have the evaluation rule \rname{E-APP}
+%   \[
+%   \inferrule*[ right=E-app]
+%   {   
+%     { \eval{ t_1  }{ \abs{x}{t}  }{m_1} }
+%     \\
+%     { \eval{ t_2  }{ F  }{m_2} } 
+%     \\
+%     { \eval{t[F/x] }{ F'}{m_3 } }
+%   }
+%   { \eval{ \app{t_1}{t_2}  }{ F'  }{ m_1+m_2+m_3  } }
+%   \]
+ 
+%  Since $F_1$ is a value with an arrow type according to the preservation lemma, it must be an abstraction. Say $F_1$ = $\abs{x}{t}$.\\
+% We know $ \app{ \abs{x}{t}}{F_2} \rightarrow^* t[F_2/x] $ by $\beta$ reduction, and $\eval{t[F/x]}{F'}{} $ by $\delta$ reduction.\\
+% By applying the \rname{E-APP} rule, we get: $\eval{\app{t_1}{t_2}}{F'}{}$.\\ This case is proved.
+
+
+
+
+% \noindent \textbf{Case} 
+% $$
+% (t_1,t_2) 
+% $$
+% By induction hypothesis, we have: $\eval{t_1}{F_1}{}$ and $\eval{t_2}{F_2}{}$.\\
+% By applying the \rname{E-PAIR} rule, we get: $\eval{(t_1,t_2)}{(F_1, F_2)}{}$.\\
+% This case is proved.
+
+% \noindent \textbf{Case} 
+% $$
+% \letx{!x}{t_1}{t_2} 
+% $$
+% By induction hypothesis, we have: $\eval{t_1}{!t_3}{m_1}$ and $\eval{t_2[t3/x]}{F}{m_2}$.\\
+% By applying the \rname{E-LET-BANG} rule, we get: $\eval{\letx{!x}{t_1}{t_2} 
+% }{F}{m_1 + m_2}$.\\
+% This case is proved.
+
+% \noindent \textbf{Case} 
+% $$
+% \letx{(x_1,x_2)}{t}{t}
+% $$
+% \noindent \textbf{Case} 
+% $$
+% t[]
+% $$
+% By induction hypothesis, we have $\eval{t}{\Lambda.t'}{m}$.\\
+% By applying the \rname{E-IAPP} rule, we get: $\eval{t[]}{t'}{m}$.\\
+% This case is proved.
+
+
+% \noindent \textbf{Case} 
+% $$
+% M(t)
+% $$
+% By induction hypothesis, we have $\eval{t}{F}{m}$.\\
+% By applying the \rname{E-MECH} rule, we get: $\eval{M(t)}{M(F)}{m}$, this case is proved.
+
+% \noindent \textbf{Case} 
+% $$ 
+% \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  
+% $$
+% By induction hypothesis, we have $\eval{t}{F}{m}$ and $\eval{t_i}{F_i}{m_i}$.\\
+% By applying the \rname{E-CASE} rule, we get:\\
+% $\eval{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}}{\tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b}}{m + m_i}$.\\
+% This case is proved.
+
+% \end{proof}
+\newpage
+\begin{theorem} [Substitution] $ $
+\label{thm:sub}
+\begin{enumerate}
+    \item If $\Gamma \jtype{n_1}{}{t_1}{\tau_1}$  and   $\Delta, x: \tau_1 \jtype{n_2}{}{t_2}{\tau_2}$ then $max(\Gamma, \Delta) \jtype{\max{(n_1, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+    \item If $\Gamma \jtype{n_1}{}{ t_1}{!_p \tau_1}$  and   $\Delta, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$ then $max(\Gamma, \Delta) \jtype{\max{(n_1 + p, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+\end{enumerate}
+\end{theorem}
+   \[
+   \begin{array}{ccc}
+     c [t_1/x]    & ::=& c  \\
+     M(t) [t_1/x] &   & M(t[t_1/x]) \\
+     x [t_1/x] && t_1 \\
+     y [t_1/x] && y \\
+     (\app{t}{t'}) [t_1/x] && \app{t[t_1/x]}{t'[t_1/x]}\\
+     (\abs{y}{t}) [t_1/x] && \abs{y}{t[t_1/y]} \\
+     (\letx{y}{t}{t'})[t_1/x] && \letx{y}{t[t_1/x]}{t'[t_1/x]}\\
+   \end{array}
+\]
+
+\begin{proof} of \ref{thm:sub}.1 \\
+  The theorem is proved by induction on the typing derivation of the second premise $\Delta, x: \tau_1 \jtype{n_2}{}{t_2}{\tau_2} $. Assume we know $\Gamma \jtype{n_1}{}{t_1}{\tau_1} ~ (\diamond)$.
+
+\noindent \textbf{Case} 
+$$
+   \inferrule*[right = const]
+   {\empty}
+   {\Delta, x: \tau_1 \jtype{n}{}{c}{b} ~(\star) }
+$$
+where $t_2 = c$, $\tau_2 = b$ and $n_2 = n$.\\
+To show: $\max(\Gamma, \Delta) \jtype{\max{(n_1, n)}}{}{c[t_1/x]}{b} $.\\
+Because $c[t_1/x] = c$, it suffices to show $\max(\Gamma, \Delta) \jtype{\max{(n_1, n)}}{}{c}{b} $.\\
+This case is proved by applying the $\rname{CONST}$ rule. 
+
+\noindent \textbf{Case} 
+$$
+    \inferrule*[right = query]
+   {\empty}
+   {\Delta, x: \tau_1 \jtype{n}{}{q}{query} ~ (\star) }
+$$
+where $t_2 = q$, $\tau_2 = query$ and $n_2 = n$.\\
+To show: $\max{\Gamma, \Delta} \jtype{\max{(n_1, n)}}{}{q[t_1/x]}{query} $.\\
+Because $q[t_1/x] = q$, it suffices to show: $max(\Gamma, \Delta) \jtype{\max{(n_1, n)}}{}{q}{query} $.\\
+This case is proved by applying the $\rname{QUERY}$ rule. 
+
+
+\noindent \textbf{Case} 
+
+\noindent \textbf{SubCase 1} 
+$$
+    \inferrule*[ right = var]
+   {\empty}
+   {\Delta, x:\tau_1 \jtype{n}{}{x}{\tau_1}  } 
+$$
+where $t_2 = x$, $\tau_2 = \tau_1$ and $n_2 = n$.\\
+To show $\max{(\Gamma, \Delta)} \jtype{\max{(n_1, n)}}{}{x[t_1/x]}{\tau_1} $.\\
+it suffices to show $\max{(\Gamma, \Delta)} \jtype{\max{(n_1, n_2)}}{}{t_1}{\tau_1}$.\\
+This case is proved by applying Lemma \ref{lem:coweaken1} and \ref{lem:coweaken2} on $(\diamond)$.
+
+\noindent \textbf{SubCase 2} 
+$$
+    \inferrule*[ right = var]
+   {\empty}
+   {\Delta, x:\tau_1, y : \tau_2 \jtype{n}{}{y}{\tau_2}} 
+$$
+where $t_2 = y$ and $n_2 = n$.\\ 
+To show $\max{(\Gamma, \Delta, y : \tau_2)} \jtype{\max{(n_1, n)}}{}{y[t_1/x]}{\tau_2} $.\\
+it suffices to show $\max{(\Gamma, \Delta, y : \tau_2)} \jtype{n}{}{y}{\tau_2}$.\\
+This case is proved by applying the rule \rname{VAR}.
+
+\noindent \textbf{Case} 
+$$
+    \inferrule*[right = abs]
+   {\Delta, x: \tau_1, y: \tau_1' \jtype{n}{}{t}{\tau_2'}~(\star)}
+   { \Delta, x: \tau_1 \jtype{n}{}{\abs{y}{t}}{\tau_1' \multimap \tau_2'}  }
+$$
+where $t_2 = \abs{y}{t}$, $\tau_2 = \tau_1' \multimap \tau_2'$ and $n_2 = n$.\\
+To show $\max{(\Gamma, \Delta)} \jtype{\max{(n_1, n)}}{}{\abs{y}{t}[t_1/x]}{\tau_1' \multimap \tau_2'}$.\\
+By applying Lemma \ref{lem:coex}  and induction hypothesis on $(\star)$, we get:\\ $\max{(\Gamma, \Delta,  y: \tau_1')} \jtype{\max{(n_1, n_2)}}{}{{t}[t_1/x]}{ \tau_2'}$ $(\star \star)$.\\
+By applying the $\rname{ABS}$ rule on $(\star \star)$, we get: $\max{(\Gamma, \Delta)} \jtype{\max{(n_1, n_2)}}{}{\abs{y}{({t}[t_1/x])}}{\tau_1' \multimap \tau_2'}$, this case is proved.\\
+
+\noindent \textbf{Case} 
+
+$$
+   \inferrule*[ right = MT ]
+   {[\Delta_2] \jtype{n}{}{t}{query} ~ (\star)}
+   {\Delta_1, 1 + [\Delta_2], x: \tau_1 \jtype{n+1}{}{M(t)}{b}  }
+$$
+Where $\Delta = \Delta_1, 1 + [\Delta_2] $, $t_2 = M(t)$, $\tau_2 = b$  and $n_2 = n + 1$.\\
+To show $\max(\Gamma, \Delta_1, 1 + [\Delta_2]) \jtype{\max{(n_1, n + 1)}}{}{M(t)[t_1/x]}{b} $.\\
+We know $x \not \in \fcv{[\Delta_2]} \land [\Delta_2] \jtype{n}{}{t}{query}  \implies x \not \in \fv{t} $. \\
+So we know $t = t[t_1/x] \implies [\Delta_2] \jtype{n}{}{t[t_1/x]}{query}(\star\star)$ \\
+By applying the $\rname{MT}$ rule on $(\star \star)$ we get:\\
+$\max(\Delta_1, 1 + [\Delta_2]) \jtype{1 + n}{}{M(t)[t_1/x]}{b}~(\clubsuit)$\\
+This case is proved using Lemma~\ref{lem:coex}, Lemma~\ref{lem:deweaken1} on ($\clubsuit$).\\
+
+
+\noindent \textbf{Case} 
+$$
+  \inferrule*[ right = app ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
+   { \max(\Gamma_1, \Gamma_2) \jtype{\max(n_1',n_2')}{}{\app{t_1'}{t_2'}}{\tau_2}  }
+$$
+There are three sub cases depending on whether $x \in \fcv{\Gamma_1}$ and $\fcv{\Gamma_2}$.\\
+
+ \textbf{SubCase 1} 
+$$
+  \inferrule*[ right = app ]
+   {\Delta_1, x: \tau_1 \jtype{n_1'}{}{t_1'}{\tau_1 \rightarrow \tau_2} ~(\star) \\ \Delta_2 \jtype{n_2'}{}{t_2'}{\tau_1} ~ (\clubsuit)}
+   { \max(\Delta_1, x: \tau_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\app{t_1'}{t_2'}}{\tau_2} }
+$$
+where $x \not \in \fcv{\Delta_2}$. \\
+$\Delta = \max(\Delta_1, \Delta_2)$, $t_2 = \app{t_1'}{t_2'}$ and $n_2 = \max(n_1',n_2')$.\\
+To show $\max(\Gamma,\max(\Delta_1, \Delta_2))\jtype{\max(n_1, \max(n_1',n_2'))}{}{\app{t_1'}{t_2'}[t_1/x]}{\tau_2} $.\\
+it suffices to show $\max(\Gamma,\Delta_1, \Delta_2)\jtype{\max(n_1, n_1',n_2')}{}{\app{t_1'}{t_2'}[t_1/x]}{\tau_2} $.\\
+By induction hypothesis on $(\star)$, we get: 
+$\max(\Gamma,\Delta_1)\jtype{\max(n_1, n_1')}{}{t_1'[t_1/x]}{\tau_1 \rightarrow \tau_2}~(\star \star) $.\\
+Because $x \not \in \fcv{\Delta_2} \implies t_2'[t_1/x] = t_2'$.\\
+By applying $\rname{APP}$ on $(\star \star)$ and $(\clubsuit)$, we get:
+$\max(\max(\Gamma,\Delta_1), \Delta_2)\jtype{\max(\max(n_1, n_1'),n_2')}{}{(\app{t_1'}{t_2'})[t_1/x]}{\tau_2} $.\\
+This case is proved.\\
+
+ \textbf{SubCase 2} 
+$$
+  \inferrule*[ right = app ]
+   {\Delta_1 \jtype{n_1'}{}{t_1'}{\tau_1 \rightarrow \tau_2} ~(\star) \\ \Delta_2, x: \tau_1 \jtype{n_2'}{}{t_2'}{\tau_1} ~ (\clubsuit)}
+   { \max(\Delta_1 \Delta_2, x: \tau_1) \jtype{\max(n_1',n_2')}{}{\app{t_1'}{t_2'}}{\tau_2} }
+$$
+where $x \not \in \fcv{\Delta_1}$ .\\
+This case is proved by induction hypothesis on $(\clubsuit)$ and applying $\rname{APP}$ rule.\\
+
+ \textbf{SubCase 3} 
+$$
+  \inferrule*[ right = app ]
+   {\Delta_1, x: \tau_1 \jtype{n_1'}{}{t_1'}{\tau_1 \rightarrow \tau_2}~(\star) \\ \Delta_2, x: \tau_1 \jtype{n_2'}{}{t_2'}{\tau_1}~(\clubsuit)}
+   { \max(\Delta_1, \Delta_2, x: \tau_1) \jtype{\max(n_1',n_2')}{}{\app{t_1'}{t_2'}}{\tau_2}  }
+$$
+TS: $\max(\Gamma, \max( \Delta_1, \Delta_2) ) \jtype{\max(n_1, \max(n_1',n_2'))}{}{\app{t_1'}{t_2'}}{\tau_2} $. \\
+This case is proved by induction hypothesis on both $(\clubsuit)$ and $(\star)$ and then applying $\rname{APP}$ rule.\\
+
+\noindent \textbf{Case} 
+$$
+   \inferrule*[ right = der ]
+   {\Delta', x:\tau_1, y: \tau \jtype{n}{}{t_2}{ \tau_2 }~ (\star)}
+   { \Delta' ,  x:\tau_1, y: [\tau]_p \jtype{n}{}{t_2}{\tau_2}  }
+$$
+where $\Delta = \Delta', y: [\tau]_p$, $n_2 = n$.\\
+To show $\max(\Gamma, \Delta', y: [\tau]_p) \jtype{\max(n_1, n)}{}{t_2[t_1/x]}{\tau_2}$.\\
+By induction hypothesis on $(\star)$, we get:
+$\max(\Gamma, \Delta', y: \tau) \jtype{\max(n_1, n)}{}{t_2[t_1/x]}{\tau_2} (\star \star)$.\\
+By applying the $\rname{DER}$ rule on $(\star \star)$, we get:
+$\max(\Gamma, \Delta', y: [\tau]_p) \jtype{\max(n_1, n)}{}{t_2[t_1/x]}{\tau_2}$.\\
+This case is proved.\\
+
+
+\noindent \textbf{Case} 
+\[
+   \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, y: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!y}{t}{t'}}{\tau'}  }
+\]
+There are three sub cases.
+
+\textbf{Subcase 1: x $\not \in \fcv{\Delta_2}$ }
+\[
+   \inferrule*[ right = let ]
+   {\Delta_1, x: \tau_1 \jtype{n_1'}{}{t}{!_p \tau}~(\star) \\ \Delta_2, y: [\tau]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: \tau_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{!y}{t}{t'}}{\tau'}  }
+\]
+ TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\letx{!y}{t}{t'})[t_1/x] }{\tau'}  $. \\
+ By IH on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1,n_1') }{}{t[t_1/x]}{!_p \tau}~(\star\star) $. \\
+ $x \not \in \fcv{\Delta_2} \implies t'[t_1/x] =  t'$.\\
+ It is proved by the rule \rname{LET} using ($\star\star$) and ($\clubsuit$). \\
+
+\textbf{Subcase 2: x $\not \in \fcv{\Delta_1}$ }
+\[
+   \inferrule*[ right = let ]
+   {\Delta_1 \jtype{n_1'}{}{t}{!_p \tau}~(\star) \\ \Delta_2, x: \tau_1, y: [\tau]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: \tau_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{!y}{t}{t'}}{\tau'}  }
+\]
+ TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\letx{!y}{t}{t'})[t_1/x] }{\tau'}  $. \\
+By IH on ($\clubsuit$), we get $\max(\Gamma, \Delta_2),y:[\tau]_p \jtype{\max(n_1,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+ $x \not \in \fcv{\Delta_1} \implies t[t_1/x] = t $.\\
+It is proved by the rule \rname{LET} using ($\star$) and ($\clubsuit\clubsuit$). \\
+
+\textbf{Subcase 3 }
+\[
+   \inferrule*[ right = let ]
+   {\Delta_1, x:\tau_1 \jtype{n_1'}{}{t}{!_p \tau}~(\star) \\ \Delta_2, x: \tau_1, y: [\tau]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: \tau_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{!y}{t}{t'}}{\tau'}  }
+\]
+TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\letx{!y}{t}{t'})[t_1/x] }{\tau'}  $. \\
+By IH on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1,n_1') }{}{t[t_1/x]}{!_p \tau}~(\star\star) $. \\
+By IH on ($\clubsuit$), we get $\max(\Gamma, \Delta_2),y:[\tau]_p \jtype{\max(n_1,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+It is proved by the rule \rname{LET} using ($\star\star$) and ($\clubsuit\clubsuit$).\\
+
+\noindent \textbf{Case} 
+\[
+   \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1'}{}{t}{\tau_1' \times \tau_2' } \\ \Gamma_2, x_1: \tau_1', x_2 : \tau_2' \jtype{n_2'}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1',n_2')}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+\]
+There are three sub cases.\\
+\textbf{Subcase 1: x $\not \in \fcv{\Delta_2}$ }
+\[
+   \inferrule*[ right = let-p ]
+   {\Delta_1, x: \tau_1 \jtype{n_1'}{}{t}{\tau_1' \times \tau_2'}~(\star) \\ \Delta_2, x_1:\tau_1', x_2: \tau_2' \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: \tau_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{(x_1,x_2)}{t}{t'}}{\tau'}  }
+\]
+ TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\letx{(x_1,x_2)}{t}{t'})[t_1/x] }{\tau'}  $. \\
+ By IH on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1,n_1') }{}{t[t_1/x]}{\tau_1' \times \tau_2'}~(\star\star) $. \\
+ $x \not \in \fcv{\Delta_2} \implies t'[t_1/x] =  t'$.\\
+ It is proved by the rule \rname{LET-P} using ($\star\star$) and ($\clubsuit$). \\
+
+\textbf{Subcase 2: x $\not \in \fcv{\Delta_1}$ }
+\[
+   \inferrule*[ right = let-p ]
+   {\Delta_1 \jtype{n_1'}{}{t}{\tau_1' \times \tau_2'}~(\star) \\ \Delta_2, x_1:\tau_1', x_2: \tau_2' , x: \tau_1 \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: \tau_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{(x_1,x_2)}{t}{t'}}{\tau'}  }
+\]
+ TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\letx{(x_1,x_2)}{t}{t'})[t_1/x] }{\tau'}  $. \\
+By IH on ($\clubsuit$), we get $\max(\Gamma, \Delta_2), x_1:\tau_1', x_2: \tau_2'  \jtype{\max(n_1,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+ $x \not \in \fcv{\Delta_1} \implies t[t_1/x] = t $.\\
+It is proved by the rule \rname{LET-P} using ($\star$) and ($\clubsuit\clubsuit$). \\
+
+\textbf{Subcase 3 }
+\[
+    \inferrule*[ right = let-p ]
+   {\Delta_1 , x: \tau_1 \jtype{n_1'}{}{t}{\tau_1' \times \tau_2'}~(\star) \\ \Delta_2, x_1:\tau_1', x_2: \tau_2' , x: \tau_1 \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: \tau_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{(x_1,x_2)}{t}{t'}}{\tau'}  }
+\]
+TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\letx{(x_1,x_2)}{t}{t'} )[t_1/x] }{\tau'}  $. \\
+By IH on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1,n_1') }{}{t[t_1/x]}{\tau_1' \times \tau_2'}~(\star\star) $. \\
+By IH on ($\clubsuit$), we get $\max(\Gamma, \Delta_2),x_1: \tau_1', x_2:\tau_2' \jtype{\max(n_1,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+It is proved by the rule \rname{LET-P} using ($\star\star$) and ($\clubsuit\clubsuit$).\\
+
+
+\noindent \textbf{Case} 
+\[
+     \inferrule*[right = pair]
+   {\Gamma_1 \jtype{n_1'}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2'}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1',n_2')}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+\]
+There are three sub cases,$x$ only in $\Gamma_1$,  $x$ only in $\Gamma_2$ and $x$  appears in both $\Gamma_1$ and $\Gamma_2$. When $x$ only in $\Gamma_1$, it is proved by ih on the first premise and then using the rule \rname{PAIR}. When $x$ only in $\Gamma_2$, it is proved by ih on the second premise and then using the rule \rname{PAIR}. When $x$  appears in both $\Gamma_1$ and $\Gamma_2$, it is proved by ih on both premises and then using rule \rname{PAIR}.\\
+
+\noindent \textbf{Case} 
+\[
+    \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1'}{}{t}{b} \\ \Gamma_2 \jtype{n_2'}{}{t_i}{b} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+There are three sub cases.\\
+
+\textbf{Subcase 1: x $\not \in \fcv{\Delta_2}$ }
+\[
+   \inferrule*[ right = case-const ]
+   {\Delta_1, x: \tau_1 \jtype{n_1'}{}{t}{b}~(\star) \\ \Delta_2 \jtype{n_2'}{}{t_i}{b}~(\clubsuit) }
+   {\max(\Delta_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+ TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b})[t_1/x] }{b}  $. \\
+ By IH on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1,n_1') }{}{t[t_1/x]}{b}~(\star\star) $. \\
+ $x \not \in \fcv{\Delta_2} \implies t_i[t_1/x] =  t_i$.\\
+ It is proved by the rule \rname{CASE-CONST} using ($\star\star$) and ($\clubsuit$). \\
+
+\textbf{Subcase 2: x $\not \in \fcv{\Delta_1}$ }
+\[
+     \inferrule*[ right = case-const ]
+   {\Delta_1 \jtype{n_1'}{}{t}{b}~(\star) \\ \Delta_2, x: \tau_1 \jtype{n_2'}{}{t_i}{b}~(\clubsuit) }
+   {\max(\Delta_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+ TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b})[t_1/x] }{b}  $. \\
+By IH on ($\clubsuit$), we get $\max(\Gamma, \Delta_2) \jtype{\max(n_1,n_2') }{}{t_i[t_1/x]}{b}~(\clubsuit\clubsuit) $. \\
+ $x \not \in \fcv{\Delta_1} \implies t[t_1/x] = t $.\\
+It is proved by the rule \rname{CASE-CONST} using ($\star$) and ($\clubsuit\clubsuit$). \\
+
+\textbf{Subcase 3 }
+\[
+    \inferrule*[ right = case-const ]
+   {\Delta_1 , x: \tau_1 \jtype{n_1'}{}{t}{b}~(\star) \\ \Delta_2, x: \tau_1 \jtype{n_2'}{}{t_i}{b}~(\clubsuit) }
+   {\max(\Delta_1, \Delta_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+ TS: $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1,\max(n_1',n_2') )}{}{  (\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b})[t_1/x] }{b}  $. \\
+By IH on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1,n_1') }{}{t[t_1/x]}{b}~(\star\star) $. \\
+By IH on ($\clubsuit$), we get $\max(\Gamma, \Delta_2) \jtype{\max(n_1,n_2') }{}{t_i[t_1/x]}{b}~(\clubsuit\clubsuit) $.. \\
+It is proved by the rule \rname{CASE-CONST} using ($\star\star$) and ($\clubsuit\clubsuit$).\\
+
+
+
+\noindent \textbf{Case} 
+\[
+    \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1'}{}{t}{b} \\ \Gamma_2 \jtype{n_2'}{}{t_i}{query} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+\]
+There are three sub cases. Thre proof are quite similar as the one of \emph{CASE-CONST}.\\
+
+\noindent \textbf{Case} 
+\[
+   \inferrule*[right = iabs]
+  { 
+    \inferrule*[]
+    {}
+    {i::\mathbb{N};\Delta,x:\tau_1 \jtype{n}{}{t}{ \tau } ~(\star)}
+    \and
+    \inferrule*[]
+    {}
+    { i \notin \fiv{\Delta,x:\tau_1}  } 
+  }
+  { \Delta, x:\tau_1 \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+ \]
+ TS: $\max(\Gamma, \Delta) \jtype{\max(n_1,n)}{}{\Lambda.t[t_1/x] }{\tforallN{i}{\tau}} $.\\
+ By ih on ($\star$), we get : $ i :: \mathbb{N};\max(\Gamma, \Delta) \jtype{\max(n_1,n)}{}{t[t_1/x]}{\tau}(\star\star)$.\\
+ There are two cases.\\
+ \textbf{Sub case 1: $i \not \in \fiv{\Gamma}$}
+  It is proved by using rule \rname{IABS} with $(\star\star)$.\\
+  \textbf{Sub case 2: $i \in \fiv{\Gamma}$}
+  We choose $j \not \in \fiv{\max(\Gamma,\Delta)}$. We rename all the $i$ to $j$ in $(\star\star)$ and use rule \rname{IABS} to get:
+  $ \max(\Gamma, \Delta) \jtype{\max(n_1,n)}{}{\Lambda.t[t_1/x] }{\tforallN{j}{\tau}}$. It is just a renaming version of the goal.
+ 
+
+\noindent \textbf{Case} 
+\[ 
+   \inferrule*[ right =  iapp]
+  { 
+    \inferrule*[]
+    {}
+    { \Delta, x:\tau_1  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } (\star) }
+    \and
+    \inferrule*[]
+    {}
+    { \jiterm{I}{ \mathbb{N} } } 
+  }
+  {\Delta, x:\tau_1 \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+\]
+TS: $ \max(\Gamma, \Delta) \jtype{\max(n_1,n)}{}{t[t_1/x] \, []}{ \tau \{ I/i \} } $.\\
+By ih on $(\star)$, we get: $ \max(\Gamma,\Delta)  \jtype{\max(n_1,n)}{}{t}{ \tforallN{i}{\tau} } ~ (\star\star) $.\\
+It is proved by the rule \rname{IAPP} with $(\star\star)$.\\
+
+\noindent \textbf{Case} 
+$$
+  \inferrule*[right = sub]
+  { 
+   { \Delta, x:\tau_1 \jtype{n}{}{t}{\tau} ~(\star) } \\
+   { \Delta, x:\tau_1 \subseteq \Delta',x:\tau_1 ~ (\clubsuit) }  \\
+   { \vDash n \leq n' } ~(\spadesuit) \\
+   { \tau \subseteq \tau' }
+  }
+  { \Delta',x:\tau_1 \jtype{n'}{}{t}{\tau'} }
+$$
+TS: $ \max(\Gamma, \Delta') \jtype{\max(n',n_1)}{}{t}{\tau'}$.\\
+By ih on ($\star$), we get : $\max(\Gamma, \Delta) \jtype{\max(n,n_1)}{}{t}{\tau} $.\\
+$(\clubsuit) \implies \max(\Gamma,\Delta) \subseteq \max(\Gamma,\Delta')~(\clubsuit\clubsuit) $.\\
+$ (\spadesuit) \implies  \vDash \max(n_1,n) \leq \max(n_1,n') $.\\
+It is proved by the rule \rname{SUB}.\\
+
+
+\noindent \textbf{Case}
+\[
+\inferrule*[right = pr]
+   {[\Delta_2] \jtype{n}{}{t}{\tau}}
+   {\Delta_1, p + [\Delta_2], x:\tau_1 \jtype{n}{}{!t}{!_p \tau}  }
+\]
+TS: $\max(\Gamma,(\Delta_1, p+[\Delta_2]) ) \jtype{\max(n_1, n)}{}{!t[t_1/x]}{!_p \tau}$.\\
+$x \not \in [\Delta_2] \implies [\Delta_2] \jtype{n}{}{t[t_1/x]}{\tau}(\star)$.\\
+By rule \rname{PR} with $(\star)$, we get: $\Delta_1, p+[\Delta_2] \jtype{n}{}{!t[t_1/x]}{!_p \tau} $.
+It is proved by the Lemma \ref{lem:coex} and Lemma~\ref{lem:deweaken1} from the conclusion.
+
+\end{proof}
+
+
+
+\newpage
+\begin{proof} of \ref{thm:sub}.2 \\
+  The theorem is proved by induction on the typing derivation of the second premise $\Delta, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$. Assume we know $\Gamma \jtype{n_1}{}{t_1}{!_p \tau_1}~(\diamond)$.
+
+
+$$
+   \inferrule*[right = const]
+   {\empty}
+   {\Delta, x: [\tau_1]_p \jtype{n}{}{c}{b} ~(\star) }
+$$
+where $t_2 = c$, $\tau_2 = b$ and $n_2 = n$.\\
+To show: $\max(\Gamma, \Delta) \jtype{\max{(n_1 + p, n)}}{}{c[t_1/x]}{b} $.\\
+Because $c[t_1/x] = c$, it suffices to show $\max(\Gamma, \Delta) \jtype{\max{(n_1 + p, n)}}{}{c}{b} $.\\
+This case is proved by applying the $\rname{CONST}$ rule. 
+
+
+\noindent \textbf{Case} 
+$$
+    \inferrule*[right = query]
+   {\empty}
+   {\Delta, x: [\tau_1]_p  \jtype{n}{}{q}{query} ~ (\star) }
+$$
+where $t_2 = q$, $\tau_2 = query$ and $n_2 = n$.\\
+To show: $\max{\Gamma, \Delta} \jtype{\max{(n_1 + p, n)}}{}{q[t_1/x]}{query} $.\\
+Because $q[t_1/x] = q$, it suffices to show: $max(\Gamma, \Delta) \jtype{\max{(n_1, n)}}{}{q}{query} $.\\
+This case is proved by applying the $\rname{QUERY}$ rule. 
+
+
+\noindent \textbf{Case} 
+
+ \textbf{Subcase 1} 
+$$
+    \inferrule*[ right = var]
+   {\empty}
+   {\Delta, x:[\tau_1]_p \jtype{n}{}{x}{!_p \tau_1 }  } 
+$$
+where $t_2 = x$, $\tau_2 = !_p \tau_1$ and $n_2 = n$.\\
+To show $\max{(\Gamma, \Delta)} \jtype{\max{(n_1 + p, n)}}{}{x[t_1/x]}{!_p \tau_1} $.\\
+it suffices to show $\max{(\Gamma, \Delta)} \jtype{\max{(n_1 + p, n_2)}}{}{t_1}{!_p \tau_1}$.\\
+This case is proved by applying Lemma \ref{lem:coweaken1} and \ref{lem:coweaken2} on $(\diamond)$.
+
+ \textbf{Subcase 2} 
+$$
+    \inferrule*[ right = var]
+   {\empty}
+   {\Delta, x:[\tau_1]_p, y : \tau_2 \jtype{n}{}{y}{\tau_2}} 
+$$
+where $t_2 = y$ and $n_2 = n$.\\ 
+To show $\max{(\Gamma, \Delta, y : \tau_2)} \jtype{\max{(n_1 + p, n)}}{}{y[t_1/x]}{\tau_2} $.\\
+it suffices to show $\max{(\Gamma, \Delta, y : \tau_2)} \jtype{n}{}{y}{\tau_2}$.\\
+This case is proved by applying the rule \rname{VAR}.
+
+\noindent \textbf{Case} 
+$$
+    \inferrule*[right = abs]
+   {\Delta, x: [\tau_1]_p, y: \tau_1' \jtype{n}{}{t}{\tau_2'}~(\star)}
+   { \Delta, x: [\tau_1]_p \jtype{n}{}{\abs{y}{t}}{\tau_1' \multimap \tau_2'}  }
+$$
+where $t_2 = \abs{y}{t}$, $\tau_2 = \tau_1' \multimap \tau_2'$ and $n_2 = n$.\\
+To show $\max{(\Gamma, \Delta)} \jtype{\max{(n_1 + p, n)}}{}{\abs{y}{t}[t_1/x]}{\tau_1' \multimap \tau_2'}$.\\
+By applying Lemma \ref{lem:coex}  and induction hypothesis on $(\star)$, we get:\\ $\max{(\Gamma, \Delta,  y: \tau_1')} \jtype{\max{(n_1 + p, n_2)}}{}{{t}[t_1/x]}{ \tau_2'}$ $(\star \star)$.\\
+By applying the $\rname{ABS}$ rule on $(\star \star)$, we get: $\max{(\Gamma, \Delta)} \jtype{\max{(n_1 + p, n_2)}}{}{\abs{y}{({t}[t_1/x])}}{\tau_1' \multimap \tau_2'}$, this case is proved.\\
+
+
+\noindent \textbf{Case} 
+$$
+   \inferrule*[ right = MT ]
+   {[\Delta_2], x: [\tau_1]_{p-1} \jtype{n}{}{t}{query} ~ (\star)}
+   {\Delta_1, 1 + [\Delta_2], x: [\tau_1]_{p} \jtype{n+1}{}{M(t)}{b}  }
+$$
+Where $\Delta = \Delta_1, 1 + [\Delta_2] $, $t_2 = M(t)$, $\tau_2 = b$ and $n_2 = n + 1$.\\
+To show $max(\Gamma, \Delta_1, 1 + [\Delta_2]) \jtype{\max{(n_1 + p, n + 1)}}{}{M(t)[t_1/x]}{b} $.\\
+By induction hypothesis on $ (\star)$, we get:
+$max(\Gamma, [\Delta_2]) \jtype{\max{(n_1 + p - 1, n)}}{}{t[t_1/x]}{query}~ (\star \star)$.\\
+By applying the $\rname{MT}$ rule on $~ (\star \star)$, we get: 
+$\Delta_1, max(\Gamma, 1 + [\Delta_2]) \jtype{1 + \max{(n_1 + p - 1, n)}}{}{M(t[t_1/x])}{b}$.\\
+Because $\Delta_1$ and $\Delta_2$ are disjoint and $1 + \max{(n_1 + p - 1, n)} = \max{(n_1 + p, n + 1)}$, we get: \\
+$\max(\Gamma,(\Delta_1, 1 + [\Delta_2])) \jtype{\max{(n_1 + p, n + 1)}}{}{M(t)[t_1/x]}{b}$.\\
+This case is proved.
+
+
+\noindent \textbf{Case} 
+$$
+  \inferrule*[ right = app ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
+   { \max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+$$
+There are three sub cases depending on whether $x \in \fcv{\Gamma_1}$ and $\fcv{\Gamma_2}$.\\
+
+ \textbf{Subcase 1 x $\not \in \fcv{\Delta_2}$ } 
+$$
+  \inferrule*[ right = app ]
+   {\Delta_1, x: [\tau_1]_p \jtype{n_1'}{}{t_1'}{\tau_1 \rightarrow \tau_2} ~(\star) \\ \Delta_2 \jtype{n_2'}{}{t_2'}{\tau_1} ~ (\clubsuit)}
+   { \max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\app{t_1'}{t_2'}}{\tau_2} }
+$$
+where $\Delta = \max(\Delta_1, \Delta_2)$, $t_2 = \app{t_1'}{t_2'}$ and $n_2 = \max(n_1',n_2')$.\\
+To show $\max(\Gamma,\max(\Delta_1, \Delta_2))\jtype{\max(n_1 + p, \max(n_1',n_2'))}{}{\app{t_1'}{t_2'}[t_1/x]}{\tau_2} $.\\
+it suffices to show $\max(\Gamma,\Delta_1, \Delta_2)\jtype{\max(n_1 + p, n_1',n_2')}{}{\app{t_1'}{t_2'}[t_1/x]}{\tau_2} $.\\
+By induction hypothesis on $(\star)$, we get: 
+$\max(\Gamma,\Delta_1)\jtype{\max(n_1 + p, n_1')}{}{t_1'[t_1/x]}{\tau_1 \rightarrow \tau_2} ~ (\star \star)$.\\
+Because $x \not \in \fcv{\Delta_2} \implies t_2'[t_1/x] = t_2'$.\\
+By applying $\rname{APP}$ on $(\star \star)$ and $(\clubsuit)$, we get:
+$\max(\max(\Gamma,\Delta_1), \Delta_2)\jtype{\max(\max(n_1 + p, n_1'),n_2')}{}{(\app{t_1'}{t_2'})[t_1/x]}{\tau_2} $.\\
+This case is proved.\\
+
+\textbf{Subcase 2 x $\not \in \fcv{\Delta_1}$ } 
+$$
+  \inferrule*[ right = app ]
+   {\Delta_1 \jtype{n_1'}{}{t_1'}{\tau_1 \rightarrow \tau_2} ~(\star) \\ \Delta_2, x: [\tau_1]_p \jtype{n_2'}{}{t_2'}{\tau_1} ~ (\clubsuit)}
+   { \max(\Delta_1 \Delta_2, x: [\tau_1]_p) \jtype{\max(n_1',n_2')}{}{\app{t_1'}{t_2'}}{\tau_2} }
+$$
+This case is proved by induction hypothesis on $(\clubsuit)$ and applying $\rname{APP}$ rule.\\
+
+ \textbf{Subcase 3} 
+$$
+  \inferrule*[ right = app ]
+   {\Delta_1, x: [\tau_1]_p \jtype{n_1'}{}{t_1'}{\tau_1 \rightarrow \tau_2}~(\star) \\ \Delta_2, x: [\tau_1]_p \jtype{n_2'}{}{t_2'}{\tau_1}~(\clubsuit)}
+   { \max(\Delta_1, \Delta_2, x: [\tau_1]_p) \jtype{\max(n_1',n_2')}{}{\app{t_1'}{t_2'}}{\tau_2}  }
+$$
+To show: $\max(\Gamma, \max( \Delta_1, \Delta_2) ) \jtype{\max(n_1 + p, \max(n_1',n_2'))}{}{\app{t_1'}{t_2'}}{\tau_2} $. \\
+This case is proved by induction hypothesis on both $(\clubsuit)$ and $(\star)$ and then applying $\rname{APP}$ rule.\\
+
+
+\noindent \textbf{Case} 
+$$
+   \inferrule*[ right = der ]
+   {\Delta, x: \tau \jtype{n}{}{t_2}{ \tau_2 }  }
+   { \Delta , x: [\tau]_p \jtype{n }{}{t_2 }{\tau_2 }  }
+$$
+
+\textbf{Subcase 1} 
+$$
+   \inferrule*[ right = der ]
+   {\Delta, x: \tau \jtype{n}{}{t_2}{ \tau_2 }  }
+   { \Delta , x: [\tau]_p \jtype{n}{}{t_2}{ \tau_2 }  }
+$$
+where  $n_2 = n$.\\
+To show $\max(\Gamma, \Delta) \jtype{\max(n_1 + p, n)}{}{t_2[t_1/x]}{\tau_2}$\\
+By induction hypothesis on $(\star)$, this case is proved.
+
+\textbf{Subcase 2} 
+$$
+   \inferrule*[ right = der ]
+   {\Delta', y: \tau, x : [\tau]_p \jtype{n}{}{t_2}{ \tau_2 } ~ (\star) }
+   {\Delta' , y: [\tau]_{p'}, x : [\tau]_p \jtype{n }{}{t_2 }{\tau_2 } }
+$$
+where $\Delta =\Delta', y: [\tau]_{p'} $ and $n_2 = n$.\\
+To show $\max(\Gamma, \Delta', y: [\tau]_{p'}) \jtype{\max(n_1 + p, n_2)}{}{t_2[t_1/x]}{\tau_2}$.\\
+By induction hypothesis on $(\star)$, we get: 
+$ \max(\Gamma, \Delta', y: \tau) \jtype{\max(n_1 + p, n)}{}{t_2[t_1/x]}{\tau_2} (\star \star)$.\\
+By applying $\rname{DER}$ rule on $(\star \star)$, we get:
+$ \max(\Gamma, \Delta', y: [\tau]_p') \jtype{\max(n_1 + p, n)}{}{t_2[t_1/x]}{\tau_2}$.\\
+This case is proved.
+
+
+\noindent \textbf{Case} 
+$$
+   \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+$$
+There are three sub cases.
+
+\textbf{Subcase 1: x $\not \in \fcv{\Delta_2}$ }
+\[
+   \inferrule*[ right = let ]
+   {\Delta_1, x: [\tau_1]_p \jtype{n_1'}{}{t}{!_p \tau}~(\star) \\ \Delta_2, y: [\tau]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{!y}{t}{t'}}{\tau'}  }
+\]
+where $\Delta = \max(\Delta_1, \Delta_2)$, $t_2 =\letx{!y}{t}{t'}$, $\tau_2 = \tau'$ and $n_2 = \max(n_1', n_2')$.\\
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{(\letx{!y}{t}{t'})[t_1/x] }{\tau'}  $. \\
+ By induction hypothesis on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1 + p,n_1') }{}{t[t_1/x]}{!_p \tau}~(\star\star) $. \\
+ $x \not \in \fcv{\Delta_2} \implies t'[t_1/x] =  t'$.\\
+ It is proved by the rule \rname{LET} using ($\star\star$) and ($\clubsuit$). \\
+
+\textbf{Subcase 2: x $\not \in \fcv{\Delta_1}$ }
+\[
+   \inferrule*[ right = let ]
+   {\Delta_1 \jtype{n_1'}{}{t}{!_p \tau}~(\star) \\ \Delta_2, x: [\tau_1]_p, y: [\tau]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{!y}{t}{t'}}{\tau'}  }
+\]
+where $\Delta = \max(\Delta_1, \Delta_2)$, $t_2 =\letx{!y}{t}{t'}$, $\tau_2 = \tau'$ and $n_2 = \max(n_1', n_2')$.\\
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\letx{!y}{t}{t'})[t_1/x] }{\tau'}$. \\
+By induction hypothesis on ($\clubsuit$), we get $\max(\Gamma, \Delta_2),y:[\tau]_p \jtype{\max(n_1 + p,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+ $x \not \in \fcv{\Delta_1} \implies t[t_1/x] = t $.\\
+It is proved by the rule \rname{LET} using ($\star$) and ($\clubsuit\clubsuit$). \\
+
+\textbf{Subcase 3 }
+\[
+   \inferrule*[ right = let ]
+   {\Delta_1, x:[\tau_1]_p \jtype{n_1'}{}{t}{!_p \tau}~(\star) \\ \Delta_2, x: [\tau_1], y: [\tau]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{!y}{t}{t'}}{\tau'}  }
+\]
+where $\Delta = \max(\Delta_1, \Delta_2)$, $t_2 =\letx{!y}{t}{t'}$, $\tau_2 = \tau'$ and $n_2 = \max(n_1', n_2')$.\\
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\letx{!y}{t}{t'})[t_1/x] }{\tau'}  $. \\
+By induction hypothesis on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1 + p,n_1') }{}{t[t_1/x]}{!_p \tau}~(\star\star) $. \\
+By induction hypothesis on ($\clubsuit$), we get $\max(\Gamma, \Delta_2),y:[\tau]_p \jtype{\max(n_1 + p,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+It is proved by the rule \rname{LET} using ($\star\star$) and ($\clubsuit\clubsuit$).\\
+
+\noindent \textbf{Case} 
+$$
+   \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+$$
+
+\textbf{Subcase 1: x $\not \in \fcv{\Delta_2}$ }
+\[
+   \inferrule*[ right = let-p ]
+   {\Delta_1, x: [\tau_1]_p \jtype{n_1'}{}{t}{\tau_1' \times \tau_2'}~(\star) \\ \Delta_2, x_1:\tau_1', x_2: \tau_2' \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{(x_1,x_2)}{t}{t'}}{\tau'}  }
+\]
+where $\Delta = \max(\Delta_1,\Delta_2)$, $t_2 = \letx{(x_1,x_2)}{t}{t'}$, $\tau_2 = \tau'$ and $n_2 =\max(n_1',n_2')$. \\
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\letx{(x_1,x_2)}{t}{t'})[t_1/x] }{\tau'}  $. \\
+By induction hypothesis on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1 + p, n_1') }{}{t[t_1/x]}{\tau_1' \times \tau_2'}~(\star\star) $. \\
+ $x \not \in \fcv{\Delta_2} \implies t'[t_1/x] =  t'$.\\
+ It is proved by the rule \rname{LET-P} using ($\star\star$) and ($\clubsuit$).\\
+
+\textbf{Subcase 2: x $\not \in \fcv{\Delta_1}$ }
+\[
+   \inferrule*[ right = let-p ]
+   {\Delta_1 \jtype{n_1'}{}{t}{\tau_1' \times \tau_2'}~(\star) \\ \Delta_2, x_1:\tau_1', x_2: \tau_2' , x: [\tau_1]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{(x_1,x_2)}{t}{t'}}{\tau'}  }
+\]
+where $\Delta = \max(\Delta_1,\Delta_2)$, $t_2 = \letx{(x_1,x_2)}{t}{t'}$, $\tau_2 = \tau'$ and $n_2 =\max(n_1',n_2')$. \\
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\letx{(x_1,x_2)}{t}{t'})[t_1/x] }{\tau'}  $. \\
+By induction hypothesis on ($\clubsuit$), we get $\max(\Gamma, \Delta_2), x_1:\tau_1', x_2: \tau_2'  \jtype{\max(n_1 + p,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+ $x \not \in \fcv{\Delta_1} \implies t[t_1/x] = t $.\\
+It is proved by the rule \rname{LET-P} using ($\star$) and ($\clubsuit\clubsuit$). \\
+
+\textbf{Subcase 3 }
+\[
+    \inferrule*[ right = let-p ]
+   {\Delta_1 , x: [\tau_1]_p \jtype{n_1'}{}{t}{\tau_1' \times \tau_2'}~(\star) \\ \Delta_2, x_1:\tau_1', x_2: \tau_2' , x: [\tau_1]_p \jtype{n_2'}{}{t'}{\tau'}~(\clubsuit)}
+   {  \max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\letx{(x_1,x_2)}{t}{t'}}{\tau'}  }
+\]
+where $\Delta = \max(\Delta_1,\Delta_2)$, $t_2 = \letx{(x_1,x_2)}{t}{t'}$, $\tau_2 = \tau'$ and $n_2 =\max(n_1',n_2')$. \\
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\letx{(x_1,x_2)}{t}{t'} )[t_1/x] }{\tau'}  $. \\
+By induction hypothesis on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1 + p, n_1') }{}{t[t_1/x]}{\tau_1' \times \tau_2'}~(\star\star) $. \\
+By induction hypothesis on ($\clubsuit$), we get $\max(\Gamma, \Delta_2),x_1: \tau_1', x_2:\tau_2' \jtype{\max(n_1 + p,n_2') }{}{t'[t_1/x]}{\tau'}~(\clubsuit\clubsuit) $. \\
+It is proved by the rule \rname{LET-P} using ($\star\star$) and ($\clubsuit\clubsuit$).\\
+
+\noindent \textbf{Case} 
+$$
+     \inferrule*[right = pair]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+$$
+There are three sub cases,$x$ only in $\Gamma_1$,  $x$ only in $\Gamma_2$ and $x$ appears in both $\Gamma_1$ and $\Gamma_2$. When $x$ only in $\Gamma_1$, it is proved by induction hypothesis on the first premise and then using the rule \rname{PAIR}. When $x$ only in $\Gamma_2$, it is proved by induction hypothesis on the second premise and then using the rule \rname{PAIR}. When $x$  appears in both $\Gamma_1$ and $\Gamma_2$, it is proved by induction hypothesis on both premises and then using rule \rname{PAIR}.\\
+
+\noindent \textbf{Case} 
+$$
+    \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+$$
+
+There are three sub cases.\\
+
+\textbf{Subcase 1: x $\not \in \fcv{\Delta_2}$ }
+\[
+   \inferrule*[ right = case-const ]
+   {\Delta_1, x: [\tau_1]_p \jtype{n_1'}{}{t}{b}~(\star) \\ \Delta_2 \jtype{n_2'}{}{t_i}{b}~(\clubsuit) }
+   {\max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+where $\Delta = \max(\Delta_1, \Delta_2)$, $t_2 =\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}$, $\tau_2 = b$ and $n_2 = \max(n_1', n_2')$.\\ 
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b})[t_1/x] }{b}  $. \\
+ By induction hypothesis on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1 + p, n_1') }{}{t[t_1/x]}{b}~(\star\star) $. \\
+ $x \not \in \fcv{\Delta_2} \implies t_i[t_1/x] =  t_i$.\\
+ It is proved by the rule \rname{CASE-CONST} using ($\star\star$) and ($\clubsuit$). \\
+
+\textbf{Subcase 2: x $\not \in \fcv{\Delta_1}$ }
+\[
+     \inferrule*[ right = case-const ]
+   {\Delta_1 \jtype{n_1'}{}{t}{b}~(\star) \\ \Delta_2, x: [\tau_1]_p \jtype{n_2'}{}{t_i}{b}~(\clubsuit) }
+   {\max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+where $\Delta = \max(\Delta_1, \Delta_2)$, $t_2 =\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}$, $\tau_2 = b$ and $n_2 = \max(n_1', n_2')$.\\ 
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b})[t_1/x] }{b}  $. \\
+By induction hypothesis on ($\clubsuit$), we get $\max(\Gamma, \Delta_2) \jtype{\max(n_1 + p, n_2') }{}{t_i[t_1/x]}{b}~(\clubsuit\clubsuit) $. \\
+ $x \not \in \fcv{\Delta_1} \implies t[t_1/x] = t $.\\
+It is proved by the rule \rname{CASE-CONST} using ($\star$) and ($\clubsuit\clubsuit$). \\
+
+\textbf{Subcase 3 }
+\[
+    \inferrule*[ right = case-const ]
+   {\Delta_1, x: [\tau_1]_p \jtype{n_1'}{}{t}{b}~(\star) \\ \Delta_2, x: [\tau_1]_p \jtype{n_2'}{}{t_i}{b}~(\clubsuit) }
+   {\max(\Delta_1, x: [\tau_1]_p, \Delta_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+\]
+where $\Delta = \max(\Delta_1, \Delta_2)$, $t_2 =\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}$, $\tau_2 = b$ and $n_2 = \max(n_1', n_2')$.\\ 
+To show $ \max(\Gamma, \max(\Delta_1,\Delta_2) ) \jtype{\max(n_1 + p,\max(n_1',n_2') )}{}{  (\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b})[t_1/x] }{b}  $. \\
+By induction hypothesis on ($\star$), we get $\max(\Gamma, \Delta_1) \jtype{\max(n_1 + p, n_1') }{}{t[t_1/x]}{b}~(\star\star) $. \\
+By induction hypothesis on ($\clubsuit$), we get $\max(\Gamma, \Delta_2) \jtype{\max(n_1 + p, n_2') }{}{t_i[t_1/x]}{b}~(\clubsuit\clubsuit) $.. \\
+It is proved by the rule \rname{CASE-CONST} using ($\star\star$) and ($\clubsuit\clubsuit$).\\
+
+
+
+\noindent \textbf{Case} 
+\[
+    \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1'}{}{t}{b} \\ \Gamma_2 \jtype{n_2'}{}{t_i}{query} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1',n_2')}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+\]
+There are three sub cases. Thre proof are quite similar as the one of $\rname{CASE-CONST}$.\\
+
+\noindent \textbf{Case} 
+\[
+   \inferrule*[right = iabs]
+  { 
+    \inferrule*[]
+    {}
+    {i::\mathbb{N};\Delta,x:[\tau_1]_p \jtype{n}{}{t}{ \tau } ~(\star)}
+    \and
+    \inferrule*[]
+    {}
+    { i \notin \fiv{\Delta,x:\tau_1}  } 
+  }
+  { \Delta, x:[\tau_1]_p \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+ \]
+To show $\max(\Gamma, \Delta) \jtype{\max(n_1 + p,n)}{}{\Lambda.t[t_1/x] }{\tforallN{i}{\tau}} $.\\
+ By induction hypothesis on ($\star$), we get : $ i :: \mathbb{N};\max(\Gamma, \Delta) \jtype{\max(n_1,n)}{}{t[t_1/x]}{\tau}(\star\star)$.\\
+ There are two cases.\\
+ \textbf{Sub case 1: $i \not \in \fiv{\Gamma}$}
+  It is proved by using rule \rname{IABS} with $(\star\star)$.\\
+  \textbf{Sub case 2: $i \in \fiv{\Gamma}$}
+  We choose $j \not \in \fiv{\max(\Gamma,\Delta)}$. We rename all the $i$ to $j$ in $(\star\star)$ and use rule \rname{IABS} to get:
+  $ \max(\Gamma, \Delta) \jtype{\max(n_1,n)}{}{\Lambda.t[t_1/x] }{\tforallN{j}{\tau}}$. It is just a renaming version of the goal.
+ 
+
+\noindent \textbf{Case} 
+\[ 
+   \inferrule*[ right =  iapp]
+  { 
+    \inferrule*[]
+    {}
+    { \Delta, x:[\tau_1]_p \jtype{n}{}{t}{ \tforallN{i}{\tau}   } (\star) }
+    \and
+    \inferrule*[]
+    {}
+    { \jiterm{I}{ \mathbb{N} } } 
+  }
+  {\Delta, x:[\tau_1]_p \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+\]
+To show $ \max(\Gamma, \Delta) \jtype{\max(n_1 + p, n)}{}{t[t_1/x] \, []}{ \tau \{ I/i \} } $.\\
+By ih on $(\star)$, we get: $ \max(\Gamma,\Delta)  \jtype{\max(n_1 + p, n)}{}{t}{ \tforallN{i}{\tau} } ~ (\star\star) $.\\
+It is proved by the rule \rname{IAPP} with $(\star\star)$.\\
+
+\noindent \textbf{Case} 
+\[
+  \inferrule*[right = sub]
+  { 
+   { \Delta, x:[\tau_1]_p \jtype{n}{}{t}{\tau} ~(\star) } \\
+   { \Delta, x:[\tau_1]_p\subseteq \Delta',x:\tau_1 ~ (\clubsuit) }  \\
+   { \vDash n \leq n' } ~(\spadesuit) \\
+   { \tau \subseteq \tau' }
+  }
+  { \Delta',x:[\tau_1]_p \jtype{n'}{}{t}{\tau'} }
+\]
+To show $ \max(\Gamma, \Delta') \jtype{\max(n_1 + p, n')}{}{t}{\tau'}$.\\
+By induction hypothesis on ($\star$), we get : $\max(\Gamma, \Delta) \jtype{\max(n_1 + p, n)}{}{t}{\tau} $.\\
+$(\clubsuit) \implies \max(\Gamma,\Delta) \subseteq \max(\Gamma,\Delta')~(\clubsuit\clubsuit) $.\\
+$ (\spadesuit) \implies  \vDash \max(n_1 + p, n) \leq \max(n_1 + p,n') $.\\
+It is proved by the rule \rname{SUB}.\\
+
+
+\noindent \textbf{Case}
+\[
+\inferrule*[right = pr]
+   {[\Delta_2] \jtype{n}{}{t}{\tau}}
+   {\Delta_1, p' + [\Delta_2], x:[\tau_1]_p\jtype{n}{}{!t}{!_p' \tau}  }
+\]
+TS: $\max(\Gamma,(\Delta_1, p+[\Delta_2]) ) \jtype{\max(n_1 + p, n)}{}{!t[t_1/x]}{!_p \tau}$.\\
+$x \not \in [\Delta_2] \implies [\Delta_2] \jtype{n}{}{t[t_1/x]}{\tau}(\star)$.\\
+By rule \rname{PR} with $(\star)$, we get: $\Delta_1, p'+[\Delta_2] \jtype{n}{}{!t[t_1/x]}{!_{p'} \tau} $.
+It is proved by the Lemma \ref{lem:coex} and Lemma~\ref{lem:deweaken1} from the conclusion.
+
+
+\end{proof}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
