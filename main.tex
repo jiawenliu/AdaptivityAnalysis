@@ -328,6 +328,10 @@ $$
 \begin{figure}
 \boxed{\eval{t }{v }{m}}
 \begin{mathpar}
+ \inferrule*[ right=E-values]
+  { }
+  { \eval{ F   }{ F  }{0}}   
+  \and
  \inferrule*[ right=E-const]
   { }
   { \eval{ c   }{ c  }{0}}   
@@ -692,6 +696,11 @@ This is proved by the definition of $\depth(q)$.
 	If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash \Gamma$, then $ \cdot \jtype{n}{}{\gamma(t)}{\tau} $\\
 \end{lemma}
 
+\begin{lemma}
+	\label{lem:subext}
+	If $\Gamma \subseteq \Gamma'$ and $\gamma \vDash \Gamma$ and $\gamma' \vDash \Gamma'$ and $ \cdot \jtype{n}{}{\gamma(t)}{\tau} $, then $ \cdot \jtype{n}{}{\gamma'(t)}{\tau} $ \\
+\end{lemma}
+
 \begin{theorem}[Type Safety]
 	If $\cdot \jtype{n,m}{}{t}{\tau} $ then $ \exists F. t \Downarrow F \land \jtype{n,m}{}{F}{\tau}$
 \end{theorem}
@@ -737,67 +746,70 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
  Because $\gamma(\abs{x}{t_1}) =\abs{x}{\gamma(t_1)} $ is value, unfold the definition of $\llu{\tau_1 \multimap \tau_2}{\epsilon}$, STS: $ \gamma(\abs{x}{t_1}) \in \llu{\tau_1 \multimap \tau_2}{v} $\\
  Unfold the definition of $\llu{\tau_1 \multimap \tau_2}{v}$, STS: $\forall v. v \in \llu{\tau_1}{v}. \gamma(t_1)[v/x] \in \llu{\tau_2}{\epsilon}  $.\\
  Pick $v$ s.t $ v \in \llu{\tau_1}{v}$. STS: $\gamma(t_1)[v/x] \in \llu{\tau_2}{\epsilon} $.\\
- We have $\gamma[x \rightarrow v] \vDash \Gamma, x: [\tau_1]_0 \ \ (\diamond) $ because $\gamma \vDash \Gamma$ and $ v \in \llu{\tau_1}{v} $(the assumption). \\
+ We have $\gamma[x \rightarrow v] \vDash \Gamma, x: \tau_1 \ \ (\diamond) $ because $\gamma \vDash \Gamma$ and $ v \in \llu{\tau_1}{v} $(the assumption). \\
  By IH on $(\star)$ and $(\diamond)$, we have : \\
    $$ \gamma[v/x](t_1) \in \llu{\tau_2}{\epsilon}  $$
- Because $\gamma[v/x] (t_1) = . \gamma(t_1[v/x])$, this case is proved.\\
+ Because $\gamma[v/x] (t_1) =  \gamma(t_1[v/x])$, this case is proved.\\
  
  \noindent \textbf{Case} 
  \[
  \inferrule*[right = pr]
-   {\Gamma \jtype{n}{}{t}{\tau}~(\star)}
-   {p + \Gamma \jtype{n}{}{!t}{!_p \tau}  }
+   {[\Gamma] \jtype{n}{}{t_1}{\tau_1}}
+   {\Delta, p + [\Gamma] \jtype{n}{}{!t_1}{!_p \tau_1}  }
  \]
- We assume $ \gamma \vDash p+\Gamma  $, by the definition of $\gamma$, we know $\gamma \vDash \Gamma ~(\spadesuit) $. \\
- TS : $ \gamma(!t) \in \llu{!_p \tau}{\epsilon} $ \\
+ We assume $ \gamma \vDash \Delta, p+[\Gamma] ~(\spadesuit) $. \\
+ TS : $ \gamma(!t_1) \in \llu{!_p \tau}{\epsilon} $ \\
  Because $\gamma ( !t)= ! \gamma(t) $ is value, unfold the definition of $\llu{!_p \tau}{\epsilon}$, STS: $ ! \gamma(t) \in \llu{!_p \tau}{v} $\\
  Unfold the definition of $\llu{!_p \tau}{v} $, STS: $\gamma (t) \in \llu{\tau}{\epsilon}$. \\
- It is proved by IH on ($\star$) and the assumption ($\spadesuit$) 
+ We pick $\gamma_1$ s.t. $\gamma_1 \vDash [\Gamma] $, By ih, we get : $\gamma'(t_1) \in \llu{\tau_1}{\epsilon} ~(\star) $.\\
+ By Lemma ~\ref{lem:subext} on $(\star)$ and we know $ [\Gamma] \subseteq \Delta,p+[\Gamma] $, This case is proved.\\
+ 
  
   \noindent \textbf{Case} 
   \[
     \inferrule*[ right = let ]
-   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau}~(\star) \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}~(\diamond)}
-   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   {\Gamma_1 \jtype{n_1}{}{t_1}{!_p \tau_1}~(\star) \\ \Gamma_2, x: [\tau_1]_p \jtype{n_2}{}{t_1'}{\tau'}~(\diamond)}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t_1}{t_1'}}{\tau'}  }
   \]
   We assume $\gamma \vDash \max(\Gamma_1,\Gamma_2 ) ~(\spadesuit) $.
-  TS: $ \gamma ( \letx{!x}{t}{t'} ) \in \llu{ \tau'}{\epsilon} $. \\
-  Unfold $ \llu{ \tau'}{\epsilon} $, STS: $\exists F. \eval{\gamma ( \letx{!x}{t}{t'} )}{F}{} \land F \in \llu{ \tau'}{v} $.\\
-  By using Lemma ~\ref{lem:weaken2} and Lemma~\ref{lem:weaken3} on ($\star$), we get: $ \max(\Gamma_1,\Gamma_2) \jtype{n_1}{}{t}{!_p \tau}~(1)$.\\
-  By using Lemma ~\ref{lem:weaken2} and Lemma~\ref{lem:weaken3} on ($\diamond$), we get: $ \max(\Gamma_1,\Gamma_2),x : [\tau]_p \jtype{n_2}{}{t'}{\tau'  }~(2) $.  \\
-  By IH on (1), we know: $ \gamma(t) \in \llu{ !_p \tau}{\epsilon}~(3) $. \\
-  Unfold (3), we get: $\exists F. \eval{\gamma(t)}{F}{} \land F \in \llu{ !_p \tau}{v} \implies \exists t_1. t_1 \in \llu{ \tau}{\epsilon} \land \eval{\gamma(t)}{(!t_1)}{} ~(4) $.  \\
-  Pick $ t_1 $, $t_1 \in  \llu{\tau}{\epsilon} \implies \exists v. \eval{t_1}{v}{} \land v \in \llu{\tau}{v}~(5) $. \\
-  Pick $v \in \llu{ \tau}{v}$, st. $ \gamma[v/x] \vDash \max(\Gamma_1,\Gamma_2), x:[\tau]_p $.\\
-  By IH on (2) and $\gamma[v/x] \vDash \max(\Gamma_1,\Gamma_2), x:[\tau]_p $, we know : 
-  $\gamma[v/x] (t') \in  \llu{ \tau'}{\epsilon} ~ (6) $.\\
-    From (6), we know: $ \exists F. \eval{\gamma[v/x] (t')}{F}{} \land F \in \llu{\tau'}{v} ~(7)  $.\\
-    It is proved by using (4),(5),(7) and the following evaluation rule \rname{E-LET-BANG}.
+  TS: $ \gamma ( \letx{!x}{t_1}{t_1'} ) \in \llu{ \tau'}{\epsilon} $. \\
+  Unfold $ \llu{ \tau'}{\epsilon} $, STS: $\exists F. \eval{\gamma ( \letx{!x}{t}{t'} )}{F}{} \land F \in \llu{ \tau'}{v} $.
+  
+  Pick $\gamma_1$ s.t. $\gamma_1 \vDash \Gamma_1 $. By ih on $(\star)$ we get : $ \gamma_1(t_1) \in \llu{!_p \tau_1 }{\epsilon}$. \\
+  By Lemma~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2)$, we know: $ \gamma(t_1) \in \llu{!_p \tau_1 }{\epsilon}~(1) $\\
+  Unfold (1), we get: $\exists F. \eval{\gamma(t_1)}{F}{} \land F \in \llu{ !_p \tau}{v}~(2)  $.  
+ 
+  Pick $\gamma_2$ s.t. $\gamma_2 \vDash \Gamma_2 \implies \gamma_2[F/x] \vDash \Gamma_2, x:[\tau_1]_p $. By ih on $(\diamond)$ we get : $ \gamma_2[F/x](t_1') \in \llu{ \tau' }{\epsilon} ~(3)$. \\
+  By Lemma~\ref{lem:subext} and $\Gamma_2, x:[\tau_1]_p \subseteq \max(\Gamma_1,\Gamma_2), x:[\tau_1]_p$, we know: $ \gamma[F/x](t_1') \in \llu{ \tau' }{\epsilon}~(4) $\\
+  
+
+    It is proved by unfolding (2),(4) and the following evaluation rule \rname{E-LET-BANG}.
    \[
    \inferrule*[ right=E-let-bang]
   {   
-    { \eval{ \gamma(t) }{ !t_1  }{m_1} } 
+    { \eval{ \gamma(t_1) }{ !t_2  }{m_1} } 
     \\
-    {\eval{t_1}{v}{m_2}}\\
-    { \eval{\gamma[v/x](t') }{ F}{m_3 } }
+    { \eval{\gamma[!t_2/x](t_1') }{ F'}{m_3 } }
   }
-  { \eval{  \letx{!x}{\gamma(t)}{\gamma(t')}  }{ F  }{ m_1+m_2+m_3  } }  
+  { \eval{  \letx{!x}{\gamma(t_1)}{\gamma(t_1')}  }{ F'  }{ m_1+m_2+m_3  } }  
    \]
   
   
    \noindent \textbf{Case} 
    \[
-     \inferrule*[ right = MT ]
-   {\Gamma \jtype{n}{}{t}{query}~(\star)}
-   {1 + \Gamma \jtype{n+1}{}{M(t)}{b}  }
+      \inferrule*[ right = MT ]
+   {[\Gamma] \jtype{n}{}{t}{query}}
+   {\Delta, 1 + [\Gamma] \jtype{n+1}{}{M(t)}{b}  }
    \]
-   Assume $\gamma \vDash{1+\Gamma} \implies \gamma \vDash{\Gamma}~(\spadesuit)$.\\
+   Assume $\gamma \vDash{\Delta,1+[\Gamma]}~(\spadesuit)$.\\
    TS: $\gamma(M(t)) \in \llu{b}{\epsilon}$.\\
    STS: $\exists F. \eval{M(\gamma(t))}{F}{} \land F \in \llu{b}{v} \implies \exists T_{b}. \eval{M(\gamma(t))}{T_{b}}{}$.\\
-   By IH on ($\star$) and ($\spadesuit$), we get : $ \gamma(t) \in \llu{query}{\epsilon}~(1)$.\\
-   Unfold (1), we know: $\exists F. \eval{\gamma(t)}{F}{} \land F \in \llu{query}{v} \implies F = T_{query} ~(2) $. 
+   We assume $\gamma' \vDash{[\Gamma]} $,
+   by ih we get : $ \gamma'(t) \in \llu{query}{\epsilon}~(1)$.\\
+   By Lemma ~\ref{lem:subext} and $[\Gamma] \subseteq \Delta, 1+[\Gamma] $, we get $ \gamma(t) \in \llu{query}{\epsilon}~(2)$\\
+   Unfold (2), we know: $\exists F. \eval{\gamma(t)}{F}{} \land F \in \llu{query}{v} \implies F = T_{query} ~(3) $. 
    
-   It is proved by \rname{E-MECH} and (2), $T_b =M( T_{query})$.
+   It is proved by \rname{E-MECH} and (3), $T_b =M( T_{query})$.
    \[
      \inferrule*[ right=E-mech]
   { 
@@ -811,10 +823,46 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
     
      \noindent \textbf{Case} 
      \[
-      \inferrule*[ right = case-query]
-   {\Gamma \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
-   {\Gamma \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+       \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, x:\tau \jtype{n}{}{x}{\tau}  } 
      \]
+    Assume $\gamma \vDash \Gamma, x: \tau $.\\
+    TS: $\gamma(x) \in \llu{\tau}{\epsilon} $.\\
+    Unfold the definition of $\gamma \vDash{\Gamma, x: \tau}$, we know : $ \gamma(x) \in \llu{\tau}{v} $. \\
+    STS: $ F \in \llu{\tau}{\epsilon} $.\\
+    
+   It is proved by the assumption and the evaluation rule \rname{E-Value}.
+ 
+ \noindent \textbf{Case}
+  \[
+   \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} ~(\star) \\ \Gamma_2 \jtype{n_2}{}{t_i}{b}~(\diamond) }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+  \]
+  We assume $ \gamma \vDash \max(\Gamma_1,\Gamma_2)$.\\
+  TS: $\gamma( \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  )  \in \llu{b}{\epsilon} \implies \tcaseof{\gamma(t)}\ \{c_i \Rightarrow \gamma(t_i)\}_{c_i \in b} \in \llu{b}{\epsilon}$.\\
+  We assume $\gamma_1 \vDash \Gamma_1$ and $\gamma_2 \vDash \Gamma_2 $.\\
+  By ih on $(\star)$, we get : $ \gamma_1(t) \in \llu{b}{\epsilon}$.\\
+  By ih on $(\diamond)$, we get : $ \gamma_2(t_i) \in \llu{b}{\epsilon}$.\\
+  By Lemma ~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2) $ and $ \Gamma_2 \subseteq \max(\Gamma_1,\Gamma_2) $, we get: $\gamma(t) \in \llu{b}{\epsilon}~(1) $ and $ \gamma(t_i) \in \llu{b}{\epsilon}~(2)$.\\
+  It is proved by unfolding (1) and (2) and using the evaluation rule \rname{E-CASE} and the definition of $T_b$.\\ 
+  
+  \noindent \textbf{Case}
+  \[
+   \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1}{}{t}{b}(\star) \\ \Gamma_2 \jtype{n_2}{}{t_i}{query}~(\diamond) }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+  \]
+  We assume $\gamma \vDash \max(\Gamma_1, \Gamma_2) $.\\
+  TS: $\gamma(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) \in \llu{query}{\epsilon} \implies \tcaseof{\gamma(t)}\ \{c_i \Rightarrow \gamma(t_i)\}_{c_i \in b} \in \llu{query}{\epsilon} $.\\
+  We assume $\gamma_1 \vDash \Gamma_1$ and $\gamma_2 \vDash \Gamma_2 $.\\
+  By ih on $(\star)$, we get : $ \gamma_1(t) \in \llu{b}{\epsilon}$.\\
+  By ih on $(\diamond)$, we get : $ \gamma_2(t_i) \in \llu{query}{\epsilon}$.\\
+  By Lemma ~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2) $ and $ \Gamma_2 \subseteq \max(\Gamma_1,\Gamma_2) $, we get: $\gamma(t) \in \llu{b}{\epsilon}~(1) $ and $ \gamma(t_i) \in \llu{query}{\epsilon}~(2)$.\\
+   It is proved by unfolding (1) and (2) and using the evaluation rule \rname{E-CASE} and the definition of $T_{query}$.\\ 
+  
+  
  
  \end{proof}
 
