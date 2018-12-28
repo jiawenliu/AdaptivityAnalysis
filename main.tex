@@ -78,19 +78,33 @@ Concrete
     $\tcaseof{ {\tt gauss}({\tt {\tt count}(\phi)})  }$ \\ $\{c_i \Rightarrow \tcaseof{ {\tt gauss}({\tt {\tt count}(\phi')})  }$ \\ $\{c_i' \Rightarrow {{\tt gauss}({\tt {\tt count}(\phi_i')})} \}_{c_i' \in b} \}_{c_i \in b}$
 \end{tabbing}    
 
-
+Two-rounds:
     \begin{tabbing}
-    $ \mathsf{let} \, g =  !\Big(\mathsf{fix} \, (M:\, !_1 (X \to [-1,1] ) \to [-1,1] 
+    $ \mathsf{let} \, g =  !\Big(\mathsf{fix} \, (m 
     ) . \lambda j. \lambda k. $ \\
     $\hspace{0.2cm} \mathsf{if}\, (j < k) \, \mathsf{then}$ \\
-    $\hspace{0.2cm} \mathsf{let} \, a_j = M !(\lambda X. X(j)\cdot X(k) ) \, \mathsf{in}$\\
-    $\hspace{0.4cm} a_j :: (f \, M \,j+1 \, k) $\\
+    $\hspace{0.2cm} \mathsf{let} \, a = m !(\lambda d. (d \,j)\cdot (d \,k) ) \, \mathsf{in}$\\
+    $\hspace{0.4cm} a :: (f \, m \,j+1 \, k) $\\
     $\hspace{0.2cm} \mathsf{else} \, [] \Big)$\\
     $\mathsf{in} $\\
-    $ \hspace{0.2cm} \mathsf{let}\,l = ! (g \, M\, 0)\, \mathsf{in} $\\
-    $\mathsf{let} !Q =  \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda a. \lambda r. \lambda i. \big(a\,+ X(i)*lg(\frac{1+r}{1-r})  \big) \, 0 \, l ))  \, \mathsf{in}$\\
-    $ M ( Q ) $
-\end{tabbing}    
+    $ \hspace{0.2cm} \mathsf{let}\,l = ! (g \, M\, 0\, K)\, \mathsf{in} $\\
+    $\mathsf{let} q = ! \lambda d. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda a. \lambda r. \lambda i. \big(a\,+ (d \, i) *lg(\frac{1+r}{1-r})  \big) \, 0 \, l ))  \, \mathsf{in}$\\
+    $ M ( q ) $
+\end{tabbing}  
+
+\begin{tabbing}
+$ d: \tint \to  \tlist{\tint}{}{}   $ \\
+$ \cdot: \tlist{\tint}{}{} * \tlist{\tint}{}{} \to \tint $   \\
+$ g: !_1 \Big(   !_1( (\tint \to \tlist{\tint}{}{}) \to \tint ) \to  b \to \tint \to \tint \to \tlist{b}{}{}  \Big) $\\
+\end{tabbing}
+
+
+\begin{tabbing}
+$ \mathsf{fold} = \mathsf{fix} f \, (f') \, acc \, l_1 \, l_2 $ \\
+$ \mathsf{match}\, ( l_1 , l_2 ) \,  \mathsf{with}   $\\
+$ | (l_1 :: lt_1, l_2 :: lt_2) => \mathsf{fold} \, f' \,(f'\, acc\, l_1 \,l_2)\, lt_1\, lt_2 $\\
+$ | \_ , \_ => acc $
+\end{tabbing}
 
 \caption{examples}
 \end{figure}
