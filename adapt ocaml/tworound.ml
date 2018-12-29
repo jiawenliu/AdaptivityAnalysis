@@ -20,7 +20,7 @@ let sum_q (db: int list list) =
 let gauss_mech (q:query) db =  
     (q db) +. (sample_normal_boxmuller3 0.0 1.0 )
 
-let normal_mech (q:query) db =  
+let nonoise_mech (q:query) db =  
     (q db) 
 
 let dot (l1:int ) (l2: int) : int = l1 * l2
@@ -76,8 +76,9 @@ let two_round d k m =
 
   let main  = 
       let x = two_round dataset 4 gauss_mech in
-      let y =  two_round dataset 4 normal_mech in
-        printf "gauss_mech:%f, no noise mech is: %f \n" x y
+        let y =  two_round dataset 4 nonoise_mech in
+          let z = two_round dataset 4 gauss_mech in
+        printf "gauss_mech:%f, no noise mech is: %f, gauss2 : %f \n" x y z
        
 
 

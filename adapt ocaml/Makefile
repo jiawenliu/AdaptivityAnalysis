@@ -1,7 +1,7 @@
 # Program main file
 
 # Ocamlbuild
-OCBOPTS=-use-ocamlfind -pkg unix,menhirLib,core,oUnit,sedlex -tag debug,thread  -cflags -g
+OCBOPTS=-use-ocamlfind -pkg unix -tag debug  -cflags -g
 OCAMLBUILD=ocamlbuild 
 
 VERSION=byte
