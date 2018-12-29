@@ -77,7 +77,7 @@ let two_round d k m =
   let main  = 
       let x = two_round dataset 4 gauss_mech in
       let y =  two_round dataset 4 normal_mech in
-        printf "gauss_mech:%f, no noise mech is: %f" x y
+        printf "gauss_mech:%f, no noise mech is: %f \n" x y
        
 
 
