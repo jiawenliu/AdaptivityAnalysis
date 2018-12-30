@@ -23,8 +23,8 @@
      \text{Types} & \quad & \tau ::= b \sep \tau \multimap \tau' \sep !_n \tau \sep
      \tau \times \tau \sep \tforallN{i}{\tau} \sep \query \\[2mm]
 
-     \text{Term} & \quad & t ::= c \sep \fix{t} \sep \app{t}{t} \sep !t \sep (t,t) \sep  \letx{!x}{t}{t} \sep \Lambda.t \sep t[] \sep \abs{x}{t} \sep  M(t) \sep x \sep q \sep\\
-     && \quad   \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  \sep \letx{(x_1,x_2)}{t}{t} \\[2mm]
+     \text{Term} & \quad & t ::= c \sep \fix{t} \sep \app{t}{t} \sep !t \sep (t_1,t_2) \sep  \letx{!x}{t_1}{t_2} \sep \Lambda.t \sep t[] \sep \abs{x}{t} \sep  M(t) \sep x \sep q \sep\\
+     && \quad   \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  \sep \letx{(x_1,x_2)}{t_1}{t_2} \\[2mm]
       
      \text{Normal Form} &\quad & F ::=  c \sep \fix{t} \sep !t \sep (F_1, F_2) \sep \Lambda. t \sep \abs{x}{t} \sep M(F) \sep x \sep q \sep \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b_i}  \\[2mm]
 
@@ -86,37 +86,52 @@ Concrete
 %%
 
 Two-rounds:
-    \begin{tabbing}
-    $\mathsf{let} \, g =  \mathsf{fix} \, (m
-    ) . \lambda j. \lambda k. $ \\
+
+\begin{tabbing}
+    $\mathsf{let}\, g = \mathsf{fix} \, f(m). \lambda j. \lambda k.$ \\
     $\hspace{0.2cm} \mathsf{if}\, (j < k) \, \mathsf{then}$ \\
-    $\hspace{0.2cm} \mathsf{let} \, a = m !(\lambda d. (d \,j)\cdot (d \,k) ) \, \mathsf{in}$\\
-    $\hspace{0.4cm} a :: (f \, m \,j+1 \, k) $\\
+    $\hspace{0.2cm} \mathsf{let} \, ! a = m\, (\lambda x. (x \,j)\cdot (x \,k) ) \, \mathsf{in}$\\
+    $\hspace{0.4cm} (a, j) :: (f \, m \,j+1 \, k) $\\
     $\hspace{0.2cm} \mathsf{else} \, []  $\\
     $\mathsf{in} $\\
-    $ \hspace{0.2cm} \mathsf{let}\,l = ! (g \, M\, 0\, K)\, \mathsf{in} $\\
-    $\mathsf{let} q = ! \lambda d. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda a. \lambda r. \lambda i. \big(a\,+ (d \, i) *lg(\frac{1+r}{1-r})  \big) \, 0 \, l ))  \, \mathsf{in}$\\
+    $ \hspace{0.2cm} \mathsf{let}\, !l = g \, M\, 0\, K \, \mathsf{in} $\\
+    $\mathsf{let} \, ! q = \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l ))  \, \mathsf{in}$\\
     $ M ( q ) $
 \end{tabbing}  
 
 \begin{tabbing}
-$ d: \tint \to  \tlist{\tint}{}{}   $ \\
-$ \cdot: \tlist{\tint}{}{} * \tlist{\tint}{}{} \to \tint $   \\
-$ g: !_1 \Big(   !_1( (\tint \to \tlist{\tint}{}{}) \to \tint ) \to  b \to \tint \to \tint \to \tlist{b}{}{}  \Big) $\\
+    $ x: \tint \to  \tint   $ \\
+    $ \cdot: \tint * \tint \to \tint $   \\
+    $ g: \big( (\tquery \to \tlists{!_1 b * \tint} ) \to \tint \to \tint \to \tlists{!_1 b * \tint}  \big) $\\
+    $ q: \tquery $\\
+    $ m: \tquery \to !_1 b $\\
+    $ M: \tquery \to !_1 b $\\
 \end{tabbing}
 
+Type derivation of $g$:\\
+Let $A = (\tquery \to \tlists{!_1 b * \tint} ) \to \tint \to \tint \to \tlists{!_1 b * \tint} $. To show $\jtype{1}{}{g}{ A }$. \\
+Applying rule FIX, we get:\\
+${f: A}, m :\tquery \to \tlists{!_1 b * \tint}  \jtype{1}{}{\lambda j. \lambda k. \mathsf{if} \cdots}{\tint \to \tint \to \tlists{!_1 b * \tint}}$\\
+Applying rule ABS twice, we get:\\
+${f: A}, m :\tquery \to \tlists{!_1 b * \tint}, j: \tint, k:\tint  \jtype{1}{}{ \mathsf{if} \cdots}{ \tlists{!_1 b * \tint}}$\\
+Let $\Gamma = {f: A}, m :\tquery \to \tlists{!_1 b * \tint}, j: \tint, k:\tint$, applying rule IF, we get:\\
+$\Gamma \jtype{1}{}{j < k }{\tbool} (\star)$;
+$\Gamma \jtype{1}{}{\mathsf{let} \, !a = m \cdots}{\tlists{!_1 b * \tint}} (\diamond)$ and
+$\Gamma \jtype{1}{}{\enil}{\tlists{!_1 b * \tint}} (\triangle)$.\\
+$(\star)$ can be derived by INL and INR rule, $(\triangle)$ can be derived by NIL rule, the only interesting case is $(\diamond)$.
+Applying LET rule, we get:\\
+$\Gamma \jtype{1}{}{m\, (\lambda x. (x \,j)\cdot (x \,k) )}{ !_1 b} (\diamond\diamond)$ and $\Gamma, a: [b]_1 \jtype{}{}{(a, j) :: (f \, m \,j+1 \, k) }{\tlists{!_1 b * int}}(\diamond\diamond\diamond)$.\\
+Applying APP rule on $(\diamond\diamond)$, we get:\\
+$\Gamma, \jtype{1}{}{m}{\tquery \to !_1 b}$ and $\Gamma \jtype{0}{}{\lambda x. (x \,j)\cdot (x \, k)}{\tquery}$. This can be derived by type of $q$ and $m$.\\
+$(\diamond\diamond\diamond)$ can be derived by LIST rule.\\
 
-\begin{tabbing}
-$ \mathsf{fold} = \mathsf{fix} f \, (f') \, acc \, l_1 \, l_2 $ \\
-$ \mathsf{match}\, ( l_1 , l_2 ) \,  \mathsf{with}   $\\
-$ | (l_1 :: lt_1, l_2 :: lt_2) => \mathsf{fold} \, f' \,(f'\, acc\, l_1 \,l_2)\, lt_1\, lt_2 $\\
-$ | \_ , \_ => acc $
-\end{tabbing}
+Type derivation of two-rounds algorithm TR:\\
+To show: $\jtype{2}{}{TR}{!_2 b}$.
 
 \caption{examples}
 \end{figure}
 
-\clearpage
+
 
 \begin{algorithm}
 \caption{A two-round analyst strategy for random data (Algorithm 4 in ...)}
@@ -136,7 +151,68 @@ $ | \_ , \_ => acc $
 \end{algorithmic}
 \end{algorithm}
 
+\clearpage
+\begin{figure}
+   $$
+ \begin{array}{rcl}
+     \text{Types} & \quad & \tau ::= \tau_1 + \tau_2 \sep \tlists{\tau}   \\[2mm]
 
+     \text{Term} & \quad & t ::= \einl \, t \sep \einr \, t \sep \enil \sep \econs (t_1,t_2) \sep \letx{x}{t_1}{t_2} \sep \ecase (t, x.t_1, y.t_2)
+     
+ \end{array}
+     $$
+     
+     \boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }\\
+     
+     \begin{mathpar}
+  \inferrule*[right = fix]
+   { \Gamma, f : \tau_1 \multimap \tau_2, x: \tau_1 \jtype{n}{}{t}{\tau_2} }
+   {\Gamma \jtype{n}{}{\fix{t} }{\tau_1 \multimap \tau_2}  }
+   
+  \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau} \\ \Gamma_2, x:\tau \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{x}{t}{t'}}{\tau'}  }
+   
+    \inferrule*[ right = inl ]
+   {\Gamma \jtype{n_1}{}{t}{\tau_1} }
+   { \Gamma  \jtype{n_1}{}{ \einl \, t }{ \tau_1 + \tau_2 }  }
+   
+    \inferrule*[ right = inr ]
+   {\Gamma \jtype{n_2}{}{t}{\tau_2} }
+   { \Gamma  \jtype{n_2}{}{ \einr \, t }{ \tau_1 + \tau_2 }  }
+   
+   \inferrule*[ right = case ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 + \tau_2} \\ \Gamma_2, x:\tau_1 \jtype{n_2}{}{t_1}{\tau}
+   \\ \Gamma_3, y :\tau_2 
+   \jtype{n_3}{}{t_2}{\tau}}
+   { \max(\Gamma_1, \Gamma_2,\Gamma_3)  \jtype{\max(n_1,n_2,n_3)}{}{ \ecase (t, x.t_1, y.t_2)}{\tau}  }
+   
+   \inferrule*[right = nil]
+   {   \wfty{\tau}   }
+   {\Gamma \jtype{0}{}{\enil }{\tlists{\tau} }  }
+   
+     \inferrule*[ right = cons ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau} \\
+    \Gamma_2 \jtype{n_2}{}{t_2}{\tlists{\tau} }}
+   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \econs \, (t_1,t_2) }{ \tlists{\tau} }  }
+   
+   \end{mathpar}
+    \boxed{  \tau \subseteq \tau  }\\
+   \begin{mathpar}
+     \inferrule*[right= S-pair]
+  {  }
+  { ( !_i \tau_1 , !_j \tau_2) \subseteq !_{\max(i,j)} (\tau_1,\tau_2)  }
+  
+     \inferrule*[right= S-list]
+  {  }
+  {  \tlists{!_i \tau_1}  \subseteq !_i \tlists{\tau_1}  }
+   \end{mathpar}
+     
+    \caption{New added components}
+    \label{fig:my_label}
+\end{figure}
+
+\clearpage
 \begin{figure}
 \boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }\\
 \boxed{  \Gamma :: = \emptyset \sep \Gamma, x : \tau \sep \Gamma, x : [\tau]_p   }
@@ -196,7 +272,7 @@ $ | \_ , \_ => acc $
    
    \and 
    
-   \inferrule*[ right = let ]
+   \inferrule*[ right = let-b ]
    {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
    { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
    
