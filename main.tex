@@ -88,45 +88,126 @@ Concrete
 Two-rounds:
 
 \begin{tabbing}
-    $\mathsf{let}\, g = \mathsf{fix} \, f(m). \lambda j. \lambda k.$ \\
-    $\hspace{0.2cm} \mathsf{if}\, (j < k) \, \mathsf{then}$ \\
-    $\hspace{0.2cm} \mathsf{let} \, ! a = m\, (\lambda x. (x \,j)\cdot (x \,k) ) \, \mathsf{in}$\\
-    $\hspace{0.4cm} (a, j) :: (f \, m \,j+1 \, k) $\\
-    $\hspace{0.2cm} \mathsf{else} \, []  $\\
+    $\mathsf{let}\, !g = ! \mathsf{fix} \, f(j). \lambda k.$ \\
+    $\hspace{0.4cm} \mathsf{if}\, (j < k) \, \mathsf{then}$ \\
+    $\hspace{0.8cm} \mathsf{let} \, a = M \, ( \lambda x. (x \,j)\cdot (x \,k) ) \, \mathsf{in}$\\
+    $\hspace{1.2cm} (a, j) :: (f  \,(j+1) \, k) $\\
+    $\hspace{0.4cm} \mathsf{else} \, []  $\\
     $\mathsf{in} $\\
-    $ \hspace{0.2cm} \mathsf{let}\, !l = g \, M\, 0\, K \, \mathsf{in} $\\
-    $\mathsf{let} \, ! q = \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l ))  \, \mathsf{in}$\\
+    $  \mathsf{let}\, !l = g \, 0\, K $\\
+    $\mathsf{in}$\\
+    $\mathsf{let} \, ! q = \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) $ \\
+    $\mathsf{in}$\\
     $ M ( q ) $
 \end{tabbing}  
 
 \begin{tabbing}
     $ x: \tint \to  \tint   $ \\
     $ \cdot: \tint * \tint \to \tint $   \\
-    $ g: \big( (\tquery \to \tlists{!_1 b * \tint} ) \to \tint \to \tint \to \tlists{!_1 b * \tint}  \big) $\\
+    $ g: !_1 \big(  \tint \to \tint \to \tlists{b * \tint}  \big) $\\
     $ q: \tquery $\\
-    $ m: \tquery \to !_1 b $\\
-    $ M: \tquery \to !_1 b $\\
+    $ M: \tquery \to b $\\
 \end{tabbing}
+Type derivation:\\
 
-Type derivation of $g$:\\
-Let $A = (\tquery \to \tlists{!_1 b * \tint} ) \to \tint \to \tint \to \tlists{!_1 b * \tint} $. To show $\jtype{1}{}{g}{ A }$. \\
-Applying rule FIX, we get:\\
-${f: A}, m :\tquery \to \tlists{!_1 b * \tint}  \jtype{1}{}{\lambda j. \lambda k. \mathsf{if} \cdots}{\tint \to \tint \to \tlists{!_1 b * \tint}}$\\
-Applying rule ABS twice, we get:\\
-${f: A}, m :\tquery \to \tlists{!_1 b * \tint}, j: \tint, k:\tint  \jtype{1}{}{ \mathsf{if} \cdots}{ \tlists{!_1 b * \tint}}$\\
-Let $\Gamma = {f: A}, m :\tquery \to \tlists{!_1 b * \tint}, j: \tint, k:\tint$, applying rule IF, we get:\\
-$\Gamma \jtype{1}{}{j < k }{\tbool} (\star)$;
-$\Gamma \jtype{1}{}{\mathsf{let} \, !a = m \cdots}{\tlists{!_1 b * \tint}} (\diamond)$ and
-$\Gamma \jtype{1}{}{\enil}{\tlists{!_1 b * \tint}} (\triangle)$.\\
-$(\star)$ can be derived by INL and INR rule, $(\triangle)$ can be derived by NIL rule, the only interesting case is $(\diamond)$.
-Applying LET rule, we get:\\
-$\Gamma \jtype{1}{}{m\, (\lambda x. (x \,j)\cdot (x \,k) )}{ !_1 b} (\diamond\diamond)$ and $\Gamma, a: [b]_1 \jtype{}{}{(a, j) :: (f \, m \,j+1 \, k) }{\tlists{!_1 b * int}}(\diamond\diamond\diamond)$.\\
-Applying APP rule on $(\diamond\diamond)$, we get:\\
-$\Gamma, \jtype{1}{}{m}{\tquery \to !_1 b}$ and $\Gamma \jtype{0}{}{\lambda x. (x \,j)\cdot (x \, k)}{\tquery}$. This can be derived by type of $q$ and $m$.\\
-$(\diamond\diamond\diamond)$ can be derived by LIST rule.\\
+Let $A = \big( \tint \to \tint \to \tlists{b * \tint} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tint, k: \tint\ $.\\
+\[
+  \inferrule*[ right = LET-B ]
+   {\Pi_L {\vartriangleright M : \tquery \to b \jtype{1}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
+   \and
+   \Pi_R {\vartriangleright M : \tquery \to b, g: [A]_1 \jtype{2}{}{\letx{!l}{! g \, 0\, K}{\letx{!q}{\cdots}{\cdots}}}{b}}
+   }
+   { M: \tquery \to b \jtype{2}{}{\letx{ !g}{! \mathsf{fix} \, f \cdots}{ \letx{!l}{\cdots}{\cdots}}}{b}}
+\]
 
-Type derivation of two-rounds algorithm TR:\\
-To show: $\jtype{2}{}{TR}{!_2 b}$.
+Derivation $\Pi_L$ and $\Pi_R$ are shown as follows:\\
+$\Pi_L$:
+\begin{mathpar}
+  \inferrule*[ right = PR ]
+    {
+    \inferrule*[ right = FIX ]
+    {
+    \inferrule*[right = ABS]
+    {
+    \inferrule*[right = IF]
+    {
+    \inferrule*[right = BOOL]
+    {
+    \empty
+    }
+    {
+    \Gamma \jtype{0}{}{j<k}{\tbool}
+    }\and
+    \inferrule*[right = LET]
+    {
+    \dots
+    }
+    {
+    \Gamma \jtype{1}{}{\letx{a}{M \, ( \cdots )}{(a, j) :: \cdots}}{\tlists{b*\tint}}
+    }\and
+    \inferrule*[right = NIL]
+    {
+    \empty
+    }
+    {
+    \Gamma \jtype{0}{}{[]}{\tlists{b*\tint}}
+    }
+    }
+    {
+    f: A, M : \tquery \to b, j: \tint, k: \tint\ \jtype{1}{}{\mathsf{if} \cdots}{ \tlists{b*\tint}}
+    }
+    }
+    {
+    f: A, M : \tquery \to b\ \jtype{1}{}{\lambda\, j. \lambda\, k. \mathsf{if} \cdots}{\tint \to \tint \to \tlists{b*\tint}}
+    }
+    }
+    {M: \tquery \to b \jtype{1}{}{\mathsf{fix} \, f \cdots}{ A} }}
+    {M: \tquery \to b \jtype{1}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
+    
+    
+    
+    \inferrule*[right = LET]
+    {
+    \inferrule*[right = MT]
+    {
+     \inferrule*[right = QUERY]
+    {
+    \empty
+    }
+    {
+    \Gamma \jtype{0}{}{ \lambda x. (x \,j)\cdot (x \,k)}{\tquery}
+    }
+    }
+    {
+    \Gamma \jtype{1}{}{M\, ( \lambda x. (x \,j)\cdot (x \,k))}{b}
+    }
+    \and 
+    \inferrule*[right = CONS]
+    {
+    \inferrule*[right = VAR]
+    {
+    \empty
+    }
+    {
+    \Gamma, a: b \jtype{0}{}{(a, j) }{b*\tint}
+    }
+    \and
+    \inferrule*[right = APP]
+    {
+    \empty
+    }
+    {
+    \Gamma, a: b \jtype{0}{}{(f \, j+1 \, k) }{\tlists{b*\tint}}
+    }
+    }
+    {
+    \Gamma, a: b \jtype{0}{}{(a, j) ::(f \, j+1 \, k) }{\tlists{b*\tint}}
+    }
+    }
+    {
+    \Gamma \jtype{1}{}{\letx{a}{M\, ( \lambda x. (x \,j)\cdot (x \,k))}{(a, j) ::(f \, j+1 \, k) }}{\tlists{b*\tint}}
+    }
+    \end{mathpar}
 
 \caption{examples}
 \end{figure}
