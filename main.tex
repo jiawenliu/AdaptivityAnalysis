@@ -110,7 +110,7 @@ Two-rounds:
 \end{tabbing}
 Type derivation:\\
 
-Let $A = \big( \tint \to \tint \to \tlists{b * \tint} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tint, k: \tint\ $.\\
+Let $A = \big( \tint \to \tint \to \tlists{b * \tint} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tint, k: \tint\ $, $\Gamma_0 = M : \tquery \to b$.\\
 \[
   \inferrule*[ right = LET-B ]
    {\Pi_L {\vartriangleright M : \tquery \to b \jtype{2}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
@@ -215,20 +215,57 @@ $\Pi_R$:
 {
 \inferrule*[right = PR]
 {
+\inferrule*[right = DER]
+{
 \inferrule*[right = APP]
 {
 \dots
 }
 {
-M : \tquery \to b, g: [A]_1 \jtype{0}{}{g \, 0\, K}{\tlists{b*\tint}}
+g: A \jtype{0}{}{g \, 0\, K}{\tlists{b*\tint}}
 }
 }
 {
-M : \tquery \to b, g: [A]_1 \jtype{1}{}{!g \, 0\, K}{!_1 \tlists{b*\tint}}
+g: [A]_0 \jtype{0}{}{g \, 0\, K}{\tlists{b*\tint}}
+}
+}
+{
+ g: [A]_1 \jtype{1}{}{!g \, 0\, K}{!_1 \tlists{b*\tint}}
 }
 \and
-
+\inferrule*[right = LET-B]
+{
+\inferrule*[right = ABS]
+{
+\dots
+}
+{
+\jtype{1}{}{!\lambda x. \dots}{\tquery}
+}
+\and
+\inferrule*[right = PR]
+{
+\inferrule*[right = DER]
+{
+\inferrule*[right = ABS]
+{
+\Gamma_0, g: A, l:\tlists{b*\tint}, q:\tquery, x:row \jtype{1}{}{sign \dots}{ b}
+}
+{
+\Gamma_0, g: A, l:\tlists{b*\tint}, q:\tquery \jtype{1}{}{\lambda x. \dots}{\tquery}
+}
+}
+{
+\Gamma_0, g: [A]_0, l:[\tlists{b*\tint}]_0, q:[\tquery]_0 \jtype{1}{}{\lambda x. \dots}{\tquery}
+}
+}
+{
+\Gamma_0, g: [A]_1, l:[\tlists{b*\tint}]_1, q:[\tquery]_1 \jtype{1}{}{!\lambda x. \dots}{ \tquery}
+}
+}
+{
 M : \tquery \to b, g: [A]_1, l:[\tlists{b*\tint}]_1  \jtype{1}{}{\letx{!q}{\cdots}{\cdots}}{ b}
+}
 }
 {
 M : \tquery \to b, g: [A]_1 \jtype{1}{}{\letx{!l}{! g \, 0\, K}{\letx{!q}{\cdots}{\cdots}}}{b}
