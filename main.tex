@@ -88,15 +88,15 @@ Concrete
 Two-rounds:
 
 \begin{tabbing}
-    $\mathsf{let}\, !g = ! \mathsf{fix} \, f(j). \lambda k.$ \\
+    $\mathsf{let}\, !g = ! \big( \mathsf{fix} \, f(j). \lambda k.$ \\
     $\hspace{0.4cm} \mathsf{if}\, (j < k) \, \mathsf{then}$ \\
-    $\hspace{0.8cm} \mathsf{let} \, a = M \, ( \lambda x. (x \,j)\cdot (x \,k) ) \, \mathsf{in}$\\
+    $\hspace{0.8cm} \mathsf{let} \, a = M \, ( \lambda x. (x \,j)\cdot (x \,k) )  \, \mathsf{in}$\\
     $\hspace{1.2cm} (a, j) :: (f  \,(j+1) \, k) $\\
-    $\hspace{0.4cm} \mathsf{else} \, []  $\\
+    $\hspace{0.4cm} \mathsf{else} \, [] \big)  $\\
     $\mathsf{in} $\\
-    $  \mathsf{let}\, !l = g \, 0\, K $\\
+    $  \mathsf{let}\, !l = !g \, 0\, K $\\
     $\mathsf{in}$\\
-    $\mathsf{let} \, ! q = \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) $ \\
+    $\mathsf{let} \, ! q = ! \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) $ \\
     $\mathsf{in}$\\
     $ M ( q ) $
 \end{tabbing}  
@@ -113,7 +113,7 @@ Type derivation:\\
 Let $A = \big( \tint \to \tint \to \tlists{b * \tint} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tint, k: \tint\ $.\\
 \[
   \inferrule*[ right = LET-B ]
-   {\Pi_L {\vartriangleright M : \tquery \to b \jtype{1}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
+   {\Pi_L {\vartriangleright M : \tquery \to b \jtype{2}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
    \and
    \Pi_R {\vartriangleright M : \tquery \to b, g: [A]_1 \jtype{2}{}{\letx{!l}{! g \, 0\, K}{\letx{!q}{\cdots}{\cdots}}}{b}}
    }
@@ -162,8 +162,7 @@ $\Pi_L$:
     }
     }
     {M: \tquery \to b \jtype{1}{}{\mathsf{fix} \, f \cdots}{ A} }}
-    {M: \tquery \to b \jtype{1}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
-    
+    {M: \tquery \to b \jtype{2}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
     
     
     \inferrule*[right = LET]
@@ -194,7 +193,7 @@ $\Pi_L$:
     \and
     \inferrule*[right = APP]
     {
-    \empty
+    \dots
     }
     {
     \Gamma, a: b \jtype{0}{}{(f \, j+1 \, k) }{\tlists{b*\tint}}
@@ -208,6 +207,13 @@ $\Pi_L$:
     \Gamma \jtype{1}{}{\letx{a}{M\, ( \lambda x. (x \,j)\cdot (x \,k))}{(a, j) ::(f \, j+1 \, k) }}{\tlists{b*\tint}}
     }
     \end{mathpar}
+
+$\Pi_R$:
+\inferrule*[right = LET-B]
+{
+}
+{
+}
 
 \caption{examples}
 \end{figure}
