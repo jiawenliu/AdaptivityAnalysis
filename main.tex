@@ -110,7 +110,7 @@ Two-rounds:
 \end{tabbing}
 Type derivation:\\
 
-Let $A = \big( \tint \to \tint \to \tlists{b * \tint} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tint, k: \tint\ $, $\Gamma_0 = M : \tquery \to b$.\\
+Let $A = \big( \tint \to \tint \to \tlists{b * \tint} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tint, k: \tint\ $, $\Gamma_0 = M : \tquery \to b$, $[\Delta]_i = g: [A]_i, l:[\tlists{b*\tint}]_i, q:[\tquery]_i$.\\
 \[
   \inferrule*[ right = LET-B ]
    {\Pi_L {\vartriangleright M : \tquery \to b \jtype{2}{}{! \mathsf{fix} \, f \cdots}{!_1 A}}
@@ -235,12 +235,24 @@ g: [A]_0 \jtype{0}{}{g \, 0\, K}{\tlists{b*\tint}}
 \and
 \inferrule*[right = LET-B]
 {
+\inferrule*[right = PR]
+{
 \inferrule*[right = ABS]
 {
-\dots
+\inferrule*[right = VAR]
+{
+\empty
 }
 {
-\jtype{1}{}{!\lambda x. \dots}{\tquery}
+x:row \jtype{0}{}{sign \dots}{ b}
+}
+}
+{
+\jtype{0}{}{\lambda x. \dots}{row \to b}
+}
+}
+{
+\jtype{1}{}{!\lambda x. \dots}{!_1 row \to b}
 }
 \and
 \inferrule*[right = PR]
@@ -249,18 +261,18 @@ g: [A]_0 \jtype{0}{}{g \, 0\, K}{\tlists{b*\tint}}
 {
 \inferrule*[right = ABS]
 {
-\Gamma_0, g: A, l:\tlists{b*\tint}, q:\tquery, x:row \jtype{1}{}{sign \dots}{ b}
+\Gamma_0, \Delta, x:row \jtype{1}{}{sign \dots}{ b}
 }
 {
-\Gamma_0, g: A, l:\tlists{b*\tint}, q:\tquery \jtype{1}{}{\lambda x. \dots}{\tquery}
-}
-}
-{
-\Gamma_0, g: [A]_0, l:[\tlists{b*\tint}]_0, q:[\tquery]_0 \jtype{1}{}{\lambda x. \dots}{\tquery}
+\Gamma_0, \Delta \jtype{0}{}{M(q)}{b}
 }
 }
 {
-\Gamma_0, g: [A]_1, l:[\tlists{b*\tint}]_1, q:[\tquery]_1 \jtype{1}{}{!\lambda x. \dots}{ \tquery}
+\Gamma_0, \Delta_0 \jtype{0}{}{M(q)}{ b}
+}
+}
+{
+\Gamma_0, [\Delta]_1 \jtype{1}{}{M(q)}{b}
 }
 }
 {
