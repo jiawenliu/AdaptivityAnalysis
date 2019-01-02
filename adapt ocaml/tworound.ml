@@ -11,6 +11,8 @@ let argDefs = [
     "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name" ; 
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name" 
 ]
+let delta = 0.0000001
+let epsilon = 1.0
 
 type 'a bang  = 
     Bang of 'a 
@@ -31,7 +33,7 @@ let parseArgs () =
                    | Some i, Some o -> (i,o)
                    | _,_ -> printf "%s" "specify  your input file or output file"; ("","")
 
-let dataset = [[1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ;[1;1;1;1] ] 
+let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] 
 
 let sum_q (db: int list list) = 
     List.fold_left ( fun a r -> a +  (hd r)  ) 0 db  
@@ -46,7 +48,9 @@ let gauss_mech (q:query) db =
         in  
         sm /.  float_of_int (List.length db)
       in
-    mean +. (sample_normal_boxmuller3 0.0 1.0 ) 
+        let mu = 2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon
+        in 
+          mean +. (sample_normal_boxmuller3 0.0 mu) 
   in 
   if result > 1.0 then 1.0 
   else  if result < -1.0 then -1.0 else result 
