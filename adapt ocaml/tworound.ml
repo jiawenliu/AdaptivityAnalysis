@@ -5,11 +5,15 @@ open Printf
 let infile = ref (None : string option)
 let outfile = ref (None : string option)
 let rounds = ref 0
+let cols = ref 0
+let rows = ref 0 
 
 let argDefs = [
-    "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments"; 
-    "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name" ; 
-      "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name" 
+    "-rw", Arg.Int (fun i -> rows := i) , "specify the rows of the database, -rw int"; 
+    "-cl", Arg.Int (fun i -> cols := i) , "specify the cols of the database, -cl int"; 
+    "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
+    "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name, -i string" ; 
+      "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string" 
 ]
 let delta = 0.0000001
 let epsilon = 1.0
@@ -31,9 +35,10 @@ let parseArgs () =
                       | None  -> oname := Some (s); printf "%s" s ) "for output file" ;
              match !infile, !outfile  with
                    | Some i, Some o -> (i,o)
-                   | _,_ -> printf "%s" "specify  your input file or output file"; ("","")
+                   | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col int, rounds -r int"; ("","")
 
 let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] 
+
 
 let sum_q (db: int list list) = 
     List.fold_left ( fun a r -> a +  (hd r)  ) 0 db  
