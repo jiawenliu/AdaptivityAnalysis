@@ -39,6 +39,7 @@ let parseArgs () =
 
 let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] 
 
+
 let rec creat_db (col : int) (row : int)  =
   if row > 0 
     then 
@@ -52,8 +53,9 @@ let rec creat_db (col : int) (row : int)  =
     else
       []
 
+
 let thresholdout_mech (q:query) db =
-  let holdout_db = creat_db (List.length db) (List.length db) in
+  let holdout_db = creat_db (List.length (hd db)) (List.length db) in
     let threshold = 1.0 in
       let noise_rate = 1.0 in
         let budget = (List.length db) in
@@ -61,19 +63,19 @@ let thresholdout_mech (q:query) db =
                 match (db, holdout_db) with
                   |([],[]) -> []
                   |(rw::t, holdout_rw::holdout_t) -> let eta = (sample_exp (4.0 *. noise_rate)) in
-                  if ((q rw) -. (q holdout_rw)) > (threshold +. gamma +. eta)
-                  then
-                    ((q holdout_rw) +. (sample_exp noise_rate))::(threshold_mech t holdout_t (sample_exp 2.0 *. noise_rate))
-                  else
-                    (q rw)::(threshold_mech t holdout_t gamma)
-                  | _ -> printf "This shouldn't happen";[]
+                    if ((q rw) -. (q holdout_rw)) > (threshold +. gamma +. eta)
+                    then
+                      ((q holdout_rw) +. (sample_exp noise_rate))::(threshold_mech t holdout_t (sample_exp 2.0 *. noise_rate))
+                    else
+                      (q rw)::(threshold_mech t holdout_t gamma)
+                  | _ -> printf "This shouldn't happen\n";[]
                   in
                     let sm = List.fold_left 
                       (fun sum rw ->  
                           sum +. rw
                       ) 0.0 (threshold_mech db holdout_db (sample_exp (2.0 *. noise_rate)))
                     in 
-                      (sm /.  float_of_int (List.length db))
+                      (sm /.  float_of_int (List.length (hd db)))
 
 
 (*let rec read_rows ic i j acc =
