@@ -7,8 +7,10 @@ let outfile = ref (None : string option)
 let rounds = ref 0
 let cols = ref 0
 let rows = ref 0 
+let cdb = ref false
 
 let argDefs = [
+    "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
     "-rw", Arg.Int (fun i -> rows := i) , "specify the rows of the database, -rw int"; 
     "-cl", Arg.Int (fun i -> cols := i) , "specify the cols of the database, -cl int"; 
     "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
@@ -37,8 +39,8 @@ let parseArgs () =
                    | Some i, Some o -> (i,o)
                    | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col int, rounds -r int"; ("","")
 
-let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] 
-
+(* let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] 
+ *)
 
 let rec creat_db (col : int) (row : int)  =
   if row > 0 
@@ -52,6 +54,25 @@ let rec creat_db (col : int) (row : int)  =
       in (creat_row col) :: creat_db col (row - 1)
     else
       []
+
+let record_db db oc =
+    List.map (fun row -> List.map (fun e ->fprintf oc "%d," e ) row; fprintf oc "\n" )  db ; close_out oc
+
+let sub_row row =
+  List.rev (List.tl (List.rev row) )
+
+let rec read_db ic rows cols =
+    if rows > 0 
+     then 
+          let line = input_line ic in 
+          let tmp_row =
+           (String.split_on_char ',' line) in 
+           (List.map (fun s -> int_of_string s) (sub_row tmp_row)) :: (read_db ic (rows-1) cols)
+           (* {
+           if (List.length tmp_row) > cols then tmp_row else tmp_row
+           } *)
+    else
+       [] 
 
 
 let thresholdout_mech (q:query) db =
@@ -161,17 +182,26 @@ let two_round d k m =
   let write res oc =
     fprintf oc "%f\n" res
 
-  let rec experiments oc i =
+  let rec experiments oc i db =
      if i < !rounds then
-        let x = two_round dataset 4 thresholdout_mech in
-        let y =  two_round dataset 4 nonoise_mech in
-        write (x-.y) oc ; experiments oc (i+1)
+        let x = two_round db !cols thresholdout_mech in
+        let y =  two_round db !cols nonoise_mech in
+        write (x-.y) oc ; experiments oc (i+1) db
       else close_out oc
 
   let main  = 
    let (ifile,ofile) = parseArgs() in
+   let dataset = 
+    if (!cdb) then 
+     let ic = open_out ifile in
+     let db = creat_db !rows !cols in 
+      record_db db ic ; cdb:= true ; db 
+   else
+        let ic = open_in ifile in 
+        let db = read_db ic !rows !cols in close_in ic; db 
+      in  
     let oc = open_out ofile in 
-     experiments oc 0
+     experiments oc 0 dataset
         
        
   
