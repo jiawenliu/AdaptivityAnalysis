@@ -40,6 +40,15 @@ let parseArgs () =
 let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] 
 
 
+let rec read_rows ic i j acc =
+        if i < j then
+         read_line ic (i+1) j (int_of_string (input_line ic)) :: acc
+        else
+         List.rev acc 
+       
+let read_db ic acc =
+   let rec read_rows 
+
 let sum_q (db: int list list) = 
     List.fold_left ( fun a r -> a +  (hd r)  ) 0 db  
 
