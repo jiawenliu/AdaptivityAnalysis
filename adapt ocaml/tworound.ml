@@ -65,7 +65,8 @@ let thresholdout_mech (q:query) db =
                   then
                     ((q holdout_rw) +. (sample_exp noise_rate))::(threshold_mech t holdout_t (sample_exp 2.0 *. noise_rate))
                   else
-                    (q rw)::(threshold_mech t holdout_t)
+                    (q rw)::(threshold_mech t holdout_t gamma)
+                  | _ -> printf "This shouldn't happen";[]
                   in
                     let sm = List.fold_left 
                       (fun sum rw ->  
@@ -75,14 +76,12 @@ let thresholdout_mech (q:query) db =
                       (sm /.  float_of_int (List.length db))
 
 
-let rec read_rows ic i j acc =
+(*let rec read_rows ic i j acc =
         if i < j then
          read_line ic (i+1) j (int_of_string (input_line ic)) :: acc
         else
-         List.rev acc 
+         List.rev acc *)
        
-let read_db ic acc =
-   let rec read_rows 
 
 let sum_q (db: int list list) = 
     List.fold_left ( fun a r -> a +  (hd r)  ) 0 db  
@@ -162,7 +161,7 @@ let two_round d k m =
 
   let rec experiments oc i =
      if i < !rounds then
-        let x = two_round dataset 4 gauss_mech in
+        let x = two_round dataset 4 thresholdout_mech in
         let y =  two_round dataset 4 nonoise_mech in
         write (x-.y) oc ; experiments oc (i+1)
       else close_out oc
