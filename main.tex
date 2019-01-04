@@ -286,8 +286,33 @@ $\Pi_R$:
         \Gamma_0, g: [A]_1 \jtype{1}{}{\letx{! l}{! g \, 0\, K}{\letx{! q}{ \dots }{ \dots }}}{b}
     }
 \end{mathpar}
+\caption{examples: two rounds}
+\end{figure}
 
-\caption{examples}
+
+\begin{figure}
+Evaluation:
+
+\begin{mathpar}
+\inferrule*[right = E-LET-BANG]
+{
+\inferrule*[right = E-BANG]
+{\empty}
+{
+\eval{!\mathsf{fix} \, f \cdots}{ ! \mathsf{fix} \, f \cdots}{0}
+}
+\and 
+\inferrule*[right = E-FIX]
+{\empty}
+{\eval{\mathsf{fix} \, f \cdots}{ \mathsf{fix} \, f \cdots}{0}
+}
+\and
+}
+{\eval{\letx{ !g}{! \mathsf{fix} \, f \cdots}{ \letx{!l}{\cdots}{\cdots}}}{c}{2}}
+
+\end{mathpar}
+
+\caption{examples: two rounds - evaluation}
 \end{figure}
 
 
@@ -772,6 +797,11 @@ $\Pi_R$:
   }
   { \eval{  M(t)  }{ M(F)  }{  m } }
   
+     \inferrule*[ right=E-mech2]
+  { 
+  }
+  { \eval{  M(F)  }{ c  }{  1 } }
+  
 \end{mathpar}
 \end{figure}
 
@@ -787,8 +817,8 @@ $$
       \llu{\tforallN{i}{\tau}}{v}  & \quad & = \{  \Lambda. t \, | \, \forall I. \vdash i :: \mathbb{N}. t[I/i] \in \llu{\tau}{\epsilon}   \}  \\[2mm]
       \llu{\tau_1 * \tau_2}{v}  & \quad & = \{  (F_1, F_2) \, | \, F_1 \in \llu{\tau_1}{v} \land F_2 \in \llu{\tau_2}{v}     \} \\[2mm]
       \llu{\cdot}{} &\quad & = \{ \emptyset \} \\[2mm]
-    %   \llu{\Gamma, x : [\tau]_p}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
-      \llu{\Gamma, x : [\tau]_p}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{!_p \tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \llu{\Gamma, x : [\tau]_p}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \boxed{\llu{\Gamma, x : [\tau]_p}{}}  & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{!_p \tau}{v}  \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
       \llu{\Gamma, x : \tau}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
       \gamma \vDash \Gamma &\quad & \triangleq dom(\gamma) = dom(\Gamma) \land \forall x \in dom(\Gamma). \gamma(x) \in \llu{\Gamma(x)}{v}
 \end{array}
@@ -1098,7 +1128,7 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
   
   Pick $\gamma_1$ s.t. $\gamma_1 \vDash \Gamma_1 $. By ih on $(\star)$ we get : $ \gamma_1(t_1) \in \llu{!_p \tau_1 }{\epsilon}$. \\
   By Lemma~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2)$, we know: $ \gamma(t_1) \in \llu{!_p \tau_1 }{\epsilon}~(1) $\\
-  Unfold (1), we get: $\exists F. \eval{\gamma(t_1)}{F}{} \land F \in \llu{ !_p \tau}{v}~(2)  $.  
+  Unfold (1), we get: $\exists F. \eval{\gamma(t_1)}{F}{} \land F \in \llu{ !_p \tau_1}{v}~(2)  $.  
  
   Pick $\gamma_2$ s.t. $\gamma_2 \vDash \Gamma_2 \implies \gamma_2[F/x] \vDash \Gamma_2, x:[\tau_1]_p $. By ih on $(\diamond)$ we get : $ \gamma_2[F/x](t_1') \in \llu{ \tau' }{\epsilon} ~(3)$. \\
   By Lemma~\ref{lem:subext} and $\Gamma_2, x:[\tau_1]_p \subseteq \max(\Gamma_1,\Gamma_2), x:[\tau_1]_p$, we know: $ \gamma[F/x](t_1') \in \llu{ \tau' }{\epsilon}~(4) $\\
@@ -1114,6 +1144,36 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
   }
   { \eval{  \letx{!x}{\gamma(t_1)}{\gamma(t_1')}  }{ F'  }{ m_1+m_2+m_3  } }  
    \]
+  
+  \noindent \textbf{Case} 
+  \[
+    \inferrule*[ right = let ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{!_p \tau_1}~(\star) \\ \Gamma_2, x: [\tau_1]_p \jtype{n_2}{}{t_1'}{\tau'}~(\diamond)}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t_1}{t_1'}}{\tau'}  }
+  \]
+  We assume $\gamma \vDash \max(\Gamma_1,\Gamma_2 ) ~(\spadesuit) $.
+  TS: $ \gamma ( \letx{!x}{t_1}{t_1'} ) \in \llu{ \tau'}{\epsilon} $. \\
+  Unfold $ \llu{ \tau'}{\epsilon} $, STS: $\exists F. \eval{\gamma ( \letx{!x}{t}{t'} )}{F}{} \land F \in \llu{ \tau'}{v} $.
+  
+  Pick $\gamma_1$ s.t. $\gamma_1 \vDash \Gamma_1 $. By ih on $(\star)$ we get : $ \gamma_1(t_1) \in \llu{!_p \tau_1 }{\epsilon}$. \\
+  By Lemma~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2)$, we know: $ \gamma(t_1) \in \llu{!_p \tau_1 }{\epsilon}~(1) $\\
+  Unfold (1), we get: $\exists F. \eval{\gamma(t_1)}{F}{} \land F \in \llu{ !_p \tau_1}{v}~(2)  $.  
+ 
+  Pick $\gamma_2$ s.t. $\gamma_2 \vDash \Gamma_2 \implies \gamma_2[F/x] \vDash \Gamma_2, x:[\tau_1]_p $. By ih on $(\diamond)$ we get : $ \gamma_2[F/x](t_1') \in \llu{ \tau' }{\epsilon} ~(3)$. \\
+  By Lemma~\ref{lem:subext} and $\Gamma_2, x:[\tau_1]_p \subseteq \max(\Gamma_1,\Gamma_2), x:[\tau_1]_p$, we know: $ \gamma[F/x](t_1') \in \llu{ \tau' }{\epsilon}~(4) $\\
+  
+
+    It is proved by unfolding (2),(4) and the following evaluation rule \rname{E-LET-BANG}.
+   \[
+   \inferrule*[ right=E-let-bang]
+  {   
+    { \eval{ \gamma(t_1) }{ !t_2  }{m_1} } 
+    \\
+    { \eval{\gamma[!t_2/x](t_1') }{ F'}{m_3 } }
+  }
+  { \eval{  \letx{!x}{\gamma(t_1)}{\gamma(t_1')}  }{ F'  }{ m_1+m_2+m_3  } }  
+   \]
+  
   
   
    \noindent \textbf{Case} 
