@@ -294,21 +294,130 @@ $\Pi_R$:
 Evaluation:
 
 \begin{mathpar}
-\inferrule*[right = E-LET-BANG]
+\inferrule*[right = E-let-bang]
 {
-\inferrule*[right = E-BANG]
-{\empty}
-{
-\eval{!\mathsf{fix} \, f \cdots}{ ! \mathsf{fix} \, f \cdots}{0}
-}
+    \inferrule*[right = E-bang]
+    {\empty}
+    {
+    \eval{!\mathsf{fix} \, f \cdots}{ ! \mathsf{fix} \, f \cdots}{0}
+    }
 \and 
-\inferrule*[right = E-FIX]
-{\empty}
-{\eval{\mathsf{fix} \, f \cdots}{ \mathsf{fix} \, f \cdots}{0}
-}
+    \inferrule*[right = E-fix]
+    {\empty}
+    {\eval{\mathsf{fix} \, f \cdots}{ \mathsf{fix} \, f \cdots}{0}
+    }
 \and
+    \inferrule*[right = E-let-bang]
+    {\dots}
+    {\eval{\letx{!l}{!(\mathsf{fix} \dots 0 K)}{\cdots}}{c}{2}
+    }
 }
-{\eval{\letx{ !g}{! \mathsf{fix} \, f \cdots}{ \letx{!l}{\cdots}{\cdots}}}{c}{2}}
+{\eval{\letx{!g}{! \mathsf{fix} \, f \cdots}{ \letx{!l}{\cdots}{\cdots}}}{c}{2}}
+
+\inferrule*[right = E-let-bang]
+{
+    \inferrule*[right = E-bang]
+    {\empty}
+    {
+    \eval{!(\mathsf{fix} \dots 0 K)}{ !(\mathsf{fix} \dots 0 K)}{0}
+    }
+\and
+    \inferrule*[right = E-app]
+    {\Pi_1}
+    {
+    \eval{\mathsf{fix} \dots 0 K}{c_1}{1}
+    }
+\and
+    \inferrule*[right = E-let-bang]
+    {\Pi_2}
+    {
+    \eval{\letx{!q}{!(! \lambda x. (\dots 0 c_1))}{M(q)}}{c}{1}
+    }
+}
+{\eval{\letx{!l}{!(\mathsf{fix} \dots 0 K)}{\cdots}}{c}{2}
+}
+
+\Pi_1: \quad
+\inferrule*[right = E-app]
+{
+    \inferrule*[right = E-fix]
+    {\empty}
+    {
+    \eval{\mathsf{fix} \dots}{\lambda j. \lambda k. \dots}{0}
+    }
+\and 
+    \inferrule*[right = E-values]
+    {\empty}
+    {
+    \eval{0\, K }{0}{0\, K}
+    }
+\and 
+    \inferrule*[right = E-if]
+    {\Pi_{1-1}}
+    {
+    \eval{\mathsf{if} \dots \letx{a}{M(\dots)}{\dots}}{c_1}{1}
+    }
+}
+{
+\eval{\mathsf{fix} \dots 0\, K}{c_1}{1}
+}
+
+\Pi_{1-1}: \quad
+\inferrule*[right = E-if]
+{
+    \inferrule*[right = E-let]
+    {
+        \inferrule*[right = E-mt]
+        {\empty}
+        {
+        \eval{M(\dots)}{c_1'}{1}
+        }
+    \and
+        \inferrule*[right = E-cons]
+        {\empty}
+        {
+        \eval{(c_1', j)::(f (j + 1) K)}{c_1}{0}
+        }
+    }
+    {
+    \eval{\letx{a}{M(\dots)}{\dots}}{c_1}{1}
+    }
+\and
+    \inferrule*[right = E-nil]
+    {\empty}
+    {
+    \eval{[]}{[]}{0}
+    }
+}
+{
+\eval{\mathsf{if} \dots \letx{a}{M(\dots)}{\dots}}{c_1}{1}
+}
+
+\Pi_2:
+\inferrule*[right = E-let-bang]
+{
+    \inferrule*[right = E-bang]
+    {\empty}
+    {
+    \eval{!( \lambda x. (\dots 0\, c_1))}{ !( \lambda x. (\dots 0\, c_1))}{0}
+    }
+\and
+    \inferrule*[right = E-query]
+    {\empty}
+    {
+    \eval{\lambda x. (\dots 0\, c_1)}{q}{0}
+    }
+\and
+    \inferrule*[right = E-mt]
+    {\empty}
+    {
+    \eval{M(q)}{c}{1}
+    }
+}
+{
+\eval{\letx{!q}{!( \lambda x. (\dots 0\, c_1))}{M(q)}}{c}{1}
+}
+
 
 \end{mathpar}
 
