@@ -26,7 +26,8 @@
      \text{Term} & \quad & t ::= c \sep \fix{t} \sep \app{t}{t} \sep !t \sep (t_1,t_2) \sep  \letx{!x}{t_1}{t_2} \sep \Lambda.t \sep t[] \sep \abs{x}{t} \sep  M(t) \sep x \sep q \sep\\
      && \quad   \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  \sep \letx{(x_1,x_2)}{t_1}{t_2} \\[2mm]
       
-     \text{Normal Form} &\quad & F ::=  c \sep \fix{t} \sep !t \sep (F_1, F_2) \sep \Lambda. t \sep \abs{x}{t} \sep M(F) \sep x \sep q \sep \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b_i}  \\[2mm]
+     \text{Normal Form} &\quad & F ::=  c \sep \fix{t} \sep !t \sep (F_1, F_2) \sep \Lambda. t \sep \abs{x}{t} \sep M(F) \sep x \sep q \sep \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b_i} \sep\\
+     && \enil \sep \econs(F_1,F_2)  \\[2mm]
 
      \text{Mechanisms} &\quad & M ::=  {\tt gauss} \sep {\tt thdt} \\[2mm]
 
@@ -393,8 +394,8 @@ Evaluation:
 \eval{\mathsf{if} \dots \letx{a}{M(\dots)}{\dots}}{c_1}{1}
 }
 
-\Pi_2:
-\inferrule*[right = E-let-bang]
+\Pi_2: 
+\inferrule*[lab = E-let-bang]
 {
     \inferrule*[right = E-bang]
     {\empty}
@@ -426,6 +427,7 @@ Evaluation:
 
 
 
+
 \begin{algorithm}
 \caption{A two-round analyst strategy for random data (Algorithm 4 in ...)}
 \label{alg:BitGOF}
@@ -443,6 +445,34 @@ Evaluation:
 \ENSURE $a_{k+1}\in [-1,+1]$
 \end{algorithmic}
 \end{algorithm}
+
+
+\clearpage
+
+\begin{figure}
+    \centering
+   Multi-rounds:
+
+\[
+\begin{array}{l}
+ \mathsf{let}\, \mathsf{multi\_round} =   \mathsf{fix} \, f(j). \lambda k. \lambda D. \lambda I. \lambda S. \lambda SC.  \\
+ \hspace{.2cm} \mathsf{if}\, (j < k) \, \mathsf{then} \\
+  \hspace{.8cm} \mathsf{let} \, P_j =  \mathsf{uniform}(0,1) \, \mathsf{in} \\
+  \hspace{1.2cm} \mathsf{let} q_j = \lambda x. \mathsf{if} (\mathsf{uniform}(0,1) < p_j ) \, \mathsf{then} \, 1 \, \mathsf{else} \, 0 \, \mathsf{in} \\
+  \hspace{1.2cm} \mathsf{let} q_{j,c} = \lambda x. \mathsf{if} (\mathsf{uniform}(0,1) < p_j ) \, \mathsf{then} \, 1 \, \mathsf{else} \, 0 \, \mathsf{in} \\
+  \hspace{1.6cm} \mathsf{let} q_{jd} =    \mathsf{in}\\
+ \hspace{1.2cm} \mathsf{let} \, a_j = M (q_j) \, \mathsf{in} \\
+ \hspace{1.4cm} \mathsf{let} \, S_{j,i} = \mathsf{updt1} \, S_{j,c} \, a_j \,  p_j \, q_j \mathsf{in}   \\
+ \hspace{1.4cm}  \mathsf{let} \,  S_{j,c} = \mathsf{updt2} \, S_{j,c} \, a_j \, p_j \, q_{j,c} \, \mathsf{in}\\
+ \hspace{1.6cm} \mathsf{let} \, I_j =  \mathsf{updt3} \, S \, SC \, \mathsf{in} \\
+   f (j+1) \, k , (D \setminus I_j) \, I_j \, S_{j,i} \, S_{j,c}
+\end{array}
+\]
+    \caption{Caption}
+    \label{fig:my_label}
+\end{figure}
+
+
 
 \clearpage
 \begin{figure}
@@ -523,7 +553,7 @@ Evaluation:
    \and
    \inferrule*[right = pr]
    {[\Gamma] \jtype{n}{}{t}{\tau}}
-   {\Delta, p + [\Gamma] \jtype{n}{}{!t}{!_p \tau}  }
+   {\Delta, p + [\Gamma] \jtype{n+p}{}{!t}{!_p \tau}  }
 %   \boxed{
 %   \inferrule*[right = pr]
 %   {[\Gamma] \jtype{n}{}{t}{\tau}}
@@ -556,7 +586,7 @@ Evaluation:
    
    \inferrule*[ right = der ]
    {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
-   { \Gamma , x: [\tau]_0 \jtype{n }{}{t }{\tau }  }
+   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
    \boxed{
    \inferrule*[ right = der ]
    {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
@@ -661,6 +691,11 @@ Evaluation:
   { }
   { \Gamma \subseteq \Gamma }
   
+   \and
+  \inferrule*[right = S-empty]
+  { }
+  { \emptyset \subseteq \Gamma }
+  
   \and
   \inferrule*[right = S-Ctx]
   {
@@ -669,112 +704,119 @@ Evaluation:
   }
   {\Gamma, x: A \subseteq \Delta, x: B }
   
+  \and
+  \inferrule*[right = S-xctx]
+  {
+  {\Delta \subseteq \Gamma }
+  }
+  {\Delta \subseteq \Gamma \cup \Gamma'  }
+  
  \end{mathpar}
  \caption{sub typing}
 \end{figure}
 
 
 
-\begin{figure}
-\boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }
-\boxed{  \Gamma :: = \emptyset \sep \Gamma, [\tau]_p   } \\
-\boxed{ \max \big( (x:[\tau]_{p_1},\Gamma_1 ),(x:[\tau]_{p_2},\Gamma_2) \big ) \triangleq x:[\tau]_{\max(p_1,p_2)}, \max(\Gamma_1,\Gamma_2) \qquad
-\max(\emptyset, \Gamma_2) \triangleq \Gamma_2  \qquad \max(\Gamma_1, \emptyset) \triangleq \Gamma_1 
-}
+% \begin{figure}
+% \boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }
+% \boxed{  \Gamma :: = \emptyset \sep \Gamma, [\tau]_p   } \\
+% \boxed{ \max \big( (x:[\tau]_{p_1},\Gamma_1 ),(x:[\tau]_{p_2},\Gamma_2) \big ) \triangleq x:[\tau]_{\max(p_1,p_2)}, \max(\Gamma_1,\Gamma_2) \qquad
+% \max(\emptyset, \Gamma_2) \triangleq \Gamma_2  \qquad \max(\Gamma_1, \emptyset) \triangleq \Gamma_1 
+% }
 
-\begin{mathpar}
-  \inferrule*[right = const]
-   {\empty}
-   {\Gamma \jtype{0}{}{c}{b}  }
+% \begin{mathpar}
+%   \inferrule*[right = const]
+%   {\empty}
+%   {\Gamma \jtype{0}{}{c}{b}  }
    
-   \and
-    \inferrule*[right = abs]
-   {\Gamma, x: [\tau_1]_{0} \jtype{n}{}{t}{\tau_2}}
-   { \Gamma \jtype{n}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
+%   \and
+%     \inferrule*[right = abs]
+%   {\Gamma, x: [\tau_1]_{0} \jtype{n}{}{t}{\tau_2}}
+%   { \Gamma \jtype{n}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
    
-   \and
-   \inferrule*[right = pr]
-   {\Gamma \jtype{n}{}{t}{\tau}}
-   {p + \Gamma \jtype{n}{}{!t}{!_p \tau}  }
+%   \and
+%   \inferrule*[right = pr]
+%   {\Gamma \jtype{n}{}{t}{\tau}}
+%   {p + \Gamma \jtype{n}{}{!t}{!_p \tau}  }
    
-   \and
-    \inferrule*[ right = var]
-   {\empty}
-   {\Gamma, x:[\tau]_p \jtype{0}{}{x}{\tau}  } 
+%   \and
+%     \inferrule*[ right = var]
+%   {\empty}
+%   {\Gamma, x:[\tau]_p \jtype{0}{}{x}{\tau}  } 
    
-   \and
-   \inferrule*[ right = MT ]
-   {\Gamma \jtype{n}{}{t}{query}}
-   {1 + \Gamma \jtype{n+1}{}{M(t)}{b}  }
+%   \and
+%   \inferrule*[ right = MT ]
+%   {\Gamma \jtype{n}{}{t}{query}}
+%   {1 + \Gamma \jtype{n+1}{}{M(t)}{b}  }
    
-   \and
-    \inferrule*[right = query]
-   {\empty}
-   {\Gamma \jtype{0}{}{q}{query}  }
+%   \and
+%     \inferrule*[right = query]
+%   {\empty}
+%   {\Gamma \jtype{0}{}{q}{query}  }
    
-   \and
-    \inferrule*[ right = app ]
-   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
-   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
-   
-   \and 
-   
-%   \inferrule*[ right = der ]
-%   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
-%   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
+%   \and
+%     \inferrule*[ right = app ]
+%   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
+%   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
    
 %   \and 
    
-   \inferrule*[ right = let ]
-   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
-   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+% %   \inferrule*[ right = der ]
+% %   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+% %   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
    
-   \and 
-   \inferrule*[ right = let-p ]
-   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
-   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+% %   \and 
    
-   \and
-     \inferrule*[right = pair]
-   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2}}
-   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+%   \inferrule*[ right = let ]
+%   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
+%   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   
+%   \and 
+%   \inferrule*[ right = let-p ]
+%   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
+%   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+   
+%   \and
+%      \inferrule*[right = pair]
+%   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2}}
+%   { \max(\Gamma_1,\Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
  
-   \and
-    \inferrule*[ right = case-const ]
-   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
-   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+%   \and
+%     \inferrule*[ right = case-const ]
+%   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
+%   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
    
-   \and
-    \inferrule*[ right = case-query]
-   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
-   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+%   \and
+%     \inferrule*[ right = case-query]
+%   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
+%   {\max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
    
-   \inferrule*[right = iabs]
-  { 
-    \inferrule*[]
-    {}
-    {i::\mathbb{N};\Gamma \jtype{n}{}{t}{ \tau } }
-    \and
-    \inferrule*[]
-    {}
-    { i \notin FV(\Gamma )  } 
-  }
-  { \Gamma \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+%   \inferrule*[right = iabs]
+%   { 
+%     \inferrule*[]
+%     {}
+%     {i::\mathbb{N};\Gamma \jtype{n}{}{t}{ \tau } }
+%     \and
+%     \inferrule*[]
+%     {}
+%     { i \notin FV(\Gamma )  } 
+%   }
+%   { \Gamma \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
   
-   \inferrule*[ right =  iapp]
-  { 
-    \inferrule*[]
-    {}
-    { \Gamma  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } }
-    \and
-    \inferrule*[]
-    {}
-    { \jiterm{I}{ \mathbb{N} } } 
-  }
-  {\Gamma \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
-\end{mathpar}
-\caption{Typing judgment (with only discharged variables in the context) }
-\end{figure}
+%   \inferrule*[ right =  iapp]
+%   { 
+%     \inferrule*[]
+%     {}
+%     { \Gamma  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } }
+%     \and
+%     \inferrule*[]
+%     {}
+%     { \jiterm{I}{ \mathbb{N} } } 
+%   }
+%   {\Gamma \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+% \end{mathpar}
+% \caption{Typing judgment (with only discharged variables in the context) }
+% \end{figure}
 
 \clearpage
 
@@ -906,12 +948,68 @@ Evaluation:
   }
   { \eval{  M(t)  }{ M(F)  }{  m } }
   
+\end{mathpar}
+ \caption{Evaluation Rules}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+
+\inferrule*[right = E-if-true]
+{
+ \eval{b}{true}{0}
+ \and 
+ \eval{t_1}{F_1}{n} 
+}
+{
+\eval{\tif{b}{t_1}{t_2}}{F_1}{n}
+}
+
+\inferrule*[right = E-if-false]
+{
+ \eval{b}{false}{0}
+ \and 
+ \eval{t_2}{F_2}{n} 
+}
+{
+\eval{\tif{b}{t_1}{t_2}}{F_2}{n}
+}
+
+\inferrule*[right = E-nil]
+{
+ \empty
+}
+{
+\eval{\enil}{\enil}{0}
+}
+
+\inferrule*[right = E-cons]
+{
+\eval{e_1}{F_1}{n_1}
+\and 
+\eval{e_2}{F_2}{n_2}
+}
+{
+\eval{\econs(e_1,e_2)}{\econs(F_1,F_2)}{0}
+}
+
      \inferrule*[ right=E-mech2]
   { 
   }
   { \eval{  M(F)  }{ c  }{  1 } }
-  
+
+\inferrule*[right = E-let]
+{
+\eval{e_2}{F_2}{n_2}
+\and
+\eval{t[F_2/x]}{F}{n}
+}
+{
+\eval{\letx{x}{t_2}{t}}{F}{n_2 + n}
+}
+
 \end{mathpar}
+ \caption{New Added Evaluation Rules}
 \end{figure}
 
 
@@ -1127,28 +1225,41 @@ This is proved by the definition of $\depth(q)$.
 
 \begin{lemma}[Depth Weakening1] 
 	\label{lem:deweaken1}
-	$\Gamma \jtype{n_1,m}{}{e}{\tau} \land n_1 \leq n_2 \implies \Gamma \jtype{n_2,m}{}{e}{\tau}$\\
+	$\Gamma \jtype{n_1,m}{}{t}{\tau} \land n_1 \leq n_2 \implies \Gamma \jtype{n_2,m}{}{t}{\tau}$\\
 \end{lemma}
+\begin{proof}
+  By induction on $\Gamma \jtype{n_1}{}{t}{\tau}  $.
+\end{proof}
 
 \begin{lemma}[Depth Weakening2] 
 	\label{lem:deweaken2}
-	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \implies \Gamma, x:[\tau]_{p_2} \jtype{n}{}{e}{\tau} $\\
-	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \land \Gamma \subseteq \Gamma' \land n \leq n' \implies \Gamma', x:[\tau]_{p_2} \jtype{n'}{}{e}{\tau} $\\
+	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau} \land p_1 \leq p_2 \implies \Gamma, x:[\tau]_{p_2} \jtype{n}{}{t}{\tau} $\\
+% 	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \land \Gamma \subseteq \Gamma' \land n \leq n' \implies \Gamma', x:[\tau]_{p_2} \jtype{n'}{}{e}{\tau} $\\
 \end{lemma}
+\begin{proof}
+  By induction on $\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau}  $.
+\end{proof}
 
 \begin{lemma}[Context weakening - 1]
     \label{lem:coweaken1}
-    $\Gamma \jtype{n,m}{}{e}{\tau}  \implies \Gamma, x:\tau \jtype{n,m}{}{e}{\tau} $\\
+    $\Gamma \jtype{n,m}{}{t}{\tau}  \implies \Gamma, x:\tau \jtype{n,m}{}{t}{\tau} $\\
 \end{lemma}
+\begin{proof}
+  By induction on $\Gamma \jtype{n}{}{t}{\tau}  $ and using ih.
+\end{proof}
 
 \begin{lemma}[Context weakening - 2]
     \label{lem:coweaken2}
-    $\Gamma \jtype{n,m}{}{e}{\tau}  \implies \Gamma, x:[\tau]_p \jtype{n,m}{}{e}{\tau} $\\
+    $\Gamma \jtype{n,m}{}{t}{\tau}  \implies \Gamma, x:[\tau]_p \jtype{n,m}{}{t}{\tau} $\\
 \end{lemma}
+\begin{proof}
+  By induction on $\Gamma \jtype{n}{}{t}{\tau} $, using ih.
+\end{proof}
+
 
 \begin{lemma}[Context exchange]
     \label{lem:coex}
-    $\Gamma, x : \tau_1, \Delta, y : \tau_2 \jtype{n,m}{}{e}{\tau}  \implies \Gamma, y : \tau_2, \Delta, x : \tau_1 \jtype{n,m}{}{e}{\tau} $\\
+    $\Gamma, x : \tau_1, \Delta, y : \tau_2 \jtype{n,m}{}{t}{\tau}  \implies \Gamma, y : \tau_2, \Delta, x : \tau_1 \jtype{n,m}{}{t}{\tau} $\\
 \end{lemma}
 
 \begin{lemma}
@@ -1158,9 +1269,54 @@ This is proved by the definition of $\depth(q)$.
 
 \begin{lemma}
 	\label{lem:subext}
-	If $\Gamma \subseteq \Gamma'$ and $\gamma \vDash \Gamma$ and $\gamma' \vDash \Gamma'$ and $ \cdot \jtype{n}{}{\gamma(t)}{\tau} $, then $ \cdot \jtype{n}{}{\gamma'(t)}{\tau} $ \\
+	If $\Gamma \subseteq \Gamma'$ and $\Gamma \jtype{n}{}{t}{\tau}$, then  $\Gamma'  \jtype{n}{}{t}{\tau} $. \\
 \end{lemma}
+\begin{proof}
+  Induction on $\Gamma \subseteq \Gamma'$.\\
+    \noindent \textbf{Case} 
+    \[
+    \inferrule*[right = S-IDC]
+  { }
+  { \Gamma \subseteq \Gamma }
+    \]
+   $ \Gamma' = \Gamma $.\\
+   Because $\gamma' = \gamma$, This case is proved.\\
+   
+    \noindent \textbf{Case} 
+    \[
+     \inferrule*[right = S-xctx]
+  {
+  {\Delta \subseteq \Gamma }
+  }
+  {\Delta \subseteq \Gamma \cup \Gamma'  }
+    \]
+    We have $\Delta \jtype{n}{}{t}{\tau}$. We get :$ \Gamma \jtype{n}{}{t}{\tau}$ by ih. \\
+    For any $\Gamma'$, suppose $\Gamma' =  x_i : \tau_i , y_i : [\tau_i']$, we conclude $\Gamma \cup \Gamma' \jtype{n}{}{t}{\tau} $ by Lemma~\ref{lem:coweaken1} and Lemma~\ref{lem:coweaken2} for every $x_i$ and $y_i$.\\
+   
+    \noindent \textbf{Case}  
+    \[
+    \inferrule*[right = S-empty]
+  { }
+  { \emptyset \subseteq \Gamma }
+    \]
+   It is proved by Lemma~\ref{lem:coweaken1} and Lemma~\ref{lem:coweaken2} several times for every variables in $\Gamma$. \\
+   
+    \noindent \textbf{Case}  
+    \[
+  \inferrule*[right = S-Ctx]
+  {
+  {B \subseteq A  }\\
+  {\Gamma \subseteq \Delta}
+  }
+  {\Gamma, x: A \subseteq \Delta, x: B }
+    \]
+  
+    
+    
+\end{proof}
 
+
+\clearpage
 \begin{theorem}[Type Safety]
 	If $\cdot \jtype{n,m}{}{t}{\tau} $ then $ \exists F. t \Downarrow F \land \jtype{n,m}{}{F}{\tau}$
 \end{theorem}
@@ -1219,10 +1375,10 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
  \]
  We assume $ \gamma \vDash \Delta, p+[\Gamma] ~(\spadesuit) $. \\
  TS : $ \gamma(!t_1) \in \llu{!_p \tau_1}{\epsilon} $ \\
- Because $\gamma ( !t)= ! \gamma(t) $ is value, unfold the definition of $\llu{!_p \tau_1}{\epsilon}$, STS: $ ! \gamma(t) \in \llu{!_p \tau_1}{v} $\\
- Unfold the definition of $\llu{!_p \tau_1}{v} $, STS: $\gamma (t) \in \llu{\tau_1}{\epsilon}$. \\
- We pick $\gamma_1$ s.t. $\gamma_1 \vDash [\Gamma] $, By ih, we get : $\gamma_1 (t_1) \in \llu{\tau_1}{\epsilon} ~(\star) $.\\
- By Lemma ~\ref{lem:subext} on $(\star)$ and we know $ [\Gamma] \subseteq \Delta,p+[\Gamma] $, This case is proved.\\
+ Because $\gamma ( !t_1)= ! \gamma(t_1) $ is value, unfold the definition of $\llu{!_p \tau_1}{\epsilon}$, STS: $ ! \gamma(t_1) \in \llu{!_p \tau_1}{v} $\\
+ Unfold the definition of $\llu{!_p \tau_1}{v} $, STS: $\gamma (t_1) \in \llu{\tau_1}{\epsilon}$. \\
+ We extend the context of the premise to $\Delta, p+[\Gamma] $ by Lemma~\ref{lem:coweaken1} and Lemma~\ref{lem:coweaken2}. By ih, we get  : $\gamma (t_1) \in \llu{\tau_1}{\epsilon} ~(\star) $.\\
+%  By Lemma ~\ref{lem:subext} on $(\star)$ and we know $ [\Gamma] \subseteq \Delta,p+[\Gamma] $, This case is proved.\\
  
  
   \noindent \textbf{Case} 
