@@ -184,7 +184,7 @@ let two_round d k m =
 
   let rec experiments oc i db =
      if i < !rounds then
-        let x = two_round db !cols gauss_mech in
+        let x = two_round db !cols thresholdout_mech in
         let y =  two_round db !cols nonoise_mech in
         write (x-.y) oc ; experiments oc (i+1) db
       else close_out oc
