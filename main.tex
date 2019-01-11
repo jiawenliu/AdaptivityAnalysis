@@ -394,7 +394,7 @@ Evaluation:
 \eval{\mathsf{if} \dots \letx{a}{M(\dots)}{\dots}}{c_1}{1}
 }
 
-\Pi_2: 
+\Pi_2: \quad
 \inferrule*[lab = E-let-bang]
 {
     \inferrule*[right = E-bang]
@@ -590,7 +590,7 @@ Evaluation:
    \boxed{
    \inferrule*[ right = der ]
    {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
-   { \Gamma , x: [\tau]_1 \jtype{n }{}{t }{\tau }  }
+   { \Gamma , x: [\tau]_0 \jtype{n }{}{t }{\tau }  }
  }
    
    \and 
@@ -646,7 +646,7 @@ Evaluation:
   \inferrule*[right = sub]
   { 
    { \Gamma \jtype{n}{}{t}{\tau} } \\
-   { \Gamma \subseteq \Gamma' } \\
+   {  \Gamma' \subseteq \Gamma } \\
    { \vDash n \leq n' } \\
    { \tau \subseteq \tau' }
   }
@@ -662,22 +662,22 @@ Evaluation:
   
   \inferrule*[right= S-ID]
   { }
-  { \tau \subseteq \tau  }
+  { \tau <: \tau  }
   \and
   \inferrule*[right = S-B]
   { 
-   {A \subseteq B}
+   {A <: B}
    \\
    { q \leq p }
   }
-  { !_p A \subseteq !_q B  }
+  { !_p A <: !_q B  }
   \and
   \inferrule*[right =  S-ARROW]
-  { {A' \subseteq A}
+  { {A' <: A}
     \\
-    {B \subseteq B'}
+    {B <: B'}
   }
-  { A \multimap B \subseteq A' \multimap B' }
+  { A \multimap B <: A' \multimap B' }
   \and
   \inferrule*[right = S-D ]
   {
@@ -694,22 +694,29 @@ Evaluation:
    \and
   \inferrule*[right = S-empty]
   { }
-  { \emptyset \subseteq \Gamma }
+  { \Gamma \subseteq \emptyset }
   
   \and
   \inferrule*[right = S-Ctx]
   {
-  {B \subseteq A  }\\
-  {\Gamma \subseteq \Delta}
+  {A \subseteq B}\\
+  { \Gamma \subseteq \Delta }
   }
-  {\Gamma, x: A \subseteq \Delta, x: B }
+  { \Gamma, x: A \subseteq \Delta, x: B }
   
   \and
-  \inferrule*[right = S-xctx]
+  \inferrule*[right = S-xctx1]
   {
-  {\Delta \subseteq \Gamma }
+  { \Delta \subseteq \Gamma }
   }
-  {\Delta \subseteq \Gamma \cup \Gamma'  }
+  { x : \tau, \Delta \subseteq \Gamma }
+  
+  \and
+  \inferrule*[right = S-xctx2]
+  {
+  { \Delta \subseteq \Gamma }
+  }
+  { x : [\tau]_p, \Delta \subseteq \Gamma }
   
  \end{mathpar}
  \caption{sub typing}
@@ -1233,11 +1240,64 @@ This is proved by the definition of $\depth(q)$.
 
 \begin{lemma}[Depth Weakening2] 
 	\label{lem:deweaken2}
-	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau} \land p_1 \leq p_2 \implies \Gamma, x:[\tau]_{p_2} \jtype{n}{}{t}{\tau} $\\
+	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau} \land p_1 \leq p_2 \implies \exists m. n \leq m$ s.t. $\Gamma, x:[\tau]_{p_2} \jtype{n}{}{t}{\tau} $\\
 % 	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \land \Gamma \subseteq \Gamma' \land n \leq n' \implies \Gamma', x:[\tau]_{p_2} \jtype{n'}{}{e}{\tau} $\\
 \end{lemma}
 \begin{proof}
-  By induction on $\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau}  $.
+  By induction on $\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau}  $.\\
+\noindent \textbf{Case} 
+\[
+   \inferrule*[ right = let-b ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{!_p \tau_1} \\ \Gamma_2, y: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!y}{t_1}{t_2}}{\tau_2}  }
+\]
+where $\tau = \tau_2$, $t = \letx{!y}{t_1}{t_2}$.
+
+\textbf{Subcase 1: x $\not \in \fcv{\Delta_2}$ }
+\[
+   \inferrule*[ right = let-b ]
+   {\Gamma_1', x:[\tau]_{p1} \jtype{n_1}{}{t_1}{!_p \tau_1}~(\star) \\
+   \Gamma_2, y: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}~(\diamond)}
+   { \max(\Gamma_1', x:[\tau]_{p1} , \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!y}{t_1}{t_2}}{\tau_2}  }
+\]
+To show:$\max(\Gamma_1', x:[\tau]_{p2} , \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!y}{t_1}{t_2}}{\tau_2}$\\
+By ih on $(\star)$, we get: $\Gamma_1', x:[\tau]_{p2} \jtype{n_1}{}{t_1}{!_p \tau_1}~(\star\star)$.\\
+Applying the rule $\rname{LET-B}$ on $(\star\star)$ and $(\diamond)$, this case is proved.
+
+\textbf{Subcase 2: x $\not \in \fcv{\Delta_1}$ }
+\[
+   \inferrule*[ right = let-b ]
+   {
+   \Gamma_1 \jtype{n_1}{}{t_1}{!_p \tau_1}~(\star) \\
+   \Gamma_2', x:[\tau]_{p1}, y: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}~(\diamond)
+   }
+   { 
+   \max(\Gamma_1 , \Gamma_2', x:[\tau]_{p1})  \jtype{\max(n_1,n_2)}{}{\letx{!y}{t_1}{t_2}}{\tau_2}  
+   }
+\]
+To show:$\max(\Gamma_1', x:[\tau]_{p2} , \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!y}{t_1}{t_2}}{\tau_2}$\\
+By ih on $(\diamond)$, we get: $\Gamma_2', x:[\tau]_{p2}, y: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}~(\diamond\diamond)$.\\
+Applying the rule $\rname{LET-B}$ on $(\star)$ and $(\diamond\diamond)$, this case is proved.
+
+
+\textbf{Subcase 3}
+\[
+   \inferrule*[ right = let-b ]
+   {\Gamma_1', x:[\tau]_{p1} \jtype{n_1}{}{t_1}{!_p \tau_1} \\ \Gamma_2, x:[\tau]_{p1}, y: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1', \Gamma_2, x:[\tau]_{p1})  \jtype{\max(n_1,n_2)}{}{\letx{!y}{t_1}{t_2}}{\tau_2}  }
+\]
+To show:$\max(\Gamma_1', x:[\tau]_{p2} , \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!y}{t_1}{t_2}}{\tau_2}$\\
+By ih on $(\diamond)$, we get: $\Gamma_2', x:[\tau]_{p2}, y: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}~(\diamond\diamond)$.\\
+Applying the rule $\rname{LET-B}$ on $(\star)$ and $(\diamond\diamond)$, this case is proved.
+
+
+\noindent \textbf{Case} 
+\[
+   \inferrule*[right = pr]
+   {[\Gamma] \jtype{n}{}{t}{\tau}}
+   {\Delta, p + [\Gamma] \jtype{n+p}{}{!t}{!_p \tau}  }
+\]
+
 \end{proof}
 
 \begin{lemma}[Context weakening - 1]
@@ -1269,7 +1329,7 @@ This is proved by the definition of $\depth(q)$.
 
 \begin{lemma}
 	\label{lem:subext}
-	If $\Gamma \subseteq \Gamma'$ and $\Gamma \jtype{n}{}{t}{\tau}$, then  $\Gamma'  \jtype{n}{}{t}{\tau} $. \\
+	If $\Gamma \subseteq \Gamma'$,  and $\Gamma' \jtype{n}{}{t}{\tau}$, then $\exists m. n \leq m$ s.t.  $\Gamma  \jtype{m}{}{t}{\tau} $. \\
 \end{lemma}
 \begin{proof}
   Induction on $\Gamma \subseteq \Gamma'$.\\
@@ -1280,24 +1340,40 @@ This is proved by the definition of $\depth(q)$.
   { \Gamma \subseteq \Gamma }
     \]
    $ \Gamma' = \Gamma $.\\
-   Because $\gamma' = \gamma$, This case is proved.\\
+   This case is proved.\\
    
     \noindent \textbf{Case} 
     \[
-     \inferrule*[right = S-xctx]
+     \inferrule*[right = S-xctx1]
   {
   {\Delta \subseteq \Gamma }
   }
-  {\Delta \subseteq \Gamma \cup \Gamma'  }
+  {x:\tau', \Delta \subseteq \Gamma }
     \]
-    We have $\Delta \jtype{n}{}{t}{\tau}$. We get :$ \Gamma \jtype{n}{}{t}{\tau}$ by ih. \\
-    For any $\Gamma'$, suppose $\Gamma' =  x_i : \tau_i , y_i : [\tau_i']$, we conclude $\Gamma \cup \Gamma' \jtype{n}{}{t}{\tau} $ by Lemma~\ref{lem:coweaken1} and Lemma~\ref{lem:coweaken2} for every $x_i$ and $y_i$.\\
+    We have $\Gamma \jtype{n}{}{t}{\tau}$. \\
+    TS: $ x:\tau', \Delta \jtype{n}{}{t}{\tau}$.
+    \\ 
+    By ih, we get :  $ \exists m. m \geq n.$ s.t. $\Delta \jtype{m}{}{t}{\tau}$, this case is proved by Lemma~\ref{lem:coweaken1}.
+   
+    \noindent \textbf{Case} 
+    \[
+     \inferrule*[right = S-xctx2]
+  {
+  {\Delta \subseteq \Gamma }
+  }
+  {x:[\tau']_p, \Delta \subseteq \Gamma }
+    \]
+    We have $\Gamma \jtype{n}{}{t}{\tau}$. \\
+    TS: $ x:\tau', \Delta \jtype{n}{}{t}{\tau}$.
+    \\ 
+    By ih, we get :  $ \exists m. m \geq n.$ s.t. $\Delta \jtype{m}{}{t}{\tau}$, this case is proved by Lemma~\ref{lem:coweaken2}.
+   
    
     \noindent \textbf{Case}  
     \[
     \inferrule*[right = S-empty]
   { }
-  { \emptyset \subseteq \Gamma }
+  { \Gamma \subseteq \emptyset}
     \]
    It is proved by Lemma~\ref{lem:coweaken1} and Lemma~\ref{lem:coweaken2} several times for every variables in $\Gamma$. \\
    
@@ -1305,14 +1381,17 @@ This is proved by the definition of $\depth(q)$.
     \[
   \inferrule*[right = S-Ctx]
   {
-  {B \subseteq A  }\\
+  {A \subseteq B  }\\
   {\Gamma \subseteq \Delta}
   }
   {\Gamma, x: A \subseteq \Delta, x: B }
     \]
-By ih, we have: a$\Delta \jtype{n}{}{t}{\tau}$.\\
-Induction on $B \subseteq A$.\\
-     \textbf{SubCase}  
+    
+ We have: $\Delta, x:B \jtype{n}{}{t}{\tau}$.\\
+ TS: $\exists m. m \geq n $ s.t. $ \Gamma, x : A \jtype{m}{}{t}{\tau}  $    \\
+Induction on $A \subseteq B$.
+    
+    \textbf{SubCase}  
     \[
   \inferrule*[right = S-ID]
   {
@@ -1336,9 +1415,9 @@ Induction on $B \subseteq A$.\\
     \[
   \inferrule*[right = S-ARROW]
   {
-  A \subseteq A'
+  A' \subseteq A
   \and 
-  B' \subseteq B
+  B \subseteq B'
   }
     {A \multimap B \subseteq A' \multimap B' }
    \]
@@ -1425,30 +1504,31 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
   \noindent \textbf{Case} 
   \[
     \inferrule*[ right = let ]
-   {\Gamma_1 \jtype{n_1}{}{t_1}{!_p \tau_1}~(\star) \\ \Gamma_2, x: [\tau_1]_p \jtype{n_2}{}{t_1'}{\tau'}~(\diamond)}
-   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t_1}{t_1'}}{\tau'}  }
+   {\Gamma_1 \jtype{n_1}{}{t_1}{!_p \tau_1}~(\star) \\ \Gamma_2, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau'}~(\diamond)}
+   { \max(\Gamma_1,\Gamma_2) \jtype{\max(n_1,n_2)}{}{\letx{!x}{t_1}{t_2}}{\tau'}  }
   \]
   We assume $\gamma \vDash \max(\Gamma_1,\Gamma_2 ) ~(\spadesuit) $.
-  TS: $ \gamma ( \letx{!x}{t_1}{t_1'} ) \in \llu{ \tau'}{\epsilon} $. \\
-  Unfold $ \llu{ \tau'}{\epsilon} $, STS: $\exists F. \eval{\gamma ( \letx{!x}{t}{t'} )}{F}{} \land F \in \llu{ \tau'}{v} $.
+  TS: $ \gamma ( \letx{!x}{t_1}{t_2} ) \in \llu{ \tau'}{\epsilon} $. \\
+  Unfold $ \llu{ \tau'}{\epsilon} $, STS: $\exists F. \eval{\gamma ( \letx{!x}{t_1}{t_2} )}{F}{} \land F \in \llu{ \tau'}{v} $.
   
-  Pick $\gamma_1$ s.t. $\gamma_1 \vDash \Gamma_1 $. By ih on $(\star)$ we get : $ \gamma_1(t_1) \in \llu{!_p \tau_1 }{\epsilon}$. \\
-  By Lemma~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2)$, we know: $ \gamma(t_1) \in \llu{!_p \tau_1 }{\epsilon}~(1) $\\
-  Unfold (1), we get: $\exists F. \eval{\gamma(t_1)}{F}{} \land F \in \llu{ !_p \tau_1}{v}~(2)  $.  
- 
-  Pick $\gamma_2$ s.t. $\gamma_2 \vDash \Gamma_2 \implies \gamma_2[F/x] \vDash \Gamma_2, x:[\tau_1]_p $. By ih on $(\diamond)$ we get : $ \gamma_2[F/x](t_1') \in \llu{ \tau' }{\epsilon} ~(3)$. \\
-  By Lemma~\ref{lem:subext} and $\Gamma_2, x:[\tau_1]_p \subseteq \max(\Gamma_1,\Gamma_2), x:[\tau_1]_p$, we know: $ \gamma[F/x](t_1') \in \llu{ \tau' }{\epsilon}~(4) $\\
+  Extend the context of $(\star)$ to $\max(\Gamma_1,\Gamma_2)$ using Lemma~\ref{lem:coweaken1} and Lemma~\ref{lem:coweaken2} or the rule (\rname{SUB}). By ih on $(\star)$ we get : $ \gamma(t_1) \in \llu{!_p \tau_1 }{\epsilon} ~(1) $\\
+  Unfold (1), we get: $\exists F. \eval{\gamma(t_1)}{F}{} \land F \in \llu{ !_p \tau_1}{v}~(2)  $.\\
+  Unfold (2), we know: $ \exists !t_3. \eval{\gamma(t_1)}{!t_3}{} \land t_3 \in \llu{  \tau_1}{\epsilon}~(3)$. \\
+ Unfold (3), we know: $ \exists !t_3. \eval{\gamma(t_1)}{!t_3}{} \land \exists F'. \eval{t_3}{F'}{} \land F' \in \llu{  \tau_1}{v}~(4)$. \\
+  Pick $F' $ in $(4)$. Extend the context of $(\diamond)$ to $\max(\Gamma_1,\Gamma_2), x:[\tau_1]_p$ s.t. $\gamma [F'/x] \vDash{\max(\Gamma_1,\Gamma_2), x:[\tau_1]_p} $. By ih on $(\diamond)$ we get : $ \gamma[F'/x](t_2) \in \llu{ \tau' }{\epsilon} ~(5)$. \\
+  Unfold $(5)$, we know $\exists F. \eval{\gamma[F'/x](t_1')}{F}{}\land F \in \llu{\tau'}{v} ~(6) $.\\
   
-
-    It is proved by unfolding (2),(4) and the following evaluation rule \rname{E-LET-BANG}.
+  This case is proved using the following evaluation rule \rname{E-LET-BANG} and $(6)$.
    \[
    \inferrule*[ right=E-let-bang]
   {   
-    { \eval{ \gamma(t_1) }{ !t_2  }{m_1} } 
+    { \eval{ \gamma(t_1)  }{ !t_3  }{m_1} } 
     \\
-    { \eval{\gamma[!t_2/x](t_1') }{ F'}{m_3 } }
+    {\eval{t_3}{F'}{m_2}}
+    \\
+    { \eval{\gamma(t_2[F'/x]) }{ F}{m_3 } }
   }
-  { \eval{  \letx{!x}{\gamma(t_1)}{\gamma(t_1')}  }{ F'  }{ m_1+m_2+m_3  } }  
+  { \eval{  \letx{!x}{\gamma (t_1)}{\gamma(t_2)}  }{ F  }{ m_1+m_2+m_3  } }  
    \]
   
   \noindent \textbf{Case} 
@@ -1549,7 +1629,22 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
   By Lemma ~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2) $ and $ \Gamma_2 \subseteq \max(\Gamma_1,\Gamma_2) $, we get: $\gamma(t) \in \llu{b}{\epsilon}~(1) $ and $ \gamma(t_i) \in \llu{query}{\epsilon}~(2)$.\\
    It is proved by unfolding (1) and (2) and using the evaluation rule \rname{E-CASE} and the definition of $T_{query}$.\\ 
   
-  
+%   \noindent \textbf{Case}
+% \[
+%   \inferrule*[right = sub]
+%   { 
+%   { \Gamma \jtype{n}{}{t}{\tau} ~(\star) } \\
+%   {  \Gamma' \subseteq \Gamma } \\
+%   { \vDash n \leq n' } \\
+%   { \tau \subseteq \tau' }
+%   }
+%   { \Gamma' \jtype{n'}{}{t}{\tau'} }
+%  \]
+% We assume $\gamma \vDash \Gamma'$.\\
+% To show $\gamma(t)\in \llu{\tau'}{\epsilon}$. \\
+% We assume $\gamma' \vDash \Gamma$. By ih on $(\star)$, we get:  $\gamma'(t) \in \llu{\tau}{\epsilon}$.\\
+% By $\Gamma ' \subseteq \Gamma $ and $\tau \subseteq \tau'$, we get: $\gamma(t)  \in \llu{\tau'}{\epsilon}$, this case is proved.
+
  
  \end{proof}
 
@@ -1754,7 +1849,21 @@ From the evaluation rule, we get:
   \]
   By ih, we know : $ \cdot \jtype{n_1}{}{F_1}{\tau_1}$ and $ \cdot \jtype{n_2}{}{F_2}{\tau_2}$. \\
   This case is proved by using the rule \rname{PAIR}.\\
-   
+ 
+  \noindent \textbf{Case}
+\[
+  \inferrule*[right = sub]
+  { 
+   { \Gamma \jtype{n}{}{t}{\tau} ~(\star) } \\
+   {  \Gamma' \subseteq \Gamma } \\
+   { \vDash n \leq n' } \\
+   { \tau \subseteq \tau' }
+  }
+  { \Gamma' \jtype{n'}{}{t}{\tau'} }
+ \]
+ by ih on $(\star)$, we get:
+ $\Gamma \jtype{n}{}{F}{\tau}$.\\
+ This case is proved by using the rule $\rname{SUB}$.
  
 \end{proof}
 
@@ -2350,7 +2459,7 @@ $$
   \inferrule*[right = sub]
   { 
    { \Delta, x:\tau_1 \jtype{n}{}{t}{\tau} ~(\star) } \\
-   { \Delta, x:\tau_1 \subseteq \Delta',x:\tau_1 ~ (\clubsuit) }  \\
+   { \Delta', x:\tau_1 \subseteq \Delta,x:\tau_1 ~ (\clubsuit) }  \\
    { \vDash n \leq n' } ~(\spadesuit) \\
    { \tau \subseteq \tau' }
   }
@@ -2358,7 +2467,7 @@ $$
 $$
 TS: $ \max(\Gamma, \Delta') \jtype{\max(n',n_1)}{}{t}{\tau'}$.\\
 By ih on ($\star$), we get : $\max(\Gamma, \Delta) \jtype{\max(n,n_1)}{}{t}{\tau} $.\\
-$(\clubsuit) \implies \max(\Gamma,\Delta) \subseteq \max(\Gamma,\Delta')~(\clubsuit\clubsuit) $.\\
+$(\clubsuit) \implies \max(\Gamma,\Delta') \subseteq \max(\Gamma,\Delta)~(\clubsuit\clubsuit) $.\\
 $ (\spadesuit) \implies  \vDash \max(n_1,n) \leq \max(n_1,n') $.\\
 It is proved by the rule \rname{SUB}.\\
 
@@ -2718,7 +2827,7 @@ It is proved by the rule \rname{IAPP} with $(\star\star)$.\\
   \inferrule*[right = sub]
   { 
    { \Delta, x:[\tau_1]_p \jtype{n}{}{t}{\tau} ~(\star) } \\
-   { \Delta, x:[\tau_1]_p\subseteq \Delta',x:\tau_1 ~ (\clubsuit) }  \\
+   { \Delta', x:[\tau_1]_p \subseteq \Delta,x:\tau_1 ~ (\clubsuit) }  \\
    { \vDash n \leq n' } ~(\spadesuit) \\
    { \tau \subseteq \tau' }
   }
@@ -2726,7 +2835,7 @@ It is proved by the rule \rname{IAPP} with $(\star\star)$.\\
 \]
 To show $ \max(\Gamma, \Delta') \jtype{\max(n_1 + p, n')}{}{t}{\tau'}$.\\
 By induction hypothesis on ($\star$), we get : $\max(\Gamma, \Delta) \jtype{\max(n_1 + p, n)}{}{t}{\tau} $.\\
-$(\clubsuit) \implies \max(\Gamma,\Delta) \subseteq \max(\Gamma,\Delta')~(\clubsuit\clubsuit) $.\\
+$(\clubsuit) \implies \max(\Gamma,\Delta') \subseteq \max(\Gamma,\Delta)~(\clubsuit\clubsuit) $.\\
 $ (\spadesuit) \implies  \vDash \max(n_1 + p, n) \leq \max(n_1 + p,n') $.\\
 It is proved by the rule \rname{SUB}.\\
 
