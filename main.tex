@@ -584,9 +584,9 @@ Evaluation:
    
    \and 
    
-   \inferrule*[ right = der ]
-   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
-   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
+%   \inferrule*[ right = der ]
+%   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+%   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
    \boxed{
    \inferrule*[ right = der ]
    {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
@@ -612,12 +612,12 @@ Evaluation:
    \and
     \inferrule*[ right = case-const ]
    {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
-   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+   {\max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2) | (n_1+n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
    
    \and
     \inferrule*[ right = case-query]
    {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
-   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)| (n_1+n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
    
    \inferrule*[right = iabs]
   { 
@@ -832,10 +832,10 @@ Evaluation:
 \begin{figure}
 \boxed{\eval{t }{v }{m}}
 \begin{mathpar}
- \inferrule*[ right=E-values]
-  { }
-  { \eval{ F   }{ F  }{0}}   
-  \and
+%  \inferrule*[ right=E-values]
+%   { }
+%   { \eval{ F   }{ F  }{0}}   
+%   \and
  \inferrule*[ right=E-const]
   { }
   { \eval{ c   }{ c  }{0}}   
@@ -866,7 +866,8 @@ Evaluation:
     \\
     { \eval{ t_2  }{ F_2  }{m_2} } 
   }
-  { \eval{  (t_1,t_2)  }{ (F_1,F_2)  }{ m_1+m_2  } }  
+  { \eval{  (t_1,t_2)  }{ (F_1,F_2)  }{ \max(m_1, m_2) %m_1+m_2
+  } }  
   
   \and
 
@@ -878,7 +879,7 @@ Evaluation:
     \\
     { \eval{t[F/x] }{ F'}{m_3 } }
   }
-  { \eval{ \app{t_1}{t_2}  }{ F'  }{ m_1+m_2+m_3  } }  
+  { \eval{ \app{t_1}{t_2}  }{ F'  }{ \max(m_1+m_3, m_2 )  } }  
  
  \boxed{ 
    \inferrule*[ right=E-let-bang]
@@ -889,24 +890,24 @@ Evaluation:
     \\
     { \eval{t_2[F'/x] }{ F}{m_3 } }
   }
-  { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_2+m_3  } }  
+  { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ \max(m_1+m_2,m_3 )  } }  
 }
 
- \inferrule*[ right=E-let-bang]
-  {   
-    { \eval{ t_1  }{ !t_3  }{m_1} } 
-    \\
-    { \eval{t_2[!t_3 /x] }{ F}{m_3 } }
-  }
-  { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_3  } } 
+%  \inferrule*[ right=E-let-bang]
+%   {   
+%     { \eval{ t_1  }{ !t_3  }{m_1} } 
+%     \\
+%     { \eval{t_2[!t_3 /x] }{ F}{m_3 } }
+%   }
+%   { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_3  } } 
   
   \inferrule*[ right=E-let-p]
   {   
     { \eval{ t  }{ (F_1,F_2)  }{m_1} } 
     \\
-    { \eval{t'[F_1/x_1][F_2/x_2] }{ F}{m_3 } }
+    { \eval{t'[F_1/x_1][F_2/x_2] }{ F}{m2 } }
   }
-  { \eval{  \letx{(x_1,x_2)}{t}{t'}  }{ F  }{ m_1+m_2+m_3  } } 
+  { \eval{  \letx{(x_1,x_2)}{t}{t'}  }{ F  }{ \max(m_1,m_2)  } } 
   
  
 
@@ -920,12 +921,12 @@ Evaluation:
     {}
     { \eval{ t_i  }{ F_i   }{ m_i }  }
   }
-  { \eval{ \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  }{ \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b}  }{  m + m_i } }
+  { \eval{ \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  }{ \tcaseof{F}\ \{c_i \Rightarrow F_i\}_{c_i \in b}  }{  m + \max(m_i) } }
   
     \inferrule*[ right=E-fix]
   { 
   }
-  { \eval{  \fix{t}  }{ \fix{t}  }{ m } }
+  { \eval{  \fix{t}  }{ \fix{t}  }{ 0 } }
   
       \inferrule*[ right=E-x]
   { 
@@ -966,20 +967,20 @@ Evaluation:
 {
  \eval{b}{true}{0}
  \and 
- \eval{t_1}{F_1}{n} 
+ \eval{t_1}{F_1}{m} 
 }
 {
-\eval{\tif{b}{t_1}{t_2}}{F_1}{n}
+\eval{\tif{b}{t_1}{t_2}}{F_1}{m}
 }
 
 \inferrule*[right = E-if-false]
 {
  \eval{b}{false}{0}
  \and 
- \eval{t_2}{F_2}{n} 
+ \eval{t_2}{F_2}{m} 
 }
 {
-\eval{\tif{b}{t_1}{t_2}}{F_2}{n}
+\eval{\tif{b}{t_1}{t_2}}{F_2}{m}
 }
 
 \inferrule*[right = E-nil]
@@ -992,12 +993,12 @@ Evaluation:
 
 \inferrule*[right = E-cons]
 {
-\eval{e_1}{F_1}{n_1}
+\eval{t_1}{F_1}{m_1}
 \and 
-\eval{e_2}{F_2}{n_2}
+\eval{t_2}{F_2}{m_2}
 }
 {
-\eval{\econs(e_1,e_2)}{\econs(F_1,F_2)}{0}
+\eval{\econs(t_1,t_2)}{\econs(F_1,F_2)}{\max(m_1,m_2)}
 }
 
      \inferrule*[ right=E-mech2]
@@ -1007,12 +1008,12 @@ Evaluation:
 
 \inferrule*[right = E-let]
 {
-\eval{e_2}{F_2}{n_2}
+\eval{t_2}{F_2}{m_2}
 \and
-\eval{t[F_2/x]}{F}{n}
+\eval{t[F_2/x]}{F}{m}
 }
 {
-\eval{\letx{x}{t_2}{t}}{F}{n_2 + n}
+\eval{\letx{x}{t_2}{t}}{F}{\max(m_2,m)}
 }
 
 \end{mathpar}
@@ -1629,21 +1630,21 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)  }{ F
   By Lemma ~\ref{lem:subext} and $\Gamma_1 \subseteq \max(\Gamma_1,\Gamma_2) $ and $ \Gamma_2 \subseteq \max(\Gamma_1,\Gamma_2) $, we get: $\gamma(t) \in \llu{b}{\epsilon}~(1) $ and $ \gamma(t_i) \in \llu{query}{\epsilon}~(2)$.\\
    It is proved by unfolding (1) and (2) and using the evaluation rule \rname{E-CASE} and the definition of $T_{query}$.\\ 
   
-%   \noindent \textbf{Case}
-% \[
-%   \inferrule*[right = sub]
-%   { 
-%   { \Gamma \jtype{n}{}{t}{\tau} ~(\star) } \\
-%   {  \Gamma' \subseteq \Gamma } \\
-%   { \vDash n \leq n' } \\
-%   { \tau \subseteq \tau' }
-%   }
-%   { \Gamma' \jtype{n'}{}{t}{\tau'} }
-%  \]
-% We assume $\gamma \vDash \Gamma'$.\\
-% To show $\gamma(t)\in \llu{\tau'}{\epsilon}$. \\
-% We assume $\gamma' \vDash \Gamma$. By ih on $(\star)$, we get:  $\gamma'(t) \in \llu{\tau}{\epsilon}$.\\
-% By $\Gamma ' \subseteq \Gamma $ and $\tau \subseteq \tau'$, we get: $\gamma(t)  \in \llu{\tau'}{\epsilon}$, this case is proved.
+  \noindent \textbf{Case}
+\[
+  \inferrule*[right = sub]
+  { 
+  { \Gamma \jtype{n}{}{t}{\tau} ~(\star) } \\
+  {  \Gamma' \subseteq \Gamma } \\
+  { \vDash n \leq n' } \\
+  { \tau \subseteq \tau' }
+  }
+  { \Gamma' \jtype{n'}{}{t}{\tau'} }
+ \]
+We assume $\gamma \vDash \Gamma'$.\\
+To show $\gamma(t)\in \llu{\tau'}{\epsilon}$. \\
+We assume $\gamma' \vDash \Gamma$. By ih on $(\star)$, we get:  $\gamma'(t) \in \llu{\tau}{\epsilon}$.\\
+By $\Gamma ' \subseteq \Gamma $ and $\tau \subseteq \tau'$, we get: $\gamma(t)  \in \llu{\tau'}{\epsilon}$, this case is proved.
 
  
  \end{proof}
