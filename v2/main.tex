@@ -1,0 +1,400 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{mathpartir}
+\usepackage{amsmath,amsthm,amsfonts}
+\usepackage{color}
+
+\input{ldefs}
+
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{prop}[thm]{Proposition}
+
+
+\title{Adaptivity analysis}
+
+\author{}
+
+\date{January 19, 2019}
+
+\begin{document}
+
+\maketitle
+
+
+\paragraph{Language}
+Expressions are shown below. $\econst$ denotes constants (of some base
+type $\tbase$, which may, for example, be reals or rational
+numbers). $\eop$ represents a primitive operation (such as a
+mechanism). We restrict $\eop$ to base types ($\tbase$, $\tbool$)
+only. We make environments explicit in closures. This is needed for
+the tracing semantics later.
+\[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr) \\
+%
+\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x).\expr, \env) ~|~ (\valr_1, \valr_2) \\
+%
+\mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
+\end{array}\]
+
+\paragraph{Traces}
+A trace is a representation of the big-step derivation of an
+expression's evaluation. Our big-step semantics output a trace. We use
+traces to define the adaptivity of a run. Our notion of traces and the
+tracing semantics is taken from~\cite[Section 4]{perera:dep}, but we
+omit their ``holes'' for which we have no need. The construct
+$\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$ records a trace of function
+application. $\tr_1$ is the trace of the head, $\tr_2$ the trace that
+evaluates the argument and $\tr_3$ is the trace of the function
+body. $f$ and $x$ are bound in $\tr_3$.
+%
+\[\begin{array}{llll}
+\mbox{Trace} & \tr & ::= & x ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
+\trfix f(x).e ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+%
+& & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
+~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr)
+\end{array}\]
+
+
+\paragraph{Big-step tracing semantics}
+The big-step, tracing semantics $\env, \expr \bigstep \valr, \tr$
+computes a value $\valr$ and a trace $\tr$ from an expression $\expr$
+and an enviroment $\env$ which maps the free variables of $\expr$ to
+values. The rules, taken from~\cite{perera:dep}, are shown in
+Figure~\ref{fig:big-step}. Some salient points:
+\begin{itemize}
+\item[-] Erasing the traces from the semantics yields a standard
+  big-step semantics.
+\item[-] The trace of a primitive application $\eop(\expr)$
+  records that $\eop$ was applied to the trace of
+  $\expr$. This enables us to define adaptivity from a trace later.
+\item[-] The trace of a variable $x$ is $x$. Hence, traces record
+  where substitutions occur and, hence, variable dependencies. This is
+  also needed for defining adaptivity.
+\end{itemize}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule{ }{\env, x \bigstep \env(x), x}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \econst \bigstep \econst, \trconst}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \etrue \bigstep \etrue, \trtrue}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
+  %
+  \and
+  %
+  \inferrule{
+  }{
+    \env, \efix f(x). \expr \bigstep (\efix f(x).\expr, \env), \trfix f(x).\expr
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \valr_1 = (\efix f(x).\expr, \env') \\\\
+    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstep \valr_2, \tr_2
+  }{
+    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojl(\expr) \bigstep \valr_1, \trprojl(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojr(\expr) \bigstep \valr_2, \trprojr(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \etrue, \tr \\
+    \env, \expr_1 \bigstep \valr, \tr_1
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \trift(\tr, \tr_1)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \efalse, \tr \\
+    \env, \expr_2 \bigstep \valr, \tr_2
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \triff(\tr, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \valr, \tr \\
+    \eop{}(\valr) = \valr'
+  }{
+    \env, \eop(\expr) \bigstep \valr', \trop(\tr)
+  }
+\end{mathpar}
+  
+  \caption{Big-step semantics with provenance}
+  \label{fig:big-step}
+\end{figure}
+
+
+\paragraph{Adaptivity of a trace}
+We define the \emph{adaptivity} of a trace $\tr$, $\adap(\tr)$, which
+means the maximum number of nested $\eop$s in $\tr$, taking variable
+and control dependencies into account. To define this, we need an
+auxiliary notion called the \emph{depth of variable $x$} in trace
+$\tr$, written $\ddep{x}(\tr)$, which is the maximum number of
+$\eop{}$s in any path leading from the root of $\tr$ to an occurence
+of $x$ (at a leaf), again taking variable and control dependencies
+into account.
+
+If $x$ does not appear free in $\tr$, $\ddep{x}(\tr)$ is $\bot$, a
+special symbol. Let $\natb \defeq \nat \cup \{\bot\}$. We extend
+addition ($+$) on $\nat$ to $\natb$ by defining $n + \bot = \bot + n =
+\bot$. Similarly, we extend the $\max$ operator to $\natb$ by defining
+$\max(\bot, n) = \max(n, \bot) = n$. So, $\bot$ behaves exactly like
+$-\infty$.
+
+The functions $\adap$ and $\ddep{x}$ are defined by mutual induction
+in Figure~\ref{fig:adap}. Note the co-domains of these functions.
+
+\begin{figure}
+  \framebox{$\adap: \mbox{Traces} \to \nat$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \adap(x) & = & 0 \\
+      %
+      \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
+      \adap(\tr_1) + \max(\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
+      %
+      \adap(\trfix f(x).\expr) & = & 0 \\
+      %
+      \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
+      %
+      \adap(\trprojl(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trprojr(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trtrue) & = & 0 \\
+      %
+      \adap(\trfalse) & = & 0 \\
+      %
+      \adap(\trift(\tr_b, \tr_t)) & = & \adap(\tr_b) + \adap(\tr_t) \\
+      %
+      \adap(\triff(\tr_b, \tr_f)) & = & \adap(\tr_b) + \adap(\tr_f) \\
+      %
+      \adap(\trconst) & = & 0 \\
+      %
+      \adap(\trop(\tr)) & = & 1 + \adap(\tr)
+      \end{array}
+  \end{mathpar}
+  
+  \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \ddep{x}(y) & = &
+      \left\lbrace
+      \begin{array}{ll}
+        0 & \mbox{if } x = y \\
+        \bot & \mbox{if } x \neq y
+      \end{array}
+      \right.\\
+      %
+      \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3)) \\
+      %
+      \ddep{x}(\trfix f(y).\expr) & = & \bot \\
+      %
+      \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
+      %
+      \ddep{x}(\trprojl(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trprojr(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trtrue) & = & \bot \\
+      %
+      \ddep{x}(\trfalse) & = & \bot \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_t)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t)) \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_f)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_f)) \\
+      %
+      \ddep{x}(\trconst) & = & \bot \\
+      %
+      \ddep{x}(\trop(\tr)) & = & 1 + \ddep{x}(\tr)
+    \end{array}
+  \end{mathpar}
+  \caption{Adaptivity of a trace and $\delta$-depth of variable $x$ in a trace}
+  \label{fig:adap}
+\end{figure}
+
+\paragraph{Explanation of $\adap$}
+We explain the interesting cases of the definition of $\adap$. The
+case $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$ corresponds to a function
+application with $\tr_1$, $\tr_2$, $\tr_3$ being the traces of the
+head, the argument and the body, respectively, and $x$ being the
+argument. The adaptivity is defined to be $\adap(\tr_1) +
+\max(\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))$. The term
+$\adap(\tr_1)$ occurs additively since the entire computation is
+control-dependent on the function the head of the application
+evaluates to. The rest of the term $\max(\adap(\tr_3), \adap(\tr_2) +
+\ddep{x}(\tr_3))$ is simply the maximum nesting depth in the body,
+taking the data dependency on the argument into account. To see this,
+consider the following exhaustive cases:
+\begin{itemize}
+  \item[-] When $x$ appears free in the trace $\tr_3$,
+    $\ddep{x}(\tr_3)$ is the maximum $\eop$-nesting depth of $x$ in
+    the body. Hence, $\max(\adap(\tr_3), \adap(\tr_2) +
+    \ddep{x}(\tr_3))$ represents the maximum number of nested $\eop$s
+    in the evaluation of $e[e'/x]$ where $e'$ is the argument
+    expression that generates the trace $\tr_2$ and $e$ is the body of
+    the function.
+  \item[-] When $x$ does not appear free in the trace $\tr_3$ of the
+    body (i.e., the body's evaluation does not depend on $x$),
+    $\ddep{x}(\tr_3) = \bot$, so $\max(\adap(\tr_3), \adap(\tr_2) +
+    \ddep{x}(\tr_3)) = \max(\adap(\tr_3), \adap(\tr_2) + \bot) =
+    \max(\adap(\tr_3), \bot) = \adap(\tr_3)$, which is the adaptivity
+    of the body in the absence of dependency from $x$.
+\end{itemize}
+
+The case $\trift(\tr_b, \tr_t)$ corresponds to the evaluation of
+$\eif(\expr_b, \expr_t, \_)$ where $\expr_b$ evaluates to $\etrue$
+with trace $\tr_b$ and $\tr_t$ is the trace of $\expr_t$. In this
+case, since the entire evaluation of $\expr_t$ is control dependent on
+$\expr_b$, the adaptivity is simply $\adap(\tr_b) + \adap(\tr_t)$.
+
+\paragraph{Explanation of $\ddep{x}$}
+We explain interesting cases in the definition of $\ddep{x}$.  For the
+trace $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$, $\ddep{x}$ is defined as
+$\adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) +
+\ddep{y}(\tr_3))$. Here, $\max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) +
+\ddep{y}(\tr_3))$ is the maximum depth of $x$ in the body ($\tr_3$),
+taking the dependency on the argument into account. Specifically, when
+the argument variable $y$ is not used in the body, $\ddep{y}(\tr_3) =
+\bot$, and this term is $\ddep{x}(\tr_3)$.  The term $\adap(\tr_1)$ is
+added since the body's entire execution is control-flow dependent on
+the function that the head of the application evaluates to.
+
+For the trace $\trift(\tr_b, \tr_t)$, $\ddep{x}$ is defined as
+$\max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t))$. The term
+$\ddep{x}(\tr_b)$ is simply the maximum depth of $x$ in $\tr_b$. We
+take the $\max$ of this with $\adap(\tr_b) + \ddep{x}(\tr_t)$, the
+maximum depth of $x$ in $\tr_t$, taking the control dependency on
+$\tr_b$ into account. Note that when $x$ is not used in $\tr_t$, then
+$\ddep{x}(\tr_t) = \bot$ and $\ddep{x}(\trift(\tr_b, \tr_t)) =
+\ddep{x}(\tr_b)$.
+
+\begin{lem}\label{lem:ddep-leq-adap}
+  If we define $\bot \leq n$ for all $n \in \natb$, then for all $\tr$
+  and $x$, $\ddep{x}(\tr) \leq \adap(\tr)$.
+\end{lem}
+%
+\begin{proof}
+By easy induction on $\tr$, following the definitions of $\ddep{x}$
+and $\adap$.
+\end{proof}
+
+\paragraph{Remark}
+At first glance it may seem that Lemma~\ref{lem:ddep-leq-adap} can be
+used to simplify the definition of $\ddep{x}(\trift(\tr_b, \tr_t))$
+from $\max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t))$ to
+$\adap(\tr_b) + \ddep{x}(\tr_t)$ since $\ddep{x}(\tr_b) \leq
+\adap(\tr_b)$. However, this simplification is not correct, since
+$\ddep{x}(\tr_t)$ may be $\bot$. In that case, $\max(\ddep{x}(\tr_b),
+\adap(\tr_b) + \ddep{x}(\tr_t))$ equals $\ddep{x}(\tr_b)$ while
+$\adap(\tr_b) + \ddep{x}(\tr_t)$ equals $\bot$.
+
+More generally, since $\bot$ behaves like $-\infty$, we do not have
+the implication $a \leq b \Rightarrow a \leq b + c$ as $c$ may be
+$-\infty$ or $\bot$. As a result, $a \leq b$ does not imply $\max(a, b
++ c) = b + c$.
+
+
+%%%%%%%%%%%%%%%%%%%%%
+
+\if 0
+
+\paragraph{Types}
+We partition types into \emph{labeled} (denoted $\typel$) and
+\emph{raw} (denoted $\typeu$). A raw type is like a standard type. A
+labeled type pairs a raw type with a \emph{label} $\labelA$, which is
+drawn from $\nat \cup \{\infty\}$. The labeled type
+$\typeu^\labelA$ ascribes values of (raw) type $\typeu$ that were
+computed with adaptivity $\labelA$.
+
+The actual syntax of labeled and raw types is mutually recursive to
+allow labeling nested subtypes, e.g., in pairs. The syntax is shown
+below. $\tbool$ is the boolean type. $\tbase$ denotes any other base
+type. $\labelA$, also called a \emph{label}, is an element of
+%
+\[\begin{array}{llll}
+\mbox{Unlabeled Type} & \typeu & ::= & \tbase ~|~ \tbool ~|~ \typel_1
+\to \typel_2 ~|~ \typel_1 \times \typel_2 \\
+%
+\mbox{Raw Type} & \typel & ::= & \typeu^{\labelA}
+\end{array}\]
+
+
+\paragraph{Type system}
+The type system uses the judgment $\Gamma \vdash \expr: \typel$, where
+$\Gamma$ maps variables to \emph{labeled} types. For $\typel =
+\typeu^\labelA$, the meaning of this judgment is that, under a
+substitution for $\Gamma$ of the right types, if $e$ terminates, then
+the result is a labeled value $\valr^{\labelA'}$ where $\valr$ is
+morally of type $\typeu$\footnote{This is not a precise statement
+  because we don't syntactically define when a raw value is of an
+  unlabeled type.} and $\labelA' \leq \labelA$. The typing rules are
+shown in Figure~\ref{fig:type-rules}.
+
+\begin{figure}
+  \begin{mathpar}
+
+  \end{mathpar}
+
+  \caption{Typing rules}
+  \label{fig:type-rules}
+\end{figure}
+
+\fi
+
+\bibliographystyle{plain}
+\bibliography{adaptivity.bib}
+
+\end{document}
+
+
+
