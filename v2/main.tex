@@ -23,6 +23,35 @@
 
 \maketitle
 
+\paragraph{Adaptivity}
+Adaptivity is a measure of the nesting depth of a mechanism. To
+represent this depth, we use extended natural numbers. Define $\natb =
+\nat \cup \{\bot\}$, where $\bot$ is a special symbol and $\natbi =
+\natb \cup \{\infty\}$. We use $\nnatA, \nnatB$ to range over $\nat$,
+$\nnatbA, \nnatbB$ to range over $\natb$, and $\nnatbiA, \nnatbiB$ to
+range over $\natbi$.
+
+The functions $\max$ and $+$, and the order $\leq$ on natural numbers
+extend to $\natbi$ in the natural way:
+\[\begin{array}{lcl}
+\max(\bot, \nnatbiA) & = & \nnatbiA \\
+\max(\nnatbiA, \bot) & = & \nnatbiA \\
+\max(\infty, \nnatbiA) & = & \infty \\
+\max(\nnatbiA, \infty) & = & \infty \\
+\\
+%
+\bot + \nnatbiA & = & \bot \\
+\nnatbiA + \bot & = & \bot \\
+\infty + \nnatbiA & = & \infty ~~~~ \mbox{if } \nnatbiA \neq \bot \\
+\nnatbiA + \infty & = & \infty ~~~~ \mbox{if } \nnatbiA \neq \bot \\
+\\
+%
+\bot \leq \nnatbiA \\
+\nnatbiA \leq \infty
+\end{array}
+\]
+One can think of $\bot$ as $-\infty$, with the special proviso that,
+here, $-\infty + \infty$ is specifically defined to be $-\infty$.
 
 \paragraph{Language}
 Expressions are shown below. $\econst$ denotes constants (of some base
@@ -44,16 +73,24 @@ the tracing semantics later.
 \mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
 \end{array}\]
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Tracing operational semantics and adaptivity}
+
 \paragraph{Traces}
-A trace is a representation of the big-step derivation of an
+A trace $\tr$ is a representation of the big-step derivation of an
 expression's evaluation. Our big-step semantics output a trace. We use
 traces to define the adaptivity of a run. Our notion of traces and the
 tracing semantics is taken from~\cite[Section 4]{perera:dep}, but we
 omit their ``holes'' for which we have no need. The construct
 $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$ records a trace of function
-application. $\tr_1$ is the trace of the head, $\tr_2$ the trace that
-evaluates the argument and $\tr_3$ is the trace of the function
-body. $f$ and $x$ are bound in $\tr_3$.
+application. $\tr_1$ is the trace of the head, $\tr_2$ the trace of
+the argument and $\tr_3$ is the trace of the function body. $f$ and
+$x$ are bound in $\tr_3$.
 %
 \[\begin{array}{llll}
 \mbox{Trace} & \tr & ::= & x ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
@@ -76,7 +113,7 @@ Figure~\ref{fig:big-step}. Some salient points:
 \item[-] The trace of a primitive application $\eop(\expr)$
   records that $\eop$ was applied to the trace of
   $\expr$. This enables us to define adaptivity from a trace later.
-\item[-] The trace of a variable $x$ is $x$. Hence, traces record
+\item[-] The trace of a variable $x$ is $x$. This way traces record
   where substitutions occur and, hence, variable dependencies. This is
   also needed for defining adaptivity.
 \end{itemize}
@@ -181,17 +218,12 @@ auxiliary notion called the \emph{depth of variable $x$} in trace
 $\tr$, written $\ddep{x}(\tr)$, which is the maximum number of
 $\eop{}$s in any path leading from the root of $\tr$ to an occurence
 of $x$ (at a leaf), again taking variable and control dependencies
-into account.
-
-If $x$ does not appear free in $\tr$, $\ddep{x}(\tr)$ is $\bot$, a
-special symbol. Let $\natb \defeq \nat \cup \{\bot\}$. We extend
-addition ($+$) on $\nat$ to $\natb$ by defining $n + \bot = \bot + n =
-\bot$. Similarly, we extend the $\max$ operator to $\natb$ by defining
-$\max(\bot, n) = \max(n, \bot) = n$. So, $\bot$ behaves exactly like
-$-\infty$.
+into account. Technically, $\adap: \mbox{Traces} \to \nat$ and
+$\ddep{x}: \mbox{Traces} \to \natb$. If $x$ does not appear free in
+$\tr$, $\ddep{x}(\tr)$ is $\bot$.
 
 The functions $\adap$ and $\ddep{x}$ are defined by mutual induction
-in Figure~\ref{fig:adap}. Note the co-domains of these functions.
+in Figure~\ref{fig:adap}. 
 
 \begin{figure}
   \framebox{$\adap: \mbox{Traces} \to \nat$}
@@ -258,7 +290,7 @@ in Figure~\ref{fig:adap}. Note the co-domains of these functions.
       \ddep{x}(\trop(\tr)) & = & 1 + \ddep{x}(\tr)
     \end{array}
   \end{mathpar}
-  \caption{Adaptivity of a trace and $\delta$-depth of variable $x$ in a trace}
+  \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
   \label{fig:adap}
 \end{figure}
 
@@ -319,8 +351,7 @@ $\ddep{x}(\tr_t) = \bot$ and $\ddep{x}(\trift(\tr_b, \tr_t)) =
 \ddep{x}(\tr_b)$.
 
 \begin{lem}\label{lem:ddep-leq-adap}
-  If we define $\bot \leq n$ for all $n \in \natb$, then for all $\tr$
-  and $x$, $\ddep{x}(\tr) \leq \adap(\tr)$.
+For all $\tr$ and $x$, $\ddep{x}(\tr) \leq \adap(\tr)$ in $\natb$.
 \end{lem}
 %
 \begin{proof}
@@ -340,56 +371,219 @@ $\adap(\tr_b) + \ddep{x}(\tr_t)$ equals $\bot$.
 
 More generally, since $\bot$ behaves like $-\infty$, we do not have
 the implication $a \leq b \Rightarrow a \leq b + c$ as $c$ may be
-$-\infty$ or $\bot$. As a result, $a \leq b$ does not imply $\max(a, b
+$-\infty$ ($\bot$). As a result, $a \leq b$ does not imply $\max(a, b
 + c) = b + c$.
 
 
-%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\if 0
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Type system}
+
+We build a type system that statically approximates both $\adap$ and
+$\ddep{x}$ for every $x$ in the context.
+
+A \emph{depth map}, denoted $\dmap$, is a map from variables to
+$\natbi$.
+%
+%% We define the support of a depth map, $\supp(\dmap) \defeq \{x ~|~
+%% \dmap(x) \neq \bot\}$. We are only interested in depth maps with
+%% finite support. Such a depth map can be written $x_1: \nnatbiA_1,
+%% \ldots, x_k: \nnatbiA_k$.
+%
+Our typing judgment takes the form $\Gamma; \dmap \tvdash{\nnatA}
+\expr: \type$, where $\Gamma$ is a typing context, $\dmap$ is a depth
+map, and $\nnatA \in \nat$. The idea is that $\dmap$ gives an upper
+bound on the depth of each free variable of $\expr$. Obviously, we
+only care about the values of $\dmap$ on the domain of $\Gamma$ (at
+the remaining points, $\dmap$ can be $\bot$; such a $\dmap$ can always
+be finitely represented as $x_1: \nnatbiA_1, \ldots, x_k: \nnatbiA_k$,
+where $x_1,\ldots,x_k$ are bound by $\Gamma$). $\nnatA$ is an upper
+bound on the adaptivity of $\expr$.
 
 \paragraph{Types}
-We partition types into \emph{labeled} (denoted $\typel$) and
-\emph{raw} (denoted $\typeu$). A raw type is like a standard type. A
-labeled type pairs a raw type with a \emph{label} $\labelA$, which is
-drawn from $\nat \cup \{\infty\}$. The labeled type
-$\typeu^\labelA$ ascribes values of (raw) type $\typeu$ that were
-computed with adaptivity $\labelA$.
+Types $\type$ are simple, except that the function type is annotated
+with the adaptivity $\nnatA$ of the function body, a depth-map $\dmap$
+which gives the depths of all free variables of the body (i.e.,
+variables bound in outer scopes), and a depth $\nnatbiA \in \natbi$ of
+the argument variable in the body. The function name, although free in
+the body, always has depth $\infty$, so we don't write its depth
+explicitly.\footnote{The function name is never substituted by a value
+  with a nontrivial trace, so we can choose any depth for it. $\infty$
+  is the most permissive depth, as will become clear from the typing
+  rules shortly.}
 
-The actual syntax of labeled and raw types is mutually recursive to
-allow labeling nested subtypes, e.g., in pairs. The syntax is shown
-below. $\tbool$ is the boolean type. $\tbase$ denotes any other base
-type. $\labelA$, also called a \emph{label}, is an element of
-%
-\[\begin{array}{llll}
-\mbox{Unlabeled Type} & \typeu & ::= & \tbase ~|~ \tbool ~|~ \typel_1
-\to \typel_2 ~|~ \typel_1 \times \typel_2 \\
-%
-\mbox{Raw Type} & \typel & ::= & \typeu^{\labelA}
-\end{array}\]
+\[
+\begin{array}{llll}
+  \mbox{Type} & \type & ::= & \tbase ~|~ \tbool ~|~ \type_1 \times
+  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}
+\end{array}
+\]
 
+%% Note that the type $\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}$
+%% is well-formed only in a context $\Gamma$ that binds all variables in
+%% the domain of $\dmap$. 
 
-\paragraph{Type system}
-The type system uses the judgment $\Gamma \vdash \expr: \typel$, where
-$\Gamma$ maps variables to \emph{labeled} types. For $\typel =
-\typeu^\labelA$, the meaning of this judgment is that, under a
-substitution for $\Gamma$ of the right types, if $e$ terminates, then
-the result is a labeled value $\valr^{\labelA'}$ where $\valr$ is
-morally of type $\typeu$\footnote{This is not a precise statement
-  because we don't syntactically define when a raw value is of an
-  unlabeled type.} and $\labelA' \leq \labelA$. The typing rules are
-shown in Figure~\ref{fig:type-rules}.
+\paragraph{Typing rules}
+The typing rules are shown in Figure~\ref{fig:type-rules}. In these
+rules, we write $\nnatbiA + \dmap$ or $\dmap + \nnatbiA$ for the depth
+map $\lambda x.\, (\nnatbiA + \dmap(x))$ defined on the same domain as
+$\dmap$. We also lift $\max$ and $+$ pointwise to depth maps, and
+define the constant map $\dmapb$ that maps everything to $\bot$. These
+are also fomally defined in Figure~\ref{fig:type-rules}.
 
 \begin{figure}
   \begin{mathpar}
-
+    \inferrule{
+      \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
+    }{
+      \Gamma; \dmap \tvdash{0} x: \type
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} \\
+      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA)
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA]
+      \tvdash{\nnatA}
+      \expr: \type_2
+    }{
+      \Gamma; \dmapb \tvdash{0} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 \\
+      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 \\\\
+      \dmap' = \max(\dmap_1,\dmap_2) \\
+      \nnatA' = \max(\nnatA_1,\nnatA_2)
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
+    }{
+      \Gamma; \dmap \tvdash{\nnatA} \eprojl(\expr): \type_1
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
+    }{
+      \Gamma; \dmap \tvdash{\nnatA} \eprojr(\expr): \type_2
+    }
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Gamma; \dmap \tvdash{0} \etrue: \tbool
+    }
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Gamma; \dmap \tvdash{0} \efalse: \tbool
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tbool \\
+      \Gamma; \dmap \tvdash{\nnatA} \expr_2: \type \\
+      \Gamma; \dmap \tvdash{\nnatA} \expr_3: \type \\\\
+      \nnatA' = \nnatA_1 + \nnatA \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
+    }
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Gamma; \dmap \tvdash{0} \econst: \tbase
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma; \dmap \tvdash{\nnatA} \expr: \tbase \\
+      \nnatA' = 1 + \nnatA \\
+      \dmap' = 1 + \dmap
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \tbool
+    }
   \end{mathpar}
+
+  \framebox{
+  \begin{mathpar}
+    \mbox{\textbf{where: }} \\
+    \dmapb \defeq \lambda x.\, \bot \\
+    \nnatbiA + \dmap \defeq \dmap + \nnatbiA \defeq \lambda x.\, (\nnatbiA + \dmap(x)) \\
+    \dmap_1 + \dmap_2 \defeq \lambda x.\, (\dmap_1(x) + \dmap_2(x)) \\
+    \max(\dmap_1, \dmap_2) \defeq \lambda x.\, \max(\dmap_1(x), \dmap_2(x))
+  \end{mathpar}}
 
   \caption{Typing rules}
   \label{fig:type-rules}
 \end{figure}
 
-\fi
+The rules follow \emph{exactly} the definitions of $\adap()$ and
+$\ddep{x}()$ to compute $\nnatA$ and $\dmap$ in the conclusion of the
+typing rule for every construct. For instance, the typing rule for
+$\expr_1 \eapp \expr_2$ does exactly what $\adap()$ and $\ddep{x}()$
+do for the trace $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$.
+
+\paragraph{Remark}
+The astute reader might note that our type system looks very much like
+a coeffect+effect system where the coeffect $\dmap$ estimates the
+depth of each free variable and the effect $\nnatA$ estimates the
+adaptivity. While this is true at a high-level, note there are two
+essential differences between our type system and a coeffect+effect
+system.
+\begin{itemize}
+\item[-] In some of our rule (those for $\expr_1 \eapp \expr_2$ and
+  $\eif(\expr_1, \expr_2, \expr_3)$), the conclusion's coeffect
+  depends on the effects of the premises. For instance, in the rule
+  for $\expr_1 \eapp \expr_2$, the final effect $\nnatA'$ depends on
+  the coeffect $\nnatbiA$. This does not happen in standard
+  coeffect+effect systems.
+\item[-] Our type for functions internalizes the effect. In a standard
+  coeffect + effect system, the effect is always on the typing
+  judgment, and at the point of function construction ($\efix$), one
+  pre-adds the effects of future function applications to the effect
+  in the conclusion. 
+\end{itemize}
+It may be possible to do away with both these differences by tracking
+more information in the coeffects (e.g., what is the maximum
+adaptivity of a function's argument?), but the details need to be
+worked out and verified.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 \bibliographystyle{plain}
 \bibliography{adaptivity.bib}
