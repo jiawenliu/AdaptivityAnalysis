@@ -430,22 +430,23 @@ explicitly.\footnote{The function name is never substituted by a value
 The typing rules are shown in Figure~\ref{fig:type-rules}. In these
 rules, we write $\nnatbiA + \dmap$ or $\dmap + \nnatbiA$ for the depth
 map $\lambda x.\, (\nnatbiA + \dmap(x))$ defined on the same domain as
-$\dmap$. We also lift $\max$ and $+$ pointwise to depth maps, and
-define the constant map $\dmapb$ that maps everything to $\bot$. These
-are also fomally defined in Figure~\ref{fig:type-rules}.
+$\dmap$. We also lift $\max$ and $+$ pointwise to depth maps.
+%% and define the constant map $\dmapb$ that maps everything to
+%% $\bot$.
+These are also fomally defined in Figure~\ref{fig:type-rules}.
 
 \begin{figure}
   \begin{mathpar}
     \inferrule{
       \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
     }{
-      \Gamma; \dmap \tvdash{0} x: \type
+      \Gamma; \dmap \tvdash{\nnatA} x: \type
     }
     %
     \and
     %
     \inferrule{
-      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} \\
+      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
       \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
       \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
       \dmap' = \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA)
@@ -461,7 +462,7 @@ are also fomally defined in Figure~\ref{fig:type-rules}.
       \tvdash{\nnatA}
       \expr: \type_2
     }{
-      \Gamma; \dmapb \tvdash{0} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
+      \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
     }
     %
     \and
@@ -495,14 +496,14 @@ are also fomally defined in Figure~\ref{fig:type-rules}.
     %
     \inferrule{
     }{
-      \Gamma; \dmap \tvdash{0} \etrue: \tbool
+      \Gamma; \dmap \tvdash{\nnatA} \etrue: \tbool
     }
     %
     \and
     %
     \inferrule{
     }{
-      \Gamma; \dmap \tvdash{0} \efalse: \tbool
+      \Gamma; \dmap \tvdash{\nnatA} \efalse: \tbool
     }
     %
     \and
@@ -521,7 +522,7 @@ are also fomally defined in Figure~\ref{fig:type-rules}.
     %
     \inferrule{
     }{
-      \Gamma; \dmap \tvdash{0} \econst: \tbase
+      \Gamma; \dmap \tvdash{\nnatA} \econst: \tbase
     }
     %
     \and
@@ -538,7 +539,7 @@ are also fomally defined in Figure~\ref{fig:type-rules}.
   \framebox{
   \begin{mathpar}
     \mbox{\textbf{where: }} \\
-    \dmapb \defeq \lambda x.\, \bot \\
+%    \dmapb \defeq \lambda x.\, \bot \\
     \nnatbiA + \dmap \defeq \dmap + \nnatbiA \defeq \lambda x.\, (\nnatbiA + \dmap(x)) \\
     \dmap_1 + \dmap_2 \defeq \lambda x.\, (\dmap_1(x) + \dmap_2(x)) \\
     \max(\dmap_1, \dmap_2) \defeq \lambda x.\, \max(\dmap_1(x), \dmap_2(x))
@@ -578,6 +579,83 @@ It may be possible to do away with both these differences by tracking
 more information in the coeffects (e.g., what is the maximum
 adaptivity of a function's argument?), but the details need to be
 worked out and verified.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Logical relation and soundness}
+
+Our type system is sound in the following sense.
+
+\begin{thm}[Soundness]\label{thm:soundness}
+If $\tvdash{\nnatA} \expr: \type$ and $\cdot, \expr \bigstep \valr,
+\tr$ then $\adap(\tr) \leq \nnatA$.
+\end{thm}
+
+To prove this theorem, we build a logical relation on types. As usual,
+the relation consists of a value relation and an expression
+relation. We first show a non-step-indexed version of the relation in
+Figure~\ref{fig:lr:non-step}. This relation is well-founded but
+cannot, as usual, be used directly to prove the soundness of the
+$\efix$ typing rule. We show this relation here purely for exposition
+without the clutter of step-indices. We will step-index the relation
+shortly.
+
+\begin{figure}
+  \begin{mathpar}
+    \begin{array}{lll}
+      \lrv{\tbool} & = & \{\etrue, \efalse\} \\
+      %
+      \lrv{\tbase} & = & \{\econst ~|~ \econst: \tbase \} \\
+      %
+      \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
+      %
+      \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+      \{(\efix f(x).\expr, \env) ~|~ \forall \valr \in \lrv{\type_1}.\\
+      & & 
+      ~~~~~~(\theta[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
+      %
+      \\
+      %
+      \lre{\dmap}{\nnatA}{\type} & = & \{ (\env, \expr) ~|~ \forall \valr\, \tr.\, (\env, \expr \bigstep \valr, \tr) \\
+      & & ~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\, \ddep{x}(\tr) \leq \dmap(x) \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~\valr \in \lrv{\type})
+      \}
+    \end{array}
+  \end{mathpar}
+  \caption{Logical relation without step-indexing}
+  \label{fig:lr:non-step}
+\end{figure}
+
+The value relation $\lrv{\type}$, as usual, defines which values of
+are semantically in the type $\type$. The only interesting case of
+this relation is the case for the arrow type. The expression relation
+$\lre{\dmap}{\nnatA}{\type}$ is more interesting. It is indexed by a
+depth map and an adaptivity. Importantly, this relation contains sets
+of configurations $(\env, \expr)$ where the evaluation of $(\env,
+\expr)$ produces a value in the value relation at $\type$, the
+adaptivity of the trace is no more than $\nnatA$ and for any variable
+$x$, the $\ddep{x}$ of the trace is no more than $\dmap(x)$.
+
+The value relation can be lifted to contexts in the usual way. Say
+that $\env \in \lrv{\Gamma}$ when $\dom(\env) \supseteq \dom(\Gamma)$
+and for every $x \in \dom(\Gamma)$, $\env(x) \in \lrv{\Gamma(x)}$.
+
+The fundamental theorem we would \emph{like} to prove is the
+following. Of course, this cannot be proven until we step-index the
+relation, but this should give an idea of what the connection between
+the type system and the logical relation is.
+
+\begin{prop}[Fundamental theorem]
+  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $\env \in
+  \lrv{\Gamma}$, then $(\env, \expr) \in \lre{\dmap}{\nnatA}{\type}$.
+\end{prop}
+
+If this proposition were provable, then Theorem~\ref{thm:soundness}
+would follow from it immediately.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
