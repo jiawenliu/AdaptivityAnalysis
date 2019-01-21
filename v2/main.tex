@@ -105,8 +105,8 @@ $x$ are bound in $\tr_3$.
 The big-step, tracing semantics $\env, \expr \bigstep \valr, \tr$
 computes a value $\valr$ and a trace $\tr$ from an expression $\expr$
 and an enviroment $\env$ which maps the free variables of $\expr$ to
-values. The rules, taken from~\cite{perera:dep}, are shown in
-Figure~\ref{fig:big-step}. Some salient points:
+\emph{closed} values. The rules, taken from~\cite{perera:dep}, are
+shown in Figure~\ref{fig:big-step}. Some salient points:
 \begin{itemize}
 \item[-] Erasing the traces from the semantics yields a standard
   big-step semantics.
@@ -267,7 +267,8 @@ in Figure~\ref{fig:adap}.
       \end{array}
       \right.\\
       %
-      \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3)) \\
+      \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
+      & & ~~~~~~~\adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
       %
       \ddep{x}(\trfix f(y).\expr) & = & \bot \\
       %
@@ -332,14 +333,15 @@ $\expr_b$, the adaptivity is simply $\adap(\tr_b) + \adap(\tr_t)$.
 \paragraph{Explanation of $\ddep{x}$}
 We explain interesting cases in the definition of $\ddep{x}$.  For the
 trace $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$, $\ddep{x}$ is defined as
-$\adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) +
-\ddep{y}(\tr_3))$. Here, $\max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) +
-\ddep{y}(\tr_3))$ is the maximum depth of $x$ in the body ($\tr_3$),
-taking the dependency on the argument into account. Specifically, when
-the argument variable $y$ is not used in the body, $\ddep{y}(\tr_3) =
-\bot$, and this term is $\ddep{x}(\tr_3)$.  The term $\adap(\tr_1)$ is
-added since the body's entire execution is control-flow dependent on
-the function that the head of the application evaluates to.
+$\max(\ddep{x}(\tr_1), \adap(\tr_1) + \max(\ddep{x}(\tr_3),
+\ddep{x}(\tr_2) + \ddep{y}(\tr_3)))$. Here, $\max(\ddep{x}(\tr_3),
+\ddep{x}(\tr_2) + \ddep{y}(\tr_3))$ is the maximum depth of $x$ in the
+body ($\tr_3$), taking the dependency on the argument into
+account. Specifically, when the argument variable $y$ is not used in
+the body, $\ddep{y}(\tr_3) = \bot$, and this term is
+$\ddep{x}(\tr_3)$.  The term $\adap(\tr_1)$ is added since the body's
+entire execution is control-flow dependent on the function that the
+head of the application evaluates to.
 
 For the trace $\trift(\tr_b, \tr_t)$, $\ddep{x}$ is defined as
 $\max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t))$. The term
@@ -449,7 +451,7 @@ These are also fomally defined in Figure~\ref{fig:type-rules}.
       \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
       \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
       \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
-      \dmap' = \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA)
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
     }{
       \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
     }
