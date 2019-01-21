@@ -661,6 +661,70 @@ type system and the logical relation.
 If this proposition were provable, then Theorem~\ref{thm:soundness}
 would follow from it immediately.
 
+\paragraph{Step-indexed logical relation}
+To step-index the relation we need to have a notion of the number of
+reduction steps. One way to do this is to change the operational
+semantics to count the number of reduction steps. However, this is
+unnecessary since the number of reduction steps in a derivation is
+exactly the size of the derivation's trace. So, we just ``index'' the
+relation on the size of the derivation's trace. The same technique has
+been used previously~\cite{cicek15}. Formally, the size of a trace
+$\tr$, written $\size{\tr}$, is the number of non-leaf constructors in
+$\tr$.  
+
+The step-indexed relation is shown in Figure~\ref{fig:lr:step}. Now,
+the value relation $\lrv{\type}$ contains pairs of step-indices
+$\stepiA$ and closed values. The expression relation contains pairs of
+step-indices and configurations $(\env, \expr)$. The relation
+basically mirrors the non-step-indexed relation of
+Figure~\ref{fig:lr:non-step}, with step indexes added in the
+completely standard way.
+
+
+\begin{figure}
+  \begin{mathpar}
+    \begin{array}{lll}
+      \lrv{\tbool} & = & \{(\stepiA, \etrue) ~|~ \stepiA \in \nat\} \cup
+      \{ (\stepiA, \efalse) ~|~ \stepiA \in \nat\} \\
+      %
+      \lrv{\tbase} & = & \{(\stepiA, \econst) ~|~ \stepiA \in \nat \conj \econst: \tbase \} \\
+      %
+      \lrv{\type_1 \times \type_2} & = & \{(\stepiA, (\valr_1, \valr_2)) ~|~ (\stepiA, \valr_1) \in \lrv{\type_1} \conj (\stepiA, \valr_2) \in \lrv{\type_2} \}\\
+      %
+      \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+      \{(\stepiA, (\efix f(x).\expr, \env)) ~|~ \forall \stepiB < \stepiA.\, \forall (\stepiB, \valr) \in \lrv{\type_1}.\\
+      & & 
+      ~~~~~~(\stepiB, (\theta[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
+      %
+      \\
+      %
+      \lre{\dmap}{\nnatA}{\type} & = & \{ (\stepiA, (\env, \expr)) ~|~ \forall \valr\, \tr\, \stepiB.\, (\env, \expr \bigstep \valr, \tr) \conj (\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA) \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\, \ddep{x}(\tr) \leq \dmap(x) \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~((\stepiA - \stepiB,  \valr) \in \lrv{\type})
+      \}
+    \end{array}
+  \end{mathpar}
+  \caption{Logical relation with step-indexing}
+  \label{fig:lr:step}
+\end{figure}
+
+We say that $(\stepiA, \env) \in \lrv{\Gamma}$ when $\dom(\env)
+\supseteq \dom(\Gamma)$ and for every $x \in \dom(\Gamma)$, $(\stepiA,
+\env(x)) \in \lrv{\Gamma(x)}$.
+
+\begin{thm}[Fundamental theorem]
+  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
+  \in \lrv{\Gamma}$, then $(\stepiA, (\env, \expr)) \in
+  \lre{\dmap}{\nnatA}{\type}$.
+\end{thm}
+%
+\begin{proof}
+TODO. By induction on the given typing derivation. For the case of
+$\efix$, we subinduct on the step index.
+\end{proof}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
