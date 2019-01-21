@@ -57,9 +57,10 @@ here, $-\infty + \infty$ is specifically defined to be $-\infty$.
 Expressions are shown below. $\econst$ denotes constants (of some base
 type $\tbase$, which may, for example, be reals or rational
 numbers). $\eop$ represents a primitive operation (such as a
-mechanism). We restrict $\eop$ to base types ($\tbase$, $\tbool$)
-only. We make environments explicit in closures. This is needed for
-the tracing semantics later.
+mechanism), which determines adaptivity. For simplicity, we assume
+that $\eop$ can only have type $\tbase \to \tbool$. We make
+environments explicit in closures. This is needed for the tracing
+semantics later.
 \[\begin{array}{llll}
 \mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
  ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
@@ -568,14 +569,14 @@ system.
 \item[-] In some of our rule (those for $\expr_1 \eapp \expr_2$ and
   $\eif(\expr_1, \expr_2, \expr_3)$), the conclusion's coeffect
   depends on the effects of the premises. For instance, in the rule
-  for $\expr_1 \eapp \expr_2$, the final effect $\nnatA'$ depends on
-  the coeffect $\nnatbiA$. This does not happen in standard
+  for $\expr_1 \eapp \expr_2$, the final effect $\dmap'$ depends on
+  the coeffect $\nnatA_1$. This does not happen in standard
   coeffect+effect systems.
 \item[-] Our type for functions internalizes the effect. In a standard
   coeffect + effect system, the effect is always on the typing
   judgment, and at the point of function construction ($\efix$), one
-  pre-adds the effects of future function applications to the effect
-  in the conclusion. 
+  anticipatively adds the effects of future function applications to
+  the effect in the conclusion.
 \end{itemize}
 It may be possible to do away with both these differences by tracking
 more information in the coeffects (e.g., what is the maximum
@@ -632,15 +633,16 @@ shortly.
   \label{fig:lr:non-step}
 \end{figure}
 
-The value relation $\lrv{\type}$, as usual, defines which values of
-are semantically in the type $\type$. The only interesting case of
-this relation is the case for the arrow type. The expression relation
-$\lre{\dmap}{\nnatA}{\type}$ is more interesting. It is indexed by a
-depth map and an adaptivity. Importantly, this relation contains sets
-of configurations $(\env, \expr)$ where the evaluation of $(\env,
-\expr)$ produces a value in the value relation at $\type$, the
-adaptivity of the trace is no more than $\nnatA$ and for any variable
-$x$, the $\ddep{x}$ of the trace is no more than $\dmap(x)$.
+The value relation $\lrv{\type}$, as usual, defines which
+\emph{closed} values are semantically in the type $\type$. The only
+interesting case of this relation is the case for the arrow type. The
+expression relation $\lre{\dmap}{\nnatA}{\type}$ is more
+interesting. It is indexed by a depth map and an
+adaptivity. Importantly, this relation contains sets of configurations
+$(\env, \expr)$ where the evaluation of $(\env, \expr)$ produces a
+value in the value relation at $\type$, the adaptivity of the trace is
+no more than $\nnatA$ and for any variable $x$, $\ddep{x}$ of the
+trace is no more than $\dmap(x)$.
 
 The value relation can be lifted to contexts in the usual way. Say
 that $\env \in \lrv{\Gamma}$ when $\dom(\env) \supseteq \dom(\Gamma)$
@@ -648,8 +650,8 @@ and for every $x \in \dom(\Gamma)$, $\env(x) \in \lrv{\Gamma(x)}$.
 
 The fundamental theorem we would \emph{like} to prove is the
 following. Of course, this cannot be proven until we step-index the
-relation, but this should give an idea of what the connection between
-the type system and the logical relation is.
+relation, but this should give an idea of the connection between the
+type system and the logical relation.
 
 \begin{prop}[Fundamental theorem]
   If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $\env \in
