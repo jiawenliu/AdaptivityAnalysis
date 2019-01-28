@@ -655,100 +655,10 @@ type system and the logical relation.
 
 \begin{prop}[Fundamental theorem]
 \label{prop:fund}
-  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(k, \env) \in
-  \lrv{\Gamma}$, then $(k, (\env, \expr)) \in \lre{\dmap}{\nnatA}{\type}$.
+  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $ \env \in
+  \lrv{\Gamma}$, then $(\env, \expr) \in \lre{\dmap}{\nnatA}{\type}$.
 \end{prop}
-\begin{proof} of Proposition \ref{prop:fund}.\\
-Assume we know $(k, \env) \in \lrv{\Gamma}$, 
-by induction on $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$:\\
-\noindent {\bf case}
 
-\[
-   \inferrule*[right = PAIR]{
-      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 ~ (1) 
-   		\\
-      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 ~ (2)
-      	\\\\
-      \dmap' = \max(\dmap_1,\dmap_2) 
-      	\\
-      \nnatA' = \max(\nnatA_1,\nnatA_2)
-    }{
-      \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
-    }
-\]
-Assume $(k, \env) \in \lrv{\Gamma}$, 
-to show: $k, \env, (\expr_1, \expr_2) \in \lrv{\type_1 \times \type_2}$.\\
-By inversion, STS: $\forall \, \valr, j, \Gamma.$ $\env, \expr_1, \expr_2 \bigstep \valr, \, \tr \land |\tr| = j \land j \leq k \implies \adap(\tr) < \nnatA' \land \forall x, \ddep{x}(\tr) \leq \dmap(x) \land (k - j, \valr) \in \lrv{\type_1 \times \type_2}$.\\
-By induction hypothesis on $(1)$, we have $(k, \expr_1) \in \lre{\dmap_1}{\nnatA_1}{\type}$.\\
-By inversion, pick $\valr_1, j_1, \tr_1$ s.t., $(a) ~ \env, \expr_1 \bigstep \valr_1, \tr_1 \land |\tr_1| = j_1 \land j_1 < k $, we have: $(c)~\adap(\tr_1) \leq \nnatA_1 \land (e)~\forall x, \ddep{x}(\tr_1) \leq \dmap_1(x) \land (m)~(k - j_1, \valr_1) \in \lrv{\type_1} $.\\
-By induction hypothesis on $(2)$, we have $(k, \expr_1) \in \lre{\dmap_2}{\expr_2}{\type_2}$.\\
-By inversion, pick $\valr_2, j_2, \tr_2$ s.t., $(b) ~ \env, \expr_2 \bigstep \valr_2, \tr_2 \land |\tr_2| = j_2 \land j_2 < k $, we have: $(d)~\adap(\tr_2) \leq \nnatA_2 \land (f)~\forall x, \ddep{x}(\tr_2) \leq \dmap_2(x) \land (n)~(k - j_2, \valr_2) \in \lrv{\type_2} $.\\
-By E-Pair rule, we have:\\
-\[
-\inferrule*[right = E-Pair]
-{(a) \and (b)}
-{\env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)}
-\]
-Pick $\valr = (\valr_1, \valr_2), \tr = (\tr_1, \tr_2), j = |(\tr_1, \tr_2)| = j_1 + j_2$, s.t. $\env, (\expr_1, \expr_2) \bigstep \valr, \tr \land |\tr| = j \land j \leq k$.\\
-STS:\\
-1. $\adap(\tr) = \adap(\tr_1, \tr_2) < \nnatA' = \max(\nnatA_1, \nnatA_2)$, which is proved by $(c), (d)$.\\
-2. $\forall x. \ddep{x}(\tr_1, \tr_2) = \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \leq \dmap'(x) = \max(\dmap_1(x), \dmap_2(x))$, which is proved by $(e),(f)$.\\
-3. $k - (j_1 + j_2), (\valr_1, \valr_2) \in \lrv{\type_1 \times \type_2}$, which is proved by apply Lemma \ref{lem:ddep-leq-adap} on $(m), (n)$.
-
-\noindent {\bf case}
-\[
-    \inferrule*[right = FIX]{
-      \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
-      \dmap[f: \infty, x: \nnatbiA]
-      \tvdash{\nnatA}
-      \expr: \type_2
-    }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
-    }
-\]
-Assume: $(k, \env) \in \lrv{\tr}$. TS: $(k, (\env, \efix f(x). \expr)) \in \lre{\dmap'}{\nnatA}{\type}$.\\
-%
-By inversion, STS: $\forall, \valr, \tr, j.$ $\env, \efix f(x). \expr \bigstep \valr, \tr \land |\tr| = j \land j \leq k \implies \adap(\tr) \leq \nnatA' \land \forall x. \ddep{x}(\tr) \leq \dmap'(x) \land (k - j), \valr \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
-%
-By E-FIX, we know: $\env, \efix f(x). \expr \bigstep (\efix f(x). \expr, \env), \efix f(x). \expr~(1) $, $|\efix f(x). e|= j \land j < k ~(2).$\\
-%
-Suppose $(1), (2)$, STS: $\adap(\efix f(x). \expr) = 0 \leq \nnatA' \land \forall x. \adap{x}(\efix f(x) e) = \bot \leq \dmap'(x) \land ((k -j), (\efix f(x). e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
-%
-We prove on general theorem: set $k - j = k'$, $\forall m \leq k', (m, (\efix f(x). e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
-%
-Induction on $m$:
-
-{\bf Subcase 1:} $m = 0$, TS: $\forall j < 0$, $(j, \env[\dots] \expr) \in \lre{\nnatA}{\dmap[\dots]}{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$, it is obviously true that $j < 0 \notin \mathbb{N}$.
-
-{\bf Subcase 2:} $m = m' + 1 \leq k'$, $TS: (m, (\efix f(x) e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
-
-
-\noindent {\bf case}
-\[
-    \inferrule*[right = APP]{
-      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
-      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
-      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
-      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
-    }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
-    }
-\]
-
-\noindent {\bf case}
-\[
-    \inferrule*[right = IF]{
-      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tbool \\
-      \Gamma; \dmap \tvdash{\nnatA} \expr_2: \type \\
-      \Gamma; \dmap \tvdash{\nnatA} \expr_3: \type \\\\
-      \nnatA' = \nnatA_1 + \nnatA \\
-      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
-    }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
-    }
-\]
-
-\end{proof}
 
 If this proposition were provable, then Theorem~\ref{thm:soundness}
 would follow from it immediately.
@@ -823,6 +733,104 @@ We say that $(\stepiA, \env) \in \lrv{\Gamma}$ when $\dom(\env)
 \begin{proof}
 TODO. By induction on the given typing derivation. For the case of
 $\efix$, we subinduct on the step index.
+
+\noindent {\bf case}
+
+\[
+   \inferrule*[right = PAIR]{
+      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 ~ (1) 
+   		\\
+      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 ~ (2)
+      	\\\\
+      \dmap' = \max(\dmap_1,\dmap_2) 
+      	\\
+      \nnatA' = \max(\nnatA_1,\nnatA_2)
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
+    }
+\]
+Assume $(k, \env) \in \lrv{\Gamma}$, 
+to show: $k, \env, (\expr_1, \expr_2) \in \lrv{\type_1 \times \type_2}$.\\
+%
+By inversion, STS: $\forall \, \valr, j, \Gamma.$ $\env, \expr_1, \expr_2 \bigstep \valr, \, \tr \land |\tr| = j \land j \leq k \implies \adap(\tr) < \nnatA' \land \forall x, \ddep{x}(\tr) \leq \dmap(x) \land (k - j, \valr) \in \lrv{\type_1 \times \type_2}$.\\
+%
+By induction hypothesis on $(1)$, we have $(k, \expr_1) \in \lre{\dmap_1}{\nnatA_1}{\type}$.\\
+%
+By inversion, pick $\valr_1, j_1, \tr_1$ s.t., $(a) ~ \env, \expr_1 \bigstep \valr_1, \tr_1 \land |\tr_1| = j_1 \land j_1 < k $, we have: $(c)~\adap(\tr_1) \leq \nnatA_1 \land (e)~\forall x, \ddep{x}(\tr_1) \leq \dmap_1(x) \land (m)~(k - j_1, \valr_1) \in \lrv{\type_1} $.\\
+%
+By induction hypothesis on $(2)$, we have $(k, \expr_1) \in \lre{\dmap_2}{\expr_2}{\type_2}$.\\
+%
+By inversion, pick $\valr_2, j_2, \tr_2$ s.t., $(b) ~ \env, \expr_2 \bigstep \valr_2, \tr_2 \land |\tr_2| = j_2 \land j_2 < k $, we have: $(d)~\adap(\tr_2) \leq \nnatA_2 \land (f)~\forall x, \ddep{x}(\tr_2) \leq \dmap_2(x) \land (n)~(k - j_2, \valr_2) \in \lrv{\type_2} $.\\
+By E-Pair rule, we have:\\
+\[
+\inferrule*[right = E-Pair]
+{(a) \and (b)}
+{\env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)}
+\]
+Pick $\valr = (\valr_1, \valr_2), \tr = (\tr_1, \tr_2), j = |(\tr_1, \tr_2)| = j_1 + j_2$, s.t. $\env, (\expr_1, \expr_2) \bigstep \valr, \tr \land |\tr| = j \land j \leq k$.\\
+%
+STS:\\
+1. $\adap(\tr) = \adap(\tr_1, \tr_2) < \nnatA' = \max(\nnatA_1, \nnatA_2)$, which is proved by $(c), (d)$.\\
+%
+2. $\forall x. \ddep{x}(\tr_1, \tr_2) = \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \leq \dmap'(x) = \max(\dmap_1(x), \dmap_2(x))$, which is proved by $(e),(f)$.\\
+%
+3. $k - (j_1 + j_2), (\valr_1, \valr_2) \in \lrv{\type_1 \times \type_2}$, which is proved by apply Lemma \ref{lem:ddep-leq-adap} on $(m), (n)$.
+
+\noindent {\bf case}
+\[
+    \inferrule*[right = FIX]{
+      \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA]
+      \tvdash{\nnatA}
+      \expr: \type_2
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
+    }
+\]
+Assume: $(k, \env) \in \lrv{\tr}$. TS: $(k, (\env, \efix f(x). \expr)) \in \lre{\dmap'}{\nnatA}{\type}$.\\
+%
+By inversion, STS: $\forall, \valr, \tr, j.$ $\env, \efix f(x). \expr \bigstep \valr, \tr \land |\tr| = j \land j \leq k \implies \adap(\tr) \leq \nnatA' \land \forall x. \ddep{x}(\tr) \leq \dmap'(x) \land (k - j), \valr \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+%
+By E-FIX, we know: $\env, \efix f(x). \expr \bigstep (\efix f(x). \expr, \env), \efix f(x). \expr~(1) $, $|\efix f(x). e|= j \land j < k ~(2).$\\
+%
+Suppose $(1), (2)$, STS: $\adap(\efix f(x). \expr) = 0 \leq \nnatA' \land \forall x. \adap{x}(\efix f(x) e) = \bot \leq \dmap'(x) \land ((k -j), (\efix f(x). e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+%
+We prove on general theorem:
+set $k - j = k'$, $\forall m \leq k', (m, (\efix f(x). e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+%
+Induction on $m$:
+
+{\bf Subcase 1:} $m = 0$, TS: $\forall j < 0$, $(j, \env[\dots] \expr) \in \lre{\nnatA}{\dmap[\dots]}{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$, it is obviously true that $j < 0 \notin \mathbb{N}$.
+
+{\bf Subcase 2:} $m = m' + 1 \leq k'$, $TS: (m, (\efix f(x) e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+
+
+
+\noindent {\bf case}
+\[
+    \inferrule*[right = APP]{
+      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
+      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
+    }
+\]
+
+\noindent {\bf case}
+\[
+    \inferrule*[right = IF]{
+      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tbool \\
+      \Gamma; \dmap \tvdash{\nnatA} \expr_2: \type \\
+      \Gamma; \dmap \tvdash{\nnatA} \expr_3: \type \\\\
+      \nnatA' = \nnatA_1 + \nnatA \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
+    }
+\]
+
 \end{proof}
 
 
