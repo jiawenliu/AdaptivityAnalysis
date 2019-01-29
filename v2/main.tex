@@ -783,28 +783,57 @@ STS:\\
       \dmap[f: \infty, x: \nnatbiA]
       \tvdash{\nnatA}
       \expr: \type_2
+       ~ (\triangle)
     }{
       \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
     }
 \]
 Assume: $(k, \env) \in \lrv{\tr}$. TS: $(k, (\env, \efix f(x). \expr)) \in \lre{\dmap'}{\nnatA}{\type}$.\\
 %
-By inversion, STS: $\forall, \valr, \tr, j.$ $\env, \efix f(x). \expr \bigstep \valr, \tr \land |\tr| = j \land j \leq k \implies \adap(\tr) \leq \nnatA' \land \forall x. \ddep{x}(\tr) \leq \dmap'(x) \land (k - j), \valr \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+By inversion, STS: $\forall \valr, \tr, j.$
+$(\env, \efix f(x). \expr \bigstep \valr, \tr) \land (|\tr| = j) \land (j \leq k)$
+$ \Rightarrow (\adap(\tr) \leq \nnatA') \land (\forall x. \ddep{x}(\tr) \leq \dmap'(x)) \land ((k - j), \valr) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
 %
-By E-FIX, we know: $\env, \efix f(x). \expr \bigstep (\efix f(x). \expr, \env), \efix f(x). \expr~(1) $, $|\efix f(x). e|= j \land j < k ~(2).$\\
+By E-FIX, we know: {\color{red}$\valr = (\efix f(x). \expr, \env)$:}\\
+$(\env, \efix f(x). \expr) \bigstep ((\efix f(x). \expr, \env), \efix f(x). \expr)~(1) $;\\
+$|\efix f(x). \expr|= j \land j < k ~(2).$\\
 %
-Suppose $(1), (2)$, STS: $\adap(\efix f(x). \expr) = 0 \leq \nnatA' \land \forall x. \adap{x}(\efix f(x) e) = \bot \leq \dmap'(x) \land ((k -j), (\efix f(x). e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+Suppose $(1), (2)$, STS: $ (\adap(\efix f(x). \expr) = 0 \leq \nnatA') \land (\forall x. \ddep{x}(\efix f(x). \expr) = \bot \leq \dmap'(x)) \land ((k -j), (\efix f(x). \expr, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
 %
 We prove on general theorem:
-set $k - j = k'$, $\forall m \leq k', (m, (\efix f(x). e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+set $k - j = k'$, $\forall m \leq k', (m, (\efix f(x). \expr, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
 %
 Induction on $m$:
 
-{\bf Subcase 1:} $m = 0$, TS: $\forall j < 0$, $(j, \env[\dots] \expr) \in \lre{\nnatA}{\dmap[\dots]}{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$, it is obviously true that $j < 0 \notin \mathbb{N}$.
+{\bf Subcase 1:} $m = 0$,\\
+%
+	TS: $\forall j < 0$, $(j, \env[\dots] \expr) \in \lre{\nnatA}{\dmap[\dots]}{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$,\\
+	%
+	it is obviously true because $j < 0 \notin \mathbb{N}$.
 
-{\bf Subcase 2:} $m = m' + 1 \leq k'$, $TS: (m, (\efix f(x) e, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
-
-
+{\bf Subcase 2:} $m = m' + 1 \leq k'$, \\
+%
+	TS: $ (m, (\efix f(x). \expr, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
+	%
+	Pick $\forall j < m' + 1$, $\forall (j, \valr_m) \in \lrv{\type_1}$,\\
+	%
+	STS: $(j, (\env[x \mapsto \valr_m, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2} ~ (\star)$\\
+	%
+	By Sub induction hypothesis, we have:
+	$(m', (\efix f(x). \expr, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})} ~ (a)$.\\
+	%
+	Pick $\env' = \env[x \mapsto \valr_m, f \mapsto (\efix f(x).\expr, \env)]$,\\
+	%
+	we know: $(j, \env') \in \lrv{\Gamma, f:(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}),  x: \type_1} ~ (\diamond)$.\\
+	%
+	Because:\\
+	(1). $ (k, \env) \in \lrv{\Gamma}$, applying Lemma 1 on assumption, we get: $(j, \env) \in \lrv{\Gamma}$.\\
+	%
+	(2). $(j, \valr_m) \in \lrv{\type}$, from the assumption.\\
+	%
+	(3). $(j, (\efix f(x). \expr, \env)) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$ from $(a)$.\\
+%
+From above, $\star$ is proved by induction hypothesis on $\diamond$ and $\triangle$.
 
 \noindent {\bf case}
 \[
