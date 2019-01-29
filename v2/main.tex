@@ -681,7 +681,47 @@ been used previously~\cite{cicek15}.
     counting this way is to make sure that the trace of the evaluation
     of any \emph{value} has size $0$. This may be required in the
     proof of the fundamental theorem, but I am not sure.}
+
 \end{defn}
+
+\begin{defn}[Trace size]
+  We use $\size{\tr}$ to denote the size of the trace $\tr$.
+\end{defn}
+\begin{figure}
+  \framebox{$\size{\tr}: \mbox{Traces} \to \nat$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \size{x} & = & 0 \\
+      %
+      \size{\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}} & = &
+      \size{\tr_1} + \size{\tr_2} + \size{\tr_3} \\
+      %
+      \size{\trfix f(x).e} & = & 0 \\
+      %
+      \size{(\tr_1, \tr_2)} & = & \size{\tr_1} + \size{\tr_2} \\
+      %
+      \size{\trprojl(\tr)} & = & \size{\tr} \\
+      %
+      \size{\trprojr(\tr)} & = & \size{\tr} \\
+      %
+      \size{\trtrue} & = & 0 \\
+      %
+      \size{\trfalse} & = & 0 \\
+      %
+      \size{\trift(\tr_b, \tr_t)} & = & \size{\tr_b} + \size{\tr_t} \\
+      %
+      \size{\triff(\tr_b, \tr_f)} & = & \size{\tr_b} + \size{\tr_f} \\
+      %
+      \size{\trconst} & = & 0 \\
+      %
+      \size{\trop(\tr)} & = & 1 + \size{\tr}
+      \end{array}
+  \end{mathpar}
+  \caption{Size of a trace}
+  \label{fig:size}
+\end{figure}
+
+
 
 The step-indexed relation is shown in Figure~\ref{fig:lr:step}. Now,
 the value relation $\lrv{\type}$ contains pairs of step-indices
@@ -752,22 +792,22 @@ $\efix$, we subinduct on the step index.
 Assume $(k, \env) \in \lrv{\Gamma}$, 
 to show: $k, \env, (\expr_1, \expr_2) \in \lrv{\type_1 \times \type_2}$.\\
 %
-By inversion, STS: $\forall \, \valr, j, \Gamma.$ $\env, \expr_1, \expr_2 \bigstep \valr, \, \tr \land |\tr| = j \land j \leq k \implies \adap(\tr) < \nnatA' \land \forall x, \ddep{x}(\tr) \leq \dmap(x) \land (k - j, \valr) \in \lrv{\type_1 \times \type_2}$.\\
+By inversion, STS: $\forall \, \valr, j, \Gamma.$ $\env, \expr_1, \expr_2 \bigstep \valr, \, \tr \land \size{\tr} = j \land j \leq k \implies \adap(\tr) < \nnatA' \land \forall x, \ddep{x}(\tr) \leq \dmap(x) \land (k - j, \valr) \in \lrv{\type_1 \times \type_2}$.\\
 %
 By induction hypothesis on $(1)$, we have $(k, \expr_1) \in \lre{\dmap_1}{\nnatA_1}{\type}$.\\
 %
-By inversion, pick $\valr_1, j_1, \tr_1$ s.t., $(a) ~ \env, \expr_1 \bigstep \valr_1, \tr_1 \land |\tr_1| = j_1 \land j_1 < k $, we have: $(c)~\adap(\tr_1) \leq \nnatA_1 \land (e)~\forall x, \ddep{x}(\tr_1) \leq \dmap_1(x) \land (m)~(k - j_1, \valr_1) \in \lrv{\type_1} $.\\
+By inversion, pick $\valr_1, j_1, \tr_1$ s.t., $(a) ~ \env, \expr_1 \bigstep \valr_1, \tr_1 \land \size{\tr_1} = j_1 \land j_1 < k $, we have: $(c)~\adap(\tr_1) \leq \nnatA_1 \land (e)~\forall x, \ddep{x}(\tr_1) \leq \dmap_1(x) \land (m)~(k - j_1, \valr_1) \in \lrv{\type_1} $.\\
 %
 By induction hypothesis on $(2)$, we have $(k, \expr_1) \in \lre{\dmap_2}{\expr_2}{\type_2}$.\\
 %
-By inversion, pick $\valr_2, j_2, \tr_2$ s.t., $(b) ~ \env, \expr_2 \bigstep \valr_2, \tr_2 \land |\tr_2| = j_2 \land j_2 < k $, we have: $(d)~\adap(\tr_2) \leq \nnatA_2 \land (f)~\forall x, \ddep{x}(\tr_2) \leq \dmap_2(x) \land (n)~(k - j_2, \valr_2) \in \lrv{\type_2} $.\\
+By inversion, pick $\valr_2, j_2, \tr_2$ s.t., $(b) ~ (\env, \expr_2 \bigstep \valr_2, \tr_2) \land (\size{\tr_2} = j_2) \land j_2 < k $, we have: $(d)~\adap(\tr_2) \leq \nnatA_2 \land (f)~\forall x, \ddep{x}(\tr_2) \leq \dmap_2(x) \land (n)~(k - j_2, \valr_2) \in \lrv{\type_2} $.\\
 By E-Pair rule, we have:\\
 \[
 \inferrule*[right = E-Pair]
 {(a) \and (b)}
 {\env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)}
 \]
-Pick $\valr = (\valr_1, \valr_2), \tr = (\tr_1, \tr_2), j = |(\tr_1, \tr_2)| = j_1 + j_2$, s.t. $\env, (\expr_1, \expr_2) \bigstep \valr, \tr \land |\tr| = j \land j \leq k$.\\
+Pick $\valr = (\valr_1, \valr_2), \tr = (\tr_1, \tr_2), j = |(\tr_1, \tr_2)| = j_1 + j_2$, s.t. $\env, (\expr_1, \expr_2) \bigstep \valr, \tr \land \size{\tr} = j \land j \leq k$.\\
 %
 STS:\\
 1. $\adap(\tr) = \adap(\tr_1, \tr_2) < \nnatA' = \max(\nnatA_1, \nnatA_2)$, which is proved by $(c), (d)$.\\
@@ -791,7 +831,7 @@ STS:\\
 Assume: $(k, \env) \in \lrv{\tr}$. TS: $(k, (\env, \efix f(x). \expr)) \in \lre{\dmap'}{\nnatA}{\type}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j.$
-$(\env, \efix f(x). \expr \bigstep \valr, \tr) \land (|\tr| = j) \land (j \leq k)$
+$(\env, \efix f(x). \expr \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq k)$
 $ \Rightarrow (\adap(\tr) \leq \nnatA') \land (\forall x. \ddep{x}(\tr) \leq \dmap'(x)) \land ((k - j), \valr) \in \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}$.\\
 %
 By E-FIX, we know: {\color{red}$\valr = (\efix f(x). \expr, \env)$:}\\
@@ -850,11 +890,14 @@ From above, $\star$ is proved by induction hypothesis on $\diamond$ and $\triang
 %
 Assume $(k, \env) \in \lrv{\Gamma} ~ (\square)$, TS: $(k, (\env, \expr_1, \expr_2)) \in \lre{\nnatA'}{\dmap'}{\type_2}$.\\
 %
-By inversion, pick $\valr, \tr, j$ s.t. $((\env, \expr_1 \expr_2) \bigstep (\valr, \tr)) \land (|\tr| = j) \land (j \leq k) $.\\
+By inversion, pick $\valr, \tr, j$ s.t. $((\env, \expr_1 \expr_2) \bigstep (\valr, \tr)) \land (\size{\tr} = j) \land (j \leq k) $.\\
 %
 STS: $(\adap(\tr) \leq \nnatA') \land (\forall x. \ddep{x}(\tr) \leq \dmap'(x)) \land (((k - j), \valr) \in \lrv{\type_2})$.\\
 %
-By induction hypothesis on $\star$ and $\diamond$,
+By induction hypothesis on $\star$ and $\square$, we get: $(k, (\env, \expr_1)) \in \lre{\dmap_1}{\nnatA_1}{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} ~(1) $.\\
+%
+Inversion on $(1)$, we get: 
+Pick any $\valr_1, \tr_1$, s.t. $((\env, \expr_1) \bigstep (\valr_1, \tr_1)) \land (\size{\tr_1}) $
 
 
 \noindent {\bf case}
