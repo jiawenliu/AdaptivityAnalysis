@@ -1125,13 +1125,40 @@ QED.
 \noindent {\bf case}
 \[
     \inferrule*[right = PRIMITIVE]{
-      \Gamma; \dmap \tvdash{\nnatA} \expr: \tbase \\
+      \Gamma; \dmap \tvdash{\nnatA} \expr: \tbase ~ (\star) \\
       \nnatA' = 1 + \nnatA \\
       \dmap' = 1 + \dmap
     }{
       \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \tbool
     }
 \]
+Assume $(\stepiA, \env) \in \lrv{\Gamma}$, TS: $(\stepiA, (\eop(\expr), \env)) \in \lre{\dmap'}{\nnatA'}{\tbool}$.\\
+%
+Unfold, $\forall \valr, \tr, j. (\env, \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$.\\
+%
+STS: $(\adap(\tr) \leq \nnatA') \land (\forall x \in \ddep{x}(\tr) \leq \dmap'(x)) \land ((\stepiA - j, \valr) \in \lrv{\tbool})$.\\
+%
+By induction hypothesis on $\star$, we get: $(\stepiA, (\expr, \env)) \in \lre{\dmap}{\nnatA}{\tbase} ~ (1)$.\\
+%
+Inversion on $(1)$, $\forall \valr', \tr', j'. (\env, \expr \bigstep \valr', \tr') \land (\size{\tr'} = j') \land (j' \leq \stepiA)$.\\
+%
+We know: $(\adap(\tr') \leq \nnatA) ~ (a)
+\land (\forall x \in \ddep{x}(\tr') \leq \dmap(x)) ~ (b)
+\land ((\stepiA - j', \valr') \in \lrv{\tbase}) ~ (c)$.\\
+%
+Pick $\valr = \eop(\valr')$ for any $\valr'$, then by E-PRIMITIVE, we have $\env, \eop(\expr) \bigstep \valr, \eop(\tr')$.\\
+%
+Pick $\tr = \eop(\tr'), j = j' + 1$, the following 3 items are proved:\\
+%
+1. $\adap(\tr) = \adap(\eop(\tr')) = 1 + \adap(\tr') \leq 1 + \nnatA = \nnatA'$ proved by $(a)$\\
+%
+2. $\forall x \in \ddep{x}(\tr) = \ddep{x}(\eop(\tr')) = 1 + \ddep{x}(\tr') \leq 1 + \dmap(x) = \dmap'(x)$ proved by $(b)$\\
+%
+3. $(\stepiA - j, \valr) = (\stepiA - j' - 1, \eop(\valr')) \in \lrv{\tbool} $.\\
+%
+By typing rule PRIMITIVE, we have $\eop(\valr'): \tbool$. $\eop(\valr')$ is either $\etrue$ or $\efalse$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\tbool}$.\\
+%
+QED.
 
 
 \noindent {\bf case}
