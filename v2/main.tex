@@ -69,9 +69,12 @@ semantics later.
 %
 & & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
 \econst ~|~ \eop(\expr) \\
+& & & \boxed{~|~ \elet x = \expr_1 \ein \expr_2 ~|~ \enil ~|~  \econs (
+      \expr_1, \expr_2) } \\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
-(\efix f(x).\expr, \env) ~|~ (\valr_1, \valr_2) \\
+(\efix f(x).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    \boxed{  ~|~ \enil ~|~ \econs (\valr_1, \valr_2)} \\
 %
 \mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
 \end{array}\]
@@ -1316,15 +1319,15 @@ Two-rounds:
 
 \[
 \begin{array}{l}
- \mathsf{let}\, !\mathsf{g} = ! \big( \mathsf{fix} \, f(j). \lambda k.  \\
- \hspace{.2cm} \mathsf{if}\, (j < k) \, \mathsf{then} \\
-  \hspace{.8cm} \mathsf{let} \, a = M \, ( \lambda x. (x \,j)\cdot (x \,k) )  \, \mathsf{in} \\
+ \mathsf{let}\, \mathsf{g} = \efix \, f(j). \lambda k.  \\
+ \hspace{.2cm} \eif \big (  (j < k)  ,  \\
+  \hspace{.8cm} \mathsf{let} \, a = \eop \, \boxed{( \lambda x. (x \,j)\cdot (x \,k) )}  \, \mathsf{in} \\
   \hspace{1.2cm} (a, j) :: (f  \,(j+1) \, k) \\
- \hspace{1.2cm} \mathsf{else} \, [] \big) \\
+ \hspace{1.2cm} , \, [] \big) \\
   \hspace{.2cm} \mathsf{in} \\
-  \mathsf{let}\, !l = !\mathsf{g} \, 0\, K \, \mathsf{in} \\
-  \mathsf{let} \, ! q = ! \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) \, \mathsf{in} \\
-  M ( q )
+  \mathsf{let}\, l = \mathsf{g} \, 0\, K \, \mathsf{in} \\
+  \mathsf{let} \,  q =  \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) \, \mathsf{in} \\
+  \eop ( q )
 \end{array}
 \]
 \end{figure}
