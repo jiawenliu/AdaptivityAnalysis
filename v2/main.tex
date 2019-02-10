@@ -478,7 +478,8 @@ explicitly.\footnote{The function name is never substituted by a value
 \[
 \begin{array}{llll}
   \mbox{Type} & \type & ::= & \tbase ~|~ \tbool ~|~ \type_1 \times
-  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~ \tlist{\type}
+  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
+                              \tlist{\type} ~|~ \tbox{\type}
 \end{array}
 \]
 
@@ -598,6 +599,15 @@ These are also fomally defined in Figure~\ref{fig:type-rules}.
 
 \framebox{
   \begin{mathpar}
+     \inferrule{
+      \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
+      \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{\tbox{\Gamma(x)}}
+    }{
+      \Gamma，\Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+    }
+    %
+    \and
+    %
     \inferrule{
       \dmap \wf{\type} \\
     }{
@@ -640,6 +650,51 @@ These are also fomally defined in Figure~\ref{fig:type-rules}.
   \caption{Typing rules}
   \label{fig:type-rules}
 \end{figure}
+
+\begin{figure}
+   \begin{mathpar}
+     \inferrule{
+    }{
+      \dmap \models \sub{\tbase}{\tbox{\tbase} }
+    }
+    %
+    \and
+    %
+     \inferrule{
+    }{
+      \dmap \models \sub{\tbool}{\tbox{\tbool} }
+    }
+    %
+    \and
+    %
+    \inferrule{
+       \dmap \models \sub{\type_1 }{ \type_1'  } \\
+        \dmap \models \sub{\type_2 }{ \type_2'  }
+    }{
+      \dmap \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
+    }
+    %
+    \and
+    %
+     \inferrule{
+    }{
+      \dmap \models \sub{\tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )} 
+      }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap}{0} }
+    }
+    %
+    \and
+    %
+     \inferrule{
+    }{
+      \dmap \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap}{0} }{  \tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
+    } }
+    \end{mathpar}
+ \caption{Subtyping rules}
+  \label{fig:sub-type-rules}
+\end{figure}
+
 
 The rules follow \emph{exactly} the definitions of $\adap()$ and
 $\ddep{x}()$ to compute $\nnatA$ and $\dmap$ in the conclusion of the
