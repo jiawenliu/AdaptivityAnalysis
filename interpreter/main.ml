@@ -3,18 +3,23 @@ open Ast
 (* [subst e1 e2 x] is [e1] with [e2] substituted for [x]. *)
 let rec subst e1 e2 x = 
   match e1 with
+    | 
   
 
-(* A single step of evaluation. *)
+(* Big step of evaluation. *)
 let rec bigstep env expr = 
   match expr with
-  | Var x               -> failwith "Unbound variable"
-  | Add(Int n1, Int n2) -> Int (n1+n2)
-  | Add(Int n1, e2)     -> Add(Int n1, step e2)
-  | Add(e1,e2)          -> Add(step e1, e2)
-  | Let(x,Int n,e2)     -> subst e2 (Int n) x
-  | Let(x,e1,e2)        -> Let(x,step e1, e2)
+  | Var x               -> (V_Var (eval env x) , T_Var x)
+  | Const c             -> (V_Const c, T_Const c)
+  | True                -> (V_True, T_True)
+  | False               -> (V_False, T_False)
+  | Nil                 -> 
 
+
+(* fetch the value of variable from environments. *)
+let rec eval env x =
+  match env with
+    | 
 
 (***********************************************************************)
 (* Everything above this is essentially the same as we saw in lecture. *)
