@@ -13,7 +13,7 @@ let rec bigstep env expr =
   | Const c             -> (V_Const c, T_Const c)
   | True                -> (V_True, T_True)
   | False               -> (V_False, T_False)
-  | Nil                 -> 
+  | Nil                 -> (V_Nil, T_Nil)
 
 
 (* fetch the value of variable from environments. *)
