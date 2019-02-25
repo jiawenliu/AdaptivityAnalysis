@@ -28,7 +28,7 @@ type expr =
 
 type trace = 
 	| T_Var		of expr
-	| T_Eval	of trace * trace * (function * string) * trace
+	| T_Eval	of trace * trace * (function * string) * trace (* unsure *) 
 	| T_Fix 	of expr
 	| T_Pair	of trace * trace
 	| T_Fst		of trace
@@ -41,5 +41,6 @@ type trace =
 	| T_Mech 	of trace
 	| T_Nil
 	| T_Cons 	of trace * trace
+	| T_Let 	of string* trace * trace
 
 type error = Error
