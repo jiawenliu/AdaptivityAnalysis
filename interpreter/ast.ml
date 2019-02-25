@@ -1,4 +1,4 @@
-(* The type of the abstract syntax tree (AST). *)
+\'(* The type of the abstract syntax tree (AST). *)
 type expr =
   | Var 	of string
   | App 	of expr * expr
@@ -28,7 +28,7 @@ type expr =
 
 type trace = 
 	| T_Var		of expr
-	| T_Eval	of trace * trace * expr * trace
+	| T_Eval	of trace * trace * (function * string) * trace
 	| T_Fix 	of expr
 	| T_Pair	of trace * trace
 	| T_Fst		of trace
@@ -41,3 +41,5 @@ type trace =
 	| T_Mech 	of trace
 	| T_Nil
 	| T_Cons 	of trace * trace
+
+type error = Error

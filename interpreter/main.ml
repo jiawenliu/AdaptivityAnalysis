@@ -25,14 +25,29 @@ let rec bigstep env expr =
               match (bigstep ((f, v1) :: (x, v2) :: (env1)) e) with
               | (v, t)          -> (v, T_Eval t1 t2 (f, x) t)
               | _               -> Error
-              )
+            )
           | _                   -> Error
-          )
+        )
       | _                       -> Error
-      )
+    )
   | Pair e1 e2          -> 
+    (
+      match ((bigstep env e1), (bigstep env e2)) with
+        |((v1, t1), (v2, t2))   -> (V_Pair v1 v2, T_Pair t1 t2)
+        |_                      -> Error
+    )
   | Fst e               ->
+    (
+      match (bigstep env e) with
+        | (V_Pair v1 v2, t)     -> (v1, T_Fst t)
+        | _                     -> Error
+    )
   | Snd e               ->
+    (
+      match (bigstep env e) with
+        | (V_Pair v1 v2, t)     -> (v2, T_Snd t)
+        | _                     -> Error
+    )
   | If True e1 e2       ->
   | If False e1 e2      ->
   | Mech e              ->
