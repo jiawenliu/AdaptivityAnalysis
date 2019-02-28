@@ -46,19 +46,38 @@ let id = letter+
 
 rule read = 
   parse
-  | white { read lexbuf }
-  | letter    { VAR}
-  | "lambda"  { LAM}
-  | "+"       { PLUS }
-  | "("   { LPAREN }
-  | ")"   { RPAREN }
-  | "let" { LET }
-  | "="   { EQUALS }
-  | "in"  { IN }
-  | "/"   { DIV }
-  | "*"   { }
-  | id    { ID (Lexing.lexeme lexbuf) }
-  | int   { INT (int_of_string (Lexing.lexeme lexbuf)) }
-  | eof   { EOF }
+  | white               { read lexbuf }
+  | id                  { ID (Lexing.lexeme lexbuf) }
+  | int                 { INT (int_of_string (Lexing.lexeme lexbuf)) }
+  | eof                 { EOF }
+  | "fix"               { FIX }
+  | "if"                { IF }
+  | "lambda"            { LAM }
+  | "let"               { LET }
+  | "in"                { IN }
+  | "mech"              { MECH }
+  | "true"              { TRUE }
+  | "false"             { FALSE }
+  | "foldl"             { FOLDL }
+  | "foldr"             { FOLDR }
+  | "lg"                { LG }
+  | "||"                { OR }
+  | "&&"                { AND }
+  | "^"                 { XOR }
+  | "-"                 { NEG }
+  | "+"                 { PLUS }
+  | "*"                 { MUL }
+  | "/"                 { DIV }
+  | "<"                 { LESS }
+  | "<="                { LEQ }
+  | ">"                 { GREATER }
+  | ">="                { GEQ }
+  | "::"                { CONS }
+  | "[]"                { NIL }
+  | "("                 { LPAREN }
+  | ")"                 { RPAREN }
+  | "="                 { EQUALS }
+  | ","					{ COLON }
+
 	
 (* And that's the end of the lexer definition. *)
