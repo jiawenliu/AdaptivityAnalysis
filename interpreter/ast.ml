@@ -20,7 +20,7 @@ type expr =
  	| V_True
  	| V_False
   | V_Const 	of int
-  | V_Fix		of expr * env (* unsure *) 
+  | V_Fix		of expr * ('a list) (* unsure *) 
   | V_Pair 	of value * value
  	| V_Nil
  	| V_Cons 	of value * value
@@ -44,5 +44,3 @@ type trace =
 	| T_Let 	of string* trace * trace
 
 type error = Error
-
-False
