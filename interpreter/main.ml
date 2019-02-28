@@ -1,7 +1,7 @@
 open Ast
 
 (* The mechanism *)
-let mech (v: value) : value =
+let mech (v: value) : value = V_Const 12
 
 
 (* [subst e1 e2 x] is [e1] with [e2] substituted for [x]. *)
@@ -96,25 +96,38 @@ let rec bigstep env expr =
   | _                   -> Error
 
 
+(***********************************************************************)
+(***********************************************************************)
+
 (* fetch the value of variable from environments. *)
 let rec eval env x =
   match env with
     | 
+    | []    -> 
 
-(***********************************************************************)
-(* Everything above this is essentially the same as we saw in lecture. *)
-(***********************************************************************)
 
 (* Parse a string into an ast *)
 let parse s =
-  
+  let lexbuf = Lexing.from_string s in
+  let ast = Parser.prog Lexer.read lexbuf in
+  ast
 
 (* Extract a value from an ast node.
    Raises Failure if the argument is a node containing a value. *)
-let extract_value = 
+let extract_value = function
+  | V_True          -> "true"
+  | V_False         -> "false"
+  | V_Const i       -> string_of_int i
+  | V_Fix(v, env)  -> 
+  | V_Pair(v1, v2)  -> 
+  | V_Nil           -> "[]"
+  | V_Cons(v1, v2)  -> 
+  | _ -> failwith "Not a value"
 
 (* Interpret an expression *)
 let interp e =
+  e |> parse |> bigstep |> extract_value
+
 
 (* A few test cases *)
 let run_tests () =

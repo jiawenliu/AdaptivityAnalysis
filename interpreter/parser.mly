@@ -6,7 +6,7 @@ open Ast
 (* declares all the lexical *tokens* of the language *)
 
 %token <int> INT
-%token <string> ID
+%token <string> VAR
 %token EOF
 %token FIX IF LAM
 %token LET
@@ -14,14 +14,15 @@ open Ast
 %token MECH
 %token TRUE FALSE
 %token FOLDL FOLDR LG
-%token OR AND XOR NEG
-%token PLUS MUL DIV
+%token OR AND XOR
+%token PLUS SUB MUL DIV
 %token LESS LEQ GREATER GEQ
 %token CONS NIL
 %token LPAREN
 %token RPAREN
 %token EQUALS
 %token COLON
+%token DOT
 
 (* additional information about precedence and associativity. *)
 
@@ -48,15 +49,24 @@ prog:
 
 expr:
   | i = INT                                       { Const i }
-  | x = ID                                        { Var x }
+  | x = VAR                                       { Var x }
   | TRUE                                          { True }
   | FALSE                                         { False }
   | LPAREN e1 = expr COLON e2 = expr RPAREN       { Pair(e1, e2) } 
   | IF LPAREN e = expr COLON e1 = expr COLON e2 = expr RPAREN
                                                   { If(e, e1, e2) }
-	| NIL                                           { Nil }
+  | FIX f = VAR LPAREN x = VAR RPAREN DOT e = expr
+                                                  { Fix(f, x, e) }
+  | LAM x = VAR DOT e = exper                     { Fix(_, x, e) }
+  | e1 = expr e2 = expr                           { App(e1, e2) }
+  | NIL                                           { Nil }
   | e1 = expr CONS e2 = expr                      { Cons(e1, e2) }
+  | MECH LPAREN e = expr RPAREN                   { Mech(e) }
   | LET x = expr  EQUALS e1 = expr IN e2 = expr   { Let(x, e1, e2) }
-	;
+  | LPAREN expr RPAREN
+  | expr PLUS expr | expr SUB expr | expr MUL expr | expr DIV expr  
+  | expr OR expr | expr AND expr 
+  | LG LPAREN expr RPAREN | SIGN LPAREN expr RPAREN
+  ;
 	
 (* And that's the end of the grammar definition. *)

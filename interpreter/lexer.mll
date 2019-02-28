@@ -47,7 +47,7 @@ let id = letter+
 rule read = 
   parse
   | white               { read lexbuf }
-  | id                  { ID (Lexing.lexeme lexbuf) }
+  | id                  { VAR (Lexing.lexeme lexbuf) }
   | int                 { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | eof                 { EOF }
   | "fix"               { FIX }
@@ -61,10 +61,11 @@ rule read =
   | "foldl"             { FOLDL }
   | "foldr"             { FOLDR }
   | "lg"                { LG }
+  | "sign"				{ SIGN }
   | "||"                { OR }
   | "&&"                { AND }
   | "^"                 { XOR }
-  | "-"                 { NEG }
+  | "-"                 { SUB }
   | "+"                 { PLUS }
   | "*"                 { MUL }
   | "/"                 { DIV }
@@ -78,6 +79,7 @@ rule read =
   | ")"                 { RPAREN }
   | "="                 { EQUALS }
   | ","					{ COLON }
+  | "."					{ DOT }
 
 	
 (* And that's the end of the lexer definition. *)
