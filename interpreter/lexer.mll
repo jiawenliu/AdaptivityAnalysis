@@ -58,8 +58,6 @@ rule read =
   | "mech"              { MECH }
   | "true"              { TRUE }
   | "false"             { FALSE }
-  | "foldl"             { FOLDL }
-  | "foldr"             { FOLDR }
   | "lg"                { LG }
   | "sign"				{ SIGN }
   | "||"                { OR }
