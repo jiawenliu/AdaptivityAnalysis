@@ -47,11 +47,13 @@ prog:
 (* the definition of experssion BNF *)
 
 expr:
+(*
   | expr; PLUS; expr | expr; SUB; expr | expr; MUL; expr | expr; DIV; expr  
   | expr; OR; expr | expr; AND; expr 
   | LG; LPAREN; expr; RPAREN | SIGN; LPAREN; expr; RPAREN
   | expr; LESS; expr | expr; LEQ; expr
   | expr; GREATER; expr | expr; GEQ; expr
+*) 
   | i = INT                                       { Const i }
   | x = VAR                                       { Var x }
   | TRUE                                          { True }
@@ -61,14 +63,16 @@ expr:
                                                   { If(e, e1, e2) }
   | FIX; f = VAR; LPAREN; x = VAR; RPAREN; DOT; e = expr
                                                   { Fix(f, x, e) }
-  | LAM; x = VAR; DOT; e = exper                  { Fix(_, x, e) }
+  | LAM; x = VAR; DOT; e = expr                  { Fix(_, x, e) }
   | e1 = expr; e2 = expr                          { App(e1, e2) }
   | NIL                                           { Nil }
   | e1 = expr; CONS; e2 = expr                    { Cons(e1, e2) }
   | MECH; LPAREN; e = expr; RPAREN                { Mech(e) }
   | LET; x = expr;  EQUALS; e1 = expr; IN; e2 = expr   
                                                   { Let(x, e1, e2) }
+(*
   | LPAREN; expr; RPAREN
+*)
   ;
 	
 (* And that's the end of the grammar definition. *)
