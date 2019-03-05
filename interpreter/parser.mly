@@ -61,9 +61,9 @@ expr:
   | LPAREN; e1 = expr; COLON; e2 = expr; RPAREN   { Pair(e1, e2) } 
   | IF; LPAREN; e = expr; COLON; e1 = expr; COLON; e2 = expr; RPAREN
                                                   { If(e, e1, e2) }
-  | FIX; f = VAR; LPAREN; x = VAR; RPAREN; DOT; e = expr
+  | FIX; f = expr; LPAREN; x = expr; RPAREN; DOT; e = expr
                                                   { Fix(f, x, e) }
-  | LAM; x = VAR; DOT; e = expr                  { Fix(_, x, e) }
+  | LAM; x = expr; DOT; e = expr                   { Fix(e, x, e) }
   | e1 = expr; e2 = expr                          { App(e1, e2) }
   | NIL                                           { Nil }
   | e1 = expr; CONS; e2 = expr                    { Cons(e1, e2) }

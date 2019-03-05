@@ -11,7 +11,7 @@ type expr =
   | Snd     of expr
   | If      of expr * expr * expr
   | Mech 	  of expr
-  | Let     of string * expr * expr
+  | Let     of expr * expr * expr
   | Nil
   | Cons 	  of expr*expr
 
@@ -20,15 +20,16 @@ type expr =
  	| V_True
  	| V_False
   | V_Const 	of int
-  | V_Fix		of expr * ('a list) (* unsure *) 
+  | V_Fix		of expr * ((expr * value) list) (* unsure *) 
   | V_Pair 	of value * value
  	| V_Nil
  	| V_Cons 	of value * value
+  | V_Error
 
 
 type trace = 
-	| T_Var		of expr
-	| T_Eval	of trace * trace * (expr * string) * trace (* unsure *) 
+	| T_Var		of string
+	| T_Eval	of trace * trace * (expr * expr) * trace (* unsure *) 
 	| T_Fix 	of expr
 	| T_Pair	of trace * trace
 	| T_Fst		of trace
@@ -41,6 +42,7 @@ type trace =
 	| T_Mech 	of trace
 	| T_Nil
 	| T_Cons 	of trace * trace
-	| T_Let 	of string* trace * trace
+	| T_Let 	of expr * trace * trace
+  | T_Error
 
 type error = Error
