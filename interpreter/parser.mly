@@ -3,7 +3,6 @@
 open Ast
 %}
 
-(* declares all the lexical *tokens* of the language *)
 
 %token <int> INT
 %token <string> VAR
@@ -23,7 +22,6 @@ open Ast
 %token COLON
 %token DOT
 
-(* additional information about precedence and associativity. *)
 
 %nonassoc IN
 %left PLUS MUL DIV

@@ -135,6 +135,11 @@ let token_list_of_string s =
   in 
     helper []
 
+let rec print_list (l: string list) =
+  match l with
+    | [] -> print_string "]"
+    | h::t  -> print_string h; print_list t
+
 (* A few test cases *)
-let test = token_list_of_string "let x = 12 in x + 7"
+let _ = (token_list_of_string "let x = 12 in x")
 
