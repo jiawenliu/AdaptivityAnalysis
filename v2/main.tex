@@ -1664,6 +1664,83 @@ Two-rounds:
 \]
 \end{figure}
 
+
+\newpage
+
+\[\begin{array}{llll}
+\mbox{Term} & \term & ::= & \return ~ \expr ~|~ \bernoulli ~ \expr ~|~ \uniform ~ \expr
+\end{array}\]
+
+ \[
+\begin{array}{llll}
+  \mbox{Type} & \type & ::= & \treal ~|~ \tmonad
+\end{array}
+\]
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{
+      \Gamma \tvdash{\nnatA} \expr: \type
+    }{
+      \Gamma \tvdash{\nnatA} \return ~ \expr: \tmonad(\type)
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma \tvdash{\nnatA} \expr: \type
+    }{
+      \Gamma \tvdash{\nnatA} \bernoulli ~ \expr: \tmonad(\type)
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Gamma \tvdash{\nnatA} \expr: \type
+    }{
+      \Gamma \tvdash{\nnatA} \uniform ~ \expr: \tmonad(\type)
+    }
+  \end{mathpar}
+
+  \caption{yping rules - monad}
+  \label{fig:type-rules-monad}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule{\expr \bigstep \valr}{\return ~ \expr \bigstep^{1} \valr}
+  %
+  \and
+  %
+  \inferrule{\expr \bigstep \valr}{\bernoulli ~ \expr \bigstep^{\frac{1}{2}} \etrue}
+  %
+  \and
+  %
+  \inferrule{\expr \bigstep \valr}{\uniform ~ \expr \bigstep^{\frac{1}{2}} \valr}
+\end{mathpar}
+  \caption{Big-step semantics - monad}
+  \label{fig:big-step-monad}
+\end{figure}
+
+\begin{figure}
+  \begin{mathpar}
+    \begin{array}{lll}
+      \lr{\type_1 \times \type_2} & = & \lrv{\type_1}  \times \lr{\type_2} \\
+      %
+      \lr{\tmonad ~ \type} & = & \tmonad \lrv{\type} =  \{ d : \lr{\type} \rightarrow [0,1] \} \\
+      %
+      \lr{\tlist{\type}} & = & \{ \lr{\type} \times \dots \times \lr{\type} ~|~ \sum_{x \in \lr{\type}} d(x) = 1 \}\\
+      %
+      \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+      \{(f, \nnatbiA, \dmap, \nnatA ) ~|~ f: \type_1 \rightarrow \type_2, ~ \nnatbiA, \dmap, \nnatA ~ given\} \\
+      %
+      \lr{\Gamma, \dmap \tvdash{\nnatA} \expr: \type} & = & \{ \lr{\Gamma \tvdash{\nnatA} \expr: \type}, \dmap, \nnatA
+      \}
+    \end{array}
+  \end{mathpar}
+  \caption{Logical relation - monad}
+  \label{fig:lr:monad}
+\end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
