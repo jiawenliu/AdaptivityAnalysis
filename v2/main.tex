@@ -743,18 +743,18 @@ worked out and verified.
       \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
       \lr{\type_1} \to \lrv{\type_2}\\
       %
-      \lr{M\type} & = & \mathcal{M}\lrv{\type}\\
+      \lr{\tmonad \type} & = & \mathcal{M}\lrv{\type}\\
       \\
        \\
-      \lr{\etrue}_{\theta} &=& t\in \mathbb{B}\\
-      \lr{\efalse}_{\theta}&=& f\in \mathbb{B}\\
-      \lr{(e_1,e_2)}_{\theta}&=& (\lr{e_1}_{\theta}, \lr{e_2}_{\theta})\\
-      \lr{x}_{\theta} &=& \theta(x)\\
-      \lr{\lambda x:\tau.e}_{\theta} &=&  \hat{\lambda} v\in\lr{\tau}. \lr{e}_{\theta[x=v]}\\
-      \lr{e_1e_2}_{\theta} &=&  \lr{e_1}_{\theta}\lr{e_2}_{\theta}\\
-      \lr{\return(e)}_{\theta} &=& \hat{\delta}\lr{e}_{\theta}\\
-      \lr{\elet x=e_1 \ein e_2 }_{\theta} &=& {\tt mlet}\ v=\lr{e_1}_{\theta}
-                                             \ {\tt in}\ \lr{e_2}_{\theta[x=v]} \\
+      \lr{\etrue}_{\env} &=& t\in \mathbb{B}\\
+      \lr{\efalse}_{\env}&=& f \in \mathbb{B}\\
+      \lr{(\expr_1,\expr_2)}_{\env}&=& (\lr{\expr_1}_{\env}, \lr{\expr_2}_{\env})\\
+      \lr{x}_{\env} &=& \env(x)\\
+      \lr{\lambda x:\type.\expr}_{\env} &=&  \hat{\lambda} v\in\lr{\type}. \lr{\expr}_{\env[x=v]}\\
+      \lr{\expr_1\expr_2}_{\env} &=&  \lr{\expr_1}_{\env}\lr{\expr_2}_{\env}\\
+      \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
+      \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& {\tt mlet}\ v=\lr{\expr_1}_{\env}
+                                             \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]} \\
     \end{array}
   \end{mathpar}
   \caption{Denotational Semantics without Traces}
@@ -768,7 +768,7 @@ Dirac distribution.
 \begin{figure}
   \begin{mathpar}
     \begin{array}{lll}
-      \lrt{\type} & = & \lr{\type}\times\mathcal{T} \\
+      \lrt{\type} & = & \lr{\type}\times\mathcal{\tr} \\
       % \lr{\type_1 \times \type_2} & = & \lrv{\type_1}\times\lrv{\type_2}\\
       % %
       % \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
@@ -777,18 +777,29 @@ Dirac distribution.
       % \lr{M\type} & = & \mathcal{M}\lrv{\type}\\
       \\
        \\
-      \lrt{\etrue}_{\theta} &=& (t,\etrue) \\
-      \lrt{\efalse}_{\theta}&=& (f,\efalse)\\
-      \lrt{(e_1,e_2)}_{\theta}&=& let (v_1,T_1)=\lrt{e_1}_{\theta} in 
-                                               let (v_2,T_2)=\lrt{e_2}_{\theta}) in 
-                                               ((v_1,v_2),(T_1,T_2))\\
-      \lrt{x}_{\theta} &=& (\theta(x),x)\\
-      \lrt{\lambda x:\tau.e}_{\theta} &=&  (\hat{\lambda} v\in\lr{\tau}. \lr{e}_\theta[x=v]\\
+      \lrt{\etrue}_{\env} &=& (t,\etrue) \\
+      \lrt{\efalse}_{\env}&=& (f,\efalse)\\
+      \lrt{(\expr_1,\expr_2)}_{\env}&=& \elet (\valr_1,\tr_1)=\lrt{\expr_1}_{\env} \ein 
+                                               \elet (\valr_2, \tr_2)=\lrt{\expr_2}_{\env}) \ein 
+                                               ((\valr_1,\valr_2),(\tr_1,\tr_2))\\
+      \lrt{x}_{\env} &=& (\env(x),x)\\
+      \lrt{\lambda x:\type.\expr}_{\env} &=&  (\hat{\lambda} \valr\in\lr{\type}. \lr{\expr}_{\env[x=\valr]}, \lambda x:\type.\expr)\\
+      \lrt{\expr_1\expr_2}_{\env} &=&  (\lr{\expr_1}_{\env}\lr{\expr_2}_{\env},\\ 
+        & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\env} \ein\\
+        & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\env} \ein\\
+        & & \elet \valr_1 = \lr{\lambda x:\type. \expr}_{\env} \ein \\
+        & & \elet (\valr, \tr) = \lrt{\expr}_{\env[x \to \valr_2]} \ein\\
+        & & (\tr_1, \tr_2, \mathrel{\triangleright} \lambda x:\type. \tr))\\
 \\
 \\
-      \lr{\return(e)}_{\theta} &=& \hat{\delta}\lr{e}_{\theta}\\
-      \lr{\elet x=e_1 \ein e_2 }_{\theta} &=& {\tt mlet}\ v=\lr{e_1}_{\theta}
-                                             \ {\tt in}\ \lr{e_2}_{\theta[x=v]} \\
+      \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
+      \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& ({\tt mlet}\ \valr=\lr{\expr_1}_{\env}
+                                                   
+                                                  \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]},\\
+      & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\theta} \ein \\
+      & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\theta[x \to \valr_1]} \ein \\
+      & & (x, \tr_1, \tr_2)
+      ) \\
     \end{array}
   \end{mathpar}
   \caption{Denotational Semantics with Traces}
@@ -825,7 +836,7 @@ shortly.
       \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
       \{(\efix f(x).\expr, \env) ~|~ \forall \valr \in \lrv{\type_1}.\\
       & & 
-      ~~~~~~(\theta[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
+      ~~~~~~(\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
       %
       \\
       %
@@ -958,7 +969,7 @@ completely standard way.
       \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
       \{(\stepiA, (\efix f(x).\expr, \env)) ~|~ \forall \stepiB < \stepiA.\, \forall (\stepiB, \valr) \in \lrv{\type_1}.\\
       & & 
-      ~~~~~~(\stepiB, (\theta[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
+      ~~~~~~(\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
       %
      \boxed{ \lrv{\tlist{\type}}  } & = & \{  (\stepiA, \enil) ~|~ \stepiA \in
                                 \nat \} \cup \{  (\stepiA,
