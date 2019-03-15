@@ -29,7 +29,7 @@ open Ast
 
 
 
-%start <Ast.expr> prog
+%start <Ast.expr> expr
 
 (* The following %% ends the declarations section of the grammar definition. *)
 
@@ -38,9 +38,7 @@ open Ast
 (* Now begins the *rules* section of the grammar definition. *)
    
    
-prog:
-	| e = expr; EOF { e }
-	;
+
 	
 (* the definition of experssion BNF *)
 

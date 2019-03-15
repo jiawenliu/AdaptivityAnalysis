@@ -105,7 +105,7 @@ let rec bigstep (env: (expr * value) list) (expr: expr): (value * trace) =
 let parse_string str =
   let lb = Lexing.from_string str
   in
-    Parser.prog Lexer.read lb
+    Parser.expr Lexer.read lb
     
 (* Extract a value from an ast node.
    Raises Failure if the argument is a node containing a value. *)
