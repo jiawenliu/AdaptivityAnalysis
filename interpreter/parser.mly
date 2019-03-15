@@ -61,7 +61,7 @@ expr:
                                                   { If(e, e1, e2) }
   | FIX; f = expr; LPAREN; x = expr; RPAREN; DOT; e = expr
                                                   { Fix(f, x, e) }
-  | LAM; x = expr; DOT; e = expr                   { Fix(e, x, e) }
+  | LAM; x = expr; DOT; e = expr                  { Fix(e, x, e) }
   | e1 = expr; e2 = expr                          { App(e1, e2) }
   | NIL                                           { Nil }
   | e1 = expr; CONS; e2 = expr                    { Cons(e1, e2) }

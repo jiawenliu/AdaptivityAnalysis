@@ -141,5 +141,5 @@ let rec print_list (l: string list) =
     | h::t  -> print_string h; print_list t
 
 (* A few test cases *)
-let _ = (token_list_of_string "let x = 12 in x")
+let _ = (parse_string "let x = 12 in x")
 

@@ -1,6 +1,6 @@
 (* The type of the abstract syntax tree (AST). *)
 type expr =
-  | T_Var   of string
+  | Var   of string
   | Const   of int
   | True
   | False
