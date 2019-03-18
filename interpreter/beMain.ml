@@ -1,27 +1,26 @@
-(*open BeAst
-*)
-(*
+open BeAst
+open Format
+
 let inprog = ref (None : string option)
 let infile = ref (None : string option)
-*)
 
-(*let argDefs = [
-    "-ip", Arg.String (fun s -> infile := Some s ), "specify the input program, -ip string" ; 
-      "-if", Arg.String (fun s -> outfile := Some s ), "specify the input file name, -if string" 
-]
+
+let argDefs = [
+    "-ip", Arg.String (fun s -> inprog := Some s ), "specify the input program string, -ip string" ; 
+(*      "-if", Arg.String (fun s -> infile := Some s ), "specify the input file name, -if string" 
+*)]
 
 let parseArgs () =  
-        let oname = ref (None : string option) in 
         Arg.parse argDefs 
         (fun s -> 
-                match !oname  with 
-                      | Some (_) -> printf "%s" "specify just one output file name"  
-                      | None  -> oname := Some (s); printf "%s" s ) "for output file" ;
-             match !infile, !outfile  with
-                   | Some i, Some o -> (i,o)
-                   | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col int, rounds -r int"; ("","")
+                match !inprog  with 
+                      | Some (_) -> printf "%s" "specify just the programs"  
+                      | None  -> inprog := Some (s) ) " " ;
+             match !inprog  with
+                   | Some i -> (i)
+                   | _ -> printf "%s" "specify  your input file -if or intput program string -ip"; ""
 
-*)
+
 (* The mechanism *)
 (*let mech (v: value) : value = V_Const 12
 *)
@@ -157,3 +156,26 @@ let token_list_of_string s =
     with _ -> List.rev l
   in 
     helper []
+
+let rec pretty_print (e : BeAst.expr) = 
+  match e with
+  | Var s           -> Printf.printf "Var %s " s
+  | Const i         -> Printf.printf " Const %d " i
+  | True            -> Printf.printf " True " 
+  | False           -> Printf.printf " False "
+  | Pair(e1, e2)    -> Printf.printf " ("; pretty_print e1 ; Printf.printf ","; pretty_print e2; Printf.printf ") "
+  | App (e1, e2)    -> pretty_print e1 ; Printf.printf " "; pretty_print e2
+  | Fix(e1, e2, e3) -> Printf.printf " Fix "; pretty_print(e1); Printf.printf " ("; pretty_print (e2); Printf.printf ") "; pretty_print(e3)
+  | Fst e           -> Printf.printf " Fst "; pretty_print(e)
+  | Snd e           -> Printf.printf " Snd "; pretty_print(e)
+  | If(e, e1, e2)   -> Printf.printf " If("; pretty_print(e); Printf.printf " then "; pretty_print(e1); Printf.printf "else"; pretty_print(e2)
+  | Mech e          -> Printf.printf " Mech("; pretty_print(e); Printf.printf ") "
+  | Let(x, e1, e2)  -> Printf.printf " Let "; pretty_print(x); Printf.printf " = "; pretty_print(e1); Printf.printf " in "; pretty_print(e2)
+  | Nil             -> Printf.printf " [] "
+  | Cons(e1, e2)    -> Printf.printf " Cons("; pretty_print(e1); Printf.printf ", "; pretty_print(e2); Printf.printf ") "
+
+(*let e = (parse_string "let x = 12 in (x1, x2)" in (pretty_print e)*)
+let main = 
+  let ip = parseArgs () in pretty_print (parse_string ip)
+
+
