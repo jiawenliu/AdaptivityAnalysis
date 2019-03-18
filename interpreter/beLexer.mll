@@ -1,11 +1,6 @@
-(* The first section of the lexer definition, called the *header*,
-   is the part that appears below between { and }.  It is code
-   that will simply be copied literally into the generated lexer.ml. *)
-
 {
+open BeParser
 open Lexing
-open Parser
-
 exception SyntaxError of string
 
 let next_line lexbuf =
@@ -14,28 +9,14 @@ let next_line lexbuf =
     { pos with pos_bol = lexbuf.lex_curr_pos;
                pos_lnum = pos.pos_lnum + 1
     }
+    
 }
-
-(* The second section of the lexer definition defines *identifiers*
-   that will be used later in the definition.  Each identifier is
-   a *regular expression*.  We won't go into details on how regular
-   expressions work.
-   
-   Below, we define regular expressions for 
-     - whitespace (spaces and tabs),
-     - digits (0 through 9)
-     - integers (nonempty sequences of digits, optionally preceded by a minus sign)
-     - letters (a through z, and A through Z), and
-     - identifiers (nonempty sequences of letters).
-     
-   FYI, these aren't exactly the same as the OCaml definitions of integers and 
-   identifiers. *)
 
 let white = [' ' '\t']+
 let digit = ['0'-'9']
 let int = '-'? digit+
 let letter = ['a'-'z' 'A'-'Z']
-let id = letter+
+let id = letter+ (digit|letter)*
 
 (* The final section of the lexer definition defines how to parse a character
    stream into a token stream.  Each of the rules below has the form 
@@ -44,10 +25,9 @@ let id = letter+
    specified by the [action].  We won't go into details on how the actions
    work.  *)
 
-rule read = 
+rule token = 
   parse
-  | white               { read lexbuf }
-  | id                  { VAR (Lexing.lexeme lexbuf) }
+  | white               { token lexbuf }
   | int                 { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | eof                 { EOF }
   | "fix"               { FIX }
@@ -59,7 +39,7 @@ rule read =
   | "true"              { TRUE }
   | "false"             { FALSE }
   | "lg"                { LG }
-  | "sign"				{ SIGN }
+  | "sign"              { SIGN }
   | "||"                { OR }
   | "&&"                { AND }
   | "^"                 { XOR }
@@ -76,8 +56,6 @@ rule read =
   | "("                 { LPAREN }
   | ")"                 { RPAREN }
   | "="                 { EQUALS }
-  | ","					{ COLON }
-  | "."					{ DOT }
-
-	
-(* And that's the end of the lexer definition. *)
+  | ","                 { COLON }
+  | "."                 { DOT }
+  | id                  { VAR (Lexing.lexeme lexbuf) }

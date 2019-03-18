@@ -1,9 +1,9 @@
 #!/bin/sh
-ocamllex Lexer.mll && \
-ocamlyacc Parser.mly && \
-ocamlc -c Ast.ml && \
-ocamlc -c Parser.mli && \
-ocamlc -c Parser.ml && \
-ocamlc -c Lexer.ml && \
-ocamlc -c Main.ml && \
-ocamlmktop -o be.top Ast.cmo Parser.cmo Lexer.cmo Main.cmo
+ocamllex beLexer.mll && \
+ocamlyacc beParser.mly && \
+ocamlc -c beAst.ml && \
+ocamlc -c beParser.mli && \
+ocamlc -c beParser.ml && \
+ocamlc -c beLexer.ml && \
+ocamlc -c beMain.ml && \
+ocamlmktop -o be.top beAst.cmo beParser.cmo beLexer.cmo beMain.cmo

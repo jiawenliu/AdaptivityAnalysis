@@ -10,10 +10,10 @@ type expr =
   | Fst     of expr
   | Snd     of expr
   | If      of expr * expr * expr
-  | Mech 	  of expr
+  | Mech    of expr
   | Let     of expr * expr * expr
   | Nil
-  | Cons 	  of expr*expr
+  | Cons    of expr*expr
 
 
  type value = 
@@ -28,23 +28,19 @@ type expr =
 
 
 type trace = 
-	| T_Var        of string
-	| T_Eval       of trace * trace * (expr * expr) * trace (* unsure *) 
-	| T_Fix        of expr
-	| T_Pair       of trace * trace
-	| T_Fst        of trace
-	| T_Snd        of trace
-	| T_True
-	| T_False
-	| T_Iftrue     of trace * trace
-	| T_Iffalse    of trace * trace
-	| T_Const      of int
-	| T_Mech       of trace
-	| T_Nil
-	| T_Cons 	     of trace * trace
-	| T_Let        of expr * trace * trace
+  | T_Var        of string
+  | T_Eval       of trace * trace * (expr * expr) * trace (* unsure *) 
+  | T_Fix        of expr
+  | T_Pair       of trace * trace
+  | T_Fst        of trace
+  | T_Snd        of trace
+  | T_True
+  | T_False
+  | T_Iftrue     of trace * trace
+  | T_Iffalse    of trace * trace
+  | T_Const      of int
+  | T_Mech       of trace
+  | T_Nil
+  | T_Cons       of trace * trace
+  | T_Let        of expr * trace * trace
   | T_Error
-
-
-type adap_type =
-  | Ty_Const

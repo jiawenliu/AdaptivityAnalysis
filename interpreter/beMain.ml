@@ -1,15 +1,37 @@
-open Ast
+(*open BeAst
+*)
+(*
+let inprog = ref (None : string option)
+let infile = ref (None : string option)
+*)
 
+(*let argDefs = [
+    "-ip", Arg.String (fun s -> infile := Some s ), "specify the input program, -ip string" ; 
+      "-if", Arg.String (fun s -> outfile := Some s ), "specify the input file name, -if string" 
+]
+
+let parseArgs () =  
+        let oname = ref (None : string option) in 
+        Arg.parse argDefs 
+        (fun s -> 
+                match !oname  with 
+                      | Some (_) -> printf "%s" "specify just one output file name"  
+                      | None  -> oname := Some (s); printf "%s" s ) "for output file" ;
+             match !infile, !outfile  with
+                   | Some i, Some o -> (i,o)
+                   | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col int, rounds -r int"; ("","")
+
+*)
 (* The mechanism *)
-let mech (v: value) : value = V_Const 12
-
+(*let mech (v: value) : value = V_Const 12
+*)
 (* fetch the value of variable from environments. *)
-let rec eval (env: (expr * value) list) (x: expr): value =
+(*let rec eval (env: (expr * value) list) (x: expr): value =
   match env with
     | (var, v)::env   -> if (var = x) then v else eval env x
     | []              -> V_Error
 
-
+*)
 (* [subst e1 e2 x] is [e1] with [e2] substituted for [x]. *)
 (*let rec subst e1 e2 x = 
   match e1 with
@@ -17,7 +39,7 @@ let rec eval (env: (expr * value) list) (x: expr): value =
   
 
 (* Big step of evaluation. *)
-let rec bigstep (env: (expr * value) list) (expr: expr): (value * trace) = 
+(*let rec bigstep (env: (expr * value) list) (expr: expr): (value * trace) = 
   match expr with
   | Var x                 -> (eval env (Var x) , T_Var x )
   | Const c               -> (V_Const c, T_Const c)
@@ -96,20 +118,21 @@ let rec bigstep (env: (expr * value) list) (expr: expr): (value * trace) =
   )
   | _                     -> (V_Error, T_Error)
 
-
+*)
 (***********************************************************************)
 (***********************************************************************)
 
 
 (* Parse a string into an ast *)
+
 let parse_string str =
   let lb = Lexing.from_string str
   in
-    Parser.expr Lexer.read lb
+    BeParser.expr BeLexer.token lb
     
 (* Extract a value from an ast node.
    Raises Failure if the argument is a node containing a value. *)
-let extract_value = function
+(*let extract_value = function
   | V_True          -> "true"
   | V_False         -> "false"
   | V_Const i       -> string_of_int i
@@ -118,28 +141,19 @@ let extract_value = function
   | V_Nil           -> "[]"
   | V_Cons(v1, v2)  -> "List Value"
   | _               -> failwith "Not a value"
-
+*)
 (* Interpret an expression *)
 (*let interp e =
   e |> parse |> bigstep |> extract_value
 *)
 
-(* Print all tokens *)
+(* Print all tokens *) 
 let token_list_of_string s =
   let lb = Lexing.from_string s in
   let rec helper l =
     try
-      let t = Lexer.read lb in
-      if t = Parser.EOF then List.rev l else helper (t::l)
+      let t = BeLexer.token lb in
+      if t = BeParser.EOF then List.rev l else helper (t::l)
     with _ -> List.rev l
   in 
     helper []
-
-let rec print_list (l: string list) =
-  match l with
-    | [] -> print_string "]"
-    | h::t  -> print_string h; print_list t
-
-(* A few test cases *)
-let _ = (parse_string "let x = 12 in x")
-
