@@ -1,19 +1,22 @@
 (* The type of the abstract syntax tree (AST). *)
+type equation = 
+  | Add       of equation * equation
+
 type expr =
-  | Var   of string
-  | Const   of int
+  | Var       of string
+  | Const     of int
   | True
   | False
-  | Pair    of expr * expr
-  | App     of expr * expr
-  | Fix     of expr * expr * expr(* unsure *) 
-  | Fst     of expr
-  | Snd     of expr
-  | If      of expr * expr * expr
-  | Mech    of expr
-  | Let     of expr * expr * expr
+  | Pair      of expr * expr
+  | App       of expr * expr
+  | Fix       of expr * expr * expr(* unsure *) 
+  | Fst       of expr
+  | Snd       of expr
+  | If        of expr * expr * expr
+  | Mech      of expr
+  | Let       of expr * expr * expr
   | Nil
-  | Cons    of expr*expr
+  | Cons      of expr*expr
 
 
  type value = 

@@ -3,12 +3,13 @@ open Format
 
 let inprog = ref (None : string option)
 let infile = ref (None : string option)
+let isfile = ref false
 
 
 let argDefs = [
-    "-ip", Arg.String (fun s -> inprog := Some s ), "specify the input program string, -ip string" ; 
-(*      "-if", Arg.String (fun s -> infile := Some s ), "specify the input file name, -if string" 
-*)]
+    "-ip", Arg.String (fun s -> inprog := Some s  ), "specify the input program string, -ip string" ; 
+      "-if", Arg.String (fun s -> infile := Some s; isfile := true ), "specify the input file name, -if string" 
+]
 
 let parseArgs () =  
         Arg.parse argDefs 
@@ -18,7 +19,12 @@ let parseArgs () =
                       | None  -> inprog := Some (s) ) " " ;
              match !inprog  with
                    | Some i -> (i)
-                   | _ -> printf "%s" "specify  your input file -if or intput program string -ip"; ""
+                   | _ -> 
+                   (
+                    match !infile with
+                          | Some i -> (i)
+                          | _ -> printf "%s" "specify  your input file -if or intput program string -ip"; ""
+                    )
 
 
 (* The mechanism *)
@@ -124,11 +130,18 @@ let parseArgs () =
 
 (* Parse a string into an ast *)
 
-let parse_string str =
-  let lb = Lexing.from_string str
-  in
-    BeParser.expr BeLexer.token lb
-    
+let parse_string prog =
+  if (!isfile) 
+  then
+    let fh = open_in prog 
+    in
+      let lb = (Lexing.from_channel fh) in 
+        BeParser.expr BeLexer.token lb
+  else 
+    let lb = Lexing.from_string prog
+    in
+      BeParser.expr BeLexer.token lb
+
 (* Extract a value from an ast node.
    Raises Failure if the argument is a node containing a value. *)
 (*let extract_value = function
@@ -159,7 +172,7 @@ let token_list_of_string s =
 
 let rec pretty_print (e : BeAst.expr) = 
   match e with
-  | Var s           -> Printf.printf "Var %s " s
+  | Var s           -> Printf.printf " Var %s " s
   | Const i         -> Printf.printf " Const %d " i
   | True            -> Printf.printf " True " 
   | False           -> Printf.printf " False "
@@ -176,6 +189,6 @@ let rec pretty_print (e : BeAst.expr) =
 
 (*let e = (parse_string "let x = 12 in (x1, x2)" in (pretty_print e)*)
 let main = 
-  let ip = parseArgs () in pretty_print (parse_string ip)
+  let prog = parseArgs () in pretty_print (parse_string prog); print_endline ""
 
 
