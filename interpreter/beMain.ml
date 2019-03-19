@@ -170,25 +170,25 @@ let token_list_of_string s =
   in 
     helper []
 
-let rec pretty_print (e : BeAst.expr) = 
+let rec print_expression fmt (e : BeAst.expr) = 
   match e with
-  | Var s           -> Printf.printf " Var %s " s
-  | Const i         -> Printf.printf " Const %d " i
-  | True            -> Printf.printf " True " 
-  | False           -> Printf.printf " False "
-  | Pair(e1, e2)    -> Printf.printf " ("; pretty_print e1 ; Printf.printf ","; pretty_print e2; Printf.printf ") "
-  | App (e1, e2)    -> pretty_print e1 ; Printf.printf " "; pretty_print e2
-  | Fix(e1, e2, e3) -> Printf.printf " Fix "; pretty_print(e1); Printf.printf " ("; pretty_print (e2); Printf.printf ") "; pretty_print(e3)
-  | Fst e           -> Printf.printf " Fst "; pretty_print(e)
-  | Snd e           -> Printf.printf " Snd "; pretty_print(e)
-  | If(e, e1, e2)   -> Printf.printf " If("; pretty_print(e); Printf.printf " then "; pretty_print(e1); Printf.printf "else"; pretty_print(e2)
-  | Mech e          -> Printf.printf " Mech("; pretty_print(e); Printf.printf ") "
-  | Let(x, e1, e2)  -> Printf.printf " Let "; pretty_print(x); Printf.printf " = "; pretty_print(e1); Printf.printf " in "; pretty_print(e2)
-  | Nil             -> Printf.printf " [] "
-  | Cons(e1, e2)    -> Printf.printf " Cons("; pretty_print(e1); Printf.printf ", "; pretty_print(e2); Printf.printf ") "
+  | Var s           -> fprintf fmt " Var %s " s
+  | Const i         -> fprintf fmt " Const %d " i
+  | True            -> fprintf fmt " True " 
+  | False           -> fprintf fmt " False "
+  | Pair(e1, e2)    -> fprintf fmt " (%a, %a)"  print_expression e1 print_expression e2
+  | App (e1, e2)    -> fprintf fmt " @[%a@] @[%a@] " print_expression e1  print_expression e2
+  | Fix(e1, e2, e3) -> fprintf fmt " Fix %a (%a). @\n@[<hov 1> %a@]@\n" print_expression(e1) print_expression (e2) print_expression(e3)
+  | Fst e           -> fprintf fmt " Fst %a " print_expression(e)
+  | Snd e           -> fprintf fmt " Snd %a " print_expression(e)
+  | If(e, e1, e2)   -> fprintf fmt " If %a Then @\n @[<hov 1> %a@]@\n Else @\n @[<hov 1> %a@]@\n" print_expression(e)  print_expression(e1) print_expression(e2)
+  | Mech e          -> fprintf fmt " Mech( %a )" print_expression(e)
+  | Let(x, e1, e2)  -> fprintf fmt " @[<v>@[<hov> Let %a =@;<1 1>@[%a@]@] in@ %a@]" print_expression(x) print_expression(e1) print_expression(e2)
+  | Nil             -> fprintf fmt " [] "
+  | Cons(e1, e2)    -> fprintf fmt " %a :: %a " print_expression(e1) print_expression(e2)
 
-(*let e = (parse_string "let x = 12 in (x1, x2)" in (pretty_print e)*)
+(*let e = (parse_string "let x = 12 in (x1, x2)" in (print_expression e)*)
 let main = 
-  let prog = parseArgs () in pretty_print (parse_string prog); print_endline ""
+  let prog = parseArgs () in print_expression std_formatter (parse_string prog)
 
 
