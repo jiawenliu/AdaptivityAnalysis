@@ -1,6 +1,7 @@
 (* The type of the abstract syntax tree (AST). *)
-type equation = 
-  | Add       of equation * equation
+type bop = Add | Minus | Div | Or | And | Equal | LEQ | GEQ
+
+type uop = Log | Sign | Neg
 
 type expr =
   | Var       of string
@@ -16,7 +17,9 @@ type expr =
   | Mech      of expr
   | Let       of expr * expr * expr
   | Nil
-  | Cons      of expr*expr
+  | Cons      of expr * expr
+  | Bop       of bop * expr * expr
+  | Uop       of uop * expr
 
 
  type value = 
