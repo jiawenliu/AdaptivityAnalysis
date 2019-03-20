@@ -15,6 +15,7 @@ let next_line lexbuf =
 let white = [' ' '\t']+
 let digit = ['0'-'9']
 let int = '-'? digit+
+let float = '-'? digit+ '.' digit+
 let letter = ['a'-'z' 'A'-'Z']
 let id = letter+ (digit|letter)*
 
@@ -29,6 +30,7 @@ rule token =
   parse
   | white               { token lexbuf }
   | int                 { INT (int_of_string (Lexing.lexeme lexbuf)) }
+  | float               { FLOAT (float_of_string (Lexing.lexeme lexbuf))}
   | eof                 { EOF }
   | "fix"               { FIX }
   | "if"                { IF }
@@ -38,12 +40,14 @@ rule token =
   | "mech"              { MECH }
   | "true"              { TRUE }
   | "false"             { FALSE }
+
   | "lg"                { LG }
   | "sign"              { SIGN }
+
   | "||"                { OR }
   | "&&"                { AND }
   | "^"                 { XOR }
-  | "-"                 { SUB }
+  | "-"                 { MINUS }
   | "+"                 { PLUS }
   | "*"                 { MUL }
   | "/"                 { DIV }

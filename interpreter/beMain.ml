@@ -170,25 +170,48 @@ let token_list_of_string s =
   in 
     helper []
 
-let rec print_expression fmt (e : BeAst.expr) = 
-  match e with
-  | Var s           -> fprintf fmt " Var %s " s
-  | Const i         -> fprintf fmt " Const %d " i
-  | True            -> fprintf fmt " True " 
-  | False           -> fprintf fmt " False "
-  | Pair(e1, e2)    -> fprintf fmt " (%a, %a)"  print_expression e1 print_expression e2
-  | App (e1, e2)    -> fprintf fmt " @[%a@] @[%a@] " print_expression e1  print_expression e2
-  | Fix(e1, e2, e3) -> fprintf fmt " Fix %a (%a). @\n@[<hov 1> %a@]@\n" print_expression(e1) print_expression (e2) print_expression(e3)
-  | Fst e           -> fprintf fmt " Fst %a " print_expression(e)
-  | Snd e           -> fprintf fmt " Snd %a " print_expression(e)
-  | If(e, e1, e2)   -> fprintf fmt " If %a Then @\n @[<hov 1> %a@]@\n Else @\n @[<hov 1> %a@]@\n" print_expression(e)  print_expression(e1) print_expression(e2)
-  | Mech e          -> fprintf fmt " Mech( %a )" print_expression(e)
-  | Let(x, e1, e2)  -> fprintf fmt " @[<v>@[<hov> Let %a =@;<1 1>@[%a@]@] in@ %a@]" print_expression(x) print_expression(e1) print_expression(e2)
-  | Nil             -> fprintf fmt " [] "
-  | Cons(e1, e2)    -> fprintf fmt " %a :: %a " print_expression(e1) print_expression(e2)
+let pp_bop fmt (p : BeAst.bop) = 
+  match p with
+    | Plus          -> fprintf fmt " + "
+    | Minus         -> fprintf fmt " - "
+    | Mul           -> fprintf fmt " * "
+    | Div           -> fprintf fmt " / " 
+    | Or            -> fprintf fmt " || "
+    | And           -> fprintf fmt " && "
+    | Xor           -> fprintf fmt " ^ " 
+    | Equal         -> fprintf fmt " = "
+    | Leq           -> fprintf fmt " <= " 
+    | Geq           -> fprintf fmt " >= " 
+    | Less          -> fprintf fmt " < " 
+    | Greater       -> fprintf fmt " > "
 
-(*let e = (parse_string "let x = 12 in (x1, x2)" in (print_expression e)*)
+let pp_uop fmt (p : BeAst.uop) = 
+  match p with
+    | Sign          -> fprintf fmt "sign"
+    | Log           -> fprintf fmt "log"
+
+let rec pp_expression fmt (e : BeAst.expr) = 
+  match e with
+  | Var s             -> fprintf fmt " Var %s " s
+  | Const_i i         -> fprintf fmt " Int %d " i
+  | Const_f f         -> fprintf fmt " Float %f " f
+  | True              -> fprintf fmt " True " 
+  | False             -> fprintf fmt " False "
+  | Pair(e1, e2)      -> fprintf fmt " (%a, %a)"  pp_expression e1 pp_expression e2
+  | App (e1, e2)      -> fprintf fmt " @[%a@] @[%a@] " pp_expression e1  pp_expression e2
+  | Fix(e1, e2, e3)   -> fprintf fmt " Fix %a (%a). @\n@[<hov 1> %a@]@\n" pp_expression(e1) pp_expression (e2) pp_expression(e3)
+  | Fst e             -> fprintf fmt " Fst %a " pp_expression(e)
+  | Snd e             -> fprintf fmt " Snd %a " pp_expression(e)
+  | If(e, e1, e2)     -> fprintf fmt " If %a Then @\n @[<hov 1> %a@]@\n Else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
+  | Mech e            -> fprintf fmt " Mech( %a )" pp_expression(e)
+  | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> Let %a =@;<1 1>@[%a@]@] in@ %a@]" pp_expression(x) pp_expression(e1) pp_expression(e2)
+  | Nil               -> fprintf fmt " [] "
+  | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
+  | Bop(p, e1, e2)    -> fprintf fmt " %a %a %a " pp_bop(p)  pp_expression(e1) pp_expression(e2)
+  | Uop(p, e)         -> fprintf fmt " %a ( %a ) " pp_uop(p)  pp_expression(e)
+
+(*let e = (parse_string "let x = 12 in (x1, x2)" in (pp_expression e)*)
 let main = 
-  let prog = parseArgs () in print_expression std_formatter (parse_string prog)
+  let prog = parseArgs () in pp_expression std_formatter (parse_string prog)
 
 
