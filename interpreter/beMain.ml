@@ -188,7 +188,7 @@ let pp_bop fmt (p : BeAst.bop) =
 let pp_uop fmt (p : BeAst.uop) = 
   match p with
     | Sign          -> fprintf fmt "sign"
-    | Log           -> fprintf fmt "log"
+    | Lg            -> fprintf fmt "lg"
 
 let rec pp_expression fmt (e : BeAst.expr) = 
   match e with
@@ -198,7 +198,7 @@ let rec pp_expression fmt (e : BeAst.expr) =
   | True              -> fprintf fmt " True " 
   | False             -> fprintf fmt " False "
   | Pair(e1, e2)      -> fprintf fmt " (%a, %a)"  pp_expression e1 pp_expression e2
-  | App (e1, e2)      -> fprintf fmt " @[%a@] @[%a@] " pp_expression e1  pp_expression e2
+  | App (e1, e2)      -> fprintf fmt " App @[%a@] @[%a@] " pp_expression e1  pp_expression e2
   | Fix(e1, e2, e3)   -> fprintf fmt " Fix %a (%a). @\n@[<hov 1> %a@]@\n" pp_expression(e1) pp_expression (e2) pp_expression(e3)
   | Fst e             -> fprintf fmt " Fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " Snd %a " pp_expression(e)
@@ -207,7 +207,7 @@ let rec pp_expression fmt (e : BeAst.expr) =
   | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> Let %a =@;<1 1>@[%a@]@] in@ %a@]" pp_expression(x) pp_expression(e1) pp_expression(e2)
   | Nil               -> fprintf fmt " [] "
   | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
-  | Bop(p, e1, e2)    -> fprintf fmt " %a %a %a " pp_bop(p)  pp_expression(e1) pp_expression(e2)
+  | Bop(p, e1, e2)    -> fprintf fmt " @[%a@] %a @[%a@] " pp_expression(e1) pp_bop(p) pp_expression(e2)
   | Uop(p, e)         -> fprintf fmt " %a ( %a ) " pp_uop(p)  pp_expression(e)
 
 (*let e = (parse_string "let x = 12 in (x1, x2)" in (pp_expression e)*)

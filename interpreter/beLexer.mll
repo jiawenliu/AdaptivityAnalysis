@@ -59,7 +59,7 @@ rule token =
   | "[]"                { NIL }
   | "("                 { LPAREN }
   | ")"                 { RPAREN }
-  | "="                 { EQUALS }
+  | "="                 { EQUAL }
   | ","                 { COLON }
   | "."                 { DOT }
   | id                  { VAR (Lexing.lexeme lexbuf) }

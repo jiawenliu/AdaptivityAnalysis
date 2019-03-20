@@ -1,7 +1,7 @@
 (* The type of the abstract syntax tree (AST). *)
 type bop = Plus | Minus | Mul | Div | Or | And | Xor | Equal | Leq | Geq | Less | Greater
 
-type uop = Log | Sign
+type uop = Lg | Sign
 
 type expr =
   | Var         of string
