@@ -12,7 +12,7 @@ let next_line lexbuf =
     
 }
 
-let white = [' ' '\t']+
+let white = [' ' '\t' '\n']+
 let digit = ['0'-'9']
 let int = '-'? digit+
 let float = '-'? digit+ '.' digit+
