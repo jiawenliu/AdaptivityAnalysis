@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+ Author: Alain Mebsout
+
+-->
+<language id="alt-ergo" _name="Alt-Ergo" version="2.0" _section="Sources">
+  <metadata>
+    <property name="mimetypes">text/x-alt-ergo</property>
+    <!-- Conflict with Why3 -->
+    <!-- <property name="globs">*.mlw;*.why</property> -->
+    <property name="block-comment-start">(*</property>
+    <property name="block-comment-end">*)</property>
+  </metadata>
+
+  <styles>
+    <style id="comment" _name="Comment" map-to="def:comment"/>
+    <!-- <style id="base-n-integer" _name="Base-N Integer"
+    map-to="def:base-n-integer"/> -->
+    <style id="real" _name="Real" map-to="def:floating-point"/>
+    <style id="integer" _name="Interger" map-to="def:decimal"/>
+    <style id="keyword" _name="Keyword" map-to="def:keyword"/>
+    <style id="toplevel" _name="Toplevel"  map-to="def:identifier"/>
+    <style id="operator" _name="Operator" map-to="def:operator"/>
+    <style id="type" _name="Data Type" map-to="def:type"/>
+    <style id="label" _name="Labeled argument" map-to="def:type"/>
+    <style id="poly-variant" _name="Polymorphic Variant" map-to="def:type"/>
+    <style id="variant" _name="Variant Constructor" map-to="def:type"/>
+    <style id="type-var" _name="Type Variable" map-to="def:type"/>
+    <style id="boolean" _name="Boolean value" map-to="def:boolean"/>
+    <style id="error" _name="Error" map-to="def:error"/>
+    <style id="trigger" _name="Trigger" map-to="def:doc-comment-element"/>
+  </styles>
+
+  <definitions>
+    <define-regex id="digit">[0-9]</define-regex>
+    <define-regex id="hexa">[0-9a-fA-F]</define-regex>
+    <define-regex id="ident">[A-Za-z][A-Za-z0-9_']*</define-regex>
+    <define-regex id="exponent">[pP][-+]?[0-9][0-9]*</define-regex>
+    <!-- here's the main context -->
+    <context id="alt-ergo">
+      <include>
+
+	<context id="comment" style-ref="comment">
+	  <start>\(\*</start>
+	  <end>\*\)</end>
+	  <include>
+	    <context ref="def:in-comment:*"/>
+	  </include>
+	</context>
+
+
+	<context id="boolean-constant" style-ref="boolean">
+	  <keyword>true</keyword>
+	  <keyword>false</keyword>
+	  <keyword>void</keyword>
+	</context>
+	<!-- Flow control & common keywords -->
+	<context id="keywords" style-ref="keyword">
+	  <keyword>and</keyword>
+	  <keyword>distinct</keyword>
+	  <keyword>else</keyword>
+	  <keyword>exists</keyword>
+	  <keyword>forall</keyword>
+	  <keyword>if</keyword>
+	  <keyword>not</keyword>
+	  <keyword>or</keyword>
+	  <keyword>reach</keyword>
+	  <keyword>then</keyword>
+	  <keyword>with</keyword>
+	</context>
+	<context id="toplevel" style-ref="toplevel">
+	  <keyword>ac</keyword>
+	  <keyword>axiom</keyword>
+	  <keyword>check</keyword>
+	  <keyword>cut</keyword>
+	  <keyword>function</keyword>
+	  <keyword>goal</keyword>
+	  <keyword>hypothesis</keyword>
+	  <keyword>include</keyword>
+	  <keyword>instance</keyword>
+	  <keyword>inversion</keyword>
+	  <keyword>logic</keyword>
+	  <keyword>predicate</keyword>
+	  <keyword>rewriting</keyword>
+	  <keyword>type</keyword>	
+        </context>
+	<context id="types" style-ref="type">
+	  <!-- pervasives types -->
+	  <keyword>bool</keyword>
+	  <keyword>int</keyword>
+	  <keyword>bitv</keyword>
+	  <keyword>prop</keyword>
+	  <keyword>real</keyword>
+	  <keyword>unit</keyword>
+	  <!-- note: Some and None are highlighted as variants -->
+	</context>	
+	
+	<context id="integer" style-ref="integer">
+	  <match>\%{digit}(\%{digit})*</match>
+	</context>
+	
+	<context id="real" style-ref="real">
+	  <match>\%{digit}(\%{digit})*\.(\%{digit})*</match>
+	</context>
+	<context id="hex-number" style-ref="real">
+	  <match>0x\%{hexa}(\%{hexa})*(\.(\%{hexa})*)?\%{exponent}</match>
+	</context>
+
+	<context id="poly-variant" style-ref="poly-variant">
+	  <match>`\%{ident}</match>
+	</context>
+
+	<context id="type-var" style-ref="type-var">
+	  <match>'\%{ident}</match>
+	</context>
+
+	<context id="ident">
+	  <match>\%{ident}</match>
+	</context>
+	
+	<context id="bitv" style-ref="integer">
+	  <match>\[[01][01]*\]</match>
+	</context>
+
+	<context id="op" style-ref="operator">
+	  <match>[\%\*+-]</match>
+	</context>
+
+	<context id="trigger" style-ref="trigger">
+	  <match>\[.*\]\.</match>
+	</context>
+<!--
+	<context id="badtrigger" style-ref="error" extend-parent="false">
+	  <match>\]</match>
+	</context>
+-->
+      </include>
+    </context>
+  </definitions>
+</language>
