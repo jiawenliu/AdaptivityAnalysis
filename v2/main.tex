@@ -1720,24 +1720,6 @@ STS:
 
 
 
-\begin{figure}
-
-Two-rounds:
-
-\[
-\begin{array}{l}
- \mathsf{let}\, \mathsf{g} = \efix \, f(j). \lambda k.  \\
- \hspace{.2cm} \eif \big (  (j < k)  ,  \\
-  \hspace{.8cm} \mathsf{let} \, a = \eop \, \boxed{( \lambda x. (x \,j)\cdot (x \,k) )}  \, \mathsf{in} \\
-  \hspace{1.2cm} (a, j) :: (f  \,(j+1) \, k) \\
- \hspace{1.2cm} , \, [] \big) \\
-  \hspace{.2cm} \mathsf{in} \\
-  \mathsf{let}\, l = \mathsf{g} \, 0\, K \, \mathsf{in} \\
-  \mathsf{let} \,  q =  \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) \, \mathsf{in} \\
-  \eop ( q )
-\end{array}
-\]
-\end{figure}
 
 
 \newpage
@@ -1831,7 +1813,211 @@ Two-rounds:
 \end{figure}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%EXAMPLES---TWO ROUNDS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\begin{figure}
+
+Two-rounds:
+
+\[
+\begin{array}{l}
+ \elet \, \mathsf{g} = \efix \, f(j). \lambda k.  \\
+ \hspace{.2cm} \eif \big (  (j < k)  ,  \\
+  \hspace{.8cm} \elet \, a = \eop \, \boxed{( \lambda x. (x \,j)\cdot (x \,k) )}  \, \ein \\
+  \hspace{1.2cm} (a, j) :: (f  \,(j+1) \, k) \\
+ \hspace{1.2cm} , \, [] \big) \\
+  \hspace{.2cm} \ein \\
+  \elet \, l = \mathsf{g} \, 0\, K \, \ein \\
+  \elet \,  q =  \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) \, \ein \\
+  \eop ( q )
+\end{array}
+\]
+\end{figure}
+
+
+\begin{tabbing}
+    $ x: \tbase \to  \tbase   $ \\
+    $ \cdot: \tbase * \tbase \to \tbase $   \\
+    $ g: \tbase \to \tbase \to \tlist{b * \tbase} $\\
+    $ q: \tquery $\\
+    $ M: \tquery \to b $\\
+\end{tabbing}
+
+\begin{figure}
+Type derivation:\\
+
+Let $A = \big( \tbase \to \tbase \to \tlist{b * \tbase} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tbase, k: \tbase\ $, $\Gamma_0 = M : \tquery \to b$, $[\Delta]_i = g: [A]_i, l:[\tlist{b*\tbase}]_i, q:[\tquery]_i$.\\
+\[
+  \inferrule*[ right = LET-B ]
+   {\Pi_L {\vartriangleright M : \tquery \to b \tvdash{\nnatA} ! \mathsf{fix} \, f \cdots: !_1 A}
+   \and
+   \Pi_R {\vartriangleright M : \tquery \to b, g: [A]_1 \tvdash{\nnatA} {\elet l = g \, 0\, K \ein \elet q = \cdots \ein \cdots}{b}}
+   }
+   { M: \tquery \to b \tvdash{\nnatA} {\elet g = \cdots \ein \elet l = \cdots \ein \cdots}{\tbase}}
+\]
+
+Derivation $\Pi_L$ and $\Pi_R$ are shown as follows:\\
+$\Pi_L$:
+\begin{mathpar}
+  \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+          \inferrule
+          {
+            \inferrule
+            {
+              \empty
+            }
+            {
+              \Gamma \tvdash{\nnatA} {j<k}{\tbool}
+            }
+            \and
+            \inferrule*[right = LET]
+            {
+              \dots
+            }
+            {
+              \Gamma \tvdash{\nnatA} {\elet a = M \, ( \cdots )}{(a, j) :: \cdots}: \tlist{b*\tbase}
+            }
+            \and
+            \inferrule*[right = NIL]
+            {
+              \empty
+            }
+            {
+              \Gamma \tvdash{\nnatA} {[]}{\tlist{b*\tbase}}
+            }
+          }
+          {
+            f: A, M : \tquery \to b, j: \tbase, k: \tbase \tvdash{\nnatA} \mathsf{if} \cdots: \tlist{b*\tbase}
+          }
+        }
+        {
+          f: A, M : \tquery \to b\ \tvdash{\nnatA} {\lambda\, j. \lambda\, k. \mathsf{if} \cdots}{\tbase \to \tbase \to \tlist{b*\tbase}}
+        }
+      }
+      {
+        M: \tquery \to b \tvdash{\nnatA} {\mathsf{fix} \, f \cdots}{ A} 
+      }
+    }
+    {
+      M: \tquery \to b \tvdash{\nnatA} \mathsf{fix} \, f \cdots: !_1 A
+    }
+    
+    
+    \inferrule*[right = LET]
+    {
+    \inferrule*[right = MT]
+        {
+         \inferrule*[right = QUERY]
+            {
+                \empty
+            }
+            {
+                \Gamma \tvdash{\nnatA} { \lambda x. (x \,j)\cdot (x \,k)}{\tquery}
+            }
+        }
+        {
+            \Gamma \tvdash{\nnatA} {M\, ( \lambda x. (x \,j)\cdot (x \,k))}{b}
+        }
+    \and 
+    \inferrule*[right = CONS]
+        {
+        \inferrule*[right = VAR]
+            {
+                \empty
+            }
+            {
+                \Gamma, a: b \tvdash{\nnatA} {(a, j) }{b*\tbase}
+            } \quad
+        \inferrule*[right = APP]
+            {
+                \dots
+            }
+            {
+                \Gamma, a: b \tvdash{\nnatA} {(f \, j+1 \, k) }{\tlist{b*\tbase}}
+            }
+        }
+        {
+            \Gamma, a: b \tvdash{\nnatA} {(a, j) ::(f \, j+1 \, k) }{\tlist{b*\tbase}}
+        }
+    }
+    {
+      \Gamma \tvdash{\nnatA} \elet a = M\, ( \lambda x. (x \,j)\cdot (x \,k)) = (a, j) ::(f \, j+1 \, k): \tlist{b*\tbase}
+    }
+    \end{mathpar}
+
+$\Pi_R$:
+\begin{mathpar}
+\inferrule*[right = LET-B]
+    {
+    \inferrule*[right = PR]
+    {
+    \inferrule*[right = DER]
+    {
+    \inferrule*[right = APP]
+    {
+    \dots
+    }
+    {
+        g: A \tvdash{\nnatA} {g \, 0\, K}{\tlist{b*\tbase}}
+    }
+    }
+    {
+        g: [A]_0 \tvdash{\nnatA} {g \, 0\, K}{\tlist{b*\tbase}}
+    }
+    }
+    {
+        g: [A]_1 \tvdash{\nnatA} {!g \, 0\, K}{!_1 \tlist{b*\tbase}}
+    }
+    \quad
+    \inferrule*[right = LET-B]
+        {
+        \inferrule*[right = PR]
+            {
+            \inferrule*[right = ABS]
+                {
+                \inferrule*[lab = VAR]
+                    {
+                    }
+                    {
+                        x:row \tvdash{\nnatA} {sign \dots}{ b}
+                    }
+                }
+                {
+                    \tvdash{\nnatA} {\lambda x. \dots}{row \to b}
+                }
+            }
+            {
+                \tvdash{\nnatA} {!\lambda x. \dots}{!_1 row \to b}
+            }
+        \inferrule*[right = MT]
+          {
+          \inferrule*[right = QUERY]
+              {
+                  \empty
+              }
+              {
+                  \Gamma_0, \Delta_0 \tvdash{\nnatA} {q}{\tquery}
+              }
+          }
+          {
+                  \Gamma_0, [\Delta]_1 \tvdash{\nnatA} {M(q)}{b}
+          }
+        }
+        {
+            \Gamma_0, g: [A]_1, l:[\tlist{b*\tbase}]_1  \tvdash{\nnatA} \elet q = \cdots \ein \cdots : b
+        }
+    }
+    {
+        \Gamma_0, g: [A]_1 \tvdash{\nnatA} \elet l = ! g \, 0\, K \ein \elet q =  \dots \ein \dots  : b
+    }
+\end{mathpar}
+\caption{Type Derivation of Two Round Example}
+\end{figure}
 
 
 
