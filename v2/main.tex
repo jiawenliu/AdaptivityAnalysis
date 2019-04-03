@@ -490,7 +490,7 @@ explicitly.\footnote{The function name is never substituted by a value
 \paragraph{Typing rules}
 The typing rules are shown in Figure~\ref{fig:type-rules}. In these
 rules, we write $\nnatbiA + \dmap$ or $\dmap + \nnatbiA$ for the depth
-map $\lambda x.\, (\nnatbiA + \dmap(x))$ defined on the same domain as
+map $\lambda x.\eapp  (\nnatbiA + \dmap(x))$ defined on the same domain as
 $\dmap$. We also lift $\max$ and $+$ pointwise to depth maps.
 %% and define the constant map $\dmapb$ that maps everything to
 %% $\bot$.
@@ -599,13 +599,13 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
  \and
     %
     \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \text{row}
-        }{ \mathbb{R} }{0}{\dmap''}{0})     }   \\
+      \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \trow
+        }{ \treal }{0}{\dmap''}{0})     }   \\
       \forall x \in \dmap''. \dmap''(x) = 0 \\
       \nnatA' = 1 + \nnatA \\
       \dmap' = 1 + \dmap
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \mathbb{R}
+      \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
     }
   \end{mathpar}
 
@@ -655,10 +655,10 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
   \framebox{
   \begin{mathpar}
     \mbox{\textbf{where: }} \\
-%    \dmapb \defeq \lambda x.\, \bot \\
-    \nnatbiA + \dmap \defeq \dmap + \nnatbiA \defeq \lambda x.\, (\nnatbiA + \dmap(x)) \\
-    \dmap_1 + \dmap_2 \defeq \lambda x.\, (\dmap_1(x) + \dmap_2(x)) \\
-    \max(\dmap_1, \dmap_2) \defeq \lambda x.\, \max(\dmap_1(x), \dmap_2(x))
+%    \dmapb \defeq \lambda x.\eapp  \bot \\
+    \nnatbiA + \dmap \defeq \dmap + \nnatbiA \defeq \lambda x.\eapp  (\nnatbiA + \dmap(x)) \\
+    \dmap_1 + \dmap_2 \defeq \lambda x.\eapp  (\dmap_1(x) + \dmap_2(x)) \\
+    \max(\dmap_1, \dmap_2) \defeq \lambda x.\eapp  \max(\dmap_1(x), \dmap_2(x))
   \end{mathpar}}
 
   \caption{Typing rules}
@@ -819,7 +819,7 @@ Dirac distribution.
     \end{array}
   \end{mathpar}
   \caption{Denotational Semantics with Traces}
-  \label{fig:denSem}
+  \label{fig:denSem_trace}
 \end{figure}
 
 \section{Logical relation and soundness}
@@ -856,9 +856,9 @@ shortly.
       %
       \\
       %
-      \lre{\dmap}{\nnatA}{\type} & = & \{ (\env, \expr) ~|~ \forall \valr\, \tr.\, (\env, \expr \bigstep \valr, \tr) \\
+      \lre{\dmap}{\nnatA}{\type} & = & \{ (\env, \expr) ~|~ \forall \valr\eapp  \tr.\eapp  (\env, \expr \bigstep \valr, \tr) \\
       & & ~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
-      & & ~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\, \ddep{x}(\tr) \leq \dmap(x) \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x) \conj \\
       & & ~~~~~~~~~~~~~~~~~~~~~~~\valr \in \lrv{\type})
       \}
     \end{array}
@@ -983,7 +983,7 @@ completely standard way.
       \lrv{\type_1 \times \type_2} & = & \{(\stepiA, (\valr_1, \valr_2)) ~|~ (\stepiA, \valr_1) \in \lrv{\type_1} \conj (\stepiA, \valr_2) \in \lrv{\type_2} \}\\
       %
       \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
-      \{(\stepiA, (\efix f(x).\expr, \env)) ~|~ \forall \stepiB < \stepiA.\, \forall (\stepiB, \valr) \in \lrv{\type_1}.\\
+      \{(\stepiA, (\efix f(x).\expr, \env)) ~|~ \forall \stepiB < \stepiA.\eapp  \forall (\stepiB, \valr) \in \lrv{\type_1}.\\
       & & 
       ~~~~~~(\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
       %
@@ -996,9 +996,9 @@ completely standard way.
       %
       \\ 
       %
-      \lre{\dmap}{\nnatA}{\type} & = & \{ (\stepiA, (\env, \expr)) ~|~ \forall \valr\, \tr\, \stepiB.\, (\env, \expr \bigstep \valr, \tr) \conj (\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA) \\
+      \lre{\dmap}{\nnatA}{\type} & = & \{ (\stepiA, (\env, \expr)) ~|~ \forall \valr\eapp  \tr\eapp  \stepiB.\eapp  (\env, \expr \bigstep \valr, \tr) \conj (\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA) \\
       & & ~~~~~~~~~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
-      & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\, \ddep{x}(\tr) \leq \dmap(x) \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x) \conj \\
       & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~((\stepiA - \stepiB,  \valr) \in \lrv{\type})
       \}
     \end{array}
@@ -1051,8 +1051,8 @@ $\efix$, we subinduct on the step index.
 Assume $(\stepiA, \env) \in \lrv{\Gamma}$, 
 to show: $(\stepiA, (\env, (\expr_1, \expr_2))) \in \lre{\dmap'}{\nnatA'}{\type_1 \times \type_2}$.\\
 %
-By inversion, STS: $\forall \, \valr, \tr, j.$ 
-$(\env, (\expr_1, \expr_2) \bigstep \valr, \, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
+By inversion, STS: $\forall \eapp  \valr, \tr, j.$ 
+$(\env, (\expr_1, \expr_2) \bigstep \valr, \eapp  \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
 %
 $\Rightarrow (\adap(\tr) < \nnatA') \land (\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x)) \land ((\stepiA - j, \valr) \in \lrv{\type_1 \times \type_2})$.\\
 %
@@ -1836,14 +1836,14 @@ Two-rounds:
 
 \[
 \begin{array}{l}
- \elet \, \mathsf{g} = \efix \, f(j). \lambda k.  \\
+ \elet \eapp  g = \efix \eapp  f(j). \lambda k.  \\
  \hspace{.2cm} \eif \big (  (j < k)  ,  \\
-  \hspace{.8cm} \elet \, a = \eop \, \boxed{( \lambda x. (x \,j)\cdot (x \,k) )}  \, \ein \\
-  \hspace{1.2cm} (a, j) :: (f  \,(j+1) \, k) \\
- \hspace{1.2cm} , \, [] \big) \\
+  \hspace{.8cm} \elet \eapp  a = \eop \eapp  \boxed{( \lambda x. (x \eapp j)\cdot (x \eapp k) )}  \eapp  \ein \\
+  \hspace{1.2cm} (a, j) :: (f  \eapp (j+1) \eapp  k) \\
+ \hspace{1.2cm} , \eapp  [] \big) \\
   \hspace{.2cm} \ein \\
-  \elet \, l = \mathsf{g} \, 0\, K \, \ein \\
-  \elet \,  q =  \lambda x. \mathsf{sign} \, (\mathsf{foldl} \, (\lambda acc. \lambda (a,i). \big(acc\,+ (x \, i) *lg(\frac{1+a}{1-a})  \big) \, 0 \, l )) \, \ein \\
+  \elet \eapp  l = g \eapp  0\eapp  K \eapp  \ein \\
+  \elet \eapp   q =  \lambda x. \mathsf{sign} \eapp  (\mathsf{foldl} \eapp  (\lambda acc. \lambda (a,i). \big(acc\eapp + (x \eapp  i) *lg(\frac{1+a}{1-a})  \big) \eapp  0 \eapp  l )) \eapp  \ein \\
   \eop ( q )
 \end{array}
 \]
@@ -1851,185 +1851,292 @@ Two-rounds:
 
 
 \begin{tabbing}
-    $ x: \tbase \to  \tbase   $ \\
+    $ x: \trow \to  \treal   $ \\
     $ \cdot: \tbase * \tbase \to \tbase $   \\
-    $ g: \tbase \to \tbase \to \tlist{b * \tbase} $\\
-    $ q: \tquery $\\
-    $ M: \tquery \to b $\\
+    $ g: \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{\dmap}{0} }{0}{\dmap}{0}  $\\
+    $ q: \tbox{  (\tarr{ \trow }{ \treal }{0}{\dmap''}{0})     } $\\
+    $ \eop : \tbox{  (\tarr{ \trow }{ \treal }{0}{\dmap''}{0})     } \to \treal $\\
 \end{tabbing}
 
 \begin{figure}
 Type derivation:\\
 
-Let $A = \big( \tbase \to \tbase \to \tlist{b * \tbase} \big) $, $\Gamma = f: A, M : \tquery \to b, j: \tbase, k: \tbase\ $, $\Gamma_0 = M : \tquery \to b$, $[\Delta]_i = g: [A]_i, l:[\tlist{b*\tbase}]_i, q:[\tquery]_i$.\\
+Let $A = \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{\dmap}{0} }{0}{\dmap_1'}{0} $,\\
+    $Q = \tbox{  (\tarr{ \trow }{ \treal }{0}{\dmap''}{0})} $,\\
+    $\Gamma_0 = \eop : Q \to b$,\\
+    $\Gamma = f: A, \eop : Q \to b, j: \tbase, k: \tbase, f':\tarr{\tbase}{\tlist{\treal * \tbase}}{0}{\dmap}{0} $, \\
+    $\Gamma' = \Gamma, a: \treal$,\\
+    $\Delta = g: A, l: \tlist{\treal * \tbase}, q:Q$.\\
 \[
   \inferrule*[ right = LET-B ]
-   {\Pi_L {\vartriangleright M : \tquery \to b \tvdash{\nnatA} ! \mathsf{fix} \, f \cdots: !_1 A}
-   \and
-   \Pi_R {\vartriangleright M : \tquery \to b, g: [A]_1 \tvdash{\nnatA} {\elet l = g \, 0\, K \ein \elet q = \cdots \ein \cdots}{b}}
+   {
+     \inferrule
+     {
+        \Pi_L \vartriangleright
+     }
+     {
+        \Gamma_0, \dmap' \tvdash{1} \efix \eapp  f(j). \cdots : A
+      }
+     \and
+     \inferrule
+     {
+        \Pi_L \vartriangleright
+     }
+     {
+      \Gamma_0, g: A, \dmap''[g : 1] \tvdash{1} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal
+    }
+     \\
+     n' = \max(n_1 + 1, n_2 ) = 2
+     \and
+     \dmap = \max(\dmap' + 1, \dmap'')
    }
-   { M: \tquery \to b \tvdash{\nnatA} {\elet g = \cdots \ein \elet l = \cdots \ein \cdots}{\tbase}}
+   { \Gamma_0, \dmap \tvdash{2} \elet g = \cdots \ein \elet l = \cdots \ein \cdots :  \treal }
 \]
 
 Derivation $\Pi_L$ and $\Pi_R$ are shown as follows:\\
 $\Pi_L$:
 \begin{mathpar}
-  \inferrule
-    {
-      \inferrule
+      \inferrule*[right = FIX]
       {
-        \inferrule
+        \inferrule*[right = FIX]
         {
-          \inferrule
+          \inferrule*[right = IF]
           {
-            \inferrule
+            \inferrule*[right = BOOL]
             {
               \empty
             }
             {
-              \Gamma \tvdash{\nnatA} {j<k}{\tbool}
+              \Gamma; [j:0, k:0] \tvdash{0} {j<k : \tbool}
             }
-            \and
+            \\
             \inferrule*[right = LET]
             {
               \dots
             }
             {
-              \Gamma \tvdash{\nnatA} {\elet a = M \, ( \cdots )}{(a, j) :: \cdots}: \tlist{b*\tbase}
+              \Gamma; \dmap_3' \tvdash{1} \elet a = \eop ( \cdots ) \ein (a, j) :: \cdots : \tlist{\treal * \tbase}
             }
-            \and
+            \\
             \inferrule*[right = NIL]
             {
               \empty
             }
             {
-              \Gamma \tvdash{\nnatA} {[]}{\tlist{b*\tbase}}
+              \Gamma; \dmap_3' \tvdash{1} {[]}{\tlist{\treal * \tbase}}
             }
+            \\
+            \nnatA' = \nnatA_0 + \nnatA_1 = 0 + 1 = 1
+            \and
+            \dmap_1' = \max(\dmap_3' + 0 , [j:0, k:0])
           }
           {
-            f: A, M : \tquery \to b, j: \tbase, k: \tbase \tvdash{\nnatA} \mathsf{if} \cdots: \tlist{b*\tbase}
+            \Gamma;  \dmap_2'[f': \infty, k: 0] 
+            \tvdash{1} \eif \cdots : \tlist{\treal * \tbase}
           }
         }
         {
-          f: A, M : \tquery \to b\ \tvdash{\nnatA} {\lambda\, j. \lambda\, k. \mathsf{if} \cdots}{\tbase \to \tbase \to \tlist{b*\tbase}}
+          \Gamma_0, f: A, j : \tbase; \dmap_1'[f: \infty, j: 0] \tvdash{1} {\lambda k. \eif \cdots : \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{\dmap}{0} }
         }
       }
       {
-        M: \tquery \to b \tvdash{\nnatA} {\mathsf{fix} \, f \cdots}{ A} 
-      }
-    }
-    {
-      M: \tquery \to b \tvdash{\nnatA} \mathsf{fix} \, f \cdots: !_1 A
-    }
-    
+        \Gamma_0, \dmap' \tvdash{1} \efix \eapp  f(j). \cdots : A 
+      }    
     
     \inferrule*[right = LET]
     {
-    \inferrule*[right = MT]
+    \inferrule
         {
-         \inferrule*[right = QUERY]
+         \inferrule
             {
                 \empty
             }
             {
-                \Gamma \tvdash{\nnatA} { \lambda x. (x \,j)\cdot (x \,k)}{\tquery}
+                \Gamma \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : Q
             }
         }
         {
-            \Gamma \tvdash{\nnatA} {M\, ( \lambda x. (x \,j)\cdot (x \,k))}{b}
+            \Gamma; \dmap_4' \tvdash{1} \eop ( \lambda x. (x \eapp j)\cdot (x \eapp k)) : \treal
         }
     \and 
-    \inferrule*[right = CONS]
+    \inferrule
         {
-        \inferrule*[right = VAR]
+        \inferrule*[right = PAIR]
             {
+              \inferrule*[right = VAR]
+              {
                 \empty
+              }
+              {
+                \Gamma'; \dmap_6' \tvdash{0} a: \treal
+              }
+              \and
+              \inferrule*[right = VAR]
+              {
+                \empty
+              }
+              {
+                \Gamma'; \dmap_6' \tvdash{0} j : \tbase
+              }
             }
             {
-                \Gamma, a: b \tvdash{\nnatA} {(a, j) }{b*\tbase}
-            } \quad
+                \Gamma'; \dmap_6' \tvdash{0} (a, j) : \treal * \tbase
+            }
+            \\
         \inferrule*[right = APP]
             {
                 \dots
             }
             {
-                \Gamma, a: b \tvdash{\nnatA} {(f \, j+1 \, k) }{\tlist{b*\tbase}}
+                \Gamma'; \dmap_7' \tvdash{0} f \eapp  j+1 \eapp  k : \tlist{\treal * \tbase}
             }
+            \\
+            \nnatA' = \max(\nnatA_1, \nnatA_2) = 0
+            \and
+            \dmap_5' = \max(\dmap_6', \dmap_7')
         }
         {
-            \Gamma, a: b \tvdash{\nnatA} {(a, j) ::(f \, j+1 \, k) }{\tlist{b*\tbase}}
+            \Gamma'; \dmap_5'[a: 0] \tvdash{0} 
+            (a, j) ::(\cdots) : \tlist{\treal * \tbase}
         }
+      \\
+      \nnatA' = \max(\nnatA_2, \nnatA_1 + q) = 1
+      \and
+      \dmap_3' = \max(\dmap_4' + 0, \dmap_5')
     }
     {
-      \Gamma \tvdash{\nnatA} \elet a = M\, ( \lambda x. (x \,j)\cdot (x \,k)) = (a, j) ::(f \, j+1 \, k): \tlist{b*\tbase}
+      \Gamma; \dmap_3'  \tvdash{1} 
+      \elet a = \eop (\lambda x. (x \eapp j)\cdot (x \eapp k)) \ein (a, j) ::(f \eapp  j+1 \eapp  k): \tlist{\treal * \tbase}
     }
-    \end{mathpar}
 
-$\Pi_R$:
-\begin{mathpar}
-\inferrule*[right = LET-B]
-    {
-    \inferrule*[right = PR]
-    {
-    \inferrule*[right = DER]
-    {
     \inferrule*[right = APP]
     {
-    \dots
+      \inferrule*[right = APP]
+      {
+      \inferrule*[right = VAR]
+      {
+      \empty
+      }
+      {
+      \Gamma'; \dmap_7' \tvdash{0} f: Q
+      }
+      \and
+       \inferrule*[right = VAR]
+      {
+      \empty
+      }
+      {
+      \Gamma'; \dmap_7' \tvdash{0} j + 1: \tbase
+      }
+      \\
+      \nnatA' = \max(\nnatA_2 + q, \nnatA) + \nnatA_1 = 0     
+      }
+      {
+      \Gamma'; \dmap_7' \tvdash{0} f \eapp j+1 : \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{\dmap}{0}
+      }
+      \and
+      \inferrule*[right = VAR]
+      {
+      \empty
+      }
+      {
+      \Gamma'; \dmap_7' \tvdash{0} k : \tbase
+      }
+      \\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + q) = 0
     }
     {
-        g: A \tvdash{\nnatA} {g \, 0\, K}{\tlist{b*\tbase}}
+    \Gamma'; \dmap_7' \tvdash{0} (f \eapp  j+1 \eapp  k) : \tlist{\treal * \tbase}
     }
-    }
+    \end{mathpar}
+\end{figure}
+
+\begin{figure}
+$\Pi_R$:
+\begin{mathpar}
+\inferrule*[right = LET]
     {
-        g: [A]_0 \tvdash{\nnatA} {g \, 0\, K}{\tlist{b*\tbase}}
-    }
-    }
+    \inferrule
     {
-        g: [A]_1 \tvdash{\nnatA} {!g \, 0\, K}{!_1 \tlist{b*\tbase}}
-    }
-    \quad
-    \inferrule*[right = LET-B]
+      \inferrule
+      {
+        \inferrule
         {
-        \inferrule*[right = PR]
+          \empty
+        }
+        {
+            \Gamma_0, g: A ; \dmap_1'' \tvdash{0} {g : Q }
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Gamma_0, g: A; \dmap_1'' \tvdash{0} K : \tbase
+        }
+      }
+      {
+         \Gamma_0, g: A; \dmap_1'' \tvdash{0} {g \eapp  0  : \tlist{\treal * \tbase}}
+      }
+      \and
+      \inferrule
+      {
+      \empty
+      }
+      {
+      \Gamma_0, g: A; \dmap_1'' \tvdash{0} K : \tbase
+      }
+    }
+    {
+        \Gamma_0, g: A; \dmap_1'' \tvdash{0} { g \eapp  0 \eapp  K : \tlist{\treal * \tbase}}
+    }
+    \and
+    \cdots
+    \\
+    \nnatA' = \max(\nnatA_1 + q, \nnatA_2) = 0
+    }
+    {
+    \Gamma_0, g: A; \dmap''[g : 1] \tvdash{1} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal   
+    }
+
+    \inferrule*[right = LET]
+        {
+        \inferrule*[right = FIX]
             {
-            \inferrule*[right = ABS]
+            \inferrule
                 {
-                \inferrule*[lab = VAR]
-                    {
-                    }
-                    {
-                        x:row \tvdash{\nnatA} {sign \dots}{ b}
-                    }
+                  \empty
                 }
                 {
-                    \tvdash{\nnatA} {\lambda x. \dots}{row \to b}
+                    \Gamma_0,  \Delta; \dmap_5''[x:0] \tvdash{0} {\mathsf{sign}(\dots) :  \treal}
                 }
+                \\
+                \nnatA' = \nnatA_1 + \max(\nnatA_2 + q, \nnatA) = 0               
             }
             {
-                \tvdash{\nnatA} {!\lambda x. \dots}{!_1 row \to b}
+                \Gamma_0, \Delta; \dmap_5''\tvdash{0} {\lambda x. \dots : Q}
             }
-        \inferrule*[right = MT]
+        \inferrule
           {
-          \inferrule*[right = QUERY]
+          \inferrule
               {
                   \empty
               }
               {
-                  \Gamma_0, \Delta_0 \tvdash{\nnatA} {q}{\tquery}
+                  \Gamma_0, \Delta_0 \tvdash{0} { q : Q}
               }
           }
           {
-                  \Gamma_0, [\Delta]_1 \tvdash{\nnatA} {M(q)}{b}
+                  \Gamma_0, \Delta; \dmap_4''[q : 1] \tvdash{1} {\eop (q) : \treal}
           }
+          \\
+          \nnatA' = \max(\nnatA_1 + q, \nnatA_2) = 1
         }
         {
-            \Gamma_0, g: [A]_1, l:[\tlist{b*\tbase}]_1  \tvdash{\nnatA} \elet q = \cdots \ein \cdots : b
+            \Gamma_0, \Delta; \dmap_2''[l: 1]  \tvdash{1} \elet q = \cdots \ein \cdots : \treal
         }
-    }
-    {
-        \Gamma_0, g: [A]_1 \tvdash{\nnatA} \elet l = ! g \, 0\, K \ein \elet q =  \dots \ein \dots  : b
-    }
+
 \end{mathpar}
 \caption{Type Derivation of Two Round Example}
 \end{figure}
