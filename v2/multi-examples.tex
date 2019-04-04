@@ -45,8 +45,8 @@ Multi-rounds:
  \eapp q \eapp I \eapp  \eapp 0 \eapp  N
   \eapp  \ein \\
 \hspace{0.8cm} \elet \eapp scc' =  \mathsf{updtSCC} \eapp () \eapp scc' \eapp a \eapp p
- \eapp qc \eapp I \eapp  \eapp 0 \eapp  C \ein \\
-\hspace{0.8cm} \elet \eapp maxScc =  \mathsf{maxSCC} \eapp scc' \ein \\
+ \eapp qc \eapp  \eapp 0 \eapp  C \ein \\
+\hspace{0.8cm} \elet \eapp maxScc =  \mathsf{foldl} \eapp (\lambda acc. \lambda a. \eif ( acc < a, a, acc)) \eapp 0 \eapp scc' \ein \\
 \hspace{0.8cm} \elet \eapp I' =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
   \eapp 0 \eapp N  \ein \\
   \hspace{0.8cm} \elet \eapp D' =  D \setminus I' \ein \\
@@ -65,7 +65,7 @@ UpdtSC
   p. \lambda q.  \lambda I. \lambda i. \lambda N. \\
  \hspace{.2cm} \eif   \Big (   (i < N)  ,  \\
  \hspace{0.4cm}  \eif \big( ( i \eapp \mathsf{in} I  ) ,       \\
- \hspace{0.8cm} \elet \eapp x =( nth \eapp sc \eapp i) + (a-p)*(q
+ \hspace{0.8cm} \elet \eapp x =( \mathsf{nth} \eapp sc \eapp i) + (a-p)*(q
   \eapp i - p)  \ein \\
  \hspace{0.8cm} \elet \eapp sc' =  \mathsf{updt} \eapp sc \eapp i
   \eapp x \ein \\
@@ -82,14 +82,14 @@ UpdtSCC
 \[
 \begin{array}{l}
  \mathsf{updtSCC} = \efix \eapp  \mathsf{f}(\_). \lambda scc. \lambda a. \lambda
-  p. \lambda qc.  \lambda I. \lambda i. \lambda C. \\
+  p. \lambda qc.  \lambda i. \lambda C. \\
  \hspace{.2cm} \eif   \Big (   (i < C)  ,  \\
- \hspace{0.8cm} \elet \eapp x =( nth \eapp scc \eapp i) + (a-p)*(qc
+ \hspace{0.8cm} \elet \eapp x =( \mathsf{nth} \eapp scc \eapp i) + (a-p)*(qc
   \eapp i - p)  \ein \\
  \hspace{0.8cm} \elet \eapp scc' =  \mathsf{updt} \eapp scc \eapp i
   \eapp x \ein \\
   \hspace{1.2cm} \mathsf{f}  \eapp () \eapp scc' \eapp a \eapp p
- \eapp qc \eapp I \eapp  \eapp (i+1) \eapp  C  \\ 
+ \eapp qc   \eapp (i+1) \eapp  C  \\ 
 \hspace{0.2cm}   ,  scc  \Big ) \\
  
 \end{array}
@@ -102,7 +102,7 @@ UpdtI
  \mathsf{updtI} = \efix \eapp  \mathsf{f}(\_). \lambda maxScc. \lambda sc. \lambda
   i. \lambda N. \\
  \hspace{.2cm} \eif   \Big (   (i < N)  ,  \\
-\hspace{0.4cm}  \eif \big( ( ( nth \eapp scc \eapp i)  >  maxScc  ) ,       \\
+\hspace{0.4cm}  \eif \big( ( ( \mathsf{nth} \eapp scc \eapp i)  >  maxScc  ) ,       \\
  \hspace{0.8cm}   i :: ( \mathsf{f}  \eapp () \eapp maxScc \eapp sc
   \eapp (i+1) \eapp N  )\\
  \hspace{0.8cm} , \mathsf{f}  \eapp () \eapp maxScc \eapp sc
