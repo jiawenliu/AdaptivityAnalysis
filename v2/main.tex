@@ -2463,7 +2463,95 @@ $\Pi_R$:
   \label{fig:type-rules-monad}
 \end{figure}
 
+\begin{figure}
 
+Multi-rounds:
+
+\[
+\begin{array}{l}
+ \efix \eapp  \mathsf{multiRound}(\_). \lambda sc. \lambda scc. \lambda
+  I. \lambda j. \lambda k. \lambda D. \lambda N. \lambda C. \\
+ \hspace{.2cm} \eif   \big (   (j < k)  ,  \\
+  \hspace{.2cm} \elet \eapp p = \uniform \eapp 0 \eapp 1 \ein \\
+  \hspace{0.4cm} \elet \eapp q = \lambda x. \bernoulli \eapp p \ein \\
+ \hspace{0.4cm} \elet \eapp qc = \lambda c. \bernoulli \eapp p \ein \\
+ \hspace{0.4cm} \elet \eapp a = \eop (q)  \ein \\
+ \hspace{0.8cm} \elet \eapp sc' =  \mathsf{updtSC} \eapp () \eapp sc  \eapp a \eapp p
+ \eapp q \eapp I \eapp  \eapp 0 \eapp  N
+  \eapp  \ein \\
+\hspace{0.8cm} \elet \eapp scc' =  \mathsf{updtSCC} \eapp () \eapp scc' \eapp a \eapp p
+ \eapp qc \eapp  \eapp 0 \eapp  C \ein \\
+\hspace{0.8cm} \elet \eapp maxScc =  \mathsf{foldl} \eapp (\lambda acc. \lambda a. \eif ( acc < a, a, acc)) \eapp 0 \eapp scc' \ein \\
+\hspace{0.8cm} \elet \eapp I' =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
+  \eapp 0 \eapp N  \ein \\
+  \hspace{0.8cm} \elet \eapp D' =  D \setminus I' \ein \\
+  \hspace{1.2cm} \mathsf{multiRound}  \eapp sc' \eapp scc' \eapp I'
+  \eapp (j+1) \eapp  k \eapp D' \eapp N \eapp C\\ 
+\hspace{0.2cm}   ,     D  \big ) \\
+ 
+\end{array}
+\]
+
+UpdtSC
+
+\[
+\begin{array}{l}
+ \mathsf{updtSC} = \efix \eapp  \mathsf{f}(\_). \lambda sc. \lambda a. \lambda
+  p. \lambda q.  \lambda I. \lambda i. \lambda N. \\
+ \hspace{.2cm} \eif   \Big (   (i < N)  ,  \\
+ \hspace{0.4cm}  \eif \big( ( i \eapp \mathsf{in} I  ) ,       \\
+ \hspace{0.8cm} \elet \eapp x =( \mathsf{nth} \eapp sc \eapp i) + (a-p)*(q
+  \eapp i - p)  \ein \\
+ \hspace{0.8cm} \elet \eapp sc' =  \mathsf{updt} \eapp sc \eapp i
+  \eapp x \ein \\
+  \hspace{1.2cm} \mathsf{f}  \eapp () \eapp sc' \eapp a \eapp p
+ \eapp q \eapp I \eapp  \eapp (i+1) \eapp  N  \\ 
+\hspace{0.4cm}  ,  \mathsf{f}  \eapp () \eapp sc \eapp a \eapp p
+ \eapp q \eapp I \eapp  \eapp (i+1) \eapp  N \big )  \\ 
+\hspace{0.2cm}   ,  sc  \Big ) \\
+ 
+\end{array}
+\]
+
+UpdtSCC
+\[
+\begin{array}{l}
+ \mathsf{updtSCC} = \efix \eapp  \mathsf{f}(\_). \lambda scc. \lambda a. \lambda
+  p. \lambda qc.  \lambda i. \lambda C. \\
+ \hspace{.2cm} \eif   \Big (   (i < C)  ,  \\
+ \hspace{0.8cm} \elet \eapp x =( \mathsf{nth} \eapp scc \eapp i) + (a-p)*(qc
+  \eapp i - p)  \ein \\
+ \hspace{0.8cm} \elet \eapp scc' =  \mathsf{updt} \eapp scc \eapp i
+  \eapp x \ein \\
+  \hspace{1.2cm} \mathsf{f}  \eapp () \eapp scc' \eapp a \eapp p
+ \eapp qc   \eapp (i+1) \eapp  C  \\ 
+\hspace{0.2cm}   ,  scc  \Big ) \\
+ 
+\end{array}
+\]
+
+
+UpdtI
+\[
+\begin{array}{l}
+ \mathsf{updtI} = \efix \eapp  \mathsf{f}(\_). \lambda maxScc. \lambda sc. \lambda
+  i. \lambda N. \\
+ \hspace{.2cm} \eif   \Big (   (i < N)  ,  \\
+\hspace{0.4cm}  \eif \big( ( ( \mathsf{nth} \eapp scc \eapp i)  >  maxScc  ) ,       \\
+ \hspace{0.8cm}   i :: ( \mathsf{f}  \eapp () \eapp maxScc \eapp sc
+  \eapp (i+1) \eapp N  )\\
+ \hspace{0.8cm} , \mathsf{f}  \eapp () \eapp maxScc \eapp sc
+  \eapp (i+1) \eapp N  \big )  \\
+\hspace{0.2cm}   ,  [] \Big ) \\
+ 
+\end{array}
+\]
+
+
+\end{figure}
+
+
+\newpage
 
 \bibliographystyle{plain}
 \bibliography{adaptivity.bib}
