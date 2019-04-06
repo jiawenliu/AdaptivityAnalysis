@@ -2466,7 +2466,6 @@ $\Pi_R$:
 \begin{figure}
 
 Multi-rounds:
-
 \[
 \begin{array}{l}
  \efix \eapp  \mathsf{multiRound}(\_). \lambda sc. \lambda scc. \lambda
@@ -2493,7 +2492,6 @@ Multi-rounds:
 \]
 
 UpdtSC
-
 \[
 \begin{array}{l}
  \mathsf{updtSC} = \efix \eapp  \mathsf{f}(\_). \lambda sc. \lambda a. \lambda
@@ -2512,7 +2510,6 @@ UpdtSC
  
 \end{array}
 \]
-
 UpdtSCC
 \[
 \begin{array}{l}
@@ -2526,11 +2523,8 @@ UpdtSCC
   \hspace{1.2cm} \mathsf{f}  \eapp () \eapp scc' \eapp a \eapp p
  \eapp qc   \eapp (i+1) \eapp  C  \\ 
 \hspace{0.2cm}   ,  scc  \Big ) \\
- 
 \end{array}
 \]
-
-
 UpdtI
 \[
 \begin{array}{l}
@@ -2543,16 +2537,290 @@ UpdtI
  \hspace{0.8cm} , \mathsf{f}  \eapp () \eapp maxScc \eapp sc
   \eapp (i+1) \eapp N  \big )  \\
 \hspace{0.2cm}   ,  [] \Big ) \\
- 
 \end{array}
 \]
-
-
 \end{figure}
 
 
 \newpage
+Type derivation of Multi-rounds example:
+\[
+\begin{array}{ll} 
+  \mathsf{multiRound} : & \tunit \to \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
+                        & \to \tint \to \tint \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint} \\
+  \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint}\\
+  \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tint \to \tint \to \tlist{\tint}\\
+  \mathsf{updtI} : & \tunit \to  \treal \to \tlist{\treal} \to \tint \to \tint \to \tlist{\tint}\\
+  \mathsf{foldl} : & (\treal \to \treal \to \treal) \to \treal \to \tlist{\treal}\\
+  q :              & \tbox{\tint \to \tint}\\
+  qc :             & \tbox{\tint \to \tint}\\
+\end{array}
+\]
 
+\begin{figure}
+\begin{mathpar}
+\inferrule*[right = FIX]
+{
+  \inferrule*[right = FIX]
+  {
+    \inferrule*[right = IF]
+    {
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma \tvdash{0} j<k : \tbool
+      }
+      \and
+      \inferrule*[right = LET]
+      {
+        \cdots
+      }
+      {
+        \Gamma \tvdash{0} \elet p = \cdots \ein \cdots : \tlist{\tint}
+      }
+      \and
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma \tvdash{0} D : \tlist{\tint}
+      }
+    }
+    {
+      \mathsf{multiRound} : \cdots, sc: \tlist{\treal}, \cdots 
+      \tvdash{0} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
+    }
+  }
+  {
+  \mathsf{multiRound} : \tunit \to \cdots \to \tlist{\tint}
+  \tvdash{0} \lambda sc. \cdots : \tlist{\treal} \to \cdots \to \tlist{\tint}  
+  }
+}
+{
+  \Gamma_0 \tvdash{0} \efix \mathsf{multiRound ()}. \cdots : \tunit \to \cdots \to \tlist{\tint}
+}
+
+\inferrule*[right = LET]
+{
+  \inferrule
+  {
+    \inferrule
+    {
+    \empty
+    }
+    {
+    \tvdash{0} 0: \treal    
+    }
+    \and
+    \inferrule
+    {
+      \empty
+    }
+    {
+      \tvdash{0} 1: \treal
+    }
+  }
+  {  
+    \Gamma \tvdash{0} \uniform \eapp 0 \eapp 1 : \treal
+  }  
+  \and
+  \inferrule
+  {
+    \cdots
+  }
+  {
+    \Gamma, p : \treal \tvdash{0} \elet q = \lambda x. \cdots \ein \cdots : \tlist{\tint}
+  }
+}
+{
+  \Gamma \tvdash{0} \elet p = \cdots \ein \cdots : \tlist{\tint}
+}
+
+\inferrule
+{
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \tvdash{0} p : \treal        
+        }
+      }
+      {
+        \Gamma_{1}, x: \tint \tvdash{0} \bernoulli \eapp p : \tint
+      }
+    }
+    { 
+      \Gamma_{1} \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
+    }
+  }
+  {
+    \Gamma_{1} \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\tint \to \tint}
+  }
+  \and
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+          \inferrule
+          {
+            \empty
+          }
+          {
+            \Gamma_{3} \tvdash{0} q : \tbox{\tint \to \tint}
+          }
+        }
+        { 
+          \Gamma_{3} \tvdash{0} \eop (q): \treal
+        }
+        \and
+        \Pi_1  \vartriangleright
+      }
+      {
+        \Gamma_{3} \tvdash{0} \elet a = \eop ( q ) \ein \cdots : \tlist{\tint}
+      }
+    }
+    {
+      \cdots
+    }
+  }
+  {
+    \Gamma, q: \tbox{\tint \to \tint} \tvdash{0} \elet qc = \lambda x. \cdots : \tlist{\tint}
+  }
+}
+{
+  \Gamma_{1} \tvdash{0} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\tint}
+}
+\end{mathpar}
+
+$\Pi_1:$
+\begin{mathpar}
+\inferrule
+{ 
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_4 \tvdash{0} \mathsf{updtSC} : \cdots
+      }
+      \and
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_4 \tvdash{0} sc : \tlist{\treal}
+      }
+    }
+    {
+      \cdots
+    }
+  }
+  {
+    \Gamma_4 \tvdash{0} \mathsf{updtSC} () sc a \cdots : \tlist{\treal}
+  }
+  \and
+  \inferrule
+  {
+    \inferrule
+    {
+      \Pi_2 \vartriangleright
+    }
+    {
+      \Gamma_7 \tvdash{0} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+    }
+  }
+  {
+    \cdots
+  }
+}
+{
+  \Gamma_3, a: \treal \tvdash{0} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\tint}
+}
+\end{mathpar}
+
+$\Pi_2$:
+\begin{mathpar}
+\inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_7 \tvdash{0} D: \tlist{\tint}
+      }
+      \and
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_7 \tvdash{0} I': \tlist{\tint}
+      }        
+    }
+    {
+      \Gamma_7 \tvdash{0} D \setminus I' : \tlist{\tint}
+    }
+    \and
+    \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Gamma_8 \tvdash{0} \mathsf{multiRound} : \cdots
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Gamma_8 \tvdash{0} () : \tunit
+        }
+      }
+      {
+        \cdots
+      }
+    }
+    {
+      \Gamma_7, D' : \tlist{\tint} \tvdash{0} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
+    }
+  }
+  {
+    \Gamma_7 \tvdash{0} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+  }
+\end{mathpar}
+
+\end{figure}
+
+\newpage
 \bibliographystyle{plain}
 \bibliography{adaptivity.bib}
 
