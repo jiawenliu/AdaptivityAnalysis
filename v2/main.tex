@@ -2484,7 +2484,7 @@ Multi-rounds:
 \hspace{0.8cm} \elet \eapp I' =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
   \eapp 0 \eapp N  \ein \\
   \hspace{0.8cm} \elet \eapp D' =  D \setminus I' \ein \\
-  \hspace{1.2cm} \mathsf{multiRound}  \eapp sc' \eapp scc' \eapp I'
+  \hspace{1.2cm} \mathsf{multiRound} ()  \eapp sc' \eapp scc' \eapp I'
   \eapp (j+1) \eapp  k \eapp D' \eapp N \eapp C\\ 
 \hspace{0.2cm}   ,     D  \big ) \\
  
@@ -2542,7 +2542,6 @@ UpdtI
 \end{figure}
 
 
-\newpage
 Type derivation of Multi-rounds example:
 \[
 \begin{array}{ll} 
@@ -2550,7 +2549,7 @@ Type derivation of Multi-rounds example:
                         & \to \tint \to \tint \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint} \\
   \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
                     & \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint}\\
-  \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+  \mathsf{updtSCC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
                     & \to \tint \to \tint \to \tlist{\tint}\\
   \mathsf{updtI} : & \tunit \to  \treal \to \tlist{\treal} \to \tint \to \tint \to \tlist{\tint}\\
   \mathsf{foldl} : & (\treal \to \treal \to \treal) \to \treal \to \tlist{\treal}\\
@@ -2559,7 +2558,133 @@ Type derivation of Multi-rounds example:
 \end{array}
 \]
 
+
+
 \begin{figure}
+UpdtSC:
+\begin{mathpar}
+      \inferrule*[right = FIX]
+      {
+        \inferrule*[right = FIX...]
+        {
+          \inferrule*[right = IF]
+          {
+            \inferrule*[right = BOOL]
+            {
+              \empty
+            }
+            {
+             i:\tint , I : \tlist{\tint} , \Gamma \tvdash{} {i
+               <  N : \tbool}
+            }
+            \\
+            \inferrule*[right = IF]
+            {
+              \dots
+            }
+            {
+              f:., \Gamma; \tvdash{}  \eif (i \in I)\cdots : \tlist{\treal }
+            }
+            \and
+            \inferrule*[right = VAR]
+            {
+            }
+            {
+              f:., sc:. ,\Gamma \tvdash{} {sc : \tlist{\treal}}
+            }
+            \\
+            \and
+          }
+          {
+          f: ., sc: \tlist{\treal}, a:\tint, i:\tint \dots \Gamma
+            \tvdash{ } \eif (i < N)  \cdots : \tlist{\treal}
+          }
+        }
+        {
+          f: \tunit \rightarrow \dots
+          \tlist{\treal}, \Gamma \tvdash{} {\lambda
+            sc. \dots \lambda N.
+            \eif \cdots :  \tlist{\treal} \rightarrow \dots \tlist{\treal}   }
+        }
+      }
+      {
+       \Gamma \tvdash{} \efix \eapp  f( \_ ). \lambda sc. \lambda
+        a. \dots \lambda N. \eif \Big ( (i <N), \dots, sc \Big ) : \tunit
+        \rightarrow \tlist{\treal} \rightarrow \dots \rightarrow \tlist{\treal} 
+      }
+
+   \inferrule*[ right = IF ]
+   {
+     \inferrule
+     {
+     }
+     {
+       \Gamma \tvdash{ }. f \eapp () \eapp sc' \dots \eapp N : \tlist{\treal}
+      }
+     \and
+     \inferrule
+     {
+     \dots
+     }
+     {
+      \Gamma\tvdash{}  \elet x = \dots \ein \elet sc' = \dots
+      \ein f \eapp () \eapp sc' \dots : \tlist{\treal}
+    }
+     \\
+     i :\tint , I : \tlist{\tint},\Gamma \tvdash{} i \in I : \tbool
+   }
+   { \Gamma \tvdash{}  \eif \big(  (i \in I), \elet x = \dots  ,  f \eapp ()
+     \eapp sc \dots N \big) : \tlist{\treal }    }
+
+    
+    \inferrule*[right = LET]
+    {
+    \inferrule*[right = LET]
+        {
+        \inferrule*[right = APP]
+            {
+            }
+            {
+                \Gamma \tvdash{ } \mathsf{updt} \eapp sc \eapp
+                i \eapp x : \tlist{\treal}
+            }
+            \and
+        \inferrule*[right = APP]
+            {
+                \dots
+            }
+            {
+                \Gamma \tvdash{} f () \eapp sc \dots \eapp  (i+1) \eapp  N : \tlist{\treal }
+            }
+            \\
+            {  }
+            \and
+            {}
+        }
+        {
+            x: \treal ,\Gamma \tvdash{} 
+             \elet sc' = \mathsf{updt} \eapp sc \eapp i \eapp x \ein \dots : \tlist{\treal}
+        }
+      \\
+      \inferrule
+        {
+          \dots
+        }
+        {
+            \Gamma \tvdash{} ( \mathsf{nth} \eapp sc \eapp i  )+ (a-p)*(q \eapp i -
+      p) : \treal
+        }
+    }
+    {
+      \tvdash{} 
+      \elet x =( \mathsf{nth} \eapp sc \eapp i  )+ (a-p)*(q \eapp i -
+      p) \ein \dots: \tlist{\treal }
+    }
+    \end{mathpar}
+\end{figure}
+
+\begin{figure}
+Multi-rounds:
 \begin{mathpar}
 \inferrule*[right = FIX]
 {
@@ -2641,7 +2766,7 @@ Type derivation of Multi-rounds example:
   \Gamma \tvdash{0} \elet p = \cdots \ein \cdots : \tlist{\tint}
 }
 
-\inferrule
+\inferrule*[right = LET]
 {
   \inferrule
   {
@@ -2710,9 +2835,9 @@ Type derivation of Multi-rounds example:
 
 $\Pi_1:$
 \begin{mathpar}
-\inferrule
+\inferrule*[right = LET]
 { 
-  \inferrule
+  \inferrule*[right = APP]
   {
     \inferrule
     {
@@ -2737,7 +2862,7 @@ $\Pi_1:$
     }
   }
   {
-    \Gamma_4 \tvdash{0} \mathsf{updtSC} () sc a \cdots : \tlist{\treal}
+    \Gamma_4 \tvdash{0} \mathsf{updtSC} \eapp () \eapp sc \eapp a \cdots : \tlist{\treal}
   }
   \and
   \inferrule
