@@ -31,7 +31,6 @@
 \begin{figure}
 
 Multi-rounds:
-
 \[
 \begin{array}{l}
  \efix \eapp  \mathsf{multiRound}(\_). \lambda sc. \lambda scc. \lambda
@@ -50,7 +49,7 @@ Multi-rounds:
 \hspace{0.8cm} \elet \eapp I' =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
   \eapp 0 \eapp N  \ein \\
   \hspace{0.8cm} \elet \eapp D' =  D \setminus I' \ein \\
-  \hspace{1.2cm} \mathsf{multiRound}  \eapp sc' \eapp scc' \eapp I'
+  \hspace{1.2cm} \mathsf{multiRound} ()  \eapp sc' \eapp scc' \eapp I'
   \eapp (j+1) \eapp  k \eapp D' \eapp N \eapp C\\ 
 \hspace{0.2cm}   ,     D  \big ) \\
  
@@ -58,7 +57,6 @@ Multi-rounds:
 \]
 
 UpdtSC
-
 \[
 \begin{array}{l}
  \mathsf{updtSC} = \efix \eapp  \mathsf{f}(\_). \lambda sc. \lambda a. \lambda
@@ -108,16 +106,14 @@ UpdtI
  \hspace{0.8cm} , \mathsf{f}  \eapp () \eapp maxScc \eapp sc
   \eapp (i+1) \eapp N  \big )  \\
 \hspace{0.2cm}   ,  [] \Big ) \\
- 
 \end{array}
 \]
-
 \end{figure}
 
 \begin{figure}
 
 
- UpdtSC:
+UpdtSC:
 \begin{mathpar}
       \inferrule*[right = FIX]
       {
@@ -130,7 +126,7 @@ UpdtI
               \empty
             }
             {
-             i:\tint , I : \tlist{\tint} , \Gamma; \dmap \tvdash{} {i
+             i:\tint , I : \tlist{\tint} , \Gamma \tvdash{} {i
                <  N : \tbool}
             }
             \\
@@ -146,29 +142,28 @@ UpdtI
             {
             }
             {
-              f:., sc:. ,\Gamma; \dmap \tvdash{} {sc : \tlist{\treal}}
+              f:., sc:. ,\Gamma \tvdash{} {sc : \tlist{\treal}}
             }
             \\
             \and
           }
           {
-          f: ., sc: \tlist{\treal}, a:\tint, i:\tint \dots \Gamma ;  \dmap 
+          f: ., sc: \tlist{\treal}, a:\tint, i:\tint \dots \Gamma
             \tvdash{ } \eif (i < N)  \cdots : \tlist{\treal}
           }
         }
         {
-          f: () \rightarrow \dots
-          \tlist{\treal}, \Gamma ; \dmap_1'[f: \infty] \tvdash{} {\lambda
+          f: \tunit \rightarrow \dots
+          \tlist{\treal}, \Gamma \tvdash{} {\lambda
             sc. \dots \lambda N.
             \eif \cdots :  \tlist{\treal} \rightarrow \dots \tlist{\treal}   }
         }
       }
       {
-       \Gamma; \dmap' \tvdash{} \efix \eapp  f( \_ ). \lambda sc. \lambda
-        a. \dots \lambda N. \eif \Big ( (i <N), \dots, sc \Big ) : ()
+       \Gamma \tvdash{} \efix \eapp  f( \_ ). \lambda sc. \lambda
+        a. \dots \lambda N. \eif \Big ( (i <N), \dots, sc \Big ) : \tunit
         \rightarrow \tlist{\treal} \rightarrow \dots \rightarrow \tlist{\treal} 
-      }    
-
+      }
 
    \inferrule*[ right = IF ]
    {
@@ -176,7 +171,7 @@ UpdtI
      {
      }
      {
-        \dmap \tvdash{ }. f \eapp () \eapp sc' \dots \eapp N : \tlist{\treal}
+       \Gamma \tvdash{ }. f \eapp () \eapp sc' \dots \eapp N : \tlist{\treal}
       }
      \and
      \inferrule
@@ -184,14 +179,14 @@ UpdtI
      \dots
      }
      {
-      \Gamma;  \dmap \tvdash{}  \elet x = \dots \ein \elet sc' = \dots
+      \Gamma\tvdash{}  \elet x = \dots \ein \elet sc' = \dots
       \ein f \eapp () \eapp sc' \dots : \tlist{\treal}
     }
      \\
-     i :\tint , I : \tlist{\tint},\Gamma; \dmap \tvdash{} i \in I : \tbool
+     i :\tint , I : \tlist{\tint},\Gamma \tvdash{} i \in I : \tbool
    }
-   { \dmap \tvdash{}  \eif (i \in I), \elet x = \dots  ,  f \eapp ()
-     \eapp sc \dots N : \tlist{\treal }    }
+   { \Gamma \tvdash{}  \eif \big(  (i \in I), \elet x = \dots  ,  f \eapp ()
+     \eapp sc \dots N \big) : \tlist{\treal }    }
 
     
     \inferrule*[right = LET]
@@ -202,7 +197,7 @@ UpdtI
             {
             }
             {
-                \Gamma; \dmap \tvdash{ } \mathsf{updt} \eapp sc \eapp
+                \Gamma \tvdash{ } \mathsf{updt} \eapp sc \eapp
                 i \eapp x : \tlist{\treal}
             }
             \and
@@ -211,7 +206,7 @@ UpdtI
                 \dots
             }
             {
-                \Gamma; \dmap \tvdash{} f () \eapp sc \dots \eapp  (i+1) \eapp  N : \tlist{\treal }
+                \Gamma \tvdash{} f () \eapp sc \dots \eapp  (i+1) \eapp  N : \tlist{\treal }
             }
             \\
             {  }
@@ -219,7 +214,7 @@ UpdtI
             {}
         }
         {
-            x: \treal ,\Gamma; \dmap \tvdash{} 
+            x: \treal ,\Gamma \tvdash{} 
              \elet sc' = \mathsf{updt} \eapp sc \eapp i \eapp x \ein \dots : \tlist{\treal}
         }
       \\
@@ -228,7 +223,7 @@ UpdtI
           \dots
         }
         {
-            \Gamma; \dmap \tvdash{} ( \mathsf{nth} \eapp sc \eapp i  )+ (a-p)*(q \eapp i -
+            \Gamma \tvdash{} ( \mathsf{nth} \eapp sc \eapp i  )+ (a-p)*(q \eapp i -
       p) : \treal
         }
     }
