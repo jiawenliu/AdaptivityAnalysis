@@ -2468,7 +2468,7 @@ $\Pi_R$:
 Multi-rounds:
 \[
 \begin{array}{l}
- \efix \eapp  \mathsf{multiRound}(\_). \lambda sc. \lambda scc. \lambda
+ \efix \eapp  \mathsf{multiRound}(\_). \Lambda k. \Lambda j. \lambda sc. \lambda scc. \lambda
   I. \lambda j. \lambda k. \lambda D. \lambda N. \lambda C. \\
  \hspace{.2cm} \eif   \big (   (j < k)  ,  \\
   \hspace{.2cm} \elet \eapp p = \uniform \eapp 0 \eapp 1 \ein \\
@@ -2484,7 +2484,7 @@ Multi-rounds:
 \hspace{0.8cm} \elet \eapp I' =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
   \eapp 0 \eapp N  \ein \\
   \hspace{0.8cm} \elet \eapp D' =  D \setminus I' \ein \\
-  \hspace{1.2cm} \mathsf{multiRound} ()  \eapp sc' \eapp scc' \eapp I'
+  \hspace{1.2cm} \mathsf{multiRound} () [k] [j+1]  \eapp sc' \eapp scc' \eapp I'
   \eapp (j+1) \eapp  k \eapp D' \eapp N \eapp C\\ 
 \hspace{0.2cm}   ,     D  \big ) \\
  
@@ -2541,22 +2541,6 @@ UpdtI
 \]
 \end{figure}
 
-
-Type derivation of Multi-rounds example:
-\[
-\begin{array}{ll} 
-  \mathsf{multiRound} : & \tunit \to \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
-                        & \to \tint \to \tint \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint} \\
-  \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
-                    & \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint}\\
-  \mathsf{updtSCC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
-                    & \to \tint \to \tint \to \tlist{\tint}\\
-  \mathsf{updtI} : & \tunit \to  \treal \to \tlist{\treal} \to \tint \to \tint \to \tlist{\tint}\\
-  \mathsf{foldl} : & (\treal \to \treal \to \treal) \to \treal \to \tlist{\treal}\\
-  q :              & \tbox{\tint \to \tint}\\
-  qc :             & \tbox{\tint \to \tint}\\
-\end{array}
-\]
 
 
 
@@ -2683,6 +2667,23 @@ UpdtSC:
     \end{mathpar}
 \end{figure}
 
+
+Type derivation of Multi-rounds example:
+\[
+\begin{array}{ll} 
+  \mathsf{multiRound} :& \tunit \to \forall \eapp k. \forall \eapp j. \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
+                        & \to \tint \to \tint \to \tlist{\tint} \to \tint \to \tarr{\tint}{\tlist{\tint}}{k-j}{[ \_ :0]}{k - j} \\
+  \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint}\\
+  \mathsf{updtSCC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tint \to \tint \to \tlist{\tint}\\
+  \mathsf{updtI} : & \tunit \to  \treal \to \tlist{\treal} \to \tint \to \tint \to \tlist{\tint}\\
+  \mathsf{foldl} : & (\treal \to \treal \to \treal) \to \treal \to \tlist{\treal}\\
+  q :              & \tbox{\tint \to \tint}\\
+  qc :             & \tbox{\tint \to \tint}\\
+\end{array}
+\]
+
 \begin{figure}
 Multi-rounds:
 \begin{mathpar}
@@ -2697,15 +2698,15 @@ Multi-rounds:
         \empty
       }
       {
-        \Gamma \tvdash{0} j<k : \tbool
+        \Gamma; [j : 0, k : 0] \tvdash{0} j<k : \tbool
       }
-      \and
-      \inferrule*[right = LET]
+      \\
+      \inferrule
       {
         \cdots
       }
       {
-        \Gamma \tvdash{0} \elet p = \cdots \ein \cdots : \tlist{\tint}
+        \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\tint}
       }
       \and
       \inferrule
@@ -2713,21 +2714,21 @@ Multi-rounds:
         \empty
       }
       {
-        \Gamma \tvdash{0} D : \tlist{\tint}
+        \Gamma; [D: 0] \tvdash{0} D : \tlist{\tint}
       }
     }
     {
-      \mathsf{multiRound} : \cdots, sc: \tlist{\treal}, \cdots 
+      \Gamma_0', sc: \tlist{\treal}, \cdots; \dmap_0 
       \tvdash{0} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
     }
   }
   {
-  \mathsf{multiRound} : \tunit \to \cdots \to \tlist{\tint}
-  \tvdash{0} \lambda sc. \cdots : \tlist{\treal} \to \cdots \to \tlist{\tint}  
+  \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; \dmap_0
+  \tvdash{k - j} \Lambda. \Lambda. \cdots : \forall. \forall. \cdots  
   }
 }
 {
-  \Gamma_0 \tvdash{0} \efix \mathsf{multiRound ()}. \cdots : \tunit \to \cdots \to \tlist{\tint}
+  \Gamma_0; \dmap_0 \tvdash{k - j} \efix \mathsf{multiRound ()}. \cdots : \tunit \to \cdots
 }
 
 \inferrule*[right = LET]
@@ -2751,7 +2752,7 @@ Multi-rounds:
     }
   }
   {  
-    \Gamma \tvdash{0} \uniform \eapp 0 \eapp 1 : \treal
+    \Gamma; [\_:0] \tvdash{0} \uniform \eapp 0 \eapp 1 : \treal
   }  
   \and
   \inferrule
@@ -2759,11 +2760,11 @@ Multi-rounds:
     \cdots
   }
   {
-    \Gamma, p : \treal \tvdash{0} \elet q = \lambda x. \cdots \ein \cdots : \tlist{\tint}
+    \Gamma, p : \treal; \dmap_2 \tvdash{k - j} \elet q = \lambda x. \cdots \ein \cdots : \tlist{\tint}
   }
 }
 {
-  \Gamma \tvdash{0} \elet p = \cdots \ein \cdots : \tlist{\tint}
+  \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\tint}
 }
 
 \inferrule*[right = LET]
@@ -2783,15 +2784,15 @@ Multi-rounds:
         }
       }
       {
-        \Gamma_{1}, x: \tint \tvdash{0} \bernoulli \eapp p : \tint
+        \Gamma_{1}, x: \tint; [ \_ : 0] \tvdash{0} \bernoulli \eapp p : \tint
       }
     }
     { 
-      \Gamma_{1} \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
+      \Gamma_{1}; [ \_ : 0] \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
     }
   }
   {
-    \Gamma_{1} \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\tint \to \tint}
+    \Gamma_{1}; [ \_ : 0] \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\cdots}
   }
   \and
   \inferrule
@@ -2807,17 +2808,17 @@ Multi-rounds:
             \empty
           }
           {
-            \Gamma_{3} \tvdash{0} q : \tbox{\tint \to \tint}
+            \Gamma_{3}; [q:0]  \tvdash{0} q : \tbox{\tint \to \tint}
           }
         }
         { 
-          \Gamma_{3} \tvdash{0} \eop (q): \treal
+          \Gamma_{3}; [q:1] \tvdash{1} \eop (q): \treal
         }
         \and
         \Pi_1  \vartriangleright
       }
       {
-        \Gamma_{3} \tvdash{0} \elet a = \eop ( q ) \ein \cdots : \tlist{\tint}
+        \Gamma_{3}; \dmap_4 \tvdash{k - j} \elet a = \eop ( q ) \ein \cdots : \tlist{\tint}
       }
     }
     {
@@ -2825,11 +2826,11 @@ Multi-rounds:
     }
   }
   {
-    \Gamma, q: \tbox{\tint \to \tint} \tvdash{0} \elet qc = \lambda x. \cdots : \tlist{\tint}
+    \Gamma, q: \tbox{\cdots}; \dmap_3 \tvdash{k - j} \elet qc = \lambda x. \cdots : \tlist{\tint}
   }
 }
 {
-  \Gamma_{1} \tvdash{0} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\tint}
+  \Gamma_{1}; \dmap_2 \tvdash{k - j} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\tint}
 }
 \end{mathpar}
 
@@ -2837,7 +2838,7 @@ $\Pi_1:$
 \begin{mathpar}
 \inferrule*[right = LET]
 { 
-  \inferrule*[right = APP]
+  \inferrule
   {
     \inferrule
     {
@@ -2846,15 +2847,15 @@ $\Pi_1:$
         \empty
       }
       {
-        \Gamma_4 \tvdash{0} \mathsf{updtSC} : \cdots
+        \Gamma_4;[\_ : \infty] \tvdash{0} \mathsf{updtSC} : \cdots
       }
-      \and
+      \\\\
       \inferrule
       {
         \empty
       }
       {
-        \Gamma_4 \tvdash{0} sc : \tlist{\treal}
+        \Gamma_4;[\_:0] \tvdash{0} () : \tunit
       }
     }
     {
@@ -2862,7 +2863,7 @@ $\Pi_1:$
     }
   }
   {
-    \Gamma_4 \tvdash{0} \mathsf{updtSC} \eapp () \eapp sc \eapp a \cdots : \tlist{\treal}
+    \Gamma_4; \dmap_6 \tvdash{0} \mathsf{updtSC} \eapp () \eapp sc \cdots : \tlist{\treal}
   }
   \and
   \inferrule
@@ -2872,7 +2873,7 @@ $\Pi_1:$
       \Pi_2 \vartriangleright
     }
     {
-      \Gamma_7 \tvdash{0} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+      \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
     }
   }
   {
@@ -2880,9 +2881,10 @@ $\Pi_1:$
   }
 }
 {
-  \Gamma_3, a: \treal \tvdash{0} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\tint}
+  \Gamma_3, a: \treal; \dmap_5 \tvdash{k - j - 1} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\tint}
 }
 \end{mathpar}
+
 
 $\Pi_2$:
 \begin{mathpar}
@@ -2904,46 +2906,83 @@ $\Pi_2$:
       }
       {
         \Gamma_7 \tvdash{0} I': \tlist{\tint}
-      }        
+      }
     }
     {
-      \Gamma_7 \tvdash{0} D \setminus I' : \tlist{\tint}
+      \Gamma_7; [\_ : 0] \tvdash{0} D \setminus I' : \tlist{\tint}
     }
     \and
     \inferrule
     {
-      \inferrule
-      {
-        \inferrule
-        {
-          \empty
-        }
-        {
-          \Gamma_8 \tvdash{0} \mathsf{multiRound} : \cdots
-        }
-        \and
-        \inferrule
-        {
-          \empty
-        }
-        {
-          \Gamma_8 \tvdash{0} () : \tunit
-        }
-      }
-      {
-        \cdots
-      }
+      \cdots
     }
     {
-      \Gamma_7, D' : \tlist{\tint} \tvdash{0} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
+      \Gamma_7, D' : \tlist{\tint} \tvdash{k - j - 1} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
     }
   }
   {
-    \Gamma_7 \tvdash{0} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+    \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
   }
+\end{mathpar}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+    \inferrule
+{
+  \inferrule
+  {  
+    \inferrule
+    {
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_8 \tvdash{0} \mathsf{multiRound} : \cdots
+      }
+      \and
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_8 \tvdash{0} () : \tunit
+      }
+    }
+    {
+      \cdots
+    }
+  }
+  {
+    \Gamma_8; [\_ : 0] 
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp \Lambda. \Lambda. \cdots : \tarr{\tint}{\tlist{\tint}}{k - (j + 1)}{[\_: 0]}{k - (j + 1)}
+  }
+  \and
+  \inferrule
+  {
+  \empty
+  }
+  {
+    \Gamma_8; [\_:0] \tvdash{0} C : \tint
+  }
+}
+{
+  \Gamma_7, D' : \tlist{\tint}; \dmap_8 
+  \tvdash{k - j - 1} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
+}
+
 \end{mathpar}
 
 \end{figure}
+
+The \emph{depth map} in the type derivation of Multi-rounds example:
+\[
+\begin{array}{ll}
+\dmap_8 &:[]   \\
+\end{array}
+\]
+
 
 \newpage
 \bibliographystyle{plain}
