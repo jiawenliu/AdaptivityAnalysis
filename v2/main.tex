@@ -2469,7 +2469,7 @@ Multi-rounds:
 \[
 \begin{array}{l}
  \efix \eapp  \mathsf{multiRound}(\_). \Lambda k. \Lambda j. \lambda sc. \lambda scc. \lambda
-  I. \lambda j. \lambda k. \lambda D. \lambda N. \lambda C. \\
+  I. \lambda j. \lambda k.  \lambda N. \lambda C. \lambda D.\\
  \hspace{.2cm} \eif   \big (   (j < k)  ,  \\
   \hspace{.2cm} \elet \eapp p = \uniform \eapp 0 \eapp 1 \ein \\
   \hspace{0.4cm} \elet \eapp q = \lambda x. \bernoulli \eapp p \ein \\
@@ -2478,14 +2478,14 @@ Multi-rounds:
  \hspace{0.8cm} \elet \eapp sc' =  \mathsf{updtSC} \eapp () \eapp sc  \eapp a \eapp p
  \eapp q \eapp I \eapp  \eapp 0 \eapp  N
   \eapp  \ein \\
-\hspace{0.8cm} \elet \eapp scc' =  \mathsf{updtSCC} \eapp () \eapp scc' \eapp a \eapp p
+\hspace{0.8cm} \elet \eapp scc' =  \mathsf{updtSCC} \eapp () \eapp scc \eapp a \eapp p
  \eapp qc \eapp  \eapp 0 \eapp  C \ein \\
 \hspace{0.8cm} \elet \eapp maxScc =  \mathsf{foldl} \eapp (\lambda acc. \lambda a. \eif ( acc < a, a, acc)) \eapp 0 \eapp scc' \ein \\
 \hspace{0.8cm} \elet \eapp I' =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
   \eapp 0 \eapp N  \ein \\
   \hspace{0.8cm} \elet \eapp D' =  D \setminus I' \ein \\
   \hspace{1.2cm} \mathsf{multiRound} () [k] [j+1]  \eapp sc' \eapp scc' \eapp I'
-  \eapp (j+1) \eapp  k \eapp D' \eapp N \eapp C\\ 
+  \eapp (j+1) \eapp  k \eapp N \eapp C \eapp D'\\ 
 \hspace{0.2cm}   ,     D  \big ) \\
  
 \end{array}
@@ -2672,7 +2672,7 @@ Type derivation of Multi-rounds example:
 \[
 \begin{array}{ll} 
   \mathsf{multiRound} :& \tunit \to \forall \eapp k. \forall \eapp j. \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
-                        & \to \tint \to \tint \to \tlist{\tint} \to \tint \to \tarr{\tint}{\tlist{\tint}}{k-j}{[ \_ :0]}{k - j} \\
+                        & \to \tint \to \tint \to \tint \to \tint \to \tarr{\tlist{\tint}}{\tlist{\tint}}{k-j}{\dmap}{k - j} \\
   \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
                     & \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint}\\
   \mathsf{updtSCC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
@@ -2917,7 +2917,7 @@ $\Pi_2$:
       \cdots
     }
     {
-      \Gamma_7, D' : \tlist{\tint} \tvdash{k - j - 1} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
+      \Gamma_7, D' : \tlist{\tint}; \dmap_8 \tvdash{k - j - 1} \mathsf{multiRound} \cdots : \tlist{\tint}
     }
   }
   {
@@ -2939,15 +2939,15 @@ $\Pi_2$:
         \empty
       }
       {
-        \Gamma_8 \tvdash{0} \mathsf{multiRound} : \cdots
+        \Gamma_8; [\mathsf{multiRound}: \infty] \tvdash{0} \mathsf{multiRound} : \cdots
       }
-      \and
+      \\\\
       \inferrule
       {
         \empty
       }
       {
-        \Gamma_8 \tvdash{0} () : \tunit
+        \Gamma_8; [() : 0] \tvdash{0} () : \tunit
       }
     }
     {
@@ -2956,7 +2956,7 @@ $\Pi_2$:
   }
   {
     \Gamma_8; [\_ : 0] 
-    \tvdash{0} \mathsf{multiRound} \eapp () \eapp \Lambda. \Lambda. \cdots : \tarr{\tint}{\tlist{\tint}}{k - (j + 1)}{[\_: 0]}{k - (j + 1)}
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp \Lambda. \Lambda. \cdot : \tarr{\cdot}{\cdot}{k - (j + 1)}{\dmap'}{k - (j + 1)}
   }
   \and
   \inferrule
@@ -2964,7 +2964,7 @@ $\Pi_2$:
   \empty
   }
   {
-    \Gamma_8; [\_:0] \tvdash{0} C : \tint
+    \Gamma_8; [\_:0] \tvdash{0} D' : \tlist{\tint}
   }
 }
 {
@@ -2979,7 +2979,15 @@ $\Pi_2$:
 The \emph{depth map} in the type derivation of Multi-rounds example:
 \[
 \begin{array}{ll}
-\dmap_8 &:[]   \\
+\dmap   & : [sc : k - j, scc : k - j, I : k - j, j : 0, k : 0, N : 0, C: 0, D : k - j] \\
+\dmap'  & : [sc' : k - j - 1, scc' : k - j - 1, I' : k - j - 1, (j + 1) : 0, k : 0, N : 0, C: 0, D' : k - j - 1] \\
+\dmap_8 & : \dmap'[\mathsf{multiRound}: \infty, D' : k - j - 1]   \\
+\dmap_7 & : \dmap'[\mathsf{multiRound}: \infty, D : k - j - 1]   \\
+\dmap_6 & : [\mathsf{updtSC} : \infty, () : 0, sc : 0, a : 0, p : 0, q : 0, I : 0, i : 0, N : 0]\\
+\dmap_5 & : [sc : k - j - 1, scc : k - j - 1, I : k - j - 1, a : k - j - 1, p : k - j - 1,\\
+        &    q : k - j - 1, (j + 1) : 0, k : 0, N : 0, C: 0, D : k - j - 1 ]\\
+\dmap_4 & : [sc : k - j - 1, scc : k - j - 1, I : k - j - 1, p : k - j - 1,\\
+        &    q : k - j - 1, (j + 1) : 0, k : 0, N : 0, C: 0, D : k - j ]\\
 \end{array}
 \]
 
