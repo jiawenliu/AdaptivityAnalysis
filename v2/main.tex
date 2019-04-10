@@ -25,6 +25,9 @@
 
 \maketitle
 
+\paragraph{Abstract}
+An adaptive data analysis algorithm contains multiple queries over the training data set, in which some queries rely on the results of some other queries. The error of each query is usually controllable and bound independently, but the error will propagate and become uncontrollable through their dependency chain, which is called overfitting. To handle  the overfitting, analyzers are adopting different mechanisms in their algorithms, such as Gaussian mechanism, etc. As a result, the overfitting of an algorithm will depend on the nesting depth of mechanisms. In this work, we use adaptivity to measure the nesting depth of mechanisms in a data analysis algorithm. We define a language which can provide an upper bound on the adaptivity of a program implementing an adaptive data analysis algorithm.
+
 \paragraph{Adaptivity}
 Adaptivity is a measure of the nesting depth of a mechanism. To
 represent this depth, we use extended natural numbers. Define $\natb =
@@ -1861,7 +1864,7 @@ Two-rounds:
 
 \begin{figure}
 Type derivation:\\
-    $A = \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{1}{[j:1]}{1} }{0}{[]}{0} $, \\
+    $A = \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{[j:0]}{1} }{\bot}{[]}{0} $, \\
     $FL1 = \treal \to \tlist{\tbase * \treal} \to \treal$, $FL2 = \treal \to \tlist{\treal * \tbase} \to \treal$\\
     $Q_2 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[l:0]}{0})} $,\\
     $Q_1 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[j:0, k:0]}{0})}$\\
@@ -1876,7 +1879,7 @@ Type derivation:\\
         \Pi_L \vartriangleright
      }
      {
-        \dmap' \tvdash{1} \efix \eapp  f(j). \cdots : A
+        \tvdash{1} \efix \eapp  f(j). \cdots : A
       }
      \and
      \inferrule
@@ -1884,14 +1887,14 @@ Type derivation:\\
         \Pi_R \vartriangleright
      }
      {
-      g: A, \dmap''[g : 1] \tvdash{2} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal
+      g: A, [g : 1] \tvdash{2} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal
     }
      \\
      n' = \max(n_1 + 1, n_2 ) = 2
      \and
-     \dmap = \max(\dmap' + 1, \dmap'')
+     [] = \max([] + 1, [])
    }
-   { \dmap \tvdash{2} \elet g = \cdots \ein \elet l = \cdots \ein \cdots :  \treal }
+   { \tvdash{2} \elet g = \cdots \ein \elet l = \cdots \ein \cdots :  \treal }
 \]
 
 Derivation $\Pi_L$ and $\Pi_R$ are shown as follows:\\
@@ -1908,7 +1911,7 @@ $\Pi_L$:
               \empty
             }
             {
-              \Gamma; [j:0, k:0] \tvdash{0} {j<k : \tbool}
+              \Gamma; \dmap_1' = [j:0, k:0] \tvdash{0} {j<k : \tbool}
             }
             \\
             \inferrule*[right = LET]
@@ -1916,7 +1919,7 @@ $\Pi_L$:
               \dots
             }
             {
-              \Gamma; \dmap_3' \tvdash{1} \elet a = \eop ( \cdots ) \ein (a, j) :: \cdots : \tlist{\treal * \tbase}
+              \Gamma; \dmap_2' \tvdash{1} \elet a = \eop ( \cdots ) \ein (a, j) :: \cdots : \tlist{\treal * \tbase}
             }
             \\
             \inferrule*[right = NIL]
@@ -1924,24 +1927,24 @@ $\Pi_L$:
               \empty
             }
             {
-              \Gamma; \dmap_3' \tvdash{1} {[] : \tlist{\treal * \tbase}}
+              \Gamma; \dmap_2'=[f: \infty, j: 0, k: 0] \tvdash{1} {[] : \tlist{\treal * \tbase}}
             }
             \\
             \nnatA' = \nnatA_0 + \nnatA_1 = 0 + 1 = 1
             \and
-            \dmap_2' = \max(\dmap_3' + 0 , [j:0, k:0])
+            \dmap_1' = \max(\dmap_2' + 0 , \dmap_1') = [f: \infty, j: 0, k: 0]
           }
           {
-            \Gamma ;  \dmap_2'[k: 0] 
+            \Gamma ;  [f: \infty, j: 0, k: 0] 
             \tvdash{1} \eif \cdots : \tlist{\treal * \tbase}
           }
         }
         {
-          f: A, j : \tbase; \dmap_1'[f: \infty, j: 0] \tvdash{1} {\lambda k. \eif \cdots : \tarr{\tbase}{\tlist{\treal * \tbase}}{1}{[j:0]}{1} }
+          f: A, j : \tbase; [f: \infty, j: \bot ] \tvdash{1} {\lambda k. \eif \cdots : \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{[j:0]}{1} }
         }
       }
       {
-        \dmap' \tvdash{1} \efix \eapp  f(j). \cdots : A 
+        \tvdash{1} \efix \eapp  f(j). \cdots : A 
       }    
     
     \inferrule*[right = LET]
@@ -1953,13 +1956,13 @@ $\Pi_L$:
                 \Pi_{L1} \vartriangleright
             }
             {
-                \Gamma; \dmap_9' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : Q_1
+                \Gamma; \dmap_4' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : Q_1
             \\\\
-            \dmap_4' = \dmap_9' + 1
+            \dmap_4' = [j: \bot, k : \bot]
             }
         }
         {
-            \Gamma; \dmap_4' \tvdash{1} \eop ( \lambda x. (x \eapp j)\cdot (x \eapp k)) : \treal
+            \Gamma; \dmap_3' \tvdash{1} \eop ( \lambda x. (x \eapp j)\cdot (x \eapp k)) : \treal
         }
     \and 
     \inferrule
@@ -1981,11 +1984,9 @@ $\Pi_L$:
               {
                 \Gamma'; [j:0] \tvdash{0} j : \tbase
               }
-              \\
-              \dmap_6' = [a:0, j:0]
             }
             {
-                \Gamma'; \dmap_6' \tvdash{0} (a, j) : \treal * \tbase
+                \Gamma'; [a:0, j:0] \tvdash{0} (a, j) : \treal * \tbase
             }
             \\
         \inferrule*[right = APP]
@@ -1993,24 +1994,26 @@ $\Pi_L$:
                 \Pi_{L2} \vartriangleright
             }
             {
-                \Gamma'; \dmap_7' \tvdash{1} f \eapp  j+1 \eapp  k : \tlist{\treal * \tbase}
+                \Gamma'; \dmap_5' \tvdash{1} f \eapp  j+1 \eapp  k : \tlist{\treal * \tbase}
             }
             \\
             \nnatA' = \max(\nnatA_1, \nnatA_2) = 1
             \and
-            \dmap_5' = \dmap_7[a:0]
+            \dmap_5' = [f: \infty, a: 0, j : 0, k : 0]
         }
         {
-            \Gamma'; \dmap_5'[a: 0] \tvdash{1} 
+            \Gamma'; \dmap_2'[a: 0] \tvdash{1} 
             (a, j) ::(\cdots) : \tlist{\treal * \tbase}
         }
       \\
+      \dmap_3' = [j: \bot, k: \bot]
+      \and
       \nnatA' = \max(\nnatA_2, \nnatA_1 + q) = 1
       \and
-      \dmap_3' = [x:1, j:1, k:1, f:\infty]
+      \dmap_2' = \max(\dmap_3' + 1, \dmap_2') = [j:0, k:0, f:\infty]
     }
     {
-      \Gamma; \dmap_3'  \tvdash{1} 
+      \Gamma; \dmap_2'  \tvdash{1} 
       \elet a = \eop (\lambda x. (x \eapp j)\cdot (x \eapp k)) \ein (a, j) ::(f \eapp  j+1 \eapp  k): \tlist{\treal * \tbase}
     }
     \end{mathpar}
@@ -2041,12 +2044,10 @@ $\Pi_{L2}$:
       \Gamma'; [j:0] \tvdash{0} j + 1: \tbase
       }
       \\
-      \nnatA' = \max(\nnatA_2 + q, \nnatA) + \nnatA_1 = 0
-      \and
-      \dmap_8' = [f:\infty,j:0]     
+      \nnatA' = \max(\nnatA_2 + q, \nnatA) + \nnatA_1 = 0 
       }
       {
-      \Gamma'; \dmap_8' \tvdash{0} f \eapp j+1 : \tarr{\tbase}{\tlist{\treal * \tbase}}{1}{[j:1]}{1}
+      \Gamma'; \dmap_6' \tvdash{0} f \eapp j+1 : \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{\dmap = [j:0]}{1}
       }
       \and
       \inferrule*[right = VAR]
@@ -2054,15 +2055,19 @@ $\Pi_{L2}$:
       \empty
       }
       {
-      \Gamma'; [k:0] \tvdash{0} k : \tbase
+      \Gamma'; \dmap_7' \tvdash{0} k : \tbase
       }
       \\
-      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + q) = 1
+      \dmap_6' = [j:0, f: \infty, a : 0]
       \and
-      \dmap_7' = \dmap_8'[j:1, k:1]
+      \dmap_5' = \max(\dmap_6', 0 + \max(\dmap, \dmap_7' + 0))
+      \and
+      \dmap_7' = [k:0]
+      \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + q) = 1
     }
     {
-    \Gamma'; \dmap_7' \tvdash{1} f \eapp  j+1 \eapp  k : \tlist{\treal * \tbase}
+    \Gamma'; \dmap_5' = [f: \infty, a: 0, j : 0, k : 0] \tvdash{1} f \eapp  j+1 \eapp  k : \tlist{\treal * \tbase}
     }
     \end{mathpar}
 \end{figure}
@@ -2095,11 +2100,9 @@ $\Pi_{L1}$:
         {
           \Gamma''; [j:0] \tvdash{0} j : \tbase
         }
-        \\\\
-        \dmap_{11}' = [x: 0, j:0]
       }
       {
-        \Gamma''; \dmap_{11}' \tvdash{0} (x \eapp j) : \treal
+        \Gamma''; [x: 0, j:0] \tvdash{0} (x \eapp j) : \treal
       }
       \and
        \inferrule
@@ -2119,29 +2122,22 @@ $\Pi_{L1}$:
         {
           \Gamma''; [k:0] \tvdash{0} k : \tbase
         }
-        \\\\
-        \dmap_{12}' = [x: \infty, k:0]
       }
       {
-        \Gamma''; \dmap_{12}' \tvdash{0} (x \eapp k) : \treal
+        \Gamma''; [x : 0, k : 0] \tvdash{0} (x \eapp k) : \treal
       }
-      \\
-      \dmap_{10}' = [x: 0, k:0, j : 0]
     }
     {    
-      \Gamma''; \dmap_{10}' \tvdash{0} (x \eapp j) \cdot (x \eapp k) : \treal
-      \and
-      \dmap_{9}' = \dmap_{10}'
+      \Gamma''; [x:0, j : 0, k: 0] \tvdash{0} (x \eapp j) \cdot (x \eapp k) : \treal
     }  
   }
   {
-    \Gamma; \dmap_9' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : \tarr{\trow}{\treal}{0}{[j:0,k:0]}{0}
+    \Gamma; \dmap_4' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : \tarr{\trow}{\treal}{0}{[j:0,k:0]}{0}
   }
 }
 {
-  \Gamma; \dmap_9' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : Q_1
+  \Gamma; \dmap_4' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : Q_1
 }
-
 \end{mathpar}
 \end{figure}
 
@@ -2168,13 +2164,11 @@ $\Pi_R$:
           \empty
         }
         {
-          g: A; [0: 0] \tvdash{0} 0 : \tbase
+          g: A; \tvdash{0} 0 : \tbase
         }
-        \\\\
-        \dmap_2'' = [g: 0, 0:0]
       }
       {
-         g: A; \dmap_2'' \tvdash{0} {g \eapp  0  : \tarr{\tbase}{ \tlist{\treal * \tbase}}{1}{[j:1]}{1} }
+         g: A; [g: 0] \tvdash{0} {g \eapp  0  : \tarr{\tbase}{ \tlist{\treal * \tbase}}{1}{[j:1]}{1} }
       }
       \and
       \inferrule
@@ -2182,23 +2176,21 @@ $\Pi_R$:
       \empty
       }
       {
-        g: A; [K:0] \tvdash{0} K : \tbase
+        g: A; \tvdash{0} K : \tbase
       }
-        \\
-        \dmap_1'' = [g: 0, 0:0, j:1, K:1]
     }
     {
-        g: A; \dmap_1'' \tvdash{1} { g \eapp  0 \eapp  K : \tlist{\treal * \tbase}}
+        g: A; [g:0] \tvdash{1} { g \eapp  0 \eapp  K : \tlist{\treal * \tbase}}
     }
     \and
     \cdots
     \\
     \nnatA' = \max(\nnatA_1 + q, \nnatA_2) = 2
     \and
-    \dmap'' = \max((\dmap_1'' + 1), \dmap_4'')
+    [g:1] = \max(([g:0] + 1), [g:1])
     }
     {
-    g: A; \dmap'' \tvdash{2} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal   
+    g: A; [g:1] \tvdash{2} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal   
     }
 
     \inferrule*[right = LET]
@@ -2212,15 +2204,15 @@ $\Pi_R$:
                     \cdots
                   }
                   {
-                      \Delta''; \dmap_5'' \tvdash{0} {\mathsf{sign}(\dots) :  \treal}
+                      \Delta''; [x: 0,l: 0] \tvdash{0} {\mathsf{sign}(\dots) :  \treal}
                   }          
             }
             {
-                \Delta; \dmap_5''\tvdash{0} {\lambda x. \dots : \tarr{\trow}{\treal}{0}{[l:0]}{0} }
+                \Delta; \dmap_3''\tvdash{0} {\lambda x. \dots : \tarr{\trow}{\treal}{0}{[l:0]}{0} }
             }
             }
             {
-                \Delta; \dmap_5''\tvdash{0} {\lambda x. \dots : Q_1}
+                \Delta; \dmap_3'' = [l:\bot]\tvdash{0} {\lambda x. \dots : Q_1}
             }
         \and
         \inferrule
@@ -2230,19 +2222,19 @@ $\Pi_R$:
                   \empty
               }
               {
-                  \Delta'; [q: 0] \tvdash{0} { q : Q_2}
+                  \Delta'; [g:0, l:0, q: 0] \tvdash{0} { q : Q_2}
               }
           }
           {
-                  \Delta'; [q : 1] \tvdash{1} {\eop (q) : \treal}
+                  \Delta'; \dmap_2'' = \dmap_1''[q:1] \tvdash{1} {\eop (q) : \treal}
           }
           \\
           \nnatA' = \max(\nnatA_1 + q, \nnatA_2) = 1
           \\
-          \dmap_4'' = (\dmap_5'' + 1)[q:1]
+          \dmap_1'' = \max([l:\bot] + 1, \dmap_2'')
         }
         {
-            \Delta; \dmap_4''  \tvdash{1} \elet q = \cdots \ein \cdots : \treal
+            \Delta; \dmap_1'' = [g:1, l:1]  \tvdash{1} \elet q = \cdots \ein \cdots : \treal
         }
 
 \inferrule
@@ -2252,7 +2244,7 @@ $\Pi_R$:
     \empty
   }
   {
-    \Delta, x: \trow; [\mathsf{sign}:0] \tvdash{0} \mathsf{sign} :  \treal \to \treal
+    \Delta, x: \trow;  \tvdash{0} \mathsf{sign} :  \treal \to \treal
   }
   \and
   \inferrule
@@ -2262,7 +2254,7 @@ $\Pi_R$:
     \cdots
     }
     {
-      \Delta''; \dmap_6'' \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 : \tlist{\tbase * \treal} \to \treal
+      \Delta''; [x:0] \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 : \tlist{\tbase * \treal} \to \treal
     }
     \\
     \inferrule
@@ -2274,11 +2266,11 @@ $\Pi_R$:
     }
   }
   {
-    \Delta''; \dmap_6''[l:0] \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 \eapp l : \treal 
+    \Delta''; \dmap_4'' \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 \eapp l : \treal 
   }
 }
 {
-  \Delta''; \dmap_6''[l:0][\mathsf{sign}:0] \tvdash{0} \mathsf{sign}(\dots) :  \treal
+  \Delta''; \dmap_4'' = [x: 0, l:0] \tvdash{0} \mathsf{sign}(\dots) :  \treal
 }
 
 \inferrule
@@ -2290,7 +2282,7 @@ $\Pi_R$:
       \empty
     }
     {
-      \Delta''; [\mathsf{foldl}:0] \tvdash{0} \mathsf{foldl} : FL
+      \Delta'';  \tvdash{0} \mathsf{foldl} : FL
     }
     \and
     \inferrule
@@ -2298,13 +2290,11 @@ $\Pi_R$:
       \cdots
     }
     {
-      \Delta''; \dmap_8'' \tvdash{0} \lambda acc. \cdots : FL2
+      \Delta''; [x : 0] \tvdash{0} \lambda acc. \cdots : FL2
     }
   }
   {
-    \Delta''; \dmap_7'' \tvdash{0} \mathsf{foldl}(\cdots) :FL1 
-    \and
-    \dmap_7'' = \dmap_8''[\mathsf{foldl} : 0] 
+    \Delta''; [x : 0] \tvdash{0} \mathsf{foldl}(\cdots) :FL1 
   }
   \and
   \inferrule
@@ -2312,11 +2302,11 @@ $\Pi_R$:
     \empty
   }
   {
-    \Delta''; [0:0] \tvdash{0} 0 : \tbase
+    \Delta''; \tvdash{0} 0 : \tbase
   }
 }
 {
-  \Delta''; \dmap_7''[0:0] \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 : \tlist{\tbase * \treal} \to \treal
+  \Delta''; [x : 0] \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 : \tlist{\tbase * \treal} \to \treal
 }
 
 \inferrule
@@ -2326,11 +2316,12 @@ $\Pi_R$:
     \inferrule
     {
       \inferrule
-      {
-        \dmap_{10}'' = [acc:0]
+      {\empty
       }
       {
-        \Delta_2''; \dmap_{10}'' \tvdash{0} acc: \treal
+        \Delta_2''; \dmap_6'' \tvdash{0} acc: \treal
+        \\\\
+        \dmap_6'' = [acc:0]
       }
       \and
       \inferrule
@@ -2354,9 +2345,7 @@ $\Pi_R$:
           }
         }
         {
-          \Delta_2''; \dmap_9'' \tvdash{0} x \eapp i: \treal
-          \and
-          \dmap_9'' = [x:0, i:0]
+          \Delta_2''; [x:0, i:0] \tvdash{0} x \eapp i: \treal
         }
         \and
         \inferrule
@@ -2368,25 +2357,23 @@ $\Pi_R$:
         }
       }
       {
-        \Delta_2''; [x:0, i:0, a:0] \tvdash{0} (x\eapp i) * \cdots: \treal
+        \Delta_2''; [x:0, (a, i):0] \tvdash{0} (x\eapp i) * \cdots: \treal
       }
     }
     {
-      \Delta_2''; [acc:0] \tvdash{0} acc + \cdots : \treal
+      \Delta_2''; \dmap_5''[(a,i):0] \tvdash{0} acc + \cdots : \treal
       \\
-      \Delta_2'' = \Delta_1'', (a,i): \tlist{\treal * \tbase} 
+      \Delta_2'' = \Delta_1'', (a,i): \tlist{\treal * \tbase}
     }
   }
   {
-    \Delta_1''; \dmap_8'' \tvdash{0} \lambda (a,i). \cdots :  \to \treal
+    \Delta_1''; \dmap_5'' = [x : 0, acc : 0] \tvdash{0} \lambda (a,i). \cdots :  \to \treal
     \and
     \Delta_1'' = \Delta'', acc: \treal
-    \and
-    \dmap_8'' = [x:0, i:0, a:0, acc:0]
   }
 }
 {
-  \Delta''; \dmap_8'' \tvdash{0} \lambda acc. \cdots : FL2
+  \Delta''; [x : 0] \tvdash{0} \lambda acc. \cdots : FL2
 }
 \end{mathpar}
 \vspace{-0.5cm}
@@ -2394,7 +2381,7 @@ $\Pi_R$:
 \end{figure}
 
 
-\newpage
+\clearpage
 
 \begin{algorithm}
 \footnotesize
