@@ -2659,7 +2659,7 @@ Type derivation of Multi-rounds example:
 \[
 \begin{array}{ll} 
   \mathsf{multiRound} :& \tunit \to \forall \eapp k. \forall \eapp j. \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
-                        & \to \tint \to \tint \to \tint \to \tint \to \tarr{\tlist{\tint}}{\tlist{\tint}}{k-j}{\dmap}{k - j} \\
+                        & \to \tint \to \tint \to \tint \to \tint \to \tarr{\tlist{\tint}}{\tlist{\tint}}{0}{\dmap}{k - j} \\
   \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
                     & \to \tlist{\tint} \to \tint \to \tint \to \tlist{\tint}\\
   \mathsf{updtSCC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
@@ -2685,7 +2685,7 @@ Multi-rounds:
         \empty
       }
       {
-        \Gamma; [j : 0, k : 0] \tvdash{0} j<k : \tbool
+        \Gamma; \dmap_1' = [j : 0, k : 0] \tvdash{0} j<k : \tbool
       }
       \\
       \inferrule
@@ -2701,21 +2701,21 @@ Multi-rounds:
         \empty
       }
       {
-        \Gamma; [D: 0] \tvdash{0} D : \tlist{\tint}
+        \Gamma; \dmap_1 \tvdash{0} D : \tlist{\tint}
       }
     }
     {
       \Gamma_0', sc: \tlist{\treal}, \cdots; \dmap_0 
-      \tvdash{0} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
+      \tvdash{k - j} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
     }
   }
   {
-  \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; \dmap_0
+  \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; [\mathsf{multiRound}: \infty, () : \bot]
   \tvdash{k - j} \Lambda. \Lambda. \cdots : \forall. \forall. \cdots  
   }
 }
 {
-  \Gamma_0; \dmap_0 \tvdash{k - j} \efix \mathsf{multiRound ()}. \cdots : \tunit \to \cdots
+  \Gamma_0; [] \tvdash{k - j} \efix \mathsf{multiRound ()}. \cdots : \tunit \to \cdots
 }
 
 \inferrule*[right = LET]
@@ -2739,7 +2739,7 @@ Multi-rounds:
     }
   }
   {  
-    \Gamma; [\_:0] \tvdash{0} \uniform \eapp 0 \eapp 1 : \treal
+    \Gamma; [] \tvdash{0} \uniform \eapp 0 \eapp 1 : \treal
   }  
   \and
   \inferrule
@@ -2771,15 +2771,15 @@ Multi-rounds:
         }
       }
       {
-        \Gamma_{1}, x: \tint; [ \_ : 0] \tvdash{0} \bernoulli \eapp p : \tint
+        \Gamma_{1}, x: \tint; [x: 0] \tvdash{0} \bernoulli \eapp p : \tint
       }
     }
     { 
-      \Gamma_{1}; [ \_ : 0] \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
+      \Gamma_{1}; [] \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
     }
   }
   {
-    \Gamma_{1}; [ \_ : 0] \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\cdots}
+    \Gamma_{1}; [] \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\cdots}
   }
   \and
   \inferrule
@@ -2942,8 +2942,8 @@ $\Pi_2$:
     }
   }
   {
-    \Gamma_8; [\_ : 0] 
-    \tvdash{0} \mathsf{multiRound} \eapp () \eapp \Lambda. \Lambda. \cdot : \tarr{\cdot}{\cdot}{k - (j + 1)}{\dmap'}{k - (j + 1)}
+    \Gamma_8; \dmap_8 
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp \Lambda. \Lambda. \cdot : \tarr{\cdot}{\cdot}{0}{\dmap}{k - (j + 1)}
   }
   \and
   \inferrule
@@ -2951,7 +2951,7 @@ $\Pi_2$:
   \empty
   }
   {
-    \Gamma_8; [\_:0] \tvdash{0} D' : \tlist{\tint}
+    \Gamma_8; [D':0] \tvdash{0} D' : \tlist{\tint}
   }
 }
 {
@@ -2965,16 +2965,17 @@ $\Pi_2$:
 
 The \emph{depth map} in the type derivation of Multi-rounds example:
 \[
-\begin{array}{ll}
-\dmap   & : [sc : k - j, scc : k - j, I : k - j, j : 0, k : 0, N : 0, C: 0, D : k - j] \\
-\dmap'  & : [sc' : k - j - 1, scc' : k - j - 1, I' : k - j - 1, (j + 1) : 0, k : 0, N : 0, C: 0, D' : k - j - 1] \\
-\dmap_8 & : \dmap'[\mathsf{multiRound}: \infty, D' : k - j - 1]   \\
-\dmap_7 & : \dmap'[\mathsf{multiRound}: \infty, D : k - j - 1]   \\
-\dmap_6 & : [\mathsf{updtSC} : \infty, () : 0, sc : 0, a : 0, p : 0, q : 0, I : 0, i : 0, N : 0]\\
-\dmap_5 & : [sc : k - j - 1, scc : k - j - 1, I : k - j - 1, a : k - j - 1, p : k - j - 1,\\
-        &    q : k - j - 1, (j + 1) : 0, k : 0, N : 0, C: 0, D : k - j - 1 ]\\
-\dmap_4 & : [sc : k - j - 1, scc : k - j - 1, I : k - j - 1, p : k - j - 1,\\
-        &    q : k - j - 1, (j + 1) : 0, k : 0, N : 0, C: 0, D : k - j ]\\
+\begin{array}{lll}
+\dmap     & = & [sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
+\dmap_0   & = & [\mathsf{multiRound}: \infty, () : \bot, sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
+\dmap_1   & = & [\mathsf{multiRound}: \infty, () : \bot, sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
+\dmap_2   & = & \dmap_1[p : k - j]\\
+\dmap_3   & = & \dmap_2[q : k - j]\\
+\dmap_4   & = & \dmap_3[qc : 0]\\
+\dmap_5   & = & \dmap_4[a : k - j - 1]\\
+\dmap_6   & = & \dmap_5\\
+\dmap_7   & = & \dmap_5[sc' : 0, scc' : 0, I' ; 0]\\
+\dmap_8   & = & \dmap_7[D' : 0]\\
 \end{array}
 \]
 
