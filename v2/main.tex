@@ -611,7 +611,12 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
     }
   \end{mathpar}
+  \caption{Typing rules}
+  \label{fig:type-rules}
+\end{figure}
 
+\begin{figure}
+\clearpage
 \framebox{
   \begin{mathpar}
      \inferrule{
@@ -652,6 +657,25 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
    }
    {  \Gamma; \dmap' \tvdash{\nnatA'}  \elet x = \expr_1 \ein \expr_2 : \type}
+   %
+   \and
+   %
+  \inferrule{
+      \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
+    }{
+     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{i} \type 
+    }
+    %
+    \and
+    %
+  \inferrule{
+      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{i} \type
+      \\
+       \Delta \tvdash{}  I ::  S 
+    }{
+     \Delta;  \Gamma; \dmap \tvdash{\nnatA[I/i]}    \expr \eapp []   :
+     \type[ I/i]
+    }
     \end{mathpar}
 }            
 
@@ -664,8 +688,8 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     \max(\dmap_1, \dmap_2) \defeq \lambda x.\eapp  \max(\dmap_1(x), \dmap_2(x))
   \end{mathpar}}
 
-  \caption{Typing rules}
-  \label{fig:type-rules}
+  \caption{New Typing rules}
+  \label{fig:new-type-rules}
 \end{figure}
 
 \begin{figure}
@@ -2458,25 +2482,6 @@ $\Pi_R$:
 \end{array}\]
 \begin{figure}
   \begin{mathpar}
-    \inferrule{
-      \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
-    }{
-     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{i} \type 
-    }
-    %
-    \and
-    %
-  \inferrule{
-      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{i} \type
-      \\
-       \Delta \tvdash{}  I ::  S 
-    }{
-     \Delta;  \Gamma; \dmap \tvdash{\nnatA[I/i]}    \expr \eapp []   :
-     \type[ I/i]
-    }
-    %
-    \and
-    %
   \inferrule
   {
        \Delta (i) = S
@@ -2509,7 +2514,7 @@ $\Pi_R$:
     \Delta \tvdash{}  \idx_1 \diamond \idx_2 :: S
   }
   \end{mathpar}
-  \caption{typing rules - quantification}
+  \caption{Index typing rules - quantification}
   \label{fig:type-rules-quant}
 \end{figure}
 
@@ -2520,8 +2525,8 @@ $\Pi_R$:
 Multi-rounds:
 \[
 \begin{array}{l}
- \efix \eapp  \mathsf{multiRound}(\_). \Lambda k. \Lambda j. \lambda sc. \lambda scc. \lambda
-  I. \lambda j. \lambda k.  \lambda N. \lambda C. \lambda D.\\
+ \efix \eapp  \mathsf{multiRound}(\_). \Lambda k. \Lambda j. \lambda k. \lambda j. \lambda sc. \lambda scc. \lambda
+  I.   \lambda N. \lambda C. \lambda D.\\
  \hspace{.2cm} \eif   \big (   (j < k)  ,  \\
   \hspace{.2cm} \elet \eapp p = \uniform \eapp 0 \eapp 1 \ein \\
   \hspace{0.4cm} \elet \eapp q = \lambda x. \bernoulli \eapp p \ein \\
@@ -2536,8 +2541,8 @@ Multi-rounds:
 \hspace{0.8cm} \elet \eapp I' =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
   \eapp 0 \eapp N  \ein \\
   \hspace{0.8cm} \elet \eapp D' =  D \setminus I' \ein \\
-  \hspace{1.2cm} \mathsf{multiRound} () [k] [j+1]  \eapp sc' \eapp scc' \eapp I'
-  \eapp (j+1) \eapp  k \eapp N \eapp C \eapp D'\\ 
+  \hspace{1.2cm} \mathsf{multiRound} () [k] [j+1] \eapp  k \eapp (j+1)  \eapp sc' \eapp scc' \eapp I'
+  \eapp N \eapp C \eapp D'\\ 
 \hspace{0.2cm}   ,     D  \big ) \\
  
 \end{array}
@@ -2723,14 +2728,14 @@ UpdtSC:
 Type derivation of Multi-rounds example:
 \[
 \begin{array}{ll} 
-  \mathsf{multiRound} :& \tunit \to \forall  J,K,N,C.
-                          \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
-                        & \to \tint[J] \to \tint[K] \to \tint[N] \to \tint[C] \to \tarr{\tlist{\tint}}{\tlist{\tint}}{0}{\dmap}{k - j} \\
-  \mathsf{updtSC} : & \tunit \to \forall  J,N. \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
-                    & \to \tlist{\tint} \to \tint[J] \to \tint[N] \to \tlist{\tint}\\
-  \mathsf{updtSCC} : & \tunit \to  \forall  J,C. \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
-                    & \to \tint[J] \to \tint[C] \to \tlist{\tint}\\
-  \mathsf{updtI} : & \tunit \to \forall  J,N. \treal \to \tlist{\treal} \to \tint[J] \to \tint[N] \to \tlist{\tint}\\
+  \mathsf{multiRound} :& \tunit \to \forall  J,K.
+                          \tint[K] \to \tint[J] \to \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
+                        & \to \tint \to \tint \to \tarr{\tlist{\tint}}{\tlist{\tint}}{0}{\dmap}{K - J} \\
+  \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tlist{\tint} \to \tint[J] \to \tint \to \tlist{\tint}\\
+  \mathsf{updtSCC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tint[J] \to \tint \to \tlist{\tint}\\
+  \mathsf{updtI} : & \tunit \to \treal \to \tlist{\treal} \to \tint[J] \to \tint \to \tlist{\tint}\\
   \mathsf{foldl} : & (\treal \to \treal \to \treal) \to \treal \to \tlist{\treal}\\
   q :              & \tbox{\tint \to \tint}\\
   qc :             & \tbox{\tint \to \tint}\\
@@ -2742,46 +2747,52 @@ Multi-rounds:
 \begin{mathpar}
 \inferrule*[right = FIX]
 {
-  \inferrule*[right = FIX]
+  \inferrule
   {
-    \inferrule*[right = IF]
+    \inferrule*[right = FIX]
     {
-      \inferrule
+      \inferrule*[right = IF]
       {
-        \empty
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Delta; \Gamma; \dmap_1' = [j : 0, k : 0] \tvdash{0} j<k : \tbool
+        }
+        \\
+        \inferrule
+        {
+          \cdots
+        }
+        {
+          \Delta; \Gamma; \dmap_1 \tvdash{K - J} \elet p = \cdots \ein \cdots : \tlist{\tint}
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Delta; \Gamma; \dmap_1 \tvdash{0} D : \tlist{\tint}
+        }
       }
       {
-        \Gamma; \dmap_1' = [j : 0, k : 0] \tvdash{0} j<k : \tbool
-      }
-      \\
-      \inferrule
-      {
-        \cdots
-      }
-      {
-        \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\tint}
-      }
-      \and
-      \inferrule
-      {
-        \empty
-      }
-      {
-        \Gamma; \dmap_1 \tvdash{0} D : \tlist{\tint}
+        \Delta; \Gamma_0', sc: \tlist{\treal}, \cdots; \dmap_0 
+        \tvdash{K - J} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
       }
     }
     {
-      \Gamma_0', sc: \tlist{\treal}, \cdots; \dmap_0 
-      \tvdash{k - j} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
+    \Delta; \Gamma_0'; [\mathsf{multiRound}: \infty, () : \bot] \tvdash{0} \lambda k. \cdots : \tint[K] \cdots  
     }
   }
   {
-  \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; [\mathsf{multiRound}: \infty, () : \bot]
+  \Delta; \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; [\mathsf{multiRound}: \infty, () : \bot]
   \tvdash{0} \Lambda. \Lambda. \cdots : \forall. \forall. \cdots  
   }
 }
 {
-  \Gamma_0; [] \tvdash{0} \efix \mathsf{multiRound ()}. \cdots : \tunit \to \cdots
+  \Delta; \Gamma_0; [] \tvdash{0} \efix \, \mathsf{multiRound ()}. \cdots : \tunit \to \cdots
 }
 
 \inferrule*[right = LET]
@@ -2813,11 +2824,11 @@ Multi-rounds:
     \cdots
   }
   {
-    \Gamma, p : \treal; \dmap_2 \tvdash{k - j} \elet q = \lambda x. \cdots \ein \cdots : \tlist{\tint}
+    \Delta; \Gamma, p : \treal; \dmap_2 \tvdash{K - J} \elet q = \lambda x. \cdots \ein \cdots : \tlist{\tint}
   }
 }
 {
-  \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\tint}
+  \Delta; \Gamma; \dmap_1 \tvdash{K - J} \elet p = \cdots \ein \cdots : \tlist{\tint}
 }
 
 \inferrule*[right = LET]
@@ -2871,7 +2882,7 @@ Multi-rounds:
         \Pi_1  \vartriangleright
       }
       {
-        \Gamma_{3}; \dmap_4 \tvdash{k - j} \elet a = \eop ( q ) \ein \cdots : \tlist{\tint}
+        \Delta; \Gamma_{3}; \dmap_4 \tvdash{K - J} \elet a = \eop ( q ) \ein \cdots : \tlist{\tint}
       }
     }
     {
@@ -2879,11 +2890,11 @@ Multi-rounds:
     }
   }
   {
-    \Gamma, q: \tbox{\cdots}; \dmap_3 \tvdash{k - j} \elet qc = \lambda x. \cdots : \tlist{\tint}
+    \Delta; \Gamma_1, q: \tbox{\cdots}; \dmap_3 \tvdash{K - J} \elet qc = \lambda x. \cdots : \tlist{\tint}
   }
 }
 {
-  \Gamma_{1}; \dmap_2 \tvdash{k - j} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\tint}
+  \Delta; \Gamma_{1}; \dmap_2 \tvdash{K - J} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\tint}
 }
 \end{mathpar}
 
@@ -2926,7 +2937,7 @@ $\Pi_1:$
       \Pi_2 \vartriangleright
     }
     {
-      \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+      \Delta; \Gamma_7; \dmap_7 \tvdash{K - J - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
     }
   }
   {
@@ -2934,7 +2945,7 @@ $\Pi_1:$
   }
 }
 {
-  \Gamma_3, a: \treal; \dmap_5 \tvdash{k - j - 1} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\tint}
+  \Delta; \Gamma_3, a: \treal; \dmap_5 \tvdash{K - J - 1} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\tint}
 }
 \end{mathpar}
 
@@ -2970,11 +2981,11 @@ $\Pi_2$:
       \cdots
     }
     {
-      \Gamma_7, D' : \tlist{\tint}; \dmap_8 \tvdash{k - j - 1} \mathsf{multiRound} \cdots : \tlist{\tint}
+      \Delta; \Gamma_7, D' : \tlist{\tint}; \dmap_8 \tvdash{K - J - 1} \mathsf{multiRound} \cdots : \tlist{\tint}
     }
   }
   {
-    \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+    \Delta; \Gamma_7; \dmap_7 \tvdash{K - J - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
   }
 \end{mathpar}
 \end{figure}
@@ -2989,18 +3000,11 @@ $\Pi_2$:
     {
       \inferrule
       {
-        \empty
+        \Pi_3 \vartriangleright
       }
       {
-        \Gamma_8; [\mathsf{multiRound}: \infty] \tvdash{0} \mathsf{multiRound} : \cdots
-      }
-      \\\\
-      \inferrule
-      {
-        \empty
-      }
-      {
-        \Gamma_8; [() : 0] \tvdash{0} () : \tunit
+        \Delta; \Gamma_8; \dmap_8 
+        \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [ ] : \tint[k] \to \tint[J + 1] \to \cdots
       }
     }
     {
@@ -3008,8 +3012,8 @@ $\Pi_2$:
     }
   }
   {
-    \Gamma_8; \dmap_8 
-    \tvdash{0} \mathsf{multiRound} \eapp () \eapp \Lambda. \Lambda. \cdot : \tarr{\cdot}{\cdot}{0}{\dmap}{k - (j + 1)}
+    \Delta; \Gamma_8; \dmap_8 
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [] \cdot : \tarr{\cdot}{\cdot}{0}{\dmap}{K - (J + 1)}
   }
   \and
   \inferrule
@@ -3017,19 +3021,74 @@ $\Pi_2$:
   \empty
   }
   {
-    \Gamma_8; [D':0] \tvdash{0} D' : \tlist{\tint}
+    \Delta; \Gamma_8; [D':0] \tvdash{0} D' : \tlist{\tint}
   }
 }
 {
-  \Gamma_7, D' : \tlist{\tint}; \dmap_8 
-  \tvdash{k - j - 1} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
+  \Delta; \Gamma_7, D' : \tlist{\tint}; \dmap_8 
+  \tvdash{K - J - 1} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
+}
+\end{mathpar}
+
+$\Pi_3$:
+\begin{mathpar}
+\inferrule
+{
+  \inferrule
+  {
+    \inferrule
+    {
+          \inferrule
+      {
+        \empty
+      }
+      {
+        \Delta; \Gamma_8; \dmap_8 \tvdash{0} \mathsf{multiRound} : \cdots
+      }
+      \and
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Delta; \Gamma_8; \dmap_8 \tvdash{0} () : \tunit
+      }
+    }
+    {
+      \Delta; \Gamma_8; \dmap_8 
+      \tvdash{0} \mathsf{multiRound} \eapp (): \tint[K] \to \tarr{\cdots}{\cdots}{0}{\dmap}{K - J}
+    }
+    \and
+    \inferrule
+    {
+      \Delta(K) = S
+    }
+    {
+      \Delta \tvdash{} K :: S
+    }
+  }
+  {
+    \Delta; \Gamma_8; \dmap_8 
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [] : \tint[K] \to \tint[J] \to \tarr{\cdots}{\cdots}{0}{\dmap}{K - J}
+  }
+  \and
+  \inferrule
+  {
+    \Delta(J) = S
+  }
+  {
+    \Delta \tvdash{} J :: S
+  }
+}
+{
+  \Delta; \Gamma_8; \dmap_8 
+  \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [ ] : \tint[K] \to \tint[J + 1] \to \cdots \tarr{\cdots}{\cdots}{0}{\dmap}{K - (J + 1)}
 }
 
 \end{mathpar}
 
 \end{figure}
 
-$\Delta = [J : S, K : S]$
 
 The \emph{depth map} in the type derivation of Multi-rounds example:
 \[
@@ -3037,15 +3096,17 @@ The \emph{depth map} in the type derivation of Multi-rounds example:
 \dmap     & = & [sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
 \dmap_0   & = & [\mathsf{multiRound}: \infty, () : \bot, sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
 \dmap_1   & = & [\mathsf{multiRound}: \infty, () : \bot, sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
-\dmap_2   & = & \dmap_1[p : k - j]\\
-\dmap_3   & = & \dmap_2[q : k - j]\\
+\dmap_2   & = & \dmap_1[p : K - J]\\
+\dmap_3   & = & \dmap_2[q : K - J]\\
 \dmap_4   & = & \dmap_3[qc : 0]\\
-\dmap_5   & = & \dmap_4[a : k - j - 1]\\
+\dmap_5   & = & \dmap_4[a : K - J - 1]\\
 \dmap_6   & = & \dmap_5\\
 \dmap_7   & = & \dmap_5[sc' : 0, scc' : 0, I' ; 0]\\
 \dmap_8   & = & \dmap_7[D' : 0]\\
 \end{array}
 \]
+
+$\Delta = [J : S, K : S]$
 
 
 \newpage
