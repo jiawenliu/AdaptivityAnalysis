@@ -26,7 +26,7 @@
 \maketitle
 
 \paragraph{Abstract}
-An adaptive data analysis algorithm contains multiple queries over the training data set, in which some queries rely on the results of some other queries. The error of each query is usually controllable and bound independently, but the error will propagate and become uncontrollable through their dependency chain, which is called overfitting. To handle  the overfitting, analyzers are adopting different mechanisms in their algorithms, such as Gaussian mechanism, etc. As a result, the overfitting of an algorithm will depend on the nesting depth of mechanisms. In this work, we use adaptivity to measure the nesting depth of mechanisms in a data analysis algorithm. We define a language which can provide an upper bound on the adaptivity of a program implementing an adaptive data analysis algorithm. 
+An adaptive data analysis is based on multiple queries over a data set, in which some queries rely on the results of some other queries. The error of each query is usually controllable and bound independently, but the error can propagate through the chain of different queries and bring to high generalization error. To address this issue, data analysts are adopting different mechanisms in their algorithms, such as Gaussian mechanism, etc. To utilize these mechanisms in the best way one needs to understand the depth of chain of queries that one can generate in a data analysis. In this work, we define a programming language which can provide, through its type system, an upper bound on the adaptivity  depth (the length of the longest chain of queries) of a program implementing an adaptive data analysis. We show how this language can help to analyze the generalization error of two data analyses with different adaptivity structures.
 
 \paragraph{Adaptivity}
 Adaptivity is a measure of the nesting depth of a mechanism. To
@@ -708,6 +708,31 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \dmap \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )  }
     } }
+    %
+    \and
+    %
+     \inferrule{
+    }
+    {
+      \dmap \models \sub{ \tint[I] }{ \tint }
+    }
+    %
+    \and
+    %
+     \inferrule
+    {
+      \dmap \models \sub{ \type_1' }{ \type_1 }
+      \and
+      \dmap \models \sub{ \type_2 }{ \type_2' }
+      \and
+      \dmap \leq \dmap'
+      \and
+      \nnatA \leq \nnatA'
+    }
+    {
+      \dmap \models \sub{ \tarr{\type_1}{\type_2}{ \nnatbiA }{\dmap}{\nnatA} }
+      { \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap}{\nnatA'} }
+    }
     \end{mathpar}
  \caption{Subtyping rules}
   \label{fig:sub-type-rules}
@@ -2449,6 +2474,40 @@ $\Pi_R$:
      \Delta;  \Gamma; \dmap \tvdash{\nnatA[I/i]}    \expr \eapp []   :
      \type[ I/i]
     }
+    %
+    \and
+    %
+  \inferrule
+  {
+       \Delta (i) = S
+  }
+  {
+     \Delta \tvdash{}  i :: S
+  }
+  %
+  \and
+  %
+  \inferrule
+  {
+    \empty
+  }
+  {
+    \Delta \tvdash{}  n :: \nat
+  }
+  %
+  \and
+  %
+  \inferrule
+  {
+    \Delta \tvdash{}  \idx_1 :: S
+    \and
+    \Delta \tvdash{}  \idx_2 :: S
+    \and
+    \Delta \tvdash{}  \diamond \in \{ +, -, \max \}
+  }
+  {
+    \Delta \tvdash{}  \idx_1 \diamond \idx_2 :: S
+  }
   \end{mathpar}
   \caption{typing rules - quantification}
   \label{fig:type-rules-quant}
@@ -2969,6 +3028,8 @@ $\Pi_2$:
 \end{mathpar}
 
 \end{figure}
+
+$\Delta = [J : S, K : S]$
 
 The \emph{depth map} in the type derivation of Multi-rounds example:
 \[
