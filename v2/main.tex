@@ -615,8 +615,33 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
   \label{fig:type-rules}
 \end{figure}
 
-\begin{figure}
 \clearpage
+\begin{figure}
+\[
+\begin{array}{llll}
+\mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+                                 - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+  \mbox{Sort} & S & ::= & \natbi \\
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
+            ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & &           \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) 
+            ~|~ \econst ~|~ \eop(\expr) \\
+& & &           ~|~ \elet  = \expr_1 \ein \expr_2 ~|~ \enil ~|~  \econs (
+                \expr_1, \expr_2)  \\
+& & &  \eilam \expr  ~|~  \expr \eapp []  ~|~
+                            \epack \expr ~|~ \eunpack \expr \eas x
+                            \ein \expr \\
+& & & \boxed{~|~ \bernoulli \eapp \valr ~|~ \uniform \eapp \valr_1 \eapp \valr_2}\\      
+%
+  \mbox{Type} & \type & ::= & \tbool ~|~ \type_1 \times
+  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
+                              \tlist{\type} ~|~ \tbox{\type}\\
+& & &                  \boxed{ ~|~  \treal ~|~  \tint ~|~   \tint[I]  ~|~      \tforall{i} \type  ~|~ \texists{i} \type      } 
+%
+\end{array}
+\]
+
 \framebox{
   \begin{mathpar}
      \inferrule{
@@ -677,7 +702,43 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \type[ I/i]
     }
     \end{mathpar}
-}            
+}          
+
+\framebox{
+    \begin{mathpar}
+  \inferrule
+  {
+       \Delta (i) = S
+  }
+  {
+     \Delta \tvdash{}  i :: S
+  }
+  %
+  \and
+  %
+  \inferrule
+  {
+    \empty
+  }
+  {
+    \Delta \tvdash{}  n :: \nat
+  }
+  %
+  \and
+  %
+  \inferrule
+  {
+    \Delta \tvdash{}  \idx_1 :: S
+    \and
+    \Delta \tvdash{}  \idx_2 :: S
+    \and
+    \Delta \tvdash{}  \diamond \in \{ +, -, \max \}
+  }
+  {
+    \Delta \tvdash{}  \idx_1 \diamond \idx_2 :: S
+  }
+  \end{mathpar}
+}  
 
   \framebox{
   \begin{mathpar}
@@ -688,9 +749,10 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     \max(\dmap_1, \dmap_2) \defeq \lambda x.\eapp  \max(\dmap_1(x), \dmap_2(x))
   \end{mathpar}}
 
-  \caption{New Typing rules}
+  \caption{New Typing rules and Index Term}
   \label{fig:new-type-rules}
 \end{figure}
+
 
 \begin{figure}
    \begin{mathpar}
@@ -2456,71 +2518,11 @@ $\Pi_R$:
 \end{algorithmic}
 \end{algorithm}
 
-\clearpage
 
-\[\begin{array}{llll}
-\mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
-                                 - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
-  \mbox{Sort} & S & ::= & \natbi \\
-\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
- 						~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
-%
-& & & 					\etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) 
-						~|~ \econst ~|~ \eop(\expr) \\
-& & & 					~|~ \elet  = \expr_1 \ein \expr_2 ~|~ \enil ~|~  \econs (
-      					\expr_1, \expr_2)  \\
-& & &  \eilam \expr  ~|~  \expr \eapp []  ~|~
-                            \epack \expr ~|~ \eunpack \expr \eas x
-                            \ein \expr \\
-& & & \boxed{~|~ \bernoulli \eapp \valr ~|~ \uniform \eapp \valr_1 \eapp \valr_2}\\      
-%
-  \mbox{Type} & \type & ::= & \tbool ~|~ \type_1 \times
-  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
-                              \tlist{\type} ~|~ \tbox{\type}\\
-& & &                  \boxed{ ~|~  \treal ~|~	\tint ~|~   \tint[I]  ~|~      \tforall{i} \type  ~|~ \texists{i} \type      } 
-%
-\end{array}\]
-\begin{figure}
-  \begin{mathpar}
-  \inferrule
-  {
-       \Delta (i) = S
-  }
-  {
-     \Delta \tvdash{}  i :: S
-  }
-  %
-  \and
-  %
-  \inferrule
-  {
-    \empty
-  }
-  {
-    \Delta \tvdash{}  n :: \nat
-  }
-  %
-  \and
-  %
-  \inferrule
-  {
-    \Delta \tvdash{}  \idx_1 :: S
-    \and
-    \Delta \tvdash{}  \idx_2 :: S
-    \and
-    \Delta \tvdash{}  \diamond \in \{ +, -, \max \}
-  }
-  {
-    \Delta \tvdash{}  \idx_1 \diamond \idx_2 :: S
-  }
-  \end{mathpar}
-  \caption{Index typing rules - quantification}
-  \label{fig:type-rules-quant}
-\end{figure}
+\clearpage
 
 \begin{figure}
 
-\clearpage
 
 Multi-rounds:
 \[
