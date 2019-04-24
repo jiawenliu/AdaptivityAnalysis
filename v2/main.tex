@@ -108,7 +108,7 @@ $x$ are bound in $\tr_3$.
 & & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
 ~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
 %
-& & & \trnil ~|~ \trcons (\tr_1, \tr_2)
+& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \boxed{\triapp{\tr_1}{\tr_2} }
 \end{array}\]
 
 
@@ -242,7 +242,6 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
 }
 {\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
   \tr_1, \tr_2) }
-
 }
 %
 \and
@@ -264,8 +263,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
   \env, \expr' \bigstep \valr, \tr_2
 }
-{\env, \expr [] \bigstep \valr, [](
-  \tr_1, \tr_2) }
+{\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
 
 }
 \end{mathpar}
@@ -328,6 +326,8 @@ in Figure~\ref{fig:adap}.
      %
     \adap( \trlet (x, \tr_1,\tr_2) ) & = & \max (\adap(\tr_2),
                                            \adap(\tr_1)+\ddep{x}(\tr_2)  )
+                                           \\
+    \boxed{\adap(\triapp{\tr_1}{\tr_2})} & = & \adap(\tr_1) + \adap(\tr_2)
       \end{array}
   \end{mathpar}
   
@@ -371,8 +371,9 @@ in Figure~\ref{fig:adap}.
                                             \ddep{x}(\tr_2)) \\
       %
       \ddep{x}( \trlet(y, \tr_1, \tr_2) ) & = & \max( \ddep{x}(\tr_2),
-                                                \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )
-
+                                                \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )\\
+      \boxed{\ddep{x}(\triapp{\tr_1}{\tr_2})}  & = & 
+                                                    \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))
     \end{array}
   \end{mathpar}
   \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
