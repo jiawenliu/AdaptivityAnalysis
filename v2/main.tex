@@ -621,7 +621,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
 \begin{array}{llll}
 \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
-  \mbox{Sort} & S & ::= & \natbi \\
+  \mbox{Sort} & S & ::= & \nat \\
 \mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
             ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
 %
@@ -650,7 +650,18 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \\
       \delta \not\in \expr
     }{
-      \Gamma，\Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+      \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+    }
+    %
+    \\
+    %
+    \boxed{
+     \inferrule{
+      \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
+      \delta \not\in \expr
+    }{
+      \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+    }    
     }
     %
     \and
@@ -699,7 +710,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
        \Delta \tvdash{}  I ::  S 
     }{
      \Delta;  \Gamma; \dmap \tvdash{\nnatA[I/i]}    \expr \eapp []   :
-     \type[ I/i]
+     \type[I/i]
     }
     \end{mathpar}
 }          
@@ -1114,8 +1125,17 @@ completely standard way.
       & & ~~~~~~~~~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
       & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x) \conj \\
       & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~((\stepiA - \stepiB,  \valr) \in \lrv{\type})
-      \}
-    \end{array}
+      \}\\
+      \boxed{\lrv{\tint}} & = & \{(\stepiA, i) ~|~ \stepiA \in \nat \conj i : \tint \}\\
+      %
+      \boxed{\lrv{\treal}} & = & \{(\stepiA, r) ~|~ \stepiA \in \nat \conj r : \treal \}\\
+      %  
+      \boxed{\lrv{\tbox{\type}}} & = & \{(\stepiA, \valr) ~|~ \stepiA \in \nat \conj \valr \in \lrv{\type} \conj \eop \notin \valr \}\\
+      %
+      \boxed{ \lrv{\tforall{i} \type} } & = & \{(\stepiA, \eilam \expr) ~|~ \stepiA \in \nat \conj \forall I. ~ \Delta \tvdash{} I ::S, \expr \in \lre{\dmap}{\nnatA}{\type[I/i]} \}\\
+      %
+      \boxed{ \lrv{ \tint[I] } } & = & \{(\stepiA, \valr) ~|~ \stepiA \in \nat \conj \valr = I \}\\
+  \end{array}
   \end{mathpar}
   \caption{Logical relation with step-indexing}
   \label{fig:lr:step}
@@ -1137,15 +1157,55 @@ then $(\stepiA', \expr) \in \lre{\nnatA}{\dmap}{\type}$\\
 \begin{proof}
 (1,2) simultaneously proved by induction on $\type$, 3 followed by (1, 2).
 \end{proof}
+
+\begin{thm}[Fundamental theorem]
+  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
+  \in \lrv{\Gamma}$, then $(\stepiA, (\env, \expr)) \in
+  \lre{\dmap}{\nnatA}{\type}$.
 \begin{thm}[Fundamental theorem]
   If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
   \in \lrv{\Gamma}$, then $(\stepiA, (\env, \expr)) \in
   \lre{\dmap}{\nnatA}{\type}$.
 \end{thm}
+\end{thm}
 %
 \begin{proof}
 By induction on the given typing derivation. For the case of
 $\efix$, we subinduct on the step index.
+
+\[
+    \boxed{
+     \inferrule{
+      \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
+      \delta \not\in \expr
+    }{
+      \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+    }    
+    }
+\]
+
+\[
+\boxed{
+  \inferrule{
+      \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
+    }{
+     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{i} \type 
+    }
+    }
+\]
+
+\[
+\boxed{
+  \inferrule{
+      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{i} \type
+      \\
+       \Delta \tvdash{}  I ::  S 
+    }{
+     \Delta;  \Gamma; \dmap \tvdash{\nnatA[I/i]}    \expr \eapp []   :
+     \type[I/i]
+    }
+    }
+\]
 
 \noindent {\bf case}
 
