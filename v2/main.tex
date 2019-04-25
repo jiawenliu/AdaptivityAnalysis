@@ -108,7 +108,7 @@ $x$ are bound in $\tr_3$.
 & & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
 ~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
 %
-& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \boxed{\triapp{\tr_1}{\tr_2} }
+& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \boxed{\triapp{\tr_1}{\tr_2} } ~|~ \boxed{\eilam \expr}
 \end{array}\]
 
 
@@ -244,7 +244,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   \tr_1, \tr_2) }
 }
 %
-\and
+\\\\
 %
 \boxed{
 \inferrule
@@ -327,10 +327,12 @@ in Figure~\ref{fig:adap}.
     \adap( \trlet (x, \tr_1,\tr_2) ) & = & \max (\adap(\tr_2),
                                            \adap(\tr_1)+\ddep{x}(\tr_2)  )
                                            \\
-    \boxed{\adap(\triapp{\tr_1}{\tr_2})} & = & \adap(\tr_1) + \adap(\tr_2)
+    \boxed{\adap(\triapp{\tr_1}{\tr_2})} & = & \adap(\tr_1) + \adap(\tr_2)\\
+    %
+    \boxed{\adap(\eilam \expr)} & = & 0
       \end{array}
   \end{mathpar}
-  
+  %
   \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
   \begin{mathpar}
     \begin{array}{lcl}
@@ -373,7 +375,9 @@ in Figure~\ref{fig:adap}.
       \ddep{x}( \trlet(y, \tr_1, \tr_2) ) & = & \max( \ddep{x}(\tr_2),
                                                 \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )\\
       \boxed{\ddep{x}(\triapp{\tr_1}{\tr_2})}  & = & 
-                                                    \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))
+                                                    \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
+    %
+    \boxed{\ddep{x}(\eilam \expr)} & = & \bot
     \end{array}
   \end{mathpar}
   \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
@@ -528,111 +532,111 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     \inferrule{
       \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
     }{
-      \Gamma; \dmap \tvdash{\nnatA} x: \type
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} x: \type
     }
     %
     \and
     %
     \inferrule{
-      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
-      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
+      \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
+      \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
       \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
       \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
     }
     %
     \and
     %
     \inferrule{
-      \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
       \dmap[f: \infty, x: \nnatbiA]
       \tvdash{\nnatA}
       \expr: \type_2
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
     }
     %
     \and
     %
     \inferrule{
-      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 \\
-      \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 \\\\
+      \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 \\
+      \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 \\\\
       \dmap' = \max(\dmap_1,\dmap_2) \\
       \nnatA' = \max(\nnatA_1,\nnatA_2)
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
     }
     %
     \and
     %
     \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
     }{
-      \Gamma; \dmap \tvdash{\nnatA} \eprojl(\expr): \type_1
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \eprojl(\expr): \type_1
     }
     %
     \and
     %
     \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
     }{
-      \Gamma; \dmap \tvdash{\nnatA} \eprojr(\expr): \type_2
-    }
-    %
-    \and
-    %
-    \inferrule{
-    }{
-      \Gamma; \dmap \tvdash{\nnatA} \etrue: \tbool
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \eprojr(\expr): \type_2
     }
     %
     \and
     %
     \inferrule{
     }{
-      \Gamma; \dmap \tvdash{\nnatA} \efalse: \tbool
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \etrue: \tbool
     }
     %
     \and
     %
     \inferrule{
-      \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tbool \\
-      \Gamma; \dmap \tvdash{\nnatA} \expr_2: \type \\
-      \Gamma; \dmap \tvdash{\nnatA} \expr_3: \type \\\\
+    }{
+       \Delta; \Gamma; \dmap \tvdash{\nnatA} \efalse: \tbool
+    }
+    %
+    \and
+    %
+    \inferrule{
+       \Delta;\Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tbool \\
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} \expr_2: \type \\
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} \expr_3: \type \\\\
       \nnatA' = \nnatA_1 + \nnatA \\
       \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
+       \Delta;\Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
     }
     %
     \and
     %
     \inferrule{
     }{
-      \Gamma; \dmap \tvdash{\nnatA} \econst: \tbase
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} \econst: \tbase
     }
     %
     \and
     %
     \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr: \tbase \\
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} \expr: \tbase \\
       \nnatA' = 1 + \nnatA \\
       \dmap' = 1 + \dmap
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \tbool
+       \Delta;\Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \tbool
     }
 
  \and
     %
     \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
         }{ \tau_2 }{0}{\dmap''}{0})     }   \\
       \forall x \in \dmap''. \dmap''(x) = 0 \\
       \nnatA' = 1 + \nnatA \\
       \dmap' = 1 + \dmap
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
+       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
     }
   \end{mathpar}
   \caption{Typing rules}
@@ -661,7 +665,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
   \mbox{Type} & \type & ::= & \tbool ~|~ \type_1 \times
   \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
                               \tlist{\type} ~|~ \tbox{\type}\\
-& & &                  \boxed{ ~|~  \treal ~|~  \tint ~|~   \tint[I]  ~|~      \tforall{i} \type  ~|~ \texists{i} \type      } 
+& & &                  \boxed{ ~|~  \treal ~|~  \tint ~|~   \tint[I]  ~|~      \tforall{\dmap}{\nnatA}{i} \type  ~|~ \texists{i} \type      } 
 %
 \end{array}
 \]
@@ -669,22 +673,22 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
 \framebox{
   \begin{mathpar}
      \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
       \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{\tbox{\Gamma(x)}}
       \\
       \delta \not\in \expr
     }{
-      \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+      \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
     }
     %
     \\
     %
     \boxed{
      \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
       \delta \not\in \expr
     }{
-      \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+      \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
     }    
     }
     %
@@ -693,18 +697,19 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     \inferrule{
       \dmap \wf{\type} \\
     }{
-      \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
     }
     % 
     \and
     %
    \inferrule{
-   \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type \\
-   \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \tlist{\type}\\
+   \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type \\
+   \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \tlist{\type}\\
    \dmap' = \max(\dmap_1, \dmap_2) \\
    \nnatA' = \max ( \nnatA_1, \nnatA_2 )
    }
-   { \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
+   { 
+   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
      \tlist{\type}  }
    %
    \and
@@ -723,17 +728,21 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
   \inferrule{
       \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
     }{
-     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{i} \type 
+     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
     }
     %
     \and
     %
   \inferrule{
-      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{i} \type
-      \\
-       \Delta \tvdash{}  I ::  S 
+      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{\dmap_1}{\nnatA_1}{i} \type
+      \and
+       \Delta \tvdash{}  I ::  S
+       \\
+       \dmap' = \max(\dmap, \nnatA + \dmap_1)
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
     }{
-     \Delta;  \Gamma; \dmap \tvdash{\nnatA[I/i]}    \expr \eapp []   :
+     \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
      \type[I/i]
     }
     \end{mathpar}
@@ -1156,9 +1165,9 @@ completely standard way.
       %  
       \boxed{\lrv{\tbox{\type}}} & = & \{(\stepiA, \valr) ~|~ \stepiA \in \nat \conj \valr \in \lrv{\type} \conj \eop \notin \valr \}\\
       %
-      \boxed{ \lrv{\tforall{i} \type} } & = & \{(\stepiA, \eilam \expr) ~|~ \stepiA \in \nat \conj \forall I. ~ \Delta \tvdash{} I ::S, \expr \in \lre{\dmap}{\nnatA}{\type[I/i]} \}\\
+      \boxed{ \lrv{\tforall{\dmap}{\nnatA}{i} \type} } & = & \{(\stepiA, (\eilam \expr, \env)) ~|~ \stepiA \in \nat \conj \forall I. ~  \tvdash{} I ::S, (\stepiA, \expr) \in \lre{\dmap}{\nnatA[I/i]}{\type[I/i]} \}\\
       %
-      \boxed{ \lrv{ \tint[I] } } & = & \{(\stepiA, \valr) ~|~ \stepiA \in \nat \conj \valr = I \}\\
+      \boxed{ \lrv{ \tint[I] } } & = & \{(\stepiA, n) ~|~ \stepiA \in \nat \conj n = I \}\\
   \end{array}
   \end{mathpar}
   \caption{Logical relation with step-indexing}
@@ -1187,49 +1196,148 @@ then $(\stepiA', \expr) \in \lre{\nnatA}{\dmap}{\type}$\\
   \in \lrv{\Gamma}$, then $(\stepiA, (\env, \expr)) \in
   \lre{\dmap}{\nnatA}{\type}$.
 \begin{thm}[Fundamental theorem]
-  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
-  \in \lrv{\Gamma}$, then $(\stepiA, (\env, \expr)) \in
-  \lre{\dmap}{\nnatA}{\type}$.
+  If $\Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
+  \in \lrv{\Gamma}$ and $ (\stepiA, \ienv) \in \lrv{\Delta}$, then $(\stepiA, (\env, \ienv \expr)) \in
+  \lre{\dmap}{\ienv \nnatA}{\ienv \type}$.
 \end{thm}
 \end{thm}
 %
 \begin{proof}
 By induction on the given typing derivation. For the case of
-$\efix$, we subinduct on the step index.
+$\efix$, we subinduct on the step index.\\
 
+\noindent {\bf case}
 \[
     \boxed{
      \inferrule{
-      \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
-      \delta \not\in \expr
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
+      \delta \not\in \expr~(\diamond)
     }{
-      \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+      \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
     }    
     }
 \]
+Assume $(\stepiA, \env) \in \lrv{\Gamma, \Gamma'}$, $(\stepiA, \ienv) \in \lrv{\Delta}$, to show: $(\stepiA, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tbox{\type}}$.\\
+%
+By inversion, s.t.s. :$ \forall \valr, \tr, j, 
+$ s.t. $ (\env, \ienv \expr) \bigstep (\valr, \tr) \land j = \size{\tr} \land j \leq \stepiA $.  \\
+(1) $\adap(\tr) \leq \ienv \nnatA $, (2) $\forall x, \ddep{x}(\tr) \leq \dmap(x)$, (3) $(k-j, \valr) \in \lrv{ \ienv \tbox{\type} } $. \\
+%
+By induction hypothesis, we get: $(k, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}$.\\
+%
+By inversion, we get $\forall \valr', \tr', j'$ s.t. $(\env, \ienv \expr) \bigstep (\valr', \tr') \land \size(\tr') = j' \land j' \leq \stepiA$,\\
+(1)' $\adap(\tr') \leq \ienv \nnatA$, (2)' $\forall x, \ddep{x}(\tr') \leq \dmap(x)$, (3)' $(\stepiA - j', \valr') \in \lrv{\ienv \type}$.\\
+%
+Pick $\valr = \valr', \tr = \tr' , j = j'$, (1) (2) is proved by (1)', (2)'.\\
+%
+s.t.s. (3) $(\stepiA - j, \valr ) \in \lrv{\ienv, \tbox{\type}}$.\\
+%
+By inversion on (3), s.t.s: (a) $(\stepiA - j, \valr) \in \lrv{\ienv \type}$, (b) $(\delta \notin \valr)$.\\
+(a) is proved by (3)', (b) is proved by $(\diamond)$.
 
 \[
 \boxed{
   \inferrule{
       \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
     }{
-     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{i} \type 
+     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
     }
     }
 \]
+Assume $(\stepiA, \env) \in \lrv{\Gamma } ~ (\diamond)$, $(\stepiA, \ienv) \in \lrv{\Delta}~(\star)$, TS $(\stepiA, (\env, \eilam \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\tforall{\dmap}{\nnatA}{i} \type} $.\\
+%
+Since $(\env, \eilam \ienv \expr)$ is value, STS (a) $(\stepiA, (\env, \eilam \ienv \expr)) \in \lrv{\tforall{\dmap}{\nnatA}{i} \type}$.\\
+%
+Unfolding (a), pick any $I$ s.t. $\tvdash{} I :: S$, STS: (b) $(\stepiA, (\env, \ienv \expr)) \in \lre{\dmap}{(\ienv \nnatA)[I/i]}{\ienv \type [I/i]}$.\\
+%
+By $(\star)$, we know $(\stepiA, \ienv[i \to I]) \in \lrv{\Delta, i::S} ~ (\triangle)$.\\
+%
+(b) is proved by ih on premise and $(\diamond)$ and $(\triangle)$
+
 
 \[
 \boxed{
   \inferrule{
-      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{i} \type
-      \\
-       \Delta \tvdash{}  I ::  S 
+      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{\dmap_1}{\nnatA_1}{i} \type ~ (\star)
+      \and
+       \Delta \tvdash{}  I ::  S ~ (\diamond)
+       \\
+       \dmap' = \max(\dmap, \nnatA + \dmap_1)
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
     }{
-     \Delta;  \Gamma; \dmap \tvdash{\nnatA[I/i]}    \expr \eapp []   :
+     \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
      \type[I/i]
     }
     }
 \]
+Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $(\stepiA, \ienv) \in \lrv{\Delta}$, TS: $(\stepiA, (\env, \ienv (\expr []))) \in \lre{\dmap}{\ienv(\nnatA[I/i] + \nnatA_1)}{\ienv(\type[I/i])}$.\\
+%
+By inversion, STS: $\forall \valr, \tr, j$ s.t. $(\env, \expr []) \bigstep (\valr, \tr) \land \size{\tr} = j \land j \leq \tr $.\\
+(1) $ \adap(\tr) \leq \ienv (\nnatA[I/i] + \nnatA_1)$.\\
+(2) $ \forall x, \ddep{x}(\tr) \leq \dmap'(x) $.\\
+(3) $ (\stepiA - j, \valr) \in \lrv{\ienv(\type[I/i])}$\\
+By induction hypothesis on $(\star)$, we get: $(k, (\env, \ienv \expr) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tforall{\dmap_1}{\nnatA_1}{i} \type}$.\\
+%
+By inversion, assume $(a) (\env, \ienv \expr) \bigstep ((\eilam \expr_1, \env') \tr_1) \land \size(\tr_1) = j_1 \land j_1 \leq \stepiA$. We know:\\
+(1)' $\adap(\tr_1) \leq \ienv \nnatA$.\\
+(2)' $\forall x, \ddep{x}(\tr_1) \leq \dmap(x)$.\\
+(3)' $(\stepiA - j_1, (\eilam \expr, \env')) \in \lrv{\ienv \tforall{\dmap_1}{\nnatA_1}{i} \type} $.\\
+Unfold (3)', assume $\tvdash{} \ienv I ::S$ from $(\diamond)$, we get:\\
+(4) $(k - j_1, (\env', \expr_1) \in \lre{\dmap_1}{\ienv \nnatA[I/i]}{\ienv (\type[I/i])}$\\
+%
+Unfold (4), assume $(b) (\env', \expr ) \bigstep (\valr_2, \tr_2) \land \size(\tr_2) = j_2 \land j_2 \leq \stepiA$,  we get:\\
+(1)'' $\adap(\tr_2) \leq \ienv \nnatA_1[I/i]$.\\
+(2)'' $\forall x, \ddep{x}(\tr_2) \leq \dmap(x)$.\\
+(3)'' $(\stepiA - j_2, \valr_2) \in \lrv{\ienv \type[I/i]}$.\\
+Pick $\valr = \valr_2$, $\tr = \triapp{\tr_1}{\tr_2}$, $j = j_1 + j_2$,
+By operational semantics of IApp, we know:
+$(\env, \ienv \expr []) \bigstep (\valr, \tr) \land \size(\tr) = j \land j \leq \stepiA$
+(1) (2) (3) are proved by (1)' (2)' (3)' and (1)'' (2)'' (3)''.
+
+
+\noindent {\bf case}
+\[
+  \boxed{
+    \inferrule{
+      \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
+        }{ \tau_2 }{0}{\dmap''}{0})     }   \\
+      \forall x \in \dmap''. \dmap''(x) = 0 \\
+      \nnatA' = 1 + \nnatA \\
+      \dmap' = 1 + \dmap
+    }{
+      \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
+    }
+    }
+\]
+Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $(\stepiA, \ienv) \in \lrv{\Delta}$ TS: $(\stepiA, \ienv (\eop(\expr), \env)) \in \lre{\dmap'}{\ienv \nnatA'}{\treal}$.\\
+%
+Unfold, $\forall \valr, \tr, j. (\env, \ienv \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$.\\
+%
+STS: $(\adap(\tr) \leq \ienv \nnatA') \land (\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x)) \land ((\stepiA - j, \valr) \in \lrv{\treal})$.\\
+%
+By induction hypothesis on $\star$, we get: $(\stepiA-1, (\expr, \ienv \env)) \in \lre{\dmap}{\ienv \nnatA}{\tbox{  (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0})}} ~ (1)$.\\
+%
+Inversion on $(1)$, pick $\forall \valr', \tr', j'$. s.t. $ (\env, \expr \bigstep \valr', \tr') \land (\size{\tr'} = j') \land (j' \leq \stepiA-1)$.\\
+%
+We know: $(\adap(\tr') \leq \ienv \nnatA) ~ (a)
+\land (\forall x \in \ddep{x}(\tr') \leq \dmap(x)) ~ (b)
+\land ((\stepiA -1- j', \valr') \in \lrv{\tbox{  (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0})     }}) ~ (c)$.\\
+%
+Pick $\valr = \eop(\valr')$, then by E-PRIMITIVE, we have $\env, \ienv \eop(\expr) = (\env, \eop( \ienv \expr) )  \bigstep \valr, \eop(\tr')$.\\
+%
+Pick $\tr = \eop(\tr'), j = j' + 1$ s.t.  $j \leq k$, STS:\\
+%
+1. $\adap(\tr) = \adap(\eop(\tr')) = 1 + \adap(\tr') \leq 1 + \ienv \nnatA = \ienv \nnatA'$ proved by $(a)$\\
+%
+2. $\forall x \in \mbox{Vars}. \ddep{x}(\tr) = \ddep{x}(\eop(\tr')) = 1 + \ddep{x}(\tr') \leq 1 + \dmap(x) = \dmap'(x)$ proved by $(b)$\\
+%
+{\color{red}
+3. $(\stepiA - j, \valr) = (\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal} $.\\
+%
+By typing rule PRIMITIVE, we have $\eop(\valr'): \treal$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal}$.\\
+%
+}
 
 \noindent {\bf case}
 
