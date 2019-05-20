@@ -713,13 +713,13 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
    \and
    %
    \inferrule{
-     \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type_1 \\
-     \Gamma, x:\type_1 ; \dmap_2[x:q] \tvdash{\nnatA_2} \expr_2 :
+     \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type_1 \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \tvdash{\nnatA_2} \expr_2 :
      \type_2 \\
      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
    }
-   {  \Gamma; \dmap' \tvdash{\nnatA'}  \elet x = \expr_1 \ein \expr_2 : \type}
+   {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x = \expr_1 \ein \expr_2 : \type}
    %
    \and
    %
@@ -900,6 +900,29 @@ more information in the coeffects (e.g., what is the maximum
 adaptivity of a function's argument?), but the details need to be
 worked out and verified.
 
+\begin{figure}
+\begin{mathpar}
+\inferrule
+{
+	\Gamma(x) = \type
+}
+{
+	\Delta; \Gamma; \dmap \tvdash{\nnatA} x \inferring \type \restriction \dmap(x) \geq 0
+}
+%
+\and
+%
+\inferrule
+{
+	\empty
+}
+{
+	\Delta; \Gamma; \dmap \tvdash{\nnatA} c \inferring \tbase \restriction \bot
+}
+\end{mathpar}
+ \caption{Algorithmic rules}
+  \label{fig:sub-type-rules}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1205,8 +1228,8 @@ then $(\stepiA', \expr) \in \lre{\nnatA}{\dmap}{\type}$\\
 \end{thm}
 {\color{red}
 \begin{thm}[Fundamental theorem]
-  If $\Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
-  \in \lrv{\Gamma}$ and $ \ienv \in \lrv{\Delta}$, then $(\stepiA, (\env, \ienv \expr)) \in
+  If $\Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $ \ienv \in \lrv{\Delta}$ and $(\stepiA, \env)
+  \in \lrv{\ienv \Gamma}$, then $(\stepiA, (\env, \ienv \expr)) \in
   \lre{\dmap}{\ienv \nnatA}{\ienv \type}$.
 \end{thm}%
 }
@@ -1315,13 +1338,13 @@ $(\env, \ienv \expr []) \bigstep (\valr, \tr) \land \size(\tr) = j \land j \leq 
 $
   \boxed{
     \inferrule*[right = PRIMITIVE]{
-      \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
         }{ \tau_2 }{0}{\dmap''}{0})     }   \\
       \forall x \in \dmap''. \dmap''(x) = 0 \\
       \nnatA' = 1 + \nnatA \\
       \dmap' = 1 + \dmap
     }{
-      \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
     }
     }
 $
@@ -3601,7 +3624,7 @@ $\Pi_R$:
 \STATE \qquad {\bf for}\ $i \in [c]$\ {\bf do}
 \STATE \qquad \qquad $Cscore(C(i)) = Cscore(C(i)) + (a - p)*(qc (i) - p)$
 \STATE \qquad {\bf let} $I = \{i | i\in [N] \land Nscore(i) > \max(Cscore)\}$
-\STATE \qquad {\bf let} $X = X \setminus I$
+\STATE \qquad {\bf let} $X = X \setminus I$ 
 \RETURN $X$.
 % \ENSURE 
 \end{algorithmic}
