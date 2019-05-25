@@ -670,25 +670,17 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
 \framebox{
   \begin{mathpar}
      {\color{blue}
-     \inferrule{
-           \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
-           \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{\tbox{\Gamma(x)}}
+     \inferrule
+     {
+        \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
            \\
-           \delta \not\in \expr
-         }{
-           \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
-         }
-         }
-    %
-    \\
-    %
-    \boxed{\color{red}
-     \inferrule{
-      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
-      \delta \not\in \expr
-    }{
-      \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
-    }    
+        \forall x \in \dom(\Gamma), \sub{\tbox{\Gamma(x)}}{\Gamma(x)}
+           \\
+        \delta \not\in \expr
+    }
+    {
+        \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+    }
     }
     %
     \and
@@ -911,7 +903,7 @@ worked out and verified.
 	\Delta; \Gamma; \dmap \tvdash{\nnatA}  \infr{x}{\type}{\dmap(x) \geq 0}
 }
 %
-\and
+\quad
 %
 \inferrule
 {
@@ -919,6 +911,16 @@ worked out and verified.
 }
 {
 	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{c}{\tbase}{\bot}
+}
+%
+\quad
+%
+\inferrule
+{
+	\Delta; \Gamma; \dmap \tvdash{\nnatA} \type: wf
+}
+{
+	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{\enil}{ \tlist{\type} }{\bot}
 }
 %
 \and
@@ -931,7 +933,7 @@ worked out and verified.
 	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{\etrue}{\tbool}{\bot}
 }
 %
-\and
+\quad
 %
 \inferrule
 {
@@ -1041,7 +1043,7 @@ worked out and verified.
 }
 }
 %
-\and
+\quad
 %
 \boxed{
 \inferrule
@@ -1051,16 +1053,6 @@ worked out and verified.
 {
 	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\expr}{\tbox{\type}}{\restriction}
 }
-}
-%
-\and
-%
-\inferrule
-{
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \type: wf
-}
-{
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{\enil}{ \tlist{\type} }{\bot}
 }
 %
 \and
@@ -1103,6 +1095,27 @@ worked out and verified.
 }
 %
 \and
+%
+\boxed{
+\inferrule
+{
+	\Delta; \Gamma; \dmap \tvdash{\nnatA}
+	\infr{\expr}{\type}{\restriction}
+	\and
+	\Delta; \Gamma; \dmap' \tvdash{\nnatA'}
+	\sub{\type'}{\type'} \Rightarrow 
+	{\color{red} \restriction'}
+}
+{
+	\Delta; \Gamma; \dmap' \tvdash{\nnatA'}
+	\chec{\expr}{\type'}
+	{\restriction \land \restriction'
+	\land \nnatA' \geq \nnatA
+	\land \dmap' \geq \dmap}
+}
+}
+%
+\quad ~
 %
 \inferrule
 {
@@ -1448,17 +1461,22 @@ $\efix$, we subinduct on the step index.\\
 \begin{mainitem} 
 \caseL{
 $
-    \boxed{
-     \inferrule{
-      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type \\
-      \delta \not\in \expr~(\diamond)
-    }{
-      \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
-    }    
+\boxed{
+    \inferrule
+    {
+        \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
+           \\
+        \forall x \in \dom(\Gamma), \sub{\tbox{\Gamma(x)}}{\Gamma(x)}
+           \\
+        \delta \not\in \expr
     }
+    {
+        \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+    }   
+}
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma, \Gamma'}$, $\ienv \in \lrv{\Delta}$, to show: $(\stepiA, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tbox{\type}}$.\\
+Assume $\ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv (\Gamma, \Gamma')}$, to show: $(\stepiA, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tbox{\type}}$.\\
 %
 By inversion, s.t.s. :$ \forall \valr, \tr, j, 
 $ s.t. $ (\env, \ienv \expr) \bigstep (\valr, \tr) \land j = \size{\tr} \land j \leq \stepiA $.  \\
@@ -1488,7 +1506,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma } ~ (\diamond)$, $(\ienv \in \lrv{\Delta}~(\star)$, TS $(\stepiA, (\env, \eilam \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\tforall{\dmap}{\nnatA}{i} \type} $.\\
+Assume $(\ienv \in \lrv{\Delta}~(\star)$, $(\stepiA, \env) \in \lrv{\ienv \Gamma } ~ (\diamond)$, TS $(\stepiA, (\env, \eilam \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\tforall{\dmap}{\nnatA}{i} \type} $.\\
 %
 Since $(\env, \eilam \ienv \expr)$ is value, STS (a) $(\stepiA, (\env, \eilam \ienv \expr)) \in \lrv{\tforall{\dmap}{\nnatA}{i} \type}$.\\
 %
@@ -1518,7 +1536,7 @@ $
 $
 }
 
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $\ienv \in \lrv{\Delta}$, TS: $(\stepiA, (\env, \ienv (\expr []))) \in \lre{\dmap}{\ienv(\nnatA[I/i] + \nnatA_1)}{\ienv(\type[I/i])}$.\\
+Assume $\ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$, TS: $(\stepiA, (\env, \ienv (\expr []))) \in \lre{\dmap}{\ienv(\nnatA[I/i] + \nnatA_1)}{\ienv(\type[I/i])}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j$ s.t. $(\env, \expr []) \bigstep (\valr, \tr) \land \size{\tr} = j \land j \leq \tr $.\\
 (1) $ \adap(\tr) \leq \ienv (\nnatA[I/i] + \nnatA_1)$.\\
@@ -1559,7 +1577,7 @@ $
 $
 }
 
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$ TS: $(\stepiA, \ienv (\eop(\expr), \env)) \in \lre{\dmap'}{\ienv \nnatA'}{\treal}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$, TS: $(\stepiA, \ienv (\eop(\expr), \env)) \in \lre{\dmap'}{\ienv \nnatA'}{\treal}$.\\
 %
 Unfold, $\forall \valr, \tr, j. (\env, \ienv \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$.\\
 %
@@ -1603,7 +1621,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$, 
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$, 
 to show: $(\stepiA, (\env, \ienv (\expr_1, \expr_2))) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv (\type_1 \times \type_2)}$.\\
 %
 By inversion, STS: $\forall \eapp  \valr, \tr, j.$ 
@@ -1674,7 +1692,7 @@ $
     }
 $
 }
-Assume: $(\stepiA, \env) \in \lrv{\tr}$, $ \ienv \in \lrv{\Delta}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$.\\
 %
 TS: $(\stepiA, (\env, \ienv \efix f(x). \expr)) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }$.\\
 %
@@ -1757,7 +1775,7 @@ $
 $
 }
 %
-Assume $(\stepiA, \env) \in \lrv{\Gamma} ~ (\triangle)$, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \ienv  (\expr_1 \eapp \expr_2))) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv \type_2}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma} ~ (\triangle)$. TS: $(\stepiA, (\env, \ienv  (\expr_1 \eapp \expr_2))) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv \type_2}$.\\
 %
 By inversion, pick any $\valr, \tr, j$
 %
@@ -1871,7 +1889,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \ienv \eif(\expr_1, \expr_2, \expr_3))) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv \type}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$. TS: $(\stepiA, (\env, \ienv \eif(\expr_1, \expr_2, \expr_3))) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv \type}$.\\
 %
 Inversion on it, $\forall \valr, \tr, j$ $(\env, \ienv  \eif(\expr_1, \expr_2, \expr_3) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
 %
@@ -1979,7 +1997,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$.
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$.
 %
 TS: $( \stepiA, (\env, \ienv \eprojl(\expr)) ) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type_1} $.\\
 %
@@ -2033,7 +2051,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \ienv \eprojr(\expr))) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type_2} $.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$. TS: $(\stepiA, (\env, \ienv \eprojr(\expr))) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type_2} $.\\
 %
 Unfold, pick any $ \valr, \tr, j. (\env, \ienv \eprojr(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA) $,\\
 %
@@ -2083,7 +2101,7 @@ $
     }
 $
 }
-Assume $ (\stepiA, \env) \in \lrv{\tbool} $, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \etrue)) \in \lre{\dmap}{\ienv \nnatA}{\tbool}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $ (\stepiA, \env) \in \lrv{\tbool} $. TS: $(\stepiA, (\env, \etrue)) \in \lre{\dmap}{\ienv \nnatA}{\tbool}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j. (\env, \etrue \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA) $\\
 %
@@ -2112,7 +2130,7 @@ $
     }
 $
 }
-Assume $ (\stepiA, \env) \in \lrv{\tbool} $, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \efalse)) \in \lre{\dmap}{\ienv \nnatA}{\tbool}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $ (\stepiA, \env) \in \lrv{\tbool} $. TS: $(\stepiA, (\env, \efalse)) \in \lre{\dmap}{\ienv \nnatA}{\tbool}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j. (\env, \efalse \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA) $\\
 %
@@ -2142,7 +2160,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \ienv \eop(\expr))) \in \lre{\dmap'}{\ienv \nnatA'}{\tbool}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$. TS: $(\stepiA, (\env, \ienv \eop(\expr))) \in \lre{\dmap'}{\ienv \nnatA'}{\tbool}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j. (\env, \ienv \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
 %
@@ -2185,7 +2203,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \ienv x)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$. TS: $(\stepiA, (\env, \ienv x)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j. (\env, \ienv x \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA) $\\
 %
@@ -2217,7 +2235,7 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env, \enil)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tlist{\type}}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$. TS: $(\stepiA, (\env, \enil)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tlist{\type}}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j. (\env, \enil \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA) $\\
 %
@@ -2256,8 +2274,9 @@ $
     }
 $
 }
-Assume $(\stepiA, \env) \in \lrv{\Gamma}$, $ \ienv \in \lrv{\Delta}$. TS: $(\stepiA, (\env,
-\ienv \econs(\expr_1 , \expr_2 ) )) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv \tlist{\type}}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$.
+%
+TS: $(\stepiA, (\env, \ienv \econs(\expr_1 , \expr_2 ) )) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv \tlist{\type}}$.\\
 %
 By inversion, STS: $\forall \valr, \tr, j. (\env, \ienv \econs(e_1,e_2) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA) $\\
 % 
@@ -2265,10 +2284,9 @@ By inversion, STS: $\forall \valr, \tr, j. (\env, \ienv \econs(e_1,e_2) \bigstep
 %
 2. $(\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x))$;
 %
-3. $(\stepiA - j, \valr) \in \lrv{\ienv \tlist{\type}} $
+3. $(\stepiA - j, \valr) \in \lrv{\ienv \tlist{\type}} $\\
 %
-
-  By ih on $(\star)$, we get: $(\stepiA, (\env,
+By ih on $(\star)$, we get: $(\stepiA, (\env,
 \ienv \expr_1  )) \in \lre{\dmap_1}{\ienv \nnatA_1}{\type}~(1)$.\\
 %
 By inversion, we pick $v_1$, $\tr_1$ and $j_1$ 
@@ -2351,7 +2369,7 @@ $
 $
 }
 %
-Assume $(\stepiA, \env) \in \lrv{\Gamma} ~ (\triangle)$, $ \ienv \in \lrv{\Delta}$.\\
+Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma} ~ (\triangle)$.\\
 %
 TS: $(\stepiA, (\env, \ienv (\elet x = \expr_1 \ein \expr_2) )) 
 	\in \lre{\dmap'}{\ienv \nnatA'}{\ienv \type}$.\\
