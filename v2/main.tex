@@ -674,7 +674,8 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      {
         \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
            \\
-        \forall x \in \dom(\Gamma), \sub{\tbox{\Gamma(x)}}{\Gamma(x)}
+        \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{  \tbox{\Gamma(x)}
+         }
            \\
         \delta \not\in \expr
     }
@@ -795,31 +796,31 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
    \begin{mathpar}
      \inferrule{
     }{
-      \dmap \models \sub{\tbase}{\tbox{\tbase} }
+       \models \sub{\tbase}{\tbox{\tbase} }
     }
     %
     \and
     %
      \inferrule{
     }{
-      \dmap \models \sub{\tbool}{\tbox{\tbool} }
+      \models \sub{\tbool}{\tbox{\tbool} }
     }
     %
     \and
     %
     \inferrule{
-       \dmap \models \sub{\type_1 }{ \type_1'  } \\
-        \dmap \models \sub{\type_2 }{ \type_2'  }
+     \models \sub{\type_1 }{ \type_1'  } \\
+         \models \sub{\type_2 }{ \type_2'  }
     }{
-      \dmap \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
+       \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
     }
     %
     \and
     %
      \inferrule{
-       \forall x \in \dmap'. \dmap'(x) =0
+       % \forall x \in \dmap'. \dmap'(x) =0
     }{
-      \dmap \models \sub{\tbox{(
+       \models \sub{\tbox{(
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
       }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
     }
@@ -828,8 +829,8 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     %
      \inferrule{
     }{
-      \dmap \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
-          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )  }
+       \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
     } }
     %
     \and
@@ -837,24 +838,58 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \inferrule{
     }
     {
-      \dmap \models \sub{ \tint[I] }{ \tint }
+       \models \sub{ \tint[I] }{ \tint }
     }
     %
     \and
     %
      \inferrule
     {
-      \dmap \models \sub{ \type_1' }{ \type_1 }
+       \models \sub{ \type_1' }{ \type_1 }
       \and
-      \dmap \models \sub{ \type_2 }{ \type_2' }
+       \models \sub{ \type_2 }{ \type_2' }
       \and
-      \dmap \leq \dmap'
+       \leq \dmap'
       \and
       \nnatA \leq \nnatA'
     }
     {
-      \dmap \models \sub{ \tarr{\type_1}{\type_2}{ \nnatbiA }{\dmap}{\nnatA} }
-      { \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap}{\nnatA'} }
+       \models \sub{ \tarr{\type_1}{\type_2}{ \nnatbiA }{\dmap}{\nnatA} }
+      { \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'} }
+    }
+  \and
+    %
+     \inferrule{
+    }{
+       \models \sub{ \tbox{\tau}  }{ \tau }
+    }
+  \and
+    %
+     \inferrule{
+    }{
+       \models \sub{ \tbox{\tau}  }{ \tbox{\tbox{\tau}} }
+    }
+  \and
+    %
+     \inferrule{
+         \models \sub{ \tau_1  }{ \tau_2 }
+    }{
+       \models \sub{ \tbox{\tau_1}  }{ \tbox{\tau_2} }
+    }
+  \and
+    %
+     \inferrule*[right = refl]{
+    }{
+       \models \sub{ \tau  }{ \tau }
+    }
+ \and
+    %
+     \inferrule*[right=tran]{
+         \models \sub{ \tau_1  }{ \tau_2 } 
+        \\
+          \models \sub{ \tau_2  }{ \tau_3 }
+    }{
+       \models \sub{ \tau_1  }{ \tau_3 }
     }
     \end{mathpar}
  \caption{Subtyping rules}
@@ -883,8 +918,7 @@ system.
   the effect $\nnatA_1$. This does not happen in standard
   coeffect+effect systems.
 \item[-] Our type for functions internalizes the effect. In a standard
-  coeffect + effect system, the effect is always on the typing
-  judgment, and at the point of function construction ($\efix$), one
+  coeffect + effect system, the effect is always on the typing  judgment, and at the point of function construction ($\efix$), one
   anticipatively adds the effects of future function applications to
   the effect in the conclusion.
 \end{itemize}
