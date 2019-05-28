@@ -1,4 +1,5 @@
 (* ---------------------------------------------------------------------- *)
+(* Implementation for Adaptive Analysis                                   *)
 (* Abstract Syntax Tree for types and expressions                         *)
 (* ---------------------------------------------------------------------- *)
 
