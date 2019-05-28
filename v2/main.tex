@@ -796,23 +796,23 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
    \begin{mathpar}
      \inferrule{
     }{
-       \models \sub{\tbase}{\tbox{\tbase} }
+       \Delta \models \sub{\tbase}{\tbox{\tbase} }
     }
     %
     \and
     %
      \inferrule{
     }{
-      \models \sub{\tbool}{\tbox{\tbool} }
+      \Delta \models \sub{\tbool}{\tbox{\tbool} }
     }
     %
     \and
     %
     \inferrule{
-     \models \sub{\type_1 }{ \type_1'  } \\
-         \models \sub{\type_2 }{ \type_2'  }
+     \Delta \models \sub{\type_1 }{ \type_1'  } \\
+         \Delta \models \sub{\type_2 }{ \type_2'  }
     }{
-       \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
+       \Delta \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
     }
     %
     \and
@@ -820,7 +820,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \inferrule{
        % \forall x \in \dmap'. \dmap'(x) =0
     }{
-       \models \sub{\tbox{(
+       \Delta \models \sub{\tbox{(
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
       }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
     }
@@ -829,7 +829,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     %
      \inferrule{
     }{
-       \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
+       \Delta \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
     } }
     %
@@ -838,58 +838,58 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \inferrule{
     }
     {
-       \models \sub{ \tint[I] }{ \tint }
+       \Delta \models \sub{ \tint[I] }{ \tint }
     }
     %
     \and
     %
      \inferrule
     {
-       \models \sub{ \type_1' }{ \type_1 }
+      \Delta  \models \sub{ \type_1' }{ \type_1 }
       \and
-       \models \sub{ \type_2 }{ \type_2' }
+      \Delta  \models \sub{ \type_2 }{ \type_2' }
       \and
-       \leq \dmap'
+      \dmap \leq \dmap'
       \and
       \nnatA \leq \nnatA'
     }
     {
-       \models \sub{ \tarr{\type_1}{\type_2}{ \nnatbiA }{\dmap}{\nnatA} }
+      \Delta  \models \sub{ \tarr{\type_1}{\type_2}{ \nnatbiA }{\dmap}{\nnatA} }
       { \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'} }
     }
   \and
     %
      \inferrule{
     }{
-       \models \sub{ \tbox{\tau}  }{ \tau }
+      \Delta  \models \sub{ \tbox{\tau}  }{ \tau }
     }
   \and
     %
      \inferrule{
     }{
-       \models \sub{ \tbox{\tau}  }{ \tbox{\tbox{\tau}} }
+      \Delta  \models \sub{ \tbox{\tau}  }{ \tbox{\tbox{\tau}} }
     }
   \and
     %
      \inferrule{
-         \models \sub{ \tau_1  }{ \tau_2 }
+      \Delta \models \sub{ \tau_1  }{ \tau_2 }
     }{
-       \models \sub{ \tbox{\tau_1}  }{ \tbox{\tau_2} }
+      \Delta \models \sub{ \tbox{\tau_1}  }{ \tbox{\tau_2} }
     }
   \and
     %
      \inferrule*[right = refl]{
     }{
-       \models \sub{ \tau  }{ \tau }
+      \Delta \models \sub{ \tau  }{ \tau }
     }
  \and
     %
      \inferrule*[right=tran]{
-         \models \sub{ \tau_1  }{ \tau_2 } 
+      \Delta \models \sub{ \tau_1  }{ \tau_2 } 
         \\
-          \models \sub{ \tau_2  }{ \tau_3 }
+      \Delta \models \sub{ \tau_2  }{ \tau_3 }
     }{
-       \models \sub{ \tau_1  }{ \tau_3 }
+      \Delta \models \sub{ \tau_1  }{ \tau_3 }
     }
     \end{mathpar}
  \caption{Subtyping rules}
@@ -1500,7 +1500,7 @@ $
     {
         \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
            \\
-        \forall x \in \dom(\Gamma), \sub{\tbox{\Gamma(x)}}{\Gamma(x)}
+        \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{\tbox{\Gamma(x)}}
            \\
         \delta \not\in \expr
     }
@@ -1518,16 +1518,14 @@ $ s.t. $ (\env, \ienv \expr) \bigstep (\valr, \tr) \land j = \size{\tr} \land j 
 %
 By induction hypothesis, we get: $(k, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}$.\\
 %
-By inversion, we get $\forall \valr', \tr', j'$ s.t. $(\env, \ienv \expr) \bigstep (\valr', \tr') \land \size(\tr') = j' \land j' \leq \stepiA$,\\
+By inversion, we get $\forall \valr', \tr', j'$ s.t. $(\env, \ienv \expr) \bigstep (\valr', \tr') \land \size{\tr'} = j' \land j' \leq \stepiA$,\\
 (1)' $\adap(\tr') \leq \ienv \nnatA$, (2)' $\forall x, \ddep{x}(\tr') \leq \dmap(x)$, (3)' $(\stepiA - j', \valr') \in \lrv{\ienv \type}$.\\
 %
 Pick $\valr = \valr', \tr = \tr' , j = j'$, (1) (2) is proved by (1)', (2)'.\\
 %
 s.t.s. (3) $(\stepiA - j, \valr ) \in \lrv{\ienv \tbox{\type}}$.\\
 %
-By inversion on (3), s.t.s: (a) $(\stepiA - j, \valr) \in \lrv{\ienv \type}$, (b) $(\delta \notin \valr)$.\\
-(a) is proved by (3)', (b) is proved by $(\diamond)$.
-\\
+...\\
 
 \caseL{
 $
