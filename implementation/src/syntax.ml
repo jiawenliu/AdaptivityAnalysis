@@ -99,154 +99,70 @@ let rec un_ty_subst i it uty =
   | UMonad (p,g,uty,k,m,q) -> UMonad(p,g, utf uty, f_it k, m , q )
   | UArray (g, i, uty) -> UArray(g, f_it i, utf uty)
 
+
+(* Binary Operations    *)
+type bop = Plus | Minus | Mul | Div | Or | And | Xor | Equal | Leq | Geq | Less | Greater
+
+(* Unary Operations   *)
+type uop = Lg | Sign
+
+(* Expressions   *)
+type expr =
+  | Var         of string
+  | Const_i     of int
+  | Const_f     of float
+  | True
+  | False
+  | Pair        of expr * expr
+  | App         of expr * expr
+  | Fix         of expr * expr * expr(* unsure *) 
+  | Fst         of expr
+  | Snd         of expr
+  | If          of expr * expr * expr
+  | Mech        of expr
+  | Let         of expr * expr * expr
+  | Nil
+  | Cons        of expr * expr
+  | Bop         of bop * expr * expr
+  | Uop         of uop * expr
+
+
+ type value = 
+  | V_True
+  | V_False
+  | V_Const     of int
+  | V_Fix       of expr * ((expr * value) list) (* unsure *) 
+  | V_Pair      of value * value
+  | V_Nil
+  | V_Cons      of value * value
+  | V_Error
+
+
+type trace = 
+  | T_Var        of string
+  | T_Eval       of trace * trace * (expr * expr) * trace (* unsure *) 
+  | T_Fix        of expr
+  | T_Pair       of trace * trace
+  | T_Fst        of trace
+  | T_Snd        of trace
+  | T_True
+  | T_False
+  | T_Iftrue     of trace * trace
+  | T_Iffalse    of trace * trace
+  | T_Const      of int
+  | T_Mech       of trace
+  | T_Nil
+  | T_Cons       of trace * trace
+  | T_Let        of expr * trace * trace
+  | T_Error
+
                          
-(* Binary types*)
-type bi_ty =
-  (* Primitive types *)
-  | BTyPrim  of bi_ty_prim
-
-  (* ADT *)
-  | BTySum     of bi_ty * bi_ty
-  | BTyProd    of bi_ty * bi_ty
-
-  (* Functional type *)
-  | BTyArr     of bi_ty * iterm * bi_ty
-
-  (* Quantified types *)
-  | BTyForall of var_info * sort * iterm * bi_ty
-  | BTyExists of var_info * sort * bi_ty
-
-  (********************************************************************)
-  (* Dependent types *)
-  | BTyList    of iterm * iterm * bi_ty
-
-  (********************************************************************)
-  (* Unrelated types *)
-  | BTyUnrel    of un_ty * un_ty
-
-  (********************************************************************)
-  (* Boxed types *)
-  | BTyBox    of bi_ty
-
- (* Constrained types *)
-  | BTyCs    of constr * bi_ty
-  | BTyCsImp of constr * bi_ty
-
-  | BMonad of predicate * var_info* bi_ty*iterm * predicate
-  | BInt of iterm
-  | BArray of var_info*iterm*bi_ty
-
-  let predicate_subst i it p = 
-      List.map ( fun (g, iarr) ->
-            (g, iterm_subst i it iarr)
-          ) p
-
-(* Substitution un_ty[I/i] for index vars *)
-let rec bi_ty_subst i it bty = 
-  let f_it = (iterm_subst i it) in
-  let btf = bi_ty_subst i it in
-  let ptf = predicate_subst i it in 
-  match bty with
-  | BTyPrim tp            -> BTyPrim tp
-  (* ADT *)
-  | BTySum(bty1, bty2)    -> BTySum(btf bty1, btf bty2)
-  | BTyProd(bty1, bty2)   -> BTyProd(btf bty1, btf bty2)
-
-  (* Functional type *)
-  | BTyArr(bty1, k, bty2) -> BTyArr(btf bty1, f_it k, btf bty2)
-                                    
-  (* Quantified types *)
-  | BTyForall(b, s, k, bty')-> BTyForall(b, s, f_it k,  btf bty')
-  | BTyExists(b, s, bty')  -> BTyExists(b, s, btf bty')
-
-  (* Dependent types *)
-  | BTyList (sz, ch, bty') -> BTyList(f_it sz, f_it ch, btf bty')
-
-  (* Unrelated types *)
-  | BTyUnrel (uty1, uty2)  -> BTyUnrel (un_ty_subst i it uty1, un_ty_subst i it uty2)
-
-  (* Boxed types *)
-  | BTyBox bty'            -> BTyBox (btf bty')
-
-  (* Constrained types *)
-  | BTyCs (cs, bty')       -> BTyCs(constr_subst i it cs, btf bty')
-  | BTyCsImp (cs, bty')       -> BTyCsImp(constr_subst i it cs, btf bty')
-  (*monadic binary types*)
-  | BMonad (p,g,bty,k,q) -> BMonad ( ptf p, g, btf bty, f_it k, ptf q)
-  | BInt (i) -> BInt (f_it i)
-  | BArray(g, i, bty) ->  BArray(g, f_it i, btf bty) 
-
-  
-      
-
- (*helper function*) 
- let rec bi_proj (p:predicate) : predicate=
-    match p with
-       [] -> []
-       | (v,l) :: tl -> 
-          match l with
-            IArray (a,ls) -> 
-                         (v, IArray (a,[]) ) :: (bi_proj tl) 
-            |_ -> bi_proj tl
-
-      
-
-(* Projection for binary types *)
-let rec bi_ty_proj (isLeft: bool) (bty : bi_ty) : un_ty =
-  let btp = bi_ty_proj isLeft in
-  match bty with
-  | BTyPrim tp            -> UTyPrim (proj_prim_bi_ty tp)
-  (* ADT *)
-  | BTySum(bty1, bty2)    -> UTySum (btp bty1, btp bty2)
-  | BTyProd(bty1, bty2)   -> UTyProd(btp bty1, btp bty2)
-
-  (* Functional type *)
-  | BTyArr(bty1, k, bty2) -> if isLeft then UTyArr(btp bty1, MaxEx, IInfty, btp bty2) 
-    				       else UTyArr(btp bty1, MinEx, IZero, btp bty2)
-        
-  (* Quantified types *)
-  | BTyForall(b, s, k, bty')-> if isLeft then UTyForall(b, s, MaxEx, IInfty, btp bty') 
-    				         else UTyForall(b, s, MinEx, IZero, btp bty')
-  | BTyExists(b, s, bty')  -> UTyExists(b, s, btp bty')
-
-  (* Dependent types *)
-  | BTyList (sz, ch, bty') -> UTyList(sz, btp bty')
-
-  (* Unrelated types *)
-  | BTyUnrel (uty1, uty2)  -> if isLeft then uty1 else uty2
-
-  (* Boxed types *)
-  | BTyBox bty'            -> btp bty'
-
-  (* Constrained types *)
-  | BTyCs (cs, bty')       -> UTyCs(cs, btp bty')
-  | BTyCsImp (cs, bty')       -> UTyCsImp(cs, btp bty')
-
-  | BMonad (p, g, bty, k, q) -> if isLeft 
-      then UMonad ( (bi_proj p) , g, btp bty, IInfty, MaxEx, (bi_proj q) )
-      else UMonad ( (bi_proj p) , g, btp bty, IZero, MinEx, (bi_proj q) )
-  | BInt (i) -> UInt(i)
-  | BArray (g, i, bty) -> UArray (g, i, (btp bty ) )
-(*********************************************************************)
-(* Terms *)
-
-
- let rec int_to_speano n = if n = 0 then IZero else ISucc (int_to_speano (n-1))
 (* Primitive Terms *)
 type exp_prim =
     PrimTUnit
   | PrimTInt    of int
   | PrimTBool   of bool
 
-let un_type_of_prim t = match t with
-    PrimTUnit       -> UTyPrim UPrimUnit
-  | PrimTInt i      -> UInt (int_to_speano i) (* UTyPrim UPrimInt *)
-  | PrimTBool _     -> UTyPrim UPrimBool
-
-let bi_type_of_prim t = match t with
-    PrimTUnit       -> BTyPrim BPrimUnit
-  | PrimTInt i      -> BInt (int_to_speano i ) (* BTyPrim BPrimInt *)
-  | PrimTBool _     -> BTyPrim BPrimBool
 
 (*********************************************************************)
 (* Expressions with information for error messages *)
