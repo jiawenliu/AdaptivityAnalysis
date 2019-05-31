@@ -8,7 +8,7 @@ let parser_error   fi = Support.Error.error_msg   Support.Options.Parser fi
 let parser_warning fi = Support.Error.message   1 Support.Options.Parser fi
 let parser_info    fi = Support.Error.message   2 Support.Options.Parser fi
 
-let dummy_ty  = UTyPrim UPrimUnit
+let dummy_ty  = Ty_Prim UPrimUnit
 
 let rec int_to_speano n = if n = 0 then IZero else ISucc (int_to_speano (n-1))
 
@@ -48,16 +48,16 @@ let nb_lvar n = {v_name = n; v_type = BiLVar}
 
 
 (* From a list of arguments to a universally quantified unary type *)
-let rec qf_to_forall_utype qf u_ty = match qf with
+let rec qf_to_forall_type qf u_ty = match qf with
     []               -> u_ty
   | (_, n, mu, t, s) :: qfl -> 
-    if mu=Loc then UTyForall(nb_lvar n, mu, t, s, qf_to_forall_utype qfl u_ty)
-    else UTyForall(nb_ivar n, mu, t, s, qf_to_forall_utype qfl u_ty)
+    if mu=Loc then Ty_Forall(nb_lvar n, mu, t, s, qf_to_forall_type qfl u_ty)
+    else Ty_Forall(nb_ivar n, mu, t, s, qf_to_forall_type qfl u_ty)
 
 (* From a list of arguments to an existentially quantified unary type *)
-let rec qf_to_exists_utype qf u_ty = match qf with
+let rec qf_to_exists_type qf u_ty = match qf with
     []               -> u_ty
-  | (_, n, s) :: qfl -> UTyExists(nb_ivar n, s, qf_to_exists_utype qfl u_ty)
+  | (_, n, s) :: qfl -> Ty_Exists(nb_ivar n, s, qf_to_exists_type qfl u_ty)
                                         
 
 (* From a list of arguments to a universally quantified binary type *)
@@ -172,6 +172,11 @@ let rec predicate_trans ivs = match ivs with
 %token <Support.FileInfo.info> MINPOWCONSTANT
 %token <Support.FileInfo.info> SUM
 %token <Support.FileInfo.info> BOX
+%token <Support.FileInfo.info> BERNOULLI
+%token <Support.FileInfo.info> UNIFORM
+
+/* Operations */
+%token <Support.FileInfo.info> SIGN
 
 /* Identifier and constant value tokens */
 %token <string Support.FileInfo.withinfo> ID
@@ -208,32 +213,24 @@ let rec predicate_trans ivs = match ivs with
 %token <Support.FileInfo.info> INTMIN
 %token <Support.FileInfo.info> CNOT 
 
+
 /* ---------------------------------------------------------------------- */
 /* RelCost grammar                                                           */
 /* ---------------------------------------------------------------------- */
 
-%start u_toplevel b_toplevel
-%type < Syntax.expr * IndexSyntax.iterm * Syntax.un_ty * Syntax.mode > u_toplevel
-%type < Syntax.expr *  Syntax.expr * IndexSyntax.iterm * Syntax.bi_ty > b_toplevel
+%start u_toplevel
+%type < Syntax.expr * IndexSyntax.iterm * Syntax.ty * Syntax.mode > u_toplevel
 %%
 
 /* ---------------------------------------------------------------------- */
-/* Main body of the parser definition                                     */
+/* Main body of the parser definition     m                                */
 /* ---------------------------------------------------------------------- */
 
 u_toplevel :
-    Term LEQ LBRACK Mode COMMA ITerm RBRACK COLON UType EOF
+    Term LEQ LBRACK Mode COMMA ITerm RBRACK COLON Type EOF
         { let ctx = Ctx.set_exec_mode $4 (Ctx.empty_context) in
           ($1 ctx, $6 ctx, $9 ctx, $4) }
 
-
-b_toplevel :
-    Term COMMA Term LEQ ITerm COLON BType EOF
-        { let ctx = Ctx.empty_context in
-          ($1 ctx, $3 ctx, $5 ctx, $7 ctx) }
-  | Term LEQ ITerm COLON BType EOF
-      { let ctx = Ctx.empty_context in
-        ($1 ctx, $1 ctx, $3 ctx, $5 ctx) }
 
 
 Term :
@@ -244,12 +241,6 @@ Term :
           Let($2.i, (nb_var $2.v), $4 ctx, $6 ctx')
         }
         
-   | CLET Term AS ID IN Term
-        {
-          fun ctx ->
-          let ctx' = extend_var $4.v ctx in
-          CLet($4.i, (nb_var $4.v),  $2 ctx, $6 ctx')
-        }
 
     | CELIM Term 
         { fun ctx -> let e = $2 ctx in CExpr(expInfo e, e) }
@@ -296,46 +287,6 @@ Term :
         let ctx_tl = extend_var $10.v ctx_h in
         CaseL($1, $2 ctx, $6 ctx, nb_var $8.v, nb_var $10.v, $12 ctx_tl) }
 
-    | LBRACE Term COLON UType COMMA ITerm RBRACE { fun ctx -> UAnno($1, $2 ctx, $4 ctx, $6 ctx)}
-    | LBRACE Term COLON BType COMMA ITerm RBRACE { fun ctx -> BAnno($1, $2 ctx, $4 ctx, $6 ctx)}
-    | LBRACE Term COLON BType SEMI BType SEMI ITerm SEMI ITerm RBRACE { fun ctx -> BAnnoM($1, $2 ctx, $4 ctx, $6 ctx, $8 ctx, $10 ctx)}
-    | App  { $1 }
-   
-    | ALLOC Expr Expr 
-      {fun ctx -> 
-        Alloc($1, $2 ctx, $3 ctx) }   
-    | RETURN Expr 
-      {fun ctx -> 
-        Return($1, $2 ctx) } 
-    | READ Expr Expr 
-      {fun ctx -> 
-        Read($1, $2 ctx, $3 ctx) }
-    | UPDATE Expr Expr Expr 
-      {fun ctx -> 
-        Update($1, $2 ctx, $3 ctx, $4 ctx) }
-    | LETM ID EQUAL Term IN Term 
-      {fun ctx -> 
-        let ctx'=extend_var $2.v ctx in 
-        Letm($2.i, (nb_var $2.v) ,$4 ctx, $6 ctx'  )
-      }
-     | SPLIT LBRACE Term RBRACE WITH LBRACE Constr RBRACE
-      { 
-        fun ctx -> Split ( $1, $3 ctx , $7 ctx  )
-       } 
-
-      | FIXEXT LBRACE UType RBRACE COMMA ID LPAREN ID RPAREN DOT Term
-      {
-        fun ctx ->
-        let ctx_f = extend_var $6.v ctx   in
-        let ctx_x = extend_var $8.v ctx_f in
-        FIXEXT($6.i, $3 ctx,  nb_var $6.v, nb_var $8.v, $11 ctx_x)
-      }
-
-      | SWITCH LBRACE Term RBRACE WITH LBRACE BType SEMI ITerm SEMI Constr RBRACE
-      {  
-          fun ctx -> 
-          SWITCH ($1, $3 ctx, $7 ctx, $9 ctx, $11 ctx)
-      }
 
 /* Applications */
 App:
@@ -343,61 +294,98 @@ App:
   { fun ctx ->
       let e1 = $1 ctx in
       let e2 = $2 ctx in
-      App (expInfo e1 , e1, e2) 
+      App (e1, e2) 
   }
+
   |  Expr 
      { $1 }
-  | App LBRACK RBRACK { fun ctx -> let e = $1 ctx in IApp(expInfo e, e) } 
-  
+  | App LBRACK RBRACK { fun ctx -> let e = $1 ctx in IApp( e) } 
+
 
 /* Syntactic sugar for n-ary tuples */
 PairSeq:
     Term COMMA Term 
-      { fun ctx -> Pair($2, $1 ctx, $3 ctx) }
+    { fun ctx -> Pair($2, $1 ctx, $3 ctx) }
   | Term COMMA PairSeq 
-      { fun ctx -> Pair($2, $1 ctx, $3 ctx)  }
+    { fun ctx -> Pair($2, $1 ctx, $3 ctx)  }
 
 
 Expr:
     TRUE
-     { fun _cx -> Prim ($1, PrimTBool true) }
+     { fun _cx -> Prim (PrimBool true) }
   | FALSE
-     { fun _cx -> Prim ($1, PrimTBool false) }
+     { fun _cx -> Prim (PrimBool false) }
   | INTV
-     { fun _cx -> Prim($1.i, PrimTInt $1.v) }
+     { fun _cx -> Prim (PrimInt $1.v) }
+
+  | FLOATV
+     { fun _cx -> Prim (PrimReal $1.v) }
+
   | NIL
-     { fun _cx -> Nil($1) }
-  | CONTRA 
-    { fun _cx -> Contra($1) }
+     { fun _cx -> Nil }
+
   | LPAREN RPAREN
-     { fun _cx -> Prim ($1, PrimTUnit) }
+     { fun _cx -> Prim (PrimUnit) }
+
   | ID
-     { fun ctx -> Var($1.i, existing_var $1.i $1.v ctx) }
+     { fun ctx -> Var(existing_var $1.i $1.v ctx) }
+
   | LPAREN Term RPAREN
      { $2 }
+
   | FST Term
-     { fun ctx -> Fst ($1, $2 ctx) }
+     { fun ctx -> Fst ($2 ctx) }
+
   | SND Term   
-     { fun ctx -> Snd ($1, $2 ctx) }    
-  | INL Expr
-     { fun ctx -> Inl($1, $2 ctx)  }
-  | INR Expr
-     { fun ctx -> Inr ($1, $2 ctx) }
+     { fun ctx -> Snd ($2 ctx) }    
+
   | LPAREN PairSeq RPAREN 
      { $2 }
+
   | Term DBLCOLON Term
-     { fun ctx -> Cons($2, $1 ctx, $3 ctx) }
+    { fun ctx -> Cons($1 ctx, $3 ctx) }
+
+
+
+  | uop LPAREN expr RPAREN
+    { fun ctx -> Uop($1 ctx, $3 ctx) }                                                  
+
+  | expr bop expr
+    { fun ctx -> Bop($2 ctx, $1 ctx, $3 ctx) }
+
+  | BERNOULLI FLOATV
+    { fun ctx -> Bernoulli (PrimReal $2.v)}
+
+  | UNIFORM LPAREN FLOATV COMMA FLOATV RPAREN
+    { fun ctx -> Uniform(PrimReal $3.v, PrimReal $5.v)}
+
+
+
+/* Operations */
+
+bop:
+    | ADD           { Add }
+    | SUB           { Sub }
+    | MUL           { Mul }
+    | DIV           { Div }
+    | OR            { Or }
+    | AND           { And }
+    | EQUAL         { Equal }
+    | LEQ           { Leq }
+    | GEQ           { Geq }
+    | LESS          { Less }
+    | GREATER       { Greater }
+
+
+uop:
+    | SIGN          { Sign }
+    | LOG           { Log }
+
  
 /* Sorts */
 Sort :
     SIZE
-      { Size }
-  | COST
-      { Cost }
-  | LOC
-      { Loc }
-  | ARR
-      {Arr}
+      { Adap }
 
 
 Mode:
@@ -408,71 +396,57 @@ Mode:
 
 
   /* Unary Types */
-UType:
-    UAType LBRACK Mode COMMA ITerm RBRACK ARROW UType
+Type:
+    Type LBRACK Mode COMMA ITerm RBRACK ARROW Type
     { fun ctx -> 
-      UTyArr($1 ctx, $3, $5 ctx, $8 ctx) }
-  | UAType ARROW UType
+      Ty_Arr($1 ctx, $3, $5 ctx, $8 ctx) }
+  | Type ARROW Type
     { fun ctx -> 
-      UTyArr($1 ctx, MaxEx, IZero, $3 ctx) }
+      Ty_Arr($1 ctx, MaxEx, IZero, $3 ctx) }
 
-  | UAType ARROW ARROW UType
-    { fun ctx -> UTyArr($1 ctx, MinEx, IZero, $4 ctx) }
+  | Type ARROW ARROW Type
+    { fun ctx -> Ty_Arr($1 ctx, MinEx, IZero, $4 ctx) }
 
-  | LIST LBRACK ITerm RBRACK UType
-    { fun ctx -> UTyList($3 ctx, $5 ctx) }
+  | LIST LBRACK ITerm RBRACK type
+    { fun ctx -> Ty_List($3 ctx, $5 ctx) }
 
-  | UType ADD UType
-    { fun ctx -> UTySum($1 ctx, $3 ctx) }
-
-  | QuantifiedUTypes
+  | Quantifiedtypes
     { $1 }
 
-  | ConstrainedUTypes
+  | Constrainedtypes
     { $1 }
 
-  | ConstrainedImpUTypes
+  | ConstrainedImptypes
     { $1 }
 
-  | UAType
+  | Type
     { $1 }
 
-  
 
-  | UMonadType
-    { $1}
-
-UMonadType:
-   Predicates ID COLON UAType COMMA LBRACK Mode COMMA ITerm RBRACK  Predicates
-   { fun ctx -> 
-       let (ivs_1, ctx_1) =  $1 ctx in
-       let (ivs_2, ctx_2) =  $11 ctx_1 in 
-       let n_lvar = {v_name =  $2.v ; v_type = BiLVar;} in 
-        UMonad(ivs_1, n_lvar, $4 ctx, $9 ctx, $7, ivs_2 )  }
-
-UAType:
-    LPAREN UType RPAREN
+Type:
+    LPAREN Type RPAREN
     { $2 }
   | BOOL
-    { fun _cx -> UTyPrim UPrimBool }
+    { fun _cx -> Ty_Prim Ty_PrimBool }
+
   | INT
-    { fun _cx ->  UTyPrim UPrimInt }
+    { fun _cx ->  Ty_Prim Ty_PrimInt }
   | UNIT
-    { fun _cx ->  UTyPrim UPrimUnit }
+    { fun _cx ->  Ty_Prim Ty_PrimUnit }
   | UTPairSeq
     { fun ctx -> $1 ctx }
   | UINT LBRACK ITerm RBRACK
     { fun ctx -> UInt ($3 ctx) }
-  | ARRAY LPAREN ID RPAREN LBRACK ITerm RBRACK UType
+  | ARRAY LPAREN ID RPAREN LBRACK ITerm RBRACK type
      { fun ctx -> let n_lvar = {v_name =  $3.v ; v_type = BiLVar;} in 
           UArray ( n_lvar, $6 ctx, $8 ctx)  }
   
 
 UTPairSeq:
-    UType TIMES UType
-    { fun ctx -> UTyProd($1 ctx, $3 ctx) }
-  | UType TIMES UTPairSeq
-    { fun ctx -> UTyProd($1 ctx, $3 ctx) }
+    Type TIMES Type
+    { fun ctx -> Ty_Prod($1 ctx, $3 ctx) }
+  | Type TIMES UTPairSeq
+    { fun ctx -> Ty_Prod($1 ctx, $3 ctx) }
 
 FSortUAnn :
     ID LBRACK Mode COMMA ITerm RBRACK DBLCOLON Sort
@@ -502,21 +476,21 @@ EQuantifierUList :
                    (iv @ qf, ctx_qf)
       }
 
-QuantifiedUTypes :
-   FORALL FQuantifierUList DOT UType
+Quantifiedtypes :
+   FORALL FQuantifierUList DOT type
           { fun ctx -> let (qf, ctx') =  $2 ctx in
-                        qf_to_forall_utype qf ($4 ctx')  }
-  | EXISTS EQuantifierUList DOT UType
-    { fun ctx ->  let (qf, ctx') =  $2 ctx in qf_to_exists_utype qf ($4 ctx') }
+                        qf_to_forall_type qf ($4 ctx')  }
+  | EXISTS EQuantifierUList DOT type
+    { fun ctx ->  let (qf, ctx') =  $2 ctx in qf_to_exists_type qf ($4 ctx') }
 
 
-ConstrainedUTypes :
-    LBRACE Constr RBRACE UType
-    { fun ctx -> UTyCs ($2 ctx, $4 ctx) }      
+Constrainedtypes :
+    LBRACE Constr RBRACE type
+    { fun ctx -> Ty_Cs ($2 ctx, $4 ctx) }      
 
-ConstrainedImpUTypes :
-    LBRACE Constr RBRACE DBLARROW UType
-    { fun ctx -> UTyCsImp ($2 ctx, $5 ctx) }     
+ConstrainedImptypes :
+    LBRACE Constr RBRACE DBLARROW type
+    { fun ctx -> Ty_CsImp ($2 ctx, $5 ctx) }     
 
 
 /*  Predicates */
@@ -583,63 +557,6 @@ LCt:
     INTV 
     { fun ctx ->  [$1.v] }
 
- /* Binary Types */
-BType:
-    BAType LBRACK DIFF COMMA ITerm RBRACK ARROW BType
-    { fun ctx -> BTyArr($1 ctx, $5 ctx, $8 ctx) }
-  |  BAType DBLARROW BType
-    { fun ctx -> BTyArr($1 ctx, IZero, $3 ctx) }
-  | LIST LBRACK ITerm COMMA ITerm RBRACK BType
-    { fun ctx -> BTyList($3 ctx, $5 ctx, $7 ctx) }
-  | QuantifiedBTypes
-    { $1 }
-  
-  | ConstrainedBTypes
-    { $1 }
-  | ConstrainedImpBTypes
-    { $1 }
-  | BOX BType
-    { fun ctx -> BTyBox ($2 ctx) }
-  | BAType
-    { $1 }
-  | BMonadType
-    { $1 }
-
-BMonadType:
-    Predicates ID COLON BAType COMMA LBRACK DIFF COMMA ITerm RBRACK  Predicates
-   { fun ctx -> 
-       let (ivs_1, ctx_1) =  $1 ctx in
-       let (ivs_2, ctx_2) =  $11 ctx_1 in 
-       let n_lvar = {v_name =  $2.v ; v_type = BiLVar;} in 
-        BMonad(ivs_1, n_lvar, $4 ctx, $9 ctx, ivs_2 )  }
-
-BAType:
-    LPAREN BType RPAREN
-    { $2 }
-  | BOOLR
-    { fun _cx -> BTyPrim BPrimBool }
-  | INTR
-    { fun _cx ->  BTyPrim BPrimInt }
-  | UNITR
-    { fun _cx ->  BTyPrim BPrimUnit }
-  | BTPairSeq
-    { fun ctx -> $1 ctx }
-  | BINT LBRACK ITerm RBRACK
-    { fun ctx -> BInt ($3 ctx) }
-
-  | ARRAY LPAREN ID RPAREN LBRACK ITerm RBRACK BType
-     { fun ctx -> let n_lvar = {v_name =  $3.v ; v_type = BiLVar;} in 
-          BArray ( n_lvar, $6 ctx, $8 ctx)  }
-   | UnrelatedTypes
-    { $1 }       
-  
-
-BTPairSeq:
-    BType TIMES BType
-    { fun ctx -> BTyProd($1 ctx, $3 ctx) }
-  | BType TIMES BTPairSeq
-    { fun ctx -> BTyProd($1 ctx, $3 ctx) }
-
 FSortBAnn :
      ID LBRACK DIFF COMMA ITerm RBRACK DBLCOLON Sort
       { fun ctx -> ([($1.i, $1.v, $8, $5 ctx)], extend_i_var $1.v $8 ctx) }
@@ -676,9 +593,9 @@ QuantifiedBTypes :
     { fun ctx ->  let (qf, ctx') =  $2 ctx in qf_to_exists_btype qf ($4 ctx') }
 
 UnrelatedTypes :
-   UNREL LPAREN UType COMMA UType RPAREN 
+   UNREL LPAREN type COMMA type RPAREN 
     { fun ctx -> BTyUnrel ($3 ctx, $5 ctx) }
-  | UNREL UType
+  | UNREL type
     { fun ctx -> BTyUnrel ($2 ctx, $2 ctx) }
 
 ConstrainedBTypes :
@@ -694,68 +611,19 @@ ConstrainedImpBTypes :
  ITerm:
    ITerm ADD ITerm
     { fun ctx -> IAdd($1 ctx, $3 ctx) }
-  | ITerm MUL ITerm
-    { fun ctx -> IMult($1 ctx, $3 ctx) }
-  | ITerm DIV ITerm
-    { fun ctx -> IDiv($1 ctx, $3 ctx) }
+
   | ITerm SUB ITerm
     { fun ctx -> IMinus($1 ctx, $3 ctx) }
-  | MIN LPAREN ITerm COMMA ITerm RPAREN
-    { fun ctx -> IMin($3 ctx, $5 ctx) }
-  | INF
-    { fun ctx -> IInfty }
-  | LOG LPAREN ITerm RPAREN    	
-    { fun ctx -> ILog($3 ctx) }
-  | ITerm HAT ITerm     	
-    { fun ctx -> IPow($1 ctx, $3 ctx) }
-  | MINPOWLIN LPAREN ITerm COMMA ITerm RPAREN    	
-    { fun ctx -> IMinPowLin($3 ctx, $5 ctx) }
-  | MINPOWCONSTANT LPAREN ITerm COMMA ITerm RPAREN    	
-    { fun ctx -> IMinPowCon($3 ctx, $5 ctx) }
-  | SUM LPAREN ITerm COMMA LBRACE
-    ITerm COMMA ITerm RBRACE RPAREN 	
-    { fun ctx -> ISum($3 ctx, $6 ctx, $8 ctx)}
-  | ZERO
-    { fun _cx ->
-      IZero
-    }
-  | SUCC ITerm
-    { fun ctx ->
-      ISucc ($2 ctx)
-    }
 
-  | FLOOR LPAREN ITerm RPAREN
-    { fun ctx ->
-      IFloor ($3 ctx)
-    }
-
-  | CEIL LPAREN ITerm RPAREN
-    { fun ctx ->
-      ICeil ($3 ctx)
-    }
   | LPAREN ITerm RPAREN
     { fun ctx -> $2 ctx }
   | ID
     { fun ctx -> let n_ivar = {v_name = $1.v; v_type = BiIVar;} in
-                             IVar n_ivar 
-                
+                             IVar n_ivar                 
     }
-  | IO 
-    { fun ctx -> IO }
-  | INTV
-      { fun _cx ->
-        (int_to_speano $1.v)
-      }
-  | FLOATV
-      { fun _cx -> IConst $1.v }
-  | PIPE ARRs PIPE
-      { fun ctx -> IBetaABS ($2 ctx) }
-  | BETAMIN LPAREN ARRs RPAREN
-      { fun ctx -> IBetaMin($3 ctx )   }
+
   | INTMAX LPAREN ITerm COMMA ITerm RPAREN
       { fun ctx -> IMaximal($3 ctx, $5 ctx) }
-  | INTMIN LPAREN ITerm COMMA ITerm RPAREN
-      { fun ctx -> IMinimal($3 ctx, $5 ctx) }
 
 /* Constraints */
 Constr:
@@ -764,13 +632,5 @@ Constr:
   | ITerm LT ITerm         { fun ctx -> CLt($1 ctx,$3 ctx) }
   | Constr AND Constr       { fun ctx -> CAnd($1 ctx,$3 ctx) }
   | LPAREN Constr RPAREN    { fun ctx -> $2 ctx }
-  | CBETAIN ID COMMA ARRs   {  fun ctx ->  
-                              let n_ivar = {v_name = $2.v; v_type = BiIVar;} in
-                                   let l = IVar n_ivar in 
-                                   CBetaIn(l, $4 ctx)  
-                                     }
-  | CBETAEQ ARRs COMMA ARRs  
-                      {  fun ctx ->  
-                                   CBetaEq($2 ctx, $4 ctx)  
-                                     }
+
   | CNOT Constr {fun ctx -> CNot ($2 ctx) }

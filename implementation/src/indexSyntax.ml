@@ -13,19 +13,19 @@ type sort =
 
 
 (* Different types of variable binding, for debugging purposes *)
-(*type birel_binding =*)
-(*    BiVar            Regular varible 
-  | BiIVar           Index variable   
-  | BiEVar of sort   Existential variable  
-  | BiLVar
-  | BiPVar
-*)
+type binding =
+    Var            (*Regular varible *)
+  | IVar           (*Index variable  *) 
+  | EVar of sort   (*Existential variable  *)
+  | LVar
+  | PVar
 
-(*type var_info = {
+
+type var_info = {
   v_name  : string;
-  v_type  : birel_binding;
+  v_type  : binding;
 }
-*)
+
 
 (* Default var_info *)
 (*let dvi = {
@@ -47,7 +47,7 @@ type iterm =
   | IVar     	of var_info
   | IAdd     	of iterm * iterm
   | IMinus   	of iterm * iterm
-  | IMaximal of iterm * iterm
+  | IMaximal  of iterm * iterm
 
 
 (* Map over index variables *)
@@ -58,7 +58,6 @@ let rec iterm_map f it =
   | IConst c         -> IConst c
   | IAdd(x, y)       -> IAdd (smf x, smf y)
   | IMinus(x, y)     -> IMinus (smf x, smf y)
-  | IMinimal(i1, i2) -> IMinimal (smf i1, smf i2)
   | IMaximal(i1, i2) -> IMaximal (smf i1, smf i2)
 
 
@@ -87,11 +86,9 @@ let rec iterm_simpl it : iterm =
       | IConst c1 , IConst c2 -> IConst (c1 - c2) 
       | _, _ ->IMinus(r1, r2)
     end
-  | IMinimal(i1, i2) -> IMinimal (iterm_simpl i1, iterm_simpl i2)
   | IMaximal(i1, i2) -> IMaximal (iterm_simpl i1, iterm_simpl i2)
   | IConst _ 
   | IVar _ -> it    
-  | _ -> it
 
 let rec dedup (l: 'a list) : 'a list =
       match l with
@@ -104,18 +101,13 @@ let rec iterm_free_i_vars (it: iterm) : var_info list =
     IVar v    ->  [v]
   | IConst c  -> []
   | IAdd (x, y) 
-  | IMinus  (x, y) 
-  | IMinimal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)
-  | IMaximal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)
-  | _ -> []
-      
+  | IMinus  (x, y)  ->  dedup (iterm_free_i_vars x  @ iterm_free_i_vars y)
+  | IMaximal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)      
   
-let add_costs  (sl, sr) : iterm =
+(*let add_costs  (sl, sr) : iterm =
 match  sl, sr with
-| IZero, _ -> iterm_simpl sr
-| _, IZero -> iterm_simpl sl
 | _ -> IAdd(iterm_simpl sl, iterm_simpl sr)
-        
+*)        
 
 
    

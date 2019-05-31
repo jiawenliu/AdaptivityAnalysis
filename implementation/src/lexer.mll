@@ -11,10 +11,13 @@ let reservedWords = [
   ("^", fun i -> Parser.HAT i);
   ("{", fun i -> Parser.LBRACE i);
   ("}", fun i -> Parser.RBRACE i);
-  (":", fun i -> Parser.COLON i);
   ("::", fun i -> Parser.DBLCOLON i);
+  (":", fun i -> Parser.COLON i);
   (",", fun i -> Parser.COMMA i);
+  ("<", fun i -> Parser.LESS i);
   ("<=", fun i -> Parser.LEQ i);
+  (">", fun i -> Parser.GREATER i);
+  (">=", fun i -> Parser.GEQ i);
   ("=", fun i -> Parser.EQUAL i);
   ("->", fun i -> Parser.ARROW i);
   ("-->", fun i -> Parser.LARROW i);
@@ -26,6 +29,7 @@ let reservedWords = [
   ("/", fun i -> Parser.DIV i);
   ("(", fun i -> Parser.LPAREN i);
   (")", fun i -> Parser.RPAREN i);
+  ("[]", fun i -> Parser.NIL i);
   ("[", fun i -> Parser.LBRACK i);
   ("]", fun i -> Parser.RBRACK i);
   ("|", fun i -> Parser.PIPE i);
@@ -34,7 +38,13 @@ let reservedWords = [
   ("&&", fun i -> Parser.AND i);
   (".", fun i -> Parser.DOT i);
 
-  
+  (* Keywords for Operations *)
+  ("sign", fun i -> Parser.SIGN i);
+  ("log", fun i -> Parser.LOG i);
+  ("bernoulli", fun i -> Parser.BERNOULLI i);
+  ("uniform", fun i -> Parser.UNIFORM i);
+
+
   (* Keywords *)
   ("true", fun i -> Parser.TRUE i);
   ("false", fun i -> Parser.FALSE i);
@@ -52,9 +62,7 @@ let reservedWords = [
   ("fst", fun i -> Parser.FST i);
   ("snd", fun i -> Parser.SND i);
   ("as", fun i -> Parser.AS i);
-  ("as", fun i -> Parser.AS i);
   ("nil", fun i -> Parser.NIL i);
-  ("mu", fun i -> Parser.MU i);
   ("let", fun i -> Parser.LET i);
   ("clet", fun i -> Parser.CLET i);
   ("fix", fun i -> Parser.FIX i);
@@ -67,6 +75,7 @@ let reservedWords = [
   ("print", fun i -> Parser.PRINT i);
   ("bool", fun i -> Parser.BOOL i);
   ("boolR", fun i -> Parser.BOOLR i);
+  ("mu", fun i -> Parser.MU i);
   ("num", fun i -> Parser.NUM i);
   ("list", fun i -> Parser.LIST i);
   ("type", fun i -> Parser.TYPE i);
@@ -80,7 +89,6 @@ let reservedWords = [
   ("in", fun i -> Parser.IN i);
   ("fl", fun i -> Parser.FLOOR i);
   ("cl", fun i -> Parser.CEIL i);
-  ("log", fun i -> Parser.LOG i);
   ("unpack", fun i -> Parser.UNPACK i);
   ("forall", fun i -> Parser.FORALL i);
   ("exists", fun i -> Parser.EXISTS i);

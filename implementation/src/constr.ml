@@ -26,9 +26,6 @@ type constr =
   | CExists of var_info * info * sort * constr
   | CArrPos of iterm * iterm  (**  IArray, pos *) 
   | CLt of iterm * iterm
-  | CBetaEq of beta * beta
-  | CBetaIn of iterm * beta
-  | CBetaSub of beta * beta
   | CNot of constr
 
 let empty_constr = CTrue
@@ -47,9 +44,6 @@ match cs with
 | CForall(x,i, s, cs') 
 | CExists(x,i, s, cs') -> List.filter (fun y -> x.v_name <> y.v_name ) (constr_free_i_vars cs')
  | CArrPos (o,l) -> []
- | CBetaIn (l, b) -> dedup  (iterm_free_i_vars l @  beta_free_i_vars b )
-  | CBetaSub (b1, b2) -> dedup (beta_free_i_vars b1 @ beta_free_i_vars b2 )
-  | CBetaEq (b1, b2) ->  dedup (beta_free_i_vars b1 @ beta_free_i_vars b2 )
   |_ -> []
 
 (* Substitution cs[it/x] for index vars *)
@@ -66,22 +60,18 @@ let rec constr_subst x it cs =
   | CForall(y, i, s, cs') -> if x = y then csub cs' else CForall(y, i, s, csub cs')
   | CExists(y, i, s, cs') -> if x = y then csub cs' else CExists(y, i, s, csub cs')
   | CArrPos (o,l) -> cs
-  | CBetaIn (l, b) -> CBetaIn ( iterm_subst x it l ,beta_subst x it b)
-  | CBetaSub (b1, b2) -> CBetaSub ( beta_subst x it b1 ,beta_subst x it b2)
-  | CBetaEq (b1, b2) -> CBetaEq ( beta_subst x it b1 ,beta_subst x it b2)
    |_ -> cs
 
 let rec constr_map f cs =
  let cmap = constr_map f in
  match cs with
   | CTrue | CFalse -> cs
-  | CEq (IConst 0.0, IConst 0.0) -> CTrue
+  | CEq (IConst 0, IConst 0) -> CTrue
   | CEq (it1, it2) -> if it1 = it2 then CTrue else CEq (f it1,f it2)
 (*   | CLeq (IConst 0.0, IConst 0.0) -> CTrue *)
-  | CLeq (IZero, IZero) -> CTrue
   | CLeq (it1, it2) -> if it1 = it2 then CTrue else CLeq (f it1, f it2)
   | CLeq (it1, it2) -> cs
-  | CLt (IZero, IZero) -> CFalse
+
   | CLt (it1, it2) -> if it1 = it2 then CFalse else CLt (f it1, f it2)
   | CLt (it1, it2) -> cs
   | CAnd (cs1, cs2) -> 
@@ -93,7 +83,6 @@ let rec constr_map f cs =
   | CForall(x, i, s, cs') -> CForall(x, i, s, cmap cs')
   | CExists(x, i, s, cs') -> CExists(x, i, s, cmap cs')
   | CArrPos (o,l) -> cs
-  | CBetaIn (l, b) -> CBetaIn (f l, b ) 
    |_ -> cs
 
 let constr_simpl cs = 

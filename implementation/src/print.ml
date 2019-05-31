@@ -142,47 +142,12 @@ let  pp_array fmt a =
 let rec pp_iterm fmt it =
   match it with
     IVar   v              -> pp_vinfo fmt v
-  | IZero                 -> fprintf fmt "0"
   | IConst flt            -> fprintf fmt "%.3f" flt
-  | ISucc  x              -> 
-    begin
-      try let i_x = speano_to_int it in  
-      	fprintf fmt "%d" i_x
-      with		
-      | NoTrans ->  fprintf fmt "S(%a)" pp_iterm x
-    end
   | IAdd (i1, i2)         -> fprintf fmt "(%a + %a)" pp_iterm i1 pp_iterm i2
   | IMinus (i1, i2)       -> fprintf fmt "(%a - %a)" pp_iterm i1 pp_iterm i2
   | IMult(i1, i2)         -> fprintf fmt "(%a * %a)" pp_iterm i1 pp_iterm i2
-  | IDiv(i1, i2)          -> fprintf fmt "(%a / %a)" pp_iterm i1 pp_iterm i2
-  | IPow (i1, i2)         -> fprintf fmt "%a^ %a" pp_iterm i1 pp_iterm i2
-  | IMin (i1, i2)         -> fprintf fmt "min(%a,%a)" pp_iterm i1 pp_iterm i2
-  | IMinPowLin (i1, i2)   -> fprintf fmt "minpowlin(%a,%a)" pp_iterm i1 pp_iterm i2
-  | IMinPowCon (i1, i2)   -> fprintf fmt "minpowcon(%a,%a)" pp_iterm i1 pp_iterm i2
-  | ISum (i1,i2,i3)       -> fprintf fmt "sum(%a, {%a, %a})" pp_iterm i1 pp_iterm i2 pp_iterm i3
-  | ILog  x               -> fprintf fmt "log(%a)" pp_iterm x
-  | ICeil  x              -> fprintf fmt "ceil(%a)" pp_iterm x
-  | IFloor  x             -> fprintf fmt "floor(%a)" pp_iterm x
-  | IInfty                -> fprintf fmt "%s" (u_sym Symbols.Inf)
-  | IArray (a,l)              -> fprintf fmt "IArray %a"  pp_iterm a 
-  | IO   ->    fprintf fmt "%s" ("IO")
-  | IArrUnion (a,s,e)              -> fprintf fmt "IArrUnion %a, %a, %a"  pp_iterm a pp_iterm s pp_iterm e 
-  | IBeta b -> fprintf fmt "Beta :%a"  pp_beta b
-  | IBetaABS b -> fprintf fmt " |%a|"  pp_beta b
-  | IBetaMin b -> fprintf fmt " MIN (%a)"  pp_beta b
-  | IMinimal (i1,i2) ->  fprintf fmt " int_MIN (%a, %a)"  pp_iterm i1 pp_iterm i2
   | IMaximal (i1,i2) ->  fprintf fmt " int_MAX (%a, %a)"  pp_iterm i1 pp_iterm i2
 
-and pp_beta fmt b = 
-  match b with
-   | BIO -> fprintf fmt "%s" ("IO")
-    | BIE -> fprintf fmt "%s" ("IE")
-   | BVar v -> pp_vinfo fmt v
-   | BRange (i1,i2) -> fprintf fmt "Range [%a , %a]" pp_iterm i1 pp_iterm i2
-   | BPos i -> fprintf fmt "Pos {%a} " pp_iterm i
-   | BUnion (b1 ,b2) -> fprintf fmt "(%a union %a)" pp_beta b1 pp_beta b2
-   | BIntersect (b1,b2) -> fprintf fmt "(%a insect %a)" pp_beta b1 pp_beta b2
-   | BSetDiff (b1,b2) -> fprintf fmt "(%a setDiff %a)" pp_beta b1 pp_beta b2
 
  let pp_cost fmt cst = 
     match cst with 
@@ -228,7 +193,7 @@ let rec pp_cs ppf cs =
 (* Pretty printing for types *)
 
 (* Unary primitive types *)
-let pp_primutype fmt ty = match ty with
+let pp_primtype fmt ty = match ty with
     UPrimInt     -> fprintf fmt "@<1>%s" (u_sym Symbols.Int)
   | UPrimUnit    -> fprintf fmt "@<1>%s" (u_sym Symbols.Unit)
   | UPrimBool    -> fprintf fmt "@<1>%s" (u_sym Symbols.Bool)
@@ -247,55 +212,32 @@ let rec pp_mode fmt mu = match mu with
 | MinEx  -> fprintf fmt "min"
 
 (* Unary type printer *)
-let rec pp_utype ppf  = function
-   UTyPrim tp                -> fprintf ppf "%a" pp_primutype tp
+let rec pp_type ppf  = function
+   Ty_Prim tp                -> fprintf ppf "%a" pp_primtype tp
   (* List types *)
-  | UTyList (n, ty)          -> fprintf ppf "list[%a](%a)" pp_iterm n pp_utype ty 
+  | Ty_List (n, ty)          -> fprintf ppf "list[%a](%a)" pp_iterm n pp_type ty 
   (* ADT *)
-  | UTySum(ty1, ty2)         -> fprintf ppf "(%a @<1> +  @[<h>%a@])" pp_utype ty1   pp_utype ty2
-  | UTyProd(ty1, ty2)        -> fprintf ppf "(%a @<1>%s @[<h>%a@])" pp_utype ty1 (u_sym Symbols.Times) pp_utype ty2
+  | Ty_Prod(ty1, ty2)        -> fprintf ppf "(%a @<1>%s @[<h>%a@])" pp_type ty1 (u_sym Symbols.Times) pp_type ty2
   (* Funs *)
-  | UTyArr(ty1, mu, t, ty2)  -> fprintf ppf "(@[<hov>%a [%a,%a]%s @ %a@])" pp_utype ty1 pp_mode mu pp_iterm t (u_sym Symbols.Arrow)  pp_utype ty2
+  | Ty_Arr(ty1, mu, t, ty2)  -> fprintf ppf "(@[<hov>%a [%a,%a]%s @ %a@])" pp_type ty1 pp_mode mu pp_iterm t (u_sym Symbols.Arrow)  pp_type ty2
   (* Quantified types *)
-  | UTyForall(n, s, mu, t , ty)  -> fprintf ppf "@<1>%s %a [%a,%a] :: %a.@;(@[%a@])" (u_sym Symbols.Forall) pp_vinfo n pp_mode mu pp_iterm t pp_sort s pp_utype ty
-  | UTyExists(n, s, ty)     -> fprintf ppf "@<1>%s %a :: %a.@;(@[%a@])" (u_sym Symbols.Exists) pp_vinfo n pp_sort s pp_utype ty
-  | UTyCs(cs, ty)     -> fprintf ppf "%a@<1>%s @;(@[%a@])" pp_cs cs (u_sym Symbols.And) pp_utype ty
-  | UTyCsImp(cs, ty)     -> fprintf ppf "%a=> @;(@[%a@])" pp_cs cs  pp_utype ty
-  | UMonad (p,g,uty,k,m,q) -> fprintf ppf "@[ {%a} @ %a : %a [%a,%a] {%a} @] @. " pp_predicates p pp_vinfo g pp_utype uty pp_mode m pp_iterm k pp_predicates q 
-  | UInt (i) -> fprintf ppf "UInt[ %a ]" pp_iterm i
-  | UArray (g,i, u) -> fprintf ppf "@[ Array (%a) @ [%a]%a @]" pp_vinfo g pp_iterm i pp_utype u
+  | Ty_Forall(n, s, mu, t , ty)  -> fprintf ppf "@<1>%s %a [%a,%a] :: %a.@;(@[%a@])" (u_sym Symbols.Forall) pp_vinfo n pp_mode mu pp_iterm t pp_sort s pp_type ty
+  | Ty_Exists(n, s, ty)     -> fprintf ppf "@<1>%s %a :: %a.@;(@[%a@])" (u_sym Symbols.Exists) pp_vinfo n pp_sort s pp_type ty
+  | Ty_Cs(cs, ty)     -> fprintf ppf "%a@<1>%s @;(@[%a@])" pp_cs cs (u_sym Symbols.And) pp_type ty
+  | Ty_CsImp(cs, ty)     -> fprintf ppf "%a=> @;(@[%a@])" pp_cs cs  pp_type ty
 
-(* Binary type printer *)
-let rec pp_btype ppf  = function
-   BTyPrim tp                -> fprintf ppf "%a" pp_primbtype tp
-  (* List types *)
-  | BTyList (n, alpha, ty)          -> fprintf ppf "list[%a,%a] %a" pp_iterm n pp_iterm alpha pp_btype ty 
-  (* ADT *)
-  | BTySum(ty1, ty2)         -> fprintf ppf "(%a @<1> +  @[<h>%a@])" pp_btype ty1   pp_btype ty2
-  | BTyProd(ty1, ty2)        -> fprintf ppf "(%a @<1>%s @[<h>%a@])" pp_btype ty1 (u_sym Symbols.Times) pp_btype ty2
-  (* Funs *)
-  | BTyArr(ty1, t, ty2)  -> fprintf ppf "(@[<hov>%a[diff, %a]%s @ %a@])" pp_btype ty1 pp_iterm t (u_sym Symbols.Arrow)  pp_btype ty2
-  (* Quantified types *)
-  | BTyForall(n, s, t , ty)  -> fprintf ppf "@<1>%s %a [diff, %a] :: %a.@;(@[%a@])" (u_sym Symbols.Forall) pp_vinfo n pp_iterm t  pp_sort s pp_btype ty
-  | BTyExists(n, s, ty)     -> fprintf ppf "@<1>%s :: %a.@;(@[%a@])" (u_sym Symbols.Exists) pp_vinfo n pp_btype ty
-  | BTyUnrel (uty1, uty2) -> if uty1 = uty2 then  fprintf ppf "U %a @<1>" pp_utype uty1  else  fprintf ppf "U (%a @<1>, @[<h>%a@])" pp_utype uty1   pp_utype uty2
-  | BTyBox ty         -> fprintf ppf "box (%a)" pp_btype ty
-  | BTyCs (c, ty)         -> fprintf ppf " (%a and %a)"pp_cs c  pp_btype ty
-  | BTyCsImp (c, ty)         -> fprintf ppf " (%a imply %a)"pp_cs c  pp_btype ty
-  | BMonad (p,g,bty,k,q) -> fprintf ppf "@[%a @ %a : %a [DIFF,%a] %a @] " pp_predicates p pp_vinfo g pp_btype bty pp_iterm k pp_predicates q 
-  | BInt (i) -> fprintf ppf "BInt[ %a ]" pp_iterm i
-  | BArray (g,i, bty) -> fprintf ppf "Array (%a) @ [%a]%a " pp_vinfo g pp_iterm i pp_btype bty
+  | Ty_List (g,i, u) -> fprintf ppf "@[ Array (%a) @ [%a]%a @]" pp_vinfo g pp_iterm i pp_type u
+
 
                                 
-let pp_utype_list = pp_list pp_utype 
-let pp_btype_list = pp_list pp_btype 
+let pp_type_list = pp_list pp_type 
 
 (**********************************************************************)
 (* Pretty printing for unary contexts *)
 
 let pp_var_uctx_elem ppf (v, ty) =
   if !debug_options.full_context then
-    fprintf ppf "%-10a : @[%a@]" pp_vinfo v pp_utype ty
+    fprintf ppf "%-10a : @[%a@]" pp_vinfo v pp_type ty
   else
     fprintf ppf "%a" pp_vinfo v
 
@@ -414,7 +356,7 @@ let rec pp_expr ppf t =
   | Unpack(_, tm1, bi_x, tm2) -> fprintf ppf "unpack %a as %a in %a" pp_expr tm1 pp_vinfo bi_x pp_expr tm2
 
   (* Annotated expressions *)
-  | UAnno (_, tm, uty, t) -> fprintf ppf "(%a: %a, %a)" pp_expr tm pp_utype uty pp_iterm t
+  | UAnno (_, tm, ty, t) -> fprintf ppf "(%a: %a, %a)" pp_expr tm pp_type ty pp_iterm t
   | BAnno (_, tm, bty, t) -> fprintf ppf "(%a: %a, %a)" pp_expr tm pp_btype bty pp_iterm t
   | BAnnoM (_, tm, bty1, bty2, t1, t2) -> fprintf ppf "(%a: @[%a@]@\n, @[%a@]@\n %a, %a)" pp_expr tm pp_btype bty1 pp_btype bty2 pp_iterm t1 pp_iterm t2
   (* Constrained expressions *)
@@ -428,9 +370,9 @@ let rec pp_expr ppf t =
   | Update (_, tm1, tm2, tm3) -> fprintf ppf "@[Update %a @ %a @%a @]" pp_expr tm1 pp_expr tm2 pp_expr tm3
   | Return (_, tm1) -> fprintf ppf "@[Return %a @]" pp_expr tm1 
   | Letm (_, bi_x,tm1, tm2) -> fprintf ppf "@[<v>@[<hov> letm %a =@;<1 1>@[%a@]@] in@ %a@]" pp_vinfo bi_x pp_expr tm1 pp_expr tm2
-  |  FIXEXT (_, uty, bi_f, bi_x, tm) ->
+  |  FIXEXT (_, ty, bi_f, bi_x, tm) ->
     fprintf ppf "fixEXT : %a , %a (%a). @\n@[<hov 1> %a@]@\n"
-       pp_utype uty pp_vinfo bi_f pp_vinfo bi_x  pp_expr tm
+       pp_type ty pp_vinfo bi_f pp_vinfo bi_x  pp_expr tm
   | Split (_, e, c) ->   
       fprintf ppf "@[SPLIT : %a with %a @]@\n"
       pp_expr e pp_cs c
