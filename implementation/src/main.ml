@@ -1,9 +1,12 @@
 open Syntax
 open Format
+open Support.FileInfo
+open Support.Error
 
 let inprog = ref (None : string option)
 let infile = ref (None : string option)
 let isfile = ref false
+
 
 
 let argDefs = [
@@ -136,11 +139,11 @@ let parse_string prog =
     let fh = open_in prog 
     in
       let lb = (Lexing.from_channel fh) in 
-        Parser.expr Lexer.token lb
+        Parser.u_toplevel Lexer.main lb
   else 
     let lb = Lexing.from_string prog
     in
-      Parser.expr Lexer.token lb
+      Parser.u_toplevel Lexer.main lb
 
 (* Extract a value from an ast node.
    Raises Failure if the argument is a node containing a value. *)
@@ -164,7 +167,7 @@ let token_list_of_string s =
   let lb = Lexing.from_string s in
   let rec helper l =
     try
-      let t = Lexer.token lb in
+      let t = Lexer.main lb in
       if t = Parser.EOF then List.rev l else helper (t::l)
     with _ -> List.rev l
   in 

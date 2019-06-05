@@ -44,7 +44,6 @@ let reservedWords = [
   ("bernoulli", fun i -> Parser.BERNOULLI i);
   ("uniform", fun i -> Parser.UNIFORM i);
 
-
   (* Keywords *)
   ("true", fun i -> Parser.TRUE i);
   ("false", fun i -> Parser.FALSE i);

@@ -105,7 +105,13 @@ let rec predicate_trans ivs = match ivs with
 %token <Support.FileInfo.info> DIV
 %token <Support.FileInfo.info> LPAREN
 %token <Support.FileInfo.info> RPAREN
+/* Comparison */
 %token <Support.FileInfo.info> LEQ
+%token <Support.FileInfo.info> GEQ
+%token <Support.FileInfo.info> LESS
+%token <Support.FileInfo.info> GREATER
+
+
 %token <Support.FileInfo.info> LBRACK
 %token <Support.FileInfo.info> RBRACK
 %token <Support.FileInfo.info> PIPE
@@ -242,9 +248,6 @@ Term :
         }
         
 
-    | CELIM Term 
-        { fun ctx -> let e = $2 ctx in CExpr(expInfo e, e) }
-
     | FIX ID LPAREN ID RPAREN DOT Term
       {
         fun ctx ->
@@ -347,13 +350,13 @@ Expr:
 
 
 
-  | uop LPAREN expr RPAREN
+  | uop LPAREN Expr RPAREN
     { fun ctx -> Uop($1 ctx, $3 ctx) }                                                  
 
-  | expr bop expr
+  | Expr bop Expr
     { fun ctx -> Bop($2 ctx, $1 ctx, $3 ctx) }
 
-  | BERNOULLI FLOATV
+  | BERNOULLI LPAREN FLOATV RPAREN
     { fun ctx -> Bernoulli (PrimReal $2.v)}
 
   | UNIFORM LPAREN FLOATV COMMA FLOATV RPAREN
@@ -407,7 +410,7 @@ Type:
   | Type ARROW ARROW Type
     { fun ctx -> Ty_Arr($1 ctx, MinEx, IZero, $4 ctx) }
 
-  | LIST LBRACK ITerm RBRACK type
+  | LIST LBRACK ITerm RBRACK Type
     { fun ctx -> Ty_List($3 ctx, $5 ctx) }
 
   | Quantifiedtypes
@@ -437,7 +440,7 @@ Type:
     { fun ctx -> $1 ctx }
   | UINT LBRACK ITerm RBRACK
     { fun ctx -> UInt ($3 ctx) }
-  | ARRAY LPAREN ID RPAREN LBRACK ITerm RBRACK type
+  | ARRAY LPAREN ID RPAREN LBRACK ITerm RBRACK Type
      { fun ctx -> let n_lvar = {v_name =  $3.v ; v_type = BiLVar;} in 
           UArray ( n_lvar, $6 ctx, $8 ctx)  }
   
@@ -477,134 +480,29 @@ EQuantifierUList :
       }
 
 Quantifiedtypes :
-   FORALL FQuantifierUList DOT type
+   FORALL FQuantifierUList DOT Type
           { fun ctx -> let (qf, ctx') =  $2 ctx in
                         qf_to_forall_type qf ($4 ctx')  }
-  | EXISTS EQuantifierUList DOT type
+  | EXISTS EQuantifierUList DOT Type
     { fun ctx ->  let (qf, ctx') =  $2 ctx in qf_to_exists_type qf ($4 ctx') }
 
 
 Constrainedtypes :
-    LBRACE Constr RBRACE type
+    LBRACE Constr RBRACE Type
     { fun ctx -> Ty_Cs ($2 ctx, $4 ctx) }      
 
 ConstrainedImptypes :
-    LBRACE Constr RBRACE DBLARROW type
+    LBRACE Constr RBRACE DBLARROW Type
     { fun ctx -> Ty_CsImp ($2 ctx, $5 ctx) }     
 
 
 /*  Predicates */
 
-Predicates:
-    LBRACE PContents RBRACE
-    { $2
-     }
-
-PContents:
-      PCt
-      {$1}
-    | PCt COMMA PContents
-      { fun ctx -> let (iv, ctx') = $1 ctx in
-                   let  (ivs, ctx'') = $3 ctx' in
-                    (iv @ ivs, ctx'') }
-
-PCts:
-    ID ARROW  ITerm LBRACK LCts RBRACK 
-    { fun ctx -> ([($1.v, $3 ctx, $5 ctx)], extend_l_var $1.v ctx) }
-    | ID ARROW ITerm 
-    { fun ctx -> ([($1.v, $3 ctx, [] )], extend_l_var $1.v ctx) }
     
 
-PCt:
-    ID ARROW ARRs
-    { fun ctx -> 
-    let n_lvar = {v_name = $1.v; v_type = BiLVar;} in 
-    ([(n_lvar , IBeta ($3 ctx) )], extend_l_var $1.v ctx) }
-   
     
 
 
-ARRs:
-     IO 
-    {  fun ctx -> BIO}
-    | IE
-    { fun ctx -> BIE }
-    | ID
-    { fun ctx -> let n_lvar = {v_name = $1.v; v_type = BiIVar;} in BVar n_lvar }
-    | LBRACK ITerm COMMA ITerm RBRACK
-    { fun ctx ->  BRange ( $2 ctx, $4 ctx ) }
-    | LBRACK ID RBRACK
-    { fun ctx -> let n_ivar = {v_name = $2.v; v_type = BiIVar;} in BPos (IVar n_ivar )   }
-    | LBRACK ITerm RBRACK
-    { fun ctx -> BPos ($2 ctx)   }
-    | ARRs UNION ARRs
-     { fun ctx -> BUnion  ( ($1 ctx), ($3 ctx) )  }
-    | ARRs INTERSECT ARRs 
-      { fun ctx -> BIntersect  ( ($1 ctx), ($3 ctx) )  }
-    | ARRs SETDIFF ARRs
-      { fun ctx -> BSetDiff ( ($1 ctx), ($3 ctx) )  }
-   
-
-LCts:
-    LCt
-    {$1}
-  | LCt SEMI LCts
-    { fun ctx -> let h = $1 ctx in 
-                let tl = $3 ctx in
-                  (h @ tl) }
-
-LCt:
-    INTV 
-    { fun ctx ->  [$1.v] }
-
-FSortBAnn :
-     ID LBRACK DIFF COMMA ITerm RBRACK DBLCOLON Sort
-      { fun ctx -> ([($1.i, $1.v, $8, $5 ctx)], extend_i_var $1.v $8 ctx) }
-   | ID 
-      { fun ctx -> ([($1.i, $1.v, Size, IZero)], extend_i_var $1.v Size ctx) }
-
-ESortBAnn :
-    ID DBLCOLON Sort
-      { fun ctx -> ([($1.i, $1.v, $3)], extend_i_var $1.v $3 ctx) }
-     
-FQuantifierBList :
-    FSortBAnn
-      { $1 }
-  | FSortBAnn SEMI FQuantifierBList
-      { fun ctx -> let (iv, ctx')  = $1 ctx  in
-                   let (qf, ctx_qf) = $3 ctx' in
-                   (iv @ qf, ctx_qf)
-      }
-
-EQuantifierBList :
-    ESortBAnn
-      { $1 }
-  | ESortBAnn SEMI EQuantifierBList
-      { fun ctx -> let (iv, ctx')  = $1 ctx  in
-                   let (qf, ctx_qf) = $3 ctx' in
-                   (iv @ qf, ctx_qf)
-      }
-
-QuantifiedBTypes :
-   FORALL FQuantifierBList DOT BType
-          { fun ctx -> let (qf, ctx') =  $2 ctx in
-                        qf_to_forall_btype qf ($4 ctx')  }
-  | EXISTS EQuantifierBList DOT BType
-    { fun ctx ->  let (qf, ctx') =  $2 ctx in qf_to_exists_btype qf ($4 ctx') }
-
-UnrelatedTypes :
-   UNREL LPAREN type COMMA type RPAREN 
-    { fun ctx -> BTyUnrel ($3 ctx, $5 ctx) }
-  | UNREL type
-    { fun ctx -> BTyUnrel ($2 ctx, $2 ctx) }
-
-ConstrainedBTypes :
-    LBRACE Constr RBRACE BType
-    { fun ctx -> BTyCs ($2 ctx, $4 ctx) }      
-
-ConstrainedImpBTypes :
-    LBRACE Constr RBRACE DBLARROW BType
-    { fun ctx -> BTyCsImp ($2 ctx, $5 ctx) }     
 
 
 /* Index terms */
