@@ -7,6 +7,9 @@
 \usepackage{algorithmic}
 
 \input{ldefs}
+\newcommand{\mg}[1]{\textcolor[rgb]{.90,0.00,0.00}{[MG: #1]}}
+\newcommand{\dg}[1]{\textcolor[rgb]{0.00,0.5,0.5}{[DG: #1]}}
+\newcommand{\wq}[1]{\textcolor[rgb]{.50,0.0,0.7}{[WQ: #1]}}
 
 \theoremstyle{definition}
 \newtheorem{thm}{Theorem}
@@ -1450,7 +1453,7 @@ completely standard way.
       %
       \boxed{\color{red} \lrv{\treal}} & = & \{(\stepiA, r) ~|~ \stepiA \in \nat \conj r : \treal \}\\
       %  
-      \boxed{\color{red} \lrv{\tbox{\type}}} & = & \{(\stepiA, \valr) ~|~ \stepiA \in \nat \conj \valr \in \lrv{\type} \conj \eop \notin \valr \}\\
+      \boxed{\color{red} \lrv{\tbox{\type}}} & = & \{(\stepiA, \valr) ~|~ \stepiA \in \nat \conj (\stepiA,\valr) \in \lrv{\type} \conj \eop \notin \valr \}\\
       %
       \boxed{\color{red} \lrv{\tforall{\dmap}{\nnatA}{i} \type} } & = & \{(\stepiA, (\eilam \expr, \env)) ~|~ \stepiA \in \nat \conj \forall I. ~  \tvdash{} I ::S, (\stepiA, \expr) \in \lre{\dmap}{\nnatA[I/i]}{\type[I/i]} \}\\
       %
@@ -1518,19 +1521,30 @@ $
 Assume $\ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv (\Gamma, \Gamma')}$, to show: $(\stepiA, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tbox{\type}}$.\\
 %
 By inversion, s.t.s. :$ \forall \valr, \tr, j, 
-$ s.t. $ (\env, \ienv \expr) \bigstep (\valr, \tr) \land j = \size{\tr} \land j \leq \stepiA $.  \\
+$ s.t. $ (\env, \ienv \expr) \bigstep (\valr, \tr) \land j =
+\size{\tr} \land j \leq \stepiA $.  \\
 (1) $\adap(\tr) \leq \ienv \nnatA $, (2) $\forall x, \ddep{x}(\tr) \leq \dmap(x)$, (3) $(k-j, \valr) \in \lrv{ \ienv \tbox{\type} } $. \\
 %
-By induction hypothesis, we get: $(k, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}$.\\
+By induction hypothesis, we get: $(k, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}~(\star)$.\\
 %
 By inversion, we get $\forall \valr', \tr', j'$ s.t. $(\env, \ienv \expr) \bigstep (\valr', \tr') \land \size{\tr'} = j' \land j' \leq \stepiA$,\\
 (1)' $\adap(\tr') \leq \ienv \nnatA$, (2)' $\forall x, \ddep{x}(\tr') \leq \dmap(x)$, (3)' $(\stepiA - j', \valr') \in \lrv{\ienv \type}$.\\
 %
 Pick $\valr = \valr', \tr = \tr' , j = j'$, (1) (2) is proved by (1)', (2)'.\\
 %
-s.t.s. (3) $(\stepiA - j, \valr ) \in \lrv{\ienv \tbox{\type}}$.\\
+STS (3) $(\stepiA - j, \valr ) \in \lrv{\ienv \tbox{\type}}$.\\
 %
-...\\
+Unfold the interpretation of box, STS:
+\begin{enumerate}
+\item  $(\stepiA - j, \valr ) \in \lrv{\ienv \type } (a) $.   It is proved from the inversion of $(\star)$.\\
+\item $ \delta \not\in
+ \valr~(b)$.  We know $\delta \not\in \expr$. \wq{add a lemma? If
+   $\delta \not \in \expr$ and $\forall \env, \valr, \tr . \env,\expr
+   \bigstep (\valr,\tr) $, then $\delta \not \in \valr$. }
+\end{enumerate}
+
+ 
+  
 
 \caseL{
 $
