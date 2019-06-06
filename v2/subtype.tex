@@ -1,0 +1,95 @@
+\clearpage
+\begin{lem}\label{lem:sub_sound}
+1. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in \lrv{\Delta}$ and  $(\stepiA, \valr) \in \lrv{\ienv \type}$,  then  $(\stepiA, \valr) \in \lrv{\ienv \type'}$.
+  \\
+% 2. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in \lrv{\Delta}$ and  $(\stepiA, \valr) \in \lrv{\ienv \type}$,  then  $(\stepiA, \valr) \in \lrv{\ienv \type'}$.
+%   \\
+\end{lem}
+%
+\begin{proof}
+\textbf{case}
+\[ 
+ \inferrule{
+     \Delta \models \sub{\type_1 }{ \type_1'  } \\
+         \Delta \models \sub{\type_2 }{ \type_2'  }
+    }{
+       \Delta \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
+    }
+\]
+Suppose we know : $ (\stepiA, (\valr_1, \valr_2)) \in \lrv{\ienv \type_1 \times \type_2} $.\\
+TS:  $ (\stepiA, (\valr_1, \valr_2)) \in \lrv{\ienv \type_1' \times \type_2'} $ \\
+Unfold its definition, we know: $  (\stepiA, \valr_1 ) \in \lrv{\ienv \type_1} $ and $  (\stepiA, \valr_2 ) \in \lrv{\ienv \type_2} $.\\
+By IH on the first premise, we know: $  (\stepiA, \valr_1 ) \in \lrv{\ienv \type_1'} $.\\
+By IH on the second premise, we know: $  (\stepiA, \valr_2 ) \in \lrv{\ienv \type_2'} $.\\
+This case is proved.\\
+
+\textbf{case}
+\[
+     \inferrule
+    {
+      \Delta  \models \sub{ \type_1' }{ \type_1 }
+      \and
+      \Delta  \models \sub{ \type_2 }{ \type_2' }
+      \and
+      \dmap \leq \dmap'
+      \and
+      \nnatA \leq \nnatA'
+      \and 
+      q \leq q'
+    }
+    {
+      \Delta  \models \sub{ \tarr{\type_1}{\type_2}{ \nnatbiA }{\dmap}{\nnatA} }
+      { \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'} }
+    }
+\]
+Suppose  $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})  } ~(\star)$.\\
+TS: $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv (\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'})  } $ \\
+From $(\star)$, we know:\\
+$\forall \stepiB < \stepiA.\eapp  \forall (\stepiB, \valr) \in \lrv{\type_1}. $ \\
+$ (\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2} $\\
+STS:
+$\forall \stepiB < \stepiA.\eapp  \forall (\stepiB, \valr') \in \lrv{\type_1'}. $ \\
+$ (\stepiB, (\env[x \mapsto \valr', f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap'[x: \nnatbiA, f: \infty]}{\nnatA'}{\type_2'} ~(\diamond)$\\
+Pick j, assume $(\stepiB, \valr') \in \lrv{\tau_1'}$, we also know $(\stepiB, \valr') \in \lrv{\tau_1}$ by IH on the first premise.\\
+From $(\star)$, we know: \\
+$ (\stepiB, (\env[x \mapsto \valr', f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2} $.\\
+Unfold its definition, we get: \\
+$ \forall \valr_t \eapp  \tr\eapp  \stepiB.\eapp \env[x \mapsto \valr', f \mapsto (\efix f(x).\expr, \env)], \expr \bigstep \valr_t, \tr  \conj (\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA)$\\
+$\Rightarrow (\adap(\tr) \leq \nnatA \conj \forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap[x:\nnatbiA, f: \infty](x) \conj ((\stepiA - \stepiB,  \valr_t) \in \lrv{\type_2})$\\
+Unfold $(\diamond)$, STS:
+\begin{enumerate}
+\item  $\adap(\tr) \leq \nnatA'$, It is proved because we know $\adap(\tr) \leq \nnatA $ and $\nnatA \leq \nnatA'$. \\
+\item $\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap'[x:\nnatbiA', f: \infty](x) $, because $\dmap \leq \dmap'$, It is proved using $\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap[x:\nnatbiA, f: \infty](x) $ . \\
+\item $((\stepiA - \stepiB,  \valr_t) \in \lrv{\type_2'})$ it is proved by IH on the second premise with $ ((\stepiA - \stepiB,  \valr_t) \in \lrv{\type_2})$. \\
+\end{enumerate}
+
+
+% \textbf{case}
+% \[
+%  \inferrule{
+%        % \forall x \in \dmap'. \dmap'(x) =0
+%     }{
+%        \Delta \models \sub{\tbox{(
+%           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
+%       }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
+%     }
+% \]
+
+\textbf{case}
+\[
+ \inferrule{
+\dmap' < \dmap
+    }{
+       \Delta \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
+    } }
+\]
+Suppose  $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})  } ~(\star)$.\\
+TS: $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{ \tbox{\ienv (\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'})  } } $ \\
+Unfold its defintion, STS:\\
+1. $ \delta \not \in  (\efix f(x).\expr, \env)$ . I do not know how to prove it. \\
+2.  $(\stepiA, (\efix f(x).\expr, \env) ) \in  \lrv{(\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'})}
+$.  It can be proved from $(\star)$ because $ \Delta \models \sub{ (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})} { (\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}) }  $ \\
+
+
+\end{proof}
