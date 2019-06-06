@@ -168,15 +168,15 @@ let token_list_of_string s =
   let rec helper l =
     try
       let t = Lexer.main lb in
-      if t = Parser.EOF then List.rev l else helper (t::l)
+      if t = Parser.EOF  then List.rev l else helper (t::l)
     with _ -> List.rev l
   in 
     helper []
 
 let pp_bop fmt (p : Syntax.bop) = 
   match p with
-    | Plus          -> fprintf fmt " + "
-    | Minus         -> fprintf fmt " - "
+    | Add           -> fprintf fmt " + "
+    | Sub         -> fprintf fmt " - "
     | Mul           -> fprintf fmt " * "
     | Div           -> fprintf fmt " / " 
     | Or            -> fprintf fmt " || "
@@ -195,19 +195,23 @@ let pp_uop fmt (p : Syntax.uop) =
 
 let rec pp_expression fmt (e : Syntax.expr) = 
   match e with
-  | Var s             -> fprintf fmt " Var %s " s
-  | Const_i i         -> fprintf fmt " Int %d " i
-  | Const_f f         -> fprintf fmt " Float %f " f
+  | Var v             -> fprintf fmt " Var %s " v.v_name
+  | Prim p            -> (match p with 
+  	| PrimInt i       -> fprintf fmt " Int %d " i
+  	| PrimUnit        -> fprintf fmt " Unit "
+  	| PrimBool b      -> fprintf fmt " Bool %b" b
+  	| PrimReal r      -> fprintf fmt " Float %f " r
+  	) 		         
   | True              -> fprintf fmt " True " 
   | False             -> fprintf fmt " False "
   | Pair(e1, e2)      -> fprintf fmt " (%a, %a)"  pp_expression e1 pp_expression e2
   | App (e1, e2)      -> fprintf fmt " App @[%a@] @[%a@] " pp_expression e1  pp_expression e2
-  | Fix(e1, e2, e3)   -> fprintf fmt " Fix %a (%a). @\n@[<hov 1> %a@]@\n" pp_expression(e1) pp_expression (e2) pp_expression(e3)
+  | Fix(f, x, e3)     -> fprintf fmt " Fix %s (%s). @\n@[<hov 1> %a@]@\n" f.v_name x.v_name pp_expression(e3)
   | Fst e             -> fprintf fmt " Fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " Snd %a " pp_expression(e)
   | If(e, e1, e2)     -> fprintf fmt " If %a Then @\n @[<hov 1> %a@]@\n Else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
   | Mech e            -> fprintf fmt " Mech( %a )" pp_expression(e)
-  | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> Let %a =@;<1 1>@[%a@]@] in@ %a@]" pp_expression(x) pp_expression(e1) pp_expression(e2)
+  | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> Let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
   | Nil               -> fprintf fmt " [] "
   | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
   | Bop(p, e1, e2)    -> fprintf fmt " @[%a@] %a @[%a@] " pp_expression(e1) pp_bop(p) pp_expression(e2)
@@ -216,6 +220,8 @@ let rec pp_expression fmt (e : Syntax.expr) =
 
 (*let e = (parse_string "let x = 12 in (x1, x2)" in (pp_expression e)*)
 let main = 
-  let prog = parseArgs () in pp_expression std_formatter (parse_string prog)
+  let prog = parseArgs () in match (parse_string prog) with 
+  	| (expr, iterm, ty, mode) -> pp_expression std_formatter expr
+  	| _ -> ()
 
 

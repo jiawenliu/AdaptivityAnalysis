@@ -45,7 +45,7 @@ type ty =
   | Ty_Box      of ty
 
   (* List types *)
-  | Ty_List     of ty
+  | Ty_List     of iterm * ty
 
   (* Constrained types *)
   | Ty_Cs       of constr * ty
@@ -72,7 +72,7 @@ let rec ty_subst i it ty =
   (* Boxed Type *)
   | Ty_Box(ty)                -> Ty_Box( utf ty )
   (* List types *)
-  | Ty_List (ty')        -> Ty_List( utf ty')
+  | Ty_List (i, ty')        -> Ty_List(f_it i,  utf ty')
 
   (* Constrained types *)
   | Ty_Cs (cs, ty')          -> Ty_Cs(constr_subst i it cs, utf ty')
@@ -127,7 +127,7 @@ type expr =
 
   (* Parameterized Constant*)
   | Pack        of expr
-  | Unpack      of expr * expr
+  | Unpack      of expr * var_info * expr
 
 
   (* Binary and Unary Arithmetic Operations*)
@@ -153,7 +153,8 @@ let rec is_equal_exp eL eR : bool =
 
   | Nil , Nil  -> true
 
-  | Unpack (e1, e2), Unpack(e1', e2')
+  | Unpack (e1, x, e2), Unpack(e1', x', e2') -> is_equal_exp e1 e1' && is_equal_exp e2 e2' && x = x'
+
   | App( e1, e2), App( e1', e2')
   | Cons( e1, e2), Cons( e1', e2') 
   | Pair( e1, e2), Pair( e1', e2') -> is_equal_exp e1 e1' && is_equal_exp e2 e2'

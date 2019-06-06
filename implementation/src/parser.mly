@@ -8,9 +8,8 @@ let parser_error   fi = Support.Error.error_msg   Support.Options.Parser fi
 let parser_warning fi = Support.Error.message   1 Support.Options.Parser fi
 let parser_info    fi = Support.Error.message   2 Support.Options.Parser fi
 
-let dummy_ty  = Ty_Prim UPrimUnit
+let dummy_ty  = Ty_Prim Ty_PrimUnit
 
-let rec int_to_speano n = if n = 0 then IZero else ISucc (int_to_speano (n-1))
 
 (* look for a variable in the context *)
 let existing_var fi id ctx =
@@ -41,41 +40,30 @@ let extend_l_var id ctx =
 
 (* Create a new binder *)
 (* TODO: set the proper b_size !!! *)
-let nb_prim  n = {v_name = n; v_type = BiVar}
-let nb_var   n = {v_name = n; v_type = BiVar}
-let nb_ivar n = {v_name = n; v_type = BiIVar}
-let nb_lvar n = {v_name = n; v_type = BiLVar}
+let nb_prim  n = {v_name = n; v_type = Var}
+let nb_var   n = {v_name = n; v_type = Var}
+let nb_ivar n = {v_name = n; v_type = IVar}
+let nb_lvar n = {v_name = n; v_type = LVar}
 
 
 (* From a list of arguments to a universally quantified unary type *)
 let rec qf_to_forall_type qf u_ty = match qf with
     []               -> u_ty
-  | (_, n, mu, t, s) :: qfl -> 
-    if mu=Loc then Ty_Forall(nb_lvar n, mu, t, s, qf_to_forall_type qfl u_ty)
-    else Ty_Forall(nb_ivar n, mu, t, s, qf_to_forall_type qfl u_ty)
+  | (_, n, t, s) :: qfl -> 
+    Ty_Forall(nb_lvar n, t, s, qf_to_forall_type qfl u_ty)
 
 (* From a list of arguments to an existentially quantified unary type *)
 let rec qf_to_exists_type qf u_ty = match qf with
     []               -> u_ty
-  | (_, n, s) :: qfl -> Ty_Exists(nb_ivar n, s, qf_to_exists_type qfl u_ty)
+  | (_, n, t, s) :: qfl -> Ty_Exists(nb_ivar n, t, s, qf_to_exists_type qfl u_ty)
                                         
 
-(* From a list of arguments to a universally quantified binary type *)
-let rec qf_to_forall_btype qf bi_ty = match qf with
-    []               -> bi_ty
-  | (_, n, t, s) :: qfl -> BTyForall(nb_ivar n, t, s, qf_to_forall_btype qfl bi_ty)
-
-(* From a list of arguments to an existentially quantified binary type *)
-let rec qf_to_exists_btype qf bi_ty = match qf with
-    []               -> bi_ty
-  | (_, n, s) :: qfl -> BTyExists(nb_ivar n, s, qf_to_exists_btype qfl bi_ty)
-                                        
 (* from (v:string, list int) list -> predicate *)
-let rec predicate_trans ivs = match ivs with
+(* let rec predicate_trans ivs = match ivs with
       [] -> []
-      | (v, o, l) :: tl -> let n_lvar = {v_name = v; v_type = BiLVar;} in 
+      | (v, o, l) :: tl -> let n_lvar = {v_name = v; v_type = LVar;} in 
                         (n_lvar,  IArray (o, l) ) :: (predicate_trans tl)
-
+*)
 
 %}
 
@@ -145,7 +133,7 @@ let rec predicate_trans ivs = match ivs with
 %token <Support.FileInfo.info> THEN
 %token <Support.FileInfo.info> ELSE
 %token <Support.FileInfo.info> PRINT
-%token <Support.FileInfo.info> EOF
+%token EOF
 %token <Support.FileInfo.info> BOOL
 %token <Support.FileInfo.info> BOOLR
 %token <Support.FileInfo.info> NUM
@@ -244,7 +232,7 @@ Term :
         {
           fun ctx ->
           let ctx' = extend_var $2.v ctx in
-          Let($2.i, (nb_var $2.v), $4 ctx, $6 ctx')
+          Let( (nb_var $2.v), $4 ctx, $6 ctx')
         }
         
 
@@ -253,42 +241,37 @@ Term :
         fun ctx ->
         let ctx_f = extend_var $2.v ctx   in
         let ctx_x = extend_var $4.v ctx_f in
-        Fix($2.i, nb_var $2.v, nb_var $4.v, $7 ctx_x)
+        Fix( nb_var $2.v, nb_var $4.v, $7 ctx_x)
       }
     | LAMBDA ID DOT Term
       {
         fun ctx ->
         let ctx_x = extend_var $2.v ctx   in
-        Fix($2.i, nb_var "_", nb_var $2.v, $4 ctx_x)
+        Fix(nb_var "_", nb_var $2.v, $4 ctx_x)
       }
 
     | BIGLAMBDA DOT Term
       {
-        fun ctx -> let e = $3 ctx in ILam(expInfo e, e)
+        fun ctx -> let e = $3 ctx in ILam( e)
       }
     |  IF Expr THEN Term ELSE Term 
-      { fun ctx -> IfThen($1, $2 ctx, $4 ctx, $6 ctx)
+      { fun ctx -> If($2 ctx, $4 ctx, $6 ctx)
       }
 
     | PACK Term
-      { fun ctx -> Pack ($1, $2 ctx) }
+      { fun ctx -> Pack ($2 ctx) }
 
     | UNPACK Term AS ID IN Term
       { fun ctx ->
         let ctx' = extend_var $4.v ctx in
-        Unpack($1,$2 ctx, nb_var $4.v, $6 ctx')
+        Unpack($2 ctx, nb_var $4.v, $6 ctx')
       }
     | UNIONCASE Expr OF INL LPAREN ID RPAREN DBLARROW Term PIPE INR LPAREN ID RPAREN DBLARROW Term 
       { fun ctx ->
         let ctx_l = extend_var $6.v  ctx in
         let ctx_r = extend_var $13.v ctx in
-        Case($1, $2 ctx, nb_var $6.v, $9 ctx_l, nb_var $13.v, $16 ctx_r) }
+        Case($2 ctx, nb_var $6.v, $9 ctx_l, nb_var $13.v, $16 ctx_r) }
 
-    | LISTCASE Expr OF NIL DBLARROW Term PIPE ID DBLCOLON ID DBLARROW Term 
-      { fun ctx ->
-        let ctx_h  = extend_var $8.v ctx in
-        let ctx_tl = extend_var $10.v ctx_h in
-        CaseL($1, $2 ctx, $6 ctx, nb_var $8.v, nb_var $10.v, $12 ctx_tl) }
 
 
 /* Applications */
@@ -308,9 +291,9 @@ App:
 /* Syntactic sugar for n-ary tuples */
 PairSeq:
     Term COMMA Term 
-    { fun ctx -> Pair($2, $1 ctx, $3 ctx) }
+    { fun ctx -> Pair($1 ctx, $3 ctx) }
   | Term COMMA PairSeq 
-    { fun ctx -> Pair($2, $1 ctx, $3 ctx)  }
+    { fun ctx -> Pair($1 ctx, $3 ctx)  }
 
 
 Expr:
@@ -357,7 +340,7 @@ Expr:
     { fun ctx -> Bop($2 ctx, $1 ctx, $3 ctx) }
 
   | BERNOULLI LPAREN FLOATV RPAREN
-    { fun ctx -> Bernoulli (PrimReal $2.v)}
+    { fun ctx -> Bernoulli (PrimReal $3.v)}
 
   | UNIFORM LPAREN FLOATV COMMA FLOATV RPAREN
     { fun ctx -> Uniform(PrimReal $3.v, PrimReal $5.v)}
@@ -367,28 +350,28 @@ Expr:
 /* Operations */
 
 bop:
-    | ADD           { Add }
-    | SUB           { Sub }
-    | MUL           { Mul }
-    | DIV           { Div }
-    | OR            { Or }
-    | AND           { And }
-    | EQUAL         { Equal }
-    | LEQ           { Leq }
-    | GEQ           { Geq }
-    | LESS          { Less }
-    | GREATER       { Greater }
+    | ADD           { fun ctx -> Add }
+    | SUB           { fun ctx -> Sub }
+    | MUL           { fun ctx -> Mul }
+    | DIV           { fun ctx -> Div }
+    | OR            { fun ctx -> Or }
+    | AND           { fun ctx -> And }
+    | EQUAL         { fun ctx -> Equal }
+    | LEQ           { fun ctx -> Leq }
+    | GEQ           { fun ctx -> Geq }
+    | LESS          { fun ctx -> Less }
+    | GREATER       { fun ctx -> Greater }
 
 
 uop:
-    | SIGN          { Sign }
-    | LOG           { Log }
+    | SIGN          { fun ctx -> Sign }
+    | LOG           { fun ctx -> Log }
 
  
 /* Sorts */
 Sort :
     SIZE
-      { Adap }
+      { fun ctx -> Adap }
 
 
 Mode:
@@ -398,29 +381,20 @@ Mode:
     { MinEx }
 
 
-  /* Unary Types */
+  /* Types */
 Type:
     Type LBRACK Mode COMMA ITerm RBRACK ARROW Type
     { fun ctx -> 
       Ty_Arr($1 ctx, $3, $5 ctx, $8 ctx) }
   | Type ARROW Type
     { fun ctx -> 
-      Ty_Arr($1 ctx, MaxEx, IZero, $3 ctx) }
+      Ty_Arr($1 ctx, MaxEx, (IConst 0), $3 ctx) }
 
   | Type ARROW ARROW Type
-    { fun ctx -> Ty_Arr($1 ctx, MinEx, IZero, $4 ctx) }
+    { fun ctx -> Ty_Arr($1 ctx, MinEx, (IConst 0), $4 ctx) }
 
   | LIST LBRACK ITerm RBRACK Type
     { fun ctx -> Ty_List($3 ctx, $5 ctx) }
-
-  | Quantifiedtypes
-    { $1 }
-
-  | Constrainedtypes
-    { $1 }
-
-  | ConstrainedImptypes
-    { $1 }
 
   | Type
     { $1 }
@@ -438,11 +412,6 @@ Type:
     { fun _cx ->  Ty_Prim Ty_PrimUnit }
   | UTPairSeq
     { fun ctx -> $1 ctx }
-  | UINT LBRACK ITerm RBRACK
-    { fun ctx -> UInt ($3 ctx) }
-  | ARRAY LPAREN ID RPAREN LBRACK ITerm RBRACK Type
-     { fun ctx -> let n_lvar = {v_name =  $3.v ; v_type = BiLVar;} in 
-          UArray ( n_lvar, $6 ctx, $8 ctx)  }
   
 
 UTPairSeq:
@@ -450,57 +419,6 @@ UTPairSeq:
     { fun ctx -> Ty_Prod($1 ctx, $3 ctx) }
   | Type TIMES UTPairSeq
     { fun ctx -> Ty_Prod($1 ctx, $3 ctx) }
-
-FSortUAnn :
-    ID LBRACK Mode COMMA ITerm RBRACK DBLCOLON Sort
-      { fun ctx -> if ($8 = Loc) then ([($1.i, $1.v, $8, $3, $5 ctx)], extend_l_var $1.v ctx) 
-      else  ([($1.i, $1.v, $8, $3, $5 ctx)], extend_i_var $1.v $8 ctx) }
-       
-
-ESortUAnn :
-    ID DBLCOLON Sort
-      { fun ctx -> ([($1.i, $1.v, $3)], extend_i_var $1.v $3 ctx) }
-     
-FQuantifierUList :
-    FSortUAnn
-      { $1 }
-  | FSortUAnn SEMI FQuantifierUList
-      { fun ctx -> let (iv, ctx')  = $1 ctx  in
-                   let (qf, ctx_qf) = $3 ctx' in
-                   (iv @ qf, ctx_qf)
-      }
-
-EQuantifierUList :
-    ESortUAnn
-      { $1 }
-  | ESortUAnn SEMI EQuantifierUList
-      { fun ctx -> let (iv, ctx')  = $1 ctx  in
-                   let (qf, ctx_qf) = $3 ctx' in
-                   (iv @ qf, ctx_qf)
-      }
-
-Quantifiedtypes :
-   FORALL FQuantifierUList DOT Type
-          { fun ctx -> let (qf, ctx') =  $2 ctx in
-                        qf_to_forall_type qf ($4 ctx')  }
-  | EXISTS EQuantifierUList DOT Type
-    { fun ctx ->  let (qf, ctx') =  $2 ctx in qf_to_exists_type qf ($4 ctx') }
-
-
-Constrainedtypes :
-    LBRACE Constr RBRACE Type
-    { fun ctx -> Ty_Cs ($2 ctx, $4 ctx) }      
-
-ConstrainedImptypes :
-    LBRACE Constr RBRACE DBLARROW Type
-    { fun ctx -> Ty_CsImp ($2 ctx, $5 ctx) }     
-
-
-/*  Predicates */
-
-    
-
-    
 
 
 
@@ -516,7 +434,7 @@ ConstrainedImptypes :
   | LPAREN ITerm RPAREN
     { fun ctx -> $2 ctx }
   | ID
-    { fun ctx -> let n_ivar = {v_name = $1.v; v_type = BiIVar;} in
+    { fun ctx -> let n_ivar = {v_name = $1.v; v_type = IVar;} in
                              IVar n_ivar                 
     }
 

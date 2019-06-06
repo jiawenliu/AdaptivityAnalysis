@@ -232,7 +232,7 @@ rule main = parse
 
 | "\"" { resetStr(); startLex := info lexbuf; string lexbuf }
 
-| eof { Parser.EOF(info lexbuf) }
+| eof { Parser.EOF }
 
 | _  { lex_error (info lexbuf) "Illegal character" }
 
