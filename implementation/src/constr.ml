@@ -70,10 +70,8 @@ let rec constr_map f cs =
   | CEq (it1, it2) -> if it1 = it2 then CTrue else CEq (f it1,f it2)
 (*   | CLeq (IConst 0.0, IConst 0.0) -> CTrue *)
   | CLeq (it1, it2) -> if it1 = it2 then CTrue else CLeq (f it1, f it2)
-  | CLeq (it1, it2) -> cs
 
   | CLt (it1, it2) -> if it1 = it2 then CFalse else CLt (f it1, f it2)
-  | CLt (it1, it2) -> cs
   | CAnd (cs1, cs2) -> 
     let r1 = cmap cs1 in
     let r2 = cmap cs2 in

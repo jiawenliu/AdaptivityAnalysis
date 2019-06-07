@@ -221,7 +221,7 @@ let rec qf_to_exists_type qf u_ty = match qf with
 /* ---------------------------------------------------------------------- */
 
 u_toplevel :
-    Term LEQ LBRACK Mode COMMA ITerm RBRACK COLON Type EOF
+    Expr LEQ LBRACK Mode COMMA ITerm RBRACK COLON Type EOF
         { let ctx = Ctx.set_exec_mode $4 (Ctx.empty_context) in
           ($1 ctx, $6 ctx, $9 ctx, $4) }
 
@@ -330,8 +330,6 @@ Expr:
 
   | Term DBLCOLON Term
     { fun ctx -> Cons($1 ctx, $3 ctx) }
-
-
 
   | uop LPAREN Expr RPAREN
     { fun ctx -> Uop($1 ctx, $3 ctx) }                                                  

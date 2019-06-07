@@ -220,8 +220,8 @@ let rec pp_expression fmt (e : Syntax.expr) =
 
 (*let e = (parse_string "let x = 12 in (x1, x2)" in (pp_expression e)*)
 let main = 
-  let prog = parseArgs () in match (parse_string prog) with 
+  let prog = parseArgs () in 
+  	match (parse_string prog) with 
   	| (expr, iterm, ty, mode) -> pp_expression std_formatter expr
-  	| _ -> ()
 
 
