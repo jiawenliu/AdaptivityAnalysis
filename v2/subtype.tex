@@ -2,11 +2,14 @@
 \begin{lem}\label{lem:sub_sound}
 1. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in \lrv{\Delta}$ and  $(\stepiA, \valr) \in \lrv{\ienv \type}$,  then  $(\stepiA, \valr) \in \lrv{\ienv \type'}$.
   \\
-% 2. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in \lrv{\Delta}$ and  $(\stepiA, \valr) \in \lrv{\ienv \type}$,  then  $(\stepiA, \valr) \in \lrv{\ienv \type'}$.
-%   \\
+ 2. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in
+ \lrv{\Delta}$ and  $(\stepiA, (\env, \expr)) \in
+ \lre{\dmap}{\nnatA}{\ienv \type}$, and $\dmap < \dmap'$ and $\nnatA < \nnatA' $,  then  $(\stepiA, (\env, \expr)) \in \lre{\dmap'}{\nnatA'}{\ienv \type'}$.
+   \\
 \end{lem}
 %
-\begin{proof}
+\begin{proof} The proof of statement (1) is by induction on the
+  subtying derivation.\\
 \textbf{case}
 \[ 
  \inferrule{
@@ -78,7 +81,7 @@ Unfold $(\diamond)$, STS:
 \textbf{case}
 \[
  \inferrule{
-\dmap' < \dmap
+\dmap' \leq \dmap
     }{
        \Delta \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
@@ -90,6 +93,45 @@ Unfold its defintion, STS:\\
 1. $ \delta \not \in  (\efix f(x).\expr, \env)$ . \wq{I do not know how to prove it.} \\
 2.  $(\stepiA, (\efix f(x).\expr, \env) ) \in  \lrv{(\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'})}
 $.  It can be proved from $(\star)$ because $ \Delta \models \sub{ (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})} { (\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}) }  $ \\
+
+
+\textbf{The proof of statement (2)} \\
+Assume $(\stepiA, (\env, \expr)) \in
+ \lre{\dmap}{\nnatA}{\ienv \type}~(\star)$. \\
+%
+
+
+TS: $(\stepiA, (\env, \expr)) \in
+ \lre{\dmap'}{\nnatA'}{\ienv \type'}$.\\
+Unfold its definition, STS:
+$ \forall \stepiB, \env, \tr.  \env, \expr \bigstep \valr, \tr \conj
+(\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA) $.\\
+$\Rightarrow \adap(\tr) \leq \nnatA' \conj$\\
+$\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap'(x)\conj$\\
+$ (\stepiA - \stepiB,  \valr) \in \lrv{\type'}$\\
+%
+Pick  $\stepiB$,$\valr$,  $\tr$, s.t.
+$\env, \expr \bigstep \valr, \tr \conj
+(\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA) $.\\
+STS1: $\adap(\tr) \leq \nnatA' $ \\
+STS2: $\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq
+\dmap'(x)$\\
+STS3: $ (\stepiA - \stepiB,  \valr) \in \lrv{\type'}  $.\\
+
+
+By inversion on the assumption $(\star)$, Pick $\stepiB$,$\valr$,
+$\tr$. we know from assumption: $ \env, \expr \bigstep \valr, \tr \conj
+(\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA) $.\\
+We get: $\adap(\tr) \leq \nnatA ~(a)$\\
+$\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x)~(b)$\\
+$ (\stepiA - \stepiB,  \valr) \in \lrv{\type}~(c)$\\
+
+STS1: $\adap(\tr) \leq \nnatA' $ is proved by $(a)$ and $\nnatA \leq
+\nnatA'$. \\
+STS2: $\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq
+\dmap'(x)$. It is proved by $(b)$ and $\dmap \leq \dmap'$. \\
+STS3: $ (\stepiA - \stepiB,  \valr) \in \lrv{\type'}$. It is proved by
+IH1 instantiated with $(c)$  and $ \Delta \models \sub{\type}{\type'}$.\\
 
 
 \end{proof}
