@@ -95,6 +95,65 @@ Unfold its defintion, STS:\\
 $.  It can be proved from $(\star)$ because $ \Delta \models \sub{ (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})} { (\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}) }  $ \\
 
 
+
+\textbf{Case}
+\[
+\inferrule{
+       % \forall x \in \dmap'. \dmap'(x) =0
+    }{
+       \Delta \models \sub{\tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
+      }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
+    }
+\]
+Assume $ \ienv \in \lrv{\Delta}$.\\
+We have:  $$ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv \tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} }
+      ~(\star)$$
+TS: $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{ \ienv 
+  \tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0}} $ \\
+Assume $\stepiB < \stepiA \conj (j, \valr) \in \lrv{\tbox{\type_1}}$,
+which implies $ (j, \valr) \in \lrv{\type_1} \conj \delta \not \in \valr$ \\
+STS: $(\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr,
+\env)], \expr)) \in \lre{\dmap[x: 0, f:
+  \infty]}{0}{ \tbox{ \type_2} } (\star\star)$\\
+
+By unrolling $(\star)$, we know that: 
+ $$ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv (
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} ) } ~(a) \conj
+        \delta \not \in   (\efix f(x).\expr, \env) ~(b)
+      $$
+
+By unrolling $(a)$ with $\stepiA < \stepiB \conj (j, \valr) \in
+\lrv{\type_1}$, we get:
+ \[
+(\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr,
+\env)], \expr)) \in \lre{\dmap'[x: \nnatbiA, f:
+  \infty]}{\nnatA}{  \type_2 } (\diamond)
+\]
+
+Unrolling $(\diamond)$, assume \[ \env[x \mapsto \valr, f \mapsto (\efix f(x).\expr,
+\env)], \expr \bigstep \valr_1, \tr_1 \conj |\tr_1| = \stepiB_1 \conj
+\stepiB_1 \leq \stepiA \] .
+We get : $$ \adap(\tr_1) \leq \nnatA $$
+         $$\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr_1) \leq
+         \dmap'[x: \nnatbiA, f: \infty](x)$$
+         $$  (\stepiA - \stepiB_1,  \valr_1) \in \lrv{\type_2}$$
+
+Unrolling $(\star\star)$ with our assumption $ \env[x \mapsto \valr, f \mapsto (\efix f(x).\expr,
+\env)], \expr \bigstep \valr_1, \tr_1 \conj |\tr_1| = \stepiB_1 \conj
+\stepiB_1 \leq \stepiA $. \\ 
+ STS:
+\begin{enumerate}
+\item $ \adap(\tr_1) \leq 0 $ \\  \wq{ have a lemma? :  if $\env, \expr
+    \bigstep \valr,  \tr $ and $\delta \not \in \expr$ and $\delta \not
+    \in \env$, then $ \adap(\tr)   = 0 $ and $\delta \not \in \valr $ }  
+\item $\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr_1) \leq
+         \dmap'[x: 0, f: \infty](x)$ \\
+\item $  (\stepiA - \stepiB_1,  \valr_1) \in \lrv{\tbox {\type_2} }$ \\
+\end{enumerate}
+  
+
 \textbf{The proof of statement (2)} \\
 Assume $(\stepiA, (\env, \expr)) \in
  \lre{\dmap}{\nnatA}{\ienv \type}~(\star)$. \\
