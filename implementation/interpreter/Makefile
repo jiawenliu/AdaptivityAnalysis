@@ -7,7 +7,7 @@ OCAMLBUILD=ocamlbuild $(OCBOPTS)
 VERSION=byte
 
 
-NAME=beMain
+NAME=main
 # Program main file
 MAIN=$(NAME)
 

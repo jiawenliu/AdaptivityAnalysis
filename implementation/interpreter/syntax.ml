@@ -4,15 +4,13 @@
 (* ---------------------------------------------------------------------- *)
 
 open Format
-open Support.FileInfo
 open IndexSyntax
-open Constr 
 
 
 (* Execution modes  *)
 type mode =
-    MaxEx
-  | MinEx
+    Check
+  | Infer
 
 (* Types *)
 
@@ -23,7 +21,6 @@ type ty_prim =
   | Ty_PrimBool
   | Ty_PrimReal
 
-type predicate = (var_info*iterm) list  
 
 
 (* Types *)
@@ -47,9 +44,6 @@ type ty =
   (* List types *)
   | Ty_List     of iterm * ty
 
-  (* Constrained types *)
-  | Ty_Cs       of constr * ty
-  | Ty_CsImp    of constr * ty
 
 
 (* Substitution ty[I/i] for index vars *)
@@ -74,16 +68,12 @@ let rec ty_subst i it ty =
   (* List types *)
   | Ty_List (i, ty')        -> Ty_List(f_it i,  utf ty')
 
-  (* Constrained types *)
-  | Ty_Cs (cs, ty')          -> Ty_Cs(constr_subst i it cs, utf ty')
-  | Ty_CsImp (cs, ty')       -> Ty_CsImp(constr_subst i it cs, utf ty')
 
 
 (* Primitive Terms *)
 type exp_prim =
     PrimUnit
   | PrimInt    of int
-  | PrimBool   of bool
   | PrimReal   of float
 
 
@@ -113,7 +103,7 @@ type expr =
   | Case        of expr * var_info * expr * var_info * expr
 
   (* Functional Expressions *)
-  | Fix         of var_info * var_info * expr(* unsure *) 
+  | Fix         of var_info * expr * expr(* unsure *) 
   | App         of expr * expr
   | Mech        of expr
 
@@ -144,7 +134,7 @@ let rec is_equal_exp eL eR : bool =
   | Var(v1), Var( v2) -> v1 = v2
   | Prim(p1), Prim( p2) -> p1 = p2
 
-  | Fix(f1, x1, e1), Fix(f2, x2, e2) -> f1 = f2 && x1 = x2 && is_equal_exp e1 e2
+  | Fix(f1, x1, e1), Fix(f2, x2, e2) -> f1 = f2 && is_equal_exp x1 x2 && is_equal_exp e1 e2
   
   | Pack( e), Pack (e')
   | Mech( e), Mech (e')
@@ -192,7 +182,7 @@ let rec exp_free_vars (e: expr) =
   | If ( e, e1, e2) -> exp_free_vars e1 @ exp_free_vars e2 @ exp_free_vars e
                                                                
   | Fix ( f, x, e') ->
-    List.filter (fun vi_x -> vi_x != f.v_name && vi_x != x.v_name) (exp_free_vars e')
+    List.filter (fun vi_x -> vi_x != f.v_name) (exp_free_vars e')
 
   | Case( e, x, e1, y, e2) ->(exp_free_vars e) @ 
     (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e1)) @ 
@@ -299,19 +289,3 @@ let check_arrays_leq (arr_1: iterm) (arr_2: iterm) : bool =
             let l_2 = Array.to_list a_2 in
             check_lists_leq l_1 l_2
         | _ , _ -> false *)
-
-let sort_alg (i_1:int) (i_2:int) :int =
-    i_1 - i_2
-     
-
-  let minus_cost (k_1: iterm) (k_2 : iterm) : iterm =
-    iterm_simpl (IMinus( k_1, k_2) )
-
-  let predicate_remove (p1:predicate) (p2: predicate) : predicate =
-    List.filter ( fun (g, iarr) -> not (List.mem_assoc g p2) )   p1
-
-   let predicate_intersect (p1:predicate) (p2: predicate) : predicate =
-    List.filter ( fun (g, iarr) ->  (List.mem_assoc g p2) )   p1
-
-       let predicate_union (p1:predicate) (p2: predicate) : predicate =
-    List.append p1 p2

@@ -12,18 +12,10 @@ type sort =
     Adap
 
 
-(* Different types of variable binding, for debugging purposes *)
-type binding =
-    Var            (*Regular varible *)
-  | IVar           (*Index variable  *) 
-  | EVar of sort   (*Existential variable  *)
-  | LVar
-  | PVar
 
 
 type var_info = {
   v_name  : string;
-  v_type  : binding;
 }
 
 

@@ -1,5 +1,5 @@
 {
-open BeParser
+open Parser
 open Lexing
 exception SyntaxError of string
 
@@ -26,12 +26,22 @@ let id = letter+ (digit|letter)*
    specified by the [action].  We won't go into details on how the actions
    work.  *)
 
-rule token = 
+rule main = 
   parse
-  | white               { token lexbuf }
-  | int                 { INT (int_of_string (Lexing.lexeme lexbuf)) }
-  | float               { FLOAT (float_of_string (Lexing.lexeme lexbuf))}
+  | white               { main lexbuf }
+  | int                 { INTV (int_of_string (Lexing.lexeme lexbuf)) }
+  | float               { REALV (float_of_string (Lexing.lexeme lexbuf))}
   | eof                 { EOF }
+
+  | "int"               { INT }
+  | "bool"              { BOOL }
+  | "real"              { REAL }
+  | "unit"              { UNIT }
+
+  | "nil"               { NIL }
+
+  | "index"             { INDEX }
+
   | "fix"               { FIX }
   | "if"                { IF }
   | "lambda"            { LAM }
@@ -41,14 +51,17 @@ rule token =
   | "true"              { TRUE }
   | "false"             { FALSE }
 
-  | "lg"                { LG }
+  | "Lambda"            { BIGLAM }
+
+  | "log"               { LOG }
   | "sign"              { SIGN }
 
+  | "<<"                { LEFTSHIFT }
   | "||"                { OR }
   | "&&"                { AND }
   | "^"                 { XOR }
-  | "-"                 { MINUS }
-  | "+"                 { PLUS }
+  | "-"                 { SUB }
+  | "+"                 { ADD }
   | "*"                 { MUL }
   | "/"                 { DIV }
   | "<"                 { LESS }
@@ -57,9 +70,18 @@ rule token =
   | ">="                { GEQ }
   | "::"                { CONS }
   | "[]"                { NIL }
+  | "()"                { UNITV }
+  | "["                 { LBRACK }
+  | "]"                 { RBRACK }
   | "("                 { LPAREN }
   | ")"                 { RPAREN }
   | "="                 { EQUAL }
-  | ","                 { COLON }
+  | ":"                 { COLON }
+  | ","                 { COMMA }
   | "."                 { DOT }
+
+  | "check"             { CHECK }
+  | "infer"             { INFER }
+
+
   | id                  { VAR (Lexing.lexeme lexbuf) }
