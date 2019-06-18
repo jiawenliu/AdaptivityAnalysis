@@ -1,77 +1,7 @@
 open Syntax
 open IndexSyntax
 open Format
-open Print
 
-let inprog = ref (None : string option)
-let infile = ref (None : string option)
-let isfile = ref false
-
-
-
-let argDefs = [
-    "-prog", Arg.String (fun s -> inprog := Some s  ), "specify the input program string, -ip string" ; 
-      "-file", Arg.String (fun s -> infile := Some s; isfile := true ), "specify the input file name, -if string" 
-]
-
-let parseArgs () =  
-        Arg.parse argDefs 
-        (fun s -> 
-                match !inprog  with 
-                      | Some (_) -> printf "%s" "specify just the programs"  
-                      | None  -> inprog := Some (s) ) " " ;
-             match !inprog  with
-                   | Some i -> (i)
-                   | _ -> 
-                   (
-                    match !infile with
-                          | Some i -> (i)
-                          | _ -> printf "%s" "specify  your input file -if or intput program string -ip"; ""
-                    )
-
-
-
-(* Parsing string *)
-
-let parse_string prog =
-  if (!isfile) 
-  then
-    let fh = open_in prog 
-    in
-      let lb = (Lexing.from_channel fh) in 
-        Parser.toplevel Lexer.main lb
-  else 
-    let lb = Lexing.from_string prog
-    in
-      Parser.toplevel Lexer.main lb
-
-(* Extract a value from an ast node.
-   Raises Failure if the argument is a node containing a value. *)
-(*let extract_value = function
-  | V_True          -> "true"
-  | V_False         -> "false"
-  | V_Const i       -> string_of_int i
-  | V_Fix(v, env)   -> "Fix Function Value"
-  | V_Pair(v1, v2)  -> "(Pair value)"
-  | V_Nil           -> "[]"
-  | V_Cons(v1, v2)  -> "List Value"
-  | _               -> failwith "Not a value"
-*)
-(* Interpret an expression *)
-(*let interp e =
-  e |> parse |> bigstep |> extract_value
-*)
-
-(* Print all tokens *) 
-(*let token_list_of_string s =
-  let lb = Lexing.from_string s in
-  let rec helper l =
-    try
-      let t = Lexer.main lb in
-      if t = Parser.EOF  then List.rev l else helper (t::l)
-    with _ -> List.rev l
-  in 
-    helper []
 
 let pp_bop fmt (p : Syntax.bop) = 
   match p with
@@ -119,11 +49,4 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | IApp e            -> fprintf fmt " %a []" pp_expression(e)
   | ILam e            -> fprintf fmt " Lam. %a " pp_expression(e)
   | _                 -> fprintf fmt " new "
-
-*)(*let e = (parse_string "let x = 12 in (x1, x2)" in (pp_expression e)*)
-let main = 
-  let prog = parseArgs () in 
-    match (parse_string prog) with 
-    | (expr, ty) -> pp_expression std_formatter expr
-
 
