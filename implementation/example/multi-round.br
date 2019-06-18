@@ -1,6 +1,6 @@
-let updtSCC = fix f (). lambda sc. lambda a. lambda p. lambda q. lambda I. lambda i. lambda N.
+let updtSC = fix f (z). lambda sc. lambda a. lambda p. lambda q. lambda I. lambda i. lambda N.
 	if	(	(i < N),
-			if( (i in I),
+			if( (contains I i),
 				let x = (nth sc i) + (a - p) * (q i - p) in
 					let sc' = updt sc i x in
 						f () sc' a p q I (i + 1) N,
@@ -8,26 +8,28 @@ let updtSCC = fix f (). lambda sc. lambda a. lambda p. lambda q. lambda I. lambd
 			sc
 		)
 in
-let updtSCC = fix f (). lambda scc. lambda a. lambda p. lambda qc. lambda i. lambda C.
+let updtSCC = fix f (z). lambda scc. lambda a. lambda p. lambda qc. lambda i. lambda C.
 	if	(	(i < C),
 			let x = (nth scc i) + (a - p) * (qc i - p) in
 				let scc' = updt scc i x in
 					f () scc' a p qc (i + 1) C,
 			scc
 		)
+in
 
-let updtI = fix f (). lambda maxSCC. lambda sc. lambda i. lambda N.
+let updtI = fix f (z). lambda maxSCC. lambda sc. lambda i. lambda N.
 	if(	(i < N),
 		if(	((nth scc i) < maxScc),
 			i :: (f () maxScc sc (i + 1) N),
 			f () maxScc sc (i + 1) N),
-		[]
+		nil
 		)
 
 in 
-let multiRound = fix f (). Lambda. Lambda. lambda k. lambda j. lambda sc. lambda scc. lambda I. lambda N. lambda C. lambda D.
+
+fix f (z). Lambda. Lambda. lambda k. lambda j. lambda sc. lambda scc. lambda I. lambda N. lambda C. lambda D.
 	if(	(j < k),
-		let p = uniform 0 1 in
+		let p = uniform(0, 1) in
 		let q = lambda x. bernoulli p in
 		let qc = lambda x. bernoulli p in
 		let a = mech(q) in 
@@ -36,8 +38,10 @@ let multiRound = fix f (). Lambda. Lambda. lambda k. lambda j. lambda sc. lambda
 		let maxScc = foldl (lambda acc. lambda a. if(acc < a, a, acc)) 0 scc' in
 		let I' = updtI () maxScc sc 0 N in 
 		let D' = D \ I' in
-			multiRound () [k] [j + 1] k (j + 1) sc' scc' I' N C D' ,
+			multiRound () [] [] k (j + 1) sc' scc' I' N C D' ,
 		D)
 
 
-<< [check, index k, index j] : real
+|> forall k:::adapt. forall j:::adapt. int[index k] -> int[index j] -> real list -> real list -> int list -> int -> int -> int list, 0 -> ( dmap (sc:0) ; index k - index j) int list
+
+

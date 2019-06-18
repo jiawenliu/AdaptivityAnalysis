@@ -7,68 +7,6 @@ open Format
 open IndexSyntax
 
 
-(* Execution modes  *)
-type mode =
-    Check
-  | Infer
-
-(* Types *)
-
-(* Unary primitive types *)
-type ty_prim =
-    Ty_PrimInt
-  | Ty_PrimUnit
-  | Ty_PrimBool
-  | Ty_PrimReal
-
-
-
-(* Types *)
-type ty =
-  (* Primitive types *)
-  | Ty_Prim     of ty_prim
-
-  (* Pair *)
-  | Ty_Prod     of ty * ty
-  (* Functional type *)
-  | Ty_Arr      of ty * mode * iterm * ty
-
-  (* Quantified types *)
-  | Ty_Forall   of var_info * sort * iterm * ty
-  | Ty_Exists   of var_info * sort * iterm * ty
-  | Ty_Index    of sort * iterm * ty
-
-  (* Boxed Types *)
-  | Ty_Box      of ty
-
-  (* List types *)
-  | Ty_List     of iterm * ty
-
-
-
-(* Substitution ty[I/i] for index vars *)
-let rec ty_subst i it ty = 
-  let f_it = (iterm_subst i it) in
-  let utf = ty_subst i it in
-  match ty with
-  | Ty_Prim tp            -> Ty_Prim tp
-  (* ADT *)
-  | Ty_Prod(ty1, ty2)   -> Ty_Prod(utf ty1, utf ty2)
-
-  (* Functional type *)
-  | Ty_Arr(ty1, mo, k, ty2) -> Ty_Arr(utf ty1, mo, f_it k, utf ty2)
-
-  (* Quantified types *)
-  | Ty_Forall(b, s, k, ty')  -> Ty_Forall(b, s, f_it k,  utf ty')
-  | Ty_Exists(b, s, k, ty')  -> Ty_Exists(b, s, f_it k, utf ty')
-  | Ty_Index(s, k, ty')       -> Ty_Index(s, f_it k, utf ty')
-
-  (* Boxed Type *)
-  | Ty_Box(ty)                -> Ty_Box( utf ty )
-  (* List types *)
-  | Ty_List (i, ty')        -> Ty_List(f_it i,  utf ty')
-
-
 
 (* Primitive Terms *)
 type exp_prim =
@@ -78,7 +16,7 @@ type exp_prim =
 
 
 (* Binary Operations    *)
-type bop = Add | Sub | Mul | Div | Or | And | Xor | Equal | Leq | Geq | Less | Greater
+type bop = Add | Sub | Mul | Div | Or | And | Xor | Equal | Leq | Geq | Less | Greater | Setminus
 
 (* Unary Operations   *)
 type uop = Log | Sign
@@ -112,8 +50,8 @@ type expr =
   | Cons        of expr * expr
 
   (* Parameterized Constant*)
-  | Bernoulli   of exp_prim
-  | Uniform     of exp_prim * exp_prim
+  | Bernoulli   of expr
+  | Uniform     of expr * expr
 
   (* Parameterized Constant*)
   | Pack        of expr
@@ -154,8 +92,8 @@ let rec is_equal_exp eL eR : bool =
   | Case( e, x, e1, y, e2), Case( e', x', e1', y', e2') 
     -> x = x' && y = y' && is_equal_exp e1 e1' && is_equal_exp e2 e2'
 
-  | Bernoulli v, Bernoulli v'  -> v = v'
-  | Uniform(v1, v2), Uniform(v1', v2')  -> v1 = v1' && v2 = v2'
+  | Bernoulli v, Bernoulli v'  -> is_equal_exp v  v'
+  | Uniform(v1, v2), Uniform(v1', v2')  -> is_equal_exp v1 v1' && is_equal_exp v2 v2'
 
   | ILam( e), ILam(e')
   | IApp( e), IApp( e') -> is_equal_exp e e'
@@ -225,6 +163,65 @@ type trace =
   | Tr_Cons       of trace * trace
   | Tr_Let        of expr * trace * trace
   | Tr_Error
+
+
+(* Types *)
+
+(* Unary primitive types *)
+type ty_prim =
+    Ty_PrimInt
+  | Ty_PrimUnit
+  | Ty_PrimBool
+  | Ty_PrimReal
+
+type d_map = (expr * int) list
+
+(* Types *)
+type ty =
+  (* Primitive types *)
+  | Ty_Prim     of ty_prim
+
+  (* Pair *)
+  | Ty_Prod     of ty * ty
+  (* Functional type *)
+  | Ty_Arrow      of ty * int * d_map * iterm * ty
+
+  (* Quantified types *)
+  | Ty_Forall   of var_info * sort * ty
+  | Ty_Exists   of var_info * sort * ty
+  | Ty_Index    of iterm * ty
+
+  (* Boxed Types *)
+  | Ty_Box      of ty
+
+  (* List types *)
+  | Ty_List     of ty
+
+
+
+(* Substitution ty[I/i] for index vars *)
+let rec ty_subst i it ty = 
+  let f_it = (iterm_subst i it) in
+  let utf = ty_subst i it in
+  match ty with
+  | Ty_Prim tp            -> Ty_Prim tp
+  (* ADT *)
+  | Ty_Prod(ty1, ty2)   -> Ty_Prod(utf ty1, utf ty2)
+
+  (* Functional type *)
+  | Ty_Arrow(ty1, i, d, k, ty2) -> Ty_Arrow(utf ty1, i, d, f_it k, utf ty2)
+
+  (* Quantified types *)
+  | Ty_Forall(b, s, ty')  -> Ty_Forall(b, s,  utf ty')
+  | Ty_Exists(b, s, ty')  -> Ty_Exists(b, s, utf ty')
+  | Ty_Index(k, ty')       -> Ty_Index(f_it k, utf ty')
+
+  (* Boxed Type *)
+  | Ty_Box(ty)                -> Ty_Box( utf ty )
+  (* List types *)
+  | Ty_List (ty')        -> Ty_List( utf ty')
+
+
 
 
 

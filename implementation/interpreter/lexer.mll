@@ -14,10 +14,12 @@ let next_line lexbuf =
 
 let white = [' ' '\t' '\n']+
 let digit = ['0'-'9']
+let underscore = ['_']
+let apostrophe = ['\'']
 let int = '-'? digit+
 let float = '-'? digit+ '.' digit+
 let letter = ['a'-'z' 'A'-'Z']
-let id = letter+ (digit|letter)*
+let id = letter+ (digit|letter|underscore|apostrophe)*
 
 (* The final section of the lexer definition defines how to parse a character
    stream into a token stream.  Each of the rules below has the form 
@@ -50,13 +52,19 @@ rule main =
   | "mech"              { MECH }
   | "true"              { TRUE }
   | "false"             { FALSE }
+  | "pack"              { PACK }
+  | "unpack"            { UNPACK }
+  | "bernoulli"         { BERNOULLI }
+  | "uniform"           { UNIFORM }
+  | "dmap"              { DMAP }
 
   | "Lambda"            { BIGLAM }
 
   | "log"               { LOG }
   | "sign"              { SIGN }
 
-  | "<<"                { LEFTSHIFT }
+  | "->"                { ARROW }
+  | "|>"                { VDASH }
   | "||"                { OR }
   | "&&"                { AND }
   | "^"                 { XOR }
@@ -64,12 +72,12 @@ rule main =
   | "+"                 { ADD }
   | "*"                 { MUL }
   | "/"                 { DIV }
+  | "\\"                { SETMINUS }
   | "<"                 { LESS }
   | "<="                { LEQ }
   | ">"                 { GREATER }
   | ">="                { GEQ }
-  | "::"                { CONS }
-  | "[]"                { NIL }
+  | "::"                { DBCOLON }
   | "()"                { UNITV }
   | "["                 { LBRACK }
   | "]"                 { RBRACK }
@@ -79,9 +87,19 @@ rule main =
   | ":"                 { COLON }
   | ","                 { COMMA }
   | "."                 { DOT }
+  | ";"                 { SEMICOLON }
+
+  | "X"                 { TIMES }
+  | "box"               { BOX }
+  | "list"              { LIST }
+  | "forall"            { FORALL }
+  | "exists"            { EXISTS }
+  | "adapt"             { ADAPT }
 
   | "check"             { CHECK }
   | "infer"             { INFER }
+  | "max"               { MAX }
+  | "min"               { MIN }
 
 
   | id                  { VAR (Lexing.lexeme lexbuf) }

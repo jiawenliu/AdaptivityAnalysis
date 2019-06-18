@@ -86,6 +86,7 @@ let pp_bop fmt (p : Syntax.bop) =
     | Geq           -> fprintf fmt " >= " 
     | Less          -> fprintf fmt " < " 
     | Greater       -> fprintf fmt " > "
+    | Setminus      -> fprintf fmt " \ "
 
 let pp_uop fmt (p : Syntax.uop) = 
   match p with
@@ -114,12 +115,14 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
   | Bop(p, e1, e2)    -> fprintf fmt " @[%a@] %a @[%a@] " pp_expression(e1) pp_bop(p) pp_expression(e2)
   | Uop(p, e)         -> fprintf fmt " %a ( %a ) " pp_uop(p)  pp_expression(e)
+  | IApp e            -> fprintf fmt " %a []" pp_expression(e)
+  | ILam e            -> fprintf fmt " Lam. %a " pp_expression(e)
   | _                 -> fprintf fmt " new "
 
 (*let e = (parse_string "let x = 12 in (x1, x2)" in (pp_expression e)*)
 let main = 
   let prog = parseArgs () in 
     match (parse_string prog) with 
-    | (expr, iterm, ty, mode) -> pp_expression std_formatter expr
+    | (expr, ty) -> pp_expression std_formatter expr
 
 
