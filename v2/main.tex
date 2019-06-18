@@ -70,12 +70,12 @@ that $\eop$ can only have type $\tbase \to \tbool$. We make
 environments explicit in closures. This is needed for the tracing
 semantics later.
 \[\begin{array}{llll}
-\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \wq{\efix f(x:\tau).\expr}
  ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
 %
 & & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
 \econst ~|~ \eop(\expr) \\
-& & & ~|~ \elet  = \expr_1 \ein \expr_2 ~|~ \enil ~|~  \econs (
+& & & ~|~ \wq {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
       \expr_1, \expr_2) \\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
@@ -105,13 +105,13 @@ the argument and $\tr_3$ is the trace of the function body. $f$ and
 $x$ are bound in $\tr_3$.
 %
 \[\begin{array}{llll}
-\mbox{Trace} & \tr & ::= & x ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
-\trfix f(x).e ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+\mbox{Trace} & \tr & ::= & \wq{(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
+\wq{ (\trfix f(x).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
 %
 & & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
 ~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
 %
-& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \boxed{\color{red} \triapp{\tr_1}{\tr_2} ~|~ \eilam \expr}
+& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~ \eilam \expr
 \end{array}\]
 
 
@@ -134,7 +134,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
 
 \begin{figure}
 \begin{mathpar}
-  \inferrule{ }{\env, x \bigstep \env(x), x}
+  \wq { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
   %
   \and
   %
@@ -150,10 +150,12 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   %
   \and
   %
-  \inferrule{
+  \wq{ \inferrule{
   }{
-    \env, \efix f(x). \expr \bigstep (\efix f(x).\expr, \env), \trfix f(x).\expr
+    \env, \efix f(x). \expr \bigstep (\efix f(x).\expr, \env),
+    (\trfix f(x).\expr, \env)
   }
+}
   %
   \and
   %
@@ -293,12 +295,12 @@ in Figure~\ref{fig:adap}.
   \framebox{$\adap: \mbox{Traces} \to \nat$}
   \begin{mathpar}
     \begin{array}{lcl}
-      \adap(x) & = & 0 \\
+      \wq { \adap( (x,\env) )} & = & 0 \\
       %
       \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
-      \adap(\tr_1) + \max(\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
+      \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
       %
-      \adap(\trfix f(x).\expr) & = & 0 \\
+      \wq {\adap( (\trfix f(x).\expr, \env)  ) } & = & 0 \\
       %
       \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
       %
@@ -316,7 +318,15 @@ in Figure~\ref{fig:adap}.
       %
       \adap(\trconst) & = & 0 \\
       %
-      \adap(\trop(\tr)) & = & 1 + \adap(\tr) \\
+      \adap(\trop(\tr)) & = &\wq { 1 + \adap(\tr) +
+                              \textsf{MAX}_{\valr \in \tau} \Big(
+                              \max \big(\adap(\tr_3 (\valr) ),
+                              \ddep{x}(\tr_3(\valr)) \big) \Big) } \\
+      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \tau). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
       %
      \adap(\trnil) & = & 0 \\
      %
@@ -326,9 +336,9 @@ in Figure~\ref{fig:adap}.
     \adap( \trlet (x, \tr_1,\tr_2) ) & = & \max (\adap(\tr_2),
                                            \adap(\tr_1)+\ddep{x}(\tr_2)  )
                                            \\
-    \boxed{\color{red} \adap(\triapp{\tr_1}{\tr_2})} & = & \adap(\tr_1) + \adap(\tr_2)\\
+     \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
     %
-    \boxed{\color{red} \adap(\eilam \expr)} & = & 0
+    \adap(\eilam \expr) & = & 0
       \end{array}
   \end{mathpar}
   %
@@ -364,7 +374,14 @@ in Figure~\ref{fig:adap}.
       %
       \ddep{x}(\trconst) & = & \bot \\
       %
-      \ddep{x}(\trop(\tr)) & = & 1 + \ddep{x}(\tr) \\
+      \ddep{x}(\trop(\tr)) & = & \wq {1 +  \max(\ddep{x}(\tr), } \\
+      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \tau} \Big( \max(\ddep{x}(\tr_3(\valr)),
+          \ddep{y}(\tr_3(\valr)) )   \Big ) ) \\  
+ &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \tau). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
        %
       \ddep{x}(\trnil) & = & \bot \\
       %
@@ -373,10 +390,10 @@ in Figure~\ref{fig:adap}.
       %
       \ddep{x}( \trlet(y, \tr_1, \tr_2) ) & = & \max( \ddep{x}(\tr_2),
                                                 \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )\\
-      \boxed{\color{red} \ddep{x}(\triapp{\tr_1}{\tr_2})}  & = & 
+       \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
                                                     \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
     %
-    \boxed{\color{red} \ddep{x}(\eilam \expr)} & = & \bot
+    \ddep{x}(\eilam \expr) & = & \bot
     \end{array}
   \end{mathpar}
   \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
@@ -449,6 +466,8 @@ By easy induction on $\tr$, following the definitions of $\ddep{x}$
 and $\adap$.
 \end{proof}
 
+
+
 \paragraph{Remark}
 At first glance it may seem that Lemma~\ref{lem:ddep-leq-adap} can be
 used to simplify the definition of $\ddep{x}(\trift(\tr_b, \tr_t))$
@@ -464,6 +483,14 @@ the implication $a \leq b \Rightarrow a \leq b + c$ as $c$ may be
 $-\infty$ ($\bot$). As a result, $a \leq b$ does not imply $\max(a, b
 + c) = b + c$.
 
+\begin{lem}\label{lem:trace_extract}
+Exists a function $\mathsf{extract}$, if $\env, \expr \bigstep \valr,
+\tr  $, then $\mathsf{extract}(\tr) = \valr$.
+\end{lem}
+%
+\begin{proof}
+TODO.
+\end{proof}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -631,7 +658,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     {
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
         }{ \tau_2 }{0}{\dmap''}{0})     }   \\
-      \forall x \in \dmap''. \dmap''(x) = 0 \\
+     \wq{ delete : \forall x \in \dmap''. \dmap''(x) = 0 }\\
       \nnatA' = 1 + \nnatA \\
       \dmap' = 1 + \dmap
     }
