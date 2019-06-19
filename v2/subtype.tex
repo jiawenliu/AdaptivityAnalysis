@@ -1,4 +1,11 @@
 \clearpage
+\begin{lem} \label{lem:adap_depth_zero}
+ if $\adap(\tr) = 0 $ then for all variable x, $\ddep{x}(\tr) \leq 0
+ $. ($\bot$ is less than any number in $\mathbb{N}$).
+\end{lem}
+\begin{proof}
+\wq{ It is proved simply by induction on $(\tr)$.}
+\end{proof}
 
 \begin{lem} \label{lem:delta_free}
   if $\env, \expr
@@ -6,10 +13,130 @@
     \in \env$, then $ \adap(\tr)   = 0 $ and $\delta \not \in \valr $
 \end{lem}
 \begin{proof}
-\wq{TODO.}
+\wq{By induction on the derivation of opertational semantics.\\}
+%
+\textbf{Case} 
+\[\inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }\]
+We know $\delta \not\in \env \conj \delta \not\in x$, \\
+so we know : 
+$ \tr = (x, \env) \Rightarrow  \adap(\tr) = 0$ and $\delta \not \in
+\env(x) $. \\
+%
+\textbf{Case}
+\[
+\inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \valr_1 = (\efix f(x).\expr, \env') \\\\
+    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+  }
+\]
+We know that: $ \delta \not\in (\expr_1 \eapp \expr_2) ~(1)\conj \delta
+\not\in \env $. \\
+From $(1)$, we get : $\delta \not\in \expr_1~(2)$ and $\delta \not\in
+\expr_2~(3)$.\\
+IH on the first premise instantiated with $(2)$, we know:
+$\adap(\tr_1) = 0 \conj \delta \not\in \valr_1~(4)$. \\
+Because $\valr_1$ is a function, we know that $\delta \not\in (\efix
+f(x).\expr, \env') ~(5)$ from the second premise. \\
+IH on the third premise instantiated with $(3)$, we know:
+$\adap(\tr_2) = 0 \conj \delta \not\in \valr_2~(6)$. \\
+
+From $(4), (5), (6)$, we know that:
+ $ \delta \not\in \env'[f \mapsto \valr_1, x \mapsto \valr_2]$ and $
+ \delta \not\in \expr~(7) $. \\
+
+By IH on the fourth premise instantiated with $(7)$, we conclude that
+:
+$\delta \not\in \valr $ and $\adap(\tr) = 0$. \\
+
+We want to show: \\
+ $ \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3})  = 
+      \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) +
+      \ddep{x}(\tr_3)) = 0$. \\
+We already know that $ \adap(\tr_1) =0 \conj\adap(\tr_2) =0  \conj
+\adap(\tr_1) =0 $. \\
+By Lemma~\ref{lem:adap_depth_zero}, we know: $\ddep{x}(\tr_3) \leq 0$.\\
+So we conclude that $\adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) =0$.\\
+%
+\textbf{Case}
+\[\inferrule{
+  }{
+    \env, \efix f(x). \expr \bigstep (\efix f(x).\expr, \env),
+    (\trfix f(x).\expr, \env)
+  }\]
+We assume that $\delta \not\in \env$ and $\delta \not\in \efix
+f(x). \expr$.\\
+STS1: $\adap(\tr) = \adap( (\trfix f(x).\expr, \env) ) = 0$, which is
+proved by the defintion of adaptivity. \\
+STS2: $\delta \not\in (\efix f(x).\expr, \env)$,  which is known by
+our assumption. \\
+%
+\textbf{Case}
+\[
+\inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstep \valr_2, \tr_2
+  }{
+    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+  }
+\]
+We assume that $\delta \not\in \env$ and $\delta \not\in  (\expr_1, \expr_2)~(1) $.\\
+From $(1)$, we can infer that : $\delta \not\in \expr_1~(2)$ and $\delta
+\not\in \expr_2~(3)$.\\
+By IH on the first premise instantiated with $(2)$, we know:
+$\adap(\tr_1) = 0~(4)$ and $\delta \not\in \valr_1~(5) $. \\
+By IH on the first premise instantiated with $(3)$, we know:
+$\adap(\tr_2) = 0~(6)$ and $\delta \not\in \valr_2~(7)$. \\
+STS1: $\adap((\tr_1,\tr_2)) = 0$, which is proved by $(4),(6)$.\\
+STS2: $\delta \not\in (\valr_1,\valr_2) $, which is proved by
+$(5),(7)$.\\
+
+%
+\textbf{Case}
+\[
+\inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojl(\expr) \bigstep \valr_1, \trprojl(\tr)
+  }
+\]
+We assume that $\delta \not\in \env$ and $\delta \not\in
+\eprojl(\expr) ~(1) $.\\
+From $(1)$, we can infer that : $\delta \not\in \expr~(2)$ \\
+ By IH on the first premise instantiated with $(2)$, we know:
+$\adap(\tr) = 0~(3)$ and $\delta \not\in (\valr_1, \valr_2) ~(4) $. \\
+STS1: $\adap(\trprojl(\tr) ) = 0$, which is proved by $(3)$.\\
+STS2: $\delta \not\in \valr_1 $, which is proved by $(4)$. \\
+
+%
+\textbf{Case}
+\[
+\inferrule{
+  \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+  \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
+}
+{\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
+  \tr_1, \tr_2) }
+\]
+We assume that $\delta \not\in \env$ and $\delta \not\in
+\elet x;q = \expr_1 \ein \expr_2 ~(1) $.\\
+From $(1)$, we can infer that : $\delta \not\in \expr_1~(2)$ and $\delta \not\in \expr_2~(3)$.  \\
+By IH on the first premise instantiated with $(2)$, we know:
+$\adap(\tr_1) = 0~(4)$ and $\delta \not\in \valr_1 ~(5) $. \\
+From $(5)$, We know that $ \delta \not\in \env[x \mapsto
+\valr_1]~(6)$.\\
+By IH on the second premise instantiated with $(3),(6)$ , we know:
+$\adap(\tr_2) = 0~(7)$ and $\delta \not\in \valr~(8)$. \\
+STS1: $\adap( \trlet (x,
+  \tr_1, \tr_2) ) = 0$, which is proved by $(4),(7)$ and Lemma~\ref{lem:adap_depth_zero}.\\
+STS2: $\delta \not\in \valr_1 $, which is proved by $(8)$. \\
+
 \end{proof}
 
-\begin{lem}\label{lem:sub_sound}
+\begin{lem}\label{lem:sub_sound} \textsf{Sutyping Soundness} \\
 1. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in \lrv{\Delta}$ and  $(\stepiA, \valr) \in \lrv{\ienv \type}$,  then  $(\stepiA, \valr) \in \lrv{\ienv \type'}$.
   \\
  2. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in
