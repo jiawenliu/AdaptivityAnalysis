@@ -136,7 +136,7 @@ STS2: $\delta \not\in \valr_1 $, which is proved by $(8)$. \\
 
 \end{proof}
 
-\begin{lem}\label{lem:sub_sound} \textsf{Sutyping Soundness} \\
+\begin{lem}\label{lem:sub_sound} \wq{\textsf{Sutyping Soundness}} \\
 1. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in \lrv{\Delta}$ and  $(\stepiA, \valr) \in \lrv{\ienv \type}$,  then  $(\stepiA, \valr) \in \lrv{\ienv \type'}$.
   \\
  2. If $ \Delta \models \sub{ \type }{ \type' } $ and $ \ienv \in
@@ -147,7 +147,8 @@ STS2: $\delta \not\in \valr_1 $, which is proved by $(8)$. \\
 %
 \begin{proof} The proof of statement (1) is by induction on the
   subtying derivation.\\
-\textbf{case}
+
+\textbf{Case}
 \[ 
  \inferrule{
      \Delta \models \sub{\type_1 }{ \type_1'  } \\
@@ -163,7 +164,7 @@ By IH on the first premise, we know: $  (\stepiA, \valr_1 ) \in \lrv{\ienv \type
 By IH on the second premise, we know: $  (\stepiA, \valr_2 ) \in \lrv{\ienv \type_2'} $.\\
 This case is proved.\\
 
-\textbf{case}
+\textbf{Case}
 \[
      \inferrule
     {
@@ -204,71 +205,62 @@ Unfold $(\diamond)$, STS:
 \end{enumerate}
 
 
+
+
 % \textbf{case}
 % \[
 %  \inferrule{
-%        % \forall x \in \dmap'. \dmap'(x) =0
+% \dmap' \leq \dmap
 %     }{
-%        \Delta \models \sub{\tbox{(
-%           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
-%       }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
-%     }
+%        \Delta \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
+%           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
+%     } }
 % \]
+% Suppose  $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})  } ~(\star)$.\\
+% TS: $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{ \tbox{\ienv (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})  } } $ \\
+% Unfold its defintion, STS:\\
+% 1. $ \delta \not \in  (\efix f(x).\expr, \env)$ . \wq{I do not know how to prove it.} \\
+% 2.  $(\stepiA, (\efix f(x).\expr, \env) ) \in  \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}
+% $.  It can be proved from $(\star)$ because $ \Delta \models \sub{
+%   (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})} {
+%   (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }  $ \\
 
-\textbf{case}
-\[
- \inferrule{
-\dmap' \leq \dmap
-    }{
-       \Delta \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
-          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
-    } }
-\]
-Suppose  $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})  } ~(\star)$.\\
-TS: $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{ \tbox{\ienv (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})  } } $ \\
-Unfold its defintion, STS:\\
-1. $ \delta \not \in  (\efix f(x).\expr, \env)$ . \wq{I do not know how to prove it.} \\
-2.  $(\stepiA, (\efix f(x).\expr, \env) ) \in  \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}
-$.  It can be proved from $(\star)$ because $ \Delta \models \sub{
-  (\tarr{\type_1}{\type_2}{0}{\dmap'}{0})} {
-  (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }  $ \\
+% \textbf{case}
+% \[
+%  \inferrule{
+% \dmap' \leq \dmap
+%     }{
+%        \Delta \models \sub{\tarr{\tbox{\type_1}}{\tbox{\type_2}}{0}{\dmap'}{0} }{  \tbox{(
+%           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
+%     } }
+% \]
+% Suppose  $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv
+%   (\tarr{\tbox{\type_1}}{\tbox{\type_2}}{0}{\dmap'}{0})  }
+% ~(\star)$.\\
+% Unfold $(\star)$, we pick $\stepiB < \stepiA$ and $(\stepiB, \valr)
+% \in \lrv{\tbox{\type_1}}$. \\
+% We get:
+%  \[
+%    (\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap'[x: 0, f: \infty]}{0}{\tbox{\type_2}}
+% \]
+% Unrolling its defintion,\\
+% $ \forall \valr_t \eapp  \tr\eapp  \stepiB.\eapp \env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr \bigstep \valr_t, \tr  \conj (\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA)$\\
+% $\Rightarrow (\adap(\tr) \leq 0 \conj \forall x \in \mbox{Vars}.\eapp
+% \ddep{x}(\tr) \leq \dmap[x:0, f: \infty](x) \conj ((\stepiA - \stepiB,
+% \valr_t) \in \lrv{\tbox{ \type_2} })~(\diamond)$\\
 
-\textbf{case}
-\[
- \inferrule{
-\dmap' \leq \dmap
-    }{
-       \Delta \models \sub{\tarr{\tbox{\type_1}}{\tbox{\type_2}}{0}{\dmap'}{0} }{  \tbox{(
-          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
-    } }
-\]
-Suppose  $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{\ienv
-  (\tarr{\tbox{\type_1}}{\tbox{\type_2}}{0}{\dmap'}{0})  }
-~(\star)$.\\
-Unfold $(\star)$, we pick $\stepiB < \stepiA$ and $(\stepiB, \valr)
-\in \lrv{\tbox{\type_1}}$. \\
-We get:
- \[
-   (\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap'[x: 0, f: \infty]}{0}{\tbox{\type_2}}
-\]
-Unrolling its defintion,\\
-$ \forall \valr_t \eapp  \tr\eapp  \stepiB.\eapp \env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr \bigstep \valr_t, \tr  \conj (\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA)$\\
-$\Rightarrow (\adap(\tr) \leq 0 \conj \forall x \in \mbox{Vars}.\eapp
-\ddep{x}(\tr) \leq \dmap[x:0, f: \infty](x) \conj ((\stepiA - \stepiB,
-\valr_t) \in \lrv{\tbox{ \type_2} })~(\diamond)$\\
-
-TS: $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{ \tbox{\ienv
-    (\tarr{\type_1'}{\type_2'}{\nnatbiA}{\dmap}{\nnatA})  } } $ \\
-Unfold its defintion, STS:\\
-1. $ \delta \not \in  (\efix f(x).\expr, \env)$ . \wq{I do not know how to prove it.} \\
-2.  $(\stepiA, (\efix f(x).\expr, \env) ) \in  \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}
-$. \\
-   Use $\stepiB$ and $\valr$.\\
-    STS:  \[
-   (\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}
-\]
-It is proved by $(\diamond)$.
- \\
+% TS: $ (\stepiA, (\efix f(x).\expr, \env) ) \in \lrv{ \tbox{\ienv
+%     (\tarr{\type_1'}{\type_2'}{\nnatbiA}{\dmap}{\nnatA})  } } $ \\
+% Unfold its defintion, STS:\\
+% 1. $ \delta \not \in  (\efix f(x).\expr, \env)$ . \wq{I do not know how to prove it.} \\
+% 2.  $(\stepiA, (\efix f(x).\expr, \env) ) \in  \lrv{(\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})}
+% $. \\
+%    Use $\stepiB$ and $\valr$.\\
+%     STS:  \[
+%    (\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}
+% \]
+% It is proved by $(\diamond)$.
+%  \\
 
 
 
@@ -311,22 +303,31 @@ By unrolling $(a)$ with $\stepiA < \stepiB \conj (j, \valr) \in
 Unrolling $(\diamond)$, assume \[ \env[x \mapsto \valr, f \mapsto (\efix f(x).\expr,
 \env)], \expr \bigstep \valr_1, \tr_1 \conj |\tr_1| = \stepiB_1 \conj
 \stepiB_1 \leq \stepiA \] .
-We get : $$ \adap(\tr_1) \leq \nnatA $$
-         $$\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr_1) \leq
-         \dmap'[x: \nnatbiA, f: \infty](x)$$
-         $$  (\stepiA - \stepiB_1,  \valr_1) \in \lrv{\type_2}$$
+We get : $$ \adap(\tr_1) \leq \nnatA ~(c)$$
+         $$\forall y \in \mbox{Vars}.\eapp  \ddep{y}(\tr_1) \leq
+         \dmap'[x: \nnatbiA, f: \infty](x) ~(d)$$
+         $$  (\stepiA - \stepiB_1,  \valr_1) \in \lrv{\type_2}~(e) $$
 
 Unrolling $(\star\star)$ with our assumption $ \env[x \mapsto \valr, f \mapsto (\efix f(x).\expr,
 \env)], \expr \bigstep \valr_1, \tr_1 \conj |\tr_1| = \stepiB_1 \conj
 \stepiB_1 \leq \stepiA $. \\ 
+We know that $\delta \not\in \valr \conj \delta \not\in  (\efix f(x).\expr,
+\env) \conj \delta \not\in \expr $, by Lemma~\ref{lem:delta_free}, we
+conclude that: $\adap(\tr_1) =0~(1)$ and  $ \delta \not \in \valr_1~(2)$.
  STS:
 \begin{enumerate}
-\item $ \adap(\tr_1) \leq 0 $ \\  \wq{ have a lemma? :  if $\env, \expr
-    \bigstep \valr,  \tr $ and $\delta \not \in \expr$ and $\delta \not
-    \in \env$, then $ \adap(\tr)   = 0 $ and $\delta \not \in \valr $ }  
-\item $\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr_1) \leq
-         \dmap'[x: 0, f: \infty](x)$ \\
-\item $  (\stepiA - \stepiB_1,  \valr_1) \in \lrv{\tbox {\type_2} }$ \\
+\item $ \adap(\tr_1) \leq 0 $, proved by $(1)$ \\  
+
+\item $\forall y \in \mbox{Vars}.\eapp  \ddep{y}(\tr_1) \leq
+         \dmap'[x: 0, f: \infty](x)$ . By
+         Lemma~\ref{lem:adap_depth_zero} and $(1)$, we can show that
+         $\ddep{x}(\tr_1) = 0 
+leq \dmap'[x: 0, f: \infty](x) $ when $y = x$.\\
+           When $y \not= x$, it is proved by $(d)$    \\
+
+\item $  (\stepiA - \stepiB_1,  \valr_1) \in \lrv{\tbox {\type_2} }$
+  \\
+It is proved by $(e)$ and $(2)$.
 \end{enumerate}
   
 
