@@ -124,6 +124,6 @@ let rec pp_expression fmt (e : Syntax.expr) =
 let main = 
   let prog = parseArgs () in 
     match (parse_string prog) with 
-    | (expr, ty) -> pp_expression std_formatter expr
+    | (expr, ty) -> pp_expression std_formatter expr ; pp_type std_formatter ty
 
 
