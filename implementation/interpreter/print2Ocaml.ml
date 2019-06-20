@@ -91,9 +91,8 @@ let pp_uop fmt (p : Syntax.uop) =
     | Log           -> fprintf fmt "log"
 
 let rec pp_head fmt =
-  fprintf fmt "open %s @\n " "List";
-  fprintf fmt "open %s @\n " "Distribution";
-  fprintf fmt "open %s @\n " "Printf"
+  fprintf fmt "open HeadFile"
+
 
 
 (*let rec pp_mechs fmt (mech_name) = 
