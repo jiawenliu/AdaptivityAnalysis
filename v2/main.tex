@@ -74,13 +74,16 @@ semantics later.
  ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
 %
 & & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
-\econst ~|~ \eop(\expr) \\
+\econst ~|~ \eop(\expr)  ~|~ \wq {\eilam \expr ~|~ \expr \eapp [] } \\
 & & & ~|~ \wq {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
       \expr_1, \expr_2) \\
+& & & ~|~ \wq{ semantics?  \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+      \expr_2 } \\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
-(\efix f(x).\expr, \env) ~|~ (\valr_1, \valr_2) 
-    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) \\
+(\efix f(x:\tau).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
+& & & \wq {(\eilam \expr , \env) } \\ 
 %
 \mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
 \end{array}\]
@@ -106,12 +109,13 @@ $x$ are bound in $\tr_3$.
 %
 \[\begin{array}{llll}
 \mbox{Trace} & \tr & ::= & \wq{(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
-\wq{ (\trfix f(x).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+\wq{ (\trfix f(x:\tau).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
 %
 & & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
 ~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
 %
-& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~ \eilam \expr
+& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~
+      \wq {(\eilam \expr, \env)}
 \end{array}\]
 
 
@@ -152,8 +156,8 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   %
   \wq{ \inferrule{
   }{
-    \env, \efix f(x). \expr \bigstep (\efix f(x).\expr, \env),
-    (\trfix f(x).\expr, \env)
+    \env, \efix f(x:\tau). \expr \bigstep (\efix f(:\tau).\expr, \env),
+    (\trfix f(x:\tau).\expr, \env)
   }
 }
   %
@@ -161,7 +165,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   %
   \inferrule{
     \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-    \valr_1 = (\efix f(x).\expr, \env') \\\\
+    \wq{ \valr_1 = (\efix f(x:\tau).\expr, \env')} \\\\
     \env, \expr_2 \bigstep \valr_2, \tr_2 \\
     \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
   }{
@@ -300,7 +304,7 @@ in Figure~\ref{fig:adap}.
       \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
       \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
       %
-      \wq {\adap( (\trfix f(x).\expr, \env)  ) } & = & 0 \\
+      \wq {\adap( (\trfix f(x:\tau).\expr, \env)  ) } & = & 0 \\
       %
       \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
       %
@@ -338,14 +342,14 @@ in Figure~\ref{fig:adap}.
                                            \\
      \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
     %
-    \adap(\eilam \expr) & = & 0
+    \wq { \adap( (\eilam \expr, \env) ) } & = & 0
       \end{array}
   \end{mathpar}
   %
   \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
   \begin{mathpar}
     \begin{array}{lcl}
-      \ddep{x}(y) & = &
+      \wq { \ddep{x}( ( y, \env )) } & = &
       \left\lbrace
       \begin{array}{ll}
         0 & \mbox{if } x = y \\
@@ -354,9 +358,9 @@ in Figure~\ref{fig:adap}.
       \right.\\
       %
       \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
-      & & ~~~~~~~\adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
+      & & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
       %
-      \ddep{x}(\trfix f(y).\expr) & = & \bot \\
+     \wq { \ddep{x}(  (\trfix f(y:\tau).\expr,\env)  )  }& = & \bot \\
       %
       \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
       %
@@ -374,9 +378,9 @@ in Figure~\ref{fig:adap}.
       %
       \ddep{x}(\trconst) & = & \bot \\
       %
-      \ddep{x}(\trop(\tr)) & = & \wq {1 +  \max(\ddep{x}(\tr), } \\
-      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \tau} \Big( \max(\ddep{x}(\tr_3(\valr)),
-          \ddep{y}(\tr_3(\valr)) )   \Big ) ) \\  
+      \ddep{x}(\trop(\tr)) & = & 1 +  \max(\ddep{x}(\tr),  \\
+      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \tau} \Big(
+          \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) ) \\  
  &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \tau). \expr, \env ) =
                        \mathsf{extract}(\tr) } \\
  & & \wq{ \conj  \env[f \mapsto
@@ -393,7 +397,7 @@ in Figure~\ref{fig:adap}.
        \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
                                                     \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
     %
-    \ddep{x}(\eilam \expr) & = & \bot
+    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot
     \end{array}
   \end{mathpar}
   \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
@@ -628,9 +632,13 @@ explicitly.\footnote{The function name is never substituted by a value
 
 \[
 \begin{array}{llll}
+\mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+                                 - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+  \mbox{Sort} & S & ::= & \nat \\
   \mbox{Type} & \type & ::= & \tbase ~|~ \tbool ~|~ \type_1 \times
   \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
-                              \tlist{\type} ~|~ \tbox{\type}
+                              \tlist{\type} ~|~ \tbox{\type} ~|~ \\
+    & & & \wq{   \treal ~|~ \tint ~|~   \tint[I]  ~|~      \tforall{\dmap}{\nnatA}{i} \type  }
 \end{array}
 \]
 
@@ -736,16 +744,14 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     }{
        \Delta;\Gamma; \dmap \tvdash{\nnatA} \econst: \tbase
     }
+   \and
     %
-    % \and
-    % %
-    % \inferrule{
-    %    \Delta;\Gamma; \dmap \tvdash{\nnatA} \expr: \tbase \\
-    %   \nnatA' = 1 + \nnatA \\
-    %   \dmap' = 1 + \dmap
-    % }{
-    %    \Delta;\Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \tbool
-    % }
+    \inferrule{
+      \dmap \wf{\type} \\
+    }{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
+    }
+    % 
  	\and
     %
     \inferrule
@@ -759,40 +765,9 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     {
        \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
     }
-  \end{mathpar}
-  \caption{Typing rules}
-  \label{fig:type-rules}
-\end{figure}
-
-\clearpage
-\begin{figure}
-\[
-\begin{array}{llll}
-\mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
-                                 - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
-  \mbox{Sort} & S & ::= & \nat \\
-\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
-            ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
 %
-& & &           \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) 
-            ~|~ \econst ~|~ \eop(\expr) \\
-& & &           ~|~ \elet  = \expr_1 \ein \expr_2 ~|~ \enil ~|~  \econs (
-                \expr_1, \expr_2)  \\
-& & &  \eilam \expr  ~|~  \expr \eapp []  ~|~
-                            \epack \expr ~|~ \eunpack \expr \eas x
-                            \ein \expr \\
-& & & ~|~ \bernoulli \eapp \valr ~|~ \uniform \eapp \valr_1 \eapp \valr_2\\      
+  \and
 %
-  \mbox{Type} & \type & ::= & \tbool ~|~ \type_1 \times
-  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
-                              \tlist{\type} ~|~ \tbox{\type}\\
-& & &                 ~|~  \treal ~|~  \tint ~|~   \tint[I]  ~|~      \tforall{\dmap}{\nnatA}{i} \type  ~|~ \texists{i} \type
-%
-\end{array}
-\]
-
-\framebox{
-  \begin{mathpar}
      {\color{blue}
      \inferrule
      {
@@ -808,14 +783,6 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     }
     }
     %
-    \and
-    %
-    \inferrule{
-      \dmap \wf{\type} \\
-    }{
-      \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
-    }
-    % 
     \and
     %
    \inferrule{
@@ -862,9 +829,114 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
      \type[I/i]
     }
-	    }
-    \end{mathpar}
-}          
+	    }        
+
+  \end{mathpar}
+  \caption{Typing rules}
+  \label{fig:type-rules}
+\end{figure}
+
+\clearpage
+\begin{figure}
+% \[
+% \begin{array}{llll}
+% \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+%                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+%   \mbox{Sort} & S & ::= & \nat \\
+% \mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
+%             ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+% %
+% & & &           \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) 
+%             ~|~ \econst ~|~ \eop(\expr) \\
+% & & &           ~|~ \elet  = \expr_1 \ein \expr_2 ~|~ \enil ~|~  \econs (
+%                 \expr_1, \expr_2)  \\
+% & & &  \eilam \expr  ~|~  \expr \eapp []  ~|~
+%                             \epack \expr ~|~ \eunpack \expr \eas x
+%                             \ein \expr \\
+% & & & ~|~ \bernoulli \eapp \valr ~|~ \uniform \eapp \valr_1 \eapp \valr_2\\      
+% %
+%   \mbox{Type} & \type & ::= & \tbool ~|~ \type_1 \times
+%   \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
+%                               \tlist{\type} ~|~ \tbox{\type}\\
+% & & &                 ~|~  \treal ~|~  \tint ~|~   \tint[I]  ~|~      \tforall{\dmap}{\nnatA}{i} \type  ~|~ \texists{i} \type
+% %
+% \end{array}
+% \]
+
+% \framebox{
+%   \begin{mathpar}
+%      {\color{blue}
+%      \inferrule
+%      {
+%         \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
+%            \\
+%         \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{  \tbox{\Gamma(x)}
+%          }
+%            \\
+%         \delta \not\in \expr
+%     }
+%     {
+%         \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+%     }
+%     }
+%     %
+%     \and
+%     %
+%     \inferrule{
+%       \dmap \wf{\type} \\
+%     }{
+%       \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
+%     }
+%     % 
+%     \and
+%     %
+%    \inferrule{
+%    \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type \\
+%    \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \tlist{\type}\\
+%    \dmap' = \max(\dmap_1, \dmap_2) \\
+%    \nnatA' = \max ( \nnatA_1, \nnatA_2 )
+%    }
+%    { 
+%    \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
+%      \tlist{\type}  }
+%    %
+%    \and
+%    %
+%    \inferrule{
+%      \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type_1 \\
+%      \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \tvdash{\nnatA_2} \expr_2 :
+%      \type_2 \\
+%      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
+%      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+%    }
+%    {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x = \expr_1 \ein \expr_2 : \type}
+%    %
+%    \and
+%    %
+%   {\color{red}
+%   \inferrule{
+%       \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
+%     }{
+%      \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
+%     }
+%     %
+%     \and
+%     %
+%   \inferrule{
+%       \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{\dmap_1}{\nnatA_1}{i} \type
+%       \and
+%        \Delta \tvdash{}  I ::  S
+%        \\
+%        \dmap' = \max(\dmap, \nnatA + \dmap_1)
+%        \\
+%        \nnatA' = \nnatA_1[I/i] + \nnatA
+%     }{
+%      \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
+%      \type[I/i]
+%     }
+% 	    }
+%     \end{mathpar}
+% }          
 
 \framebox{
     \begin{mathpar}
@@ -941,13 +1013,13 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     %
     \and
     %
-    \boxed{ \inferrule{
+   \inferrule{
        % \forall x \in \dmap'. \dmap'(x) =0
     }{
        \Delta \models \sub{\tbox{(
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
       }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
-    } }
+    } 
     %
     % \and
     % %
@@ -1313,123 +1385,123 @@ worked out and verified.
 
 \section{Denotational Semantics}
 
-\begin{figure}
-  \begin{mathpar}
-    \begin{array}{lll}
-      \lr{\tbool} & = & \mathbb{B}\\
-      \lr{\type_1 \times \type_2} & = & \lrv{\type_1}\times\lrv{\type_2}\\
-      %
-      \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
-      \lr{\type_1} \to \lrv{\type_2}\\
-      %
-      \lr{\tmonad \type} & = & \mathcal{M}\lrv{\type}\\
-      \\
-       \\
-      \lr{\etrue}_{\env} &=& t\in \mathbb{B}\\
-      \lr{\efalse}_{\env}&=& f \in \mathbb{B}\\
-      \lr{(\expr_1,\expr_2)}_{\env}&=& (\lr{\expr_1}_{\env}, \lr{\expr_2}_{\env})\\
-      \lr{x}_{\env} &=& \env(x)\\
-      \lr{\lambda x:\type.\expr}_{\env} &=&  \hat{\lambda} v\in\lr{\type}. \lr{\expr}_{\env[x=v]}\\
-      \lr{\expr_1\expr_2}_{\env} &=&  \lr{\expr_1}_{\env}\lr{\expr_2}_{\env}\\
-      \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
-      \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& {\tt mlet}\ v=\lr{\expr_1}_{\env}
-                                             \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]} \\
-    \end{array}
-  \end{mathpar}
-  \caption{Denotational Semantics without Traces}
-  \label{fig:denSem}
-\end{figure}
+% \begin{figure}
+%   \begin{mathpar}
+%     \begin{array}{lll}
+%       \lr{\tbool} & = & \mathbb{B}\\
+%       \lr{\type_1 \times \type_2} & = & \lrv{\type_1}\times\lrv{\type_2}\\
+%       %
+%       \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+%       \lr{\type_1} \to \lrv{\type_2}\\
+%       %
+%       \lr{\tmonad \type} & = & \mathcal{M}\lrv{\type}\\
+%       \\
+%        \\
+%       \lr{\etrue}_{\env} &=& t\in \mathbb{B}\\
+%       \lr{\efalse}_{\env}&=& f \in \mathbb{B}\\
+%       \lr{(\expr_1,\expr_2)}_{\env}&=& (\lr{\expr_1}_{\env}, \lr{\expr_2}_{\env})\\
+%       \lr{x}_{\env} &=& \env(x)\\
+%       \lr{\lambda x:\type.\expr}_{\env} &=&  \hat{\lambda} v\in\lr{\type}. \lr{\expr}_{\env[x=v]}\\
+%       \lr{\expr_1\expr_2}_{\env} &=&  \lr{\expr_1}_{\env}\lr{\expr_2}_{\env}\\
+%       \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
+%       \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& {\tt mlet}\ v=\lr{\expr_1}_{\env}
+%                                              \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]} \\
+%     \end{array}
+%   \end{mathpar}
+%   \caption{Denotational Semantics without Traces}
+%   \label{fig:denSem}
+% \end{figure}
 
-where $\mathcal{M} A$ is the set of discrete distributions over $A$ defined as 
-$\{d: A \to [0,1] | \sum_{a\in A} d(a)=1 \}$ and $\hat{\delta}$ is the
-Dirac distribution.
+% where $\mathcal{M} A$ is the set of discrete distributions over $A$ defined as 
+% $\{d: A \to [0,1] | \sum_{a\in A} d(a)=1 \}$ and $\hat{\delta}$ is the
+% Dirac distribution.
 
-\begin{figure}
-  \begin{mathpar}
-    \begin{array}{lll}
-      \lrt{\type} & = & \lr{\type}\times\mathcal{\tr} \\
-      % \lr{\type_1 \times \type_2} & = & \lrv{\type_1}\times\lrv{\type_2}\\
-      % %
-      % \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
-      % \lr{\type_1} \to \lrv{\type_2}\\
-      % %
-      % \lr{M\type} & = & \mathcal{M}\lrv{\type}\\
-      \\
-       \\
-      \lrt{\etrue}_{\env} &=& (t,\etrue) \\
-      \lrt{\efalse}_{\env}&=& (f,\efalse)\\
-      \lrt{(\expr_1,\expr_2)}_{\env}&=& \elet (\valr_1,\tr_1)=\lrt{\expr_1}_{\env} \ein 
-                                               \elet (\valr_2, \tr_2)=\lrt{\expr_2}_{\env}) \ein 
-                                               ((\valr_1,\valr_2),(\tr_1,\tr_2))\\
-      \lrt{x}_{\env} &=& (\env(x),x)\\
-      \lrt{\lambda x:\type.\expr}_{\env} &=&  (\hat{\lambda} \valr\in\lr{\type}. \lr{\expr}_{\env[x=\valr]}, \lambda x:\type.\expr)\\
-      \lrt{\expr_1\expr_2}_{\env} &=&  
-      % (\lr{\expr_1}_{\env}\lr{\expr_2}_{\env},\\ 
-        % & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\env} \ein\\
-        % & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\env} \ein\\
-        % & & \elet \valr_1 = \lr{\lambda x:\type. \expr}_{\env} \ein \\
-        % & & \elet (\valr, \tr) = \lrt{\expr}_{\env[x \to \valr_2]} \ein\\
-        % & & (\tr_1, \tr_2, \mathrel{\triangleright} \lambda x:\type. \tr))\\
-\\
-\\
-      \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
-      \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& ({\tt mlet}\ \valr=\lr{\expr_1}_{\env}
+% \begin{figure}
+%   \begin{mathpar}
+%     \begin{array}{lll}
+%       \lrt{\type} & = & \lr{\type}\times\mathcal{\tr} \\
+%       % \lr{\type_1 \times \type_2} & = & \lrv{\type_1}\times\lrv{\type_2}\\
+%       % %
+%       % \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+%       % \lr{\type_1} \to \lrv{\type_2}\\
+%       % %
+%       % \lr{M\type} & = & \mathcal{M}\lrv{\type}\\
+%       \\
+%        \\
+%       \lrt{\etrue}_{\env} &=& (t,\etrue) \\
+%       \lrt{\efalse}_{\env}&=& (f,\efalse)\\
+%       \lrt{(\expr_1,\expr_2)}_{\env}&=& \elet (\valr_1,\tr_1)=\lrt{\expr_1}_{\env} \ein 
+%                                                \elet (\valr_2, \tr_2)=\lrt{\expr_2}_{\env}) \ein 
+%                                                ((\valr_1,\valr_2),(\tr_1,\tr_2))\\
+%       \lrt{x}_{\env} &=& (\env(x),x)\\
+%       \lrt{\lambda x:\type.\expr}_{\env} &=&  (\hat{\lambda} \valr\in\lr{\type}. \lr{\expr}_{\env[x=\valr]}, \lambda x:\type.\expr)\\
+%       \lrt{\expr_1\expr_2}_{\env} &=&  
+%       % (\lr{\expr_1}_{\env}\lr{\expr_2}_{\env},\\ 
+%         % & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\env} \ein\\
+%         % & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\env} \ein\\
+%         % & & \elet \valr_1 = \lr{\lambda x:\type. \expr}_{\env} \ein \\
+%         % & & \elet (\valr, \tr) = \lrt{\expr}_{\env[x \to \valr_2]} \ein\\
+%         % & & (\tr_1, \tr_2, \mathrel{\triangleright} \lambda x:\type. \tr))\\
+% \\
+% \\
+%       \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
+%       \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& ({\tt mlet}\ \valr=\lr{\expr_1}_{\env}
                                                    
-                                                  \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]},\\
-      & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\theta} \ein \\
-      & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\theta[x \to \valr_1]} \ein \\
-      & & (x, \tr_1, \tr_2)
-      ) \\
-    \end{array}
-  \end{mathpar}
-  \caption{Denotational Semantics with Traces}
-  \label{fig:denSem_trace}
-\end{figure}
+%                                                   \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]},\\
+%       & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\theta} \ein \\
+%       & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\theta[x \to \valr_1]} \ein \\
+%       & & (x, \tr_1, \tr_2)
+%       ) \\
+%     \end{array}
+%   \end{mathpar}
+%   \caption{Denotational Semantics with Traces}
+%   \label{fig:denSem_trace}
+% \end{figure}
 
-\section{Logical relation and soundness}
+% \section{Logical relation and soundness}
 
-Our type system is sound in the following sense.
+% Our type system is sound in the following sense.
 
-\begin{thm}[Soundness]\label{thm:soundness}
-If $\tvdash{\nnatA} \expr: \type$ and $\cdot, \expr \bigstep \valr,
-\tr$ then $\adap(\tr) \leq \nnatA$.
-\end{thm}
+% \begin{thm}[Soundness]\label{thm:soundness}
+% If $\tvdash{\nnatA} \expr: \type$ and $\cdot, \expr \bigstep \valr,
+% \tr$ then $\adap(\tr) \leq \nnatA$.
+% \end{thm}
 
-To prove this theorem, we build a logical relation on types. As usual,
-the relation consists of a value relation and an expression
-relation. We first show a non-step-indexed version of the relation in
-Figure~\ref{fig:lr:non-step}. This relation is well-founded but
-cannot, as usual, be used directly to prove the soundness of the
-$\efix$ typing rule. We show this relation here purely for exposition
-without the clutter of step-indices. We will step-index the relation
-shortly.
+% To prove this theorem, we build a logical relation on types. As usual,
+% the relation consists of a value relation and an expression
+% relation. We first show a non-step-indexed version of the relation in
+% Figure~\ref{fig:lr:non-step}. This relation is well-founded but
+% cannot, as usual, be used directly to prove the soundness of the
+% $\efix$ typing rule. We show this relation here purely for exposition
+% without the clutter of step-indices. We will step-index the relation
+% shortly.
 
-\begin{figure}
-  \begin{mathpar}
-    \begin{array}{lll}
-      \lrv{\tbool} & = & \{\etrue, \efalse\} \\
-      %
-      \lrv{\tbase} & = & \{\econst ~|~ \econst: \tbase \} \\
-      %
-      \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
-      %
-      \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
-      \{(\efix f(x).\expr, \env) ~|~ \forall \valr \in \lrv{\type_1}.\\
-      & & 
-      ~~~~~~(\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
-      %
-      \\
-      %
-      \lre{\dmap}{\nnatA}{\type} & = & \{ (\env, \expr) ~|~ \forall \valr\eapp  \tr.\eapp  (\env, \expr \bigstep \valr, \tr) \\
-      & & ~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
-      & & ~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x) \conj \\
-      & & ~~~~~~~~~~~~~~~~~~~~~~~\valr \in \lrv{\type})
-      \}
-    \end{array}
-  \end{mathpar}
-  \caption{Logical relation without step-indexing}
-  \label{fig:lr:non-step}
-\end{figure}
+% \begin{figure}
+%   \begin{mathpar}
+%     \begin{array}{lll}
+%       \lrv{\tbool} & = & \{\etrue, \efalse\} \\
+%       %
+%       \lrv{\tbase} & = & \{\econst ~|~ \econst: \tbase \} \\
+%       %
+%       \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
+%       %
+%       \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+%       \{(\efix f(x).\expr, \env) ~|~ \forall \valr \in \lrv{\type_1}.\\
+%       & & 
+%       ~~~~~~(\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
+%       %
+%       \\
+%       %
+%       \lre{\dmap}{\nnatA}{\type} & = & \{ (\env, \expr) ~|~ \forall \valr\eapp  \tr.\eapp  (\env, \expr \bigstep \valr, \tr) \\
+%       & & ~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
+%       & & ~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x) \conj \\
+%       & & ~~~~~~~~~~~~~~~~~~~~~~~\valr \in \lrv{\type})
+%       \}
+%     \end{array}
+%   \end{mathpar}
+%   \caption{Logical relation without step-indexing}
+%   \label{fig:lr:non-step}
+% \end{figure}
 
 The value relation $\lrv{\type}$, as usual, defines which
 \emph{closed} values are semantically in the type $\type$. The only
@@ -1607,11 +1679,11 @@ then $(\stepiA', \expr) \in \lre{\nnatA}{\dmap}{\type}$\\
 (1,2) simultaneously proved by induction on $\type$, 3 followed by (1, 2).
 \end{proof}
 
-\begin{thm}[Fundamental theorem]
-  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
-  \in \lrv{\Gamma}$, then $(\stepiA, (\env, \expr)) \in
-  \lre{\dmap}{\nnatA}{\type}$.
-\end{thm}
+% \begin{thm}[Fundamental theorem]
+%   If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $(\stepiA, \env)
+%   \in \lrv{\Gamma}$, then $(\stepiA, (\env, \expr)) \in
+%   \lre{\dmap}{\nnatA}{\type}$.
+% \end{thm}
 {\color{red}
 \begin{thm}[Fundamental theorem]
   If $\Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $ \ienv \in \lrv{\Delta}$ and $(\stepiA, \env)
@@ -1640,16 +1712,16 @@ $
 }
 $
 }
-Assume $\ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv (\Gamma, \Gamma')}$, to show: $(\stepiA, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tbox{\type}}$.\\
+Assume $\ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv (\Gamma, \Gamma')}$, TS: $(\stepiA, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \tbox{\type}}$.\\
 %
-By inversion, s.t.s. :$ \forall \valr, \tr, j, 
+By inversion, STS :$ \forall \valr, \tr, j, 
 $ s.t. $ (\env, \ienv \expr) \bigstep (\valr, \tr) \land j =
 \size{\tr} \land j \leq \stepiA $.  \\
 (1) $\adap(\tr) \leq \ienv \nnatA $, (2) $\forall x, \ddep{x}(\tr) \leq \dmap(x)$, (3) $(k-j, \valr) \in \lrv{ \ienv \tbox{\type} } $. \\
 %
-By induction hypothesis, we get: $(k, (\env, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}~(\star)$.\\
+By IH instantiated with $\env_1 \in \lrv{\ienv (\Gamma} $,  we get: $(k, (\env_1, \ienv \expr)) \in \lre{\dmap}{\ienv \nnatA}{\ienv \type}~(\star)$.\\
 %
-By inversion, we get $\forall \valr', \tr', j'$ s.t. $(\env, \ienv \expr) \bigstep (\valr', \tr') \land \size{\tr'} = j' \land j' \leq \stepiA$,\\
+By inversion, we get $\forall \valr', \tr', j'$ s.t. $(\env_1, \ienv \expr) \bigstep (\valr', \tr') \land \size{\tr'} = j' \land j' \leq \stepiA$,\\
 (1)' $\adap(\tr') \leq \ienv \nnatA$, (2)' $\forall x, \ddep{x}(\tr') \leq \dmap(x)$, (3)' $(\stepiA - j', \valr') \in \lrv{\ienv \type}$.\\
 %
 Pick $\valr = \valr', \tr = \tr' , j = j'$, (1) (2) is proved by (1)', (2)'.\\
@@ -1660,13 +1732,13 @@ Unfold the interpretation of box, STS:
 \begin{enumerate}
 \item  $(\stepiA - j, \valr ) \in \lrv{\ienv \type } (a) $.   It is proved from the inversion of $(\star)$.\\
 \item $ \delta \not\in
- \valr~(b)$.  We know $\delta \not\in \expr$. \wq{add a lemma? If
-   $\delta \not \in \expr$ and $\forall \env, \valr, \tr . \env,\expr
-   \bigstep (\valr,\tr) $, then $\delta \not \in \valr$. }
-\end{enumerate}
-
- 
-  
+ \valr~(b)$.  We know $\delta \not\in \expr$. \\
+  From the second premise, we know that $\forall x \in
+  dom(\env_1). \env_1(x) \in \lrv{\tbox{\Gamma(x)}}$ from Subtyping
+  soundness Lemma~\ref{lem:sub_sound}, which implies $\delta \not\in
+  \env' $.\\
+  By lemma~\ref{lem:delta_free}, we know that $\delta \not\in \valr$.\\
+\end{enumerate}  
 
 \caseL{
 $
@@ -2322,47 +2394,47 @@ Following 3 goals are proved:\\
 3. $(\stepiA - j, \valr) = (\stepiA, \efalse) \in \lrv{\tbool}$.\\
 
 
-\caseL{
-$
-    \inferrule*[right = PRIMITIVE]{
-      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \tbase ~ (\star) \\
-      \nnatA' = 1 + \nnatA \\
-      \dmap' = 1 + \dmap
-    }{
-      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \tbool
-    }
-$
-}
-Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$. TS: $(\stepiA, (\env, \ienv \eop(\expr))) \in \lre{\dmap'}{\ienv \nnatA'}{\tbool}$.\\
-%
-By inversion, STS: $\forall \valr, \tr, j. (\env, \ienv \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
-%
-1. $(\adap(\tr) \leq \ienv \nnatA')$
-%
-2. $(\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x))$
-%
-3. $((\stepiA - j, \valr) \in \lrv{\tbool})$.\\
-%
-By induction hypothesis on $\star$, we get: $(\stepiA-1, (\ienv \expr, \env)) \in \lre{\dmap}{\ienv \nnatA}{\tbase} ~ (1)$.\\
-%
-Inversion on $(1)$, pick any $ \valr', \tr', j'$. s.t. $ (\env, \ienv \expr \bigstep \valr', \tr') \land (\size{\tr'} = j') \land (j' \leq \stepiA-1)$.\\
-%
-We know: $(\adap(\tr') \leq \ienv \nnatA) ~ (a)
-\land (\forall x \in \ddep{x}(\tr') \leq \dmap(x)) ~ (b)
-\land ((\stepiA -1- j', \valr') \in \lrv{\tbase}) ~ (c)$.\\
-%
-Pick $\valr = \eop(\valr')$, then by E-PRIMITIVE, we have $\env, \ienv \eop(\expr) \bigstep \valr, \eop(\tr')$.\\
-%
-Pick $\tr = \eop(\tr'), j = j' + 1$ s.t.  $j \leq k$, following 3 goals are proved:\\
-%
-1. $\adap(\tr) = \adap(\eop(\tr')) = 1 + \adap(\tr') \leq 1 + \ienv \nnatA = \ienv \nnatA'$ proved by $(a)$\\
-%
-2. $\forall x \in \mbox{Vars}. \ddep{x}(\tr) = \ddep{x}(\eop(\tr')) = 1 + \ddep{x}(\tr') \leq 1 + \dmap(x) = \dmap'(x)$ proved by $(b)$\\
-%
-3. $(\stepiA - j, \valr) = (\stepiA - j' - 1, \eop(\valr')) \in \lrv{\tbool} $.\\
-%
-By typing rule PRIMITIVE, we have $\eop(\valr'): \tbool$. $\eop(\valr')$ is either $\etrue$ or $\efalse$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\tbool}$.\\
-%
+% \caseL{
+% $
+%     \inferrule*[right = PRIMITIVE]{
+%       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \tbase ~ (\star) \\
+%       \nnatA' = 1 + \nnatA \\
+%       \dmap' = 1 + \dmap
+%     }{
+%       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \tbool
+%     }
+% $
+% }
+% Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$. TS: $(\stepiA, (\env, \ienv \eop(\expr))) \in \lre{\dmap'}{\ienv \nnatA'}{\tbool}$.\\
+% %
+% By inversion, STS: $\forall \valr, \tr, j. (\env, \ienv \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
+% %
+% 1. $(\adap(\tr) \leq \ienv \nnatA')$
+% %
+% 2. $(\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x))$
+% %
+% 3. $((\stepiA - j, \valr) \in \lrv{\tbool})$.\\
+% %
+% By induction hypothesis on $\star$, we get: $(\stepiA-1, (\ienv \expr, \env)) \in \lre{\dmap}{\ienv \nnatA}{\tbase} ~ (1)$.\\
+% %
+% Inversion on $(1)$, pick any $ \valr', \tr', j'$. s.t. $ (\env, \ienv \expr \bigstep \valr', \tr') \land (\size{\tr'} = j') \land (j' \leq \stepiA-1)$.\\
+% %
+% We know: $(\adap(\tr') \leq \ienv \nnatA) ~ (a)
+% \land (\forall x \in \ddep{x}(\tr') \leq \dmap(x)) ~ (b)
+% \land ((\stepiA -1- j', \valr') \in \lrv{\tbase}) ~ (c)$.\\
+% %
+% Pick $\valr = \eop(\valr')$, then by E-PRIMITIVE, we have $\env, \ienv \eop(\expr) \bigstep \valr, \eop(\tr')$.\\
+% %
+% Pick $\tr = \eop(\tr'), j = j' + 1$ s.t.  $j \leq k$, following 3 goals are proved:\\
+% %
+% 1. $\adap(\tr) = \adap(\eop(\tr')) = 1 + \adap(\tr') \leq 1 + \ienv \nnatA = \ienv \nnatA'$ proved by $(a)$\\
+% %
+% 2. $\forall x \in \mbox{Vars}. \ddep{x}(\tr) = \ddep{x}(\eop(\tr')) = 1 + \ddep{x}(\tr') \leq 1 + \dmap(x) = \dmap'(x)$ proved by $(b)$\\
+% %
+% 3. $(\stepiA - j, \valr) = (\stepiA - j' - 1, \eop(\valr')) \in \lrv{\tbool} $.\\
+% %
+% By typing rule PRIMITIVE, we have $\eop(\valr'): \tbool$. $\eop(\valr')$ is either $\etrue$ or $\efalse$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\tbool}$.\\
+% %
 
 
 
