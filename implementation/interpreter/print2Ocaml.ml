@@ -91,7 +91,7 @@ let pp_uop fmt (p : Syntax.uop) =
     | Log           -> fprintf fmt "log"
 
 let rec pp_head fmt =
-  fprintf fmt "open HeadFile"
+  fprintf fmt "open HeadFile \n\n"
 
 
 
@@ -100,7 +100,7 @@ let rec pp_head fmt =
     | Guassian
 *)
 let rec pp_dataset fmt = 
-  fprintf fmt "%s @\n" "let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] "
+  fprintf fmt "%s \n\n" "let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] "
 
 let rec pp_expression fmt (e : Syntax.expr) = 
   match e with
