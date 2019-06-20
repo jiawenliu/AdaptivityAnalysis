@@ -107,7 +107,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Fix(f, x, e3)     -> fprintf fmt " Fix %s (%a ). @\n@[<hov 1> %a@]@\n" f.v_name pp_expression(x) pp_expression(e3)
   | Fst e             -> fprintf fmt " Fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " Snd %a " pp_expression(e)
-  | If(e, e1, e2)     -> fprintf fmt " If %a Then @\n @[<hov 1> %a@]@\n Else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
+  | If(e, e1, e2)     -> fprintf fmt " If(%a) Then @\n @[<hov 1> %a@]@\n Else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
   | Mech e            -> fprintf fmt " Mech( %a )" pp_expression(e)
   | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> Let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
   | Nil               -> fprintf fmt " [] "
