@@ -3,6 +3,7 @@ open IndexSyntax
 open Support.Options
 open Format
 open Print
+open TyCheck
 
 let inprog = ref (None : string option)
 let infile = ref (None : string option)
@@ -65,10 +66,9 @@ let type_check infile  t=
 let (prgm, ty) = parse_prog !infile in
     (* Print the results of the parsing phase *)
     main_debug dp "Parsed program:@\n@[%a@]@.\nParsed type:@\n@[%a@]@." 
-         Print.pp_expr prgm Print.pp_utype uty;
+         Print.pp_expr prgm Print.pp_type ty;
     let ctx = Ctx.set_exec_mode mu (Ctx.empty_context) in
-    let cost = if (!debug_options.types_mode) then None else Some cost in
-    let cs =  (Unary.check_type ctx prgm uty cost) in
+    let cs =  (TyCheck.check_type ctx prgm ty) in
     
     main_info dp "Typechecking engine: %fs\n" ((Unix.gettimeofday () -. t) -. !WhySolver.smt_time);
     main_debug dp "Resulting constraint:@\n@[%a@]@." Print.pp_cs cs;
@@ -88,5 +88,5 @@ let (prgm, ty) = parse_prog !infile in
 
 let main = 
   let t= Unix.gettimeofday ()  in
-    let prog = parseArgs () in 
+    let infile = parseArgs () in 
         type_check_un infile t
