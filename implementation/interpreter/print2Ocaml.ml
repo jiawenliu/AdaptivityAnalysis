@@ -83,6 +83,7 @@ let pp_bop fmt (p : Syntax.bop) =
     | Less          -> fprintf fmt " < " 
     | Greater       -> fprintf fmt " > "
     | Setminus      -> fprintf fmt " \ "
+    | Dot           -> fprintf fmt " dot "
 
 
 let pp_uop fmt (p : Syntax.uop) = 
@@ -104,7 +105,12 @@ let rec pp_dataset fmt =
 
 let rec pp_expression fmt (e : Syntax.expr) = 
   match e with
-  | Var v             -> fprintf fmt " %s " v.v_name
+  | Var v             -> 
+  (
+    match v.v_name with
+      | "foldl" -> fprintf fmt " List.fold_left "
+      | _       -> fprintf fmt " %s " v.v_name
+  )  
   | Prim p            -> 
     (match p with 
       | PrimInt i       -> fprintf fmt " %d " i
@@ -124,55 +130,17 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Fst e             -> fprintf fmt " fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " snd %a " pp_expression(e)
   | If(e, e1, e2)     -> fprintf fmt " if(%a) then @\n @[<hov 1> %a@]@\n else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
-  | Mech e            -> fprintf fmt " mech( %a )" pp_expression(e)
+  | Mech e            -> fprintf fmt " mech(%a) " pp_expression(e)
   | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
   | Nil               -> fprintf fmt " [] "
   | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
-  | Bop(p, e1, e2)    -> fprintf fmt " (@[%a@] %a @[%a@]) " pp_expression(e1) pp_bop(p) pp_expression(e2)
-  | Uop(p, e)         -> fprintf fmt " %a ( %a ) " pp_uop(p)  pp_expression(e)
+  | Bop(p, e1, e2)    -> fprintf fmt " %a (%a)  (%a) " pp_bop(p) pp_expression(e1) pp_expression(e2)
+  | Uop(p, e)         -> fprintf fmt " %a (%a) " pp_uop(p)  pp_expression(e)
   | IApp e            -> fprintf fmt " %a " pp_expression(e)
   | ILam e            -> fprintf fmt " %a " pp_expression(e)
   | _                 -> fprintf fmt " new "
 
 
-let rec pp_primutype fmt ty = match ty with
-    Ty_PrimInt     -> fprintf fmt "@<1>%s" (u_sym Symbols.Int)
-  | Ty_PrimUnit    -> fprintf fmt "@<1>%s" (u_sym Symbols.Unit)
-  | Ty_PrimBool    -> fprintf fmt "@<1>%s" (u_sym Symbols.Bool)
-  | Ty_PrimReal    -> fprintf fmt "@<1>%s" (u_sym Symbols.Real)
-
-let rec pp_list pp fmt l = match l with
-    []         -> fprintf fmt ""
-  | hd :: []  -> fprintf fmt "%a" pp hd
-  | hd :: tl -> fprintf fmt "%a,@ %a" pp hd (pp_list pp) tl
-
-
-let rec pp_sort fmt s = match s with
-    Adapt       -> fprintf fmt "%s" "adapt"
-
-
-
-let rec pp_iterm fmt ty = match ty with
-  | IConst i            -> fprintf fmt " Index %d " i
-  | IVar v              -> fprintf fmt " Index %s " v.v_name
-  | IAdd(i1, i2)        -> fprintf fmt " %a + %a " pp_iterm i1 pp_iterm i2
-  | ISub(i1, i2)        -> fprintf fmt " %a - %a " pp_iterm i1 pp_iterm i2
-  | IMaximal(i1, i2)    -> fprintf fmt " Max(%a, %a) " pp_iterm i1 pp_iterm i2
-
-let rec pp_type fmt ty = match ty with
-  | Ty_Prim tp               -> fprintf fmt "%a " pp_primutype tp
-
-  | Ty_Prod(ty1, ty2)        -> fprintf fmt "(%a @<1>%s @[<h>%a@]) " pp_type ty1 (u_sym Symbols.Times) pp_type ty2
-  | Ty_Arrow(ity, q, d, a, oty) 
-                             -> fprintf fmt "%a , %d @<1>%s %a  @[<h>%a@] " pp_type ity q (u_sym Symbols.Arrow) pp_iterm a pp_type oty
-
-  | Ty_Forall(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (u_sym Symbols.Forall) i.v_name pp_sort s pp_type ty1
-  | Ty_Exists(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (u_sym Symbols.Exists) i.v_name pp_sort s pp_type ty1
-  | Ty_Index(i, ty1)         -> fprintf fmt "%a[%a] " pp_type ty1 pp_iterm i
-
-  | Ty_Box ty1               -> fprintf fmt "@<1>%s %a " (u_sym Symbols.Box) pp_type ty1
-
-  | Ty_List ty1              -> fprintf fmt "%a list " pp_type ty1
 
 
 let rec pp_progm fmt expr = 

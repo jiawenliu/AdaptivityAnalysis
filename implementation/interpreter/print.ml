@@ -83,6 +83,7 @@ let pp_bop fmt (p : Syntax.bop) =
     | Less          -> fprintf fmt " < " 
     | Greater       -> fprintf fmt " > "
     | Setminus      -> fprintf fmt " \ "
+    | Dot           -> fprintf fmt " dot "
 
 
 let pp_uop fmt (p : Syntax.uop) = 

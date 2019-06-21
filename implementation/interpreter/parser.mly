@@ -35,7 +35,7 @@ open IndexSyntax
 /* Tokens for Operator     */
 %token LOG SIGN
 %token OR AND XOR
-%token ADD SUB MUL DIV
+%token ADD SUB MUL DIV DOT
 %token LESS LEQ GREATER GEQ
 %token SETMINUS
 
@@ -135,6 +135,7 @@ bop:
     | LESS          { Less }
     | GREATER       { Greater }
     | SETMINUS      { Setminus }
+    | DOT           { Dot }
 
 
 uop:

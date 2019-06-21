@@ -39,6 +39,7 @@ rule main =
   | "bool"              { BOOL }
   | "real"              { REAL }
   | "unit"              { UNIT }
+  | "dot"               { DOT }
 
   | "nil"               { NIL }
 

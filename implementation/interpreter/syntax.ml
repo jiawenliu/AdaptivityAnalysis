@@ -16,7 +16,8 @@ type exp_prim =
 
 
 (* Binary Operations    *)
-type bop = Add | Sub | Mul | Div | Or | And | Xor | Equal | Leq | Geq | Less | Greater | Setminus
+type bop = Add | Sub | Mul | Div | Or | And | Xor | Equal 
+| Leq | Geq | Less | Greater | Setminus | Dot
 
 (* Unary Operations   *)
 type uop = Log | Sign
