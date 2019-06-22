@@ -135,7 +135,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
   | Nil               -> fprintf fmt " [] "
   | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
-  | Bop(p, e1, e2)    -> fprintf fmt " (%a) %a (%a) " pp_expression(e1) pp_bop(p) pp_expression(e2)
+  | Bop(p, e1, e2)    -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
   | Uop(p, e)         -> fprintf fmt " %a (%a) " pp_uop(p)  pp_expression(e)
   | IApp e            -> fprintf fmt " %a " pp_expression(e)
   | ILam e            -> fprintf fmt " %a " pp_expression(e)

@@ -1,3 +1,4 @@
+open Printf 
 open HeadFile 
 
 let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ]  
@@ -6,11 +7,11 @@ let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ]
  let g =
   let rec f ( j  ) = 
    fun ( k  ) -> 
-    if( ( j )  <  ( k ) ) then 
+    if( (( j ) < ( k )) ) then 
        let a =  mech( fun ( x  ) -> 
-                 (  x   j  )  dot  (  x   k  ) 
+                 ((  x   j  ) dot (  x   k  )) 
                )  in
-        ( a ,  j ) ::   f    ( j )  +.  ( 1 )   k    
+        ( a ,  j ) ::   f    (( j ) +. ( 1 ))   k    
     else 
       [] 
    
@@ -21,7 +22,7 @@ let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ]
     fun ( x  ) -> 
      sign (  List.fold_left   fun ( acc  ) -> 
                                fun ( ( a ,  i ) ) -> 
-                                 ( acc )  +.  ( (  x   i  )  *.  ( log ( ( ( 1 )  +.  ( a ) )  /.  ( ( 1 )  -.  ( a ) ) ) ) )  
+                                 (( acc ) +. ( ((  x   i  ) *. ( log ( (( (( 1 ) +. ( a )) ) /. ( (( 1 ) -. ( a )) )) ) )) ))  
                                  0   l   
                               
                               ) 
