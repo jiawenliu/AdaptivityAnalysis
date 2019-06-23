@@ -4,29 +4,27 @@ open Printf
 
 let infile = ref (None : string option)
 let outfile = ref (None : string option)
-let rounds = ref 0
-let cols = ref 0
-let rows = ref 0 
+let rounds = ref 0.0
+let cols = ref 0.0
+let rows = ref 0.0 
 let cdb = ref false
 
 let argDefs = [
     "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
-    "-rw", Arg.Int (fun i -> rows := i) , "specify the rows of the database, -rw int"; 
-    "-cl", Arg.Int (fun i -> cols := i) , "specify the cols of the database, -cl int"; 
-    "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
+    "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
+    "-cl", Arg.Float (fun i -> cols := i) , "specify the cols of the database, -cl float"; 
+    "-r", Arg.Float (fun i -> rounds := i) , "specify the rounds of the experiments, -r float"; 
     "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name, -i string" ; 
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string" 
 ]
 let delta = 0.0000001
 let epsilon = 1.0
 
-type 'a bang  = 
-    Bang of 'a 
-type row = int list
+type row = float list
 type database = row list
 type query = row -> float
 type mech = query -> database -> float
-type result = float * int
+type result = float * float
 
 let parseArgs () =  
         let oname = ref (None : string option) in 
@@ -37,21 +35,21 @@ let parseArgs () =
                       | None  -> oname := Some (s); printf "%s" s ) "for output file" ;
              match !infile, !outfile  with
                    | Some i, Some o -> (i,o)
-                   | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col int, rounds -r int"; ("","")
+                   | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col float, rounds -r float"; ("","")
 
-(* let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] 
- *)
+let dataset = [ [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ]  
+  
 
-let rec creat_db (col : int) (row : int)  =
-  if row > 0 
+let rec creat_db (col : float) (row : float)  =
+  if row > 0.0
     then 
-      let rec creat_row (col : int) = 
-        if col > 0
+      let rec creat_row (col : float) = 
+        if col > 0.0
         then 
-          (Random.int 2) :: creat_row (col - 1)
+          (float_of_int (Random.int 2)) :: creat_row (col -. 1.0)
         else
           []
-      in (creat_row col) :: creat_db col (row - 1)
+      in (creat_row col) :: creat_db col (row -. 1.0)
     else
       []
 
@@ -62,18 +60,18 @@ let sub_row row =
   List.rev (List.tl (List.rev row) )
 
 let rec read_db ic rows cols =
-    if rows > 0 
+    if rows > 0.0
      then 
           let line = input_line ic in 
           let tmp_row =
            (String.split_on_char ',' line) in 
-           (List.map (fun s -> int_of_string s) (sub_row tmp_row)) :: (read_db ic (rows-1) cols)
+           (List.map (fun s -> float_of_string s) (sub_row tmp_row)) :: (read_db ic (rows-.1.0) cols)
     else
        [] 
 
 
 let thresholdout_mech (q:query) db =
-  let holdout_db = creat_db (List.length (hd db)) (List.length db) in
+  let holdout_db = creat_db (float_of_int (List.length (hd db))) (float_of_int(List.length db)) in
     let threshold = 1.0 in
       let noise_rate = 1.0 in
         let budget = (List.length db) in
@@ -98,13 +96,13 @@ let thresholdout_mech (q:query) db =
 
 (*let rec read_rows ic i j acc =
         if i < j then
-         read_line ic (i+1) j (int_of_string (input_line ic)) :: acc
+         read_line ic (i+1) j (float_of_string (input_line ic)) :: acc
         else
          List.rev acc *)
        
 
-let sum_q (db: int list list) = 
-    List.fold_left ( fun a r -> a +  (hd r)  ) 0 db  
+let sum_q (db: float list list) = 
+    List.fold_left ( fun a r -> a +.  (hd r)  ) 0.0 db  
 
 let gauss_mech (q:query) db =  
   let result =
@@ -127,25 +125,21 @@ let nonoise_mech (q:query) db =
     let mean = 
       let sm =  List.fold_left 
           ( fun sum rw ->  
-              sum +. (q rw)
+              sum +.  (q rw)
           ) 0.0 db  
         in  
         sm /.  float_of_int (List.length db)
       in
     mean 
 
-let dot (l1:int ) (l2: int) : int = l1 * l2
+let dot (l1:float ) (l2: float) : float = l1 *. l2
   
 
 let sign (y: float) : float = 
   if y > 0.0 then 1.0 else -1.0
 
-let get (row:int list) (i:int) : int  =
-  nth row i
+let get (row:float list) (i:float) : float  =
+  nth row (int_of_float i)
 
 
-       
-  
-
-            
- 
+let mech (q:query) =  nonoise_mech q dataset

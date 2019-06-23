@@ -83,7 +83,7 @@ let pp_bop fmt (p : Syntax.bop) =
     | Less          -> fprintf fmt " < " 
     | Greater       -> fprintf fmt " > "
     | Setminus      -> fprintf fmt " \ "
-    | Dot           -> fprintf fmt " dot "
+    | Dot           -> fprintf fmt " *. "
 
 
 let pp_uop fmt (p : Syntax.uop) = 
@@ -114,7 +114,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   )  
   | Prim p            -> 
     (match p with 
-      | PrimInt i       -> fprintf fmt " %d " i
+      | PrimInt i       -> fprintf fmt " %f " (float_of_int i)
       | PrimUnit        -> fprintf fmt " () "
       | PrimReal r      -> fprintf fmt " %f " r
     )              
@@ -127,7 +127,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
     then  
       fprintf fmt " fun (%a ) -> @\n@[<hov 1> %a@]@\n" pp_expression(x) pp_expression(e3)
     else
-      fprintf fmt " let rec %s (%a ) = @\n@[<hov 1> %a@] in %s @\n" f.v_name pp_expression(x) pp_expression(e3) f.v_name
+      fprintf fmt " let rec %s (%a ) = @\n@[<hov 1> %a@]@\n" f.v_name pp_expression(x) pp_expression(e3)
   | Fst e             -> fprintf fmt " fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " snd %a " pp_expression(e)
   | If(e, e1, e2)     -> fprintf fmt " if(%a) then @\n @[<hov 1> %a@]@\n else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)

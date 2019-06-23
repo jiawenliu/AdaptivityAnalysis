@@ -7,7 +7,7 @@ OCAMLBUILD=ocamlbuild
 VERSION=byte
 
 
-NAME=exec
+NAME=twoRound
 # Program main file
 MAIN=$(NAME)
 
