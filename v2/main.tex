@@ -77,7 +77,8 @@ semantics later.
 \econst ~|~ \eop(\expr)  ~|~ \wq {\eilam \expr ~|~ \expr \eapp [] } \\
 & & & ~|~ \wq {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
       \expr_1, \expr_2) \\
-& & & ~|~ \wq{ semantics?  \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+& & & ~|~ \wq{ semantics? ~~~~~~~
+ \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
       \expr_2 } \\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
@@ -758,9 +759,8 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     {
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
         }{ \tau_2 }{0}{\dmap''}{0})     }   \\
-     \wq{ delete : \forall x \in \dmap''. \dmap''(x) = 0 }\\
       \nnatA' = 1 + \nnatA \\
-      \dmap' = 1 + \dmap
+      \wq{ \dmap' = 1 + \max(\dmap, \dmap''+\nnatA) } 
     }
     {
        \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
@@ -1806,119 +1806,189 @@ $(\env, \ienv \expr []) \bigstep (\valr, \tr) \land \size(\tr) = j \land j \leq 
 (1) (2) (3) are proved by (1)' (2)' (3)' and (1)'' (2)'' (3)''.\\
 
 
-\caseL{
+\wq{ \caseL{
 $
   \boxed{
     \inferrule*[right = PRIMITIVE]{
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
-        }{ \tau_2 }{0}{\dmap''}{0})     }   \\
-      \forall x \in \dmap''. \dmap''(x) = 0 \\
+        }{ \tau_2 }{0}{\dmap''}{0})     } ~(\star)   \\
       \nnatA' = 1 + \nnatA \\
-      \dmap' = 1 + \dmap
+      \dmap' = 1 + \max( \dmap, \dmap''+ \nnatA)
     }{
       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
     }
     }
 $
-}
+} }
 
 Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$, TS: $(\stepiA, \ienv (\eop(\expr), \env)) \in \lre{\dmap'}{\ienv \nnatA'}{\treal}$.\\
 %
-Unfold, $\forall \valr, \tr, j. (\env, \ienv \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$.\\
+Unfold, pick $\valr, \tr$, assume  $(\ienv \env, \ienv \eop(\expr) \bigstep \valr, \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$.\\
 %
-STS: $(\adap(\tr) \leq \ienv \nnatA') \land (\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x)) \land ((\stepiA - j, \valr) \in \lrv{\treal})$.\\
+STS: 
+1.
+$(\adap(\tr) \leq \ienv \nnatA') $ \\ 
+2. $ (\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x)) $ \\
+3.  $ ((\stepiA - j, \valr) \in \lrv{\treal})$.\\
 %
-By induction hypothesis on $\star$, we get: $(\stepiA-1, (\expr, \ienv \env)) \in \lre{\dmap}{\ienv \nnatA}{\tbox{  (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0})}} ~ (1)$.\\
-%
-Inversion on $(1)$, pick $\forall \valr', \tr', j'$. s.t. $ (\env, \expr \bigstep \valr', \tr') \land (\size{\tr'} = j') \land (j' \leq \stepiA-1)$.\\
-%
-{\color{red}We know: $(\adap(\tr') \leq \ienv \nnatA) ~ (a)
-\land (\forall x \in \ddep{x}(\tr') \leq \dmap(x)) ~ (b)
-\land ((\stepiA -1- j', \valr') \in \lrv{\tbox{  (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0})     }}) ~ (c)$.}\\
-%
-Pick $\valr = \eop(\valr')$, then by E-PRIMITIVE, we have $\env, \ienv \eop(\expr) = (\env, \eop( \ienv \expr) )  \bigstep \valr, \eop(\tr')$.\\
-%
-Pick $\tr = \eop(\tr'), j = j' + 1$ s.t.  $j \leq k$, STS:\\
-%
-1. $\adap(\tr) = \adap(\eop(\tr')) = 1 + \adap(\tr') \leq 1 + \ienv \nnatA = \ienv \nnatA'$ proved by $(a)$\\
-%
-2. $\forall x \in \mbox{Vars}. \ddep{x}(\tr) = \ddep{x}(\eop(\tr')) = 1 + \ddep{x}(\tr') \leq 1 + \dmap(x) = \dmap'(x)$ proved by $(b)$\\
-%
-{\color{red}
-3. $(\stepiA - j, \valr) = (\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal} $.\\
-%
-From (c), we know: $\tvdash{} \valr' : \tbox{  (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0}) }$ . By typing rule PRIMITIVE, we have $\eop(\valr'): \treal$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal}$.\\
-%
-}
-
-\caseL{
-$
-   \inferrule*[right = PAIR]{
-      \Delta;\Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 ~ (1) 
-   		\\
-      \Delta;\Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 ~ (2)
-      	\\\\
-      \dmap' = \max(\dmap_1,\dmap_2) 
-      	\\
-      \nnatA' = \max(\nnatA_1,\nnatA_2)
-    }{
-      \Delta;\Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
-    }
-$
-}
-Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$, 
-to show: $(\stepiA, (\env, \ienv (\expr_1, \expr_2))) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv (\type_1 \times \type_2)}$.\\
-%
-By inversion, STS: $\forall \eapp  \valr, \tr, j.$ 
-$(\env, \ienv (\expr_1, \expr_2) \bigstep \valr, \eapp  \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
-%
-1. $ (\adap(\tr) < \ienv \nnatA')$\\
-2. $ (\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x)) $\\
-3. $ ((\stepiA - j, \valr) \in \lrv{\ienv (\type_1 \times \type_2)})$.\\
-%
-By induction hypothesis on $(1)$, we have $(\stepiA, \ienv \expr_1) \in \lre{\dmap_1}{\ienv \nnatA_1}{\ienv  \type_1}$.\\
-%
-By inversion, pick any $\valr_1,  \tr_1, j_1$ s.t.,
-$(\env, \ienv \expr_1 \bigstep \valr_1, \tr_1) ~ (3) 
-\land \size{\tr_1} = j_1
-\land j_1 < \stepiA $,\\
-%
-we have: \\
-(4). $(\adap(\tr_1) \leq \ienv  \nnatA_1)$;\\
-% 
-(5). $\forall x, \ddep{x}(\tr_1) \leq \dmap_1(x)$;\\
-% 
-(6). $ (\stepiA - j_1, \valr_1) \in \lrv{\ienv  \type_1} $.\\
-%
-By induction hypothesis on $(2)$ and the assumption $(\stepiA - j_1,
-\env) \in \lrv{\Gamma}$ from Lemma~\ref{lem:downward}, we have $(\stepiA - j_1, \ienv  \expr_2) \in \lre{\dmap_2}{\ienv  \nnatA_2}{\ienv  \type_2}$.\\
-%
-By inversion, pick $\valr_2, \tr_2, j_2 $ s.t., $ (\env, \ienv \expr_2 \bigstep \valr_2, \tr_2) ~ (7) \land (\size{\tr_2} = j_2) \land j_2 < \stepiA-j_1 $,\\
-%
-we have:\\
-(8). $\adap(\tr_2) \leq \ienv  \nnatA_2$;\\
-%
-(9). $\forall x\in \mbox{Vars}. \ddep{x}(\tr_2) \leq \dmap_2(x)$;\\
-%
-(10). $(\stepiA- j_1- j_2, \valr_2) \in \lrv{\ienv  \type_2}$.\\
-%
-By E-Pair rule, we have:\\
+From the evaluation rules, we assume that :
 \[
-\inferrule*[right = E-Pair]
-{\env, \expr_1 \bigstep \valr_1, \tr_1 ~ (3)  \and \env, \expr_2
-\bigstep \valr_2, \tr_2 ~ (7) }
-{\env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)}
+ \inferrule{
+    \ienv \env, \ienv \expr \bigstep \valr', \tr' \\
+    \eop{}(\valr') = \valr
+  }{
+    \env, \eop(\expr) \bigstep \valr', \trop(\tr')
+  }
 \]
-Pick $\valr = (\valr_1, \valr_2), \tr = (\tr_1, \tr_2), j = |(\tr_1, \tr_2)| = j_1 + j_2$, s.t. $\env, \ienv (\expr_1, \expr_2) \bigstep \valr, \tr \land \size{\tr} = j \land j \leq \stepiA$.\\
+
+By induction hypothesis on $\star$, we get:
+ \[
+(\stepiA, (\ienv \expr, \ienv \env)) \in \lre{\dmap}{\ienv \nnatA}{\tbox{
+    (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0})}} ~ (1)
+\].\\
 %
-1. 2. 3. are proved by: \\
-1. $\adap(\tr) = \adap(\tr_1, \tr_2) < \ienv \nnatA' = \max(\ienv \nnatA_1, \ienv \nnatA_2)$, which is proved by $(4), (8)$.\\
+Assume $\ienv \env, \ienv \expr \bigstep \valr', \tr' \conj |\tr'|=j'
+\conj j' < \stepiA$,\\
+ we know: $(\adap(\tr') \leq \ienv \nnatA) ~ (a) $ \\
+$ (\forall x \in \ddep{x}(\tr') \leq \dmap(x)) ~ (b)$ \\
+$ ((\stepiA - j', \valr') \in \lrv{\tbox{  (\tarr{ \tau_1}{
+      \tau_2 }{0}{\dmap''}{0})     }}) ~ (c)$ \\
+
+\begin{enumerate}
+\item [STS1:] $\adap(\tr) = \adap(\trop(\tr') )  \leq \ienv \nnatA'
+  $\\
+Unfold $\adap(\trop(\tr') ) $, STS:\\
+ $1+ \adap(\tr') + \textsf{MAX}_{\valr \in \tau_1} \Big(
+                              \max \big(\adap(\tr_3 (\valr) ),
+                              \ddep{x}(\tr_3(\valr)) \big) \Big) \leq
+                              \ienv \nnatA' $. \\
+      $\mathsf{where}$   $\valr_1 = (\efix f(x: \tau_1). \expr_1, \env_1 ) =
+                       \mathsf{extract}(\tr') $ and $  \env_1[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr_1 \bigstep
+                       \valr'', \tr_3(\valr)  $\\
+  By Lemma\ref{lem:trace_extract} based on our assumption $\ienv \env, \ienv \expr \bigstep \valr', \tr'$,  we know that $\valr_1 =
+                       \mathsf{extract}(\tr) = v' $.\\
+ Unfold $(c)$, we know : $(\stepiA - j',  (\efix f(x: \tau_1). \expr_1, \env_1 ) ) \in \lrv{  (\tarr{ \tau_1}{
+      \tau_2 }{0}{\dmap''}{0}) }~(d) $  and $ \delta \not\in  (\efix
+  f(x: \tau). \expr_1, \env_1 ) $  \\
+  Unfold $(d)$, we get : $ \forall j_1 < (\stepiA-j'). (\stepiB_1,
+  \valr_a) \in \lrv{\tau_1} $, $  ( \stepiB_1, ( \expr_1 ,\env_1[f \mapsto
+                       \valr_1, x \mapsto \valr_a]) )\in
+                       \lre{\dmap''[x:0,f:\infty]}{0}{\tau_2}~(e) $.\\  
+   Pick $\valr_a$, unfold $(e)$, we assume:  $ \env_1[f \mapsto
+                       \valr_1, x \mapsto \valr_a], \expr_1 \bigstep
+                       \valr'', \tr_3(\valr_a)  \conj |\tr_3(\valr_a)|
+                       = j_2 \conj j_2 \leq j_1.$
+                       \\
+   we get: $ \adap(\tr_3(\valr_a)) \leq 0 (f)$ \\
+             $ \forall x \in \ddep{x}(\tr_3(\valr_a)) \leq
+             \dmap''[x:0,f:\infty](x) ~(h)$ \\
+
+  From $(f)$, we know $\forall \valr_a \in
+  \lrv{\tau_1}. \adap(\tr_3(\valr_a)) =0$. \\
+ By Lemma~\ref{lem:adap_depth_zero}, we conclude that $ \textsf{MAX}_{\valr \in \tau_1} \Big(
+                              \max \big(\adap(\tr_3 (\valr) ),
+                              \ddep{x}(\tr_3(\valr)) \big) \Big) \leq 0~(g) $.\\
+           This property is proved by $(a),(g)$.
+
+\item [STS2:] $ \ddep{x}(\tr) = \ddep{x}(\trop (\tr')) =  1 +  \max(\ddep{x}(\tr'),
+        \adap(\tr') + \textsf{MAX}_{\valr \in \tau_1} \Big(
+          \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) )$ \\
+ $\leq      \dmap'(x) $.\\
+       It is proved by $(a),(b),(h)$.\\
+\item[STS3:] $ ((\stepiA - j, \valr) \in \lrv{\treal})$\\
+    It is proved by the property of the constuct $\trop$ whose
+    codomain is real number. \\
+        
+\end{enumerate}
+
+
+
 %
-2. $\forall x \in \mbox{Vars}. \ddep{x}(\tr_1, \tr_2) = \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \leq \dmap'(x) = \max(\dmap_1(x), \dmap_2(x))$, which is proved by $(5),(9)$.\\
 %
-3. $(\stepiA - (j_1 + j_2), (\valr_1, \valr_2)) \in \lrv{\ienv (\type_1  \times \type_2)}$, 
-  which is proved by $(10)
-$ and applying Lemma~\ref{lem:downward} on $(6)$.\\
+% Pick $\valr = \eop(\valr')$, then by E-PRIMITIVE, we have $\env, \ienv \eop(\expr) = (\env, \eop( \ienv \expr) )  \bigstep \valr, \eop(\tr')$.\\
+% %
+% Pick $\tr = \eop(\tr'), j = j' + 1$ s.t.  $j \leq k$, STS:\\
+% %
+% 1. $\adap(\tr) = \adap(\eop(\tr')) = 1 + \adap(\tr') \leq 1 + \ienv \nnatA = \ienv \nnatA'$ proved by $(a)$\\
+% %
+% 2. $\forall x \in \mbox{Vars}. \ddep{x}(\tr) = \ddep{x}(\eop(\tr')) = 1 + \ddep{x}(\tr') \leq 1 + \dmap(x) = \dmap'(x)$ proved by $(b)$\\
+% %
+% {\color{red}
+% 3. $(\stepiA - j, \valr) = (\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal} $.\\
+% %
+% From (c), we know: $\tvdash{} \valr' : \tbox{  (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0}) }$ . By typing rule PRIMITIVE, we have $\eop(\valr'): \treal$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal}$.\\
+% %
+% }
+
+% \caseL{
+% $
+%    \inferrule*[right = PAIR]{
+%       \Delta;\Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 ~ (1) 
+%    		\\
+%       \Delta;\Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 ~ (2)
+%       	\\\\
+%       \dmap' = \max(\dmap_1,\dmap_2) 
+%       	\\
+%       \nnatA' = \max(\nnatA_1,\nnatA_2)
+%     }{
+%       \Delta;\Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
+%     }
+% $
+% }
+% Assume $ \ienv \in \lrv{\Delta}$, $(\stepiA, \env) \in \lrv{\ienv \Gamma}$, 
+% to show: $(\stepiA, (\env, \ienv (\expr_1, \expr_2))) \in \lre{\dmap'}{\ienv \nnatA'}{\ienv (\type_1 \times \type_2)}$.\\
+% %
+% By inversion, STS: $\forall \eapp  \valr, \tr, j.$ 
+% $(\env, \ienv (\expr_1, \expr_2) \bigstep \valr, \eapp  \tr) \land (\size{\tr} = j) \land (j \leq \stepiA)$\\
+% %
+% 1. $ (\adap(\tr) < \ienv \nnatA')$\\
+% 2. $ (\forall x \in \mbox{Vars}. \ddep{x}(\tr) \leq \dmap'(x)) $\\
+% 3. $ ((\stepiA - j, \valr) \in \lrv{\ienv (\type_1 \times \type_2)})$.\\
+% %
+% By induction hypothesis on $(1)$, we have $(\stepiA, \ienv \expr_1) \in \lre{\dmap_1}{\ienv \nnatA_1}{\ienv  \type_1}$.\\
+% %
+% By inversion, pick any $\valr_1,  \tr_1, j_1$ s.t.,
+% $(\env, \ienv \expr_1 \bigstep \valr_1, \tr_1) ~ (3) 
+% \land \size{\tr_1} = j_1
+% \land j_1 < \stepiA $,\\
+% %
+% we have: \\
+% (4). $(\adap(\tr_1) \leq \ienv  \nnatA_1)$;\\
+% % 
+% (5). $\forall x, \ddep{x}(\tr_1) \leq \dmap_1(x)$;\\
+% % 
+% (6). $ (\stepiA - j_1, \valr_1) \in \lrv{\ienv  \type_1} $.\\
+% %
+% By induction hypothesis on $(2)$ and the assumption $(\stepiA - j_1,
+% \env) \in \lrv{\Gamma}$ from Lemma~\ref{lem:downward}, we have $(\stepiA - j_1, \ienv  \expr_2) \in \lre{\dmap_2}{\ienv  \nnatA_2}{\ienv  \type_2}$.\\
+% %
+% By inversion, pick $\valr_2, \tr_2, j_2 $ s.t., $ (\env, \ienv \expr_2 \bigstep \valr_2, \tr_2) ~ (7) \land (\size{\tr_2} = j_2) \land j_2 < \stepiA-j_1 $,\\
+% %
+% we have:\\
+% (8). $\adap(\tr_2) \leq \ienv  \nnatA_2$;\\
+% %
+% (9). $\forall x\in \mbox{Vars}. \ddep{x}(\tr_2) \leq \dmap_2(x)$;\\
+% %
+% (10). $(\stepiA- j_1- j_2, \valr_2) \in \lrv{\ienv  \type_2}$.\\
+% %
+% By E-Pair rule, we have:\\
+% \[
+% \inferrule*[right = E-Pair]
+% {\env, \expr_1 \bigstep \valr_1, \tr_1 ~ (3)  \and \env, \expr_2
+% \bigstep \valr_2, \tr_2 ~ (7) }
+% {\env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)}
+% \]
+% Pick $\valr = (\valr_1, \valr_2), \tr = (\tr_1, \tr_2), j = |(\tr_1, \tr_2)| = j_1 + j_2$, s.t. $\env, \ienv (\expr_1, \expr_2) \bigstep \valr, \tr \land \size{\tr} = j \land j \leq \stepiA$.\\
+% %
+% 1. 2. 3. are proved by: \\
+% 1. $\adap(\tr) = \adap(\tr_1, \tr_2) < \ienv \nnatA' = \max(\ienv \nnatA_1, \ienv \nnatA_2)$, which is proved by $(4), (8)$.\\
+% %
+% 2. $\forall x \in \mbox{Vars}. \ddep{x}(\tr_1, \tr_2) = \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \leq \dmap'(x) = \max(\dmap_1(x), \dmap_2(x))$, which is proved by $(5),(9)$.\\
+% %
+% 3. $(\stepiA - (j_1 + j_2), (\valr_1, \valr_2)) \in \lrv{\ienv (\type_1  \times \type_2)}$, 
+%   which is proved by $(10)
+% $ and applying Lemma~\ref{lem:downward} on $(6)$.\\
 
 
 
