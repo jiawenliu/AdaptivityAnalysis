@@ -104,6 +104,7 @@ let rec pp_head fmt =
 let rec pp_dataset fmt = 
   fprintf fmt "%s \n\n" "let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] "
 
+
 let rec pp_expression fmt (e : Syntax.expr) = 
   match e with
   | Var v             -> 
@@ -125,14 +126,23 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Fix(f, x, e3)     -> 
     if(f.v_name = "_")
     then  
-      fprintf fmt " fun (%a ) -> @\n@[<hov 1> %a@]@\n" pp_expression(x) pp_expression(e3)
+      fprintf fmt "(fun (%a ) -> @\n@[<hov 1> %a@]@\n)" pp_expression(x) pp_expression(e3)
     else
       fprintf fmt " let rec %s (%a ) = @\n@[<hov 1> %a@]@\n" f.v_name pp_expression(x) pp_expression(e3)
   | Fst e             -> fprintf fmt " fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " snd %a " pp_expression(e)
   | If(e, e1, e2)     -> fprintf fmt " if(%a) then @\n @[<hov 1> %a@]@\n else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
   | Mech e            -> fprintf fmt " mech(%a) " pp_expression(e)
-  | Let(x, e1, e2)    -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
+  | Let(x, e1, e2)    -> 
+  (
+    match e1 with
+    | Fix(f, _, e3)   -> 
+      if(f.v_name = "_")
+      then fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
+      else 
+        fprintf fmt "%a \nlet %s = %s\n%a" pp_expression(e1) x.v_name f.v_name pp_expression(e2)
+    | _ -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
+  )
   | Nil               -> fprintf fmt " [] "
   | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
   | Bop(p, e1, e2)    -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
