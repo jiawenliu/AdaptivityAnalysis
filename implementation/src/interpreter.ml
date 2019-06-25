@@ -38,7 +38,7 @@ let parse_string file =
 let main = 
   let (infile, outfile) = parseArgs () in 
     let (expr, ty) = (parse_string infile) in
-    let  out_formatter = formatter_of_out_channel (open_out ("../exec/"^outfile)) in
+    let  out_formatter = formatter_of_out_channel (open_out (outfile)) in
       pp_progm out_formatter expr ; 
       pp_progm std_formatter expr
 

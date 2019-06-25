@@ -1,6 +1,7 @@
 open Printf 
 open HeadFile 
-open Distribution
+
+open Distribution 
 
 let dataset = [ [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ]  
 
@@ -15,7 +16,7 @@ let dataset = [ [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0
          if( (( i ) < ( nn )) ) then 
            if((List.exists (fun a -> if (a =  i ) then true else false)  ii )) then 
               let x =
-               ((  nth   sc   i   ) +. ( (( (( a ) -. ( p )) ) *. ( (( 
+               ((  nth    sc   i   ) +. ( (( (( a ) -. ( p )) ) *. ( (( 
                q   i  ) -. ( p )) )) ))  in
                let sc' =   updt    sc    i   x     in
                 f    ()    sc'    a    p    q    ii    (( i ) +. ( 1.000000 ))  
@@ -45,7 +46,7 @@ let updtSC = f
       (fun ( cc  ) -> 
         if( (( i ) < ( cc )) ) then 
            let x =
-            ((  nth   scc   i   ) +. ( (( (( a ) -. ( p )) ) *. ( (( 
+            ((  nth    scc   i   ) +. ( (( (( a ) -. ( p )) ) *. ( (( 
             qc   i  ) -. ( p )) )) ))  in
             let scc' =   updt    scc    i   x     in
              f    ()    scc'    a    p    qc    (( i ) +. ( 1.000000 ))  
@@ -67,7 +68,7 @@ let updtSCC = f
    (fun ( i  ) -> 
     (fun ( nn  ) -> 
       if( (( i ) < ( nn )) ) then 
-        if( ((  nth   sc   i   ) < ( maxScc )) ) then 
+        if( ((  nth    sc   i   ) < ( maxScc )) ) then 
            i  ::   f    ()    maxScc    sc    (( i ) +. ( 1.000000 ))   nn       
         else 
            f    ()    maxScc    sc    (( i ) +. ( 1.000000 ))   nn      
@@ -115,13 +116,12 @@ let updtI = f
                                       )   0.000000   scc'     in
                     let ii' =
                       updtI    ()    maxScc    sc    0.000000   nn       in
-                     let dd' =  (listminus ( dd )  ( ii' ))  in
-                      multiRound      ()      k    (( j ) +. ( 1.000000 ))    sc'  
-                                                                     scc'  
-                                                                     ii'  
-                                                                     nn  
-                                                                     cc  
-                                                                    dd'          
+                     let dd' = (listminus  dd   ii' ) in
+                      multiRound      ()      k    (( j ) +. ( 1.000000 ))  
+                                                   sc'    scc'    ii'  
+                                                                  nn  
+                                                                  cc  
+                                                                 dd'          
           else 
             dd 
          

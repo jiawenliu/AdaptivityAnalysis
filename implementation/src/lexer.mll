@@ -66,7 +66,7 @@ rule main =
   | "sign"              { SIGN }
 
   | "->"                { ARROW }
-  | "|>"                { VDASH }
+  | "|-"                { VDASH }
   | "||"                { OR }
   | "&&"                { AND }
   | "^"                 { XOR }

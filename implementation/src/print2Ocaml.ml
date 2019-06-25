@@ -50,7 +50,7 @@ module Symbols = struct
     | UnitR    -> ("unitR",    "unitᵣ")
     | Mu       -> ("mu",      "μ")
     | Lambda   -> ("\\",      "λ")
-    | BigLambda-> ("\\!",  "Λ")
+    | BigLambda-> ("\\!",  "Λ") 
     | Vdash    -> ("|-",      "⊢")
     | Leq      -> ("<=",      "≤")
     | Top      -> ("true",    "T")
@@ -94,6 +94,7 @@ let pp_uop fmt (p : Syntax.uop) =
 let rec pp_head fmt =
   fprintf fmt "open Printf \n";
   fprintf fmt "open HeadFile \n\n";
+  fprintf fmt "open Distribution \n\n"
 
 
 
@@ -149,6 +150,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   (
     match p with
     | Contains        -> fprintf fmt "(List.exists (fun a -> if (a = %a) then true else false) %a)" pp_expression(e2) pp_expression(e1)
+    | Setminus        -> fprintf fmt "(listminus %a %a)" pp_expression(e1) pp_expression(e2)
     | _               -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
   )
 
@@ -165,6 +167,6 @@ let rec pp_expression fmt (e : Syntax.expr) =
 let rec pp_progm fmt expr = 
       pp_head fmt; 
       pp_dataset fmt;
-      pp_expression fmt expr ; 
+      pp_expression fmt expr
 
 

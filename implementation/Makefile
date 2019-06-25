@@ -9,7 +9,7 @@ VERSION=byte
 
 NAME=interpreter
 # Program main file
-MAIN=$(NAME)
+MAIN=src/$(NAME)
 
 
 .PHONY: $(NAME) clean clean-py $(NAME).byte $(NAME).native $(NAME).d.byte $(NAME).d.native 
