@@ -58,6 +58,7 @@ rule main =
   | "bernoulli"         { BERNOULLI }
   | "uniform"           { UNIFORM }
   | "dmap"              { DMAP }
+  | "contains"          { CONTAINS }
 
   | "Lambda"            { BIGLAM }
 

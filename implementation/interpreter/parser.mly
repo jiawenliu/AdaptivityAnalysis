@@ -37,7 +37,7 @@ open IndexSyntax
 %token OR AND XOR
 %token ADD SUB MUL DIV DOT
 %token LESS LEQ GREATER GEQ
-%token SETMINUS
+%token SETMINUS CONTAINS
 
 /* Tokens for Types */
 %token INT
@@ -136,6 +136,7 @@ bop:
     | GREATER       { Greater }
     | SETMINUS      { Setminus }
     | DOT           { Dot }
+    | CONTAINS      { Contains }
 
 
 uop:

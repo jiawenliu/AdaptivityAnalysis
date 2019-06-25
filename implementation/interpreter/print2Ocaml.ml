@@ -93,7 +93,7 @@ let pp_uop fmt (p : Syntax.uop) =
 
 let rec pp_head fmt =
   fprintf fmt "open Printf \n";
-  fprintf fmt "open HeadFile \n\n"
+  fprintf fmt "open HeadFile \n\n";
 
 
 
@@ -102,7 +102,7 @@ let rec pp_head fmt =
     | Guassian
 *)
 let rec pp_dataset fmt = 
-  fprintf fmt "%s \n\n" "let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ] "
+  fprintf fmt "%s \n\n" "let dataset = [ [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ] "
 
 
 let rec pp_expression fmt (e : Syntax.expr) = 
@@ -145,10 +145,18 @@ let rec pp_expression fmt (e : Syntax.expr) =
   )
   | Nil               -> fprintf fmt " [] "
   | Cons(e1, e2)      -> fprintf fmt " %a :: %a " pp_expression(e1) pp_expression(e2)
-  | Bop(p, e1, e2)    -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
+  | Bop(p, e1, e2)    -> 
+  (
+    match p with
+    | Contains        -> fprintf fmt "(List.exists (fun a -> if (a = %a) then true else false) %a)" pp_expression(e2) pp_expression(e1)
+    | _               -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
+  )
+
   | Uop(p, e)         -> fprintf fmt " %a (%a) " pp_uop(p)  pp_expression(e)
   | IApp e            -> fprintf fmt " %a " pp_expression(e)
   | ILam e            -> fprintf fmt " %a " pp_expression(e)
+  | Bernoulli(v)      -> fprintf fmt "(sample_bernoulli(%a))" pp_expression(v)
+  | Uniform(v1, v2)   -> fprintf fmt "(sample_uniform %a %a)" pp_expression(v1) pp_expression(v2)
   | _                 -> fprintf fmt " new "
 
 

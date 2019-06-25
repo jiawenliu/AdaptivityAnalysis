@@ -141,5 +141,17 @@ let sign (y: float) : float =
 let get (row:float list) (i:float) : float  =
   nth row (int_of_float i)
 
+let updt l pos a = 
+  List.mapi (fun i x -> if i = (int_of_float pos) then a else x) l
+
+let nth l i =
+  List.nth l (int_of_float i)
 
 let mech (q:query) =  nonoise_mech q dataset
+
+let rec listminus l1 l2 = 
+  match l2 with
+    | hd::tl -> listminus (List.filter (fun a -> if (a = hd) then false else true) l1) tl
+    | [] -> l1
+
+
