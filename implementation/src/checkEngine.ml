@@ -1,5 +1,5 @@
 (* ---------------------------------------------------------------------- *)
-(* Unary typechecking engine for BiArel                               *)
+(* typechecking engine for Adapt Program                               *)
 (* ---------------------------------------------------------------------- *)
 
 open Tycheck
@@ -43,22 +43,6 @@ let typing_error_pp = Err.error_msg_pp Opt.TypeChecker
               | Some (iarr') -> CAnd (c, check_iarray_sub iarr iarr') 
               | None -> CTrue
        ) CTrue  p1    
-
- (* let check_predicate_sub p1 p2 q1 q2 ctx : bool = 
-   if (List.length p1) = (List.length p2) && (List.length q1) = (List.length q2) then 
-      begin
-        let c_1 = ck_sub p1 p2 in 
-        let c_2 = ck_sub q1 q2 in
-        let c= CImpl(c_1,c_2) in
-       let c_3 =  CImpl (ctx.constr_env, c) in 
-        let c_4 = quantify_all_exist ctx.evar_ctx c_3 in 
-                          let c_5 = quantify_all_universal ctx.ivar_ctx c_4 in
-                            let w_c= WhyTrans.why3_translate_int c_5 in 
-                           
-                              WhySolver.post_st w_c 1      
-      end
-  else
-     false    *)
 
      let get_fst c =
        match c with
@@ -308,7 +292,7 @@ and infer_iapp m i =
   fun ctx ->
     match m ctx with
     | Right (uty, c, psi, k) ->
-    unary_debug dp "inf_iapp2 :@\n@[c is :%a, uty  %a @]@." Print.pp_cs c Print.pp_utype uty ; 
+    unary_debug dp "inf_iapp2 :@\n@[c is :%a, uty  %a @]@." Print.pp_cs c Print.pp_type uty ; 
       begin
         match uty with
         | UTyForall(x, s, mu', k_e, ty) ->
@@ -336,7 +320,7 @@ and infer_app m i e2 =
   m =<-> (fun uty _ ->
       match uty with
       | UTyArr(ty1, mu', k'', ty2) ->
-         unary_debug dp "inf_app :@\n@[uty is :%a, k'' is %a, e2 is %a @]@." Print.pp_utype uty Print.pp_iterm k'' Print.pp_expr e2; 
+         unary_debug dp "inf_app :@\n@[uty is :%a, k'' is %a, e2 is %a @]@." Print.pp_type uty Print.pp_iterm k'' Print.pp_expr e2; 
         [(check_mode i mu' (checkUType e2 ty1), ty2, ISucc k'')]
       | _ -> [(fail i (WrongUShape (uty, "function")), UTyPrim (UPrimInt), IZero)])
 
@@ -350,7 +334,7 @@ and infer_proj i f =
     in the context [ctx] with the cost [k]. If
     it does, it returns unit, otherwise it raises an exception. *)
 and checkUType (e: expr) (uty : ty) : constr checker =
-    unary_debug dp "@[UCK  %a, uty is %a @]@." Print.pp_expr e Print.pp_utype uty; 
+    unary_debug dp "@[UCK  %a, uty is %a @]@." Print.pp_expr e Print.pp_type uty; 
   match e, uty with
   (* Constrained type intro *)
   | _, UTyCs(c, ty) -> 
@@ -360,7 +344,7 @@ and checkUType (e: expr) (uty : ty) : constr checker =
    (with_new_ctx (fun ctx -> {ctx with constr_env = CAnd (c, ctx.constr_env )} ) (checkUType e ty) ) >>= fun cs_b -> unary_debug dp "@[UTY Cimpl2 CSB is %a@]@." Print.pp_cs cs_b; return_ch (CImpl(c, cs_b))
   (* Primitive expressions *)
   |  Prim (i, ep), tp ->
-     unary_debug dp "primTInt :@\n@[%a, %a@]@." Print.pp_expr e Print.pp_utype tp  ; 
+     unary_debug dp "primTInt :@\n@[%a, %a@]@." Print.pp_expr e Print.pp_type tp  ; 
       begin
       match ep with
       | PrimTInt x -> let ty_ep = un_type_of_prim ep in             
@@ -379,13 +363,10 @@ and checkUType (e: expr) (uty : ty) : constr checker =
   (* List type expressions *)
   | Nil i, _ -> check_nil i uty
   | Cons(i, e1, e2), _ -> check_cons e1 e2 i uty
-  | CaseL(i,e, e_n, x_h, x_tl, e_c), _ -> check_case_list i e e_n x_h x_tl e_c uty
-  (* Sum type expressions *)
-  | Inl(i, e), UTySum (ty1,_) -> checkUType e ty1
-  | Inr(i, e), UTySum (_,ty2) -> checkUType e ty2
+
   | Case(i,e, x_l, e_l, x_r, e_r), _ -> check_case_sum i e x_l e_l x_r e_r uty
   (* If statement *)
-  | IfThen(i, e, el, er), _ -> unary_debug dp "checkif, el is %a, uty is %a " Print.pp_expr el Print.pp_utype uty ; check_if i e el er uty
+  | IfThen(i, e, el, er), _ -> unary_debug dp "checkif, el is %a, uty is %a " Print.pp_expr el Print.pp_type uty ; check_if i e el er uty
   (* Pairs *)
   | Pair(i, e1, e2), _ ->
     begin
@@ -409,48 +390,7 @@ and checkUType (e: expr) (uty : ty) : constr checker =
   | Let (i, vi_x, e1, e2), _ ->
     inferUType e1 <->=
     (fun uty_x -> (vi_x  |:| uty_x) (checkUType e2 uty))
-  (* Constrained type elim *)
-  | CLet (i, vi_x, e1, e2), _ -> check_clet i vi_x e1 e2 uty
-  | Contra i, _ -> return_ch empty_constr
-  (* Monadic terms *)
-  | Alloc (i, e1, e2), UMonad (p, g, uty_1, k, mu, q) ->
-      fun (ctx, k') -> 
-     if (preselect_alloc p q g ctx) then
-       (check_alloc i e1 e2 k mu g uty_1 ) (ctx,k')
-     else fail i (WrongUShape (uty, "alloc preselect fails")) (ctx,k')
-  | Return (i, e1) , UMonad (p, g, uty_1, k, mu, q) ->
-     fun (ctx, k') -> 
-     unary_debug dp "checkreturn, e1 is %a " Print.pp_expr e1  ;
-     if (preselect_return p q ctx) then
-      ( check_body (with_mode mu (checkUType e1 uty_1 ) ) k ) (ctx,k')
-     else fail i (WrongUShape (uty, "return")) (ctx,k')
-  | Read (i, e1, e2),  UMonad (p, g, uty_1, k, mu, q) -> 
-     fun (ctx, k') -> 
-     if (preselect_return p q ctx) then
-       (check_read i e1 e2 p k ) (ctx,k')
-     else  fail i (WrongUShape (uty, "preselect of read fails")) (ctx,k')
-  | Update(i, e1, e2, e3), UMonad (p, g, uty_1, k, mu, q) ->
-     begin
-     match uty_1 with
-     | UTyPrim (UPrimUnit) -> check_update i e1 e2 e3 p k
-     | _ ->  fail i (WrongUShape (uty, "update"))
-     end
-  | Letm(i, x, e1, e2),  UMonad (p, g, uty_2, k'', mu, q) ->
-     (inferUType e1) <->=
-       ( fun uty_inf ->
-         match uty_inf with
-         |  UMonad (p_1, g_1, uty_1, k, mu_1, q_1) ->
-             begin
-             (* let p_2 = predicate_remove p p_1 in
-              * let q_2 = predicate_intersect q'' q' in
-              * let q_1 = predicate_remove q'' q_2 in
-              * let q = predicate_remove q' q_2 in *)
-       unary_debug dp "let second premise :@\n@[k'' is %a, k is %a,  next uty_2 is %a @]@." Print.pp_iterm k'' Print.pp_iterm k Print.pp_utype uty_2;
-             (x |:| uty_1 ) ( checkUType e2 (UMonad( q_1 , g, uty_2, (minus_cost k'' k), mu,  q  ) ) )
-             end
-         | _ -> fail i (WrongUShape (uty, "Let monadic"))    
-       )
-  |  _ , _ -> infer_and_check (expInfo e) e uty
+
 
 and check_update (i: info) (e1: expr) (e2 : expr)(e3 : expr) (p:predicate) (k_m: iterm)=
   fun (ctx, k) ->
@@ -560,7 +500,7 @@ and check_read (i: info) (e1: expr) (e2 : expr) (p:predicate) (k_m: iterm)  =
   fun (ctx,k) -> match (inferUType e1  ctx) with
                  | Right (uty_1, c_1, psi_1, k_1) ->
                     begin
-                       unary_debug dp "read first premise :@\n@[type is %a, expr is %a, predicate is %a @]@."  Print.pp_utype uty_1 Print.pp_expr e1 Print.pp_predicates p;
+                       unary_debug dp "read first premise :@\n@[type is %a, expr is %a, predicate is %a @]@."  Print.pp_type uty_1 Print.pp_expr e1 Print.pp_predicates p;
                          match uty_1 with
                          | UArray (g, l, uty) ->
                           
@@ -598,7 +538,7 @@ and check_alloc (i: info) (e1 : expr) (e2 : expr) (k: iterm) (mu:mode) (g: var_i
 and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (uty : ty) =
   match uty with
   | UTyArr(ty1, mu, k_fun, ty2) ->
-  unary_debug dp "ck_fix:@\n@[e %a, ty1: %a, ty2: %a @]@.@\n"  Print.pp_expr e Print.pp_utype ty1 Print.pp_utype ty2;
+  unary_debug dp "ck_fix:@\n@[e %a, ty1: %a, ty2: %a @]@.@\n"  Print.pp_expr e Print.pp_type ty1 Print.pp_type ty2;
     check_body ((vi_f |:| uty)
                   ((vi_x |:| ty1)
                      (with_mode mu (checkUType e ty2)))) k_fun
@@ -708,7 +648,7 @@ and infer_and_check (i: info) (e: expr) (uty : ty) : constr checker =
     match inferUType e ctx with
     | Right (inf_uty, c, psi_ctx, k') ->
       unary_debug dp "infer_and_check :@\n@[infer_type is %a, expr is %a, checked type is %a, idx_ctx is :%a , k' is %a, k is %a @]@." 
-      Print.pp_utype inf_uty Print.pp_expr e Print.pp_utype uty Print.pp_ivar_ctx ctx.ivar_ctx Print.pp_cost k' Print.pp_cost k; 
+      Print.pp_type inf_uty Print.pp_expr e Print.pp_type uty Print.pp_ivar_ctx ctx.ivar_ctx Print.pp_cost k' Print.pp_cost k; 
       (match (check_usubtype i inf_uty uty (extend_e_ctx psi_ctx ctx, None)) with
        | Right c' -> 
 	  let cs = option_combine k' k (cost_cs ctx) |> Core.Option.value ~default:CTrue in

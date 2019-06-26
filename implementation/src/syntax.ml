@@ -228,62 +228,7 @@ let rec ty_subst i it ty =
 
 (************************************************************************)
 (* Info extraction *)
-(*let rec expInfo = function 
-    Var(i, _) 
-  | Prim(i, _)
-
-  | Fix (i,   _)
-
-  | App(i,  _)
-  | Nil i  
-  | Cons(i,  _)
-  | CaseL(i,     _)
-
-  | Inl(i, _)
-  | Inr(i, _)
-  | Case(i,     _)
-
-  | Pair(i,  _)
-  | Fst(i, _)
-  | Snd(i, _)
-
-  | IfThen (i,   _)
-
-  | UAnno (i,   _)
-  | BAnno (i,   _)
-  | BAnnoM(i,    _)
-  | Let (i,   _)
-
-  | ILam(i, _)
-  | IApp(i, _) 
-
-  | Pack(i, _)
-  | Unpack(i,   _)
-
-  | CExpr(i, _)
-  | CLet (i,   _)
-  | Contra i           
-  | Return(i,_) 
-  | Alloc(i,_) 
-  | Read(i,_) 
-  | Update(i,_) 
-  | Letm(i,_)  
-  | FIXEXT (i,    _) 
-  | Split (i,  _) 
-  | SWITCH (i, _)  -> i
-*)
-
-(* et check_lists_leq l1 l2 : bool =
-  try List.for_all2 (fun i_1 i_2 -> i_1 <= i_2) l1 l2 with Invalid_argument "ararys length fails" -> false
-
-let check_lists_eq l1 l2 : bool =
-  try List.for_all2 (fun i_1 i_2 -> i_1 = i_2) l1 l2 with Invalid_argument "ararys length fails" -> false
-                    
-                    
-let check_arrays_leq (arr_1: iterm) (arr_2: iterm) : bool =
-      match arr_1 , arr_2 with
-        | IArray a_1 , IArray a_2 ->
-            let l_1 = Array.to_list a_1  in 
-            let l_2 = Array.to_list a_2 in
-            check_lists_leq l_1 l_2
-        | _ , _ -> false *)
+let type_of_prim t = match t with
+    PrimUnit       -> Ty_Prim Ty_PrimUnit
+  | PrimInt i      -> Ty_Prim Ty_PrimInt (* UTyPrim UPrimInt *)
+  | PrimBool _     -> Ty_Prim Ty_PrimBool

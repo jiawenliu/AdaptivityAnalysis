@@ -105,10 +105,10 @@ expr:
   | FIX VAR LPAREN expr  RPAREN DOT expr
                                                     { Fix( {v_name = $2}, $4, $7) }
   | LAM expr DOT expr                               { Fix( {v_name = "_"}, $2, $4) }
-  | expr expr                                       { App($1, $2) }
   | NIL                                             { Nil }
   | expr DBCOLON expr                                  { Cons($1, $3) }
   | MECH LPAREN expr RPAREN                         { Mech($3) }
+  | app                                             { $1 }
   | LET VAR EQUAL expr IN expr   
                                                     { Let({v_name = $2}, $4, $6) }
   | uop LPAREN expr RPAREN                          { Uop($1, $3) }                                                  
@@ -120,6 +120,14 @@ expr:
   | UNPACK RPAREN expr COMMA VAR COMMA expr LPAREN  { Unpack($3, {v_name = $5}, $7) }
   | BERNOULLI expr                                  { Bernoulli $2 }
   | UNIFORM LPAREN expr COMMA expr RPAREN           { Uniform( $3, $5 ) }
+
+/* Applications */
+app:
+  | app expr
+     { App($1, $2) }
+  |  expr 
+     { $1 }
+
 
 bop:
     | ADD           { Add }
