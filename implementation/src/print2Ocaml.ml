@@ -103,7 +103,7 @@ let rec pp_head fmt =
     | Guassian
 *)
 let rec pp_dataset fmt = 
-  fprintf fmt "%s \n\n" "let dataset = [ [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ] "
+  fprintf fmt "%s \n\n" "let dataset = [1.0;1.0;1.0;1.0]  "
 
 
 let rec pp_expression fmt (e : Syntax.expr) = 
@@ -149,7 +149,6 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Bop(p, e1, e2)    -> 
   (
     match p with
-    | Contains        -> fprintf fmt "(List.exists (fun a -> if (a = %a) then true else false) %a)" pp_expression(e2) pp_expression(e1)
     | Setminus        -> fprintf fmt "(listminus %a %a)" pp_expression(e1) pp_expression(e2)
     | _               -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
   )

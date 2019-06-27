@@ -28,5 +28,3 @@ let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ]
                                )   0.000000   l    ) 
     ) in
     mech( q ) 
-;;
-let _ = print_float(twoRound 2.0)

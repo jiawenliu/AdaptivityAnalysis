@@ -284,7 +284,7 @@ and infer_celim m i =
 
 and infer_check_anno i e uty k =
   fun ctx ->
-    match checkUType e uty (ctx, Some k) with
+    match checkType e uty (ctx, Some k) with
     | Right c -> Right (uty, c, [], Some k)
     | Left err -> Left err
 
@@ -321,7 +321,7 @@ and infer_app m i e2 =
       match uty with
       | UTyArr(ty1, mu', k'', ty2) ->
          unary_debug dp "inf_app :@\n@[uty is :%a, k'' is %a, e2 is %a @]@." Print.pp_type uty Print.pp_iterm k'' Print.pp_expr e2; 
-        [(check_mode i mu' (checkUType e2 ty1), ty2, ISucc k'')]
+        [(check_mode i mu' (checkType e2 ty1), ty2, ISucc k'')]
       | _ -> [(fail i (WrongUShape (uty, "function")), UTyPrim (UPrimInt), IZero)])
 
 and infer_proj i f =
@@ -330,66 +330,68 @@ and infer_proj i f =
     | UTyProd (ty1, ty2) ->  return_inf(f (ty1, ty2))
     | _ -> fail i (WrongUShape (uty, "product"))
 
-(** [checkUType e] verifies that expression [e] has unary type [uty]
+(** [checkType e] verifies that expression [e] has unary type [uty]
     in the context [ctx] with the cost [k]. If
     it does, it returns unit, otherwise it raises an exception. *)
-and checkUType (e: expr) (uty : ty) : constr checker =
+and checkType (e: expr) (uty : ty) : constr checker =
     unary_debug dp "@[UCK  %a, uty is %a @]@." Print.pp_expr e Print.pp_type uty; 
   match e, uty with
-  (* Constrained type intro *)
-  | _, UTyCs(c, ty) -> 
-            (with_new_ctx (fun ctx -> {ctx with constr_env = CAnd (c, ctx.constr_env )} ) (checkUType e ty) ) >>= fun cs_b -> return_ch (CAnd(c, CImpl(c, cs_b)))
-  | _, UTyCsImp (c, ty) -> 
-  unary_debug dp "@[UTY Cimpl is %a, e is :%a@]@." Print.pp_cs c Print.pp_expr e; 
-   (with_new_ctx (fun ctx -> {ctx with constr_env = CAnd (c, ctx.constr_env )} ) (checkUType e ty) ) >>= fun cs_b -> unary_debug dp "@[UTY Cimpl2 CSB is %a@]@." Print.pp_cs cs_b; return_ch (CImpl(c, cs_b))
   (* Primitive expressions *)
-  |  Prim (i, ep), tp ->
+  |  Prim (ep), tp ->
      unary_debug dp "primTInt :@\n@[%a, %a@]@." Print.pp_expr e Print.pp_type tp  ; 
       begin
       match ep with
-      | PrimTInt x -> let ty_ep = un_type_of_prim ep in             
+      | PrimInt x -> let ty_ep = Syntax.type_of_prim ep in             
             (* 0 , UINT(D) *)
             begin
               match ty_ep, tp with
-              | UInt x, UInt y ->  check_size_eq x y  return_leaf_ch
-              | _,  UTyPrim UPrimInt -> return_leaf_ch
+              | Ty_IntIndex x, Ty_IntIndex y ->  Tycheck.check_size_eq x y  Tycheck.return_leaf_ch
+              | _,  Ty_Prim Ty_PrimInt -> Tycheck.return_leaf_ch
               | _,_ -> fail i @@ WrongUShape (tp, "int[i] or int")
             end
          
-      | _ -> if tp = un_type_of_prim ep
-             then return_leaf_ch else fail i @@ WrongUShape (tp, "primitive2")
+      | _ -> if tp = Syntax.type_of_prim ep
+             then Tycheck.return_leaf_ch else fail i @@ WrongUShape (tp, "primitive2")
        end
-  |  Fix(i, vi_f, vi_x, e), _ -> check_fix i vi_f vi_x e uty
+  | Fix( vi_f, vi_x, e), _ -> check_fix i vi_f vi_x e uty
   (* List type expressions *)
-  | Nil i, _ -> check_nil i uty
-  | Cons(i, e1, e2), _ -> check_cons e1 e2 i uty
+  | Nil, _ -> check_nil i uty
+  | Cons( e1, e2), _ -> check_cons e1 e2 i uty
 
-  | Case(i,e, x_l, e_l, x_r, e_r), _ -> check_case_sum i e x_l e_l x_r e_r uty
+  | Case(e, x_l, e_l, x_r, e_r), _ -> check_case_sum i e x_l e_l x_r e_r uty
   (* If statement *)
-  | IfThen(i, e, el, er), _ -> unary_debug dp "checkif, el is %a, uty is %a " Print.pp_expr el Print.pp_type uty ; check_if i e el er uty
+  | If( e, el, er), _ -> unary_debug dp "checkif, el is %a, uty is %a " Print.pp_expr el Print.pp_type uty ; check_if i e el er uty
   (* Pairs *)
-  | Pair(i, e1, e2), _ ->
+  | Pair(e1, e2), _ ->
     begin
       match uty with
-      | UTyProd (ty1,ty2) -> (checkUType e1 ty1) >> (checkUType e2 ty2)
+      | UTyProd (ty1,ty2) -> (checkType e1 ty1) >> (checkType e2 ty2)
       | _ -> fail i (WrongUShape (uty, "product"))
     end
   (* Index abstraction *)
-  | ILam (i, e), UTyForall(x, s, mu, k, ty) ->
+  | ILam (e), UTyForall(x, s, mu, k, ty) ->
      if (s = Loc) then
        begin
         check_body ((x |::::| s) i
-                      (with_mode mu (checkUType e ty))) k
+                      (with_mode mu (checkType e ty))) k
           end
    else    check_body ((x |::| s) i
-                  (with_mode mu (checkUType e ty))) k
+                  (with_mode mu (checkType e ty))) k
   (* Existential introduction and elimination *)
-  | Pack (i, e), _ -> check_pack i e uty
-  | Unpack (i, e1, vi_x, e2), _ -> check_unpack i e1 vi_x e2 uty
+  | Pack (e), _ -> check_pack i e uty
+  | Unpack (e1, vi_x, e2), _ -> check_unpack i e1 vi_x e2 uty
   (* Let bound *)
-  | Let (i, vi_x, e1, e2), _ ->
+  | Let (vi_x, e1, e2), _ ->
     inferUType e1 <->=
-    (fun uty_x -> (vi_x  |:| uty_x) (checkUType e2 uty))
+    (fun uty_x -> (vi_x  |:| uty_x) (checkType e2 uty))
+  | IApp (e), ty -> 
+  | Bernoulli (v) 
+  | Uniform (v1, v2)
+  | Mech (e)
+  | Fst (e)
+  | Snd (e)
+  | True
+  | False
 
 
 and check_update (i: info) (e1: expr) (e2 : expr)(e3 : expr) (p:predicate) (k_m: iterm)=
@@ -411,7 +413,7 @@ and check_update (i: info) (e1: expr) (e2 : expr)(e3 : expr) (p:predicate) (k_m:
                                         let k_sum = option_combine k_1 k_2 (fun (ik,k') -> add_costs( add_costs (ik, ISucc (IZero) ), k') ) in
                                         let k_3 = option_combine (Some k_m) k_sum (fun(ik, k') -> IMinus(ik, k')  ) in
                                         unary_debug dp "update_test :@\n@[k is %a, k_sum is %a, k_3 is %a, e3 is %a @]@." Print.pp_cost k Print.pp_cost k_sum Print.pp_cost k_3 Print.pp_expr e3;
-                                        match (checkUType e3 uty (ctx, k_3)) with
+                                        match (checkType e3 uty (ctx, k_3)) with
                                         | Right (c_3) -> Right (      quantify_all_exist (psi_1@psi_2) (merge_cs c_1 (merge_cs c_2 c_3) ) )
                                         | Left err'' -> Left err''
                                       end
@@ -452,49 +454,6 @@ and   handle_u_update (p:predicate) (g: var_info) (l': iterm) (l: iterm) (ctx: t
                             unary_debug dp "handler_u_updte3 : @[  w_c: %a, c_4: %a @]"  Why3.Pretty.print_term w_c Print.pp_cs c_5;
                               WhySolver.post_st w_c 1
              | _ -> false
-            (* match beta with
-            | None -> false
-            | Some (IArray(o, ls) ) -> 
-                let c_1 =  CArrPos ( IArray(o,ls) , l' ) in 
-                    let c_2 = merge_cs  (CLeq (l', l)) c_1 in 
-                      let c_3 =  CImpl (ctx.constr_env, c_2) in 
-                        let c_4 = quantify_all_exist ctx.evar_ctx c_3 in 
-                          let c_5 = quantify_all_universal ctx.ivar_ctx c_4 in
-                            let w_c= WhyTrans.why3_translate_int c_5 in 
-                            unary_debug dp "handler_u_updte3 : @[  w_c: %a @]"  Why3.Pretty.print_term w_c;
-                              WhySolver.post w_c 1
-            | _ -> false *)
-
-
-
-
-      (* let beta = (List.assoc_opt g p) in
-        match beta, l',l with
-         | None, _ ,_-> false
-         | Some (IArray(a,ls)), IVar v, IVar v' -> 
-         unary_debug dp "handler_u_updte2 : @[ v:%a, v': %a @]" Print.pp_vinfo v Print.pp_vinfo v';
-            let c = CForall(v',i, Size,  CForall(v, i, Size, CImpl (ctx.constr_env, CLeq(l',l) ) ) ) in 
-               let w_c=  WhyTrans.why3_translate c in 
-               unary_debug dp "handler_u_updte3 : @[  w_c: %a @]"  Why3.Pretty.print_term w_c;
-          let i_1'=  WhyTrans.get_why3_var v.v_name in
-            let a_fml = WhySolver.createArrayTerm a.v_name in
-              let get_a_i = WhySolver.createGetTerm a_fml i_1' in 
-                let fml_btrue= WhySolver.checkValueTrue get_a_i in 
-                let fml_1 = WhySolver.createImplyPredicate a_fml fml_btrue in 
-                let cs_1= Why3.Term.t_forall_close [i_1'] [] fml_1 in
-                let cs_2 =WhySolver.createExistArray a_fml cs_1 in
-                    let    cs_3 =  Why3.Term.t_binary Why3.Term.Tand w_c cs_2 in
-                 WhySolver.post cs_3 1 *)
-
-
-  (* let beta = (List.assoc_opt g p) in
-  unary_debug dp "in handle_update  :@\n@[g is %a, iterm l' is %a, l is %a, predicate is %a @]@."  Print.pp_vinfo g  Print.pp_iterm l'  Print.pp_iterm l Print.pp_predicates p;
-     match (iterm_simpl l') , (iterm_simpl l), beta with
-     | IConst i', IConst i , Some (IArray a) ->
-        let x' = int_of_float i' in
-        let x = int_of_float i in
-         if  (x' < x ) && ( a.(x') = 1 ) then true else false
-     | _, _, _ -> false *)
                     
 and check_read (i: info) (e1: expr) (e2 : expr) (p:predicate) (k_m: iterm)  =
   fun (ctx,k) -> match (inferUType e1  ctx) with
@@ -532,7 +491,7 @@ and check_read (i: info) (e1: expr) (e2 : expr) (p:predicate) (k_m: iterm)  =
 and check_alloc (i: info) (e1 : expr) (e2 : expr) (k: iterm) (mu:mode) (g: var_info) (uty: ty) =
   match uty with
   |  UArray (g_1, l_1, uty_1) -> if g = g_1 then 
-                                  check_body ( with_mode mu ( (checkUType e1 (UInt(l_1)) ) >> (checkUType e2 uty_1) ) ) ( minus_cost k (IConst 1.0) ) else fail i (WrongUShape (uty, "alloc return type"))
+                                  check_body ( with_mode mu ( (checkType e1 (UInt(l_1)) ) >> (checkType e2 uty_1) ) ) ( minus_cost k (IConst 1.0) ) else fail i (WrongUShape (uty, "alloc return type"))
   | _ -> fail i (WrongUShape (uty, "alloc return type"))
 
 and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (uty : ty) =
@@ -541,7 +500,7 @@ and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (uty : ty
   unary_debug dp "ck_fix:@\n@[e %a, ty1: %a, ty2: %a @]@.@\n"  Print.pp_expr e Print.pp_type ty1 Print.pp_type ty2;
     check_body ((vi_f |:| uty)
                   ((vi_x |:| ty1)
-                     (with_mode mu (checkUType e ty2)))) k_fun
+                     (with_mode mu (checkType e ty2)))) k_fun
   | _ ->  fail i (WrongUShape (uty, "fuction"))
 
 and check_body (m: constr checker) (k_fun : iterm) : constr checker =
@@ -561,7 +520,7 @@ and check_if (i : info) e el er uty =
   inferUType e <->=
   (fun uty_g ->
      match uty_g with
-     | UTyPrim UPrimBool -> (checkUType el uty) >&&> (checkUType er uty)
+     | UTyPrim UPrimBool -> (checkType el uty) >&&> (checkType er uty)
      | _ -> fail i (WrongUShape (uty, "bool")))
 
 and check_nil i uty =
@@ -573,14 +532,14 @@ and check_nil i uty =
 and check_cons e1 e2 i uty =
   match uty with
   | UTyList(n, ty) ->
-    checkUType e1 ty >>
+    checkType e1 ty >>
     (* Introduce a new size variable and add it to the existential ctx*)
     let v = fresh_evar Size in
     let sz = IVar v in
     (v |:::| Size) i
       (* Check that (sz + 1 = n) *)
       (check_size_eq (n) (ISucc sz)
-         (checkUType e2 (UTyList(sz, ty))))
+         (checkType e2 (UTyList(sz, ty))))
   | _ -> fail i (WrongUShape (uty, "list"))
 
 
@@ -590,7 +549,7 @@ and check_case_list i e e_n x_h x_tl e_c uty =
      match uty_g with
      | UTyList (n, tye) ->
        (* Nil case *)
-       (assume_size_eq n IZero (checkUType e_n uty))
+       (assume_size_eq n IZero (checkType e_n uty))
        >&&>
        (* Cons case *)
        (* Generate a fesh size variable *)
@@ -601,7 +560,7 @@ and check_case_list i e e_n x_h x_tl e_c uty =
          ((x_h |:| tye)
             (* Assume that n = sz + 1*)
             (assume_size_eq n (ISucc sz)
-               ( (x_tl |:| UTyList(sz, tye)) (checkUType e_c uty))))
+               ( (x_tl |:| UTyList(sz, tye)) (checkType e_c uty))))
      | _ -> fail i (WrongUShape (uty, "list"))
   )
 
@@ -610,8 +569,8 @@ and check_case_sum i e x_l e_l x_r e_r  uty =
   (fun uty_g ->
      match uty_g with
      | UTySum (tyl, tyr) -> 
-       ((x_l |:| tyl) (checkUType e_l uty)) >>>=
-       fun c1 -> (x_r |:| tyr) (checkUType e_r uty) >>>=
+       ((x_l |:| tyl) (checkType e_l uty)) >>>=
+       fun c1 -> (x_r |:| tyr) (checkType e_r uty) >>>=
        fun c2 -> return_ch (merge_cs c1 c2) 
      | _ -> fail i (WrongUShape (uty, "sum"))
   )
@@ -621,7 +580,7 @@ and check_pack i e uty =
   | UTyExists(x, s, ty) ->
     let v = fresh_evar s in
     let witness = IVar v in
-    (v |:::| s) i (checkUType e (un_ty_subst x witness ty))
+    (v |:::| s) i (checkType e (un_ty_subst x witness ty))
   | _ -> fail i (WrongUShape (uty, "existential"))
 
 and check_unpack i e1 vi_x e2 uty =
@@ -629,7 +588,7 @@ and check_unpack i e1 vi_x e2 uty =
   (fun uty_x ->
      match uty_x with
      | UTyExists(x, s, ty) ->
-       (x |::| s) i ((vi_x |:| ty) (checkUType e2 uty))
+       (x |::| s) i ((vi_x |:| ty) (checkType e2 uty))
      | _ -> fail i (WrongUShape (uty, "existential")))
 
 and check_clet i vi_x e1 e2 uty =
@@ -637,7 +596,7 @@ and check_clet i vi_x e1 e2 uty =
   (fun csty ->
      match csty with
      | UTyCs(cs, uty_x) ->
-        (vi_x |:| uty_x) (checkUType e2 uty) >>= fun cs_b -> return_ch (CImpl(cs, cs_b))
+        (vi_x |:| uty_x) (checkType e2 uty) >>= fun cs_b -> return_ch (CImpl(cs, cs_b))
      | _ -> fail i (WrongUShape (uty, "constrained")))
 
 
@@ -660,7 +619,7 @@ and infer_and_check (i: info) (e: expr) (uty : ty) : constr checker =
 
 
 let check_type ctx program ty  =
-  match checkUType program ty ctx with
+  match checkType program ty ctx with
   | Right c ->  c
   | Left err -> typing_error_pp  err.i pp_tyerr err.v
 

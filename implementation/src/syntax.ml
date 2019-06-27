@@ -17,7 +17,7 @@ type exp_prim =
 
 (* Binary Operations    *)
 type bop = Add | Sub | Mul | Div | Or | And | Xor | Equal 
-| Leq | Geq | Less | Greater | Setminus | Dot | Contains
+| Leq | Geq | Less | Greater | Setminus | Dot 
 
 (* Unary Operations   *)
 type uop = Log | Sign
@@ -190,7 +190,7 @@ type ty =
   (* Quantified types *)
   | Ty_Forall   of var_info * sort * ty
   | Ty_Exists   of var_info * sort * ty
-  | Ty_Index    of iterm * ty
+  | Ty_IntIndex of iterm
 
   (* Boxed Types *)
   | Ty_Box      of ty
@@ -215,7 +215,7 @@ let rec ty_subst i it ty =
   (* Quantified types *)
   | Ty_Forall(b, s, ty')  -> Ty_Forall(b, s,  utf ty')
   | Ty_Exists(b, s, ty')  -> Ty_Exists(b, s, utf ty')
-  | Ty_Index(k, ty')       -> Ty_Index(f_it k, utf ty')
+  | Ty_IntIndex(k)       -> Ty_IntIndex(f_it k)
 
   (* Boxed Type *)
   | Ty_Box(ty)                -> Ty_Box( utf ty )
@@ -230,5 +230,5 @@ let rec ty_subst i it ty =
 (* Info extraction *)
 let type_of_prim t = match t with
     PrimUnit       -> Ty_Prim Ty_PrimUnit
-  | PrimInt i      -> Ty_Prim Ty_PrimInt (* UTyPrim UPrimInt *)
-  | PrimBool _     -> Ty_Prim Ty_PrimBool
+  | PrimInt i      -> Ty_IntIndex(IConst(i)) (* UTyPrim UPrimInt *)
+  | PrimReal _     -> Ty_Prim Ty_PrimReal

@@ -4,17 +4,17 @@ open Printf
 
 let infile = ref (None : string option)
 let outfile = ref (None : string option)
-let rounds = ref 0.0
+let rounds = ref 0
 let cols = ref 0.0
 let rows = ref 0.0 
 let cdb = ref false
 
 let argDefs = [
-    "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
+(*    "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
     "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
     "-cl", Arg.Float (fun i -> cols := i) , "specify the cols of the database, -cl float"; 
-    "-r", Arg.Float (fun i -> rounds := i) , "specify the rounds of the experiments, -r float"; 
-    "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name, -i string" ; 
+*)    "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
+      "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name, -i string" ; 
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string" 
 ]
 let delta = 0.0000001
@@ -37,7 +37,7 @@ let parseArgs () =
                    | Some i, Some o -> (i,o)
                    | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col float, rounds -r float"; ("","")
 
-let dataset = [ [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ]  
+let dataset = [ [2.0;2.0;2.0;2.0] ; [2.0;2.0;2.0;2.0] ; [2.0;2.0;2.0;2.0] ; [2.0;2.0;2.0;2.0] ]  
   
 
 let rec creat_db (col : float) (row : float)  =
@@ -54,7 +54,7 @@ let rec creat_db (col : float) (row : float)  =
       []
 
 let record_db db oc =
-    List.map (fun row -> List.map (fun e ->fprintf oc "%d," e ) row; fprintf oc "\n" )  db ; close_out oc
+    List.map (fun row -> List.map (fun e ->fprintf oc "%f," e ) row; fprintf oc "\n" )  db ; close_out oc
 
 let sub_row row =
   List.rev (List.tl (List.rev row) )
@@ -139,19 +139,23 @@ let sign (y: float) : float =
   if y > 0.0 then 1.0 else -1.0
 
 let get (row:float list) (i:float) : float  =
-  nth row (int_of_float i)
+  List.nth row (int_of_float i)
 
 let updt l pos a = 
   List.mapi (fun i x -> if i = (int_of_float pos) then a else x) l
 
-let nth l i =
-  List.nth l (int_of_float i)
 
-let mech (q:query) =  nonoise_mech q dataset
+
 
 let rec listminus l1 l2 = 
   match l2 with
     | hd::tl -> listminus (List.filter (fun a -> if (a = hd) then false else true) l1) tl
     | [] -> l1
 
+let contains l i = 
+  List.exists (fun a -> if (a = i) then true else false) l
+
+
+
+let mech (q:query) =  gauss_mech q dataset
 

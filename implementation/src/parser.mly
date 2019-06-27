@@ -37,7 +37,7 @@ open IndexSyntax
 %token OR AND XOR
 %token ADD SUB MUL DIV DOT
 %token LESS LEQ GREATER GEQ
-%token SETMINUS CONTAINS
+%token SETMINUS
 
 /* Tokens for Types */
 %token INT
@@ -144,7 +144,6 @@ bop:
     | GREATER       { Greater }
     | SETMINUS      { Setminus }
     | DOT           { Dot }
-    | CONTAINS      { Contains }
 
 
 uop:
@@ -198,7 +197,7 @@ Type:
   | EXISTS VAR DBCOLON COLON Sort DOT Type 
     { Ty_Exists({v_name = $2}, $5, $7) }
 
-  | Type LBRACK ITerm RBRACK
-    { Ty_Index($3, $1)}
+  | INT LBRACK ITerm RBRACK
+    { Ty_IntIndex($3)}
 
 

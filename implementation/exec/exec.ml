@@ -1,20 +1,20 @@
 open TwoRound
 open MultiRound
 open Printf 
+open HeadFile
 
   let write res oc =
     fprintf oc "%f\n" res
 
-  let rec experiments oc i db =
+  let rec experiments oc i =
      if i < !rounds then
-        let x = two_round db !cols thresholdout_mech in
-        let y =  two_round db !cols nonoise_mech in
-        write (x-.y) oc ; experiments oc (i+1) db
+        let x = TwoRound.twoRound 3.0 in
+        write (x) oc ; experiments oc (i+1)
       else close_out oc
 
   let main  = 
-   let (ifile,ofile) = parseArgs() in
-   let dataset = 
+    let (ifile,ofile) = parseArgs() in
+(*    let dataset = 
     if (!cdb) then 
      let ic = open_out ifile in
      let db = creat_db !rows !cols in 
@@ -23,5 +23,5 @@ open Printf
         let ic = open_in ifile in 
         let db = read_db ic !rows !cols in close_in ic; db 
       in  
-    let oc = open_out ofile in 
-     experiments oc 0 dataset
+*)    let oc = open_out ofile in 
+     experiments oc 0
