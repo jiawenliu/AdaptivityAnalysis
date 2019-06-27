@@ -1,7 +1,7 @@
 open Printf 
 open HeadFile 
 
-let dataset = [ [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ; [1;1;1;1] ]  
+let dataset = [1;1;1;1]
 
  let rec round ( j  ) = 
  (fun ( k  ) -> 

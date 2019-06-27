@@ -29,222 +29,29 @@ let unary_debug   fi = Support.Error.message 4 General fi
 let typing_error fi = Err.error_msg    Opt.TypeChecker fi
 let typing_error_pp = Err.error_msg_pp Opt.TypeChecker
 
- let  check_iarray_sub (iarr_1: iterm) (iarr_2: iterm)  = 
-   match iarr_1, iarr_2 with
-      | IBeta b1, IBeta b2 ->  CBetaSub (b1 ,b2)
-
-      |_ -> CTrue
-
-
-
- let ck_sub p1 p2 = 
-     List.fold_left ( fun c (g, iarr) ->
-             match List.assoc_opt g p2 with 
-              | Some (iarr') -> CAnd (c, check_iarray_sub iarr iarr') 
-              | None -> CTrue
-       ) CTrue  p1    
-
-     let get_fst c =
-       match c with
-       | CAnd(c1,c2) -> c1 
-       | _ -> c
-
-     let check_predicate_sub_cs p1 p2 q1 q2  = 
-        let c_1 = ck_sub p1 p2 in 
-        let c_2 = ck_sub q1 q2 in
-        (* let c= CAnd( get_fst c_1, get_fst c_2) in *)
-        let c= CAnd( c_1,  c_2) in
-       c  
-
-
-let  check_beta_eq (b1:beta) (b2:beta) ctx : bool =
-    let c_3= CBetaEq (b1 ,b2) in
-
-    let c_4 = quantify_all_exist ctx.evar_ctx c_3 in 
-                          let c_5 = quantify_all_universal ctx.ivar_ctx c_4 in
-                            let w_c= WhyTrans.why3_translate_int c_5 in 
-                           
-                              WhySolver.post_st w_c 1
-
-let  check_beta_sub (b1:beta) (b2:beta) ctx : bool =
-    
-    let c_2= CBetaSub (b1 ,b2) in
-    let c_3 =  CImpl (ctx.constr_env, c_2) in 
-    let c_4 = quantify_all_exist ctx.evar_ctx c_3 in 
-                          let c_5 = quantify_all_universal ctx.ivar_ctx c_4 in
-                            let w_c= WhyTrans.why3_translate_int c_5 in 
-                           
-                              WhySolver.post_st w_c 1
-
-
-
-
-let  check_iarrays_eq (iarr_1: iterm) (iarr_2: iterm) ctx : bool = 
-     match iarr_1, iarr_2 with
-      | IBeta b1, IBeta b2 ->  check_beta_eq b1 b2 ctx
-
-      |_ -> false
-
-      (* match iarr_1 , iarr_2 with
-        | IArray (o_1, l_1 ), IArray (o_2,l_2) ->
-            let l_1' = List.sort sort_alg l_1 in 
-            let l_2' = List.sort sort_alg l_2 in
-            (l_1' = l_2') 
-        | IVar v1, IVar v2 ->  v2.v_name = v1.v_name
-        | IArrUnion (a_1, s_1, e_1), IArrUnion (a_2, s_2,e_2)  -> (check_iarrays_eq a_1 a_2) && s_1 = s_2 && e_1 = e_2  
-        | _ , _ -> false      *) 
-   
-let  check_iarrays_sub (iarr_1: iterm) (iarr_2: iterm)  ctx: bool = 
-   match iarr_1, iarr_2 with
-      | IBeta b1, IBeta b2 ->  check_beta_sub b1 b2 ctx
-
-      |_ -> false
-     (*  match iarr_1 , iarr_2 with
-        | IArray (o_1, l_1 ), IArray (o_2,l_2) ->
-            let l_1' = List.sort sort_alg l_1 in 
-            let l_2' = List.sort sort_alg l_2 in
-            (l_1' = l_2') 
-        | Ivar v1, Ivar v2 ->  v2.v_name = v1.v_name
-        | IArrUnion (a_1, s_1, e_1), IArrUnion (a_2, s_2,e_2)  -> (check_iarrays_eq a_1 a_2) && s_1 = s_2 && e_1 = e_2  
-        | _ , _ -> false    
- *)
-
-   let check_predicate_sub (p : predicate) (q :  predicate) ctx: bool =
-      if (List.length p) = (List.length q) then 
-         List.for_all (fun (g, iarr) ->
-             match List.assoc_opt g q with 
-              | Some (iarr') -> check_iarrays_sub iarr iarr' ctx
-              | None -> false
-          ) p
-      else false     
-
-
-  let check_predicate (p : predicate) (q :  predicate) ctx: bool =
-      if (List.length p) = (List.length q) then 
-         List.for_all (fun (g, iarr) ->
-             match List.assoc_opt g q with 
-              | Some (iarr') ->  check_iarrays_eq iarr iarr' ctx
-              | None -> false
-          ) p
-      else false
-
-
-  let preselect_alloc (p: predicate) (q: predicate) (g: var_info) ctx : bool =
-    if ( List.mem_assoc g q ) && not (List.mem_assoc g p) && (List.length q = (List.length p) + 1) then
-      List.for_all (fun (g,iarr) ->
-           match List.assoc_opt g q with 
-              | Some (iarr') -> check_iarrays_eq iarr iarr' ctx
-              | None -> false
-        ) p
-    else false
-
-   let preselect_return (p : predicate) (q :  predicate) ctx : bool =
-      if (List.length p) = (List.length q) then 
-         List.for_all (fun (g, iarr) ->
-             match List.assoc_opt g q with 
-              | Some (iarr') -> check_iarrays_eq iarr iarr' ctx
-              | None -> false
-          ) p
-      else false
-
-(* Check whether uty1 is a subtype of uty2, generating the necessary constraints along the way. *)
-let rec check_usubtype (i: info) (uty1 : un_ty) (uty2 : un_ty) : constr checker =
-  let fail = fail i @@ NotUSubtype (uty1, uty2) in
-  match uty1, uty2 with
-  | UTyPrim pty1, UTyPrim pty2 ->
-    if pty1 = pty2 then return_ch empty_constr else fail
-  | UTyList (n, ty1), UTyList (n', ty2) -> check_size_eq n n' (check_usubtype i ty1 ty2)
-  | UTySum (ty1, ty2), UTySum (ty1',ty2') -> check_usubtype i ty1 ty1' >> check_usubtype i ty2 ty2'
-  | UTyProd (ty1, ty2), UTyProd (ty1',ty2') -> check_usubtype i ty1 ty1' >> check_usubtype i ty2 ty2'
-  | UTyArr (ty1,mo, k, ty2), UTyArr (ty1',mo', k', ty2') ->
-     if mo = mo' then check_size_leq k k' (check_usubtype i ty1' ty1 >> check_usubtype i ty2 ty2')
-     else fail
-  | UTyForall (x,s, mo, k, ty), UTyForall (x',s', mo', k', ty') ->
-     if (mo = mo' && s = s') then
-       let m = fresh_evar s in
-       let x_m = IVar m in
-       (m |::| s) i
-          (check_size_leq (iterm_subst x x_m k) (iterm_subst x' x_m k')
-              (check_usubtype i (un_ty_subst x x_m ty) (un_ty_subst x' x_m ty')))
-     else fail
-  | UTyExists (x,s, ty), UTyExists (x',s', ty') ->
-     if  x = x' && s = s' then
-        (x |::| s) i (check_usubtype i ty ty')
-     else fail
-  (*monadic*)
-  | UInt (x), UInt (x') -> check_size_eq x x' (return_ch empty_constr)
-  | UInt (x), UTyPrim  UPrimInt -> return_ch empty_constr
-  | UArray (g,x,uty), UArray (g', x', uty') ->  
-      if g = g' then 
-         check_size_eq x x' (check_usubtype i uty uty')
-      else fail
-  | UMonad(p_1, g_1,uty_1, k_1, mu_1, q_1), UMonad(p_1', g_1', uty_1', k_1', mu_1', q_1')->
-     fun (ctx, k) -> 
-
-    if g_1 = g_1' && mu_1 = mu_1' && (check_predicate_sub p_1 p_1' ctx) && (check_predicate_sub q_1 q_1' ctx) then 
-           match mu_1 with
-            | MaxEx-> ( check_size_leq k_1 k_1' (check_usubtype i uty_1 uty_1') ) (ctx,k)
-            | MinEx -> ( check_size_leq k_1' k_1 (check_usubtype i uty_1 uty_1') ) (ctx,k)
-    else fail (ctx,k)
-  | _, _ -> fail
-
-
 
 (** Check whether uty1 is a subtype of uty2, generating the necessary
     constraints along the way. **)
-let rec check_usubtype (i: info) (uty1 : ty) (uty2 : ty) : constr checker =
-  let fail = fail i @@ NotUSubtype (uty1, uty2) in
-  match uty1, uty2 with
-  | UTyPrim pty1, UTyPrim pty2 -> if pty1 = pty2 then return_ch empty_constr
-                                  else fail
-  | UTyList (n, ty1), UTyList (n', ty2) -> check_size_eq n n' (check_usubtype i ty1 ty2)
-  | UTySum (ty1, ty2), UTySum (ty1',ty2') -> check_usubtype i ty1 ty1' >> check_usubtype i ty2 ty2'
-  | UTyProd (ty1, ty2), UTyProd (ty1',ty2') -> check_usubtype i ty1 ty1' >> check_usubtype i ty2 ty2'
-  | UTyArr (ty1,mo, k, ty2), UTyArr (ty1',mo', k', ty2') ->
-     if mo = mo' then check_size_leq k k' (check_usubtype i ty1' ty1 >> check_usubtype i ty2 ty2')
-     else fail
-  | UTyForall (x,s, mo, k, ty), UTyForall (x',s', mo', k', ty') ->
-     if (mo = mo' && s = s') then
-       let m = fresh_evar s in
-       let x_m = IVar m in
-       (m |::| s) i
-          (check_size_leq (iterm_subst x x_m k) (iterm_subst x' x_m k')
-              (check_usubtype i (un_ty_subst x x_m ty) (un_ty_subst x' x_m ty')))
-     else fail
-  | UTyExists (x,s, ty), UTyExists (x',s', ty') ->
-     if  x = x' && s = s' then
-       (x |::| s) i (check_usubtype i ty ty')
-     else fail
-  | UTyCs(c1, ty1), UTyCs(c2, ty2) -> 
-     check_usubtype i ty1 ty2 >>=
-       fun cs_b -> return_ch (CAnd(CImpl(c1, c2), cs_b))
-  (*monadic*)
-  | UInt (x), UInt (x') -> check_size_eq x x' (return_ch empty_constr)
-  | UInt (x), UTyPrim  UPrimInt -> return_ch empty_constr
-  | UArray (g,x,uty), UArray (g', x', uty') ->  
-      if g = g' then 
-        check_size_eq x x' (check_usubtype i uty uty')
-      else fail
-  | UMonad(p_1, g_1,uty_1, k_1, mu_1, q_1), UMonad(p_1', g_1', uty_1', k_1', mu_1', q_1')->
-     fun (ctx, k) -> 
-      unary_debug dp "UMONAD SUB :@\n@[k is %a, k' is %a @]@."  Print.pp_iterm k_1 Print.pp_iterm k_1';
-
-    if g_1 = g_1' && mu_1 = mu_1' then 
-
-           match mu_1 with
-            | MaxEx->
-              begin
-               match ( check_size_leq k_1 k_1' (check_usubtype i uty_1 uty_1') ) (ctx,k)  with
-                  | Right c -> Right (merge_cs c (check_predicate_sub_cs p_1 p_1' q_1 q_1') )
-                  | Left err -> Left err
-              end
-            | MinEx ->
-              begin
-               match ( check_size_leq k_1' k_1 (check_usubtype i uty_1 uty_1') ) (ctx,k)  with
-                  | Right c -> Right (merge_cs c (check_predicate_sub_cs p_1 p_1' q_1 q_1') )
-                  | Left err -> Left err
-              end
-    else fail (ctx,k)
+let rec check_subtype (i: info) (ty1 : ty) (ty2 : ty) : constr checker =
+  let fail = fail i @@ NotSubtype (uty1, uty2) in
+  	if ty1 = ty2 then return_ch empty_constr
+  	else 
+  match ty1, ty2 with
+  | Ty_Box bty1, bty2 -> 
+  if bty1 = bty2 then return_ch empty_constr
+  else
+  begin
+  match bty1, bty2 with
+  	| 
+end
+  | bty1, Ty_Box bty2 -> 
+  begin
+  match bty1, bty2 with
+  	| Ty_Prim pty1, Ty_Prim pty2 -> 
+  		if pty1 = pty2 then return_ch empty_constr
+  					   else fail
+  	| 
+end (* check the subtype for box type*)return_ch empty_constr
 
   | _, _ -> fail
 
@@ -255,18 +62,18 @@ let rec check_usubtype (i: info) (uty1 : ty) (uty2 : ty) : constr checker =
     inferer: (un_ty, k, psi)] where all the free existential variables
     occuring in un_ty and k are declared in psi, otherwise it raises
     an exception. *)
-let rec inferUType (e: expr) : ty inferer  =
-unary_debug dp "if_UTP:@\n@[e1 %a @]@.@\n"  Print.pp_expr e;
+let rec inferType (e: expr) : ty inferer  =
+unary_debug dp "if_TP:@\n@[e1 %a @]@.@\n"  Print.pp_expr e;
   match e with
   | Var (i, vi) -> (get_var_ty i vi <<= fun ty ->  (return_inf ty))
   | Prim (i, ep) -> return_inf(un_type_of_prim ep )
-  | Fst(i, e) -> inferUType e <<= infer_proj i fst
-  | Snd(i, e) -> inferUType e <<= infer_proj i snd
+  | Fst(i, e) -> inferType e <<= infer_proj i fst
+  | Snd(i, e) -> inferType e <<= infer_proj i snd
   | App (i, e1, e2) -> unary_debug dp "if_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
-       infer_app (inferUType e1) i e2
-  | IApp (i, e) -> infer_iapp (inferUType e) i
+       infer_app (inferType e1) i e2
+  | IApp (i, e) -> infer_iapp (inferType e) i
   | UAnno (i, e, uty, k) -> unary_debug dp "if_UAnno:@\n@[e1 %a @]@.@\n"  Print.pp_expr e; infer_check_anno i e uty k
-  | CExpr (i, e) ->  unary_debug dp "inf_celim :@\n@[e is %a @]@."  Print.pp_expr e; infer_celim (inferUType e) i 
+  | CExpr (i, e) ->  unary_debug dp "inf_celim :@\n@[e is %a @]@."  Print.pp_expr e; infer_celim (inferType e) i 
   |  _ -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
 
 and infer_celim m i = 
@@ -382,7 +189,7 @@ and checkType (e: expr) (uty : ty) : constr checker =
   | Unpack (e1, vi_x, e2), _ -> check_unpack i e1 vi_x e2 uty
   (* Let bound *)
   | Let (vi_x, e1, e2), _ ->
-    inferUType e1 <->=
+    inferType e1 <->=
     (fun uty_x -> (vi_x  |:| uty_x) (checkType e2 uty))
   | IApp (e), ty -> 
   | Bernoulli (v) 
@@ -396,14 +203,14 @@ and checkType (e: expr) (uty : ty) : constr checker =
 
 and check_update (i: info) (e1: expr) (e2 : expr)(e3 : expr) (p:predicate) (k_m: iterm)=
   fun (ctx, k) ->
-    match (inferUType e1  ctx) with
+    match (inferType e1  ctx) with
     | Right (uty_1, c_1, psi_1, k_1) ->
        begin
          match uty_1  with
          | UArray (g, l, uty) ->
             if (List.mem_assoc g p) then
               begin
-                match (inferUType e2  ctx) with
+                match (inferType e2  ctx) with
                 | Right (uty_2, c_2, psi_2, k_2) ->
                  unary_debug dp "update_test star :@\n@[psi_2 %a, c_2 is %a @]@."  Print.pp_ivar_ctx psi_2 Print.pp_cs c_2 ;
                    begin
@@ -456,7 +263,7 @@ and   handle_u_update (p:predicate) (g: var_info) (l': iterm) (l: iterm) (ctx: t
              | _ -> false
                     
 and check_read (i: info) (e1: expr) (e2 : expr) (p:predicate) (k_m: iterm)  =
-  fun (ctx,k) -> match (inferUType e1  ctx) with
+  fun (ctx,k) -> match (inferType e1  ctx) with
                  | Right (uty_1, c_1, psi_1, k_1) ->
                     begin
                        unary_debug dp "read first premise :@\n@[type is %a, expr is %a, predicate is %a @]@."  Print.pp_type uty_1 Print.pp_expr e1 Print.pp_predicates p;
@@ -465,7 +272,7 @@ and check_read (i: info) (e1: expr) (e2 : expr) (p:predicate) (k_m: iterm)  =
                           
                             if (List.mem_assoc g p) then
                             begin
-                              match (inferUType e2 ctx) with
+                              match (inferType e2 ctx) with
                               | Right (uty_2, c_2, psi_2, k_2) ->
                                                  begin
                                                    let k_sum =  option_combine k_1 k_2 (fun (ik,k') -> add_costs( add_costs (ik, ISucc(IZero)), k')) in
@@ -488,11 +295,6 @@ and check_read (i: info) (e1: expr) (e2 : expr) (p:predicate) (k_m: iterm)  =
                  | Left err -> Left err
    
 
-and check_alloc (i: info) (e1 : expr) (e2 : expr) (k: iterm) (mu:mode) (g: var_info) (uty: ty) =
-  match uty with
-  |  UArray (g_1, l_1, uty_1) -> if g = g_1 then 
-                                  check_body ( with_mode mu ( (checkType e1 (UInt(l_1)) ) >> (checkType e2 uty_1) ) ) ( minus_cost k (IConst 1.0) ) else fail i (WrongUShape (uty, "alloc return type"))
-  | _ -> fail i (WrongUShape (uty, "alloc return type"))
 
 and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (uty : ty) =
   match uty with
@@ -517,7 +319,7 @@ and check_body (m: constr checker) (k_fun : iterm) : constr checker =
 
 and check_if (i : info) e el er uty =
   unary_debug dp "ck_if:@\n@[e is %a @]@.@\n"  Print.pp_expr e  ;
-  inferUType e <->=
+  inferType e <->=
   (fun uty_g ->
      match uty_g with
      | UTyPrim UPrimBool -> (checkType el uty) >&&> (checkType er uty)
@@ -544,7 +346,7 @@ and check_cons e1 e2 i uty =
 
 
 and check_case_list i e e_n x_h x_tl e_c uty =
-  inferUType e <->=
+  inferType e <->=
   (fun uty_g ->
      match uty_g with
      | UTyList (n, tye) ->
@@ -565,7 +367,7 @@ and check_case_list i e e_n x_h x_tl e_c uty =
   )
 
 and check_case_sum i e x_l e_l x_r e_r  uty =
-  inferUType e <->=
+  inferType e <->=
   (fun uty_g ->
      match uty_g with
      | UTySum (tyl, tyr) -> 
@@ -584,7 +386,7 @@ and check_pack i e uty =
   | _ -> fail i (WrongUShape (uty, "existential"))
 
 and check_unpack i e1 vi_x e2 uty =
-  inferUType e1 <->=
+  inferType e1 <->=
   (fun uty_x ->
      match uty_x with
      | UTyExists(x, s, ty) ->
@@ -592,7 +394,7 @@ and check_unpack i e1 vi_x e2 uty =
      | _ -> fail i (WrongUShape (uty, "existential")))
 
 and check_clet i vi_x e1 e2 uty =
-  inferUType e1 <->=
+  inferType e1 <->=
   (fun csty ->
      match csty with
      | UTyCs(cs, uty_x) ->
@@ -604,11 +406,11 @@ and check_clet i vi_x e1 e2 uty =
 
 and infer_and_check (i: info) (e: expr) (uty : ty) : constr checker =
   fun(ctx, k) ->
-    match inferUType e ctx with
+    match inferType e ctx with
     | Right (inf_uty, c, psi_ctx, k') ->
       unary_debug dp "infer_and_check :@\n@[infer_type is %a, expr is %a, checked type is %a, idx_ctx is :%a , k' is %a, k is %a @]@." 
       Print.pp_type inf_uty Print.pp_expr e Print.pp_type uty Print.pp_ivar_ctx ctx.ivar_ctx Print.pp_cost k' Print.pp_cost k; 
-      (match (check_usubtype i inf_uty uty (extend_e_ctx psi_ctx ctx, None)) with
+      (match (check_subtype i inf_uty uty (extend_e_ctx psi_ctx ctx, None)) with
        | Right c' -> 
 	  let cs = option_combine k' k (cost_cs ctx) |> Core.Option.value ~default:CTrue in
     unary_debug dp "infer_and_check2 :@\n@[cs is %a, c is %a, c' is %a @]@." 
