@@ -4,7 +4,7 @@
 
 module Options = struct
 
-  (* Components of BiRelCost's compiler *)
+  (* Components of Adaptive's compiler *)
   type component =
   | General
   | Lexer

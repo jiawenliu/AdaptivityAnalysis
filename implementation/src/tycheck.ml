@@ -57,13 +57,13 @@ module TyCheck (Ty : CH_TYPE) =
 				
     let extend_if_cost v1 ctx k = 
       Option.value_map ~default:ctx 
-		       ~f:(fun _ -> extend_e_var v1.v_name Cost ctx) k
+		       ~f:(fun _ -> extend_e_var v1.v_name Adapt ctx) k
 
     let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
       fun (ctx, k) ->
       (* Generate two new cost meta variables *)
-      let v1 = fresh_evar Cost in
-      let v2 = fresh_evar Cost in
+      let v1 = fresh_evar in
+      let v2 = fresh_evar in
       let k1 =  (IVar v1) in
       let k2 =  (IVar v2) in
       (* Extend the existential ctx with the two generated vars *)
@@ -181,8 +181,8 @@ module TyCheck (Ty : CH_TYPE) =
         Right (Option.value_map ~default:CTrue ~f:(fun k' -> cost_cs_st ctx (IZero,k')) k)        
 
 
-      let fail (i : info) (e : Ty_error.ty_error_elem) = fun _ ->
-        Left { i = i; v = e }
+      let fail (e : Ty_error.ty_error_elem) = fun _ ->
+        Left { i = UNKNOWN; v = e }
 
       let get_infer_ctx : ty context inferer =
         fun ctx -> Right (ctx, empty_constr, [], None)
@@ -241,6 +241,9 @@ module TyCheck (Ty : CH_TYPE) =
 
       let check_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
         m >>= fun c -> return_ch @@ merge_cs c (CLeq (sl,sr))
+
+      ket check_dmap_leq (sl) () () : constr checker =
+      return 
 
   
 

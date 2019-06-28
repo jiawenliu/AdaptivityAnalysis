@@ -7,7 +7,7 @@ open Constr
 (* Contexts of type 'a *)
 type 'a ctx = (var_info * 'a) list
 
-(* Unary/Binary context *)
+(* Context *)
 type 'a context =
     {
       var_ctx   : 'a ctx;
@@ -50,37 +50,33 @@ let rec lookup_lvar id ctx =
 (* Extend the context with a new variable binding. *)
 let extend_var id s ctx =
   let n_var = {
-    v_name  = id;
-    v_type  = BiVar;
-  } in
+    v_name  = id
+    } in
   {ctx with var_ctx   = (n_var, s) :: ctx.var_ctx }
 
   (*for location environment *)
 let extend_l_var id ctx =
   let n_var = {
-    v_name= id;
-    v_type= BiLVar;
+    v_name= id
   } in
    {ctx with lvar_ctx = (n_var) :: ctx.lvar_ctx }
 
 (* Extend the index context with a new binding. Return the new context. *)
 let extend_i_var id s ctx =
   let n_var = {
-    v_name  = id;
-    v_type  = BiIVar;
+    v_name  = id
   } in
   { ctx with ivar_ctx = (n_var, s) :: ctx.ivar_ctx }
 
 
-    
 
 
-let set_ctx u_ctx u_ctx' mu ctx =
+let set_context vctx context =
   {
-    var_ctx   = u_ctx;
-    ivar_ctx = ctx.ivar_ctx;
-    lvar_ctx =  ctx.lvar_ctx;
-    constr_env =  ctx.constr_env;
+    var_ctx   = vctx;
+    ivar_ctx = context.ivar_ctx;
+    lvar_ctx =  context.lvar_ctx;
+    constr_env =  context.constr_env;
   }
 
 

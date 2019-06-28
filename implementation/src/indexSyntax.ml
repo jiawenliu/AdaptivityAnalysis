@@ -18,21 +18,6 @@ type var_info = {
   v_name  : string;
 }
 
-
-(* Default var_info *)
-(*let dvi = {
-  v_name        = "lorem";
-  v_type        = BiIVar;
-}
-*)
-
-(* Default var_info *)
-(*let new_var x = {
-  v_name        = x;
-  v_type        = BiEVar Size;
-}
-*)
-
 (* Index terms *)
 type iterm =
   | IConst   	of int

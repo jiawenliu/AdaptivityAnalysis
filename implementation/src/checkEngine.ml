@@ -32,18 +32,25 @@ let typing_error_pp = Err.error_msg_pp Opt.TypeChecker
 
 (** Check whether uty1 is a subtype of uty2, generating the necessary
     constraints along the way. **)
-let rec check_subtype (i: info) (ty1 : ty) (ty2 : ty) : constr checker =
-  let fail = fail i @@ NotSubtype (uty1, uty2) in
+let rec check_subtype (ty1 : ty) (ty2 : ty) : constr checker =
+  let fail = fail NotSubtype (ty1, ty2) in
   	if ty1 = ty2 then return_ch empty_constr
   	else 
   match ty1, ty2 with
-  | Ty_Box bty1, bty2 -> 
-  if bty1 = bty2 then return_ch empty_constr
-  else
-  begin
-  match bty1, bty2 with
-  	| 
+  	(* CASES WHEN THE FIRST TYPE IS A BOX TYPE*)
+  | Ty_Box bty1, ty2 -> 
+  	begin
+  	match bty1, ty2 with
+  		| ty, ty                 -> return_ch empty_constr
+  		| ty, Ty_Box (Ty_Box ty) -> return_ch empty_constr
+  		| bty1, Ty_Box bty2      -> check_subtype bty1 bty2
+  		| Ty_Arrow(ity, d, dmap, ad, oty), Ty_Arrow(Ty_Box ity, 0, dmap, IConst 0, Ty_Box oty)
+  								 -> return_ch empty_constr
+  		| _                      -> fail
+
 end
+
+  (* CASES WHEN THE SECOND TYPE IS A BOX TYPE*)
   | bty1, Ty_Box bty2 -> 
   begin
   match bty1, bty2 with
@@ -51,8 +58,19 @@ end
   		if pty1 = pty2 then return_ch empty_constr
   					   else fail
   	| 
-end (* check the subtype for box type*)return_ch empty_constr
+end 
 
+  (* CASES WHEN NONE OF THE TYPES IS A BOX TYPE*)
+  | Ty_Prim Ty_PrimInt, Ty_IntIndex i -> return_ch empty_constr
+
+  | Ty_Prod(sty1, sty2), Ty_Prod(sty1', sty2') 
+  						   -> check_subtype sty1 sty1' >> check_subtype sty1' sty2'
+
+  | Ty_Arrow(ity, q, dmap, ad, oty), Ty_Arrow(ity', q', dmap', ad', oty') 
+  						   -> if q < q' then
+  						   	check_size_leq ad ad' (check_subtype ity' ity >> check_subtype oty oty')
+  						   else
+  						   	fail
   | _, _ -> fail
 
 

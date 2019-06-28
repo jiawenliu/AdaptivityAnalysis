@@ -6,7 +6,7 @@ let meta_vars = ref letters
 
 
 (*  New variable generator:  gen_var s and reset ()  *)
-let gen_var s =
+let gen_var =
   let l = (! meta_vars) in
   if (List.length l) = 0 then(
     cnt := (! cnt) + 1;
@@ -17,11 +17,11 @@ let gen_var s =
   nhd
 
     
- let fresh_evar s =
-   {v_name = gen_var s}
+ let fresh_evar =
+   {v_name = gen_var}
 
- let fresh_ivar s =
-   {v_name = gen_var s}
+ let fresh_ivar =
+   {v_name = gen_var}
  
 let reset () =
   cnt := 0;
