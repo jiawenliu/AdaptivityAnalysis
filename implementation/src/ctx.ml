@@ -18,7 +18,7 @@ type 'a context =
 
 let length ctx = List.length ctx
 
-let empty_context = { var_ctx = [];  ivar_ctx = []; lvar_ctx=[]; constr_env= CTrue}
+let empty_context = { var_ctx = []; ivar_ctx = []; lvar_ctx = []; constr_env = CTrue }
 
 (* Return a binding if it exists. Let the caller handle the error *)
 let rec slookup id ctx =
@@ -36,16 +36,16 @@ let lookup_var id ctx =
 let lookup_ivar id ctx =
   slookup id ctx.ivar_ctx
 
-let rec lookup_lvar id ctx = 
+let rec lookup_lvar id ctx =
     match ctx with
         [] -> None
-      | v::l -> 
+      | v::l ->
         if(v.v_name = id) then 
           Some v
         else
-          lookup_lvar id l 
+          lookup_lvar id l
 
- 
+
 
 (* Extend the context with a new variable binding. *)
 let extend_var id s ctx =
@@ -54,11 +54,12 @@ let extend_var id s ctx =
     } in
   {ctx with var_ctx   = (n_var, s) :: ctx.var_ctx }
 
-  (*for location environment *)
+(*for location environment *)
 let extend_l_var id ctx =
-  let n_var = {
+  let n_var =
+    {
     v_name= id
-  } in
+    } in
    {ctx with lvar_ctx = (n_var) :: ctx.lvar_ctx }
 
 (* Extend the index context with a new binding. Return the new context. *)

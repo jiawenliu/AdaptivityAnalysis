@@ -59,16 +59,16 @@ let parse_prog file =
 let type_check file  t= 
 let (prgm, ty) = parse_prog file in
     (* Print the results of the parsing phase *)
-    main_debug dp "Parsed program:@\n@[%a@]@.\nParsed type:@\n@[%a@]@." 
+    main_debug dp "Parsed program:@\n@[%a@]@.\n\nParsed type:@\n@[%a@]@." 
          Print.pp_expr prgm Print.pp_type ty;
-    let ctx = Ctx.set_exec_mode (Ctx.empty_context) in
+    let ctx = Ctx.empty_context in
     let cs =  (CheckEngine.check_type ctx prgm ty) in
-    
+
     main_info dp "Typechecking engine: %fs\n" ((Unix.gettimeofday () -. t) -. !WhySolver.smt_time);
     main_debug dp "Resulting constraint:@\n@[%a@]@." Print.pp_cs cs;
     
     let tcons= Unix.gettimeofday ()  in
-   try 
+   try
      E.elim ctx (Constr.constr_simpl cs)
             (fun cs' ->
              let elim_cs = Constr.constr_simpl cs' in
@@ -83,4 +83,4 @@ let (prgm, ty) = parse_prog file in
 let main = 
   let t= Unix.gettimeofday ()  in
     let infile = parseArgs () in 
-        type_check_un infile t
+        type_check infile t

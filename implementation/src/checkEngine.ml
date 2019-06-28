@@ -61,7 +61,7 @@ end
 end 
 
   (* CASES WHEN NONE OF THE TYPES IS A BOX TYPE*)
-  | Ty_Prim Ty_PrimInt, Ty_IntIndex i -> return_ch empty_constr
+  | Ty_IntIndex i, Ty_Prim Ty_PrimInt -> return_ch empty_constr
 
   | Ty_Prod(sty1, sty2), Ty_Prod(sty1', sty2') 
   						   -> check_subtype sty1 sty1' >> check_subtype sty1' sty2'
@@ -71,7 +71,7 @@ end
   						   	check_size_leq ad ad' (check_subtype ity' ity >> check_subtype oty oty')
   						   else
   						   	fail
-  | _, _ -> fail
+  | _ , _ -> fail
 
 
                  
@@ -83,15 +83,13 @@ end
 let rec inferType (e: expr) : ty inferer  =
 unary_debug dp "if_TP:@\n@[e1 %a @]@.@\n"  Print.pp_expr e;
   match e with
-  | Var (i, vi) -> (get_var_ty i vi <<= fun ty ->  (return_inf ty))
-  | Prim (i, ep) -> return_inf(un_type_of_prim ep )
-  | Fst(i, e) -> inferType e <<= infer_proj i fst
-  | Snd(i, e) -> inferType e <<= infer_proj i snd
-  | App (i, e1, e2) -> unary_debug dp "if_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
+  | Var ( vi) -> (get_var_ty vi <<= fun ty ->  (return_inf ty))
+  | Prim (ep) -> return_inf(un_type_of_prim ep )
+  | Fst(e) -> inferType e <<= infer_proj i fst
+  | Snd(e) -> inferType e <<= infer_proj i snd
+  | App (e1, e2) -> unary_debug dp "if_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
        infer_app (inferType e1) i e2
-  | IApp (i, e) -> infer_iapp (inferType e) i
-  | UAnno (i, e, uty, k) -> unary_debug dp "if_UAnno:@\n@[e1 %a @]@.@\n"  Print.pp_expr e; infer_check_anno i e uty k
-  | CExpr (i, e) ->  unary_debug dp "inf_celim :@\n@[e is %a @]@."  Print.pp_expr e; infer_celim (inferType e) i 
+  | IApp (e) -> infer_iapp (inferType e) i
   |  _ -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
 
 and infer_celim m i = 

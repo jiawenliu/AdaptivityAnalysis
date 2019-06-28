@@ -17,19 +17,19 @@ open Support.FileInfo
 type constr =
   | CTrue
   | CFalse
-  | CEq of iterm * iterm
-  | CLeq of iterm * iterm
-  | CAnd of constr * constr
-  | COr of constr * constr
-  | CImpl of constr * constr
-  | CForall of var_info  * info * sort * constr
-  | CExists of var_info * info * sort * constr
-  | CArrPos of iterm * iterm  (**  IArray, pos *) 
-  | CLt of iterm * iterm
-  | CBetaEq of beta * beta
-  | CBetaIn of iterm * beta
-  | CBetaSub of beta * beta
-  | CNot of constr
+  | CEq       of iterm * iterm
+  | CLeq      of iterm * iterm
+  | CAnd      of constr * constr
+  | COr       of constr * constr
+  | CImpl     of constr * constr
+  | CForall   of var_info  * info * sort * constr
+  | CExists   of var_info * info * sort * constr
+  | CArrPos   of iterm * iterm  (**  IArray, pos *) 
+  | CLt       of iterm * iterm
+  | CBetaEq   of beta * beta
+  | CBetaIn   of iterm * beta
+  | CBetaSub  of beta * beta
+  | CNot      of constr
 
 let empty_constr = CTrue
 
@@ -78,10 +78,10 @@ let rec constr_map f cs =
   | CEq (IConst 0.0, IConst 0.0) -> CTrue
   | CEq (it1, it2) -> if it1 = it2 then CTrue else CEq (f it1,f it2)
 (*   | CLeq (IConst 0.0, IConst 0.0) -> CTrue *)
-  | CLeq (IZero, IZero) -> CTrue
+  | CLeq (IConst 0.0, IConst 0.0) -> CTrue
   | CLeq (it1, it2) -> if it1 = it2 then CTrue else CLeq (f it1, f it2)
   | CLeq (it1, it2) -> cs
-  | CLt (IZero, IZero) -> CFalse
+  | CLt (IConst 0.0, IConst 0.0) -> CFalse
   | CLt (it1, it2) -> if it1 = it2 then CFalse else CLt (f it1, f it2)
   | CLt (it1, it2) -> cs
   | CAnd (cs1, cs2) -> 

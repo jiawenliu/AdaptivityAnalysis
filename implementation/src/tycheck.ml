@@ -191,13 +191,13 @@ module TyCheck (Ty : CH_TYPE) =
         fun (ctx,_) -> Right ctx.heur_mode
 
   
-      let get_var_ty (i: info) (vi : var_info) : ty inferer =
+      let get_var_ty (vi : var_info) : ty inferer =
         get_infer_ctx <<= fun ctx ->
           return_inf @@
             match (lookup_var vi.v_name ctx) with
-              None ->  typing_err i "Identifier %s is unbound" vi.v_name
-            | Some (v, uty) ->  
-            uty
+              None ->  typing_err UNKNOWN "Identifier %s is unbound" vi.v_name
+            | Some (v, ty) ->  
+            ty
 
  
      let with_new_ctx (f : ty context -> ty context) (m : 'a checker) : 'a checker =

@@ -4,7 +4,7 @@
 
 module Options = struct
 
-  (* Components of Adaptive's compiler *)
+  (* Components of compiler *)
   type component =
   | General
   | Lexer
@@ -124,16 +124,16 @@ module Error = struct
     | 4 -> "D2"
     | _ -> ""
 
-  (* Default print function *)
-  let message level component fi =
-    if level <= !debug_options.level &&
+(* Default print function *)
+let message level component fi =
+  if level <= !debug_options.level &&
       List.mem component !debug_options.components then
       begin
-	Format.eprintf "@[%s %s %a: @[" (level_to_string level) (comp_to_string component) FileInfo.pp_fileinfo fi;
-	Format.kfprintf (fun ppf -> Format.fprintf ppf "@]@]@.") Format.err_formatter
+        Format.eprintf "@[%s %s %a: @[" (level_to_string level) (comp_to_string component) FileInfo.pp_fileinfo fi;
+        Format.kfprintf (fun ppf -> Format.fprintf ppf "@]@]@.") Format.err_formatter
       end
     else
-      Format.ifprintf Format.err_formatter
+        Format.ifprintf Format.err_formatter
 
 (* XXX: Note the caveat that the eprintf here will be executed *)
   let error_msg comp fi =
