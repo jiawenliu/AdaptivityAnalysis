@@ -26,8 +26,13 @@ module TyCheck (Ty : CH_TYPE) =
         | Left  of Ty_error.ty_error_elem withinfo
     type ty = Ty.ty
    
-    type cost = iterm option
-    type ch_ctx = ty context * cost
+   (* The Adaptivity of programs *)
+    type adapt = iterm option
+ 
+   (* The context for Type Checking *)
+    type ch_ctx = ty context * adapt
+
+   (* The context for Type Inference *) 
     type inf_ctx = ty context
 
    (* Reader/Error monad for  type-checking *)
@@ -42,47 +47,47 @@ module TyCheck (Ty : CH_TYPE) =
       | Left e    -> Left e
 
     (* Reader/Error monad for type-inference *)
-    type 'a inferer =  inf_ctx -> ('a * constr * sort ctx * cost) ty_error
+    type 'a inferer =  inf_ctx -> ('a * constr * sort ctx * adapt) ty_error
 
-    let cost_cs ctx (k1, k2) =
+    let adapt_cs ctx (k1, k2) =
       match ctx.exec_mode with
       | MaxEx -> CLeq(iterm_simpl k1,iterm_simpl k2)
       | MinEx -> CLeq(iterm_simpl k2,iterm_simpl k1)
 
-    let cost_cs_st ctx (k1, k2) =
+    let adapt_cs_st ctx (k1, k2) =
        CLeq(iterm_simpl k1,iterm_simpl k2)
      
 
-    let if_cost k' = Option.map ~f:(fun _ -> k')
+    let if_adapt k' = Option.map ~f:(fun _ -> k')
 				
-    let extend_if_cost v1 ctx k = 
+    let extend_if_adapt v1 ctx k = 
       Option.value_map ~default:ctx 
 		       ~f:(fun _ -> extend_e_var v1.v_name Adapt ctx) k
 
     let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
       fun (ctx, k) ->
-      (* Generate two new cost meta variables *)
+      (* Generate two new adapt meta variables *)
       let v1 = fresh_evar in
       let v2 = fresh_evar in
       let k1 =  (IVar v1) in
       let k2 =  (IVar v2) in
       (* Extend the existential ctx with the two generated vars *)
-      let k1_ctx = extend_if_cost v1 ctx k in
-      let k2_ctx = extend_if_cost v2 k1_ctx k in
+      let k1_ctx = extend_if_adapt v1 ctx k in
+      let k2_ctx = extend_if_adapt v2 k1_ctx k in
       let k_cs = Option.value_map ~default:CTrue
-      				  ~f:(fun k -> cost_cs ctx (add_costs(k1, k2), k)) k in
-      (* Call the checker on the first premise with cost k1 *)
+      				  ~f:(fun k -> adapt_cs ctx (add_adapts(k1, k2), k)) k in
+      (* Call the checker on the first premise with adapt k1 *)
       begin
-        match m (k1_ctx, if_cost k1 k) with
+        match m (k1_ctx, if_adapt k1 k) with
         | Right c1 ->
            begin
-             (* Call the checker on the second premise with cost k2 *)
-             match (m' (k2_ctx,if_cost k2 k)) with
+             (* Call the checker on the second premise with adapt k2 *)
+             match (m' (k2_ctx,if_adapt k2 k)) with
              | Right c2 ->
-                (* Combine the constraints of two checkers with the cost constraint k1+k2 <= k*)
+                (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
                 let base =  merge_cs c1 (merge_cs c2 k_cs) in
-                (* Existentially quantify over the cosntraint with the new costs k1 and k2*)
-		let c_quant = CExists(v1, UNKNOWN, Cost, CExists(v2, UNKNOWN, Cost, base)) in 
+                (* Existentially quantify over the cosntraint with the new adapts k1 and k2*)
+		let c_quant = CExists(v1, UNKNOWN, Adapt, CExists(v2, UNKNOWN, Adapt, base)) in 
       		let cs_res = Option.value_map ~default:base
       					      ~f:(fun _ -> c_quant) k in
                 Right cs_res
@@ -122,20 +127,20 @@ module TyCheck (Ty : CH_TYPE) =
              begin
                match (f res ctx) with
                | Right (res',c', psi', k') -> 
-                  Right (res', merge_cs c c', psi @ psi', (sum_costs k k'))
+                  Right (res', merge_cs c c', psi @ psi', (sum_adapts k k'))
                | Left err' -> Left err'
              end
           | Left err  -> Left err
 
 
-      (* Instead of generating an fresh cost variable, we simply subtract
-         the inference cost from the checking cost. Otherwise, merge-min breaks
+      (* Instead of generating an fresh adapt variable, we simply subtract
+         the inference adapt from the checking adapt. Otherwise, merge-min breaks
          due to complicated existential substitution *)
       let (<->=) (m : ty  inferer) (f : ty  -> constr checker) : constr checker =
         fun (ctx, k) ->
           match (m ctx) with
           | Right (ty, c, psi, k') ->
-          tc_debug dp "<->= :@\n@[  c is %a, k is %a , k' is %a @]@."  Print.pp_cs c Print.pp_cost k Print.pp_cost k';  
+          tc_debug dp "<->= :@\n@[  c is %a, k is %a , k' is %a @]@."  Print.pp_cs c Print.pp_adapt k Print.pp_adapt k';  
             begin
               match (f ty (ctx, option_combine k k' (fun (ik,k') -> IMinus(ik, k')))) with
               | Right c' -> Right (quantify_all_exist psi (merge_cs c c'))
@@ -147,16 +152,16 @@ module TyCheck (Ty : CH_TYPE) =
         fun ctx ->
         match m ctx with
         | Right (ty, c, psi, k) ->
-           (* Generate a new cost meta variable *)
-           let v = fresh_evar Cost in
+           (* Generate a new adapt meta variable *)
+           let v = fresh_evar Adapt in
            let k' = (IVar v) in
            begin
              let fl = f ty ctx.heur_mode in
              let (m', ty_inf, k'') = List.hd_exn fl in
-             let psi' = Option.value_map ~default:psi ~f:(fun _ -> (v, Cost) :: psi) k in
-             let k_ctx = Option.value_map ~default:ctx ~f:(fun _-> extend_e_ctx ((v, Cost) :: psi) ctx) k in
-             let k_res k'' = Option.map ~f:(fun k -> add_costs(k'', add_costs(k,k'))) k in
-             match m' (k_ctx ,if_cost k' k) with
+             let psi' = Option.value_map ~default:psi ~f:(fun _ -> (v, Adapt) :: psi) k in
+             let k_ctx = Option.value_map ~default:ctx ~f:(fun _-> extend_e_ctx ((v, Adapt) :: psi) ctx) k in
+             let k_res k'' = Option.map ~f:(fun k -> add_adapts(k'', add_adapts(k,k'))) k in
+             match m' (k_ctx ,if_adapt k' k) with
              | Right c' -> Right (ty_inf, merge_cs c c', psi', k_res k'')
              | Left err' -> if List.length fl = 1 then Left err'
                             else
@@ -169,16 +174,16 @@ module TyCheck (Ty : CH_TYPE) =
            end
         | Left err -> Left err
 
-      let when_cost ctx k =
-	match ctx.cost_mode with
-	  | WithCost -> Some k
+      let when_adapt ctx k =
+	match ctx.adapt_mode with
+	  | WithAdapt -> Some k
 	  | _ -> None
 
       let return_inf(x : 'a) : 'a inferer = 
-	fun ctx -> Right (x, empty_constr, [], when_cost ctx IZero)
+	fun ctx -> Right (x, empty_constr, [], when_adapt ctx IConst 0)
 
       let return_leaf_ch  = fun (ctx, k) -> 
-        Right (Option.value_map ~default:CTrue ~f:(fun k' -> cost_cs_st ctx (IZero,k')) k)        
+        Right (Option.value_map ~default:CTrue ~f:(fun k' -> adapt_cs_st ctx (IConst 0,k')) k)        
 
 
       let fail (e : Ty_error.ty_error_elem) = fun _ ->
@@ -214,7 +219,7 @@ module TyCheck (Ty : CH_TYPE) =
 
       let (|:::|) (v: var_info) (s: sort) (i: info) (m: constr checker) : constr checker =
         with_new_ctx (extend_e_var v.v_name s) m
-        >>= (fun cs -> return_ch @@ CExists(v, i, s, cs (* CAnd (CLeq(IZero, IVar v), cs) *)))
+        >>= (fun cs -> return_ch @@ CExists(v, i, s, cs (* CAnd (CLeq(IConst 0, IVar v), cs) *)))
 
       let (|::::|) (v: var_info) (s: sort) (i: info)(m: constr checker) : constr checker =
         with_new_ctx (extend_l_var v.v_name ) m
@@ -225,7 +230,7 @@ module TyCheck (Ty : CH_TYPE) =
 	  (fun cs ->
 	   let r_cs = 
 	     match s with 
-	     | Size -> cs (* CImpl(CAnd(CLeq(IZero, IVar v), CEq(IFloor(IVar v), ICeil (IVar v))),cs) *)
+	     | Size -> cs (* CImpl(CAnd(CLeq(IConst 0, IVar v), CEq(IFloor(IVar v), ICeil (IVar v))),cs) *)
 	     | _ -> cs 
 	   in return_ch @@ CForall(v, i, s, r_cs))
 
