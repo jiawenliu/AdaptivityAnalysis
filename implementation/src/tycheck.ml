@@ -56,10 +56,10 @@ module TyCheck (Ty : CH_TYPE) =
 
     let adapt_cs_st ctx (k1, k2) =
        CLeq(iterm_simpl k1,iterm_simpl k2)
-     
+
 
     let if_adapt k' = Option.map ~f:(fun _ -> k')
-				
+
     let extend_if_adapt v1 ctx k = 
       Option.value_map ~default:ctx 
 		       ~f:(fun _ -> extend_e_var v1.v_name Adapt ctx) k
@@ -75,21 +75,23 @@ module TyCheck (Ty : CH_TYPE) =
       let k1_ctx = extend_if_adapt v1 ctx k in
       let k2_ctx = extend_if_adapt v2 k1_ctx k in
       let k_cs = Option.value_map ~default:CTrue
-      				  ~f:(fun k -> adapt_cs ctx (add_adapts(k1, k2), k)) k in
+                 ~f:(fun k -> adapt_cs ctx (add_adapts(k1, k2), k)) k in
+
       (* Call the checker on the first premise with adapt k1 *)
       begin
         match m (k1_ctx, if_adapt k1 k) with
         | Right c1 ->
            begin
              (* Call the checker on the second premise with adapt k2 *)
-             match (m' (k2_ctx,if_adapt k2 k)) with
+             match (m' (k2_ctx, if_adapt k2 k)) with
              | Right c2 ->
                 (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
                 let base =  merge_cs c1 (merge_cs c2 k_cs) in
-                (* Existentially quantify over the cosntraint with the new adapts k1 and k2*)
-		let c_quant = CExists(v1, UNKNOWN, Adapt, CExists(v2, UNKNOWN, Adapt, base)) in 
-      		let cs_res = Option.value_map ~default:base
-      					      ~f:(fun _ -> c_quant) k in
+    
+    (* Existentially quantify over the cosntraint with the new adapts k1 and k2 *)
+    let c_quant = CExists(v1, UNKNOWN, Adapt, CExists(v2, UNKNOWN, Adapt, base)) in 
+         	let cs_res = Option.value_map ~default:base
+          		      ~f:(fun _ -> c_quant) k in
                 Right cs_res
              | Left err' -> Left err'
            end
