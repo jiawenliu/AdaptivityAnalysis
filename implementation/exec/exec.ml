@@ -44,6 +44,6 @@ let rec write_list res oc =
 *)    let oc = open_out ofile in 
         let ic = open_in ifile in
           let dataset = read_db ic !rows !cols in 
-            let _ = experiments_mr 0 8.0 10.0 oc dataset in
+            let _ = experiments_tr 0 oc dataset in
               close_out oc;
               close_in ic

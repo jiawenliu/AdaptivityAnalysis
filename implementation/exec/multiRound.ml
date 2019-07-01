@@ -100,8 +100,7 @@ let updtI = f
                let qc = (fun ( x  ) -> 
                          (sample_bernoulli( p ))
                         ) in
-                let qj = restrict q db in
-                let a =  mech q db  in
+                let a =  mech  q  db  in
                  let sc' =
                           updtSC   ()    sc    a    p    q    ii    0.000000   
                   nn   in

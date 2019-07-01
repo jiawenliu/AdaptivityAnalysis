@@ -149,7 +149,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Bop(p, e1, e2)    -> 
   (
     match p with
-    | Setminus        -> fprintf fmt "(listminus %a %a)" pp_expression(e1) pp_expression(e2)
+    | Setminus        -> fprintf fmt "(db_minus %a %a)" pp_expression(e1) pp_expression(e2)
     | _               -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
   )
 
