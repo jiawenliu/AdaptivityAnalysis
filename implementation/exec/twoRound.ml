@@ -1,24 +1,23 @@
 open Printf 
 open HeadFile 
 
-let dataset = [1;1;1;1]
 
- let rec round ( j  ) = 
+ let rec round ( j  ) db = 
  (fun ( k  ) -> 
    if( (( j ) < ( k )) ) then 
       let a =
-       mech((fun ( x  ) -> 
+       mech(fun ( x  ) -> 
         ((  get    x   j   ) *. (  get    x   k   )) 
-      ))  in
-       ( a ,  j ) ::   round    (( j ) +. ( 1.000000 ))   k    
+      )  db in
+       ( a ,  j ) ::   round    (( j ) +. ( 1.000000 )) db   k    
    else 
      [] 
   
  )
  
  let g = round 
-  let rec twoRound ( k  ) = 
-   let l =   g    0.000000   k    in
+  let rec twoRound k db = 
+   let l =   g    0.000000 db  k    in
     let q =
     (fun ( x  ) -> 
       sign (  List.fold_left   (fun ( acc  ) -> 
@@ -27,4 +26,4 @@ let dataset = [1;1;1;1]
                                 )
                                )   0.000000   l    ) 
     ) in
-    mech( q ) 
+    mech q db 

@@ -11,9 +11,9 @@ let cdb = ref false
 
 let argDefs = [
 (*    "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
-    "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
-    "-cl", Arg.Float (fun i -> cols := i) , "specify the cols of the database, -cl float"; 
-*)    "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
+*)    "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
+      "-cl", Arg.Float (fun i -> cols := i) , "specify the cols of the database, -cl float"; 
+      "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
       "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name, -i string" ; 
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string" 
 ]
@@ -33,11 +33,10 @@ let parseArgs () =
                 match !oname  with 
                       | Some (_) -> printf "%s" "specify just one output file name"  
                       | None  -> oname := Some (s); printf "%s" s ) "for output file" ;
-             match !infile, !outfile  with
-                   | Some i, Some o -> (i,o)
-                   | _,_ -> printf "%s" "specify  your input file -i or output file -o , or colums -col float, rounds -r float"; ("","")
+             match (!infile, !outfile)  with
+                   |  Some i, Some o -> (i,o)
+                   | _ -> printf "%s" "specify  your input file -i or output file -o , or colums -col float, rounds -r float"; ("", "")
 
-let dataset = [ [2.0;2.0;2.0;2.0] ; [2.0;2.0;2.0;2.0] ; [2.0;2.0;2.0;2.0] ; [2.0;2.0;2.0;2.0] ]  
   
 
 let rec creat_db (col : float) (row : float)  =
@@ -58,6 +57,7 @@ let record_db db oc =
 
 let sub_row row =
   List.rev (List.tl (List.rev row) )
+
 
 let rec read_db ic rows cols =
     if rows > 0.0
@@ -114,7 +114,7 @@ let gauss_mech (q:query) db =
         in  
         sm /.  float_of_int (List.length db)
       in
-        let mu = 2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon
+        let mu = 1.0 (*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
         in 
           mean +. (sample_normal_boxmuller3 0.0 mu) 
   in 
@@ -132,6 +132,12 @@ let nonoise_mech (q:query) db =
       in
     mean 
 
+let restrict q db =
+  fun x -> 
+    match x with
+      [] -> 0.0
+    | _ -> q x
+
 let dot (l1:float ) (l2: float) : float = l1 *. l2
   
 
@@ -140,6 +146,7 @@ let sign (y: float) : float =
 
 let get (row:float list) (i:float) : float  =
   List.nth row (int_of_float i)
+
 
 let updt l pos a = 
   List.mapi (fun i x -> if i = (int_of_float pos) then a else x) l
@@ -152,10 +159,41 @@ let rec listminus l1 l2 =
     | hd::tl -> listminus (List.filter (fun a -> if (a = hd) then false else true) l1) tl
     | [] -> l1
 
+
 let contains l i = 
   List.exists (fun a -> if (a = i) then true else false) l
 
+let rec db_minus d l = 
+	match d with
+		| hd :: tl -> (listminus hd l) :: (db_minus tl l)
+		| [] -> []
 
 
-let mech (q:query) =  gauss_mech q dataset
+let rec mr_initial n =
+	if n = 0.0 then
+		[]
+	else
+	0.0 :: mr_initial (n -. 1.0)
+
+let dataset = 
+   [[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
+	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
+	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
+	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
+	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
+	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
+	[1.0;1.0;0.0;1.0;0.0;0.0;1.0]]
+
+(*let dataset = 
+	[[1.];
+	 [2.];
+	 [2.];
+	 [1.];
+	 [4.];
+	 [5.];
+	 [8.]]
+*)
+let mech =  nonoise_mech
+
+
 

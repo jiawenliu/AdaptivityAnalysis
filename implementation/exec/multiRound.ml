@@ -91,7 +91,7 @@ let updtI = f
      (fun ( ii  ) -> 
       (fun ( nn  ) -> 
        (fun ( cc  ) -> 
-        (fun ( dd  ) -> 
+        (fun ( db  ) -> 
           if( (( j ) < ( k )) ) then 
              let p = (sample_uniform  0.000000   1.000000 ) in
               let q = (fun ( x  ) -> 
@@ -100,7 +100,8 @@ let updtI = f
                let qc = (fun ( x  ) -> 
                          (sample_bernoulli( p ))
                         ) in
-                let a =  mech( q )  in
+                let qj = restrict q db in
+                let a =  mech q db  in
                  let sc' =
                           updtSC   ()    sc    a    p    q    ii    0.000000   
                   nn   in
@@ -119,9 +120,9 @@ let updtI = f
                                        )   0.000000    scc'   in
                     let ii' =
                           updtI   ()    maxScc    sc    0.000000    nn   in
-                     let dd' = (listminus  dd   ii' ) in
+                     let db' = (db_minus  db   ii' ) in
                       a  ::           multiRound     ()      k    (( j ) +. ( 1.000000 ))   
-                                  sc'    scc'    ii'    nn    cc    dd'   
+                                  sc'    scc'    ii'    nn    cc    db'   
           else 
             [] 
          

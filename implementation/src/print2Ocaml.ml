@@ -133,7 +133,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Fst e             -> fprintf fmt " fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " snd %a " pp_expression(e)
   | If(e, e1, e2)     -> fprintf fmt " if(%a) then @\n @[<hov 1> %a@]@\n else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
-  | Mech e            -> fprintf fmt " mech(%a) " pp_expression(e)
+  | Mech e            -> fprintf fmt " mech %a db " pp_expression(e)
   | Let(x, e1, e2)    -> 
   (
     match e1 with
