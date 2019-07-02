@@ -6,7 +6,14 @@
 open Format
 open IndexSyntax
 
+(* Types *)
 
+(* Unary primitive types *)
+type ty_prim =
+    Ty_PrimInt
+  | Ty_PrimUnit
+  | Ty_PrimBool
+  | Ty_PrimReal
 
 (* Primitive Terms *)
 type exp_prim =
@@ -22,10 +29,38 @@ type bop = Add | Sub | Mul | Div | Or | And | Xor | Equal
 (* Unary Operations   *)
 type uop = Log | Sign
 
+
+
+type d_map = (expr * int) list
+
+and 
+
+(* Types *)
+ty =
+  (* Primitive types *)
+  | Ty_Prim     of ty_prim
+
+  (* Pair *)
+  | Ty_Prod     of ty * ty
+  (* Functional type *)
+  | Ty_Arrow      of ty * int * d_map * iterm * ty
+
+  (* Quantified types *)
+  | Ty_Forall   of var_info * sort * ty
+  | Ty_Exists   of var_info * sort * ty
+  | Ty_IntIndex of iterm
+
+  (* Boxed Types *)
+  | Ty_Box      of ty
+
+  (* List types *)
+  | Ty_List     of ty
+
+and
                     
 
 (* Expressions   *)
-type expr =
+expr =
   (* Const *)
   | Prim        of exp_prim
   | True
@@ -38,11 +73,11 @@ type expr =
   | Snd         of expr
   | If          of expr * expr * expr
 
-  | Let         of var_info * expr * expr
+  | Let         of var_info * iterm * expr * expr
   | Case        of expr * var_info * expr * var_info * expr
 
   (* Functional Expressions *)
-  | Fix         of var_info * expr * expr(* unsure *) 
+  | Fix         of var_info * expr * ty * expr(* unsure *) 
   | App         of expr * expr
   | Mech        of expr
 
@@ -68,74 +103,7 @@ type expr =
   | IApp        of expr
 
 
-let rec is_equal_exp eL eR : bool = 
-  match eL, eR with
-  | Var(v1), Var( v2) -> v1 = v2
-  | Prim(p1), Prim( p2) -> p1 = p2
-
-  | Fix(f1, x1, e1), Fix(f2, x2, e2) -> f1 = f2 && is_equal_exp x1 x2 && is_equal_exp e1 e2
-  
-  | Pack( e), Pack (e')
-  | Mech( e), Mech (e')
-  | Fst( e), Fst( e') | Snd( e), Snd( e') -> is_equal_exp e e'
-  | If ( e, e1, e2), If ( e', e1', e2') -> is_equal_exp e e' && is_equal_exp e1 e1' && is_equal_exp e2 e2'
-
-  | Nil , Nil  -> true
-
-  | Unpack (e1, x, e2), Unpack(e1', x', e2') -> is_equal_exp e1 e1' && is_equal_exp e2 e2' && x = x'
-
-  | App( e1, e2), App( e1', e2')
-  | Cons( e1, e2), Cons( e1', e2') 
-  | Pair( e1, e2), Pair( e1', e2') -> is_equal_exp e1 e1' && is_equal_exp e2 e2'
-
-
-  | Let ( x, e1, e2), Let ( x', e1', e2')  ->  x = x' && is_equal_exp e1 e1' && is_equal_exp e2 e2'
-  | Case( e, x, e1, y, e2), Case( e', x', e1', y', e2') 
-    -> x = x' && y = y' && is_equal_exp e1 e1' && is_equal_exp e2 e2'
-
-  | Bernoulli v, Bernoulli v'  -> is_equal_exp v  v'
-  | Uniform(v1, v2), Uniform(v1', v2')  -> is_equal_exp v1 v1' && is_equal_exp v2 v2'
-
-  | ILam( e), ILam(e')
-  | IApp( e), IApp( e') -> is_equal_exp e e'
-
-  | _   -> false
-
-
-let rec exp_free_vars (e: expr) = 
-  match e with
-  | Prim (_)
-  | Bernoulli _
-  | Uniform _
-  | Nil   -> []
-  | Var( x)  -> [x.v_name]
-
-  | Fst( e)  
-  | Snd( e)  
-    -> exp_free_vars e
-                    
-  | App( e1, e2)                                                          
-  | Pair( e1, e2) 
-  | Cons( e1, e2) -> exp_free_vars e1 @ exp_free_vars e2
-
-  | If ( e, e1, e2) -> exp_free_vars e1 @ exp_free_vars e2 @ exp_free_vars e
-                                                               
-  | Fix ( f, x, e') ->
-    List.filter (fun vi_x -> vi_x != f.v_name) (exp_free_vars e')
-
-  | Case( e, x, e1, y, e2) ->(exp_free_vars e) @ 
-    (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e1)) @ 
-    (List.filter (fun vi_x -> vi_x != y.v_name ) (exp_free_vars e2))
-  
-  | Let ( x, e1, e2) -> (exp_free_vars e1 ) @
-    (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e2))
-
-  | ILam( e)
-  | IApp( e) -> (exp_free_vars e)
-
-  | _ -> []
-
-
+(* VALUES   *)
  type value = 
   | V_True
   | V_False
@@ -166,38 +134,6 @@ type trace =
   | Tr_Error
 
 
-(* Types *)
-
-(* Unary primitive types *)
-type ty_prim =
-    Ty_PrimInt
-  | Ty_PrimUnit
-  | Ty_PrimBool
-  | Ty_PrimReal
-
-type d_map = (expr * int) list
-
-(* Types *)
-type ty =
-  (* Primitive types *)
-  | Ty_Prim     of ty_prim
-
-  (* Pair *)
-  | Ty_Prod     of ty * ty
-  (* Functional type *)
-  | Ty_Arrow      of ty * int * d_map * iterm * ty
-
-  (* Quantified types *)
-  | Ty_Forall   of var_info * sort * ty
-  | Ty_Exists   of var_info * sort * ty
-  | Ty_IntIndex of iterm
-
-  (* Boxed Types *)
-  | Ty_Box      of ty
-
-  (* List types *)
-  | Ty_List     of ty
-
 
 
 (* Substitution ty[I/i] for index vars *)
@@ -221,6 +157,80 @@ let rec ty_subst i it ty =
   | Ty_Box(ty)                -> Ty_Box( utf ty )
   (* List types *)
   | Ty_List (ty')        -> Ty_List( utf ty')
+
+
+
+let rec is_equal_exp eL eR : bool = 
+  match eL, eR with
+  | Var(v1), Var( v2) -> v1 = v2
+  | Prim(p1), Prim( p2) -> p1 = p2
+
+  | Fix(f1, x1, ty1, e1), Fix(f2, x2, ty2, e2) 
+    -> f1 = f2 && ty1 = ty2 && is_equal_exp x1 x2 && is_equal_exp e1 e2
+  
+  | Pack( e), Pack (e')
+  | Mech( e), Mech (e')
+  | Fst( e), Fst( e') | Snd( e), Snd( e') -> is_equal_exp e e'
+  | If ( e, e1, e2), If ( e', e1', e2') -> is_equal_exp e e' && is_equal_exp e1 e1' && is_equal_exp e2 e2'
+
+  | Nil , Nil  -> true
+
+  | Unpack (e1, x, e2), Unpack(e1', x', e2') -> is_equal_exp e1 e1' && is_equal_exp e2 e2' && x = x'
+
+  | App( e1, e2), App( e1', e2')
+  | Cons( e1, e2), Cons( e1', e2') 
+  | Pair( e1, e2), Pair( e1', e2') -> is_equal_exp e1 e1' && is_equal_exp e2 e2'
+
+
+  | Let ( x, i, e1, e2), Let ( x', i', e1', e2')  
+    ->  x = x' && i = i'  && is_equal_exp e1 e1' && is_equal_exp e2 e2'
+  | Case( e, x, e1, y, e2), Case( e', x', e1', y', e2') 
+    -> x = x' && y = y' && is_equal_exp e1 e1' && is_equal_exp e2 e2'
+
+  | Bernoulli v, Bernoulli v'  -> is_equal_exp v  v'
+  | Uniform(v1, v2), Uniform(v1', v2')  -> is_equal_exp v1 v1' && is_equal_exp v2 v2'
+
+  | ILam( e), ILam(e')
+  | IApp( e), IApp( e') -> is_equal_exp e e'
+
+  | _   -> false
+
+
+let rec exp_free_vars (e: expr) = 
+  match e with
+  | Prim (_)
+  | Bernoulli _
+  | Uniform _
+  | Nil   -> []
+  | Var( x)  -> [x.v_name]
+
+  | Fst( e)  
+  | Snd( e)  
+    -> exp_free_vars e
+                    
+  | App( e1, e2)                                                          
+  | Pair( e1, e2) 
+  | Cons( e1, e2) -> exp_free_vars e1 @ exp_free_vars e2
+
+  | If ( e, e1, e2) -> exp_free_vars e1 @ exp_free_vars e2 @ exp_free_vars e
+                                                               
+  | Fix ( f, x, t, e') ->
+    List.filter (fun vi_x -> vi_x != f.v_name) (exp_free_vars e')
+
+  | Case( e, x, e1, y, e2) ->(exp_free_vars e) @ 
+    (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e1)) @ 
+    (List.filter (fun vi_x -> vi_x != y.v_name ) (exp_free_vars e2))
+  
+  | Let ( x, i, e1, e2) -> (exp_free_vars e1 ) @
+    (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e2))
+
+  | ILam( e)
+  | IApp( e) -> (exp_free_vars e)
+
+  | _ -> []
+
+
+
 
 
 

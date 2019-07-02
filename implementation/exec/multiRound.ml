@@ -100,28 +100,29 @@ let updtI = f
                let qc = (fun ( x  ) -> 
                          (sample_bernoulli( p ))
                         ) in
-                let a =  mech  q  db  in
-                 let sc' =
-                          updtSC   ()    sc    a    p    q    ii    0.000000   
-                  nn   in
-                  let scc' =
-                          updtSCC   ()    scc    a    p    qc    0.000000   
-                   cc   in
-                   let maxScc =
-                       List.fold_left  (fun ( acc  ) -> 
-                                        (fun ( a  ) -> 
-                                          if( (( acc ) < ( a )) ) then 
-                                            a 
-                                          else 
-                                            acc 
-                                         
-                                        )
-                                       )   0.000000    scc'   in
-                    let ii' =
-                          updtI   ()    maxScc    sc    0.000000    nn   in
-                     let db' = (db_minus  db   ii' ) in
-                      a  ::           multiRound     ()      k    (( j ) +. ( 1.000000 ))   
-                                  sc'    scc'    ii'    nn    cc    db'   
+                let qj =    restrict   q    db   in
+                 let a =  mech  qj  db  in
+                  let sc' =
+                           updtSC   ()    sc    a    p    q    ii    0.000000   
+                   nn   in
+                   let scc' =
+                           updtSCC   ()    scc    a    p    qc    0.000000   
+                    cc   in
+                    let maxScc =
+                        List.fold_left  (fun ( acc  ) -> 
+                                         (fun ( a  ) -> 
+                                           if( (( acc ) < ( a )) ) then 
+                                             a 
+                                           else 
+                                             acc 
+                                          
+                                         )
+                                        )   0.000000    scc'   in
+                     let ii' =
+                           updtI   ()    maxScc    sc    0.000000    nn   in
+                      let db' = (db_minus  db   ii' ) in
+                       a  ::           multiRound     ()      k    (( j ) +. ( 1.000000 ))   
+                                   sc'    scc'    ii'    nn    cc    db'   
           else 
             [] 
          

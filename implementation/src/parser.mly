@@ -102,15 +102,15 @@ expr:
   | LPAREN expr COMMA expr  RPAREN                  { Pair($2, $4) } 
   | IF LPAREN expr COMMA expr COMMA expr  RPAREN
                                                     { If($3, $5, $7) }
-  | FIX VAR LPAREN expr  RPAREN DOT expr
-                                                    { Fix( {v_name = $2}, $4, $7) }
-  | LAM expr DOT expr                               { Fix( {v_name = "_"}, $2, $4) }
+  | FIX VAR LPAREN expr COLON Type RPAREN DOT expr
+                                                    { Fix( {v_name = $2}, $4, $6, $9) }
+  | LAM expr COLON Type DOT expr                    { Fix( {v_name = "_"}, $2, $4, $6) }
   | NIL                                             { Nil }
   | expr DBCOLON expr                                  { Cons($1, $3) }
   | MECH LPAREN expr RPAREN                         { Mech($3) }
   | app                                             { $1 }
-  | LET VAR EQUAL expr IN expr   
-                                                    { Let({v_name = $2}, $4, $6) }
+  | LET VAR COLON ITerm EQUAL expr IN expr   
+                                                    { Let({v_name = $2}, $4, $6, $8) }
   | uop LPAREN expr RPAREN                          { Uop($1, $3) }                                                  
   | expr bop expr                                   { Bop($2, $1, $3) }
   | LPAREN expr RPAREN                              { $2 }

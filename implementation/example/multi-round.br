@@ -1,23 +1,23 @@
-let updtSC = fix f (z). lambda sc. lambda a. lambda p. lambda q. lambda ii. lambda i. lambda nn.
+let updtSC: index 0 = fix f (z: unit). lambda sc: real list. lambda a : real. lambda p: int list -> real. lambda q: real. lambda ii:int list. lambda i: int. lambda nn : int.
 	if	(	(i < nn),
 			if( (contains ii  i),
-				let x = (get sc i) + (a - p) * ((q i) - p) in
-					let sc' = updt sc i x in
+				let x: index 0 = (get sc i) + (a - p) * ((q i) - p) in
+					let sc': index 0 = updt sc i x in
 						f () sc' a p q ii (i + 1) nn,
 				f () sc a p q ii (i + 1) nn),
 			sc
 		)
 in
-let updtSCC = fix f (z). lambda scc. lambda a. lambda p. lambda qc. lambda i. lambda cc.
+let updtSCC: index 0 = fix f (z: unit). lambda scc: real list. lambda a : real. lambda p: int list -> real. lambda qc: int list -> real. lambda i: int. lambda cc: int.
 	if	(	(i < cc),
-			let x = (get scc i) + (a - p) * ((qc i) - p) in
-				let scc' = updt scc i x in
+			let x: index 0 = (get scc i) + (a - p) * ((qc i) - p) in
+				let scc': index 0 = updt scc i x in
 					f () scc' a p qc (i + 1) cc,
 			scc
 		)
 in
 
-let updtI = fix f (z). lambda maxScc. lambda sc. lambda i. lambda nn.
+let updtI: index 0 = fix f (z: unit). lambda maxScc: real. lambda sc: real list. lambda i : int. lambda nn: int.
 	if(	(i < nn),
 		if(	((get sc i) < maxScc),
 			i :: (f () maxScc sc (i + 1) nn),
@@ -27,18 +27,18 @@ let updtI = fix f (z). lambda maxScc. lambda sc. lambda i. lambda nn.
 
 in 
 
-fix multiRound (z). Lambda. Lambda. lambda k. lambda j. lambda sc. lambda scc. lambda ii. lambda nn. lambda cc. lambda db.
+fix multiRound (z: unit). Lambda. Lambda. lambda k : int. lambda j: int. lambda sc: real list. lambda scc: real list. lambda ii: int list. lambda nn: int. lambda cc: int. lambda db: int list list.
 	if(	(j < k),
-		let p = uniform(0, 1) in
-		let q = lambda x. bernoulli p in
-		let qc = lambda x. bernoulli p in
-		let qj = restrict q db in
-		let a = mech(qj) in 
-		let sc' = updtSC () sc a p q ii 0 nn in
-		let scc' = updtSCC () scc a p qc 0 cc in
-		let maxScc = foldl (lambda acc. lambda a. if(acc < a, a, acc)) 0 scc' in
-		let ii' = updtI () maxScc sc 0 nn in 
-		let db' = db \ ii' in
+		let p: index 1 = uniform(0, 1) in
+		let q: index 1 = lambda x: int list. bernoulli p in
+		let qc: index 1 = lambda x: int list. bernoulli p in
+		let qj: index 1 = restrict q db in
+		let a: index 0 = mech(qj) in 
+		let sc': index 0 = updtSC () sc a p q ii 0 nn in
+		let scc': index 0 = updtSCC () scc a p qc 0 cc in
+		let maxScc: index 0 = foldl (lambda acc: real. lambda a: real. if(acc < a, a, acc)) 0 scc' in
+		let ii': index 0 = updtI () maxScc sc 0 nn in 
+		let db': index k - index j - index 1 = db \ ii' in
 			a::(multiRound () [] [] k (j + 1) sc' scc' ii' nn cc db') ,
 		nil)
 

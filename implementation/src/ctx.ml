@@ -12,13 +12,14 @@ type 'a context =
     {
       var_ctx   : 'a ctx;
       ivar_ctx  : sort ctx;
+      evar_ctx  : sort ctx;
       lvar_ctx  : var_info list;
       constr_env :  constr
     }
 
 let length ctx = List.length ctx
 
-let empty_context = { var_ctx = []; ivar_ctx = []; lvar_ctx = []; constr_env = CTrue }
+let empty_context = { var_ctx = []; ivar_ctx = []; evar_ctx = []; lvar_ctx = []; constr_env = CTrue }
 
 (* Return a binding if it exists. Let the caller handle the error *)
 let rec slookup id ctx =
@@ -36,7 +37,7 @@ let lookup_var id ctx =
 let lookup_ivar id ctx =
   slookup id ctx.ivar_ctx
 
-let rec lookup_lvar id ctx =
+(*let rec lookup_lvar id ctx =
     match ctx with
         [] -> None
       | v::l ->
@@ -44,8 +45,10 @@ let rec lookup_lvar id ctx =
           Some v
         else
           lookup_lvar id l
+*)
 
-
+let lookup_evar id ctx =
+  slookup id ctx.evar_ctx
 
 (* Extend the context with a new variable binding. *)
 let extend_var id s ctx =
@@ -69,6 +72,17 @@ let extend_i_var id s ctx =
   } in
   { ctx with ivar_ctx = (n_var, s) :: ctx.ivar_ctx }
 
+
+(* Extend the existential context with a new binding. Return the new context. *)
+let extend_e_var id s ctx =
+  let n_var = {
+    v_name  = id
+  } in
+  { ctx with evar_ctx = (n_var, s) :: ctx.evar_ctx }
+
+(* Extend the existential context with a list of bindings. Return the new context. *)
+let extend_e_ctx psi ctx =
+  List.fold_left (fun  ctx' (vi,s) -> extend_e_var vi.v_name s ctx') ctx psi
 
 
 

@@ -88,11 +88,11 @@ module TyCheck (Ty : CH_TYPE) =
                 (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
                 let base =  merge_cs c1 (merge_cs c2 k_cs) in
     
-    (* Existentially quantify over the cosntraint with the new adapts k1 and k2 *)
-    let c_quant = CExists(v1, UNKNOWN, Adapt, CExists(v2, UNKNOWN, Adapt, base)) in 
-         	let cs_res = Option.value_map ~default:base
-          		      ~f:(fun _ -> c_quant) k in
-                Right cs_res
+                (* Existentially quantify over the cosntraint with the new adapts k1 and k2 *)
+                let c_quant = CExists(v1, UNKNOWN, Adapt, CExists(v2, UNKNOWN, Adapt, base)) in 
+                 	let cs_res = Option.value_map ~default:base
+                  		      ~f:(fun _ -> c_quant) k in
+                        Right cs_res
              | Left err' -> Left err'
            end
         | Left err  -> Left err

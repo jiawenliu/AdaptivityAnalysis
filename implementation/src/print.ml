@@ -124,7 +124,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | False             -> fprintf fmt " false "
   | Pair(e1, e2)      -> fprintf fmt " (%a, %a)"  pp_expression e1 pp_expression e2
   | App (e1, e2)      -> fprintf fmt " @[%a@] @[%a@] " pp_expression e1  pp_expression e2
-  | Fix(f, x, e3)     -> 
+  | Fix(f, x, t, e3)     -> 
     if(f.v_name = "_")
     then  
       fprintf fmt "(fun (%a ) -> @\n@[<hov 1> %a@]@\n)" pp_expression(x) pp_expression(e3)
@@ -134,7 +134,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Snd e             -> fprintf fmt " snd %a " pp_expression(e)
   | If(e, e1, e2)     -> fprintf fmt " if(%a) then @\n @[<hov 1> %a@]@\n else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
   | Mech e            -> fprintf fmt " mech(%a) " pp_expression(e)
-  | Let(x, e1, e2)    -> 
+  | Let(x, i, e1, e2)    -> 
   (
     match e1 with
     | Fix(f, _, e3)   -> 
