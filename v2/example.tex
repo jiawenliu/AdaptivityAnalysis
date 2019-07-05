@@ -1,0 +1,1222 @@
+
+\section{Examples}
+
+\begin{algorithm}
+\caption{A two-round analyst strategy for random data (Algorithm 4 in ...)}
+\label{alg:BitGOF}
+\begin{algorithmic}
+\REQUIRE Mechanism $\mathcal{M}$ with a hidden state $X\in \{-1,+1\}^{n\times (k+1)}$.
+\STATE  {\bf for}\ $j\in [k]$\ {\bf do}.  
+\STATE \qquad {\bf define} $q_j(x)=x(j)\cdot x(k)$ where $x\in \{-1,+1\}^{k+1}$.
+\STATE \qquad {\bf let} $a_j=\mathcal{M}(q_j)$ 
+\STATE \qquad \COMMENT{In the line above, $\mathcal{M}$ computes approx. the exp. value  of $q_j$ over $X$. So, $a_j\in [-1,+1]$.}
+\STATE {\bf define} $q_{k+1}(x)=\mathrm{sign}\big (\sum_{i\in [k]} x(i)\times\ln\frac{1+a_i}{1-a_i} \big )$ where $x\in \{-1,+1\}^{k+1}$.
+\STATE\COMMENT{In the line above,  $\mathrm{sign}(y)=\left \{ \begin{array}{lr} +1 & \mathrm{if}\ y\geq 0\\ -1 &\mathrm{otherwise} \end{array} \right . $.}
+\STATE {\bf let} $a_{k+1}=\mathcal{M}(q_{k+1})$
+\STATE\COMMENT{In the line above,  $\mathcal{M}$ computes approx. the exp. value  of $q_{k+1}$ over $X$. So, $a_{k+1}\in [-1,+1]$.}
+\RETURN $a_{k+1}$.
+\ENSURE $a_{k+1}\in [-1,+1]$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+
+
+\newpage
+
+%%%%%%EXAMPLES---TWO ROUNDS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\begin{figure}
+
+Two-rounds:
+
+\[
+\begin{array}{l}
+ \elet \eapp  g: 1 = \efix \eapp  f(j: \tint). \lambda db:  \tlist {\tlist {\tint}}. \lambda k: \tint.  \\
+  \hspace{.2cm}  \eif \big (  (j < k)  ,  \\
+  \hspace{.8cm}  \elet \eapp  a: 1 = 
+                 \eop \eapp  
+                 \boxed{( \lambda x: \tlist {\tint}. 
+                 (\mathsf{get} \eapp x \eapp j) \cdot (\mathsf{get} \eapp x \eapp k) )}  
+                 \eapp \ein \\
+  \hspace{1.2cm} (a, j) :: (f  \eapp (j+1) \eapp  k) \\
+  \hspace{1.2cm} \eapp  [] \big) \eapp \ein\\
+  \hspace{.2cm}  \efix \eapp twoRound(k : \tint). \lambda db:  \tlist {\tlist {\tint}}.  \\
+  \hspace{.8cm}  \elet \eapp  l: 1 = g \eapp  0\eapp  K \eapp  \ein \\
+  \hspace{.8cm}  \elet \eapp  q: 1 =  \lambda x: \tlist {\tint}. \mathsf{sign} \eapp \\ 
+  \hspace{.8cm}  (\mathsf{foldl} \eapp  (\lambda acc: \treal. \lambda (a,i): \treal * \tint. 
+                 \big(acc\eapp + (x \eapp  i) * lg(\frac{1+a}{1-a})  \big) 
+                 \eapp  0 \eapp  l )) \eapp  \ein \\
+  \hspace{.8cm}  \eop ( q )
+\end{array}
+\]
+\end{figure}
+
+
+\begin{tabbing}
+    $ x: \trow \equiv \tarr{\tbase}{\treal}{0}{[]}{0}$ \\
+    $ \cdot: \tbase * \tbase \to \tbase $   \\
+    $ g: \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{1}{[j:1]}{1} }{0}{[]}{0}  $\\
+    $ q: \tbox{  (\tarr{ \trow }{ \treal }{0}{[l:0]}{0})     } $\\
+    $ \eop : \tbox{  (\tarr{ \trow }{ \treal }{0}{\dmap''}{0})     } \to \treal $\\
+    $\mathsf{foldL} : (\treal \to \tlist{(\treal * \tbase)} \to \treal) \to \treal \to \tlist{\tbase * \treal} \to \treal = FL$
+\end{tabbing}
+
+\begin{figure}
+Type derivation:\\
+    $A = \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{[j:0]}{1} }{\bot}{[]}{0} $, \\
+    $FL1 = \treal \to \tlist{\tbase * \treal} \to \treal$, $FL2 = \treal \to \tlist{\treal * \tbase} \to \treal$\\
+    $Q_2 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[l:0]}{0})} $,\\
+    $Q_1 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[j:0, k:0]}{0})}$\\
+    $\Gamma = f: A,  j: \tbase, k: \tbase$; $\Gamma' = \Gamma, a: \treal$; $\Gamma'' = \Gamma, x: \trow$,\\
+    $\Delta = g: A, l: \tlist{\treal * \tbase}$; $\Delta' = \Delta, q:Q_2$; $\Delta'' = \Delta, x: \trow$\\
+
+\[
+  \inferrule*[ right = LET-B ]
+   {
+     \inferrule
+     {
+        \Pi_L \vartriangleright
+     }
+     {
+        \tvdash{1} \efix \eapp  f(j). \cdots : A
+      }
+     \and
+     \inferrule
+     {
+        \Pi_R \vartriangleright
+     }
+     {
+      g: A, [g : 1] \tvdash{2} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal
+    }
+     \\
+     n' = \max(n_1 + 1, n_2 ) = 2
+     \and
+     [] = \max([] + 1, [])
+   }
+   { \tvdash{2} \elet g = \cdots \ein \elet l = \cdots \ein \cdots :  \treal }
+\]
+
+Derivation $\Pi_L$ and $\Pi_R$ are shown as follows:\\
+$\Pi_L$:
+\begin{mathpar}
+      \inferrule*[right = FIX]
+      {
+        \inferrule*[right = FIX]
+        {
+          \inferrule*[right = IF]
+          {
+            \inferrule*[right = BOOL]
+            {
+              \empty
+            }
+            {
+              \Gamma; \dmap_1' = [j:0, k:0] \tvdash{0} {j<k : \tbool}
+            }
+            \\
+            \inferrule*[right = LET]
+            {
+              \dots
+            }
+            {
+              \Gamma; \dmap_2' \tvdash{1} \elet a = \eop ( \cdots ) \ein (a, j) :: \cdots : \tlist{\treal * \tbase}
+            }
+            \\
+            \inferrule*[right = NIL]
+            {
+              \empty
+            }
+            {
+              \Gamma; \dmap_2'=[f: \infty, j: 0, k: 0] \tvdash{1} {[] : \tlist{\treal * \tbase}}
+            }
+            \\
+            \nnatA' = \nnatA_0 + \nnatA_1 = 0 + 1 = 1
+            \and
+            \dmap_1' = \max(\dmap_2' + 0 , \dmap_1') = [f: \infty, j: 0, k: 0]
+          }
+          {
+            \Gamma ;  [f: \infty, j: 0, k: 0] 
+            \tvdash{1} \eif \cdots : \tlist{\treal * \tbase}
+          }
+        }
+        {
+          f: A, j : \tbase; [f: \infty, j: \bot ] \tvdash{1} {\lambda k. \eif \cdots : \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{[j:0]}{1} }
+        }
+      }
+      {
+        \tvdash{1} \efix \eapp  f(j). \cdots : A 
+      }    
+    
+    \inferrule*[right = LET]
+    {
+    \inferrule
+        {
+         \inferrule
+            {
+                \Pi_{L1} \vartriangleright
+            }
+            {
+                \Gamma; \dmap_4' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : Q_1
+            \\\\
+            \dmap_4' = [j: \bot, k : \bot]
+            }
+        }
+        {
+            \Gamma; \dmap_3' \tvdash{1} \eop ( \lambda x. (x \eapp j)\cdot (x \eapp k)) : \treal
+        }
+    \and 
+    \inferrule
+        {
+        \inferrule
+            {
+              \inferrule*[right = VAR]
+              {
+                \empty
+              }
+              {
+                \Gamma'; [a:0] \tvdash{0} a: \treal
+              }
+              \and
+              \inferrule*[right = VAR]
+              {
+                \empty
+              }
+              {
+                \Gamma'; [j:0] \tvdash{0} j : \tbase
+              }
+            }
+            {
+                \Gamma'; [a:0, j:0] \tvdash{0} (a, j) : \treal * \tbase
+            }
+            \\
+        \inferrule*[right = APP]
+            {
+                \Pi_{L2} \vartriangleright
+            }
+            {
+                \Gamma'; \dmap_5' \tvdash{1} f \eapp  j+1 \eapp  k : \tlist{\treal * \tbase}
+            }
+            \\
+            \nnatA' = \max(\nnatA_1, \nnatA_2) = 1
+            \and
+            \dmap_5' = [f: \infty, a: 0, j : 0, k : 0]
+        }
+        {
+            \Gamma'; \dmap_2'[a: 0] \tvdash{1} 
+            (a, j) ::(\cdots) : \tlist{\treal * \tbase}
+        }
+      \\
+      \dmap_3' = [j: \bot, k: \bot]
+      \and
+      \nnatA' = \max(\nnatA_2, \nnatA_1 + q) = 1
+      \and
+      \dmap_2' = \max(\dmap_3' + 1, \dmap_2') = [j:0, k:0, f:\infty]
+    }
+    {
+      \Gamma; \dmap_2'  \tvdash{1} 
+      \elet a = \eop (\lambda x. (x \eapp j)\cdot (x \eapp k)) \ein (a, j) ::(f \eapp  j+1 \eapp  k): \tlist{\treal * \tbase}
+    }
+    \end{mathpar}
+\end{figure}
+
+
+\begin{figure}
+$\Pi_{L2}$:
+\begin{mathpar}
+
+    \inferrule*[right = APP]
+    {
+      \inferrule*[right = APP]
+      {
+      \inferrule*[right = VAR]
+      {
+      \empty
+      }
+      {
+      \Gamma'; [f:\infty] \tvdash{0} f: A
+      }
+      \and
+       \inferrule*[right = VAR]
+      {
+      \empty
+      }
+      {
+      \Gamma'; [j:0] \tvdash{0} j + 1: \tbase
+      }
+      \\
+      \nnatA' = \max(\nnatA_2 + q, \nnatA) + \nnatA_1 = 0 
+      }
+      {
+      \Gamma'; \dmap_6' \tvdash{0} f \eapp j+1 : \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{\dmap = [j:0]}{1}
+      }
+      \and
+      \inferrule*[right = VAR]
+      {
+      \empty
+      }
+      {
+      \Gamma'; \dmap_7' \tvdash{0} k : \tbase
+      }
+      \\
+      \dmap_6' = [j:0, f: \infty, a : 0]
+      \and
+      \dmap_5' = \max(\dmap_6', 0 + \max(\dmap, \dmap_7' + 0))
+      \and
+      \dmap_7' = [k:0]
+      \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + q) = 1
+    }
+    {
+    \Gamma'; \dmap_5' = [f: \infty, a: 0, j : 0, k : 0] \tvdash{1} f \eapp  j+1 \eapp  k : \tlist{\treal * \tbase}
+    }
+    \end{mathpar}
+\end{figure}
+
+
+
+\begin{figure}
+$\Pi_{L1}$:
+\begin{mathpar}
+\inferrule
+{
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+        \empty
+        }
+        {
+          \Gamma''; [x:0] \tvdash{0} x: \trow
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Gamma''; [j:0] \tvdash{0} j : \tbase
+        }
+      }
+      {
+        \Gamma''; [x: 0, j:0] \tvdash{0} (x \eapp j) : \treal
+      }
+      \and
+       \inferrule
+      {
+        \inferrule
+        {
+        \empty
+        }
+        {
+          \Gamma''; [x:0] \tvdash{0} x: \trow
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Gamma''; [k:0] \tvdash{0} k : \tbase
+        }
+      }
+      {
+        \Gamma''; [x : 0, k : 0] \tvdash{0} (x \eapp k) : \treal
+      }
+    }
+    {    
+      \Gamma''; [x:0, j : 0, k: 0] \tvdash{0} (x \eapp j) \cdot (x \eapp k) : \treal
+    }  
+  }
+  {
+    \Gamma; \dmap_4' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : \tarr{\trow}{\treal}{0}{[j:0,k:0]}{0}
+  }
+}
+{
+  \Gamma; \dmap_4' \tvdash{0} \lambda x. (x \eapp j)\cdot (x \eapp k) : Q_1
+}
+\end{mathpar}
+\end{figure}
+
+
+\begin{figure}
+$\Pi_R$:
+\begin{mathpar}
+\inferrule*[right = LET]
+    {
+    \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+          \empty
+        }
+        {
+            g: A ; [g: 0] \tvdash{0} {g : A }
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          g: A; \tvdash{0} 0 : \tbase
+        }
+      }
+      {
+         g: A; [g: 0] \tvdash{0} {g \eapp  0  : \tarr{\tbase}{ \tlist{\treal * \tbase}}{1}{[j:1]}{1} }
+      }
+      \and
+      \inferrule
+      {
+      \empty
+      }
+      {
+        g: A; \tvdash{0} K : \tbase
+      }
+    }
+    {
+        g: A; [g:0] \tvdash{1} { g \eapp  0 \eapp  K : \tlist{\treal * \tbase}}
+    }
+    \and
+    \cdots
+    \\
+    \nnatA' = \max(\nnatA_1 + q, \nnatA_2) = 2
+    \and
+    [g:1] = \max(([g:0] + 1), [g:1])
+    }
+    {
+    g: A; [g:1] \tvdash{2} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal   
+    }
+
+    \inferrule*[right = LET]
+        {
+        \inferrule
+            {
+            \inferrule
+            {
+              \inferrule
+                  {
+                    \cdots
+                  }
+                  {
+                      \Delta''; [x: 0,l: 0] \tvdash{0} {\mathsf{sign}(\dots) :  \treal}
+                  }          
+            }
+            {
+                \Delta; \dmap_3''\tvdash{0} {\lambda x. \dots : \tarr{\trow}{\treal}{0}{[l:0]}{0} }
+            }
+            }
+            {
+                \Delta; \dmap_3'' = [l:\bot]\tvdash{0} {\lambda x. \dots : Q_1}
+            }
+        \and
+        \inferrule
+          {
+          \inferrule
+              {
+                  \empty
+              }
+              {
+                  \Delta'; [g:0, l:0, q: 0] \tvdash{0} { q : Q_2}
+              }
+          }
+          {
+                  \Delta'; \dmap_2'' = \dmap_1''[q:1] \tvdash{1} {\eop (q) : \treal}
+          }
+          \\
+          \nnatA' = \max(\nnatA_1 + q, \nnatA_2) = 1
+          \\
+          \dmap_1'' = \max([l:\bot] + 1, \dmap_2'')
+        }
+        {
+            \Delta; \dmap_1'' = [g:1, l:1]  \tvdash{1} \elet q = \cdots \ein \cdots : \treal
+        }
+
+\inferrule
+{
+  \inferrule
+  {
+    \empty
+  }
+  {
+    \Delta, x: \trow;  \tvdash{0} \mathsf{sign} :  \treal \to \treal
+  }
+  \and
+  \inferrule
+  {
+    \inferrule
+    {
+    \cdots
+    }
+    {
+      \Delta''; [x:0] \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 : \tlist{\tbase * \treal} \to \treal
+    }
+    \\
+    \inferrule
+    {
+      \empty
+    }
+    {
+      \Delta''; [l:0] \tvdash{0} l : \tlist{\tbase * \treal}
+    }
+  }
+  {
+    \Delta''; \dmap_4'' \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 \eapp l : \treal 
+  }
+}
+{
+  \Delta''; \dmap_4'' = [x: 0, l:0] \tvdash{0} \mathsf{sign}(\dots) :  \treal
+}
+
+\inferrule
+{
+  \inferrule
+  {
+    \inferrule
+    {
+      \empty
+    }
+    {
+      \Delta'';  \tvdash{0} \mathsf{foldl} : FL
+    }
+    \and
+    \inferrule
+    {
+      \cdots
+    }
+    {
+      \Delta''; [x : 0] \tvdash{0} \lambda acc. \cdots : FL2
+    }
+  }
+  {
+    \Delta''; [x : 0] \tvdash{0} \mathsf{foldl}(\cdots) :FL1 
+  }
+  \and
+  \inferrule
+  {
+    \empty
+  }
+  {
+    \Delta''; \tvdash{0} 0 : \tbase
+  }
+}
+{
+  \Delta''; [x : 0] \tvdash{0} \mathsf{foldl}(\cdots) \eapp 0 : \tlist{\tbase * \treal} \to \treal
+}
+
+\inferrule
+{
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {\empty
+      }
+      {
+        \Delta_2''; \dmap_6'' \tvdash{0} acc: \treal
+        \\\\
+        \dmap_6'' = [acc:0]
+      }
+      \and
+      \inferrule
+      {
+        \inferrule
+        {
+          \inferrule
+          {
+          \empty
+          }
+          {
+            \Delta_2''; [x:0] \tvdash{0} x : \trow
+          }
+          \\
+          \inferrule
+          {
+            \empty
+          }
+          {
+            \Delta_2''; [i:0] \tvdash{0} i : \tbase
+          }
+        }
+        {
+          \Delta_2''; [x:0, i:0] \tvdash{0} x \eapp i: \treal
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Delta_2''; [a:0] \tvdash{0} \mathsf{lg}(\cdot): \treal
+        }
+      }
+      {
+        \Delta_2''; [x:0, (a, i):0] \tvdash{0} (x\eapp i) * \cdots: \treal
+      }
+    }
+    {
+      \Delta_2''; \dmap_5''[(a,i):0] \tvdash{0} acc + \cdots : \treal
+      \\
+      \Delta_2'' = \Delta_1'', (a,i): \tlist{\treal * \tbase}
+    }
+  }
+  {
+    \Delta_1''; \dmap_5'' = [x : 0, acc : 0] \tvdash{0} \lambda (a,i). \cdots :  \to \treal
+    \and
+    \Delta_1'' = \Delta'', acc: \treal
+  }
+}
+{
+  \Delta''; [x : 0] \tvdash{0} \lambda acc. \cdots : FL2
+}
+\end{mathpar}
+\vspace{-0.5cm}
+\caption{Type Derivation of Two Round Example}
+\end{figure}
+
+
+\clearpage
+
+\begin{algorithm}
+\footnotesize
+\caption{A multi-round analyst strategy for random data (Algorithm 5 in ...)}
+\label{alg:multiRound}
+\begin{algorithmic}
+\REQUIRE Mechanism $\mathcal{M}$ with a hidden state $X\in [N]^{n}$ sampled u.a.r., control set size $c$
+\STATE Define control dataset $C = \{0,1, \cdots, c - 1\}$
+\STATE Initialize $Nscore(i) = 0$ for $i \in [N]$, $I = \emptyset$ and $Cscore(C(i)) = 0$ for $i \in [c]$
+\STATE  {\bf for}\ $j\in [k]$\ {\bf do} 
+\STATE \qquad {\bf let} $p=\uniform(0,1)$ 
+\STATE \qquad {\bf define} $q (x) = \bernoulli ( p )$ .
+\STATE \qquad {\bf define} $qc (x) = \bernoulli ( p )$ .
+\STATE \qquad {\bf let} $a = \mathcal{M}(q)$ 
+\STATE \qquad {\bf for}\ $i \in [N]$\ {\bf do}
+\STATE \qquad \qquad $Nscore(i) = Nscore(i) + (a - p)*(q (i) - p)$ if $i \notin I$
+\STATE \qquad {\bf for}\ $i \in [c]$\ {\bf do}
+\STATE \qquad \qquad $Cscore(C(i)) = Cscore(C(i)) + (a - p)*(qc (i) - p)$
+\STATE \qquad {\bf let} $I = \{i | i\in [N] \land Nscore(i) > \max(Cscore)\}$
+\STATE \qquad {\bf let} $X = X \setminus I$ 
+\RETURN $X$.
+% \ENSURE 
+\end{algorithmic}
+\end{algorithm}
+
+
+\clearpage
+
+\begin{figure}
+\[
+\begin{array}{l}
+\elet \mathsf{updtSC} =\\
+                 \efix \eapp  \mathsf{f}(z: \tunit). \lambda sc: \tlist{\treal}. 
+                 \lambda a: \treal. \lambda p: \treal. \lambda q: \tint \to \tint.
+                 \lambda I: \tlist{\int}. \lambda i: \tint. \lambda n: \tint. \\
+ \hspace{.2cm}   \eif \Big ( (i < n)  ,  \\
+ \hspace{0.4cm}  \eif \big( ( \mathsf{in} \eapp i \eapp I  ) ,       \\
+ \hspace{0.8cm}  \elet \eapp x: 0 =( \mathsf{get} \eapp sc \eapp i) 
+                 + (a-p)*(q \eapp i - p)  \ein \\
+ \hspace{0.8cm}  \elet \eapp sc': 0 =  \mathsf{updt} \eapp sc \eapp i
+                 \eapp x \ein \\
+ \hspace{1.2cm}  \mathsf{f}  \eapp () \eapp sc' \eapp a \eapp p
+                 \eapp q \eapp I \eapp  \eapp (i+1) \eapp n  \\ 
+ \hspace{0.4cm}  , \mathsf{f}  \eapp () \eapp sc \eapp a \eapp p
+                 \eapp q \eapp I \eapp  \eapp (i+1) \eapp n \big )  \\ 
+ \hspace{0.2cm}  , sc  \Big ) \eapp \ein
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+\elet \mathsf{updtSCC} = \\
+                \efix \eapp  \mathsf{f}(z: \tunit). \lambda scc: \tlist{\treal}. \lambda a: \treal. 
+                \lambda p: \treal. \lambda qc: \tint \to \tint.  
+                \lambda i: \tint. \lambda cr: \tint. \\
+ \hspace{.2cm}  \eif \Big ( (i < cr) ,  \\
+ \hspace{0.8cm} \elet \eapp x: 0 =( \mathsf{nth} \eapp scc \eapp i) 
+                + (a-p)*(qc \eapp i - p)  \ein \\
+ \hspace{0.8cm} \elet \eapp scc': 0 =  \mathsf{updt} \eapp scc \eapp i
+                \eapp x \ein \\
+ \hspace{1.2cm} \mathsf{f}  \eapp () \eapp scc' \eapp a \eapp p \eapp qc
+                \eapp (i+1) \eapp  cr  \\ 
+ \hspace{0.2cm} , scc  \Big ) \eapp \ein
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+\elet \mathsf{updtI} = \\
+                 \efix \eapp  \mathsf{f}(z : \tunit). \lambda maxScc: \treal. 
+                 \lambda sc: \tlist{\treal}. \lambda i: \tint. \lambda n: \tint. \\
+ \hspace{.2cm}   \eif \Big (   (i < n)  ,  \\
+ \hspace{0.4cm}  \eif \big( ( ( \mathsf{nth} \eapp scc \eapp i)  >  maxScc  ) ,       \\
+ \hspace{0.8cm}  i :: ( \mathsf{f}  \eapp () \eapp maxScc \eapp sc
+                 \eapp (i+1) \eapp n  )\\
+ \hspace{0.8cm}  \mathsf{f}  \eapp () \eapp maxScc \eapp sc
+                 \eapp (i+1) \eapp n  \big )  \\
+ \hspace{0.2cm}  , [] \Big ) \eapp \ein
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+ \efix \eapp  \mathsf{multiRound}(z : \tunit). \Lambda. \Lambda. 
+        \lambda k: \tint[K]. \lambda j: \tint[J]. \lambda sc: \tlist{\treal}.\\
+        \lambda scc: \tlist{\treal}. \lambda I: \tlist{\tint}. \lambda n: \tint.
+        \lambda cr: \tint. \lambda db: \tlist{\tint}.\\
+ \hspace{.2cm}  \eif   \big (   (j < k)  ,  \\
+ \hspace{.2cm}  \elet \eapp p: 0 = \uniform \eapp 0 \eapp 1 \ein \\
+ \hspace{0.4cm} \elet \eapp q: 0 = \lambda x. \bernoulli \eapp p \ein \\
+ \hspace{0.4cm} \elet \eapp qc: 0 = \lambda c. \bernoulli \eapp p \ein \\
+ \hspace{0.4cm} \elet \eapp qj : 0 = \mathsf{restrict} \eapp q \eapp db\\
+ \hspace{0.4cm} \elet \eapp a: K-J = \eop (q)  \ein \\
+ \hspace{0.8cm} \elet \eapp sc': 0 =  \mathsf{updtSC} \eapp () \eapp sc  \eapp a \eapp p
+                \eapp q \eapp I \eapp  \eapp 0 \eapp  n \eapp  \ein \\
+ \hspace{0.8cm} \elet \eapp scc': 0 =  \mathsf{updtSCC} \eapp () \eapp scc \eapp a \eapp p
+                \eapp qc \eapp  \eapp 0 \eapp  cr \ein \\
+ \hspace{0.8cm} \elet \eapp maxScc: 0 =  \mathsf{foldl} \eapp 
+                (\lambda acc : \treal. \lambda a: \treal. 
+                \eif ( acc < a, a, acc)) \eapp 0 \eapp scc' \ein \\
+ \hspace{0.8cm} \elet \eapp I': 0 =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
+                \eapp 0 \eapp n  \ein \\
+ \hspace{0.8cm} \elet \eapp db': K - J - 1 =  db \setminus I' \ein \\
+ \hspace{1.2cm} \mathsf{multiRound} () [] [] \eapp  k 
+                \eapp (j+1)  \eapp sc' \eapp scc' \eapp I'
+                \eapp n \eapp cr \eapp db'\\ 
+ \hspace{0.2cm} , db  \big )
+\end{array}
+\]
+
+\end{figure}
+
+
+
+
+\begin{figure}
+UpdtSC:
+\begin{mathpar}
+      \inferrule*[right = FIX]
+      {
+        \inferrule*[right = FIX...]
+        {
+          \inferrule*[right = IF]
+          {
+            \inferrule*[right = BOOL]
+            {
+              \empty
+            }
+            {
+             i:\tint , I : \tlist{\tint} , \Gamma \tvdash{0} {i
+               <  N : \tbool}
+            }
+            \\
+            \inferrule*[right = IF]
+            {
+              \dots
+            }
+            {
+              f:., \Gamma; \tvdash{0}  \eif (i \in I)\cdots : \tlist{\treal }
+            }
+            \and
+            \inferrule*[right = VAR]
+            {
+            }
+            {
+              f:., sc:. ,\Gamma \tvdash{0} {sc : \tlist{\treal}}
+            }
+            \\
+            \and
+          }
+          {
+          f: ., sc: \tlist{\treal}, a:\tint, i:\tint \dots \Gamma
+            \tvdash{0} \eif (i < N)  \cdots : \tlist{\treal}
+          }
+        }
+        {
+          f: \tunit \rightarrow \dots
+          \tlist{\treal}, \Gamma \tvdash{0} {\lambda
+            sc. \dots \lambda N.
+            \eif \cdots :  \tlist{\treal} \rightarrow \dots \tlist{\treal}   }
+        }
+      }
+      {
+       \Gamma \tvdash{0} \efix \eapp  f( \_ ). \lambda sc. \lambda
+        a. \dots \lambda N. \eif \Big ( (i <N), \dots, sc \Big ) : \tunit
+        \rightarrow \tlist{\treal} \rightarrow \dots \rightarrow \tlist{\treal} 
+      }
+
+   \inferrule*[ right = IF ]
+   {
+     \inferrule
+     {
+     }
+     {
+       \Gamma \tvdash{0}. f \eapp () \eapp sc' \dots \eapp N : \tlist{\treal}
+      }
+     \and
+     \inferrule
+     {
+     \dots
+     }
+     {
+      \Gamma\tvdash{0}  \elet x = \dots \ein \elet sc' = \dots
+      \ein f \eapp () \eapp sc' \dots : \tlist{\treal}
+    }
+     \\
+     i :\tint , I : \tlist{\tint},\Gamma \tvdash{0} i \in I : \tbool
+   }
+   { \Gamma \tvdash{0}  \eif \big(  (i \in I), \elet x = \dots  ,  f \eapp ()
+     \eapp sc \dots N \big) : \tlist{\treal }    }
+
+    
+    \inferrule*[right = LET]
+    {
+    \inferrule*[right = LET]
+        {
+        \inferrule*[right = APP]
+            {
+            }
+            {
+                \Gamma \tvdash{0} \mathsf{updt} \eapp sc \eapp
+                i \eapp x : \tlist{\treal}
+            }
+            \and
+        \inferrule*[right = APP]
+            {
+                \dots
+            }
+            {
+                \Gamma \tvdash{0} f () \eapp sc \dots \eapp  (i+1) \eapp  N : \tlist{\treal }
+            }
+            \\
+            {  }
+            \and
+            {}
+        }
+        {
+            x: \treal ,\Gamma \tvdash{0} 
+             \elet sc' = \mathsf{updt} \eapp sc \eapp i \eapp x \ein \dots : \tlist{\treal}
+        }
+      \\
+      \inferrule
+        {
+          \dots
+        }
+        {
+            \Gamma \tvdash{0} ( \mathsf{nth} \eapp sc \eapp i  )+ (a-p)*(q \eapp i -
+      p) : \treal
+        }
+    }
+    {
+      \tvdash{0} 
+      \elet x =( \mathsf{nth} \eapp sc \eapp i  )+ (a-p)*(q \eapp i -
+      p) \ein \dots: \tlist{\treal }
+    }
+    \end{mathpar}
+\end{figure}
+
+
+Type derivation of Multi-rounds example:
+\[
+\begin{array}{ll} 
+  \mathsf{multiRound} :& \tunit \to \forall  J,K.
+                          \tint[K] \to \tint[J] \to \tlist{\treal} \to \tlist{\treal} \to \tlist{\tint} \\
+                        & \to \tint \to \tint \to \tarr{\tlist{\tint}}{\tlist{\tint}}{0}{\dmap}{K - J} \\
+  \mathsf{updtSC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tlist{\tint} \to \tint[J] \to \tarr{\tint}{\tlist{\treal}}{0}{[\_ : 0]}{0}\\
+  \mathsf{updtSCC} : & \tunit \to \tlist{\treal} \to \treal \to \treal \to \tbox{ \tint \to \tint } \\
+                    & \to \tint[J] \to \tarr{\tint}{\tlist{\treal}}{0}{[\_ : 0]}{0}\\
+  \mathsf{updtI} : & \tunit \to \treal \to \tlist{\treal} \to \tint[J] \to \tarr{\tint}{\tlist{\tint}}{0}{[\_ : 0]}{0}\\
+  \mathsf{foldl} : & (\treal \to \treal \to \treal) \to \treal \to \tlist{\treal}\\
+  q :              & \tbox{\tint \to \tint}\\
+  qc :             & \tbox{\tint \to \tint}\\
+\end{array}
+\]
+$\to$ without annotations is equivalent to $\tarr{}{}{\bot}{\dmap_{\bot}}{0}$ in types of $\mathsf{multiRound}, \mathsf{updtSC}, \mathsf{updtSCC}$ and $ \mathsf{updtI} $ functions, where $\forall x, \dmap_{\bot}(x) = \bot$.
+
+\begin{figure}
+Multi-rounds:
+\begin{mathpar}
+\inferrule*[right = FIX]
+{
+  \inferrule
+  {
+    \inferrule*[right = FIX]
+    {
+      \inferrule*[right = IF]
+      {
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Delta; \Gamma; \dmap_1' = [j : 0, k : 0] \tvdash{0} j<k : \tbool
+        }
+        \\
+        \inferrule
+        {
+          \cdots
+        }
+        {
+          \Delta; \Gamma; \dmap_1 \tvdash{K - J} \elet p = \cdots \ein \cdots : \tlist{\tint}
+        }
+        \and
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \Delta; \Gamma; \dmap_1 \tvdash{0} D : \tlist{\tint}
+        }
+      }
+      {
+        \Delta; \Gamma_0', sc: \tlist{\treal}, \cdots; \dmap_0 
+        \tvdash{K - J} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
+      }
+    }
+    {
+    \Delta; \Gamma_0'; [\mathsf{multiRound}: \infty, () : \bot] \tvdash{0} \lambda k. \cdots : \tint[K] \cdots  
+    }
+  }
+  {
+  \Delta; \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; [\mathsf{multiRound}: \infty, () : \bot]
+  \tvdash{0} \Lambda. \Lambda. \cdots : \forall. \forall. \cdots  
+  }
+}
+{
+  \Delta; \Gamma_0; [] \tvdash{0} \efix \, \mathsf{multiRound ()}. \cdots : \tunit \to \cdots
+}
+
+\inferrule*[right = LET]
+{
+  \inferrule
+  {
+    \inferrule
+    {
+    \empty
+    }
+    {
+    \tvdash{0} 0: \treal    
+    }
+    \and
+    \inferrule
+    {
+      \empty
+    }
+    {
+      \tvdash{0} 1: \treal
+    }
+  }
+  {  
+    \Gamma; [] \tvdash{0} \uniform \eapp 0 \eapp 1 : \treal
+  }  
+  \and
+  \inferrule
+  {
+    \cdots
+  }
+  {
+    \Delta; \Gamma, p : \treal; \dmap_2 \tvdash{K - J} \elet q = \lambda x. \cdots \ein \cdots : \tlist{\tint}
+  }
+}
+{
+  \Delta; \Gamma; \dmap_1 \tvdash{K - J} \elet p = \cdots \ein \cdots : \tlist{\tint}
+}
+
+\inferrule*[right = LET]
+{
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+          \empty
+        }
+        {
+          \tvdash{0} p : \treal        
+        }
+      }
+      {
+        \Gamma_{1}, x: \tint; [x: 0] \tvdash{0} \bernoulli \eapp p : \tint
+      }
+    }
+    { 
+      \Gamma_{1}; [] \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
+    }
+  }
+  {
+    \Gamma_{1}; [] \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\cdots}
+  }
+  \and
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \inferrule
+        {
+          \inferrule
+          {
+            \empty
+          }
+          {
+            \Gamma_{3}; [q:0]  \tvdash{0} q : \tbox{\tint \to \tint}
+          }
+        }
+        { 
+          \Gamma_{3}; [q:1] \tvdash{1} \eop (q): \treal
+        }
+        \and
+        \Pi_1  \vartriangleright
+      }
+      {
+        \Delta; \Gamma_{3}; \dmap_4 \tvdash{K - J} \elet a = \eop ( q ) \ein \cdots : \tlist{\tint}
+      }
+    }
+    {
+      \cdots
+    }
+  }
+  {
+    \Delta; \Gamma_1, q: \tbox{\cdots}; \dmap_3 \tvdash{K - J} \elet qc = \lambda x. \cdots : \tlist{\tint}
+  }
+}
+{
+  \Delta; \Gamma_{1}; \dmap_2 \tvdash{K - J} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\tint}
+}
+\end{mathpar}
+
+$\Pi_1:$
+\begin{mathpar}
+\inferrule*[right = LET]
+{ 
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_4;\dmap_6 \tvdash{0} \mathsf{updtSC} : \cdots
+      }
+      \\
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_4; \dmap_6 \tvdash{0} () : \tunit
+      }
+    }
+    {
+      \cdots
+    }
+  }
+  {
+    \Gamma_4; \dmap_6 \tvdash{0} \mathsf{updtSC} \eapp () \eapp sc \cdots : \tlist{\treal}
+  }
+  \and
+  \inferrule
+  {
+    \inferrule
+    {
+      \Pi_2 \vartriangleright
+    }
+    {
+      \Delta; \Gamma_7; \dmap_7 \tvdash{K - J - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+    }
+  }
+  {
+    \cdots
+  }
+}
+{
+  \Delta; \Gamma_3, a: \treal; \dmap_5 \tvdash{K - J - 1} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\tint}
+}
+\end{mathpar}
+
+
+$\Pi_2$:
+\begin{mathpar}
+\inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_7 \tvdash{0} D: \tlist{\tint}
+      }
+      \and
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Gamma_7 \tvdash{0} I': \tlist{\tint}
+      }
+    }
+    {
+      \Gamma_7; \dmap_8 \tvdash{0} D \setminus I' : \tlist{\tint}
+    }
+    \and
+    \inferrule
+    {
+      \cdots
+    }
+    {
+      \Delta; \Gamma_8; \dmap_8 \tvdash{K - J - 1} \mathsf{multiRound} \cdots : \tlist{\tint}
+      \\\\
+      \Gamma_8 = \Gamma_7, D' : \tlist{\tint}
+    }
+  }
+  {
+    \Delta; \Gamma_7; \dmap_7 \tvdash{K - J - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+  }
+\end{mathpar}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+    \inferrule
+{
+  \inferrule
+  {  
+    \inferrule
+    {
+      \inferrule
+      {
+        \Pi_3 \vartriangleright
+      }
+      {
+        \Delta; \Gamma_8; \dmap_8 
+        \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [ ] : \tint[k] \to \tint[J + 1] \to \cdots
+      }
+    }
+    {
+      \cdots
+    }
+  }
+  {
+    \Delta; \Gamma_8; \dmap_8 
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [] \cdot : \tarr{\cdot}{\cdot}{0}{\dmap}{K - (J + 1)}
+  }
+  \and
+  \inferrule
+  {
+  \empty
+  }
+  {
+    \Delta; \Gamma_8; [D':0] \tvdash{0} D' : \tlist{\tint}
+  }
+}
+{
+  \Delta; \Gamma_7, D' : \tlist{\tint}; \dmap_8 
+  \tvdash{K - J - 1} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
+}
+\end{mathpar}
+
+$\Pi_3$:
+\begin{mathpar}
+\inferrule
+{
+  \inferrule
+  {
+    \inferrule
+    {
+          \inferrule
+      {
+        \empty
+      }
+      {
+        \Delta; \Gamma_8; \dmap_8 \tvdash{0} \mathsf{multiRound} : \cdots
+      }
+      \and
+      \inferrule
+      {
+        \empty
+      }
+      {
+        \Delta; \Gamma_8; \dmap_8 \tvdash{0} () : \tunit
+      }
+    }
+    {
+      \Delta; \Gamma_8; \dmap_8 
+      \tvdash{0} \mathsf{multiRound} \eapp (): \eilam  \eilam  \tint[K] \to \tarr{\cdots}{\cdots}{0}{\dmap}{K - J}
+    }
+    \and
+    \inferrule
+    {
+      \Delta(K) = S
+    }
+    {
+      \Delta \tvdash{} K :: S
+    }
+  }
+  {
+    \Delta; \Gamma_8; \dmap_8 
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [] : \eilam \tint[K] \to \tint[J] \to \tarr{\cdots}{\cdots}{0}{\dmap}{K - J}
+  }
+  \and
+  \inferrule
+  {
+    \Delta(J) = S
+  }
+  {
+    \Delta \tvdash{} J :: S
+  }
+}
+{
+  \Delta; \Gamma_8; \dmap_8 
+  \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [ ] : \tint[K] \to \tint[J + 1] \to \cdots \tarr{\cdots}{\cdots}{0}{\dmap}{K - (J + 1)}
+}
+
+\end{mathpar}
+
+\end{figure}
+
+
+The \emph{depth map} in the type derivation of Multi-rounds example:
+\[
+\begin{array}{lll}
+\dmap     & = & [sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
+\dmap_0   & = & [\mathsf{multiRound}: \infty, () : \bot, sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
+\dmap_1   & = & [\mathsf{multiRound}: \infty, () : \bot, sc : 0, scc : 0, I : 0, j : 0, k : 0, N : 0, C: 0, D : 0] \\
+\dmap_2   & = & \dmap_1[p : K - J]\\
+\dmap_3   & = & \dmap_2[q : K - J]\\
+\dmap_4   & = & \dmap_3[qc : 0]\\
+\dmap_5   & = & \dmap_4[a : K - J - 1]\\
+\dmap_6   & = & \dmap_5\\
+\dmap_7   & = & \dmap_5[sc' : 0, scc' : 0, I' ; 0]\\
+\dmap_8   & = & \dmap_7[D' : 0]\\
+\end{array}
+\]
+
+$\Delta = [J : S, K : S]$
+
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{adaptivity.bib}
+
+\end{document}
+
+
+
