@@ -185,15 +185,10 @@ let (=<->) (m : ty inferer) (f: ty -> Ctx.heurMode -> (constr checker * ty * ite
 
 
 
-let when_adapt ctx k =
-	match ctx.adapt_mode with
-	  | WithAdapt -> Some k
-	  | _ -> None
-
 
 
 let return_inf(x : 'a) : 'a inferer = 
-	fun ctx -> Right (x, empty_constr, [], when_adapt ctx IConst 0)
+	fun ctx -> Right (x, empty_constr, [], Some (IConst 0) )
 
 
 let return_leaf_ch  = fun (ctx, k) -> 
@@ -218,8 +213,8 @@ let get_var_ty (vi : var_info) : ty inferer =
           return_inf @@
             match (lookup_var vi.v_name ctx) with
               None ->  typing_err UNKNOWN "Identifier %s is unbound" vi.v_name
-            | Some (v, ty) ->  
-            ty
+            | Some (v, ty) ->  ty
+
 
 let with_new_ctx (f : ty context -> ty context) (m : 'a checker) : 'a checker =
   fun (ctx,k) -> m (f ctx, k)
