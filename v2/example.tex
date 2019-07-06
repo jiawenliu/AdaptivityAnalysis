@@ -33,21 +33,25 @@ Two-rounds:
 
 \[
 \begin{array}{l}
- \elet \eapp  g: 1 = \efix \eapp  f(j: \tint). \lambda db:  \tlist {\tlist {\tint}}. \lambda k: \tint.  \\
+  \elet \eapp  g: 1 = 
+  \efix \eapp f(j: \tint). \lambda k: \tint. \lambda db: \tdb.\\
   \hspace{.2cm}  \eif \big (  (j < k)  ,  \\
   \hspace{.8cm}  \elet \eapp  a: 1 = 
                  \eop \eapp  
                  \boxed{( \lambda x: \tlist {\tint}. 
                  (\mathsf{get} \eapp x \eapp j) \cdot (\mathsf{get} \eapp x \eapp k) )}  
-                 \eapp \ein \\
+                 , \eapp \ein \\
   \hspace{1.2cm} (a, j) :: (f  \eapp (j+1) \eapp  k) \\
   \hspace{1.2cm} \eapp  [] \big) \eapp \ein\\
-  \hspace{.2cm}  \efix \eapp twoRound(k : \tint). \lambda db:  \tlist {\tlist {\tint}}.  \\
-  \hspace{.8cm}  \elet \eapp  l: 1 = g \eapp  0\eapp  K \eapp  \ein \\
+  \hspace{.2cm}  \efix \eapp \mathsf{twoRound}(k : \tint). 
+                 \lambda db:\tlist {\tlist {\tint}}.\\
+  \hspace{.8cm}  \elet \eapp  l: 1 = g \eapp  0 \eapp  k \eapp bd \eapp  \ein \\
   \hspace{.8cm}  \elet \eapp  q: 1 =  \lambda x: \tlist {\tint}. \mathsf{sign} \eapp \\ 
-  \hspace{.8cm}  (\mathsf{foldl} \eapp  (\lambda acc: \treal. \lambda (a,i): \treal * \tint. 
-                 \big(acc\eapp + (x \eapp  i) * lg(\frac{1+a}{1-a})  \big) 
-                 \eapp  0 \eapp  l )) \eapp  \ein \\
+  \hspace{.8cm}  (\mathsf{foldl} \eapp  (\lambda acc: \treal. 
+                 \lambda (a,i): \treal \cdot \tint. 
+                 \big(acc\eapp + (\mathsf{get} \eapp x \eapp  i) 
+                 \cdot \mathsf{log}(\frac{1+a}{1-a}) \big)
+                 \eapp  0.0 \eapp  l )) \eapp  \ein \\
   \hspace{.8cm}  \eop ( q )
 \end{array}
 \]
@@ -55,22 +59,25 @@ Two-rounds:
 
 
 \begin{tabbing}
-    $ x: \trow \equiv \tarr{\tbase}{\treal}{0}{[]}{0}$ \\
-    $ \cdot: \tbase * \tbase \to \tbase $   \\
-    $ g: \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{1}{[j:1]}{1} }{0}{[]}{0}  $\\
-    $ q: \tbox{  (\tarr{ \trow }{ \treal }{0}{[l:0]}{0})     } $\\
-    $ \eop : \tbox{  (\tarr{ \trow }{ \treal }{0}{\dmap''}{0})     } \to \treal $\\
-    $\mathsf{foldL} : (\treal \to \tlist{(\treal * \tbase)} \to \treal) \to \treal \to \tlist{\tbase * \treal} \to \treal = FL$
+    $ x: \trow \equiv \tlist{\tint}$\\
+    $ \cdot: \{ \treal | \tint \} * \{ \treal | \tint \} \to \{ \treal | \tint \}$\\
+    $ \tdb : \tlist{\tlist{\tint}} $\\
+    $ g: \tint \to \tint \to \tarr{\tdb}{\tlist{\treal * \tint}}{1}{[j:1]}{1}  $\\
+    $ q: \tbox{  (\tarr{ \trow }{ \treal }{0}{[ ]}{0})     } $\\
+    $ \mathsf{foldl} : (\treal \to \tlist{(\treal * \tbase)} \to \treal) \to \treal \to \tlist{\tbase * \treal} \to \treal$\\
+    $ \mathsf{sign} : \treal \to \tint $\\
+    $ \mathsf{log} : \treal \to \treal $\\
+    $ \mathsf{twoRound} : \tint \to \tarr{\tdb}{\treal}{1}{[k: 0]}{2} $
 \end{tabbing}
 
 \begin{figure}
 Type derivation:\\
-    $A = \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{[j:0]}{1} }{\bot}{[]}{0} $, \\
-    $FL1 = \treal \to \tlist{\tbase * \treal} \to \treal$, $FL2 = \treal \to \tlist{\treal * \tbase} \to \treal$\\
-    $Q_2 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[l:0]}{0})} $,\\
-    $Q_1 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[j:0, k:0]}{0})}$\\
-    $\Gamma = f: A,  j: \tbase, k: \tbase$; $\Gamma' = \Gamma, a: \treal$; $\Gamma'' = \Gamma, x: \trow$,\\
-    $\Delta = g: A, l: \tlist{\treal * \tbase}$; $\Delta' = \Delta, q:Q_2$; $\Delta'' = \Delta, x: \trow$\\
+    % $A = \tarr{ \tbase }{ \tarr{\tbase}{\tlist{\treal * \tbase}}{0}{[j:0]}{1} }{\bot}{[]}{0} $, \\
+    % $FL1 = \treal \to \tlist{\tbase * \treal} \to \treal$, $FL2 = \treal \to \tlist{\treal * \tbase} \to \treal$\\
+    % $Q_2 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[l:0]}{0})} $,\\
+    % $Q_1 = \tbox{  (\tarr{ \trow }{ \treal }{0}{[j:0, k:0]}{0})}$\\
+    % $\Gamma = f: A,  j: \tbase, k: \tbase$; $\Gamma' = \Gamma, a: \treal$; $\Gamma'' = \Gamma, x: \trow$,\\
+    % $\Delta = g: A, l: \tlist{\treal * \tbase}$; $\Delta' = \Delta, q:Q_2$; $\Delta'' = \Delta, x: \trow$\\
 
 \[
   \inferrule*[ right = LET-B ]
@@ -88,14 +95,14 @@ Type derivation:\\
         \Pi_R \vartriangleright
      }
      {
-      g: A, [g : 1] \tvdash{2} \elet l = \cdots \ein \elet q = \cdots \ein \eop ( q ) : \treal
+      \cdot ; g ; [g : 0] \tvdash{0} \efix \mathsf{twoRound} \cdots : \cdots \tarr{\tdb}{\treal}{1}{[k: 0]}{2}
     }
      \\
      n' = \max(n_1 + 1, n_2 ) = 2
      \and
      [] = \max([] + 1, [])
    }
-   { \tvdash{2} \elet g = \cdots \ein \elet l = \cdots \ein \cdots :  \treal }
+   { \tvdash{0} \elet g : 0 = \cdots \ein \efix \mathsf{twoRound} \cdots \ein \cdots :  \treal }
 \]
 
 Derivation $\Pi_L$ and $\Pi_R$ are shown as follows:\\
