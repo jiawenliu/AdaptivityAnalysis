@@ -154,10 +154,12 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
   %
   \and
-  \wq{?~  \inferrule{ }{\env, \bernoulli \eapp \expr \bigstep \econst, \econst} }
+  \wq{ \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+      \bernoulli (\tr)
+    } }
   \and
- \inferrule{ }{\env, \uniform \eapp \expr_1 \eapp
-      \expr_2\bigstep \econst, \econst} 
+ \inferrule{ \env, \expr_1 \bigstep \econst, \tr_1 \\ \env, \expr_2 \bigstep \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
+      \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
   \and
   %
   \wq{ \inferrule{
@@ -348,7 +350,10 @@ in Figure~\ref{fig:adap}.
                                            \\
      \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
     %
-    \wq { \adap( (\eilam \expr, \env) ) } & = & 0
+    \wq { \adap( (\eilam \expr, \env) ) } & = & 0 \\
+    \wq { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
+     \wq { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
+                                                      \adap(\tr_2) ) \\
       \end{array}
   \end{mathpar}
   %
@@ -403,7 +408,10 @@ in Figure~\ref{fig:adap}.
        \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
                                                     \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
     %
-    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot
+    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
+    \ddep{x}(\uniform (\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
+                                            \ddep{x}(\tr_2)) \\
+  \ddep{x}(\bernoulli (\tr)) & = & \ddep{x}(\tr)
     \end{array}
   \end{mathpar}
   \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
