@@ -81,10 +81,21 @@ let rec iterm_free_i_vars (it: iterm) : var_info list =
   | ISub  (x, y)  ->  dedup (iterm_free_i_vars x  @ iterm_free_i_vars y)
   | IMaximal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)      
   
-(*let add_costs  (sl, sr) : iterm =
+let add_adapts  (sl, sr) : iterm =
 match  sl, sr with
+| IConst 0, _ -> iterm_simpl sr
+| _, IConst 0 -> iterm_simpl sl
 | _ -> IAdd(iterm_simpl sl, iterm_simpl sr)
-*)        
+        
+
+(* A simplifying version of sl+sr that checks if one of sl or sr are 0. *)
+let sum_adapts  sl sr : iterm option =
+match sl, sr with
+| Some x, Some y -> Some (add_adapts (x, y))
+| _, Some y -> Some (iterm_simpl  y)
+| Some x, _ -> Some (iterm_simpl  x)
+| _ -> None
+
 
 
    

@@ -40,19 +40,11 @@ module TyCheck (Ty : CH_TYPE) =
 
     let return_ch cs  = fun ch_ctx -> Right cs
 
-    let (>>=) (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
-      fun ch_ctx ->
-      match m ch_ctx with
-      | Right res -> f res ch_ctx
-      | Left e    -> Left e
-
     (* Reader/Error monad for type-inference *)
     type 'a inferer =  inf_ctx -> ('a * constr * sort ctx * adapt) ty_error
 
     let adapt_cs ctx (k1, k2) =
-      match ctx.exec_mode with
-      | MaxEx -> CLeq(iterm_simpl k1,iterm_simpl k2)
-      | MinEx -> CLeq(iterm_simpl k2,iterm_simpl k1)
+       CLeq(iterm_simpl k2,iterm_simpl k1)
 
     let adapt_cs_st ctx (k1, k2) =
        CLeq(iterm_simpl k1,iterm_simpl k2)
@@ -98,31 +90,43 @@ module TyCheck (Ty : CH_TYPE) =
         | Left err  -> Left err
       end
 
-      let (>>>=)  (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
-        fun (ctx, k) ->
-          match m (ctx, k) with
-          | Right c -> f c (ctx,k)
-          | Left err  -> Left err
+
+let (>>=) (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
+  fun ch_ctx ->
+    match m ch_ctx with
+    | Right res -> f res ch_ctx
+    | Left e    -> Left e
 
 
-     (* Monadic combination with conjunction of contraints; ignores function *)
-      let (>&&>) m1 m2 = 
+let (>>>=)  (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
+    fun (ctx, k) ->
+      match m (ctx, k) with
+      | Right c -> f c (ctx,k)
+      | Left err  -> Left err
+
+
+
+
+(* Monadic combination with conjunction of contraints; ignores function *)
+let (>&&>) m1 m2 = 
 	m1 >>= (fun c1 -> m2 >>= fun c2 -> return_ch (merge_cs c1 c2))
 
-      let handle_fail m1 m2 =
+
+let handle_fail m1 m2 =
 	fun ch_ctx ->
 	match m1 ch_ctx with
 	  | Right c -> Right c
 	  | Left _ -> m2 ch_ctx
 
-    (* Monadic combination with disjunction of constraints ; ignores function *)
-      let (>||>) m1 m2 =
+(* Monadic combination with disjunction of constraints ; ignores function *)
+let (>||>) m1 m2 =
 	(handle_fail m1 m2) >>=  
 		 (fun c1 -> handle_fail m2 (return_ch c1) >>=
 			      fun c2 -> return_ch (COr(c1,c2)))
 
-      (* Type inference *)
-      let (<<=) (m : 'a inferer) (f : 'a -> 'b inferer) : 'b inferer =
+
+(* Type inference *)
+let (<<=) (m : 'a inferer) (f : 'a -> 'b inferer) : 'b inferer =
         fun ctx ->
           match m ctx with
           | Right (res, c, psi, k) ->
@@ -135,11 +139,11 @@ module TyCheck (Ty : CH_TYPE) =
           | Left err  -> Left err
 
 
-      (* Instead of generating an fresh adapt variable, we simply subtract
-         the inference adapt from the checking adapt. Otherwise, merge-min breaks
-         due to complicated existential substitution *)
-      let (<->=) (m : ty  inferer) (f : ty  -> constr checker) : constr checker =
-        fun (ctx, k) ->
+(* Instead of generating an fresh adapt variable, we simply subtract
+   the inference adapt from the checking adapt. Otherwise, merge-min breaks
+   due to complicated existential substitution *)
+let (<->=) (m : ty  inferer) (f : ty  -> constr checker) : constr checker =
+    fun (ctx, k) ->
           match (m ctx) with
           | Right (ty, c, psi, k') ->
           tc_debug dp "<->= :@\n@[  c is %a, k is %a , k' is %a @]@."  Print.pp_cs c Print.pp_adapt k Print.pp_adapt k';  
@@ -150,84 +154,92 @@ module TyCheck (Ty : CH_TYPE) =
             end          
           | Left err -> Left err
 
-      let (=<->) (m : ty inferer) (f: ty -> Ctx.heurMode -> (constr checker * ty * iterm) list ) : ty inferer =
-        fun ctx ->
-        match m ctx with
-        | Right (ty, c, psi, k) ->
-           (* Generate a new adapt meta variable *)
-           let v = fresh_evar Adapt in
-           let k' = (IVar v) in
-           begin
-             let fl = f ty ctx.heur_mode in
-             let (m', ty_inf, k'') = List.hd_exn fl in
-             let psi' = Option.value_map ~default:psi ~f:(fun _ -> (v, Adapt) :: psi) k in
-             let k_ctx = Option.value_map ~default:ctx ~f:(fun _-> extend_e_ctx ((v, Adapt) :: psi) ctx) k in
-             let k_res k'' = Option.map ~f:(fun k -> add_adapts(k'', add_adapts(k,k'))) k in
-             match m' (k_ctx ,if_adapt k' k) with
-             | Right c' -> Right (ty_inf, merge_cs c c', psi', k_res k'')
-             | Left err' -> if List.length fl = 1 then Left err'
-                            else
-                              begin
-                                let (m', ty_inf, k'') = (List.nth_exn fl 1) in
-                                match m' (extend_e_ctx psi' ctx , Some k') with
-                                | Right c'  -> Right (ty_inf, merge_cs c c', psi', k_res k'')
-                                | Left err' -> Left err'
-                              end
-           end
-        | Left err -> Left err
 
-      let when_adapt ctx k =
-	match ctx.adapt_mode with
-	  | WithAdapt -> Some k
-	  | _ -> None
-
-      let return_inf(x : 'a) : 'a inferer = 
-	fun ctx -> Right (x, empty_constr, [], when_adapt ctx IConst 0)
-
-      let return_leaf_ch  = fun (ctx, k) -> 
-        Right (Option.value_map ~default:CTrue ~f:(fun k' -> adapt_cs_st ctx (IConst 0,k')) k)        
+let (=<->) (m : ty inferer) (f: ty -> Ctx.heurMode -> (constr checker * ty * iterm) list ) : ty inferer =
+    fun ctx ->
+      match m ctx with
+      | Right (ty, c, psi, k) ->
+        (* Generate a new adapt meta variable *)
+        let v = fresh_evar Adapt in
+        let k' = (IVar v) in
+        begin
+          let fl = f ty ctx.heur_mode in
+          let (m', ty_inf, k'') = List.hd_exn fl in
+          let psi' = Option.value_map ~default:psi ~f:(fun _ -> (v, Adapt) :: psi) k in
+          let k_ctx = Option.value_map ~default:ctx ~f:(fun _-> extend_e_ctx ((v, Adapt) :: psi) ctx) k in
+          let k_res k'' = Option.map ~f:(fun k -> add_adapts(k'', add_adapts(k,k'))) k in
+          match m' (k_ctx ,if_adapt k' k) with
+          | Right c' -> Right (ty_inf, merge_cs c c', psi', k_res k'')
+          | Left err' -> 
+            if List.length fl = 1 
+            then Left err'
+            else
+              begin
+                let (m', ty_inf, k'') = (List.nth_exn fl 1) in
+                match m' (extend_e_ctx psi' ctx , Some k') with
+                | Right c'  -> Right (ty_inf, merge_cs c c', psi', k_res k'')
+                | Left err' -> Left err'
+              end
+        end
+      | Left err -> Left err
 
 
-      let fail (e : Ty_error.ty_error_elem) = fun _ ->
-        Left { i = UNKNOWN; v = e }
 
-      let get_infer_ctx : ty context inferer =
+
+
+let return_inf(x : 'a) : 'a inferer = 
+	fun ctx -> Right (x, empty_constr, [], Some (IConst 0) )
+
+
+let return_leaf_ch  = fun (ctx, k) -> 
+    Right (Option.value_map ~default:CTrue ~f:(fun k' -> adapt_cs_st ctx (IConst 0,k')) k)        
+
+
+let fail (e : Ty_error.ty_error_elem) = fun _ ->
+    Left { i = UNKNOWN; v = e }
+
+
+let get_infer_ctx : ty context inferer =
         fun ctx -> Right (ctx, empty_constr, [], None)
 
-      let get_heur  : heurMode checker =
+
+let get_heur  : heurMode checker =
         fun (ctx,_) -> Right ctx.heur_mode
 
   
-      let get_var_ty (vi : var_info) : ty inferer =
+
+let get_var_ty (vi : var_info) : ty inferer =
         get_infer_ctx <<= fun ctx ->
           return_inf @@
             match (lookup_var vi.v_name ctx) with
               None ->  typing_err UNKNOWN "Identifier %s is unbound" vi.v_name
-            | Some (v, ty) ->  
-            ty
+            | Some (v, ty) ->  ty
 
- 
-     let with_new_ctx (f : ty context -> ty context) (m : 'a checker) : 'a checker =
-        fun (ctx,k) -> m (f ctx, k)
 
-      let with_mode (mu :mode) (m : 'a checker) : 'a checker =
-        with_new_ctx (set_exec_mode mu) m
+let with_new_ctx (f : ty context -> ty context) (m : 'a checker) : 'a checker =
+  fun (ctx,k) -> m (f ctx, k)
 
-      let (|:|) (vi: var_info) (uty: ty) (m: constr checker) : constr checker =
-        with_new_ctx (extend_var vi.v_name uty) m
 
-       let (|:-|) (vi: var_info) (uty: ty) (m: constr checker) : constr checker =
-        with_new_ctx (extend_uvar vi.v_name uty) m
+let with_mode (mu :mode) (m : 'a checker) : 'a checker =
+  with_new_ctx (set_exec_mode mu) m
 
-      let (|:::|) (v: var_info) (s: sort) (i: info) (m: constr checker) : constr checker =
-        with_new_ctx (extend_e_var v.v_name s) m
-        >>= (fun cs -> return_ch @@ CExists(v, i, s, cs (* CAnd (CLeq(IConst 0, IVar v), cs) *)))
 
-      let (|::::|) (v: var_info) (s: sort) (i: info)(m: constr checker) : constr checker =
-        with_new_ctx (extend_l_var v.v_name ) m
+let (|:|) (vi: var_info) (uty: ty) (m: constr checker) : constr checker =
+  with_new_ctx (extend_var vi.v_name uty) m
 
-      let (|::|) (v: var_info) (s: sort) (i: info)(m: constr checker) : constr checker =
-        with_new_ctx (extend_i_var v.v_name s) m
+let (|:-|) (vi: var_info) (uty: ty) (m: constr checker) : constr checker =
+  with_new_ctx (extend_uvar vi.v_name uty) m
+
+let (|:::|) (v: var_info) (s: sort) (i: info) (m: constr checker) : constr checker =
+  with_new_ctx (extend_e_var v.v_name s) m
+  >>= (fun cs -> return_ch @@ CExists(v, i, s, cs (* CAnd (CLeq(IConst 0, IVar v), cs) *)))
+
+let (|::::|) (v: var_info) (s: sort) (i: info)(m: constr checker) : constr checker =
+  with_new_ctx (extend_l_var v.v_name ) m
+
+
+let (|::|) (v: var_info) (s: sort) (i: info)(m: constr checker) : constr checker =
+    with_new_ctx (extend_i_var v.v_name s) m
 	>>=
 	  (fun cs ->
 	   let r_cs = 
@@ -237,20 +249,25 @@ module TyCheck (Ty : CH_TYPE) =
 	   in return_ch @@ CForall(v, i, s, r_cs))
 
 	  
-      let check_size_eq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
+
+let check_size_eq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
 	m >>= fun c -> return_ch @@ merge_cs c (CEq (sl,sr))
 
-      let assume_size_eq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
+
+let assume_size_eq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
 	m >>= fun c -> return_ch @@ CImpl (CEq (sl,sr), c)
 
-      let assume_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
+
+let assume_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
         m >>= fun c -> return_ch @@ CImpl (CLeq (sl,sr), c)
 
-      let check_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
+
+let check_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
         m >>= fun c -> return_ch @@ merge_cs c (CLeq (sl,sr))
 
-      ket check_dmap_leq (sl) () () : constr checker =
-      return 
+
+let check_dmap_leq (sl) () () : constr checker =
+      () 
 
   
 
