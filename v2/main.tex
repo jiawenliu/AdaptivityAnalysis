@@ -683,7 +683,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \tvdash{\nnatA}
       \expr: \type_2
     }{
-      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x: \tau_1).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
     }
     %
     \and
@@ -748,7 +748,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
    \and
     %
     \inferrule{
-      \dmap \wf{\type} \\
+      \Delta; \dmap \wf{\type} \\
     }{
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
     }
@@ -804,7 +804,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
    }
-   {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x = \expr_1 \ein \expr_2 : \type}
+   {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2 : \type}
    %
    \and
    %
@@ -837,6 +837,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
 \end{figure}
 
 \clearpage
+
 \begin{figure}
 % \[
 % \begin{array}{llll}
@@ -937,6 +938,67 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
 % 	    }
 %     \end{mathpar}
 % }          
+\boxed{  \Delta; \dmap \wf{\type} }
+\begin{mathpar}
+\inferrule{
+      \Delta; \dmap \wf{\type} \\
+    }{
+      \Delta; \dmap \wf{ \tlist{\type} }
+    }
+   \and
+     \inferrule{
+    }{
+      \Delta; \dmap \wf{ \tbool}
+    }
+  \and 
+  \inferrule{
+      \Delta; \dmap \wf{\type_1} \\
+      \Delta; \dmap \wf{\type_2} 
+    }{
+      \Delta; \dmap \wf{ \type_1 \times
+  \type_2 }
+    }
+ \and
+    \wq{ \inferrule{
+        \Delta; \dmap \wf{ \type_1 } \\
+        \Delta; \dmap' \wf{\type_2}  \\
+        \Delta \vdash \nnatA :: S \\
+        \Delta \vdash \nnatbiA :: S 
+    }{
+      \Delta; \dmap \wf{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA}   }
+    } }
+ \and
+     \inferrule{
+      \Delta; \dmap \wf{  \type }
+    }{
+      \Delta; \dmap \wf{  \tbox{\type}   }
+    }
+\and
+     \inferrule{
+    }{
+      \Delta; \dmap \wf{  \treal  }
+    }
+\and
+     \inferrule{
+    }{
+      \Delta; \dmap \wf{  \tint   }
+    }
+\and
+     \inferrule{
+       \Delta \vdash I :: S \\
+    }{
+      \Delta; \dmap \wf{  \tint[I]   }
+    }
+\and
+  \inferrule{
+   i::S, \Delta; \dmap \wf{ \type }  \\
+    i::S, \Delta \vdash \nnatA :: S 
+    }{ 
+      \Delta; \dmap \wf{   \tforall{\dmap}{\nnatA}{i} \type   }
+    }
+
+
+\end{mathpar}
 
 \framebox{
     \begin{mathpar}
@@ -1130,10 +1192,11 @@ worked out and verified.
 \begin{mathpar}
 \inferrule
 {
-	\Gamma(x) = \type
+	\Gamma(x) = \type \\
+        { \color{red} \nnatA } = \dmap(x)
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA}  \infr{x}{\type}{\dmap(x) \geq 0}
+	\Delta; \Gamma; \dmap \tvdash{\color{red} \nnatA }  \infr{x}{\type}{\dmap(x) \geq 0}
 }
 %
 \quad
@@ -1143,17 +1206,17 @@ worked out and verified.
 	\empty
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{c}{\tbase}{\bot}
+	\Delta; \Gamma; \dmap \tvdash{\color{red} 0 } \infr{c}{\tbase}{\bot}
 }
 %
 \quad
 %
 \inferrule
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \type: wf
+	\Delta; \dmap \tvdash{} \type: wf
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{\enil}{ \tlist{\type} }{\bot}
+	\Delta; \Gamma; \dmap \tvdash{\color{red} 0} \infr{\enil}{ \tlist{\type} }{\bot}
 }
 %
 \and
@@ -1163,7 +1226,7 @@ worked out and verified.
 	\empty
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{\etrue}{\tbool}{\bot}
+	\Delta; \Gamma; \dmap \tvdash{\color{red} 0 } \infr{\etrue}{\tbool}{\bot}
 }
 %
 \quad
@@ -1173,7 +1236,7 @@ worked out and verified.
 	\empty
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \infr{\efalse}{\tbool}{\bot}
+	\Delta; \Gamma; \dmap \tvdash{ \color{red} 0} \infr{\efalse}{\tbool}{\bot}
 }
 %
 \and
@@ -1181,11 +1244,13 @@ worked out and verified.
 \inferrule*[right = alg-FIX]
 {
 	\Delta; \Gamma, f : \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}, x : \type ; \dmap[f : \infty, x : \nnatbiA]
-	\tvdash{\nnatA} \chec{\expr}{\type_2}{\restriction}
+	\tvdash{ \nnatA} \chec{\expr}{\type_2}{\restriction}
 }
 {
-	\Delta; \Gamma; \dmap' \tvdash{\nnatA'} 
-	\chec{\efix f(x). \expr}{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} }{\restriction}
+	\Delta; \Gamma; \dmap' \tvdash{ \nnatA'} 
+	\chec{\efix f(x). \expr}{
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}
+        }{\restriction \land \nnatA' = 0 }
 }
 %
 \and
