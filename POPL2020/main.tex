@@ -193,7 +193,82 @@
 Text of paper \ldots
 
 \section{\THESYSTEM~informally}
-In adaptive data analysis, a data analysis can depend on the result of previous analysis on the same data. As an example, suppose that we have a dataset consisting on $d$ columns where each 
+In adaptive data analysis, a data analysis can depend on the result of
+previous analysis on the same data. This dependency may affect the
+\emph{generalization properties of the data analysis}. To study this phenomenon
+in a formal way, we can consider the \emph{statistical query
+  model}. In this model, a dataset $X$ consisting of $d$ attributes (columns) and $n$
+individuals' data (rows) can be accessed only through an interface to
+which one can submit statistical queries. More precisely, suppose that
+the type of a row is $R$ (as an example, a row with $d$ binary
+attributes would have type $R=\{0,1\}^d$. Then, in the statistical
+query model one can access the dataset only by submitting a function
+$p:D\to [0,1] $ to it, and obtaining as an answer the average value of
+this function $p$ on the rows in the dataset, i.e. the result is the
+value $\frac{1}{n}\sum_{i=1}^n p(X_i)$ where
+$X_i$ is the row of index $i$ in $X$. While this model is rather
+simple, in fact it supports a large of statistics one may be
+interested in having over some data.
+
+To support this model, \THESYSTEM\ provides an interface
+$\delta:(A\to[0,1])\to [0,1]$ which when prompted with a function $p$ of
+type $A\to[0,1]$ returns a value in $[0,1]$, representing the average
+of the value obtained by running $p$ on each row in $X$, as described above. To better understand how this model works, let us
+consider the program in Figure \ref{fig:nonadaptive}. In this example,
+we assume $X\in\{0,1\}^{n\times d}$ and we collect the result of
+$k$ queries where the $j$-th queries computes a simple multiplicative correlation between
+the attribute $j$ and the last attribute $k$. We can think about the
+result of each query as a weight we can assign to each column
+describing its correlation with the labels at position $k$.
+
+\begin{figure}
+  \centering
+  $$
+  \begin{array}{l}
+    \elet\, \mathrm{nonAdaptive}\, t = \\
+\qquad \elet g = \Big (\efix f(j).\lambda k.
+	\eif\,  j < k\, \\
+\qquad \qquad \qquad\qquad  \qquad \ethen\,  \elet a = \delta(\lambda
+    x. ({\tt proj}\, j \, x) * ({\tt proj}\, k\, x))\, 
+	\ein\, 
+	\econs(a, f (j +1) k)\\
+\qquad \qquad \qquad\qquad \qquad \eelse\, [] \Big )\, \ein\, g\, 0\, t\\
+  \end{array}
+  $$
+  \caption{Example of a non-adaptive program.}
+  \label{fig:nonadaptive}
+\end{figure}
+
+We may wonder what is the bound on the generalization error we can
+guarantee in this case. To compute this we first can notice that each
+query is the average of the result of the function $f$ over some
+records that are sampled independently from the population. Hence, 
+we can apply a classical result, known as Hoeffding inequality giving
+a bound on the difference between the empirical mean of a set of
+random variables and the expected value of the empirical mean. More
+precisely, Hoeffding inequality can be stated as follow.
+\begin{theorem}[Hoeffding inequality]
+Let $R_1,\ldots,R_n$ be $n$ independent random variables such that
+$0 \leq R_i\leq 1$. Then, 
+$$
+\Pr[\frac{1}{n}\sum_{i=1}^n R_i- \mathbf{E}[\frac{1}{n}\sum_{i=1}^n
+R_i]\geq t]\leq e^{-2nt^2}
+$$
+\end{theorem}
+
+Since we assume that the dataset is composed by records that are
+samples independently, we can use this result in our case to guarantee
+the following generalization result for each query.
+\begin{proposition}
+Let $R_1,\ldots,R_n$ be $n$ independent random variables such that
+$0 \leq R_i\leq 1$. Then, 
+$$
+\Pr[\frac{1}{n}\sum_{i=1}^n R_i- \mathbf{E}[\frac{1}{n}\sum_{i=1}^n
+R_i]\geq t]\leq e^{-2nt^2}
+$$
+\end{proposition}
+
+
 
 let us consider the program in Figure~\ref{fig:two-rounds}, written in the syntax of \THESYSTEM. In this example, we assume that the dat
 \begin{figure}
