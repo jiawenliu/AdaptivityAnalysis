@@ -98,6 +98,8 @@ let rec inferType (e: expr) : ty inferer  =
     | App (e1, e2) -> debug dp "infer_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
          infer_app (inferType e1) dp e2
     | IApp (e) -> infer_iapp (inferType e) dp
+    | True     -> return_inf(Ty_Prim(Ty_PrimBool))
+    | False    -> return_inf(Ty_Prim(Ty_PrimBool))
     |  _ -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
 
 
@@ -125,7 +127,7 @@ and infer_app m i e2 =
       | Ty_Arrow(ty1, mu', dmap, k'', ty2) ->
          debug dp "inf_app :@\n@[ty is :%a, k'' is %a, e2 is %a @]@." Print.pp_type ty Print.pp_iterm k'' Print.pp_expr e2; 
         [((checkType e2 ty1), ty2, k'')]
-      | _ -> [(fail i (WrongShape (ty, "function")), Ty_Prim (UPrimInt), IZero)])
+      | _ -> [(fail i (WrongShape (ty, "function")), Ty_Prim (Ty_PrimInt), IZero)])
 
 
 and infer_proj i f =
@@ -151,18 +153,18 @@ and checkType (e: expr) (ty : ty) : constr checker =
               match ty_ep, tp with
               | Ty_IntIndex x, Ty_IntIndex y ->  Tycheck.check_size_eq x y  Tycheck.return_leaf_ch
               | _,  Ty_Prim Ty_PrimInt -> Tycheck.return_leaf_ch
-              | _,_ -> fail i @@ WrongShape (tp, "int[i] or int")
+              | _,_ -> fail dp @@ WrongShape (tp, "int[i] or int")
             end
          
       | _ -> if tp = Syntax.type_of_prim ep
-             then Tycheck.return_leaf_ch else fail i @@ WrongShape (tp, "primitive2")
+             then Tycheck.return_leaf_ch else fail dp @@ WrongShape (tp, "primitive2")
        end
-  | Fix( f, x, ty_x, e), _ -> check_fix f x ty_x e ty
+  | Fix( f, x, ty_x, e), _ -> check_fix dp f x ty_x e ty
   (* List type expressions *)
-  | Nil, _ -> check_nil i ty
-  | Cons( e1, e2), _ -> check_cons e1 e2 i ty
+  | Nil, _ -> check_nil dp ty
+  | Cons( e1, e2), _ -> check_cons dp e1 e2 dp ty
 
-  | Case(e, x_l, e_l, x_r, e_r), _ -> check_case_sum i e x_l e_l x_r e_r ty
+  | Case(e, x_l, e_l, x_r, e_r), _ -> check_case_sum dp e x_l e_l x_r e_r ty
   (* If statement *)
   | If( e, el, er), _ -> debug dp "checkif, el is %a, ty is %a " Print.pp_expr el Print.pp_type ty ; check_if i e el er ty
   (* Pairs *)
@@ -170,32 +172,28 @@ and checkType (e: expr) (ty : ty) : constr checker =
     begin
       match ty with
       | Ty_Prod (ty1,ty2) -> (checkType e1 ty1) >> (checkType e2 ty2)
-      | _ -> fail i (WrongShape (ty, "product"))
+      | _ -> fail dp (WrongShape (ty, "product"))
     end
   (* Index abstraction *)
   | ILam (e), Ty_Forall(x, s, mu, k, ty) ->
      if (s = Loc) then
        begin
-        check_body ((x |::::| s) i
+        check_body ((x |::::| s) dp
                       (with_mode mu (checkType e ty))) k
           end
-   else    check_body ((x |::| s) i
+   else    check_body ((x |::| s) dp
                   (with_mode mu (checkType e ty))) k
   (* Existential introduction and elimination *)
-  | Pack (e), _ -> check_pack i e ty
-  | Unpack (e1, vi_x, e2), _ -> check_unpack i e1 vi_x e2 ty
+  | Pack (e), _ -> check_pack dp e ty
+  | Unpack (e1, vi_x, e2), _ -> check_unpack dp e1 vi_x e2 ty
   (* Let bound *)
   | Let (vi_x, e1, e2), _ ->
     inferType e1 <->=
     (fun ty_x -> (vi_x  |:| ty_x) (checkType e2 ty))
-  | IApp (e), ty -> 
-  | Bernoulli (v) 
-  | Uniform (v1, v2)
-  | Mech (e)
-  | Fst (e)
-  | Snd (e)
-  | True
-  | False
+
+  | Bernoulli (v), _ -> check_real v
+  | Uniform (v1, v2), _ -> check_real v1 >> check_real v2
+  | Mech (e), _   -> check_mech e
 
 
 and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty) =
