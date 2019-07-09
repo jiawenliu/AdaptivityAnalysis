@@ -179,6 +179,8 @@ let rec pp_sort fmt s = match s with
     Adapt       -> fprintf fmt "%s" "adapt"
 
 
+(**********************************************************************)
+(* Pretty printing for Index term *)
 
 let rec pp_iterm fmt ty = match ty with
   | IConst i            -> fprintf fmt " Index %d " i
@@ -186,6 +188,14 @@ let rec pp_iterm fmt ty = match ty with
   | IAdd(i1, i2)        -> fprintf fmt " %a + %a " pp_iterm i1 pp_iterm i2
   | ISub(i1, i2)        -> fprintf fmt " %a - %a " pp_iterm i1 pp_iterm i2
   | IMaximal(i1, i2)    -> fprintf fmt " Max(%a, %a) " pp_iterm i1 pp_iterm i2
+
+
+ let pp_adapt fmt cst = 
+    match cst with 
+    | Some k ->  fprintf fmt "(%a)" pp_iterm k
+    | None -> fprintf fmt "(%s)" "nocost"
+
+
 
 let rec pp_type fmt ty = match ty with
   | Ty_Prim tp               -> fprintf fmt "%a " pp_primutype tp
@@ -201,5 +211,39 @@ let rec pp_type fmt ty = match ty with
   | Ty_Box ty1               -> fprintf fmt "@<1>%s %a " (u_sym Symbols.Box) pp_type ty1
 
   | Ty_List ty1              -> fprintf fmt "%a list " pp_type ty1
+
+(**********************************************************************)
+(* Pretty printing for constraints *)
+
+let pp_ivar_ctx_elem ppf (v, s) =
+  if !debug_options.full_context then
+    fprintf ppf "%-10a : %a" pp_vinfo v pp_sort s
+  else
+    fprintf ppf "%-10a" pp_vinfo v
+
+let pp_ivar_ctx = pp_list pp_ivar_ctx_elem
+
+
+
+(**********************************************************************)
+(* Pretty printing for constraints *)
+let rec pp_cs ppf cs =
+  match cs with
+    | CTrue                -> fprintf ppf "%s" (u_sym Symbols.Top)
+    | CFalse               -> fprintf ppf "%s" (u_sym Symbols.Bot)
+    | CEq(i1, i2)          -> fprintf ppf "%a = %a" pp_iterm i1 pp_iterm i2
+    | CLeq(i1, i2)         -> fprintf ppf "%a %s %a" pp_iterm i1 (u_sym Symbols.Leq) pp_iterm i2
+    | CLt(i1, i2)         -> fprintf ppf "%a %s.. %a" pp_iterm i1 ("<") pp_iterm i2 
+    | CAnd(cs1, cs2)       -> fprintf ppf "%a %s %a" pp_cs cs1 (u_sym Symbols.And) pp_cs cs2
+    | COr(cs1, cs2)        -> fprintf ppf "(%a) %s (%a)" pp_cs cs1 (u_sym Symbols.Or) pp_cs cs2
+    | CImpl(cs1, cs2)      -> fprintf ppf "%a %s (%a)" pp_cs cs1 (u_sym Symbols.Impl) pp_cs cs2
+    | CForall(bi_x, i, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (u_sym Symbols.Forall) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
+    | CExists(bi_x, i, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (u_sym Symbols.Exists) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
+    | CArrPos(o, l) ->        fprintf ppf "%a[%a] =  true" pp_iterm o pp_iterm l       
+    | CBetaIn (l, b) ->   fprintf ppf "%a IN %a " pp_iterm l pp_beta b 
+    | CBetaEq (b_1,b_2) ->       fprintf ppf "%a EQ %a " pp_beta b_1 pp_beta b_2 
+    | CBetaSub (b_1,b_2) ->       fprintf ppf "%a SB %a " pp_beta b_1 pp_beta b_2 
+    | CNot c ->  fprintf ppf "NOT %a " pp_cs c  
+
 
 

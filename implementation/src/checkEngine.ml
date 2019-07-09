@@ -284,14 +284,18 @@ and infer_and_check (i: info) (e: expr) (ty : ty) : constr checker =
     match inferType e ctx with
     | Right (inf_ty, c, psi_ctx, k') ->
       debug dp "infer_and_check :@\n@[infer_type is %a, expr is %a, checked type is %a, idx_ctx is :%a , k' is %a, k is %a @]@." 
-      Print.pp_type inf_ty Print.pp_expr e Print.pp_type ty Print.pp_ivar_ctx ctx.ivar_ctx Print.pp_cost k' Print.pp_cost k; 
-      (match (check_subtype i inf_ty ty (extend_e_ctx psi_ctx ctx, None)) with
-       | Right c' -> 
-	  let cs = option_combine k' k (cost_cs ctx) |> Core.Option.value ~default:CTrue in
-    debug dp "infer_and_check2 :@\n@[cs is %a, c is %a, c' is %a @]@." 
-      Print.pp_cs cs Print.pp_cs c Print.pp_cs c' ; 
-          Right (quantify_all_exist psi_ctx (merge_cs (merge_cs c c') cs))
-       | Left err -> Left err)
+      Print.pp_type inf_ty Print.pp_expr e Print.pp_type ty Print.pp_ivar_ctx ctx.ivar_ctx Print.pp_adapt k' Print.pp_adapt k; 
+      (
+        match (check_subtype inf_ty ty (extend_e_ctx psi_ctx ctx, None)) with
+          | Right c' -> 
+          	  let 
+                cs = option_combine k' k (cost_cs ctx) |> Core.Option.value ~default:CTrue 
+              in
+                debug dp "infer_and_check2 :@\n@[cs is %a, c is %a, c' is %a @]@." 
+                Print.pp_cs cs Print.pp_cs c Print.pp_cs c' ; 
+                Right (quantify_all_exist psi_ctx (merge_cs (merge_cs c c') cs))
+          | Left err -> Left err
+      )
     | Left err' -> Left err'
 
 
