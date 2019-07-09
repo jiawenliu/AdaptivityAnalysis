@@ -1219,13 +1219,15 @@ worked out and verified.
 
 \begin{figure}
 \begin{mathpar}
-\inferrule
+\boxed{ \inferrule
 {
 	\Gamma(x) = \type \\
         { \color{red} \nnatA } = \dmap(x)
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\color{red} \nnatA }  \infr{x}{\type}{\dmap(x) \geq 0}
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\color{red} \nnatA }
+        \infr{x}{\red {\type} }{\dmap(x) \geq 0}{.}
+}
 }
 %
 \quad
@@ -1235,7 +1237,8 @@ worked out and verified.
 	\empty
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\color{red} 0 } \infr{c}{\tbase}{\bot}
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\red{ 0} } \infr{c}{ 
+            \tbase }{\bot}{.}
 }
 %
 \quad
@@ -1245,7 +1248,7 @@ worked out and verified.
 	\Delta; \dmap \tvdash{} \type: wf
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\color{red} 0} \infr{\enil}{ \tlist{\type} }{\bot}
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\color{red} 0} \infr{\enil}{ \tlist{\type} }{\bot}{.}
 }
 %
 \and
@@ -1255,7 +1258,7 @@ worked out and verified.
 	\empty
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\color{red} 0 } \infr{\etrue}{\tbool}{\bot}
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\color{red} 0 } \infr{\etrue}{\tbool}{\bot}{.}
 }
 %
 \quad
@@ -1265,50 +1268,55 @@ worked out and verified.
 	\empty
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{ \color{red} 0} \infr{\efalse}{\tbool}{\bot}
+	\Delta; \Gamma; \psi_a;\dmap \tvdash{ \color{red} 0} \infr{\efalse}{\tbool}{\bot}{.}
 }
 %
 \and
 %
 \inferrule*[right = alg-FIX]
 {
-	\Delta; \Gamma, f : \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}, x : \type ; \dmap[f : \infty, x : \nnatbiA]
+	\Delta; \Gamma, f :
+        \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}, x : \type ;
+      \psi_a;  \dmap[f : \infty, x : \nnatbiA]
 	\tvdash{ \nnatA} \chec{\expr}{\type_2}{\restriction}
 }
 {
-	\Delta; \Gamma; \dmap' \tvdash{ \nnatA'} 
+	\Delta; \Gamma; \psi_a;\dmap' \tvdash{ \nnatA'} 
 	\chec{\efix f(x). \expr}{
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}
-        }{\restriction \land \nnatA' = 0 }
+        }{\restriction \land \nnatA' \geq 0 }
 }
 %
 \and
 %
-\inferrule
+\inferrule*[right =  alg-app]
 {
-	\Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} 
-	\infr{\expr_1}{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} }{ \restriction_1 }
+	\Delta; \Gamma; \psi_a;\dmap_1 \tvdash{\red{\nnatA_1} } 
+	\infr{\expr_1}{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} }{ \restriction_1 }{\psi}
 	\and
-	\Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \chec{\expr_2}{\type_1}{\restriction_1}
+       \nnatA_2 \in \fresh(\natb)\\
+	\Delta; \Gamma; \psi_a, \psi; \dmap_2 \tvdash{\nnatA_2}
+        \chec{\expr_2}{\type_1}{\restriction_2} \and
+       \restriction_3 = \nnatA' \geq \nnatA_1 + \max(\nnatA,\nnatA_2 + \nnatbiA)
 }
 {
-	\Delta; \Gamma; \dmap'  \tvdash{\nnatA'} 
+	\Delta; \Gamma; \psi_a; \dmap'  \tvdash{\red {\nnatA'} } 
 	\infr{\expr_1 \eapp \expr_2}{\type_2}{\restriction_1 \land \restriction_2 
-	\land \nnatA' \geq \nnatA_1 + \max(\nnatA_2 + \nnatbiA)
-	\land \dmap' \geq \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))}
+	\land \restriction_3 \land \dmap' \geq \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2
+        + \nnatbiA))}{\psi, \nnatA_2}
 }
 %
 \and
 %
-\inferrule
-{
-	\Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \chec{\expr_1}{\type_1}{\restriction_1}
+\inferrule*[right=alg-pair]
+{      \nnatA_1, \nnatA_2 \in \fresh(\natb) \and
+	\Delta; \Gamma; \psi_a; \dmap_1 \tvdash{\nnatA_1} \chec{\expr_1}{\type_1}{\restriction_1}
 	\and
-	\Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \chec{\expr_2}{\type_2}{\restriction_2}
+	\Delta; \Gamma; \psi_a; \dmap_2 \tvdash{\nnatA_2} \chec{\expr_2}{\type_2}{\restriction_2}
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{(\expr_1, \expr_2)}{\type_1 \times \type_2}
-	{\restriction_1 \land \restriction_2 \land \nnatA \geq \max(\nnatA_1, \nnatA_2) 
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\nnatA} \chec{(\expr_1, \expr_2)}{\type_1 \times \type_2}
+	{\exists \nnatA_1. \restriction_1 \land \exists \nnatA_2.\restriction_2 \land \nnatA \geq \max(\nnatA_1, \nnatA_2) 
 	\land \dmap = \max(\dmap_1, \dmap_2)}
 }
 %
@@ -1316,38 +1324,40 @@ worked out and verified.
 %
 \inferrule
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\expr}{\type_1 \times \type_2}{\restriction}
+	\Delta; \Gamma; \psi_a;\dmap \tvdash{\nnatA} \infr{\expr}{\type_1 \times \type_2}{\restriction}{\psi}
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\eprojl(\expr)}{\type_1}{\restriction}
-}
-%
-\and
-%
-\inferrule
-{
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\expr}{\type_1 \times \type_2}{\restriction}
-}
-{
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\eprojr(\expr)}{\type_2}{\restriction}
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\nnatA} \infr{\eprojl(\expr)}{\type_1}{\restriction}{\psi}
 }
 %
 \and
 %
 \inferrule
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA_1} \infr{\expr_1}{\tbool}{\restriction_1}
+	\Delta; \Gamma; \psi_a;\dmap \tvdash{\nnatA} \infr{\expr}{\type_1 \times \type_2}{\restriction}{\psi}
+}
+{
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\nnatA} \infr{\eprojr(\expr)}{\type_2}{\restriction}{\psi}
+}
+%
+\and
+%
+\inferrule*[right = alg-case]
+{
+	\Delta; \Gamma; \psi_a;\dmap \tvdash{\red {\nnatA_1 }} \infr{\expr_1}{\tbool}{\restriction_1}{\psi}
 	\and
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\expr_2}{\type}{\restriction_2}
-	\and
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\expr_3}{\type}{\restriction_3}
+      \nnatA \in \fresh( \natb )\and
+	\Delta; \Gamma; \psi_a, \psi;\dmap \tvdash{\nnatA} \chec{\expr_2}{\type}{\restriction_2}
+	\\
+	\Delta; \Gamma; \psi_a, \psi;\dmap \tvdash{\nnatA}
+        \chec{\expr_3}{\type}{\restriction_3} \and
+        \restriction = \exists \psi. \restriction_1 \land \exists \nnatA. \restriction_2 \land \restriction_3
+	\land \nnatA' \geq \nnatA_1 + \nnatA
+	\land \dmap' \geq \max(\dmap_1, \nnatA_1 + \dmap)
 }
 {
 	\Delta; \Gamma; \dmap' \tvdash{\nnatA'} \chec{\eif (\expr_1, \expr_2, \expr_2) }{\type}
-	{
-	\restriction_1 \land \restriction_2 \land \restriction_3
-	\land \nnatA \geq \nnatA_1 + \nnatA
-	\land \dmap' \geq \max(\dmap_1, \nnatA_1 + \dmap)
+	{ \restriction
 	}
 }
 %
@@ -1357,43 +1367,44 @@ worked out and verified.
 {
 \inferrule
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} 
-	\infr{\expr}{ \tbox{\tarr{\type_1}{\type_2}{0}{\dmap''}{0} } }{\restriction}
+       \nnatA \in \fresh(\natb)\\	
+       \Delta; \Gamma; \psi_a; \dmap \tvdash{\nnatA} 
+	\chec{\expr}{ \tbox{\tarr{\type_1}{\type_2}{0}{\dmap''}{0} } }{\restriction}
 }
 {
-	\Delta; \Gamma; \dmap' \tvdash{\nnatA'}
-	\chec{\eop{\expr}}{\treal}
+	\Delta; \Gamma; \psi_a;\dmap' \tvdash{\red {\nnatA'} }
+	\infr{\eop{\expr}}{\treal}
 	{
 	\restriction 
 	\land \nnatA' = \nnatA + 1
-	\land \dmap' = \dmap + 1 }
+	\land \dmap' =  1 + \max(\dmap, \dmap''+ \nnatA) }{\nnatA}
 }
 }
 %
-\quad
+\\
 %
 \boxed{
 \inferrule
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\expr}{\type}{\restriction}
+	\Delta; \tbox{\Gamma}; \psi_a; \dmap \tvdash{\nnatA} \chec{\expr}{\type}{\restriction}
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\expr}{\tbox{\type}}{\restriction}
+	\Delta; \Gamma',\tbox{\Gamma}; \psi_a; \dmap \tvdash{\nnatA} \chec{\mathsf{BOX}\expr}{\tbox{\type}}{\restriction}
 }
 }
 %
 \and
 %
 \inferrule
-{
-	\Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \chec{\expr_1}{\type}{\restriction_1}
+{       \nnatA_1, \nnatA_2 \in \fresh ( \natb ) \and
+	\Delta; \Gamma; \psi_a;\dmap_1 \tvdash{\nnatA_1} \chec{\expr_1}{\type}{\restriction_1}
 	\and
-	\Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \chec{\expr_2}{ \tlist{\type} }{\restriction_2}
+	\Delta; \Gamma; \psi_a;\dmap_2 \tvdash{\nnatA_2} \chec{\expr_2}{ \tlist{\type} }{\restriction_2}
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\econs(\expr_1, \expr_2)}{\tlist{\type}}
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\nnatA} \chec{\econs(\expr_1, \expr_2)}{\tlist{\type}}
 	{
-	\restriction_1 \land \restriction_2
+	\exists \nnatA_1. \restriction_1 \land \exists \nnatA_2. \restriction_2
 	\land
 	\nnatA = \max(\nnatA_1, \nnatA_2)
 	\land
@@ -1405,15 +1416,16 @@ worked out and verified.
 %
 \inferrule
 {
-	\Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \infr{\expr_1}{\type_1}{\restriction}
+	\Delta; \Gamma; \psi_a; \dmap_1 \tvdash{ \red {\nnatA_1} } \infr{\expr_1}{\type_1}{\restriction}{\psi}
 	\and
-	\Delta; \Gamma, x : \type_1; \dmap_2[x: \nnatbiA] \tvdash{\nnatA_2} 
+       \nnatA_2 \in \fresh(\natb)  \\
+	\Delta; \Gamma, x : \type_1; \psi_a,\psi;\dmap_2[x: \nnatbiA] \tvdash{\nnatA_2} 
 	\chec{\expr_2}{\type_2}{\restriction_2} 
 }
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA} \chec{\elet x = \expr_1 \ein \expr_2 }{\type_2}
+	\Delta; \Gamma; \psi_a; \dmap \tvdash{\nnatA} \chec{\elet x = \expr_1 \ein \expr_2 }{\type_2}
 	{
-	\restriction_1 \land \restriction_2
+	\exists \psi .\restriction_1 \land \exists \nnatA_2.\restriction_2
 	\land
 	\nnatA = \max(\nnatA_2, \nnatA_1 + \nnatbiA)
 	\land
@@ -1426,48 +1438,48 @@ worked out and verified.
 \boxed{
 \inferrule
 {
-	\Delta; \Gamma; \dmap \tvdash{\nnatA}
-	\infr{\expr}{\type}{\restriction}
+	\Delta; \Gamma; \psi_a;\dmap \tvdash{\red {\nnatA} }
+	\infr{\expr}{\type}{\restriction}{\psi}
 	\and
-	\Delta; \Gamma; \dmap' \tvdash{\nnatA'}
-	\sub{\type'}{\type'} \Rightarrow 
+	\Delta; \dmap \vdash
+	\sub{\type}{\type'} \Rightarrow 
 	{\color{red} \restriction'}
 }
 {
-	\Delta; \Gamma; \dmap' \tvdash{\nnatA'}
+	\Delta; \Gamma; \psi_a; \dmap' \tvdash{\nnatA'}
 	\chec{\expr}{\type'}
-	{\restriction \land \restriction'
-	\land \nnatA' \geq \nnatA
-	\land \dmap' \geq \dmap}
+	{\exists \psi. \restriction \land \restriction'
+	\land \nnatA' \geq \nnatA}
 }
-}
-%
-\quad ~
-%
-\inferrule
-{
-	i::S, \Delta; \Gamma; \dmap \tvdash{\nnatA}
-	\chec{\expr}{\type}{\restriction}
-}
-{
-	\Delta; \Gamma; \dmap \tvdash{\nnatA}
-	\chec{\eilam \expr}{ \tforall{\dmap}{\nnatA}{i} }{\tforall{\dmap}{\nnatA}{i} \restriction}
 }
 %
 \and
 %
 \inferrule
 {
-	\Delta; \Gamma; \dmap \tvdash{ \nnatA } \infr{\expr}{ \tforall{\dmap_1 }{\nnatA_1}{i} }{ \restriction }
+	i::S, \Delta; \Gamma; \psi_a;\dmap \tvdash{\nnatA}
+	\chec{\expr}{\type}{\restriction}
+}
+{
+	\Delta; \Gamma; \psi_a;\dmap \tvdash{\nnatA'}
+	\chec{\eilam \expr}{ \tforall{\dmap}{\nnatA}{i}
+        }{\forall i. \restriction \land \nnatA' = 0}
+}
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma; \psi_a;\dmap \tvdash{ \red{\nnatA} } \infr{\expr}{ \tforall{\dmap_1 }{\nnatA_1}{i} }{ \restriction }{\psi}
 	\and
 	\Delta \tvdash{} I :: S
 }
 {
-	\Delta; \Gamma; \dmap' \tvdash{ \nnatA } \infr{\expr [ ]}{ \type[I/i] }
+	\Delta; \Gamma; \psi_a;\dmap' \tvdash{ \red{\nnatA'} } \infr{\expr [ I]}{ \type[I/i] }
 	{
 	\restriction \land \dmap' \geq \max(\dmap, \nnatA + \dmap_1)
-	\land \nnatA' \geq \nnatA_1[I/i] + \nnatA}
-}
+	\land \nnatA' \geq \nnatA_1[I/i] + \nnatA}{\psi}
+} 
 \end{mathpar}
  \caption{Algorithmic Typing Rules}
   \label{fig:sub-type-rules}
