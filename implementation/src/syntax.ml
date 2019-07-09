@@ -74,8 +74,8 @@ expr =
   | If          of expr * expr * expr
 
   | Let         of var_info * iterm * expr * expr
-  | Case        of expr * var_info * expr * var_info * expr
-
+(*  | Case        of expr * var_info * expr * var_info * expr
+*)
   (* Functional Expressions *)
   | Fix         of var_info * expr * ty * expr(* unsure *) 
   | App         of expr * expr
@@ -184,9 +184,9 @@ let rec is_equal_exp eL eR : bool =
 
   | Let ( x, i, e1, e2), Let ( x', i', e1', e2')  
     ->  x = x' && i = i'  && is_equal_exp e1 e1' && is_equal_exp e2 e2'
-  | Case( e, x, e1, y, e2), Case( e', x', e1', y', e2') 
+(*  | Case( e, x, e1, y, e2), Case( e', x', e1', y', e2') 
     -> x = x' && y = y' && is_equal_exp e1 e1' && is_equal_exp e2 e2'
-
+*)
   | Bernoulli v, Bernoulli v'  -> is_equal_exp v  v'
   | Uniform(v1, v2), Uniform(v1', v2')  -> is_equal_exp v1 v1' && is_equal_exp v2 v2'
 
@@ -217,10 +217,10 @@ let rec exp_free_vars (e: expr) =
   | Fix ( f, x, t, e') ->
     List.filter (fun vi_x -> vi_x != f.v_name) (exp_free_vars e')
 
-  | Case( e, x, e1, y, e2) ->(exp_free_vars e) @ 
+(*  | Case( e, x, e1, y, e2) ->(exp_free_vars e) @ 
     (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e1)) @ 
     (List.filter (fun vi_x -> vi_x != y.v_name ) (exp_free_vars e2))
-  
+*)  
   | Let ( x, i, e1, e2) -> (exp_free_vars e1 ) @
     (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e2))
 

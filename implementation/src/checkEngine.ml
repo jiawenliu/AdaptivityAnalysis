@@ -127,7 +127,7 @@ and infer_app m i e2 =
       | Ty_Arrow(ty1, mu', dmap, k'', ty2) ->
          debug dp "inf_app :@\n@[ty is :%a, k'' is %a, e2 is %a @]@." Print.pp_type ty Print.pp_iterm k'' Print.pp_expr e2; 
         [((checkType e2 ty1), ty2, k'')]
-      | _ -> [(fail i (WrongShape (ty, "function")), Ty_Prim (Ty_PrimInt), IZero)])
+      | _ -> [(fail i (WrongShape (ty, "function")), Ty_Prim (Ty_PrimInt), IConst 0)])
 
 
 and infer_proj i f =
@@ -164,7 +164,6 @@ and checkType (e: expr) (ty : ty) : constr checker =
   | Nil, _ -> check_nil dp ty
   | Cons( e1, e2), _ -> check_cons dp e1 e2 dp ty
 
-  | Case(e, x_l, e_l, x_r, e_r), _ -> check_case_sum dp e x_l e_l x_r e_r ty
   (* If statement *)
   | If( e, el, er), _ -> debug dp "checkif, el is %a, ty is %a " Print.pp_expr el Print.pp_type ty ; check_if i e el er ty
   (* Pairs *)
@@ -195,6 +194,20 @@ and checkType (e: expr) (ty : ty) : constr checker =
   | Uniform (v1, v2), _ -> check_real v1 >> check_real v2
   | Mech (e), _   -> check_mech e
 
+  |  _ , _ -> infer_and_check dp e ty
+
+
+and check_dmap dmap dmap' =
+  ()
+
+
+and check_real e =
+  ()
+
+
+and check_mech e =
+  ()
+
 
 and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty) =
   match ty with
@@ -203,7 +216,8 @@ and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty)
     check_body ((vi_f |:| ty)
                   ((vi_x |:| ty1)
                      (with_mode mu (checkType e ty2)))) k_fun
-  | _ ->  fail i (WrongUShape (ty, "fuction"))
+  | _ ->  fail i (WrongShape (ty, "fuction"))
+
 
 and check_body (m: constr checker) (k_fun : iterm) : constr checker =
   fun(ctx, k) ->
@@ -212,70 +226,32 @@ and check_body (m: constr checker) (k_fun : iterm) : constr checker =
         debug dp "body_test:@\n@[k is %a, k_m is %a @]@.@\n"  Print.pp_iterm k' Print.pp_iterm k_fun ;
       begin
         match m (ctx, Some k_fun) with
-        | Right c ->  Right (CAnd(c, cost_cs_st ctx (IZero, k')))
+        | Right c ->  Right (CAnd(c, cost_cs_st ctx (IConst 0, k')))
         | Left err -> Left err
       end
     | None -> m (ctx, None)
+
 
 and check_if (i : info) e el er ty =
   debug dp "ck_if:@\n@[e is %a @]@.@\n"  Print.pp_expr e  ;
   inferType e <->=
   (fun ty_g ->
      match ty_g with
-     | Ty_Prim UPrimBool -> (checkType el ty) >&&> (checkType er ty)
-     | _ -> fail i (WrongUShape (ty, "bool")))
+     | Ty_Prim Ty_PrimBool -> (checkType el ty) >&&> (checkType er ty)
+     | _ -> fail i (WrongShape (ty, "bool")))
+
 
 and check_nil i ty =
   match ty with
-  | Ty_List(n, ty) -> check_size_eq n IZero return_leaf_ch
-  | _ -> fail i (WrongUShape (ty, "list"))
+  | Ty_List(ty) -> return_leaf_ch
+  | _ -> fail i (WrongShape (ty, "list"))
 
 
 and check_cons e1 e2 i ty =
   match ty with
-  | Ty_List(n, ty) ->
-    checkType e1 ty >>
-    (* Introduce a new size variable and add it to the existential ctx*)
-    let v = fresh_evar Size in
-    let sz = IVar v in
-    (v |:::| Size) i
-      (* Check that (sz + 1 = n) *)
-      (check_size_eq (n) (ISucc sz)
-         (checkType e2 (Ty_List(sz, ty))))
-  | _ -> fail i (WrongUShape (ty, "list"))
+  | Ty_List(ty) -> checkType e1 ty
+  | _ -> fail i (WrongShape (ty, "list"))
 
-
-and check_case_list i e e_n x_h x_tl e_c ty =
-  inferType e <->=
-  (fun ty_g ->
-     match ty_g with
-     | Ty_List (n, tye) ->
-       (* Nil case *)
-       (assume_size_eq n (IConst 0) (checkType e_n ty))
-       >&&>
-       (* Cons case *)
-       (* Generate a fesh size variable *)
-       let v = fresh_ivar Size in
-       let sz = IVar v in
-       (* Extend the index ctx with freshly gen. size*)
-       (v |::| Size) i
-         ((x_h |:| tye)
-            (* Assume that n = sz + 1*)
-            (assume_size_eq n (ISucc sz)
-               ( (x_tl |:| Ty_List(sz, tye)) (checkType e_c ty))))
-     | _ -> fail i (WrongUShape (ty, "list"))
-  )
-
-and check_case_sum i e x_l e_l x_r e_r  ty =
-  inferType e <->=
-  (fun ty_g ->
-     match ty_g with
-     | Ty_Sum (tyl, tyr) -> 
-       ((x_l |:| tyl) (checkType e_l ty)) >>>=
-       fun c1 -> (x_r |:| tyr) (checkType e_r ty) >>>=
-       fun c2 -> return_ch (merge_cs c1 c2) 
-     | _ -> fail i (WrongUShape (ty, "sum"))
-  )
 
 and check_pack i e ty =
   match ty with
@@ -283,7 +259,7 @@ and check_pack i e ty =
     let v = fresh_evar s in
     let witness = IVar v in
     (v |:::| s) i (checkType e (un_ty_subst x witness ty))
-  | _ -> fail i (WrongUShape (ty, "existential"))
+  | _ -> fail i (WrongShape (ty, "existential"))
 
 and check_unpack i e1 vi_x e2 ty =
   inferType e1 <->=
@@ -291,20 +267,17 @@ and check_unpack i e1 vi_x e2 ty =
      match ty_x with
      | Ty_Exists(x, s, ty) ->
        (x |::| s) i ((vi_x |:| ty) (checkType e2 ty))
-     | _ -> fail i (WrongUShape (ty, "existential")))
+     | _ -> fail i (WrongShape (ty, "existential")))
 
-(*and check_clet i vi_x e1 e2 ty =
+(*
+and check_clet i vi_x e1 e2 ty =
   inferType e1 <->=
   (fun csty ->
      match csty with
      | Ty_Cs(cs, ty_x) ->
         (vi_x |:| ty_x) (checkType e2 ty) >>= fun cs_b -> return_ch (CImpl(cs, cs_b))
-     | _ -> fail i (WrongUShape (ty, "constrained")))
+     | _ -> fail i (WrongShape (ty, "constrained")))
 *)
-
-and check_dmap dmap dmap' =
-  ()
-
 
 and infer_and_check (i: info) (e: expr) (ty : ty) : constr checker =
   fun(ctx, k) ->
