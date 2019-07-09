@@ -56,8 +56,12 @@ let rec check_subtype (ty1 : ty) (ty2 : ty) : constr checker =
     match bty1, bty2 with
     	| Ty_Prim pty1, Ty_Prim pty2 -> 
     		if pty1 = pty2 then return_ch empty_constr
-    					   else fail
-    	| 
+    					         else fail
+      | Ty_List Ty_Box lty1, Ty_List lty2 ->
+        if lty1 = lty2 then return_ch empty_constr
+                       else fail
+
+    	| _ -> fail
     end 
 
   (* CASES WHEN NONE OF THE TYPES IS A BOX TYPE*)
@@ -71,6 +75,10 @@ let rec check_subtype (ty1 : ty) (ty2 : ty) : constr checker =
   						   	check_size_leq ad ad' (check_subtype ity' ity >> check_subtype oty oty')
   						   else
   						   	fail
+
+  | Ty_List(ty1), Ty_List(ty2)
+                 -> check_subtype ty1 ty2
+
   | _ , _ -> fail
 
 
