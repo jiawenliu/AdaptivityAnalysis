@@ -190,7 +190,7 @@ let rec pp_iterm fmt ty = match ty with
   | IMaximal(i1, i2)    -> fprintf fmt " Max(%a, %a) " pp_iterm i1 pp_iterm i2
 
 
- let pp_adapt fmt cst = 
+let pp_adapt fmt cst = 
     match cst with 
     | Some k ->  fprintf fmt "(%a)" pp_iterm k
     | None -> fprintf fmt "(%s)" "nocost"

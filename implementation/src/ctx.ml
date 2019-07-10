@@ -89,10 +89,12 @@ let extend_e_ctx psi ctx =
 
 let set_context vctx context =
   {
-    var_ctx   = vctx;
+    var_ctx  = vctx;
     ivar_ctx = context.ivar_ctx;
-    lvar_ctx =  context.lvar_ctx;
-    constr_env =  context.constr_env;
+    lvar_ctx = context.lvar_ctx;
+    evar_ctx = context.evar_ctx;
+    dmap_ctx = context.dmap_ctx;
+    constr_env = context.constr_env;
   }
 
 

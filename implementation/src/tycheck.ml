@@ -155,7 +155,7 @@ let (<->=) (m : ty  inferer) (f : ty  -> constr checker) : constr checker =
           | Left err -> Left err
 
 
-let (=<->) (m : ty inferer) (f: ty -> Ctx.heurMode -> (constr checker * ty * iterm) list ) : ty inferer =
+let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm) list ) : ty inferer =
     fun ctx ->
       match m ctx with
       | Right (ty, c, psi, k) ->
@@ -165,9 +165,9 @@ let (=<->) (m : ty inferer) (f: ty -> Ctx.heurMode -> (constr checker * ty * ite
         begin
           let fl = f ty ctx.heur_mode in
           let (m', ty_inf, k'') = List.hd_exn fl in
-          let psi' = Option.value_map ~default:psi ~f:(fun _ -> (v, Adapt) :: psi) k in
-          let k_ctx = Option.value_map ~default:ctx ~f:(fun _-> extend_e_ctx ((v, Adapt) :: psi) ctx) k in
-          let k_res k'' = Option.map ~f:(fun k -> add_adapts(k'', add_adapts(k,k'))) k in
+          let psi' = (v, Adapt) :: psi in
+          let k_ctx = extend_e_ctx ((v, Adapt) :: psi) ctx in
+          let k_res k'' = add_adapts(k'', add_adapts(k,k')) in
           match m' (k_ctx ,if_adapt k' k) with
           | Right c' -> Right (ty_inf, merge_cs c c', psi', k_res k'')
           | Left err' -> 
@@ -203,9 +203,9 @@ let get_infer_ctx : ty context inferer =
         fun ctx -> Right (ctx, empty_constr, [], None)
 
 
-let get_heur  : heurMode checker =
+(*let get_heur  : heurMode checker =
         fun (ctx,_) -> Right ctx.heur_mode
-
+*)
   
 
 let get_var_ty (vi : var_info) : ty inferer =
