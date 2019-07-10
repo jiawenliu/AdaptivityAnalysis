@@ -70,7 +70,7 @@ that $\eop$ can only have type $\tbase \to \tbool$. We make
 environments explicit in closures. This is needed for the tracing
 semantics later.
 \[\begin{array}{llll}
-\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \wq{\efix f(x:\tau).\expr}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \wq{\efix f(x:\type).\expr}
  ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
 %
 & & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
@@ -82,7 +82,7 @@ semantics later.
       \expr_2 } \\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
-(\efix f(x:\tau).\expr, \env) ~|~ (\valr_1, \valr_2) 
+(\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
     ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
 & & & \wq {(\eilam \expr , \env) } \\ 
 %
@@ -110,7 +110,7 @@ $x$ are bound in $\tr_3$.
 %
 \[\begin{array}{llll}
 \mbox{Trace} & \tr & ::= & \wq{(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
-\wq{ (\trfix f(x:\tau).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+\wq{ (\trfix f(x:\type).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
 %
 & & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
 ~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
@@ -164,8 +164,8 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   %
   \wq{ \inferrule{
   }{
-    \env, \efix f(x:\tau). \expr \bigstep (\efix f(:\tau).\expr, \env),
-    (\trfix f(x:\tau).\expr, \env)
+    \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
+    (\trfix f(x:\type).\expr, \env)
   }
 }
   %
@@ -173,7 +173,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   %
   \inferrule{
     \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-    \wq{ \valr_1 = (\efix f(x:\tau).\expr, \env')} \\\\
+    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
     \env, \expr_2 \bigstep \valr_2, \tr_2 \\
     \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
   }{
@@ -312,7 +312,7 @@ in Figure~\ref{fig:adap}.
       \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
       \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
       %
-      \wq {\adap( (\trfix f(x:\tau).\expr, \env)  ) } & = & 0 \\
+      \wq {\adap( (\trfix f(x:\type).\expr, \env)  ) } & = & 0 \\
       %
       \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
       %
@@ -331,10 +331,10 @@ in Figure~\ref{fig:adap}.
       \adap(\trconst) & = & 0 \\
       %
       \adap(\trop(\tr)) & = &\wq { 1 + \adap(\tr) } \\
-           & &       \wq{  +  \textsf{MAX}_{\valr \in \tau} \Big(
+           & &       \wq{  +  \textsf{MAX}_{\valr \in \type} \Big(
                               \max \big(\adap(\tr_3 (\valr) ),
                               \ddep{x}(\tr_3(\valr)) \big) \Big) } \\
-      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \tau). \expr, \env ) =
+      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
                        \mathsf{extract}(\tr) } \\
  & & \wq{ \conj  \env[f \mapsto
                        \valr_1, x \mapsto \valr], \expr \bigstep
@@ -371,7 +371,7 @@ in Figure~\ref{fig:adap}.
       \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
       & & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
       %
-     \wq { \ddep{x}(  (\trfix f(y:\tau).\expr,\env)  )  }& = & \bot \\
+     \wq { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
       %
       \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
       %
@@ -390,9 +390,9 @@ in Figure~\ref{fig:adap}.
       \ddep{x}(\trconst) & = & \bot \\
       %
       \ddep{x}(\trop(\tr)) & = & 1 +  \max(\ddep{x}(\tr),  \\
-      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \tau} \Big(
+      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \type} \Big(
           \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) ) \\  
- &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \tau). \expr, \env ) =
+ &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
                        \mathsf{extract}(\tr) } \\
  & & \wq{ \conj  \env[f \mapsto
                        \valr_1, x \mapsto \valr], \expr \bigstep
@@ -696,7 +696,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \tvdash{\nnatA}
       \expr: \type_2
     }{
-      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x: \tau_1).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x: \type_1).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
     }
     %
     \and
@@ -770,8 +770,8 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     %
     \inferrule
     {
-      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
-        }{ \tau_2 }{0}{\dmap''}{0})     }   \\
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     }   \\
       \nnatA' = 1 + \nnatA \\
       \wq{ \dmap' = 1 + \max(\dmap, \dmap''+\nnatA) } 
     }
@@ -1135,42 +1135,42 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     %
      \inferrule{
     }{
-      \Delta  \models \sub{ \tbox{\tau}  }{ \tau }
+      \Delta  \models \sub{ \tbox{\type}  }{ \type }
     }
   \and
     %
      \inferrule{
     }{
-      \Delta  \models \sub{ \tbox{\tau}  }{ \tbox{\tbox{\tau}} }
+      \Delta  \models \sub{ \tbox{\type}  }{ \tbox{\tbox{\type}} }
     }
   \and
     %
      \inferrule{
-      \Delta \models \sub{ \tau_1  }{ \tau_2 }
+      \Delta \models \sub{ \type_1  }{ \type_2 }
     }{
-      \Delta \models \sub{ \tbox{\tau_1}  }{ \tbox{\tau_2} }
+      \Delta \models \sub{ \tbox{\type_1}  }{ \tbox{\type_2} }
     }
   \and
     %
      \inferrule*[right = refl]{
     }{
-      \Delta \models \sub{ \tau  }{ \tau }
+      \Delta \models \sub{ \type  }{ \type }
     }
  \and
     %
      \inferrule*[right=tran]{
-      \Delta \models \sub{ \tau_1  }{ \tau_2 } 
+      \Delta \models \sub{ \type_1  }{ \type_2 } 
         \\
-      \Delta \models \sub{ \tau_2  }{ \tau_3 }
+      \Delta \models \sub{ \type_2  }{ \type_3 }
     }{
-      \Delta \models \sub{ \tau_1  }{ \tau_3 }
+      \Delta \models \sub{ \type_1  }{ \type_3 }
     }
 \and
 %
      \inferrule*[right=list]{
-      \Delta \models \sub{ \tau_1  }{ \tau_2 } 
+      \Delta \models \sub{ \type_1  }{ \type_2 } 
     }{
-      \Delta \models \sub{ \tlist{\tau_1}  }{ \tlist{\tau_2} }
+      \Delta \models \sub{ \tlist{\type_1}  }{ \tlist{\type_2} }
     }
 \and
 %
@@ -1179,7 +1179,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \empty
     }
     {
-      \Delta \models \sub{ \tlist{\tbox{\tau }}  }{ \tbox{\tlist{\tau}} } 
+      \Delta \models \sub{ \tlist{\tbox{\type }}  }{ \tbox{\tlist{\type}} } 
     }
     \end{mathpar}
  \caption{Subtyping rules}
@@ -1245,17 +1245,6 @@ worked out and verified.
 %
 \inferrule
 {
-	\Delta \tvdash{} \type: wf \\
-       \dmap =  \bot
-}
-{
-	\Delta; \Gamma;  \red{\dmap} \tvdash{\color{red} 0} \infr{\enil}{ \tlist{\type} }{\top}{.}
-}~ \textbf{alg-nil-$\uparrow$ }
-%
-\and
-%
-\inferrule
-{
 	\dmap = \bot
 }
 {
@@ -1271,6 +1260,17 @@ worked out and verified.
 {
 	\Delta; \Gamma; \red{\dmap} \tvdash{ \color{red} 0} \infr{\efalse}{\tbool}{\top}{.}
 }~ \textbf{alg-false-$\uparrow$ }
+%
+\and
+%
+\inferrule
+{
+  \Delta \tvdash{} \type: wf \\
+       \dmap = \bot
+}
+{
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\color{red} 0} \chec{\enil}{ \tlist{\type} }{\top}{.}
+}~ \textbf{alg-nil-$\downarrow$ }
 %
 \and
 %
@@ -1505,7 +1505,7 @@ worked out and verified.
 	{
 	\restriction  
 	}{\psi}
-} ~ \textbf{alg-iapp$\downarrow$ }
+} ~ \textbf{alg-iapp$\uparrow$ }
 \end{mathpar}
 \caption{Algorithmic Typing Rules, part 2}
   \label{fig:sub-type-rules2}
@@ -1942,8 +1942,8 @@ $(\env, \ienv \expr []) \bigstep (\valr, \tr) \land \size(\tr) = j \land j \leq 
 $
   \boxed{
     \inferrule*[right = PRIMITIVE]{
-      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \tau_1
-        }{ \tau_2 }{0}{\dmap''}{0})     } ~(\star)   \\
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     } ~(\star)   \\
       \nnatA' = 1 + \nnatA \\
       \dmap' = 1 + \max( \dmap, \dmap''+ \nnatA)
     }{
@@ -1976,37 +1976,37 @@ From the evaluation rules, we assume that :
 By induction hypothesis on $\star$, we get:
  \[
 (\stepiA, (\ienv \expr, \ienv \env)) \in \lre{\dmap}{\ienv \nnatA}{\tbox{
-    (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0})}} ~ (1)
+    (\tarr{ \type_1}{ \type_2 }{0}{\dmap''}{0})}} ~ (1)
 \].\\
 %
 Assume $\ienv \env, \ienv \expr \bigstep \valr', \tr' \conj |\tr'|=j'
 \conj j' < \stepiA$,\\
  we know: $(\adap(\tr') \leq \ienv \nnatA) ~ (a) $ \\
 $ (\forall x \in \ddep{x}(\tr') \leq \dmap(x)) ~ (b)$ \\
-$ ((\stepiA - j', \valr') \in \lrv{\tbox{  (\tarr{ \tau_1}{
-      \tau_2 }{0}{\dmap''}{0})     }}) ~ (c)$ \\
+$ ((\stepiA - j', \valr') \in \lrv{\tbox{  (\tarr{ \type_1}{
+      \type_2 }{0}{\dmap''}{0})     }}) ~ (c)$ \\
 
 \begin{enumerate}
 \item [STS1:] $\adap(\tr) = \adap(\trop(\tr') )  \leq \ienv \nnatA'
   $\\
 Unfold $\adap(\trop(\tr') ) $, STS:\\
- $1+ \adap(\tr') + \textsf{MAX}_{\valr \in \tau_1} \Big(
+ $1+ \adap(\tr') + \textsf{MAX}_{\valr \in \type_1} \Big(
                               \max \big(\adap(\tr_3 (\valr) ),
                               \ddep{x}(\tr_3(\valr)) \big) \Big) \leq
                               \ienv \nnatA' $. \\
-      $\mathsf{where}$   $\valr_1 = (\efix f(x: \tau_1). \expr_1, \env_1 ) =
+      $\mathsf{where}$   $\valr_1 = (\efix f(x: \type_1). \expr_1, \env_1 ) =
                        \mathsf{extract}(\tr') $ and $  \env_1[f \mapsto
                        \valr_1, x \mapsto \valr], \expr_1 \bigstep
                        \valr'', \tr_3(\valr)  $\\
   By Lemma\ref{lem:trace_extract} based on our assumption $\ienv \env, \ienv \expr \bigstep \valr', \tr'$,  we know that $\valr_1 =
                        \mathsf{extract}(\tr) = v' $.\\
- Unfold $(c)$, we know : $(\stepiA - j',  (\efix f(x: \tau_1). \expr_1, \env_1 ) ) \in \lrv{  (\tarr{ \tau_1}{
-      \tau_2 }{0}{\dmap''}{0}) }~(d) $  and $ \delta \not\in  (\efix
-  f(x: \tau). \expr_1, \env_1 ) $  \\
+ Unfold $(c)$, we know : $(\stepiA - j',  (\efix f(x: \type_1). \expr_1, \env_1 ) ) \in \lrv{  (\tarr{ \type_1}{
+      \type_2 }{0}{\dmap''}{0}) }~(d) $  and $ \delta \not\in  (\efix
+  f(x: \type). \expr_1, \env_1 ) $  \\
   Unfold $(d)$, we get : $ \forall j_1 < (\stepiA-j'). (\stepiB_1,
-  \valr_a) \in \lrv{\tau_1} $, $  ( \stepiB_1, ( \expr_1 ,\env_1[f \mapsto
+  \valr_a) \in \lrv{\type_1} $, $  ( \stepiB_1, ( \expr_1 ,\env_1[f \mapsto
                        \valr_1, x \mapsto \valr_a]) )\in
-                       \lre{\dmap''[x:0,f:\infty]}{0}{\tau_2}~(e) $.\\  
+                       \lre{\dmap''[x:0,f:\infty]}{0}{\type_2}~(e) $.\\  
    Pick $\valr_a$, unfold $(e)$, we assume:  $ \env_1[f \mapsto
                        \valr_1, x \mapsto \valr_a], \expr_1 \bigstep
                        \valr'', \tr_3(\valr_a)  \conj |\tr_3(\valr_a)|
@@ -2017,14 +2017,14 @@ Unfold $\adap(\trop(\tr') ) $, STS:\\
              \dmap''[x:0,f:\infty](x) ~(h)$ \\
 
   From $(f)$, we know $\forall \valr_a \in
-  \lrv{\tau_1}. \adap(\tr_3(\valr_a)) =0$. \\
- By Lemma~\ref{lem:adap_depth_zero}, we conclude that $ \textsf{MAX}_{\valr \in \tau_1} \Big(
+  \lrv{\type_1}. \adap(\tr_3(\valr_a)) =0$. \\
+ By Lemma~\ref{lem:adap_depth_zero}, we conclude that $ \textsf{MAX}_{\valr \in \type_1} \Big(
                               \max \big(\adap(\tr_3 (\valr) ),
                               \ddep{x}(\tr_3(\valr)) \big) \Big) \leq 0~(g) $.\\
            This property is proved by $(a),(g)$.
 
 \item [STS2:] $ \ddep{x}(\tr) = \ddep{x}(\trop (\tr')) =  1 +  \max(\ddep{x}(\tr'),
-        \adap(\tr') + \textsf{MAX}_{\valr \in \tau_1} \Big(
+        \adap(\tr') + \textsf{MAX}_{\valr \in \type_1} \Big(
           \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) )$ \\
  $\leq      \dmap'(x) $.\\
        It is proved by $(a),(b),(h)$.\\
@@ -2049,7 +2049,7 @@ Unfold $\adap(\trop(\tr') ) $, STS:\\
 % {\color{red}
 % 3. $(\stepiA - j, \valr) = (\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal} $.\\
 % %
-% From (c), we know: $\tvdash{} \valr' : \tbox{  (\tarr{ \tau_1}{ \tau_2 }{0}{\dmap''}{0}) }$ . By typing rule PRIMITIVE, we have $\eop(\valr'): \treal$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal}$.\\
+% From (c), we know: $\tvdash{} \valr' : \tbox{  (\tarr{ \type_1}{ \type_2 }{0}{\dmap''}{0}) }$ . By typing rule PRIMITIVE, we have $\eop(\valr'): \treal$. So, we have $(\stepiA - j' - 1, \eop(\valr')) \in \lrv{\treal}$.\\
 % %
 % }
 
