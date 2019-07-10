@@ -91,17 +91,25 @@ let rec check_subtype (ty1 : ty) (ty2 : ty) : constr checker =
 let rec inferType (e: expr) : ty inferer  =
   let _ = debug dp "infer_TP:@\n@[e1 %a @]@.@\n"  Print.pp_expr e in
     match e with
-    | Var ( vi) -> (get_var_ty vi <<= fun ty ->  (return_inf ty))
-    | Prim (ep) -> return_inf(un_type_of_prim ep )
-    | Fst(e) -> inferType e <<= infer_proj dp fst
-    | Snd(e) -> inferType e <<= infer_proj dp snd
-    | App (e1, e2) -> debug dp "infer_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
+    | Var(vi)     -> get_var_ty vi <<= infer_var vi
+    | Prim(ep)    -> return_inf(Syntax.type_of_prim ep )
+    | Fst(e)      -> inferType e <<= infer_proj dp fst
+    | Snd(e)      -> inferType e <<= infer_proj dp snd
+    | App(e1,e2)  -> debug dp "infer_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
          infer_app (inferType e1) dp e2
-    | IApp (e) -> infer_iapp (inferType e) dp
-    | True     -> return_inf(Ty_Prim(Ty_PrimBool))
-    | False    -> return_inf(Ty_Prim(Ty_PrimBool))
-    |  _ -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
+    | IApp(e)     -> infer_iapp (inferType e) dp
+    | True        -> return_inf(Ty_Prim(Ty_PrimBool))
+    | False       -> return_inf(Ty_Prim(Ty_PrimBool))
+    |  _          -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
 
+
+and infer_var vi =
+  fun ty ->
+    fun ctx -> 
+      let depthmap = depth_bot ctx in
+        let depthmap = set_depth depthmap vi.v_name (IConst 0) in
+
+      Right (ty, empty_constr, depthmap, Some (IConst 0) )
 
 
 and infer_iapp m i =
@@ -133,7 +141,7 @@ and infer_app m i e2 =
 and infer_proj i f =
   fun ty ->
     match ty with
-    | Ty_Prod (ty1, ty2) ->  return_inf(f (ty1, ty2))
+    | Ty_Prod (ty1, ty2) -> return_inf(f (ty1, ty2))
     | _ -> fail i (WrongShape (ty, "product"))
 
 (** [checkType e] verifies that expression [e] has unary type [ty]

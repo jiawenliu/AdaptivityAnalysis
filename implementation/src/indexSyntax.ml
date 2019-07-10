@@ -65,7 +65,8 @@ let rec iterm_simpl it : iterm =
     end
   | IMaximal(i1, i2) -> IMaximal (iterm_simpl i1, iterm_simpl i2)
   | IConst _ 
-  | IVar _ -> it    
+  | IVar _  -> it
+
 
 let rec dedup (l: 'a list) : 'a list =
       match l with
@@ -79,8 +80,8 @@ let rec iterm_free_i_vars (it: iterm) : var_info list =
   | IConst c  -> []
   | IAdd (x, y) 
   | ISub  (x, y)  ->  dedup (iterm_free_i_vars x  @ iterm_free_i_vars y)
-  | IMaximal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)      
-  
+  | IMaximal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)
+
 let add_adapts  (sl, sr) : iterm =
 match  sl, sr with
 | IConst 0, _ -> iterm_simpl sr
@@ -97,5 +98,12 @@ match sl, sr with
 | _ -> None
 
 
+
+(* Depth Terms*)
+type dterm =
+  | DConst  of int
+  | DVar    of var_info
+  | DBot
+  | DInfty
 
    

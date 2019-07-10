@@ -28,6 +28,10 @@ module TyCheck (Ty : CH_TYPE) =
    
    (* The Adaptivity of programs *)
     type adapt = iterm option
+
+
+   (* The Depth Map of variables in programs *)
+    type dmap = iterm ctx
  
    (* The context for Type Checking *)
     type ch_ctx = ty context * adapt
@@ -36,38 +40,50 @@ module TyCheck (Ty : CH_TYPE) =
     type inf_ctx = ty context
 
    (* Reader/Error monad for  type-checking *)
-    type 'a checker = ch_ctx -> 'a ty_error
+    type 'a checker = ch_ctx -> ('a * dmap * adapt) ty_error
 
     let return_ch cs  = fun ch_ctx -> Right cs
 
     (* Reader/Error monad for type-inference *)
-    type 'a inferer =  inf_ctx -> ('a * constr * sort ctx * adapt) ty_error
+    type 'a inferer =  inf_ctx -> ('a * constr * dmap * adapt) ty_error
 
-    let adapt_cs ctx (k1, k2) =
-       CLeq(iterm_simpl k2,iterm_simpl k1)
+    let adapt_leq_cs ctx (z1, z2) =
+       CLeq(iterm_simpl z2, iterm_simpl z1)
 
-    let adapt_cs_st ctx (k1, k2) =
+
+    let depth_cs ctx d1 d2 =
+      match d1,d2 with
+        | (id1, depth1)::tl, (id2, depth2)::tl2
+              -> CAnd( CLeq(iterm_simpl depth1, iterm_simpl depth2), depth_cs ctx tl1 tl2)
+        | [],[] -> CTrue
+        | _ -> fail
+
+
+
+    let rec depth_cs_const ctx d1 i =
+      match d1 with
+        | [] -> CTrue
+        | (id, depth)::tl -> CAnd( CLeq(iterm_simpl depth, i), depth_cs_const ctx tl i)
+
+(*    let adapt_cs_st ctx (k1, k2) =
        CLeq(iterm_simpl k1,iterm_simpl k2)
-
+*)
 
     let if_adapt k' = Option.map ~f:(fun _ -> k')
 
-    let extend_if_adapt v1 ctx k = 
-      Option.value_map ~default:ctx 
-		       ~f:(fun _ -> extend_e_var v1.v_name Adapt ctx) k
+    let extend_adapt v1 ctx = extend_e_var v1.v_name Adapt ctx 
 
     let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
       fun (ctx, k) ->
       (* Generate two new adapt meta variables *)
       let v1 = fresh_evar in
       let v2 = fresh_evar in
-      let k1 =  (IVar v1) in
-      let k2 =  (IVar v2) in
+      let k1 = (IVar v1) in
+      let k2 = (IVar v2) in
       (* Extend the existential ctx with the two generated vars *)
-      let k1_ctx = extend_if_adapt v1 ctx k in
-      let k2_ctx = extend_if_adapt v2 k1_ctx k in
-      let k_cs = Option.value_map ~default:CTrue
-                 ~f:(fun k -> adapt_cs ctx (add_adapts(k1, k2), k)) k in
+      let k1_ctx = extend_adapt v1 ctx in
+      let k2_ctx = extend_adapt v2 k1_ctx in
+      let k_cs   = adapt_leq_cs ctx (add_adapts(k1, k2), k) in
 
       (* Call the checker on the first premise with adapt k1 *)
       begin
@@ -192,7 +208,7 @@ let return_inf(x : 'a) : 'a inferer =
 
 
 let return_leaf_ch  = fun (ctx, k) -> 
-    Right (Option.value_map ~default:CTrue ~f:(fun k' -> adapt_cs_st ctx (IConst 0,k')) k)        
+    Right adapt_leq_cs ctx (IConst 0,k)       
 
 
 let fail (e : Ty_error.ty_error_elem) = fun _ ->
