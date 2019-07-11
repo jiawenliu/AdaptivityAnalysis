@@ -1,0 +1,618 @@
+We build a type system that statically approximates both $\adap$ and
+$\ddep{x}$ for every $x$ in the context.
+
+A \emph{depth map}, denoted $\dmap$, is a map from variables to
+$\natbi$.
+%
+%% We define the support of a depth map, $\supp(\dmap) \defeq \{x ~|~
+%% \dmap(x) \neq \bot\}$. We are only interested in depth maps with
+%% finite support. Such a depth map can be written $x_1: \nnatbiA_1,
+%% \ldots, x_k: \nnatbiA_k$.
+%
+Our typing judgment takes the form $\Gamma; \dmap \tvdash{\nnatA}
+\expr: \type$, where $\Gamma$ is a typing context, $\dmap$ is a depth
+map, and $\nnatA \in \nat$. The idea is that $\dmap$ gives an upper
+bound on the depth of each free variable of $\expr$. Obviously, we
+only care about the values of $\dmap$ on the domain of $\Gamma$ (at
+the remaining points, $\dmap$ can be $\bot$; such a $\dmap$ can always
+be finitely represented as $x_1: \nnatbiA_1, \ldots, x_k: \nnatbiA_k$,
+where $x_1,\ldots,x_k$ are bound by $\Gamma$). $\nnatA$ is an upper
+bound on the adaptivity of $\expr$.
+
+\paragraph{Types}
+Types $\type$ are simple, except that the function type is annotated
+with the adaptivity $\nnatA$ of the function body, a depth-map $\dmap$
+which gives the depths of all free variables of the body (i.e.,
+variables bound in outer scopes), and a depth $\nnatbiA \in \natbi$ of
+the argument variable in the body. The function name, although free in
+the body, always has depth $\infty$, so we don't write its depth
+explicitly.\footnote{The function name is never substituted by a value
+  with a nontrivial trace, so we can choose any depth for it. $\infty$
+  is the most permissive depth, as will become clear from the typing
+  rules shortly.}
+
+\[
+\begin{array}{llll}
+\mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+                                 - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+  \mbox{Sort} & S & ::= & \nat \\
+  \mbox{Type} & \type & ::= & \tbase ~|~ \tbool ~|~ \type_1 \times
+  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
+                              \tlist{\type} ~|~ \tbox{\type} ~|~ \\
+    & & & \wq{   \treal ~|~ \tint ~|~   \tint[I]  ~|~      \tforall{\dmap}{\nnatA}{i} \type  }
+\end{array}
+\]
+
+%% Note that the type $\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}$
+%% is well-formed only in a context $\Gamma$ that binds all variables in
+%% the domain of $\dmap$. 
+
+\paragraph{Typing rules}
+The typing rules are shown in Figure~\ref{fig:type-rules}. In these
+rules, we write $\nnatbiA + \dmap$ or $\dmap + \nnatbiA$ for the depth
+map $\lambda x.\eapp  (\nnatbiA + \dmap(x))$ defined on the same domain as
+$\dmap$. We also lift $\max$ and $+$ pointwise to depth maps.
+%% and define the constant map $\dmapb$ that maps everything to
+%% $\bot$.
+These are also formally defined in Figure~\ref{fig:type-rules}.
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{
+      \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
+    }{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} x: \type
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
+      \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
+    }{
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA]
+      \tvdash{\nnatA}
+      \expr: \type_2
+    }{
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x: \type_1).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 \\
+      \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_2 \\\\
+      \dmap' = \max(\dmap_1,\dmap_2) \\
+      \nnatA' = \max(\nnatA_1,\nnatA_2)
+    }{
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
+    }{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \eprojl(\expr): \type_1
+    }
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
+    }{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \eprojr(\expr): \type_2
+    }
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \etrue: \tbool
+    }
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta; \Gamma; \dmap \tvdash{\nnatA} \efalse: \tbool
+    }
+    %
+    
+  \end{mathpar}
+  \caption{Typing rules, part 1}
+  \label{fig:type-rules}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+    %
+    \inferrule{
+       \Delta;\Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tbool \\
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} \expr_2: \type \\
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} \expr_3: \type \\\\
+      \nnatA' = \nnatA_1 + \nnatA \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
+    }{
+       \Delta;\Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
+    }
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} \econst: \tbase
+    }
+   \and
+    %
+    \inferrule{
+      \Delta; \dmap \wf{\type} \\
+    }{
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
+    }
+    % 
+ 	\and
+    %
+    \inferrule
+    {
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr:  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     }   \\
+      \nnatA' = 1 + \nnatA \\
+      \wq{ \dmap' = 1 + \max(\dmap, \dmap''+\nnatA) } 
+    }
+    {
+       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
+    }
+%
+  \and
+%
+     {\color{blue}
+     \inferrule
+     {
+        \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
+           \\
+        \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{  \tbox{\Gamma(x)}
+         }
+           \\
+        \delta \not\in \expr
+    }
+    {
+        \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+    }
+    }
+    %
+    \and
+    %
+   \inferrule{
+   \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type \\
+   \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \tlist{\type}\\
+   \dmap' = \max(\dmap_1, \dmap_2) \\
+   \nnatA' = \max ( \nnatA_1, \nnatA_2 )
+   }
+   { 
+   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
+     \tlist{\type}  }
+   %
+   \and
+   %
+   \inferrule{
+     \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type_1 \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \tvdash{\nnatA_2} \expr_2 :
+     \type_2 \\
+     \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+   }
+   {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2 : \type}
+   %
+   \and
+   %
+  {\color{red}
+  \inferrule{
+      \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
+    }{
+     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
+    }
+    %
+    \and
+    %
+  \inferrule{
+      \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{\dmap_1}{\nnatA_1}{i} \type
+      \and
+       \Delta \tvdash{}  I ::  S
+       \\
+       \dmap' = \max(\dmap, \nnatA + \dmap_1)
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
+    }{
+     \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
+     \type[I/i]
+    }
+	    }        
+\end{mathpar}
+
+   \framebox{
+  \begin{mathpar}
+    \mbox{\textbf{where: }} \\
+%    \dmapb \defeq \lambda x.\eapp  \bot \\
+    \nnatbiA + \dmap \defeq \dmap + \nnatbiA \defeq \lambda x.\eapp  (\nnatbiA + \dmap(x)) \\
+    \dmap_1 + \dmap_2 \defeq \lambda x.\eapp  (\dmap_1(x) + \dmap_2(x)) \\
+    \max(\dmap_1, \dmap_2) \defeq \lambda x.\eapp  \max(\dmap_1(x), \dmap_2(x))
+  \end{mathpar}}
+
+  \caption{Typing rules, part 2}
+  \label{fig:type-rules2}
+\end{figure}
+
+
+
+\clearpage
+
+\begin{figure}
+% \[
+% \begin{array}{llll}
+% \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+%                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+%   \mbox{Sort} & S & ::= & \nat \\
+% \mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
+%             ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+% %
+% & & &           \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) 
+%             ~|~ \econst ~|~ \eop(\expr) \\
+% & & &           ~|~ \elet  = \expr_1 \ein \expr_2 ~|~ \enil ~|~  \econs (
+%                 \expr_1, \expr_2)  \\
+% & & &  \eilam \expr  ~|~  \expr \eapp []  ~|~
+%                             \epack \expr ~|~ \eunpack \expr \eas x
+%                             \ein \expr \\
+% & & & ~|~ \bernoulli \eapp \valr ~|~ \uniform \eapp \valr_1 \eapp \valr_2\\      
+% %
+%   \mbox{Type} & \type & ::= & \tbool ~|~ \type_1 \times
+%   \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
+%                               \tlist{\type} ~|~ \tbox{\type}\\
+% & & &                 ~|~  \treal ~|~  \tint ~|~   \tint[I]  ~|~      \tforall{\dmap}{\nnatA}{i} \type  ~|~ \texists{i} \type
+% %
+% \end{array}
+% \]
+
+% \framebox{
+%   \begin{mathpar}
+%      {\color{blue}
+%      \inferrule
+%      {
+%         \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
+%            \\
+%         \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{  \tbox{\Gamma(x)}
+%          }
+%            \\
+%         \delta \not\in \expr
+%     }
+%     {
+%         \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
+%     }
+%     }
+%     %
+%     \and
+%     %
+%     \inferrule{
+%       \dmap \wf{\type} \\
+%     }{
+%       \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
+%     }
+%     % 
+%     \and
+%     %
+%    \inferrule{
+%    \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type \\
+%    \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \tlist{\type}\\
+%    \dmap' = \max(\dmap_1, \dmap_2) \\
+%    \nnatA' = \max ( \nnatA_1, \nnatA_2 )
+%    }
+%    { 
+%    \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
+%      \tlist{\type}  }
+%    %
+%    \and
+%    %
+%    \inferrule{
+%      \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type_1 \\
+%      \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \tvdash{\nnatA_2} \expr_2 :
+%      \type_2 \\
+%      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
+%      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+%    }
+%    {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x = \expr_1 \ein \expr_2 : \type}
+%    %
+%    \and
+%    %
+%   {\color{red}
+%   \inferrule{
+%       \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
+%     }{
+%      \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
+%     }
+%     %
+%     \and
+%     %
+%   \inferrule{
+%       \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{\dmap_1}{\nnatA_1}{i} \type
+%       \and
+%        \Delta \tvdash{}  I ::  S
+%        \\
+%        \dmap' = \max(\dmap, \nnatA + \dmap_1)
+%        \\
+%        \nnatA' = \nnatA_1[I/i] + \nnatA
+%     }{
+%      \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
+%      \type[I/i]
+%     }
+% 	    }
+%     \end{mathpar}
+% }          
+\boxed{  \Delta; \dmap \wf{\type} }
+\begin{mathpar}
+\inferrule{
+      \Delta; \dmap \wf{\type} \\
+    }{
+      \Delta; \dmap \wf{ \tlist{\type} }
+    }
+   \and
+     \inferrule{
+    }{
+      \Delta; \dmap \wf{ \tbool}
+    }
+  \and 
+  \inferrule{
+      \Delta; \dmap \wf{\type_1} \\
+      \Delta; \dmap \wf{\type_2} 
+    }{
+      \Delta; \dmap \wf{ \type_1 \times
+  \type_2 }
+    }
+ \and
+    \wq{ \inferrule{
+        \Delta; \dmap \wf{ \type_1 } \\
+        \Delta; \dmap' \wf{\type_2}  \\
+        \Delta \vdash \nnatA :: S \\
+        \Delta \vdash \nnatbiA :: S 
+    }{
+      \Delta; \dmap \wf{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA}   }
+    } }
+ \and
+     \inferrule{
+      \Delta; \dmap \wf{  \type }
+    }{
+      \Delta; \dmap \wf{  \tbox{\type}   }
+    }
+\and
+     \inferrule{
+    }{
+      \Delta; \dmap \wf{  \treal  }
+    }
+\and
+     \inferrule{
+    }{
+      \Delta; \dmap \wf{  \tint   }
+    }
+\and
+     \inferrule{
+       \Delta \vdash I :: S \\
+    }{
+      \Delta; \dmap \wf{  \tint[I]   }
+    }
+\and
+  \inferrule{
+   i::S, \Delta; \dmap \wf{ \type }  \\
+    i::S, \Delta \vdash \nnatA :: S 
+    }{ 
+      \Delta; \dmap \wf{   \tforall{\dmap}{\nnatA}{i} \type   }
+    }
+
+
+\end{mathpar}  
+
+  \caption{Well-formedness rules}
+  \label{fig:well-formedness-rules}
+\end{figure}
+
+\begin{figure}
+\boxed{  \Delta \tvdash{}  I :: S  }
+    \begin{mathpar}
+  \inferrule
+  {
+       \Delta (i) = S
+  }
+  {
+     \Delta \tvdash{}  i :: S
+  }
+  %
+  \and
+  %
+  \inferrule
+  {
+    \empty
+  }
+  {
+    \Delta \tvdash{}  n :: \nat
+  }
+  %
+  \and
+  %
+  \inferrule
+  {
+    \Delta \tvdash{}  \idx_1 :: S
+    \and
+    \Delta \tvdash{}  \idx_2 :: S
+    \and
+    \Delta \tvdash{}  \diamond \in \{ +, -, \max \}
+  }
+  {
+    \Delta \tvdash{}  \idx_1 \diamond \idx_2 :: S
+  }
+  \end{mathpar}
+\caption{Sorting rules}
+\end{figure}
+
+
+
+
+\begin{figure}
+   \begin{mathpar}
+     \inferrule{
+    }{
+       \Delta \models \sub{\tbase}{\tbox{\tbase} }
+    }
+    %
+    \and
+    %
+     \inferrule{
+    }{
+      \Delta \models \sub{\tbool}{\tbox{\tbool} }
+    }
+    %
+    \and
+    %
+    \inferrule{
+     \Delta \models \sub{\type_1 }{ \type_1'  } \\
+         \Delta \models \sub{\type_2 }{ \type_2'  }
+    }{
+       \Delta \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
+    }
+    %
+    \and
+    %
+   \inferrule{
+       % \forall x \in \dmap'. \dmap'(x) =0
+    }{
+       \Delta \models \sub{\tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
+      }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
+    } 
+    %
+    % \and
+    % %
+    %  \inferrule{
+    %    \dmap' \leq \dmap
+    % }{
+    %    \Delta \models \sub{\tarr{\type_1}{\type_2}{0}{\dmap'}{0} }{  \tbox{(
+    %       \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} )  }
+    % } }
+    %
+    \and
+    %
+     \inferrule{
+    }
+    {
+       \Delta \models \sub{ \tint[I] }{ \tint }
+    }
+    %
+    \and
+    %
+     \inferrule
+    {
+      \Delta  \models \sub{ \type_1' }{ \type_1 }
+      \and
+      \Delta  \models \sub{ \type_2 }{ \type_2' }
+      \and
+      \dmap \leq \dmap'
+      \and
+      \nnatA \leq \nnatA'
+      \and 
+      q \leq q'
+    }
+    {
+      \Delta  \models \sub{ \tarr{\type_1}{\type_2}{ \nnatbiA }{\dmap}{\nnatA} }
+      { \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'} }
+    }
+  \and
+    %
+     \inferrule{
+    }{
+      \Delta  \models \sub{ \tbox{\type}  }{ \type }
+    }
+  \and
+    %
+     \inferrule{
+    }{
+      \Delta  \models \sub{ \tbox{\type}  }{ \tbox{\tbox{\type}} }
+    }
+  \and
+    %
+     \inferrule{
+      \Delta \models \sub{ \type_1  }{ \type_2 }
+    }{
+      \Delta \models \sub{ \tbox{\type_1}  }{ \tbox{\type_2} }
+    }
+  \and
+    %
+     \inferrule*[right = refl]{
+    }{
+      \Delta \models \sub{ \type  }{ \type }
+    }
+ \and
+    %
+     \inferrule*[right=tran]{
+      \Delta \models \sub{ \type_1  }{ \type_2 } 
+        \\
+      \Delta \models \sub{ \type_2  }{ \type_3 }
+    }{
+      \Delta \models \sub{ \type_1  }{ \type_3 }
+    }
+\and
+%
+     \inferrule*[right=list]{
+      \Delta \models \sub{ \type_1  }{ \type_2 } 
+    }{
+      \Delta \models \sub{ \tlist{\type_1}  }{ \tlist{\type_2} }
+    }
+\and
+%
+    \inferrule*[right=listbox]
+    {
+      \empty
+    }
+    {
+      \Delta \models \sub{ \tlist{\tbox{\type }}  }{ \tbox{\tlist{\type}} } 
+    }
+    \end{mathpar}
+ \caption{Subtyping rules}
+  \label{fig:sub-type-rules}
+\end{figure}
+
+
+The rules follow \emph{exactly} the definitions of $\adap()$ and
+$\ddep{x}()$ to compute $\nnatA$ and $\dmap$ in the conclusion of the
+typing rule for every construct. For instance, the typing rule for
+$\expr_1 \eapp \expr_2$ does exactly what $\adap()$ and $\ddep{x}()$
+do for the trace $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$.
+
+\paragraph{Remark}
+The astute reader might note that our type system looks very much like
+a coeffect+effect system where the coeffect $\dmap$ estimates the
+depth of each free variable and the effect $\nnatA$ estimates the
+adaptivity. While this is true at a high-level, note there are two
+essential differences between our type system and a coeffect+effect
+system.
+\begin{itemize}
+\item[-] In some of our rules (those for $\expr_1 \eapp \expr_2$ and
+  $\eif(\expr_1, \expr_2, \expr_3)$), the conclusion's coeffect
+  depends on the effects of the premises. For instance, in the rule
+  for $\expr_1 \eapp \expr_2$, the final coeffect $\dmap'$ depends on
+  the effect $\nnatA_1$. This does not happen in standard
+  coeffect+effect systems.
+\item[-] Our type for functions internalizes the effect. In a standard
+  coeffect + effect system, the effect is always on the typing  judgment, and at the point of function construction ($\efix$), one
+  anticipatively adds the effects of future function applications to
+  the effect in the conclusion.
+\end{itemize}
+It may be possible to do away with both these differences by tracking
+more information in the coeffects (e.g., what is the maximum
+adaptivity of a function's argument?), but the details need to be
+worked out and verified.

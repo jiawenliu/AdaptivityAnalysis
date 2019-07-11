@@ -1,0 +1,203 @@
+Our type system is sound in the following sense.
+
+\begin{thm}[Soundness]\label{thm:soundness}
+If $\tvdash{\nnatA} \expr: \type$ and $\cdot, \expr \bigstep \valr,
+\tr$ then $\adap(\tr) \leq \nnatA$.
+\end{thm}
+
+To prove this theorem, we build a logical relation on types. As usual,
+the relation consists of a value relation and an expression
+relation. We first show a non-step-indexed version of the relation in
+Figure~\ref{fig:lr:non-step}. This relation is well-founded but
+cannot, as usual, be used directly to prove the soundness of the
+$\efix$ typing rule. We show this relation here purely for exposition
+without the clutter of step-indices. We will step-index the relation
+shortly.
+
+\begin{figure}
+  \begin{mathpar}
+    \begin{array}{lll}
+      \lrv{\tbool} & = & \{\etrue, \efalse\} \\
+      %
+      \lrv{\tbase} & = & \{\econst ~|~ \econst: \tbase \} \\
+      %
+      \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
+      %
+      \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+      \{(\efix f(x).\expr, \env) ~|~ \forall \valr \in \lrv{\type_1}.\\
+      & & 
+      ~~~~~~(\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
+      %
+      \\
+      %
+      \lre{\dmap}{\nnatA}{\type} & = & \{ (\env, \expr) ~|~ \forall \valr\eapp  \tr.\eapp  (\env, \expr \bigstep \valr, \tr) \\
+      & & ~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x) \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~\valr \in \lrv{\type})
+      \}
+    \end{array}
+  \end{mathpar}
+  \caption{Logical relation without step-indexing}
+  \label{fig:lr:non-step}
+\end{figure}
+
+The value relation $\lrv{\type}$, as usual, defines which
+\emph{closed} values are semantically in the type $\type$. The only
+interesting case of this relation is the case for the arrow type. The
+expression relation $\lre{\dmap}{\nnatA}{\type}$ is more
+interesting. It is indexed by a depth map and an
+adaptivity. Importantly, this relation contains sets of configurations
+$(\env, \expr)$ where the evaluation of $(\env, \expr)$ produces a
+value in the value relation at $\type$, the adaptivity of the trace is
+no more than $\nnatA$ and for any variable $x$, $\ddep{x}$ of the
+trace is no more than $\dmap(x)$.
+
+The value relation can be lifted to contexts in the usual way. Say
+that $\env \in \lrv{\Gamma}$ when $\dom(\env) \supseteq \dom(\Gamma)$
+and for every $x \in \dom(\Gamma)$, $\env(x) \in \lrv{\Gamma(x)}$.
+
+The fundamental theorem we would \emph{like} to prove is the
+following. Of course, this cannot be proven until we step-index the
+relation, but this should give an idea of the connection between the
+type system and the logical relation.
+
+\begin{prop}[Fundamental theorem]
+\label{prop:fund}
+  If $\Gamma; \dmap \tvdash{\nnatA} \expr: \type$ and $ \env \in
+  \lrv{\Gamma}$, then $(\env, \expr) \in \lre{\dmap}{\nnatA}{\type}$.
+\end{prop}
+
+
+If this proposition were provable, then Theorem~\ref{thm:soundness}
+would follow from it immediately.
+
+\paragraph{Step-indexed logical relation}
+To step-index the relation we need to have a notion of the number of
+reduction steps. One way to do this is to change the operational
+semantics to count the number of reduction steps. However, this is
+unnecessary since the number of reduction steps in a derivation is
+exactly the size of the derivation's trace. So, we just ``index'' the
+relation on the size of the derivation's trace. The same technique has
+been used previously~\cite{cicek15}.
+
+\begin{defn}[Trace size]
+  The size of a trace is defined as the number of
+  $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$, $\trift(\tr_b, \tr_t)$,
+  $\triff(\tr_b, \tr_f)$ and $\trop(\tr)$ constructors in
+  it. Basically, we count all elimination constructors, but not
+  introduction constructors.\footnote{Deepak's note: The purpose of
+    counting this way is to make sure that the trace of the evaluation
+    of any \emph{value} has size $0$. This may be required in the
+    proof of the fundamental theorem, but I am not sure.}
+
+\end{defn}
+
+\begin{defn}[Trace size]
+  We use $\size{\tr}$ to denote the size of the trace $\tr$.
+\end{defn}
+\begin{figure}
+  \framebox{$\size{\tr}: \mbox{Traces} \to \nat$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \size{x} & = & 0 \\
+      %
+      \size{\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}} & = &
+      \size{\tr_1} + \size{\tr_2} + \size{\tr_3} + 1 \\
+      %
+      \size{\trfix f(x).e} & = & 0 \\
+      %
+      \size{(\tr_1, \tr_2)} & = & \size{\tr_1} + \size{\tr_2} \\
+      %
+      \size{\trprojl(\tr)} & = & \size{\tr} +1 \\
+      %
+      \size{\trprojr(\tr)} & = & \size{\tr} + 1 \\
+      %
+      \size{\trtrue} & = & 0 \\
+      %
+      \size{\trfalse} & = & 0 \\
+      %
+      \size{\trift(\tr_b, \tr_t)} & = & \size{\tr_b} + \size{\tr_t} + 1 \\
+      %
+      \size{\triff(\tr_b, \tr_f)} & = & \size{\tr_b} + \size{\tr_f} + 1 \\
+      %
+      \size{\trconst} & = & 0 \\
+      %
+      \size{\trop(\tr)} & = & \size{\tr} + 1 \\
+      %
+      \size{\trnil} & = & 0 \\
+      %
+      \size{\trcons(\tr_1,\tr_2)} & = & \size{\tr_1} + \size{\tr_2} \\
+      % 
+      \size{ \trlet(x, \tr_1, \tr_2) } & = & \size{\tr_1} + \size{\tr_2}\\
+      %
+      \boxed{\color{red} \size{\triapp{\tr_1}{\tr_2}}} & = & \size{\tr_1} + \size{\tr_2}\\
+      %
+      \boxed{\color{red} \size{\eilam \expr}} & = & 0\\
+      \end{array}
+  \end{mathpar}
+  \caption{Size of a trace}
+  \label{fig:size}
+\end{figure}
+
+
+
+The step-indexed relation is shown in Figure~\ref{fig:lr:step}. Now,
+the value relation $\lrv{\type}$ contains pairs of step-indices
+$\stepiA$ and closed values. The expression relation contains pairs of
+step-indices and configurations $(\env, \expr)$. The relation
+basically mirrors the non-step-indexed relation of
+Figure~\ref{fig:lr:non-step}, with step indexes added in the
+completely standard way.
+
+
+\begin{figure}
+  \begin{mathpar}
+    \begin{array}{lll}
+      \lrv{\tbool} & = & \{(\stepiA, \etrue) ~|~ \stepiA \in \nat\} \cup
+      \{ (\stepiA, \efalse) ~|~ \stepiA \in \nat\} \\
+      %
+      \lrv{\tbase} & = & \{(\stepiA, \econst) ~|~ \stepiA \in \nat \conj \econst: \tbase \} \\
+      %
+      \lrv{\type_1 \times \type_2} & = & \{(\stepiA, (\valr_1, \valr_2)) ~|~ (\stepiA, \valr_1) \in \lrv{\type_1} \conj (\stepiA, \valr_2) \in \lrv{\type_2} \}\\
+      %
+      \lrv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+      \{(\stepiA, (\efix f(x).\expr, \env)) ~|~ \forall \stepiB < \stepiA.\eapp  \forall (\stepiB, \valr) \in \lrv{\type_1}.\\
+      & & 
+      ~~~~~~(\stepiB, (\env[x \mapsto \valr, f \mapsto (\efix f(x).\expr, \env)], \expr)) \in \lre{\dmap[x: \nnatbiA, f: \infty]}{\nnatA}{\type_2}\} \\
+      %
+     \boxed{ \lrv{\tlist{\type}}  } & = & \{  (\stepiA, \enil) ~|~ \stepiA \in
+                                \nat \} \cup \{  (\stepiA,
+                                \econs(\valr_1,\valr_2) ) ~|~
+                                (\stepiA, \valr_1) \in \lrv{\type}
+                                \land (\stepiA, \valr_2) \in \lrv{\tlist{\type}} \}
+      \\
+      %
+      \\ 
+      %
+      \lre{\dmap}{\nnatA}{\type} & = & \{ (\stepiA, (\env, \expr)) ~|~ \forall \valr\eapp  \tr\eapp  \stepiB.\eapp  (\env, \expr \bigstep \valr, \tr) \conj (\size{\tr} = \stepiB) \conj (\stepiB \leq \stepiA) \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~~~\Rightarrow (\adap(\tr) \leq \nnatA \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\forall x \in \mbox{Vars}.\eapp  \ddep{x}(\tr) \leq \dmap(x) \conj \\
+      & & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~((\stepiA - \stepiB,  \valr) \in \lrv{\type})
+      \}\\
+      %	
+      \boxed{\color{red} \lrv{\tint}} & = & \{(\stepiA, i) ~|~ \stepiA \in \nat \conj i : \tint \}\\
+      %
+      \boxed{\color{red} \lrv{\treal}} & = & \{(\stepiA, r) ~|~ \stepiA \in \nat \conj r : \treal \}\\
+      %  
+      \boxed{\color{red} \lrv{\tbox{\type}}} & = & \{(\stepiA, \valr) ~|~ \stepiA \in \nat \conj (\stepiA,\valr) \in \lrv{\type} \conj \eop \notin \valr \}\\
+      %
+      \boxed{\color{red} \lrv{\tforall{\dmap}{\nnatA}{i} \type} } & = & \{(\stepiA, (\eilam \expr, \env)) ~|~ \stepiA \in \nat \conj \forall I. ~  \tvdash{} I ::S, (\stepiA, \expr) \in \lre{\dmap}{\nnatA[I/i]}{\type[I/i]} \}\\
+      %
+      \boxed{\color{red} \lrv{ \tint[I] } } & = & \{(\stepiA, n) ~|~ \stepiA \in \nat \conj n = I \}\\
+  \end{array}
+  \end{mathpar}
+  \caption{Logical relation with step-indexing}
+  \label{fig:lr:step}
+\end{figure}
+
+We say that $(\stepiA, \env) \in \lrv{\Gamma}$ when $\dom(\env)
+\supseteq \dom(\Gamma)$ and for every $x \in \dom(\Gamma)$, $(\stepiA,
+\env(x)) \in \lrv{\Gamma(x)}$.
+
+{\color{red} We say that $\ienv \in \lrv{\Delta} $ when $\dom(\ienv)
+  \supseteq \dom(\Delta) $ and for every $x \in \dom(\Delta) $, $\cdot \vdash \ienv(x) :: \Delta(x)$ }

@@ -1,0 +1,296 @@
+\begin{figure}
+\begin{mathpar}
+\inferrule
+{
+	\Gamma(x) = \type \\
+        \dmap = [x:0] \cup \bot
+}
+{
+	\Delta; \Gamma;  \textcolor{red} {\dmap} \tvdash{ \red{\nnatA} }
+        \infr{x}{\red {\type} }{\dmap(x) \geq 0}{.}
+}~ \textbf{alg-var-$\uparrow$ }
+
+%
+\and
+%
+\inferrule
+{
+	\dmap =  \bot
+}
+{
+	\Delta; \Gamma;  \red {\dmap} \tvdash{\red{ 0} } \infr{c}{ 
+            \tbase }{\top}{.}
+}~ \textbf{alg-const-$\uparrow$ }
+%
+\and
+%
+\inferrule
+{
+	\dmap = \bot
+}
+{
+	\Delta; \Gamma;  \red{\dmap} \tvdash{\color{red} 0 } \infr{\etrue}{\tbool}{\top}{.}
+}~ \textbf{alg-true-$\uparrow$ }
+%
+\and
+%
+\inferrule
+{
+	\dmap =  \bot
+}
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{ \color{red} 0} \infr{\efalse}{\tbool}{\top}{.}
+}~ \textbf{alg-false-$\uparrow$ }
+%
+\and
+%
+\inferrule
+{
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA} } \infr{\expr}{\type_1 \times \type_2}{\restriction}{\psi}
+}
+{
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA} } \infr{\eprojl(\expr)}{\type_1}{\restriction}{\psi}
+}~ \textbf{alg-fst-$\uparrow$ }
+%
+\and
+%
+\inferrule
+{
+  \Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} } \infr{\expr}{\type_1 \times \type_2}{\restriction}{\psi}
+}
+{
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA} } \infr{\eprojr(\expr)}{\type_2}{\restriction}{\psi}
+}~ \textbf{alg-snd-$\uparrow$ }
+%
+\and
+%
+\inferrule
+{
+  \Delta \tvdash{} \type: wf \\
+       \dmap = \bot
+}
+{
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\color{red} 0} \chec{\enil}{ \tlist{\type} }{\top}{.}
+}~ \textbf{alg-nil-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma, f :
+        \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}, x : \type ;
+        \red {\dmap'' }
+	\tvdash{ \red{\nnatA} } \chec{\expr}{\type_2}{\restriction}
+}
+{
+	\Delta; \Gamma;  \red{\bot} \tvdash{ \red{0} } 
+	\chec{\efix f(x). \expr}{
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}
+        }{\restriction \land \dmap''(x) \leq \nnatbiA \land \forall y. y
+          \not = x.\dmap''(y) \leq \dmap(y) }
+}~ \textbf{alg-fix-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma; \red{\dmap_1} \tvdash{\red{\nnatA_1} } 
+	\infr{\expr_1}{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} }{ \restriction_1 }{\psi}
+	\\
+	\Delta; \Gamma;   \red{\dmap_2} \tvdash{\red{
+            \nnatA_2} }
+        \chec{\expr_2}{\type_1}{\restriction_2} 
+        \\
+       \nnatA' = \nnatA_1 + \max(\nnatA,\nnatA_2 + \nnatbiA)
+       \\
+        \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2
+        + \nnatbiA))
+}
+{
+	\Delta; \Gamma;  \red{\dmap'}  \tvdash{\red {\nnatA'} } 
+	\infr{\expr_1 \eapp \expr_2}{\type_2}{\restriction_1 \land \restriction_2 
+	\land \restriction_3 }{\psi, \nnatA_2}
+}~ \textbf{alg-app-$\uparrow$ }
+%
+\and
+%
+\inferrule
+{     
+	\Delta; \Gamma;  \red{\dmap_1} \tvdash{\red{\nnatA_1}} \chec{\expr_1}{\type_1}{\restriction_1}
+	\\
+	\Delta; \Gamma;  \red{\dmap_2} \tvdash{\red { \nnatA_2}
+        } \chec{\expr_2}{\type_2}{\restriction_2} 
+        \\
+        \nnatA = \max(\nnatA_1, \nnatA_2 ) 
+        \\
+        \dmap = \max(\dmap_1, \dmap_2)
+}
+{
+	\Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA}} \chec{(\expr_1, \expr_2)}{\type_1 \times \type_2}
+	{ \restriction_1 \land \restriction_2 
+      }
+}~ \textbf{alg-pair-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma; \red{\dmap_1} \tvdash{\red {\nnatA_1 } } \infr{\expr_1}{\tbool}{\restriction_1}{\psi}
+	\and
+	\Delta; \Gamma; \red{\dmap_2}
+        \tvdash{\red{\nnatA_2} } \chec{\expr_2}{\type}{\restriction_2}
+	\\
+	\Delta; \Gamma;  \red{\dmap_3}
+        \tvdash{\red{\nnatA_3} }
+        \chec{\expr_3}{\type}{\restriction_3} 
+        \\
+	 \nnatA' =  \nnatA_1 + \max(\nnatA_2, \nnatA_3)
+         \\
+         \dmap' = \max(\dmap_1, \nnatA_1 +
+          \max(\dmap_2,\dmap_3) )
+}
+{
+	\Delta; \Gamma; \red{\dmap'} \tvdash{\red{\nnatA'} } \chec{\eif (\expr_1, \expr_2, \expr_2) }{\type}
+	{ \restriction_1 \land \restriction_2 \land \restriction_3
+	}
+}~ \textbf{alg-if-$\downarrow$ }
+%
+\end{mathpar}
+ \caption{Algorithmic Typing Rules}
+  \label{fig:sub-type-rules}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+%
+
+\inferrule
+{	
+       \Delta; \Gamma; \psi_a; \red{\dmap} \tvdash{\red{\nnatA}} 
+	\infr{\expr}{ \tbox{\tarr{\type_1}{\type_2}{0}{\dmap''}{0} }
+        }{\restriction}{}
+        \\
+        \nnatA' = \nnatA + 1 
+        \\
+        \dmap' =  1 + \max(\dmap, \dmap''+ \nnatA)
+}
+{
+	\Delta; \Gamma; \psi_a;\red{\dmap'} \tvdash{\red {\nnatA'} }
+	\infr{\eop{\expr}}{\treal}
+	{
+	\restriction 
+	 }{\nnatA}
+} ~ \textbf{alg-$\delta$-$\uparrow$ }
+
+%
+\\
+%
+\inferrule
+{
+	\Delta; \tbox{\Gamma};  \red{\dmap} \tvdash{\red{\nnatA} }
+        \chec{\expr}{\type}{\restriction} 
+        \\
+        \delta \not \in \expr
+}
+{
+	\Delta; \Gamma',\tbox{\Gamma}; \red{\dmap}
+        \tvdash{\red{\nnatA} }
+        \chec{\mathsf{BOX} \eapp\expr}{\tbox{\type}}{\restriction}
+} ~ \textbf{alg-box-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{      
+	\Delta; \Gamma;  \red{\dmap_1} \tvdash{\red{\nnatA_1} } \chec{\expr_1}{\type}{\restriction_1}
+	\\
+	\Delta; \Gamma; \red{\dmap_2} \tvdash{\red{\nnatA_2} }
+        \chec{\expr_2}{ \tlist{\type} }{\restriction_2}
+        \\
+        \nnatA = \max(\nnatA_1, \nnatA_2)
+        \\
+        \dmap = \max(\dmap_1, \dmap_2)
+}
+{
+	\Delta; \Gamma; \red{ \dmap} \tvdash{\red{\nnatA} } \chec{\econs(\expr_1, \expr_2)}{\tlist{\type}}
+	{
+          \restriction_1 \land \restriction_2
+	}
+}~ \textbf{alg-cons-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma; \red{ \dmap_1} \tvdash{ \red {\nnatA_1} } \infr{\expr_1}{\type_1}{\restriction}{\psi}
+	 \\
+	\Delta; \Gamma, x : \type_1; \red{\dmap_2}
+        \tvdash{\red{\nnatA_2} } 
+	\chec{\expr_2}{\type_2}{\restriction_2} 
+        \\
+        \nnatA = \max(\nnatA_2, \nnatA_1 + \nnatbiA)
+        \\
+        \dmap = \max(\dmap_2, \dmap_1 + \nnatbiA)
+}
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} } \chec{\elet x = \expr_1 \ein \expr_2 }{\type_2}
+	{
+	\restriction_1 \land\restriction_2
+        \land
+        \dmap_2 (x) \leq \nnatbiA
+	}
+}~ \textbf{alg-let-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red {\nnatA} }
+	\infr{\expr}{\type}{\restriction}{\psi}
+	\\
+	\Delta; \vdash
+	\sub{\type}{\type'} \Rightarrow 
+	{\color{red} \restriction'}
+}
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA}}
+	\chec{\expr}{\type'}
+	{ \restriction \land \restriction'
+	}
+} ~ \textbf{alg-$\uparrow$-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	i::S, \Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} }
+	\chec{\expr}{\type}{\restriction}
+}
+{
+	\Delta; \Gamma;\red{\dmap} \tvdash{\red{0}}
+	\chec{\eilam \expr}{ \tforall{\dmap}{\nnatA}{i}
+        }{\forall i. \restriction }
+}~ \textbf{alg-iabs-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{ \red{\nnatA} } \infr{\expr}{ \tforall{\dmap_1 }{\nnatA_1}{i} }{ \restriction }{\psi}
+	\and
+	\Delta \tvdash{} I :: S
+        \\
+        \dmap' = \max(\dmap, \nnatA + \dmap_1) 
+        \\
+        \nnatA' = \nnatA_1[I/i] + \nnatA
+}
+{
+	\Delta; \Gamma; \red{\dmap'} \tvdash{ \red{\nnatA'} } \infr{\expr [ I]}{ \type[I/i] }
+	{
+	\restriction  
+	}{\psi}
+} ~ \textbf{alg-iapp$\uparrow$ }
+\end{mathpar}
+\caption{Algorithmic Typing Rules, part 2}
+  \label{fig:sub-type-rules2}
+\end{figure}
