@@ -157,7 +157,7 @@
 %
 \end{mathpar}
  \caption{Algorithmic Typing Rules}
-  \label{fig:sub-type-rules}
+  \label{fig:alg-type-rules}
 \end{figure}
 
 \begin{figure}
@@ -248,7 +248,7 @@
 	\Delta; \Gamma; \red{\dmap} \tvdash{\red {\nnatA} }
 	\infr{\expr}{\type}{\restriction}{\psi}
 	\\
-	\Delta; \vdash
+	\Delta \models
 	\sub{\type}{\type'} \Rightarrow 
 	{\color{red} \restriction'}
 }
@@ -258,6 +258,22 @@
 	{ \restriction \land \restriction'
 	}
 } ~ \textbf{alg-$\uparrow$-$\downarrow$ }
+%
+\and
+%
+\inferrule
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red {\nnatA} }
+	\chec{\expr}{\type}{\restriction}
+        \\
+        \Delta \wf{\type}
+}
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA}}
+	\infr{ ( \expr: \type, \dmap, \nnatA )}{\type}
+	{ \restriction
+	}{}
+} ~ \textbf{alg-anno-$\uparrow$ }
 %
 \and
 %
@@ -292,5 +308,70 @@
 } ~ \textbf{alg-iapp$\uparrow$ }
 \end{mathpar}
 \caption{Algorithmic Typing Rules, part 2}
-  \label{fig:sub-type-rules2}
+  \label{fig:alg-type-rules2}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\inferrule
+{ }
+{ \Delta \models \eqv{ \tbase }{\tbase }{\top }  }~\textbf{alg-eq-base}
+%
+\and
+%
+\inferrule
+{ }
+{ \Delta \models \eqv{ \tbool }{\tbool }{\top }  }~\textbf{alg-eq-bool}
+%
+\and
+%
+\inferrule
+{ \Delta \models \eqv{\type_1}{\type_1'}{ \restriction_1 }
+  \\
+  \Delta \models \eqv{\type_2}{\type_2'}{\restriction_2}
+  }
+{ \Delta \models \eqv{ \type_1 \times \type_2 }{ \type_1' \times \type_2
+  }{\restriction_1 \land \restriction_2  }  }~\textbf{alg-eq-pair}
+%
+\and
+%
+\inferrule
+{   \Delta \models \eqv{\type_1}{\type_1' }{\restriction_1 } 
+  \\
+   \Delta \models \eqv{\type_2}{\type_2' }{\restriction_2 }
+}
+{ \Delta \models \eqv{
+    \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ) }{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'} ) }{
+    \restriction_1 \land \restriction_2 \land \nnatbiA = \nnatbiA'
+    \land \nnatA = \nnatA' \land \dmap = \dmap'  }  }~\textbf{alg-eq-arrow}
+%
+\and
+%
+\inferrule
+{ }
+{ \Delta \models \eqv{ \tint[I] }{\tint[I'] }{ I = I' }  }~\textbf{alg-eq-int}
+%
+\and
+%
+\inferrule
+{  \Delta \models \eqv{\type}{\type'}{\restriction} }
+{ \Delta \models \eqv{ \tbox{\type} }{\tbox{\type'} }{\restriction }  }~\textbf{alg-eq-box}
+%
+\and
+%
+\inferrule
+{ \Delta \models \eqv{\type}{\type'}{\restriction} }
+{ \Delta \models \eqv{ \tlist{\type} }{\tlist{\type'} }{\restriction }  }~\textbf{alg-eq-list}
+%
+\and
+%
+\inferrule
+{ i,\Delta \models \eqv{\type}{\type'}{\restriction} }
+{ \Delta \models \eqv{ \tforall{\dmap}{\nnatA}{i} \type
+  }{\tforall{\dmap'}{\nnatA'}{i} \type' }{\forall I::S.\restriction
+    \land \dmap = \dmap' \land \nnatA = \nnatA' }  }~\textbf{alg-eq-$\forall$ }
+\end{mathpar}
+\caption{Algorithmic equivalence Rules, part 2}
+  \label{fig:alg-sub-rules}
 \end{figure}

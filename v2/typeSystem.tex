@@ -62,7 +62,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
     }{
       \Delta; \Gamma; \dmap \tvdash{\nnatA} x: \type
-    }
+    }~\textbf{var}
     %
     \and
     %
@@ -73,7 +73,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
     }{
       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
-    }
+    }~\textbf{app}
     %
     \and
     %
@@ -84,7 +84,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \expr: \type_2
     }{
       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x: \type_1).\expr: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})
-    }
+    }~\textbf{fix}
     %
     \and
     %
@@ -95,7 +95,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \nnatA' = \max(\nnatA_1,\nnatA_2)
     }{
       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
-    }
+    }~\textbf{pair}
     %
     \and
     %
@@ -103,7 +103,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
     }{
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \eprojl(\expr): \type_1
-    }
+    }~\textbf{fst}
     %
     \and
     %
@@ -111,22 +111,34 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
     }{
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \eprojr(\expr): \type_2
-    }
+    }~\textbf{snd}
     %
     \and
     %
     \inferrule{
     }{
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \etrue: \tbool
-    }
+    }~\textbf{true}
     %
     \and
     %
     \inferrule{
     }{
        \Delta; \Gamma; \dmap \tvdash{\nnatA} \efalse: \tbool
-    }
+    }~\textbf{false}
     %
+    \and
+      \inferrule{
+        \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr: \type'
+        \\
+        \dmap' < \dmap 
+        \\
+        \nnatA' < \nnatA
+        \\
+        \Delta \models \sub{\type' }{ \type  } 
+    }{
+       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type
+    }~\textbf{subtype}
     
   \end{mathpar}
   \caption{Typing rules, part 1}
@@ -144,21 +156,21 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
       \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
     }{
        \Delta;\Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
-    }
+    }~\textbf{if}
     %
     \and
     %
     \inferrule{
     }{
        \Delta;\Gamma; \dmap \tvdash{\nnatA} \econst: \tbase
-    }
+    }~\textbf{const}
    \and
     %
     \inferrule{
       \Delta; \dmap \wf{\type} \\
     }{
       \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
-    }
+    }~\textbf{nil}
     % 
  	\and
     %
@@ -171,11 +183,11 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     }
     {
        \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr): \treal
-    }
+    }~\textbf{$\delta$}
 %
   \and
 %
-     {\color{blue}
+     {
      \inferrule
      {
         \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
@@ -187,7 +199,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     }
     {
         \Delta; \Gamma, \Gamma'; \dmap \tvdash{\nnatA} \expr: \tbox{\type}
-    }
+    } ~\textbf{box}
     }
     %
     \and
@@ -200,7 +212,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
    }
    { 
    \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
-     \tlist{\type}  }
+     \tlist{\type}  } ~\textbf{cons}
    %
    \and
    %
@@ -211,16 +223,16 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
    }
-   {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2 : \type}
+   {  \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2 : \type}~\textbf{let}
    %
    \and
    %
-  {\color{red}
+  {
   \inferrule{
       \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
     }{
-     \Delta;  \Gamma; \dmap \tvdash{\nnatA}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
-    }
+     \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
+    }~\textbf{ilam}
     %
     \and
     %
@@ -236,7 +248,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
      \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
      \type[I/i]
     }
-	    }        
+	    }~\textbf{iapp}        
 \end{mathpar}
 
    \framebox{
@@ -581,6 +593,21 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     {
       \Delta \models \sub{ \tlist{\tbox{\type }}  }{ \tbox{\tlist{\type}} } 
     }
+ %
+    \and
+% \tforall{\dmap}{\nnatA}{i} \type
+ \inferrule*[right=$\forall$]
+    {
+      i::S,\Delta \models \sub{ \type }{ \type' }
+      \\
+      \nnatA \leq \nnatA'
+      \\
+      \dmap \leq \dmap'
+    }
+    {
+      \Delta \models \sub{   \tforall{\dmap}{\nnatA}{i} \type  }{ \tforall{\dmap'}{\nnatA'}{i} \type'} 
+    }
+
     \end{mathpar}
  \caption{Subtyping rules}
   \label{fig:sub-type-rules}
