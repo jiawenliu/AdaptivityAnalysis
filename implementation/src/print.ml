@@ -103,7 +103,7 @@ let rec pp_head fmt =
     | Guassian
 *)
 let rec pp_dataset fmt = 
-  fprintf fmt "%s \n\n" "let dataset = [ [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ; [1.0;1.0;1.0;1.0] ] "
+  fprintf fmt "%s \n\n" "let dataset = [1.0;1.0;1.0;1.0]  "
 
 
 let rec pp_expression fmt (e : Syntax.expr) = 
@@ -127,17 +127,17 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Fix(f, x, t, e3)     -> 
     if(f.v_name = "_")
     then  
-      fprintf fmt "(fun (%a ) -> @\n@[<hov 1> %a@]@\n)" pp_expression(x) pp_expression(e3)
+      fprintf fmt "(fun (%s ) -> @\n@[<hov 1> %a@]@\n)" x.v_name pp_expression(e3)
     else
-      fprintf fmt " let rec %s (%a ) = @\n@[<hov 1> %a@]@\n" f.v_name pp_expression(x) pp_expression(e3)
+      fprintf fmt " let rec %s (%s ) = @\n@[<hov 1> %a@]@\n" f.v_name x.v_name pp_expression(e3)
   | Fst e             -> fprintf fmt " fst %a " pp_expression(e)
   | Snd e             -> fprintf fmt " snd %a " pp_expression(e)
   | If(e, e1, e2)     -> fprintf fmt " if(%a) then @\n @[<hov 1> %a@]@\n else @\n @[<hov 1> %a@]@\n" pp_expression(e)  pp_expression(e1) pp_expression(e2)
-  | Mech e            -> fprintf fmt " mech(%a) " pp_expression(e)
+  | Mech e            -> fprintf fmt " mech %a db " pp_expression(e)
   | Let(x, i, e1, e2)    -> 
   (
     match e1 with
-    | Fix(f, _, e3)   -> 
+    | Fix(f, _, _, e3)   -> 
       if(f.v_name = "_")
       then fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
       else 
@@ -149,8 +149,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Bop(p, e1, e2)    -> 
   (
     match p with
-    | Contains        -> fprintf fmt "(List.exists (fun a -> if (a = %a) then true else false) %a)" pp_expression(e2) pp_expression(e1)
-    | Setminus        -> fprintf fmt "(listminus %a %a)" pp_expression(e1) pp_expression(e2)
+    | Setminus        -> fprintf fmt "(db_minus %a %a)" pp_expression(e1) pp_expression(e2)
     | _               -> fprintf fmt " ((%a)%a(%a)) " pp_expression(e1) pp_bop(p) pp_expression(e2)
   )
 
@@ -160,7 +159,6 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | Bernoulli(v)      -> fprintf fmt "(sample_bernoulli(%a))" pp_expression(v)
   | Uniform(v1, v2)   -> fprintf fmt "(sample_uniform %a %a)" pp_expression(v1) pp_expression(v2)
   | _                 -> fprintf fmt " new "
-
 
 
 let rec pp_primutype fmt ty = match ty with
@@ -189,6 +187,19 @@ let rec pp_iterm fmt ty = match ty with
   | ISub(i1, i2)        -> fprintf fmt " %a - %a " pp_iterm i1 pp_iterm i2
   | IMaximal(i1, i2)    -> fprintf fmt " Max(%a, %a) " pp_iterm i1 pp_iterm i2
 
+(**********************************************************************)
+(* Pretty printing for Depth term *)
+
+let rec pp_dterm fmt ty = match ty with
+  | DConst i            -> fprintf fmt " Depth %d " i
+  | DVar v              -> fprintf fmt " Depth %s " v.v_name
+  | DBot                -> fprintf fmt " @<1>%s " (u_sym Symbols.Bot)
+  | DInfty              -> fprintf fmt " @<1>%s " (u_sym Symbols.Inf)
+
+let rec pp_dmap fmt d =
+  match d with
+    | []       -> ()
+    | (v, depth) :: tl  -> fprintf fmt "(%s: %a), %a" v.v_name pp_dterm depth pp_dmap tl
 
 let pp_adapt fmt cst = 
     match cst with 
@@ -202,11 +213,11 @@ let rec pp_type fmt ty = match ty with
 
   | Ty_Prod(ty1, ty2)        -> fprintf fmt "(%a @<1>%s @[<h>%a@]) " pp_type ty1 (u_sym Symbols.Times) pp_type ty2
   | Ty_Arrow(ity, q, d, a, oty) 
-                             -> fprintf fmt "%a , %d @<1>%s %a  @[<h>%a@] " pp_type ity q (u_sym Symbols.Arrow) pp_iterm a pp_type oty
+                             -> fprintf fmt "%a , %a @<1>%s [%a] %a  @[<h>%a@] " pp_type ity pp_dterm q (u_sym Symbols.Arrow) pp_dmap d pp_iterm a pp_type oty
 
   | Ty_Forall(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (u_sym Symbols.Forall) i.v_name pp_sort s pp_type ty1
   | Ty_Exists(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (u_sym Symbols.Exists) i.v_name pp_sort s pp_type ty1
-  | Ty_Index(i, ty1)         -> fprintf fmt "%a[%a] " pp_type ty1 pp_iterm i
+  | Ty_IntIndex(i)         -> fprintf fmt "Int[%a] " pp_iterm i
 
   | Ty_Box ty1               -> fprintf fmt "@<1>%s %a " (u_sym Symbols.Box) pp_type ty1
 
@@ -216,18 +227,15 @@ let rec pp_type fmt ty = match ty with
 (* Pretty printing for constraints *)
 
 let pp_ivar_ctx_elem ppf (v, s) =
-  if !debug_options.full_context then
-    fprintf ppf "%-10a : %a" pp_vinfo v pp_sort s
-  else
-    fprintf ppf "%-10a" pp_vinfo v
+    fprintf ppf "%-10s" v.v_name
 
-let pp_ivar_ctx = pp_list pp_ivar_ctx_elem
-
+(*let pp_ivar_ctx = pp_list pp_ivar_ctx_elem
+*)
 
 
 (**********************************************************************)
 (* Pretty printing for constraints *)
-let rec pp_cs ppf cs =
+(*let rec pp_cs ppf cs =
   match cs with
     | CTrue                -> fprintf ppf "%s" (u_sym Symbols.Top)
     | CFalse               -> fprintf ppf "%s" (u_sym Symbols.Bot)
@@ -244,6 +252,12 @@ let rec pp_cs ppf cs =
     | CBetaEq (b_1,b_2) ->       fprintf ppf "%a EQ %a " pp_beta b_1 pp_beta b_2 
     | CBetaSub (b_1,b_2) ->       fprintf ppf "%a SB %a " pp_beta b_1 pp_beta b_2 
     | CNot c ->  fprintf ppf "NOT %a " pp_cs c  
+*)
 
 
 
+
+let rec pp_progm fmt expr = 
+      pp_head fmt; 
+      pp_dataset fmt;
+      pp_expression fmt expr

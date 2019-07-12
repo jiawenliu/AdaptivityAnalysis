@@ -31,30 +31,30 @@ type uop = Log | Sign
 
 
 
-type d_map = (expr * int) list
+type dmap = (var_info * dterm) list
 
 and 
 
 (* Types *)
 ty =
   (* Primitive types *)
-  | Ty_Prim     of ty_prim
+  | Ty_Prim       of ty_prim
 
   (* Pair *)
-  | Ty_Prod     of ty * ty
+  | Ty_Prod       of ty * ty
   (* Functional type *)
-  | Ty_Arrow      of ty * int * d_map * iterm * ty
+  | Ty_Arrow      of ty * dterm * dmap * iterm * ty
 
   (* Quantified types *)
-  | Ty_Forall   of var_info * sort * ty
-  | Ty_Exists   of var_info * sort * ty
-  | Ty_IntIndex of iterm
+  | Ty_Forall     of var_info * sort * ty
+  | Ty_Exists     of var_info * sort * ty
+  | Ty_IntIndex   of iterm
 
   (* Boxed Types *)
-  | Ty_Box      of ty
+  | Ty_Box        of ty
 
   (* List types *)
-  | Ty_List     of ty
+  | Ty_List       of ty
 
 and
                     
@@ -74,10 +74,11 @@ expr =
   | If          of expr * expr * expr
 
   | Let         of var_info * iterm * expr * expr
+
 (*  | Case        of expr * var_info * expr * var_info * expr
 *)
   (* Functional Expressions *)
-  | Fix         of var_info * expr * ty * expr(* unsure *) 
+  | Fix         of var_info * var_info * ty * expr
   | App         of expr * expr
   | Mech        of expr
 
@@ -116,9 +117,9 @@ expr =
 
 
 type trace = 
-  | Tr_Var        of string
-  | Tr_Eval       of trace * trace * (expr * expr) * trace (* unsure *) 
-  | Tr_Fix        of expr
+  | Tr_Var        of var_info
+  | Tr_App        of trace * trace * (var_info * var_info) * trace 
+  | Tr_Fix        of expr (* Unsure *)
   | Tr_Pair       of trace * trace
   | Tr_Fst        of trace
   | Tr_Snd        of trace
@@ -131,12 +132,15 @@ type trace =
   | Tr_Nil
   | Tr_Cons       of trace * trace
   | Tr_Let        of expr * trace * trace
+  | Tr_Bernoulli  of expr
+  | Tr_Uniform
   | Tr_Error
 
 
 
 
 (* Substitution ty[I/i] for index vars *)
+(* More Carefule *)
 let rec ty_subst i it ty = 
   let f_it = (iterm_subst i it) in
   let utf = ty_subst i it in
@@ -166,7 +170,7 @@ let rec is_equal_exp eL eR : bool =
   | Prim(p1), Prim( p2) -> p1 = p2
 
   | Fix(f1, x1, ty1, e1), Fix(f2, x2, ty2, e2) 
-    -> f1 = f2 && ty1 = ty2 && is_equal_exp x1 x2 && is_equal_exp e1 e2
+    -> f1 = f2 && ty1 = ty2 && x1 = x2 && is_equal_exp e1 e2
   
   | Pack( e), Pack (e')
   | Mech( e), Mech (e')

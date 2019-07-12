@@ -1,7 +1,7 @@
 open Syntax
 open IndexSyntax
 open Format
-open Print2Ocaml
+open Print
 
 let infile = ref (None : string option)
 let outfile = ref (None : string option)
@@ -40,5 +40,6 @@ let main =
     let (expr, ty) = (parse_string infile) in
     let  out_formatter = formatter_of_out_channel (open_out (outfile)) in
       pp_progm out_formatter expr ; 
-      pp_progm std_formatter expr
+      pp_progm std_formatter expr ;
+      pp_type std_formatter ty
 

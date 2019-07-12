@@ -58,6 +58,7 @@ open IndexSyntax
 %token MIN
 %token ADAPT
 %token DMAP
+%token BOT
 
 
 /* tokens for modes */
@@ -102,9 +103,9 @@ expr:
   | LPAREN expr COMMA expr  RPAREN                  { Pair($2, $4) } 
   | IF LPAREN expr COMMA expr COMMA expr  RPAREN
                                                     { If($3, $5, $7) }
-  | FIX VAR LPAREN expr COLON Type RPAREN DOT expr
-                                                    { Fix( {v_name = $2}, $4, $6, $9) }
-  | LAM expr COLON Type DOT expr                    { Fix( {v_name = "_"}, $2, $4, $6) }
+  | FIX VAR LPAREN VAR COLON Type RPAREN DOT expr
+                                                    { Fix( {v_name = $2}, {v_name = $4}, $6, $9) }
+  | LAM VAR COLON Type DOT expr                     { Fix( {v_name = "_"}, {v_name = $2}, $4, $6) }
   | NIL                                             { Nil }
   | expr DBCOLON expr                                  { Cons($1, $3) }
   | MECH LPAREN expr RPAREN                         { Mech($3) }
@@ -158,11 +159,18 @@ Sort:
 
 
 DMap:
-  DMAP
+  LBRACK BOT RBRACK
     { [] }
 
-  | DMap LPAREN VAR COLON INTV RPAREN
-    { (Var {v_name = $3}, $5) :: $1 }
+  | LBRACK Dmap RBRACK
+    { $2 }
+
+Dmap:
+  | LPAREN VAR COLON INTV RPAREN
+    { [ ({v_name = $2}, (DConst $4) ) ] }
+  
+  | LPAREN VAR COLON INTV RPAREN COMMA Dmap
+    { ( {v_name = $2}, (DConst $4) ) :: $7 }
 
 
 Type:
@@ -183,10 +191,10 @@ Type:
     { Ty_Prod($1, $3) }
 
   | Type ARROW Type
-    { Ty_Arrow($1, 0, [], IConst 0, $3) }
+    { Ty_Arrow($1, DConst 0, [], IConst 0, $3) }
 
   | Type COMMA INTV ARROW LPAREN DMap SEMICOLON ITerm RPAREN Type
-    { Ty_Arrow($1, $3, $6, $8, $10) }
+    { Ty_Arrow($1, DConst $3, $6, $8, $10) }
 
   | Type LIST
     { Ty_List $1 }

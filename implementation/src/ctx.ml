@@ -14,7 +14,7 @@ type 'a context =
       ivar_ctx  : sort ctx;
       evar_ctx  : sort ctx;
       dmap_ctx  : iterm ctx;
-(*      lvar_ctx  : var_info list;
+(*    lvar_ctx  : var_info list;
 *)    constr_env :  constr
     }
 
