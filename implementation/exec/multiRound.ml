@@ -5,14 +5,14 @@ open Distribution
 
 let dataset = [1.0;1.0;1.0;1.0]   
 
- let rec f ( z  ) = 
- (fun ( sc  ) -> 
-  (fun ( a  ) -> 
-   (fun ( p  ) -> 
-    (fun ( q  ) -> 
-     (fun ( ii  ) -> 
-      (fun ( i  ) -> 
-       (fun ( nn  ) -> 
+ let rec f (z ) = 
+ (fun (sc ) -> 
+  (fun (a ) -> 
+   (fun (p ) -> 
+    (fun (q ) -> 
+     (fun (ii ) -> 
+      (fun (i ) -> 
+       (fun (nn ) -> 
          if( (( i ) < ( nn )) ) then 
            if(   contains   ii    i  ) then 
                       let x =
@@ -37,13 +37,13 @@ let dataset = [1.0;1.0;1.0;1.0]
  )
  
 let updtSC = f
- let rec f ( z  ) = 
- (fun ( scc  ) -> 
-  (fun ( a  ) -> 
-   (fun ( p  ) -> 
-    (fun ( qc  ) -> 
-     (fun ( i  ) -> 
-      (fun ( cc  ) -> 
+ let rec f (z ) = 
+ (fun (scc ) -> 
+  (fun (a ) -> 
+   (fun (p ) -> 
+    (fun (qc ) -> 
+     (fun (i ) -> 
+      (fun (cc ) -> 
         if( (( i ) < ( cc )) ) then 
                   let x =
                    ((   get   scc    i  ) +. ( (( (( a ) -. ( p )) ) *. ( (( 
@@ -62,11 +62,11 @@ let updtSC = f
  )
  
 let updtSCC = f
- let rec f ( z  ) = 
- (fun ( maxScc  ) -> 
-  (fun ( sc  ) -> 
-   (fun ( i  ) -> 
-    (fun ( nn  ) -> 
+ let rec f (z ) = 
+ (fun (maxScc ) -> 
+  (fun (sc ) -> 
+   (fun (i ) -> 
+    (fun (nn ) -> 
       if( (( i ) < ( nn )) ) then 
         if( ((   get   sc    i  ) < ( maxScc )) ) then 
            i  ::       f   ()    maxScc    sc    (( i ) +. ( 1.000000 ))   
@@ -83,21 +83,21 @@ let updtSCC = f
  )
  
 let updtI = f
- let rec multiRound ( z  ) = 
-   (fun ( k  ) -> 
-  (fun ( j  ) -> 
-   (fun ( sc  ) -> 
-    (fun ( scc  ) -> 
-     (fun ( ii  ) -> 
-      (fun ( nn  ) -> 
-       (fun ( cc  ) -> 
-        (fun ( db  ) -> 
+ let rec multiRound (z ) = 
+   (fun (k ) -> 
+  (fun (j ) -> 
+   (fun (sc ) -> 
+    (fun (scc ) -> 
+     (fun (ii ) -> 
+      (fun (nn ) -> 
+       (fun (cc ) -> 
+        (fun (db ) -> 
           if( (( j ) < ( k )) ) then 
              let p = (sample_uniform  0.000000   1.000000 ) in
-              let q = (fun ( x  ) -> 
+              let q = (fun (x ) -> 
                        (sample_bernoulli( p ))
                       ) in
-               let qc = (fun ( x  ) -> 
+               let qc = (fun (x ) -> 
                          (sample_bernoulli( p ))
                         ) in
                 let qj =    restrict   q    db   in
@@ -109,8 +109,8 @@ let updtI = f
                            updtSCC   ()    scc    a    p    qc    0.000000   
                     cc   in
                     let maxScc =
-                        List.fold_left  (fun ( acc  ) -> 
-                                         (fun ( a  ) -> 
+                        List.fold_left  (fun (acc ) -> 
+                                         (fun (a ) -> 
                                            if( (( acc ) < ( a )) ) then 
                                              a 
                                            else 

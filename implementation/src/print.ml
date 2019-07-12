@@ -123,7 +123,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | True              -> fprintf fmt " true " 
   | False             -> fprintf fmt " false "
   | Pair(e1, e2)      -> fprintf fmt " (%a, %a)"  pp_expression e1 pp_expression e2
-  | App (e1, e2)      -> fprintf fmt " @[%a@] @[%a@] " pp_expression e1  pp_expression e2
+  | App (e1, e2)      -> fprintf fmt " (@[%a@] @[%a@]) " pp_expression e1  pp_expression e2
   | Fix(f, x, t, e3)     -> 
     if(f.v_name = "_")
     then  
