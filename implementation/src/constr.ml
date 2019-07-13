@@ -30,6 +30,11 @@ type constr =
   | CBetaIn   of iterm * beta
   | CBetaSub  of beta * beta
   | CNot      of constr
+(* Constrains for Depth*)
+  | CDEq       of dterm * dterm
+  | CDLeq      of dterm * dterm
+  | CDAnd      of constr * constr
+  | CDOr       of constr * constr
 
 let empty_constr = CTrue
 

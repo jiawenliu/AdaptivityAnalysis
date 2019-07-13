@@ -18,7 +18,8 @@ open Constr
 open Ctx
 open Ty_error
 open Support.FileInfo
-
+open Map
+open DMap
 
 module Opt = Support.Options
 module Err = Support.Error
@@ -32,7 +33,7 @@ let typing_error_pp = Err.error_msg_pp Opt.TypeChecker
 
 (** Check whether ty1 is a subtype of ty2, generating the necessary
     constraints along the way. **)
-let rec check_subtype (ty1 : ty) (ty2 : ty) : constr checker =
+let rec check_equiv (ty1 : ty) (ty2 : ty) : constr checker =
   let fail = fail NotSubtype (ty1, ty2) in
   	if ty1 = ty2 then return_ch empty_constr
   	else 
@@ -43,7 +44,7 @@ let rec check_subtype (ty1 : ty) (ty2 : ty) : constr checker =
   	match bty1, ty2 with
   		| ty, ty                 -> return_ch empty_constr
   		| ty, Ty_Box (Ty_Box ty) -> return_ch empty_constr
-  		| bty1, Ty_Box bty2      -> check_subtype bty1 bty2
+  		| bty1, Ty_Box bty2      -> check_equiv bty1 bty2
   		| Ty_Arrow(ity, d, dmap, ad, oty), Ty_Arrow(Ty_Box ity, 0, dmap, IConst 0, Ty_Box oty)
   								 -> return_ch empty_constr
   		| _                      -> fail
@@ -68,16 +69,16 @@ let rec check_subtype (ty1 : ty) (ty2 : ty) : constr checker =
   | Ty_IntIndex i, Ty_Prim Ty_PrimInt -> return_ch empty_constr
 
   | Ty_Prod(sty1, sty2), Ty_Prod(sty1', sty2') 
-  						   -> check_subtype sty1 sty1' >> check_subtype sty1' sty2'
+  						   -> check_equiv sty1 sty1' >> check_equiv sty1' sty2'
 
   | Ty_Arrow(ity, q, dmap, ad, oty), Ty_Arrow(ity', q', dmap', ad', oty') 
   						   -> if q < q' then
-  						   	check_size_leq ad ad' (check_subtype ity' ity >> check_subtype oty oty')
+  						   	check_size_leq ad ad' (check_equiv ity' ity >> check_equiv oty oty')
   						   else
   						   	fail
 
   | Ty_List(ty1), Ty_List(ty2)
-                 -> check_subtype ty1 ty2
+                 -> check_equiv ty1 ty2
 
   | _ , _ -> fail
 
@@ -92,27 +93,70 @@ let rec inferType (e: expr) : ty inferer  =
   let _ = debug dp "infer_TP:@\n@[e1 %a @]@.@\n"  Print.pp_expr e in
     match e with
     | Var(vi)     -> get_var_ty vi <<= infer_var vi
-    | Prim(ep)    -> return_inf(Syntax.type_of_prim ep )
-    | Fst(e)      -> inferType e <<= infer_proj dp fst
-    | Snd(e)      -> inferType e <<= infer_proj dp snd
+    | Prim(ep)    -> return_inf(Syntax.type_of_prim ep) <<= infer_const
+    | Fst(e)      -> inferType e <<= infer_proj fst
+    | Snd(e)      -> inferType e <<= infer_proj snd
     | App(e1,e2)  -> debug dp "infer_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
-         infer_app (inferType e1) dp e2
+         infer_app (inferType e1) e2
     | IApp(e)     -> infer_iapp (inferType e) dp
-    | True        -> return_inf(Ty_Prim(Ty_PrimBool))
-    | False       -> return_inf(Ty_Prim(Ty_PrimBool))
-    |  _          -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
+    | Mech e      -> infer_mech (inferType e)
+    | True | False
+                   -> return_inf(Ty_Bool) <<= infer_bool 
+    |  _           -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
 
 
 and infer_var vi =
   fun ty ->
     fun ctx -> 
-      let depthmap = depth_bot ctx in
-        let depthmap = set_depth depthmap vi.v_name (IConst 0) in
+      let depthmap = bot_dmap ctx in
+        let depthmap = set_dmap depthmap vi.v_name (DConst 0) in
+          (* generate Zero Depth *)
+          let d0 = DConst 0 in
+            (* get depth of variable x *)
+            let dx = get_depth depthmap vi.v_name in
+              match dx with
+                | Some dx -> Right (ty, depth_cs d0 dx, depthmap, (IConst 0) )
+                | None    -> Left err
 
-      Right (ty, empty_constr, depthmap, Some (IConst 0) )
+
+and infer_const =
+  fun ctx -> 
+          let depthmap = bot_dmap ctx in
+            Right (ty, empty_constr, depthmap, (IConst 0) )
 
 
-and infer_iapp m i =
+and infer_bool =
+  fun ctx -> 
+          let depthmap = bot_dmap ctx in
+            Right (ty, empty_constr, depthmap, (IConst 0) )
+
+
+and infer_mech m =
+  fun ctx ->
+    match m ctx with 
+      | Right(ty, c, dps, z) ->
+      begin
+        match ty with 
+          | Ty_Arrow(ty1, IConst 0, dm, IConst 0, ty2) ->
+
+          (* Convert the depth map list from the arrow type into dmap  *)
+          let dps'' = to_dmap dm in
+           
+           (*Increase the Adaptivity by 1 *)
+           let z' = add_adapts z (IConst 1) in
+
+              (*Increase the Depth map by 1 *)
+              let dps' = sum_cons_dmap (IDConst 1) (max_dmap dps (sum_dmap_adap z dps'')) in
+                Right ( (Ty_Prim Ty_PrimReal), c, dps', z')
+
+          | _ -> fail dp (WrongShape (ty, " Mechanism operation Error ")) ctx
+      end
+      | Left err -> Left err
+
+
+
+
+and infer_iapp m =
   fun ctx ->
     match m ctx with
     | Right (ty, c, psi, k) ->
@@ -122,27 +166,30 @@ and infer_iapp m i =
         | Ty_Forall(x, s, ty) ->
           let v = fresh_evar s in
           let witn = IVar v in
-          let k' = IndexSyntax.sum_adapts k (iterm_subst x witn k_e) in 
+          let k' = IndexSyntax.add_adapts k (iterm_subst x witn k_e) in 
             Right (ty_subst x witn ty, c, (v,s):: psi, k')
-        | _ -> fail i (WrongShape (ty, "index quantified (forall) ")) ctx
+        | _ -> fail dp (WrongShape (ty, "index quantified (forall) ")) ctx
       end
     | Left err -> Left err
 
 
-and infer_app m i e2 =
-  m =<-> (fun ty _ ->
+and infer_app m e2 =
+  m =<-> (
+    fun ty _ ->
       match ty with
-      | Ty_Arrow(ty1, mu', dmap, k'', ty2) ->
+      | Ty_Arrow(ty1, q, dps, z, ty2) ->
          debug dp "inf_app :@\n@[ty is :%a, k'' is %a, e2 is %a @]@." Print.pp_type ty Print.pp_iterm k'' Print.pp_expr e2; 
-        [((checkType e2 ty1), ty2, k'')]
-      | _ -> [(fail i (WrongShape (ty, "function")), Ty_Prim (Ty_PrimInt), IConst 0)])
+        ((checkType e2 ty1), ty2, q, to_dmap dps, z)
+      | _ -> (fail dp (WrongShape (ty, "function")), ty2, IConst 0, to_dmap dps, z)
+      )
 
+  
 
-and infer_proj i f =
+and infer_proj f =
   fun ty ->
     match ty with
     | Ty_Prod (ty1, ty2) -> return_inf(f (ty1, ty2))
-    | _ -> fail i (WrongShape (ty, "product"))
+    | _ -> fail dp (WrongShape (ty, "product"))
 
 (** [checkType e] verifies that expression [e] has unary type [ty]
     in the context [ctx] with the cost [k]. If
@@ -294,7 +341,7 @@ and infer_and_check (i: info) (e: expr) (ty : ty) : constr checker =
       debug dp "infer_and_check :@\n@[infer_type is %a, expr is %a, checked type is %a, idx_ctx is :%a , k' is %a, k is %a @]@." 
       Print.pp_type inf_ty Print.pp_expr e Print.pp_type ty Print.pp_ivar_ctx ctx.ivar_ctx Print.pp_adapt k' Print.pp_adapt k; 
       (
-        match (check_subtype inf_ty ty (extend_e_ctx psi_ctx ctx, None)) with
+        match (check_equiv inf_ty ty (extend_e_ctx psi_ctx ctx, None)) with
           | Right c' -> 
           	  let 
                 cs = option_combine k' k (cost_cs ctx) |> Core.Option.value ~default:CTrue 

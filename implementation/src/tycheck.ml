@@ -3,6 +3,8 @@
 (* ---------------------------------------------------------------------- *)
 
 open Tycheck_sigs
+open Map
+
 
 module TyCheck (Ty : CH_TYPE) =
   struct
@@ -13,7 +15,9 @@ module TyCheck (Ty : CH_TYPE) =
     open Syntax
     open Support.FileInfo
     open Core
+    open DMap
 
+    module Map = Map.Make(var_info)
     module Opt = Support.Options
 
     let dp = Support.FileInfo.dummyinfo
@@ -27,11 +31,11 @@ module TyCheck (Ty : CH_TYPE) =
     type ty = Ty.ty
    
    (* The Adaptivity of programs *)
-    type adapt = iterm option
+    type adapt = iterm
 
 
    (* The Depth Map of variables in programs *)
-    type dmap = iterm ctx
+    type dmap = 'a Map.t
  
    (* The context for Type Checking *)
     type ch_ctx = ty context * adapt
@@ -51,23 +55,6 @@ module TyCheck (Ty : CH_TYPE) =
        CLeq(iterm_simpl z2, iterm_simpl z1)
 
 
-    let depth_cs ctx d1 d2 =
-      match d1,d2 with
-        | (id1, depth1)::tl, (id2, depth2)::tl2
-              -> CAnd( CLeq(iterm_simpl depth1, iterm_simpl depth2), depth_cs ctx tl1 tl2)
-        | [],[] -> CTrue
-        | _ -> fail
-
-
-
-    let rec depth_cs_const ctx d1 i =
-      match d1 with
-        | [] -> CTrue
-        | (id, depth)::tl -> CAnd( CLeq(iterm_simpl depth, i), depth_cs_const ctx tl i)
-
-(*    let adapt_cs_st ctx (k1, k2) =
-       CLeq(iterm_simpl k1,iterm_simpl k2)
-*)
 
     let if_adapt k' = Option.map ~f:(fun _ -> k')
 
@@ -149,7 +136,7 @@ let (<<=) (m : 'a inferer) (f : 'a -> 'b inferer) : 'b inferer =
              begin
                match (f res ctx) with
                | Right (res',c', psi', k') -> 
-                  Right (res', merge_cs c c', psi @ psi', (sum_adapts k k'))
+                  Right (res', merge_cs c c', merge_dmaps psi psi', (add_adapts k k'))
                | Left err' -> Left err'
              end
           | Left err  -> Left err
@@ -171,31 +158,20 @@ let (<->=) (m : ty  inferer) (f : ty  -> constr checker) : constr checker =
           | Left err -> Left err
 
 
-let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm) list ) : ty inferer =
+let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm * dmap * iterm) ) : ty inferer =
     fun ctx ->
       match m ctx with
-      | Right (ty, c, psi, k) ->
-        (* Generate a new adapt meta variable *)
-        let v = fresh_evar Adapt in
-        let k' = (IVar v) in
+      | Right (ty, c1, dps1, z1) ->
         begin
-          let fl = f ty ctx.heur_mode in
-          let (m', ty_inf, k'') = List.hd_exn fl in
-          let psi' = (v, Adapt) :: psi in
-          let k_ctx = extend_e_ctx ((v, Adapt) :: psi) ctx in
-          let k_res k'' = add_adapts(k'', add_adapts(k,k')) in
+          let (m', ty_inf, q, dps, z) = f ty in
           match m' (k_ctx ,if_adapt k' k) with
-          | Right c' -> Right (ty_inf, merge_cs c c', psi', k_res k'')
-          | Left err' -> 
-            if List.length fl = 1 
-            then Left err'
-            else
-              begin
-                let (m', ty_inf, k'') = (List.nth_exn fl 1) in
-                match m' (extend_e_ctx psi' ctx , Some k') with
-                | Right c'  -> Right (ty_inf, merge_cs c c', psi', k_res k'')
-                | Left err' -> Left err'
-              end
+          | Right(c2, dps2, z2) -> 
+            (* Calculate the new Depth Map *)
+            let dps' = max_dmap dps1 (sum_adap_dmap z1 (max_dmap dps (sum_cons_dmap q dps2))) in
+              (* Calculate the new Adaptivity *)
+              let z' = add_adapts z1 (max_adapts z (sum_adap_depth z2 q) ) in
+              Right (ty_inf, merge_cs c1 c2, dps', z')
+          | Left err' -> Left err'
         end
       | Left err -> Left err
 
@@ -204,7 +180,7 @@ let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm) list ) : ty 
 
 
 let return_inf(x : 'a) : 'a inferer = 
-	fun ctx -> Right (x, empty_constr, [], Some (IConst 0) )
+	fun ctx -> Right (x, empty_constr, empty_dmap, Some (IConst 0) )
 
 
 let return_leaf_ch  = fun (ctx, k) -> 
@@ -284,6 +260,9 @@ let check_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr chec
 
 let check_dmap_leq (sl) () () : constr checker =
       () 
+
+
+
 
   
 

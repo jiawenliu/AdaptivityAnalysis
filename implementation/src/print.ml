@@ -1,5 +1,6 @@
 open Syntax
 open IndexSyntax
+open Constr
 
 open Format
 
@@ -164,7 +165,6 @@ let rec pp_expression fmt (e : Syntax.expr) =
 let rec pp_primutype fmt ty = match ty with
     Ty_PrimInt     -> fprintf fmt "@<1>%s" (u_sym Symbols.Int)
   | Ty_PrimUnit    -> fprintf fmt "@<1>%s" (u_sym Symbols.Unit)
-  | Ty_PrimBool    -> fprintf fmt "@<1>%s" (u_sym Symbols.Bool)
   | Ty_PrimReal    -> fprintf fmt "@<1>%s" (u_sym Symbols.Real)
 
 let rec pp_list pp fmt l = match l with
@@ -210,6 +210,7 @@ let pp_adapt fmt cst =
 
 let rec pp_type fmt ty = match ty with
   | Ty_Prim tp               -> fprintf fmt "%a " pp_primutype tp
+  | Ty_Bool                  -> fprintf fmt "@<1>%s" (u_sym Symbols.Bool)
 
   | Ty_Prod(ty1, ty2)        -> fprintf fmt "(%a @<1>%s @[<h>%a@]) " pp_type ty1 (u_sym Symbols.Times) pp_type ty2
   | Ty_Arrow(ity, q, d, a, oty) 
@@ -235,7 +236,7 @@ let pp_ivar_ctx_elem ppf (v, s) =
 
 (**********************************************************************)
 (* Pretty printing for constraints *)
-(*let rec pp_cs ppf cs =
+let rec pp_cs ppf cs =
   match cs with
     | CTrue                -> fprintf ppf "%s" (u_sym Symbols.Top)
     | CFalse               -> fprintf ppf "%s" (u_sym Symbols.Bot)
@@ -252,7 +253,10 @@ let pp_ivar_ctx_elem ppf (v, s) =
     | CBetaEq (b_1,b_2) ->       fprintf ppf "%a EQ %a " pp_beta b_1 pp_beta b_2 
     | CBetaSub (b_1,b_2) ->       fprintf ppf "%a SB %a " pp_beta b_1 pp_beta b_2 
     | CNot c ->  fprintf ppf "NOT %a " pp_cs c  
-*)
+    | CDEq(d1, d2)
+    | CDLeq(d1,d2)
+    | CDAnd(cs1, cs2)
+    | CDOr(cs1, cs2) -> ()
 
 
 

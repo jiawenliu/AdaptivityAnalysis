@@ -12,7 +12,6 @@ open IndexSyntax
 type ty_prim =
     Ty_PrimInt
   | Ty_PrimUnit
-  | Ty_PrimBool
   | Ty_PrimReal
 
 (* Primitive Terms *)
@@ -39,6 +38,8 @@ and
 ty =
   (* Primitive types *)
   | Ty_Prim       of ty_prim
+
+  | Ty_Bool
 
   (* Pair *)
   | Ty_Prod       of ty * ty
@@ -146,6 +147,8 @@ let rec ty_subst i it ty =
   let utf = ty_subst i it in
   match ty with
   | Ty_Prim tp            -> Ty_Prim tp
+
+  | Ty_Bool               -> Ty_Bool
   (* ADT *)
   | Ty_Prod(ty1, ty2)   -> Ty_Prod(utf ty1, utf ty2)
 

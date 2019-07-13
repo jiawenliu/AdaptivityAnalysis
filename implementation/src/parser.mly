@@ -177,12 +177,13 @@ Type:
 
   | INT  
     { Ty_Prim Ty_PrimInt }
-  | BOOL
-    { Ty_Prim Ty_PrimBool }
   | REAL
     { Ty_Prim Ty_PrimReal }
   | UNIT
     { Ty_Prim Ty_PrimUnit }
+
+  | BOOL
+    { Ty_Bool }
 
   | BOX Type
     { Ty_Box $2 }

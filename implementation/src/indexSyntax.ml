@@ -83,27 +83,56 @@ let rec iterm_free_i_vars (it: iterm) : var_info list =
   | IMaximal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)
 
 let add_adapts  (sl, sr) : iterm =
-match  sl, sr with
-| IConst 0, _ -> iterm_simpl sr
-| _, IConst 0 -> iterm_simpl sl
-| _ -> IAdd(iterm_simpl sl, iterm_simpl sr)
+  match  sl, sr with
+    | IConst a, IConst b  -> IConst (a+b)
+    | IConst 0, _         -> iterm_simpl sr
+    | _, IConst 0         -> iterm_simpl sl
+    | _                   -> IAdd(iterm_simpl sl, iterm_simpl sr)
         
 
 (* A simplifying version of sl+sr that checks if one of sl or sr are 0. *)
-let sum_adapts  sl sr : iterm option =
+(*let sum_adapts  sl sr : iterm option =
 match sl, sr with
 | Some x, Some y -> Some (add_adapts (x, y))
 | _, Some y -> Some (iterm_simpl  y)
 | Some x, _ -> Some (iterm_simpl  x)
 | _ -> None
+*)
 
-
+let rec max_adapts q1 q2 : iterm =
+  match q1, q2 with
+    | IConst a, IConst b  -> 
+        if (a > b) 
+        then IConst a
+        else IConst b
+    | IConst 0, _         -> iterm_simpl q2
+    | _, IConst 0         -> iterm_simpl q1
+    | _                   -> IMaximal(iterm_simpl q1, iterm_simpl q2)
 
 (* Depth Terms*)
 type dterm =
   | DConst  of int
   | DVar    of var_info
+  | DMaximal of dterm * dterm
+  | DAdd  of dterm * dterm
   | DBot
   | DInfty
 
-   
+let add_depths d1 d2 =
+  match d1,d2 with
+  | DConst a, DConst b -> DConst a + b
+  | DConst 0, _ -> d2
+  | _, DConst 0 -> d1
+  | _ -> DAdd(d1, d2)
+
+let max_depths d1 d2 =
+  match d1,d2 with
+  | DConst a, DConst b -> 
+    if (a > b)
+    then 
+      DConst a
+    else
+      DConst b
+  | DBot, _ -> d2
+  | _, DBot -> d1
+  | _ -> DMaximal(d1, d2)
