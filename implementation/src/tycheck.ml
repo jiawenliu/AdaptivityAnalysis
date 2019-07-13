@@ -50,29 +50,26 @@ module TyCheck (Ty : CH_TYPE) =
     type 'a inferer =  inf_ctx -> ('a * constr * dmap * adapt) ty_error
 
 
-    let return_ch (cs : 'a) : 'a checker  = 
-      fun ch_ctx -> Right (cs, empty_dmap, IConst 0)
+let return_ch (cs : 'a) : 'a checker  = 
+    fun ch_ctx -> Right (cs, empty_dmap, IConst 0)
 
 
-    let return_inf(x : 'a) : 'a inferer = 
-      fun ctx -> Right (x, empty_constr, empty_dmap, (IConst 0) )
+let return_inf(x : 'a) : 'a inferer = 
+    fun ctx -> Right (x, empty_constr, empty_dmap, (IConst 0) )
 
 
-    let return_leaf_ch  = 
-      fun ctx -> 
+let return_leaf_ch  = 
+    fun ctx -> 
         Right (empty_constr, empty_dmap, IConst 0)      
 
 
-    let adapt_leq_cs ctx (z1, z2) =
-       CLeq(iterm_simpl z2, iterm_simpl z1)
+let adapt_leq_cs ctx (z1, z2) =
+    CLeq(iterm_simpl z2, iterm_simpl z1)
 
 
 
-    let if_adapt k' = Option.map ~f:(fun _ -> k')
 
-    let extend_adapt v1 ctx = extend_e_var v1.v_name Adapt ctx 
-
-    let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
+let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
       fun (ctx) ->
       (* Call the checker on the first premise *)
       begin
@@ -84,8 +81,9 @@ module TyCheck (Ty : CH_TYPE) =
              | Right (c2, dps2, z2) ->
                 (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
                 let cs' =  merge_cs c1 c2 in
-                  (*Generate the New Depth Map*)
+                  (*Generate the New Depth Map, is the Maximum of Existing Depth Maps*)
                   let dps' = max_dmap dps1 dps2 in
+                    (*Generate the New Adaptivity, is the Maximum of Existing Depth Adaptivity*)
                     let z' = max_adapts z1 z2 in   
                       Right (cs', dps', z')
              | Left err' -> Left err'
@@ -95,18 +93,41 @@ module TyCheck (Ty : CH_TYPE) =
 
 
 let (>>=) (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
-  fun ch_ctx ->
-    match m ch_ctx with
-    | Right res -> f res ch_ctx
+  fun ctx ->
+    match m ctx with
+    | Right (cs, dps, z) ->
+      begin 
+        match (f res ctx) with
+          | Right(cs', dps', z') 
+            -> Right(merge_cs cs cs', merge_dmaps dps dps', add_adapts z z')
+          | Left err -> Left e
+      end
     | Left e    -> Left e
 
 
 
 
 
-(* Monadic combination with conjunction of contraints; ignores function *)
+(* Monadic combination with conjunction of contraints; with the Adaptivity added to all *)
 let (>&&>) m1 m2 = 
-	m1 >>= (fun c1 -> m2 >>= fun c2 -> return_ch (merge_cs c1 c2))
+  fun ctx ->
+        match m1 ctx with
+        | Right (c1, dps1, z1) ->
+           begin
+             (* Call the checker on the second premise *)
+             match (m2 ctx) with
+             | Right (c2, dps2, z2) ->
+                (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
+                let cs' =  merge_cs c1 c2 in
+                  (*Generate the New Depth Map, is the Maximum of Existing Depth Maps*)
+                  let dps' = max_dmap dps1 (sum_adap_dmap z1 dps2) in
+                    (*Generate the New Adaptivity, is the Maximum of Existing Depth Adaptivity*)
+                    let z' = add_adapts z1 z2 in   
+                      Right (cs', dps', z')
+             | Left err' -> Left err'
+           end
+        | Left err  -> Left err
+
 
 
 let handle_fail m1 m2 =
@@ -158,7 +179,7 @@ let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm * dmap * iter
       | Right (ty, c1, dps1, z1) ->
         begin
           let (m', ty_inf, q, dps, z) = f ty in
-          match m' (k_ctx ,if_adapt k' k) with
+          match m' ctx with
           | Right(c2, dps2, z2) -> 
             (* Calculate the new Depth Map *)
             let dps' = max_dmap dps1 (sum_adap_dmap z1 (max_dmap dps (sum_cons_dmap q dps2))) in
@@ -197,18 +218,16 @@ let get_var_ty (vi : var_info) : ty inferer =
 
 
 let with_new_ctx (f : ty context -> ty context) (m : 'a checker) : 'a checker =
-  fun (ctx,k) -> m (f ctx, k)
+  fun (ctx) -> m (f ctx)
 
 
 let with_mode (mu :mode) (m : 'a checker) : 'a checker =
   with_new_ctx (set_exec_mode mu) m
 
 
-let (|:|) (vi: var_info) (uty: ty) (m: constr checker) : constr checker =
-  with_new_ctx (extend_var vi.v_name uty) m
+let (|:|) (vi: var_info) (vty: ty) (m: constr checker) : constr checker =
+  with_new_ctx (extend_var vi.v_name vty) m
 
-let (|:-|) (vi: var_info) (uty: ty) (m: constr checker) : constr checker =
-  with_new_ctx (extend_uvar vi.v_name uty) m
 
 let (|:::|) (v: var_info) (s: sort) (i: info) (m: constr checker) : constr checker =
   with_new_ctx (extend_e_var v.v_name s) m

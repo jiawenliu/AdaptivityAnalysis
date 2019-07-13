@@ -195,9 +195,9 @@ and infer_proj f =
     | Ty_Prod (ty1, ty2) -> return_inf(f (ty1, ty2))
     | _ -> fail dp (WrongShape (ty, "product"))
 
-(** [checkType e] verifies that expression [e] has unary type [ty]
-    in the context [ctx] with the cost [k]. If
-    it does, it returns unit, otherwise it raises an exception. *)
+(** [checkType e] verifies that expression [e] has type [ty]
+    in the context [ctx] with the adapts [z]. If
+    it does, it returns constrain checker, otherwise it raises an exception. *)
 and checkType (e: expr) (ty : ty) : constr checker =
   debug dp "@[UCK  %a, ty is %a @]@." Print.pp_expr e Print.pp_type ty; 
 
@@ -210,31 +210,35 @@ and checkType (e: expr) (ty : ty) : constr checker =
             begin
             match ep with
             | PrimInt x -> let ty_ep = Syntax.type_of_prim ep in             
-                  (* 0 , UINT(D) *)
                   begin
                     match ty_ep, tp with
                     | Ty_IntIndex x, Ty_IntIndex y ->  Tycheck.check_size_eq x y  Tycheck.return_leaf_ch
-                    | _,  Ty_Prim Ty_PrimInt -> Tycheck.return_leaf_ch
-                    | _,_ -> fail dp @@ WrongShape (tp, "int[i] or int")
+                    | _, Ty_Prim Ty_PrimInt -> Tycheck.return_leaf_ch
+                    | _, _ -> fail dp @@ WrongShape (tp, "int[i] or int")
                   end
                
             | _ -> if tp = Syntax.type_of_prim ep
                    then Tycheck.return_leaf_ch else fail dp @@ WrongShape (tp, "primitive2")
              end
   | Fix( f, x, ty_x, e), _ 
-        ->  check_fix dp f x ty_x e ty
+        ->  check_fix f x ty_x e ty
 
   (* List type expressions *)
   | Nil, _ 
         ->  check_nil dp ty
   | Cons( e1, e2), _ 
-        ->  check_cons dp e1 e2 dp ty
+        ->           
+          begin
+            match ty with
+            | Ty_List (ty') -> (checkType e1 ty') >> (checkType e2 (Ty_List ty'))
+            | _ -> fail dp (WrongShape (ty, "List in Cons"))
+          end
 
 
   (* If statement *)
   | If( e, el, er), _ 
         ->  debug dp "checkif, el is %a, ty is %a " Print.pp_expr el Print.pp_type ty ; 
-            check_if i e el er ty
+            (checkType e Ty_Bool) >&&> ((checkType el ty) >> (checkType er ty))
 
   (* Pairs *)
   | Pair(e1, e2), _ 
@@ -269,55 +273,50 @@ and checkType (e: expr) (ty : ty) : constr checker =
           (fun ty_x -> (vi_x  |:| ty_x) (checkType e2 ty))
 
   | Bernoulli (v), _ 
-        -> check_real v
+        -> (checkType v (Ty_Prim Ty_PrimReal))
   | Uniform (v1, v2), _ 
-        -> check_real v1 >> check_real v2
+        -> (checkType v1 (Ty_Prim Ty_PrimReal)) >> (checkType v1 (Ty_Prim Ty_PrimReal))
 
   |  _ , _ -> infer_and_check dp e ty
 
 
 
 
-and check_real e =
-  ()
-
-
-
-and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty) =
+and check_fix (vi_x : var_info) (e : expr) (ty : ty) =
   match ty with
-  | Ty_Arrow(ty1, mu, k_fun, ty2) ->
-  debug dp "ck_fix:@\n@[e %a, ty1: %a, ty2: %a @]@.@\n"  Print.pp_expr e Print.pp_type ty1 Print.pp_type ty2;
-    check_body ((vi_f |:| ty)
+  | Ty_Arrow(ty1, q, dps, z, ty2) ->
+(*  debug dp "ck_fix:@\n@[e %a, ty1: %a, ty2: %a @]@.@\n"  
+      Print.pp_expr e Print.pp_type ty1 Print.pp_type ty2;
+*)
+    let m = ((vi_f |:| ty)
                   ((vi_x |:| ty1)
-                     (with_mode mu (checkType e ty2)))) k_fun
-  | _ ->  fail i (WrongShape (ty, "fuction"))
+                    (checkType e ty2))) in
+    fun ctx ->
+      match m ctx with
+        | Right(c, dps', z') -> 
+          let depthx = (get_depth vi_x dps') in
+            (* Constrain for depth of x *)
+            let cs1 = (depth_cs depthx q) in
+
+              (* Constrains for depth of others *)
+              let cs2 = dmap_cs dps' dps in
+
+                (* Depth Map with All bottom*)
+                let dps'' = bot_dmap ctx in
+                  Right(CAnd(c, CAnd(cs1, cs2)), dps'', IConst 0) 
+ 
+  | _ ->  fail dp (WrongShape (ty, "fuction"))
 
 
-and check_body (m: constr checker) (k_fun : iterm) : constr checker =
-  fun(ctx, k) ->
-    match k with
-    | Some k' -> 
-        debug dp "body_test:@\n@[k is %a, k_m is %a @]@.@\n"  Print.pp_iterm k' Print.pp_iterm k_fun ;
-      begin
-        match m (ctx, Some k_fun) with
-        | Right c ->  Right (CAnd(c, cost_cs_st ctx (IConst 0, k')))
-        | Left err -> Left err
-      end
-    | None -> m (ctx, None)
 
 
-and check_if (i : info) e el er ty =
-  debug dp "ck_if:@\n@[e is %a @]@.@\n"  Print.pp_expr e  ;
-  inferType e <->=
-  (fun ty_g ->
-     match ty_g with
-     | Ty_Prim Ty_PrimBool -> (checkType el ty) >&&> (checkType er ty)
-     | _ -> fail i (WrongShape (ty, "bool")))
 
 
 and check_nil i ty =
   match ty with
-  | Ty_List(ty) -> return_leaf_ch
+  | Ty_List(ty) 
+      -> return_leaf_ch >>= (fun cs -> 
+        fun ctx -> Right(empty_constr, bot_dmap ctx, IConst 0))
   | _ -> fail i (WrongShape (ty, "list"))
 
 
