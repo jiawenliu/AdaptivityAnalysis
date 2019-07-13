@@ -47,7 +47,7 @@ ty =
   | Ty_Arrow      of ty * dterm * dmap * iterm * ty
 
   (* Quantified types *)
-  | Ty_Forall     of var_info * sort * ty
+  | Ty_Forall     of var_info * sort * dmap * iterm * ty
   | Ty_Exists     of var_info * sort * ty
   | Ty_IntIndex   of iterm
 
@@ -156,7 +156,7 @@ let rec ty_subst i it ty =
   | Ty_Arrow(ty1, i, d, k, ty2) -> Ty_Arrow(utf ty1, i, d, f_it k, utf ty2)
 
   (* Quantified types *)
-  | Ty_Forall(b, s, ty')  -> Ty_Forall(b, s,  utf ty')
+  | Ty_Forall(b, s, d, z, ty')  -> Ty_Forall(b, s, d, z,  utf ty')
   | Ty_Exists(b, s, ty')  -> Ty_Exists(b, s, utf ty')
   | Ty_IntIndex(k)       -> Ty_IntIndex(f_it k)
 

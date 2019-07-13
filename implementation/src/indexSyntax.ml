@@ -90,14 +90,6 @@ let add_adapts  (sl, sr) : iterm =
     | _                   -> IAdd(iterm_simpl sl, iterm_simpl sr)
         
 
-(* A simplifying version of sl+sr that checks if one of sl or sr are 0. *)
-(*let sum_adapts  sl sr : iterm option =
-match sl, sr with
-| Some x, Some y -> Some (add_adapts (x, y))
-| _, Some y -> Some (iterm_simpl  y)
-| Some x, _ -> Some (iterm_simpl  x)
-| _ -> None
-*)
 
 let rec max_adapts q1 q2 : iterm =
   match q1, q2 with
@@ -108,6 +100,18 @@ let rec max_adapts q1 q2 : iterm =
     | IConst 0, _         -> iterm_simpl q2
     | _, IConst 0         -> iterm_simpl q1
     | _                   -> IMaximal(iterm_simpl q1, iterm_simpl q2)
+
+let rec adapt_subst z i witn : iterm =
+  match z with
+    | IVar j ->  
+              if z = i 
+              then witn
+              else z
+    | IAdd(j1, j2)      
+      -> IAdd(adapt_subst j1 i witn, adapt_subst j2 i witn)
+    | IMaximal(j1, j2)  
+      -> IMaximal(adapt_subst j1 i witn, adapt_subst j2 i witn)
+    | _ -> z
 
 (* Depth Terms*)
 type dterm =

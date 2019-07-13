@@ -159,15 +159,19 @@ and infer_mech m =
 and infer_iapp m =
   fun ctx ->
     match m ctx with
-    | Right (ty, c, psi, k) ->
+    | Right (ty, c, dps, z) ->
     debug dp "inf_iapp2 :@\n@[c is :%a, ty  %a @]@." Print.pp_cs c Print.pp_type ty ; 
       begin
         match ty with
-        | Ty_Forall(x, s, ty) ->
+        | Ty_Forall(x, s, dps1, z1, ty) ->
+          (* Generate New forall variable *)
           let v = fresh_evar s in
           let witn = IVar v in
-          let k' = IndexSyntax.add_adapts k (iterm_subst x witn k_e) in 
-            Right (ty_subst x witn ty, c, (v,s):: psi, k')
+          (* New Depth Map *)
+          let dps' = max_dmap dps (sum_adap_dmap z (to_dmap dps1)) in
+            (* New Adaptivity *)
+            let z' = add_adapts (adapt_subst z1 x witn) z in 
+              Right (ty_subst x witn ty, c, dps', z')
         | _ -> fail dp (WrongShape (ty, "index quantified (forall) ")) ctx
       end
     | Left err -> Left err
@@ -195,73 +199,88 @@ and infer_proj f =
     in the context [ctx] with the cost [k]. If
     it does, it returns unit, otherwise it raises an exception. *)
 and checkType (e: expr) (ty : ty) : constr checker =
-    debug dp "@[UCK  %a, ty is %a @]@." Print.pp_expr e Print.pp_type ty; 
+  debug dp "@[UCK  %a, ty is %a @]@." Print.pp_expr e Print.pp_type ty; 
+
   match e, ty with
+
   (* Primitive expressions *)
-  |  Prim (ep), tp ->
-     debug dp "primTInt :@\n@[%a, %a@]@." Print.pp_expr e Print.pp_type tp  ; 
-      begin
-      match ep with
-      | PrimInt x -> let ty_ep = Syntax.type_of_prim ep in             
-            (* 0 , UINT(D) *)
+  |  Prim (ep), tp 
+        ->
+           debug dp "primTInt :@\n@[%a, %a@]@." Print.pp_expr e Print.pp_type tp  ; 
             begin
-              match ty_ep, tp with
-              | Ty_IntIndex x, Ty_IntIndex y ->  Tycheck.check_size_eq x y  Tycheck.return_leaf_ch
-              | _,  Ty_Prim Ty_PrimInt -> Tycheck.return_leaf_ch
-              | _,_ -> fail dp @@ WrongShape (tp, "int[i] or int")
-            end
-         
-      | _ -> if tp = Syntax.type_of_prim ep
-             then Tycheck.return_leaf_ch else fail dp @@ WrongShape (tp, "primitive2")
-       end
-  | Fix( f, x, ty_x, e), _ -> check_fix dp f x ty_x e ty
+            match ep with
+            | PrimInt x -> let ty_ep = Syntax.type_of_prim ep in             
+                  (* 0 , UINT(D) *)
+                  begin
+                    match ty_ep, tp with
+                    | Ty_IntIndex x, Ty_IntIndex y ->  Tycheck.check_size_eq x y  Tycheck.return_leaf_ch
+                    | _,  Ty_Prim Ty_PrimInt -> Tycheck.return_leaf_ch
+                    | _,_ -> fail dp @@ WrongShape (tp, "int[i] or int")
+                  end
+               
+            | _ -> if tp = Syntax.type_of_prim ep
+                   then Tycheck.return_leaf_ch else fail dp @@ WrongShape (tp, "primitive2")
+             end
+  | Fix( f, x, ty_x, e), _ 
+        ->  check_fix dp f x ty_x e ty
+
   (* List type expressions *)
-  | Nil, _ -> check_nil dp ty
-  | Cons( e1, e2), _ -> check_cons dp e1 e2 dp ty
+  | Nil, _ 
+        ->  check_nil dp ty
+  | Cons( e1, e2), _ 
+        ->  check_cons dp e1 e2 dp ty
+
 
   (* If statement *)
-  | If( e, el, er), _ -> debug dp "checkif, el is %a, ty is %a " Print.pp_expr el Print.pp_type ty ; check_if i e el er ty
-  (* Pairs *)
-  | Pair(e1, e2), _ ->
-    begin
-      match ty with
-      | Ty_Prod (ty1,ty2) -> (checkType e1 ty1) >> (checkType e2 ty2)
-      | _ -> fail dp (WrongShape (ty, "product"))
-    end
-  (* Index abstraction *)
-  | ILam (e), Ty_Forall(x, s, mu, k, ty) ->
-     if (s = Loc) then
-       begin
-        check_body ((x |::::| s) dp
-                      (with_mode mu (checkType e ty))) k
-          end
-   else    check_body ((x |::| s) dp
-                  (with_mode mu (checkType e ty))) k
-  (* Existential introduction and elimination *)
-  | Pack (e), _ -> check_pack dp e ty
-  | Unpack (e1, vi_x, e2), _ -> check_unpack dp e1 vi_x e2 ty
-  (* Let bound *)
-  | Let (vi_x, e1, e2), _ ->
-    inferType e1 <->=
-    (fun ty_x -> (vi_x  |:| ty_x) (checkType e2 ty))
+  | If( e, el, er), _ 
+        ->  debug dp "checkif, el is %a, ty is %a " Print.pp_expr el Print.pp_type ty ; 
+            check_if i e el er ty
 
-  | Bernoulli (v), _ -> check_real v
-  | Uniform (v1, v2), _ -> check_real v1 >> check_real v2
-  | Mech (e), _   -> check_mech e
+  (* Pairs *)
+  | Pair(e1, e2), _ 
+        ->
+          begin
+            match ty with
+            | Ty_Prod (ty1,ty2) -> (checkType e1 ty1) >> (checkType e2 ty2)
+            | _ -> fail dp (WrongShape (ty, "product"))
+          end
+
+  (* Index abstraction *)
+  | ILam (e), Ty_Forall(x, s, mu, k, ty) 
+        ->
+            if (s = Loc) then
+             begin
+              check_body ((x |::::| s) dp
+                            (with_mode mu (checkType e ty))) k
+                end
+            else    check_body ((x |::| s) dp
+                        (with_mode mu (checkType e ty))) k
+  (* Existential introduction and elimination *)
+  | Pack (e), _ 
+        -> check_pack dp e ty
+
+  | Unpack (e1, vi_x, e2), _ 
+        -> check_unpack dp e1 vi_x e2 ty
+
+  (* Let bound *)
+  | Let (vi_x, e1, e2), _ 
+        ->
+          inferType e1 <->=
+          (fun ty_x -> (vi_x  |:| ty_x) (checkType e2 ty))
+
+  | Bernoulli (v), _ 
+        -> check_real v
+  | Uniform (v1, v2), _ 
+        -> check_real v1 >> check_real v2
 
   |  _ , _ -> infer_and_check dp e ty
 
 
-and check_dmap dmap dmap' =
-  ()
 
 
 and check_real e =
   ()
 
-
-and check_mech e =
-  ()
 
 
 and check_fix (i: info) (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty) =
@@ -324,15 +343,7 @@ and check_unpack i e1 vi_x e2 ty =
        (x |::| s) i ((vi_x |:| ty) (checkType e2 ty))
      | _ -> fail i (WrongShape (ty, "existential")))
 
-(*
-and check_clet i vi_x e1 e2 ty =
-  inferType e1 <->=
-  (fun csty ->
-     match csty with
-     | Ty_Cs(cs, ty_x) ->
-        (vi_x |:| ty_x) (checkType e2 ty) >>= fun cs_b -> return_ch (CImpl(cs, cs_b))
-     | _ -> fail i (WrongShape (ty, "constrained")))
-*)
+
 
 and infer_and_check (i: info) (e: expr) (ty : ty) : constr checker =
   fun(ctx, k) ->

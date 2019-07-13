@@ -38,7 +38,7 @@ module TyCheck (Ty : CH_TYPE) =
     type dmap = 'a Map.t
  
    (* The context for Type Checking *)
-    type ch_ctx = ty context * adapt
+    type ch_ctx = ty context
 
    (* The context for Type Inference *) 
     type inf_ctx = ty context
@@ -46,10 +46,22 @@ module TyCheck (Ty : CH_TYPE) =
    (* Reader/Error monad for  type-checking *)
     type 'a checker = ch_ctx -> ('a * dmap * adapt) ty_error
 
-    let return_ch cs  = fun ch_ctx -> Right cs
-
     (* Reader/Error monad for type-inference *)
     type 'a inferer =  inf_ctx -> ('a * constr * dmap * adapt) ty_error
+
+
+    let return_ch (cs : 'a) : 'a checker  = 
+      fun ch_ctx -> Right (cs, empty_dmap, IConst 0)
+
+
+    let return_inf(x : 'a) : 'a inferer = 
+      fun ctx -> Right (x, empty_constr, empty_dmap, (IConst 0) )
+
+
+    let return_leaf_ch  = 
+      fun ctx -> 
+        Right (empty_constr, empty_dmap, IConst 0)      
+
 
     let adapt_leq_cs ctx (z1, z2) =
        CLeq(iterm_simpl z2, iterm_simpl z1)
@@ -61,33 +73,21 @@ module TyCheck (Ty : CH_TYPE) =
     let extend_adapt v1 ctx = extend_e_var v1.v_name Adapt ctx 
 
     let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
-      fun (ctx, k) ->
-      (* Generate two new adapt meta variables *)
-      let v1 = fresh_evar in
-      let v2 = fresh_evar in
-      let k1 = (IVar v1) in
-      let k2 = (IVar v2) in
-      (* Extend the existential ctx with the two generated vars *)
-      let k1_ctx = extend_adapt v1 ctx in
-      let k2_ctx = extend_adapt v2 k1_ctx in
-      let k_cs   = adapt_leq_cs ctx (add_adapts(k1, k2), k) in
-
-      (* Call the checker on the first premise with adapt k1 *)
+      fun (ctx) ->
+      (* Call the checker on the first premise *)
       begin
-        match m (k1_ctx, if_adapt k1 k) with
-        | Right c1 ->
+        match m ctx with
+        | Right (c1, dps1, z1) ->
            begin
-             (* Call the checker on the second premise with adapt k2 *)
-             match (m' (k2_ctx, if_adapt k2 k)) with
-             | Right c2 ->
+             (* Call the checker on the second premise *)
+             match (m' ctx) with
+             | Right (c2, dps2, z2) ->
                 (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
-                let base =  merge_cs c1 (merge_cs c2 k_cs) in
-    
-                (* Existentially quantify over the cosntraint with the new adapts k1 and k2 *)
-                let c_quant = CExists(v1, UNKNOWN, Adapt, CExists(v2, UNKNOWN, Adapt, base)) in 
-                 	let cs_res = Option.value_map ~default:base
-                  		      ~f:(fun _ -> c_quant) k in
-                        Right cs_res
+                let cs' =  merge_cs c1 c2 in
+                  (*Generate the New Depth Map*)
+                  let dps' = max_dmap dps1 dps2 in
+                    let z' = max_adapts z1 z2 in   
+                      Right (cs', dps', z')
              | Left err' -> Left err'
            end
         | Left err  -> Left err
@@ -100,12 +100,6 @@ let (>>=) (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
     | Right res -> f res ch_ctx
     | Left e    -> Left e
 
-
-let (>>>=)  (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
-    fun (ctx, k) ->
-      match m (ctx, k) with
-      | Right c -> f c (ctx,k)
-      | Left err  -> Left err
 
 
 
@@ -179,12 +173,6 @@ let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm * dmap * iter
 
 
 
-let return_inf(x : 'a) : 'a inferer = 
-	fun ctx -> Right (x, empty_constr, empty_dmap, Some (IConst 0) )
-
-
-let return_leaf_ch  = fun (ctx, k) -> 
-    Right adapt_leq_cs ctx (IConst 0,k)       
 
 
 let fail (e : Ty_error.ty_error_elem) = fun _ ->
@@ -246,13 +234,13 @@ let check_size_eq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr check
 	m >>= fun c -> return_ch @@ merge_cs c (CEq (sl,sr))
 
 
-let assume_size_eq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
+(*let assume_size_eq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
 	m >>= fun c -> return_ch @@ CImpl (CEq (sl,sr), c)
 
 
 let assume_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
         m >>= fun c -> return_ch @@ CImpl (CLeq (sl,sr), c)
-
+*)
 
 let check_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr checker =
         m >>= fun c -> return_ch @@ merge_cs c (CLeq (sl,sr))

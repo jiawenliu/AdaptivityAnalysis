@@ -201,7 +201,7 @@ Type:
     { Ty_List $1 }
 
   | FORALL VAR DBCOLON COLON Sort DOT Type 
-    { Ty_Forall({v_name = $2}, $5, $7) }
+    { Ty_Forall({v_name = $2}, $5, [], IConst 0, $7) }
 
   | EXISTS VAR DBCOLON COLON Sort DOT Type 
     { Ty_Exists({v_name = $2}, $5, $7) }

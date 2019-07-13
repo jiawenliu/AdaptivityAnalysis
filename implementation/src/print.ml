@@ -216,7 +216,9 @@ let rec pp_type fmt ty = match ty with
   | Ty_Arrow(ity, q, d, a, oty) 
                              -> fprintf fmt "%a , %a @<1>%s [%a] %a  @[<h>%a@] " pp_type ity pp_dterm q (u_sym Symbols.Arrow) pp_dmap d pp_iterm a pp_type oty
 
-  | Ty_Forall(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (u_sym Symbols.Forall) i.v_name pp_sort s pp_type ty1
+  | Ty_Forall(i, s, d, z, ty1)     
+      -> fprintf fmt "@<1>%s %s ::(%a; %a) %a. %a " (u_sym Symbols.Forall) 
+      i.v_name pp_dmap d pp_iterm z pp_sort s pp_type ty1
   | Ty_Exists(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (u_sym Symbols.Exists) i.v_name pp_sort s pp_type ty1
   | Ty_IntIndex(i)         -> fprintf fmt "Int[%a] " pp_iterm i
 
