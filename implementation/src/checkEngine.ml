@@ -70,7 +70,6 @@ let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
 
         | _ , _ -> fail
 
-let rec equiv_forall m 
                  
 (** [inferType e] infers that expression [e] has type [un_ty] along
     with cost [k] in context [ctx]. If it does, it returns [un_ty
