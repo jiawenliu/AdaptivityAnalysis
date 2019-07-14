@@ -25,15 +25,16 @@ module type CHECK =
       (* Reader/Error monad for type-inference *)
       type 'a inferer = ty context -> ('a * constr * sort ctx * cost) ty_error
 
-      
+      val (<=<) : constr equiv_checker -> constr -> constr equiv_checker
+      val (<<) : constr equiv_checker -> constr equiv_checker -> constr equiv_checker
       val (>>=) : 'a checker -> ('a -> 'b checker) -> 'b checker
       val (>>>=) : 'a checker -> ('a -> 'b checker) -> 'b checker
       val (>>)   : constr checker -> constr checker -> constr checker
       val (>&&>)  : constr checker -> constr checker -> constr checker
       val (>||>)  : constr checker -> constr checker -> constr checker
       val (<<=)  : 'a inferer -> ('a -> 'b inferer) -> 'b inferer
-      val (<->=) : ty inferer -> (ty -> constr checker) -> constr checker
-      val (=<->) : ty inferer-> (ty -> Ctx.heurMode -> (constr checker  * ty * iterm) list ) -> ty inferer      
+      val (<->=) : ty inferer -> (ty -> (constr checker * dterm * var_info)) -> constr checker
+      val (=<->) : ty inferer-> (ty -> (constr checker * ty * iterm * dmap * iterm) ) -> ty inferer      
       val return_ch     : constr -> 'a * 'b  -> constr ty_error
       val return_inf    : 'a -> 'a inferer
       val return_leaf_ch : 'a context * cost  -> constr ty_error

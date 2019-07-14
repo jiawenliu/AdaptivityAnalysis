@@ -43,11 +43,21 @@ module TyCheck (Ty : CH_TYPE) =
    (* The context for Type Inference *) 
     type inf_ctx = ty context
 
-   (* Reader/Error monad for  type-checking *)
+    (* Reader/Error monad for Equivalent-checking *)
+    type 'a equiv_checker = ch_ctx -> 'a ty_error
+
+    (* Reader/Error monad for  type-checking *)
     type 'a checker = ch_ctx -> ('a * dmap * adapt) ty_error
 
     (* Reader/Error monad for type-inference *)
     type 'a inferer =  inf_ctx -> ('a * constr * dmap * adapt) ty_error
+
+
+let return_eq_ch (cs : 'a) : 'a equiv_checker  = 
+    fun ch_ctx -> Right cs
+
+let return_leaf_eq_ch  = 
+    fun ch_ctx -> Right empty_constr
 
 
 let return_ch (cs : 'a) : 'a checker  = 
@@ -63,9 +73,31 @@ let return_leaf_ch  =
         Right (empty_constr, empty_dmap, IConst 0)      
 
 
-let adapt_leq_cs ctx (z1, z2) =
-    CLeq(iterm_simpl z2, iterm_simpl z1)
+let rec adap_eq z1 z2 =
+  CEq(iterm_simpl z1, iterm_simpl z2)
 
+let (<<) (m1 : constr equiv_checker) (m2 : constr equiv_checker) : constr equiv_checker =
+  fun ctx ->
+      begin
+        match m1 ctx with
+        | Right c1 ->
+           begin
+             (* Call the checker on the second premise *)
+             match (m2 ctx) with
+             | Right c2 ->
+                (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
+                let cs' =  merge_cs c1 c2 in
+                      Right cs'
+             | Left err' -> Left err'
+           end
+        | Left err  -> Left err
+      end
+
+let (<=<) (m : constr equiv_checker) (cs : constr) : constr equiv_checker =
+  fun ctx ->
+      begin
+        match m ctx with
+        | Right c -> Right (merge_cs c cs)
 
 
 

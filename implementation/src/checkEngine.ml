@@ -33,56 +33,44 @@ let typing_error_pp = Err.error_msg_pp Opt.TypeChecker
 
 (** Check whether ty1 is a subtype of ty2, generating the necessary
     constraints along the way. **)
-let rec check_equiv (ty1 : ty) (ty2 : ty) : constr checker =
+let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
   let fail = fail NotSubtype (ty1, ty2) in
-  	if ty1 = ty2 then return_ch empty_constr
+  	(* BASE Case For Equivalent *)
+    if ty1 = ty2 then return_leaf_eq_ch
   	else 
-  match ty1, ty2 with
-  	(* CASES WHEN THE FIRST TYPE IS A BOX TYPE*)
-  | Ty_Box bty1, ty2 -> 
-  	begin
-  	match bty1, ty2 with
-  		| ty, ty                 -> return_ch empty_constr
-  		| ty, Ty_Box (Ty_Box ty) -> return_ch empty_constr
-  		| bty1, Ty_Box bty2      -> check_equiv bty1 bty2
-  		| Ty_Arrow(ity, d, dmap, ad, oty), Ty_Arrow(Ty_Box ity, 0, dmap, IConst 0, Ty_Box oty)
-  								 -> return_ch empty_constr
-  		| _                      -> fail
-
-    end
-
-  (* CASES WHEN THE SECOND TYPE IS A BOX TYPE*)
-  | bty1, Ty_Box bty2 -> 
-    begin
-    match bty1, bty2 with
-    	| Ty_Prim pty1, Ty_Prim pty2 -> 
-    		if pty1 = pty2 then return_ch empty_constr
-    					         else fail
-      | Ty_List Ty_Box lty1, Ty_List lty2 ->
-        if lty1 = lty2 then return_ch empty_constr
-                       else fail
-
-    	| _ -> fail
-    end 
-
-  (* CASES WHEN NONE OF THE TYPES IS A BOX TYPE*)
-  | Ty_IntIndex i, Ty_Prim Ty_PrimInt -> return_ch empty_constr
-
-  | Ty_Prod(sty1, sty2), Ty_Prod(sty1', sty2') 
-  						   -> check_equiv sty1 sty1' >> check_equiv sty1' sty2'
-
-  | Ty_Arrow(ity, q, dmap, ad, oty), Ty_Arrow(ity', q', dmap', ad', oty') 
-  						   -> if q < q' then
-  						   	check_size_leq ad ad' (check_equiv ity' ity >> check_equiv oty oty')
-  						   else
-  						   	fail
-
-  | Ty_List(ty1), Ty_List(ty2)
-                 -> check_equiv ty1 ty2
-
-  | _ , _ -> fail
+      match ty1, ty2 with
+      	(* CASES WHEN THE FIRST TYPE IS A BOX TYPE*)
+        | Ty_Prod(sty1, sty2), Ty_Prod(sty1', sty2') 
+                       -> check_equiv sty1 sty1' << check_equiv sty1' sty2'
 
 
+        (* CASES WHEN NONE OF THE TYPES IS A BOX TYPE*)
+        | Ty_IntIndex i1, Ty_IntIndex i2 -> return_eq_ch (CEq(i, i1))
+
+
+        | Ty_Arrow(ity, q, dps, z, oty), Ty_Arrow(ity', q', dps', z', oty') 
+        						   -> 
+                        let cs1 = depth_eq q q' in
+                          let cs2 = adap_eq z z' in
+                            let cs3 = dmap_eq dps dps' in
+        						   	      (check_equiv ity' ity << check_equiv oty oty') 
+                              <=<
+                              merge_cs cs1 @@ merge_cs cs2 cs3 
+
+        | Ty_Box ty1, Ty_Box ty2 
+                       -> check_equiv ty1 ty2
+
+        | Ty_List ty1, Ty_List ty2
+                       -> check_equiv ty1 ty2
+
+        | Ty_Forall(ix1, s1, dps1, z1, ty1), Ty_Forall(ix2, s2, dps2, z2, ty2)
+                        -> let cs1 = adap_eq z1 z2 in
+                            let cs2 = dmap_eq dps1 dps2 in
+                              (check_equiv ty1 ty2) <=< (merge_cs cs1 cs2)
+
+        | _ , _ -> fail
+
+let rec equiv_forall m 
                  
 (** [inferType e] infers that expression [e] has type [un_ty] along
     with cost [k] in context [ctx]. If it does, it returns [un_ty
