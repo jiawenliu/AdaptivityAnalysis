@@ -82,7 +82,7 @@ let rec iterm_free_i_vars (it: iterm) : var_info list =
   | ISub  (x, y)  ->  dedup (iterm_free_i_vars x  @ iterm_free_i_vars y)
   | IMaximal (i1,i2) ->  dedup (iterm_free_i_vars i1  @ iterm_free_i_vars i2)
 
-let add_adapts  (sl, sr) : iterm =
+let add_adapts  sl sr : iterm =
   match  sl, sr with
     | IConst a, IConst b  -> IConst (a+b)
     | IConst 0, _         -> iterm_simpl sr
@@ -115,12 +115,15 @@ let rec adapt_subst z i witn : iterm =
 
 (* Depth Terms*)
 type dterm =
-  | DConst  of int
-  | DVar    of var_info
-  | DMaximal of dterm * dterm
-  | DAdd  of dterm * dterm
+  | DConst    of int
+  | DVar      of var_info
+  | DMaximal  of dterm * dterm
+  | DAdd      of dterm * dterm
+  | DSub      of dterm * dterm
   | DBot
   | DInfty
+
+
 
 let add_depths d1 d2 =
   match d1,d2 with

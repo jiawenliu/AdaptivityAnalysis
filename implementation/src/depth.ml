@@ -57,26 +57,57 @@ let rec bot_dmap ctx =
 
 
 
-let rec set_dmap ds v d = 
+let rec set_dmap dps v d = 
   Map.update v 
   (fun y -> 
     match y with 
       | Some y -> Some d
       | None   -> None
   ) 
-  ds
+  dps
 
 
-let rec sum_adap_dmap z d =
-  ()
-
-let rec sum_cons_dmap c d =
-  ()
-
-let rec sum_adap_depth q d =
-  ()
+(* Add an adaptivity value into each binding in the depth map and return a new depth map *)  
+let rec sum_adap_dmap z dps =
+  Map.fold (fun key d dps -> 
+    let dps' = Map.add key (sum_adap_depth z d) dps) dps Map.empty
 
 
+(* Add a depth value to each binding in the depth map and return a new depth map *)  
+let rec sum_depth_dmap q dps =
+  Map.fold (fun key d dps -> 
+    let dps' = Map.add key (add_depths d q) dps) dps Map.empty
+
+
+(* Add the adaptivity into Depth and return new Depth *)  
+let rec sum_adap_depth z d = 
+  match z with
+    | IConst z            -> add_depths d (DConst z)
+    | IVar z              -> add_depths d (DVar z)
+    | IAdd(z1, z2)        -> DAdd((sum_adap_depth z1 d), (sum_adap_depth z2 (DConst 0)))
+    | ISub(z1, z2)        -> add_depths(d, 
+                            DSub((sum_adap_depth z1 (DConst 0) ), (sum_adap_depth z2 (DConst 0) )
+                              )
+    | IMaximal(z1, z2)    -> DMaximal ((sum_adap_depth z1 d), (sum_adap_depth z2 d))
+
+  
+
+(* Add the value of depth into adaptivity and return new Adaptivity *)  
+let rec add_adap_depth z d =
+  match d with
+    | DBot              -> z
+    | DInfy             -> z
+    | DConst d          -> add_adapts z (IConst d)
+    | DVar d            -> add_adapts z (IVar d)
+    | DSub(d1,d2)       -> add_adapts 
+                       (z, 
+                       ISub((add_adap_depth (IConst 0) d1), (add_adap_depth (IConst 0) d2))
+                       )
+    | DAdd(d1, d2)      -> IAdd ((add_adap_depth z d1), (add_adap_depth (IConst 0) d2))
+    | DMaximal(d1,d2)   -> IMaximal ((add_adap_depth z d1), (add_adap_depth z d2))
+
+
+(* Convert a List of Depth Binding from type annotation into Map *)  
 let rec to_dmap dps = 
   
   let rec helper dps dm =

@@ -146,7 +146,7 @@ and infer_mech m =
            let z' = add_adapts z (IConst 1) in
 
               (*Increase the Depth map by 1 *)
-              let dps' = sum_cons_dmap (IDConst 1) (max_dmap dps (sum_dmap_adap z dps'')) in
+              let dps' = sum_depth_dmap (IDConst 1) (max_dmap dps (sum_dmap_adap z dps'')) in
                 Right ( (Ty_Prim Ty_PrimReal), c, dps', z')
 
           | _ -> fail dp (WrongShape (ty, " Mechanism operation Error ")) ctx
@@ -267,10 +267,10 @@ and checkType (e: expr) (ty : ty) : constr checker =
         -> check_unpack dp e1 vi_x e2 ty
 
   (* Let bound *)
-  | Let (vi_x, e1, e2), _ 
+  | Let (vi_x, q, e1, e2), _ 
         ->
           inferType e1 <->=
-          (fun ty_x -> (vi_x  |:| ty_x) (checkType e2 ty))
+          (fun ty_x -> ((vi_x  |:| ty_x) (checkType e2 ty), q, vi_x))
 
   | Bernoulli (v), _ 
         -> (checkType v (Ty_Prim Ty_PrimReal))
@@ -299,7 +299,7 @@ and check_fix (vi_x : var_info) (e : expr) (ty : ty) =
             let cs1 = (depth_cs depthx q) in
 
               (* Constrains for depth of others *)
-              let cs2 = dmap_cs dps' dps in
+              let cs2 = dmap_cs dps' (to_dmap dps) in
 
                 (* Depth Map with All bottom*)
                 let dps'' = bot_dmap ctx in

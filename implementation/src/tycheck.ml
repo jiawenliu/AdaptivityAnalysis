@@ -160,14 +160,23 @@ let (<<=) (m : 'a inferer) (f : 'a -> 'b inferer) : 'b inferer =
 (* Instead of generating an fresh adapt variable, we simply subtract
    the inference adapt from the checking adapt. Otherwise, merge-min breaks
    due to complicated existential substitution *)
-let (<->=) (m : ty  inferer) (f : ty  -> constr checker) : constr checker =
-    fun (ctx, k) ->
+let (<->=) (m : ty  inferer) (f : ty  -> (constr checker * dterm * var_info)) : constr checker =
+    fun ctx ->
           match (m ctx) with
-          | Right (ty, c, psi, k') ->
-          tc_debug dp "<->= :@\n@[  c is %a, k is %a , k' is %a @]@."  Print.pp_cs c Print.pp_adapt k Print.pp_adapt k';  
+          | Right (ty1, c1, dps1, z1) ->
+(*            tc_debug dp "<->= :@\n@[  c is %a, k is %a , k' is %a @]@."  
+            Print.pp_cs c Print.pp_adapt k Print.pp_adapt k';  
+*)           
+            let (m, q, vi_x) = f ty1 in 
             begin
-              match (f ty (ctx, option_combine k k' (fun (ik,k') -> IMinus(ik, k')))) with
-              | Right c' -> Right (quantify_all_exist psi (merge_cs c c'))
+              match m ctx with
+              | Right (c2, dps2, z2) ->
+                let z = max_adapts z2 (add_adap_depth z1 q) in
+                  let dps = max_dmap dps2 (sum_depth_dmap q dps1) in
+                    let csd = depth_cs (get_depth dps2 vi_x) q in
+                      
+                      Right (CAnd(CAnd(cs1, cs2), csd), dps, z )
+
               | Left err' -> Left err'
             end          
           | Left err -> Left err
@@ -182,9 +191,9 @@ let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm * dmap * iter
           match m' ctx with
           | Right(c2, dps2, z2) -> 
             (* Calculate the new Depth Map *)
-            let dps' = max_dmap dps1 (sum_adap_dmap z1 (max_dmap dps (sum_cons_dmap q dps2))) in
+            let dps' = max_dmap dps1 (sum_adap_dmap z1 (max_dmap dps (sum_depth_dmap q dps2))) in
               (* Calculate the new Adaptivity *)
-              let z' = add_adapts z1 (max_adapts z (sum_adap_depth z2 q) ) in
+              let z' = add_adapts z1 (max_adapts z (add_adap_depth z2 q) ) in
               Right (ty_inf, merge_cs c1 c2, dps', z')
           | Left err' -> Left err'
         end
