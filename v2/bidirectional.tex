@@ -65,30 +65,22 @@
 \and
 %
 \inferrule
-{
-  \Delta \tvdash{} \type: wf \\
-       \dmap = \bot
+{	
+       \Delta; \Gamma; \psi_a; \red{\dmap} \tvdash{\red{\nnatA}} 
+	\infr{\expr}{ \tbox{\tarr{\type_1}{\type_2}{0}{\dmap''}{0} }
+        }{\restriction}{}
+        \\
+        \nnatA' = \nnatA + 1 
+        \\
+        \dmap' =  1 + \max(\dmap, \dmap''+ \nnatA)
 }
 {
-  \Delta; \Gamma;  \red{\dmap} \tvdash{\color{red} 0} \chec{\enil}{ \tlist{\type} }{\top}{.}
-}~ \textbf{alg-nil-$\downarrow$ }
-%
-\and
-%
-\inferrule
-{
-	\Delta; \Gamma, f :
-        \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}, x : \type ;
-        \red {\dmap'' }
-	\tvdash{ \red{\nnatA} } \chec{\expr}{\type_2}{\restriction}
-}
-{
-	\Delta; \Gamma;  \red{\bot} \tvdash{ \red{0} } 
-	\chec{\efix f(x). \expr}{
-          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}
-        }{\restriction \land \dmap''(x) \leq \nnatbiA \land \forall y. y
-          \not = x.\dmap''(y) \leq \dmap(y) }
-}~ \textbf{alg-fix-$\downarrow$ }
+	\Delta; \Gamma; \psi_a;\red{\dmap'} \tvdash{\red {\nnatA'} }
+	\infr{\eop{\expr}}{\treal}
+	{
+	\restriction 
+	 }{\nnatA}
+} ~ \textbf{alg-$\delta$-$\uparrow$ }
 %
 \and
 %
@@ -111,6 +103,29 @@
 	\infr{\expr_1 \eapp \expr_2}{\type_2}{\restriction_1 \land \restriction_2 
 	 }{\psi, \nnatA_2}
 }~ \textbf{alg-app-$\uparrow$ }
+%
+\end{mathpar}
+ \caption{Algorithmic Typing Rules}
+  \label{fig:alg-type-rules}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+%
+\inferrule
+{
+	\Delta; \Gamma, f :
+        \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}, x : \type ;
+        \red {\dmap'' }
+	\tvdash{ \red{\nnatA} } \chec{\expr}{\type_2}{\restriction}
+}
+{
+	\Delta; \Gamma;  \red{\bot} \tvdash{ \red{0} } 
+	\chec{\efix f(x: \type ). \expr}{
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}
+        }{\restriction \land \dmap''(x) \leq \nnatbiA \land \forall y. y
+          \not = x.\dmap''(y) \leq \dmap(y) }
+}~ \textbf{alg-fix-$\downarrow$ }
 %
 \and
 %
@@ -155,35 +170,18 @@
 	}
 }~ \textbf{alg-if-$\downarrow$ }
 %
-\end{mathpar}
- \caption{Algorithmic Typing Rules}
-  \label{fig:alg-type-rules}
-\end{figure}
-
-\begin{figure}
-\begin{mathpar}
+\and
 %
-
 \inferrule
-{	
-       \Delta; \Gamma; \psi_a; \red{\dmap} \tvdash{\red{\nnatA}} 
-	\infr{\expr}{ \tbox{\tarr{\type_1}{\type_2}{0}{\dmap''}{0} }
-        }{\restriction}{}
-        \\
-        \nnatA' = \nnatA + 1 
-        \\
-        \dmap' =  1 + \max(\dmap, \dmap''+ \nnatA)
+{
+  \Delta \tvdash{} \type: wf \\
+       \dmap = \bot
 }
 {
-	\Delta; \Gamma; \psi_a;\red{\dmap'} \tvdash{\red {\nnatA'} }
-	\infr{\eop{\expr}}{\treal}
-	{
-	\restriction 
-	 }{\nnatA}
-} ~ \textbf{alg-$\delta$-$\uparrow$ }
-
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\color{red} 0} \chec{\enil}{ \tlist{\type} }{\top}{.}
+}~ \textbf{alg-nil-$\downarrow$ }
 %
-\\
+\and
 %
 \inferrule
 {
@@ -233,7 +231,7 @@
         \dmap = \max(\dmap_2, \dmap_1 + \nnatbiA)
 }
 {
-	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} } \chec{\elet x = \expr_1 \ein \expr_2 }{\type_2}
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} } \chec{\elet x : \nnatbiA = \expr_1 \ein \expr_2 }{\type_2}
 	{
 	\restriction_1 \land\restriction_2
         \land
@@ -283,7 +281,7 @@
 }
 {
 	\Delta; \Gamma;\red{\dmap} \tvdash{\red{0}}
-	\chec{\eilam \expr}{ \tforall{\dmap}{\nnatA}{i}
+	\chec{\eilam \expr}{ \tforall{\dmap}{\nnatA}{i} \type
         }{\forall i. \restriction }
 }~ \textbf{alg-iabs-$\downarrow$ }
 %
@@ -291,7 +289,7 @@
 %
 \inferrule
 {
-	\Delta; \Gamma; \red{\dmap} \tvdash{ \red{\nnatA} } \infr{\expr}{ \tforall{\dmap_1 }{\nnatA_1}{i} }{ \restriction }{\psi}
+	\Delta; \Gamma; \red{\dmap} \tvdash{ \red{\nnatA} } \infr{\expr}{ \tforall{\dmap_1 }{\nnatA_1}{i} \type }{ \restriction }{\psi}
 	\and
 	\Delta \tvdash{} I :: S
         \\
