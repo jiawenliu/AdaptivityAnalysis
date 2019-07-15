@@ -1,0 +1,40 @@
+\subsection{Syntax}
+The language we consider is a typed lambda calculus with expressions
+for basic data types, recursion, and special constructions to execute
+queries. The grammar is defined as follow:
+
+\begin{table}
+\[\begin{array}{llll}
+  \mbox{Types} & \type & ::= & \tbool ~|~  \treal ~|~  \tint ~|~   \tint[I] ~|~ \type_1 \times
+  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} ~|~
+                              \tlist{\type} ~|~ \tbox{\type}~|~ \\
+& & &                      \tforall{\dmap}{\nnatA}{i} \type  ~|~ \texists{i} \type\\
+\mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+                                 - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+\mbox{Expr.} & \expr & ::= & x ~|~ \econst ~|~ \distr ~|~ \eop(\expr) ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x:\tau).\expr
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~ \eilam \expr  ~|~  \expr \eapp []  ~|~
+                            \epack \expr ~|~ \eunpack \expr \eas x
+                            \ein \expr ~|~
+\\
+& & &  \enil ~|~  \econs (
+      \expr_1, \expr_2) ~|~ 
+      \ecase \expr \eof\, []\mapsto\expr~;\econs(x,xs)\mapsto\expr\\
+& & &  \elet  x:q = \expr_1 \ein \expr_2\\
+%
+\mbox{Distr.} & \distr & ::= & \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp \expr_2\\      
+\mbox{Values} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2)\\
+\mbox{Environments} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n\\
+\end{array}\]
+\caption{Syntax of \THESYSTEM.}
+\label{tab:syntax}
+\end{table}
+where by $\econst$ we denote arbitrary constants, $\eop$ represents a primitive operation (such as a
+mechanism), which determines adaptivity. For simplicity, we assume
+that $\eop$ can only have type $\tbase \to \tbool$. We make
+environments explicit in closures. This is needed for the tracing
+semantics later.
+\subsection{Tracing Operational Semantics}
