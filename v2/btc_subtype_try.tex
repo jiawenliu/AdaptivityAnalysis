@@ -1,0 +1,187 @@
+\begin{figure}
+\begin{mathpar}
+\inferrule
+{ }
+{ \Delta \models \eqvt{ \tbase }{\tbase }{\top }  }~\textbf{alg-sb-base}
+%
+\and
+%
+\inferrule
+{ }
+{ \Delta \models \eqvt{ \tbool }{\tbool }{\top }  }~\textbf{alg-sb-bool}
+%
+\and
+%
+\inferrule
+{ \Delta \models \eqvt{\type_1}{\type_1'}{ \restriction_1 }
+  \\
+  \Delta \models \eqvt{\type_2}{\type_2'}{\restriction_2}
+  }
+{ \Delta \models \eqvt{ \type_1 \times \type_2 }{ \type_1' \times \type_2'
+  }{\restriction_1 \land \restriction_2  }  }~\textbf{alg-sb-pair}
+%
+\and
+%
+\inferrule
+{   \Delta \models \eqvt{\type_1}{\type_1' }{\restriction_1 } 
+  \\
+   \Delta \models \eqvt{\type_2}{\type_2' }{\restriction_2 }
+}
+{ \Delta \models \eqvt{
+    \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}  }{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  }{
+    \restriction_1 \land \restriction_2 \land \nnatbiA \leq \nnatbiA'
+    \land \nnatA \leq \nnatA' \land \dmap \leq \dmap'  }  }~\textbf{alg-sb-arrow}
+%
+\and
+%
+\inferrule
+{ }
+{ \Delta \models \eqvt{ \tint[I] }{\tint[I'] }{ I = I' }  }~\textbf{alg-sb-int}
+%
+\and
+%
+\inferrule
+{  \Delta \models \eqvt{\type}{\type'}{\restriction} }
+{ \Delta \models \eqvt{ \tbox{\type} }{\tbox{\type'} }{\restriction }  }~\textbf{alg-sb-box}
+%
+\and
+%
+\inferrule
+{ \Delta \models \eqvt{\type}{\type'}{\restriction} }
+{ \Delta \models \eqvt{ \tlist{\type} }{\tlist{\type'} }{\restriction }  }~\textbf{alg-sb-list}
+%
+\and
+%
+\inferrule
+{ i,\Delta \models \eqvt{\type}{\type'}{\restriction} }
+{ \Delta \models \eqvt{ \tforall{\dmap}{\nnatA}{i} \type
+  }{\tforall{\dmap'}{\nnatA'}{i} \type' }{\forall I::S.\restriction
+    \land \dmap \leq \dmap' \land \nnatA \leq \nnatA' }  }~\textbf{alg-sb-$\forall$ }
+\end{mathpar}
+\caption{Algorithmic Subtyping Rules}
+  \label{fig:alg-sub-rules}
+\end{figure}
+
+\begin{lem}[Reflexivity of algorithmic subtyping  ]
+1.  $ \Delta \models \eqvt{\type}{\type}{\restriction}$ and $ \Delta  \models \restriction$ is provable.
+\end{lem}
+\begin{proof}
+By structural induction on the type $\type$.\\
+\caseL{ Case: $ \type_1 \times \type_2 $} 
+From the rule \textbf{alg-s-pair}, IH on the premises we get: \\
+(1). $ \Delta \models \eqvt{\type_1}{\type_1}{\restriction_1}$ and $ \Delta  \models \restriction_1$ is provable. \\
+(2). $ \Delta \models \eqvt{\type_2}{\type_2}{\restriction_2}$ and $ \Delta  \models \restriction_2$ is provable.\\
+STS: $ \Delta  \models \restriction_1 \land \restriction_2 $ is provable, which is proved by  (1),(2). 
+
+\caseL{ Case: $\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}$   } \\ 
+From the rule \textbf{alg-s-arrow}, IH on the premises we get: 
+(1). $ \Delta \models \eqvt{\type_1}{\type_1}{\restriction_1}$ and $ \Delta  \models \restriction_1$ is provable. \\
+(2). $ \Delta \models \eqvt{\type_2}{\type_2}{\restriction_2}$ and $ \Delta  \models \restriction_2$ is provable.\\
+STS: $ \Delta  \models \restriction_1 \land \restriction_2 \land \nnatbiA \leq \nnatbiA
+    \land \nnatA \leq \nnatA \land \dmap \leq \dmap $ is provable, which is proved by  (1),(2). \\
+  
+\caseL{ \textbf{Case} $ \tforall{\dmap}{\nnatA}{i} \type  $ }  \\  
+From the rule \textbf{alg-s-arrow}, IH on the premise instantiated with $i::S, \Delta$, we get: \\
+(1). $ i::S, \Delta \models \eqvt{\type}{\type}{\restriction}$ and $ i::S, \Delta  \models \restriction$ is provable. \\
+By generalizing the i from the index variable environment, we also know: $\Delta \models \forall i::S. \restriction ~(2) $ is provable.\\
+STS: $ \Delta  \models \forall I::S.\restriction
+    \land \dmap \leq \dmap \land \nnatA \leq \nnatA'$ is provable. It is proved by (2).
+
+\end{proof}
+
+\begin{lem}[Transitivity of algorithmic subtyping  ]
+1.  If $ \Delta \models \eqvt{\type_1}{\type_2}{\restriction_1}$ and $ \Delta  \models \restriction_1$ is provable. and $ \Delta \models \eqvt{\type_2}{\type_3}{\restriction_2}$ and $ \Delta  \models \restriction_2$ is provable, then exists$\restriction_3$ such that $ \Delta \models \eqvt{\type_1}{\type_3}{\restriction_3}$ and $ \Delta  \models \restriction_3$ is provable.
+\end{lem}
+\begin{proof}
+By induction on the first two subtyping derivation.
+
+\caseL{Case: $\inferrule
+{ \Delta \models \eqvt{\type_1}{\type_1'}{ \restriction_1 }~(a)
+  \\
+  \Delta \models \eqvt{\type_2}{\type_2'}{\restriction_2}~(b)
+  }
+{ \Delta \models \eqvt{ \type_1 \times \type_2 }{ \type_1' \times \type_2'
+  }{\restriction_1 \land \restriction_2  }  }~\textbf{alg-sb-pair}$}
+\caseL{, $\inferrule
+{ \Delta \models \eqvt{\type_1'}{\type_1''}{ \restriction_1' }~(c)
+  \\
+  \Delta \models \eqvt{\type_2'}{\type_2''}{\restriction_2'}~(d)
+  }
+{ \Delta \models \eqvt{ \type_1' \times \type_2' }{ \type_1'' \times \type_2''
+  }{\restriction_1' \land \restriction_2'  }  }~\textbf{alg-sb-pair}$ }
+  TS: exists $\restriction_3$, $ \Delta \models \eqvt{ \type_1 \times \type_2 }{ \type_1'' \times \type_2''
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+  By IH on (a),(c), we get : $ \Delta \models \eqvt{ \type_1  }{ \type_1'' 
+  }{\restriction_1 \land \restriction_1' } $ and $ \Delta \models \restriction_1 \land \restriction_1'$.\\
+  By IH on (b),(d), we get : $ \Delta \models \eqvt{ \type_2  }{ \type_2'' 
+  }{\restriction_2 \land \restriction_2' } $ and $ \Delta \models \restriction_2 \land \restriction_2'$.\\
+  By the rule \textbf{alg-sb-pair}, we know that exists $\restriction_3 = \restriction_1 \land \restriction_1' \land \restriction_2 \land \restriction_2'$ such that $ \Delta \models \eqvt{ \type_1 \times \type_2 }{ \type_1'' \times \type_2''
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+  
+  \caseL{Case: $ \inferrule
+{   \Delta \models \eqvt{\type_1}{\type_1' }{\restriction_1 } (a)
+  \\
+   \Delta \models \eqvt{\type_2}{\type_2' }{\restriction_2 }~(b)
+}
+{ \Delta \models \eqvt{
+    \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}  }{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  }{
+    \restriction_1 \land \restriction_2 \land \nnatbiA \leq \nnatbiA'
+    \land \nnatA \leq \nnatA' \land \dmap \leq \dmap'  }  }~\textbf{alg-sb-arrow}$ }
+\caseL{ , $ \inferrule
+{   \Delta \models \eqvt{\type_1'}{\type_1'' }{\restriction_1' }~(c) 
+  \\
+   \Delta \models \eqvt{\type_2'}{\type_2'' }{\restriction_2' }~(d)
+}
+{ \Delta \models \eqvt{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  }{
+    \tarr{\type_1''}{\type_2''}{\nnatbiA''}{\dmap''}{\nnatA''}  }{
+    \restriction_1' \land \restriction_2' \land \nnatbiA' \leq \nnatbiA''
+    \land \nnatA' \leq \nnatA'' \land \dmap' \leq \dmap''  }  }~\textbf{alg-sb-arrow}$ }
+ TS: exists $\restriction_3$, $ \Delta \models \eqvt{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}   }{ \tarr{\type_1''}{\type_2''}{\nnatbiA''}{\dmap''}{\nnatA''}
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+  By IH on (a),(c), we get : $ \Delta \models \eqvt{ \type_1  }{ \type_1'' 
+  }{\restriction_1 \land \restriction_1' } $ and $ \Delta \models \restriction_1 \land \restriction_1'$.\\
+  By IH on (b),(d), we get : $ \Delta \models \eqvt{ \type_2  }{ \type_2'' 
+  }{\restriction_2 \land \restriction_2' } $ and $ \Delta \models \restriction_2 \land \restriction_2'$.\\
+  By the rule \textbf{alg-sb-arrow}, we know that exists $\restriction_3 = \restriction_1 \land \restriction_1' \land \restriction_2 \land \restriction_2' \land \nnatbiA \leq \nnatbiA''
+    \land \nnatA \leq \nnatA'' \land \dmap \leq \dmap'' $ such that $ \Delta \models \eqvt{ \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} }{ \tarr{\type_1''}{\type_2''}{\nnatbiA''}{\dmap''}{\nnatA''}
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+  $\Delta \models \nnatbiA \leq \nnatbiA''
+    \land \nnatA \leq \nnatA'' \land \dmap \leq \dmap''$ is provable from the assumption.\\
+    
+\caseL{Case: $\inferrule
+{  \Delta \models \eqvt{\type}{\type'}{\restriction}~(a) }
+{ \Delta \models \eqvt{ \tbox{\type} }{\tbox{\type'} }{\restriction }  }~\textbf{alg-sb-box} $
+}
+\caseL{, $\inferrule
+{  \Delta \models \eqvt{\type'}{\type''}{\restriction'} ~(b) }
+{ \Delta \models \eqvt{ \tbox{\type'} }{\tbox{\type''} }{\restriction' }  }~\textbf{alg-sb-box} $
+}
+TS: exists $\restriction_3$, $ \Delta \models \eqvt{ \tbox{\type}   }{ \tbox{\type''}
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+By IH on (a),(b), we get : $ \Delta \models \eqvt{ \type  }{ \type'' 
+  }{\restriction \land \restriction' } $ and $ \Delta \models \restriction \land \restriction'$.\\
+  By the rule \textbf{alg-sb-box}, we know that exists $\restriction_3 = \restriction \land \restriction'  $ such that $ \Delta \models \eqvt{ \tbox{\type} }{\tbox{\type''} 
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+  
+ \caseL{Case: $ \inferrule
+{ i,\Delta \models \eqvt{\type}{\type'}{\restriction} ~(a)}
+{ \Delta \models \eqvt{ \tforall{\dmap}{\nnatA}{i} \type
+  }{\tforall{\dmap'}{\nnatA'}{i} \type' }{\forall I::S.\restriction
+    \land \dmap \leq \dmap' \land \nnatA \leq \nnatA' }  }~\textbf{alg-sb-$\forall$ } $ } 
+  \caseL{, $ \inferrule
+{ i,\Delta \models \eqvt{\type'}{\type''}{\restriction'}~(b) }
+{ \Delta \models \eqvt{ \tforall{\dmap'}{\nnatA'}{i} \type'
+  }{\tforall{\dmap''}{\nnatA''}{i} \type'' }{\forall I::S.\restriction'
+    \land \dmap' \leq \dmap'' \land \nnatA' \leq \nnatA'' }  }~\textbf{alg-sb-$\forall$ } $ } 
+TS: exists $\restriction_3$, $ \Delta \models \eqvt{ \tforall{\dmap}{\nnatA}{i} \type   }{ \tforall{\dmap''}{\nnatA''}{i} \type''
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+ By IH on (a),(b), we get : $ i::S, \Delta \models \eqvt{ \type  }{ \type'' 
+  }{\restriction \land \restriction' } $ and $ i::S, \Delta \models \restriction \land \restriction'$.\\
+  By generalizing the index variable $i$,we know that : $ \Delta \models \forall i::S. \restriction \land \restriction'~(c)$
+  By the rule \textbf{alg-sb-$\forall$}, we know that exists $\restriction_3 = \forall i::S.\restriction \land \restriction' \land \dmap \leq \dmap'' \land \nnatA \leq \nnatA'' $ such that $ \Delta \models \eqvt{ \tforall{\dmap}{\nnatA}{i} \type }{ \tforall{\dmap''}{\nnatA''}{i} \type'' 
+  }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
+  
+\end{proof}
