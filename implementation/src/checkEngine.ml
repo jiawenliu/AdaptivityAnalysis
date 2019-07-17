@@ -89,8 +89,11 @@ let rec inferType (e: expr) : ty inferer  =
     | Mech e      -> infer_mech (inferType e)
     | True | False
                    -> return_inf(Ty_Bool) <<= infer_bool 
-    |  _           -> fail (expInfo e) (Internal ("no inference rule, try annotating the expression please."))
+    |  _           -> infer_anno e 
 
+
+and infer_anno e =
+  
 
 and infer_var vi =
   fun ty ->

@@ -26,7 +26,7 @@ let dmap_eq d1 d2 =
       then     
           match d1,d2 with
             | (id1, depth1)::tl, (id2, depth2)::tl2
-                  -> CAnd( CLeq(iterm_simpl depth1, iterm_simpl depth2), depth_cs tl1 tl2)
+                  -> CAnd( CEq(iterm_simpl depth1, iterm_simpl depth2), depth_cs tl1 tl2)
             | [],[] -> CTrue
             | _ -> fail
       else
