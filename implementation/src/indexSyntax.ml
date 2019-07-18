@@ -127,7 +127,7 @@ type dterm =
 
 let add_depths d1 d2 =
   match d1,d2 with
-  | DConst a, DConst b -> DConst a + b
+  | DConst a, DConst b -> DConst (a + b)
   | DConst 0, _ -> d2
   | _, DConst 0 -> d1
   | _ -> DAdd(d1, d2)

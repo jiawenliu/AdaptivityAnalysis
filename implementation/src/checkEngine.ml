@@ -5,7 +5,7 @@
 open Tycheck
 module UnaryTy =
 struct
-      type ty = Syntax.un_ty
+      type ty = Syntax.ty
     end
     
 module AbstractUnary = TyCheck(UnaryTy)
@@ -87,12 +87,13 @@ let rec inferType (e: expr) : ty inferer  =
          infer_app (inferType e1) e2
     | IApp(e)     -> infer_iapp (inferType e) dp
     | Mech e      -> infer_mech (inferType e)
+    (*| Anno(e, ty, dps, z) -> infer_check_anno e ty dps z*)
     | True | False
                    -> return_inf(Ty_Bool) <<= infer_bool 
-    |  _           -> infer_anno e 
+    |  _ -> fail dp (Internal ("no inference rule, try annotating the expression please."))
 
 
-and infer_anno e =
+(*and infer_check_anno e ty dps z =*)
   
 
 and infer_var vi =
@@ -240,21 +241,16 @@ and checkType (e: expr) (ty : ty) : constr checker =
           end
 
   (* Index abstraction *)
-  | ILam (e), Ty_Forall(x, s, mu, k, ty) 
-        ->
-            if (s = Loc) then
-             begin
-              check_body ((x |::::| s) dp
-                            (with_mode mu (checkType e ty))) k
-                end
-            else    check_body ((x |::| s) dp
-                        (with_mode mu (checkType e ty))) k
+  | ILam (e), Ty_Forall(ix, s, dps, z, ty)
+        ->           
+          (ix |::| s) (checkType e ty)
+
   (* Existential introduction and elimination *)
   | Pack (e), _ 
-        -> check_pack dp e ty
+        -> check_pack e ty
 
   | Unpack (e1, vi_x, e2), _ 
-        -> check_unpack dp e1 vi_x e2 ty
+        -> check_unpack e1 vi_x e2 ty
 
   (* Let bound *)
   | Let (vi_x, q, e1, e2), _ 
@@ -316,39 +312,23 @@ and check_cons e1 e2 i ty =
   | _ -> fail i (WrongShape (ty, "list"))
 
 
-and check_pack i e ty =
-  match ty with
-  | Ty_Exists(x, s, ty) ->
-    let v = fresh_evar s in
-    let witness = IVar v in
-    (v |:::| s) i (checkType e (un_ty_subst x witness ty))
-  | _ -> fail i (WrongShape (ty, "existential"))
+and check_pack e ty =
+  Tycheck.return_leaf_ch
 
-and check_unpack i e1 vi_x e2 ty =
-  inferType e1 <->=
-  (fun ty_x ->
-     match ty_x with
-     | Ty_Exists(x, s, ty) ->
-       (x |::| s) i ((vi_x |:| ty) (checkType e2 ty))
-     | _ -> fail i (WrongShape (ty, "existential")))
-
+and check_unpack e1 vi_x e2 ty =
+    Tycheck.return_leaf_ch
 
 
 and infer_and_check (i: info) (e: expr) (ty : ty) : constr checker =
-  fun(ctx, k) ->
+  fun ctx ->
     match inferType e ctx with
-    | Right (inf_ty, c, psi_ctx, k') ->
-      debug dp "infer_and_check :@\n@[infer_type is %a, expr is %a, checked type is %a, idx_ctx is :%a , k' is %a, k is %a @]@." 
-      Print.pp_type inf_ty Print.pp_expr e Print.pp_type ty Print.pp_ivar_ctx ctx.ivar_ctx Print.pp_adapt k' Print.pp_adapt k; 
+    | Right (inf_ty, c, dps, z) ->
+      debug dp "infer_and_check :@\n@[infer_type is %a, expr is %a, checked type is %a, depth map is :%a , adaptivity is %a @]@." 
+      Print.pp_type inf_ty Print.pp_expr e Print.pp_type ty Print.pp_dmap dps Print.pp_adapt z; 
       (
-        match (check_equiv inf_ty ty (extend_e_ctx psi_ctx ctx, None)) with
+        match (check_equiv inf_ty ty ctx) with
           | Right c' -> 
-          	  let 
-                cs = option_combine k' k (cost_cs ctx) |> Core.Option.value ~default:CTrue 
-              in
-                debug dp "infer_and_check2 :@\n@[cs is %a, c is %a, c' is %a @]@." 
-                Print.pp_cs cs Print.pp_cs c Print.pp_cs c' ; 
-                Right (quantify_all_exist psi_ctx (merge_cs (merge_cs c c') cs))
+              Right ((merge_cs c c'), dps, z)
           | Left err -> Left err
       )
     | Left err' -> Left err'

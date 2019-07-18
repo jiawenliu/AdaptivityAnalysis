@@ -22,13 +22,13 @@ type constr =
   | CAnd      of constr * constr
   | COr       of constr * constr
   | CImpl     of constr * constr
-  | CForall   of var_info  * info * sort * constr
-  | CExists   of var_info * info * sort * constr
+  | CForall   of var_info * sort * constr
+  | CExists   of var_info * sort * constr
   | CArrPos   of iterm * iterm  (**  IArray, pos *) 
   | CLt       of iterm * iterm
-  | CBetaEq   of beta * beta
-  | CBetaIn   of iterm * beta
-  | CBetaSub  of beta * beta
+  | CBetaEq 
+  | CBetaIn
+  | CBetaSub
   | CNot      of constr
 (* Constrains for Depth*)
   | CDEq       of dterm * dterm
@@ -47,12 +47,9 @@ match cs with
 | CAnd (cs1, cs2) 
 | COr (cs1, cs2) 
 | CImpl (cs1, cs2) -> dedup (constr_free_i_vars cs1 @ constr_free_i_vars cs2)
-| CForall(x,i, s, cs') 
-| CExists(x,i, s, cs') -> List.filter (fun y -> x.v_name <> y.v_name ) (constr_free_i_vars cs')
+| CForall(x, s, cs') 
+| CExists(x, s, cs') -> List.filter (fun y -> x.v_name <> y.v_name ) (constr_free_i_vars cs')
  | CArrPos (o,l) -> []
- | CBetaIn (l, b) -> dedup  (iterm_free_i_vars l @  beta_free_i_vars b )
-  | CBetaSub (b1, b2) -> dedup (beta_free_i_vars b1 @ beta_free_i_vars b2 )
-  | CBetaEq (b1, b2) ->  dedup (beta_free_i_vars b1 @ beta_free_i_vars b2 )
   |_ -> []
 
 (* Substitution cs[it/x] for index vars *)
@@ -66,25 +63,22 @@ let rec constr_subst x it cs =
   | CAnd (cs1, cs2) -> CAnd (csub cs1, csub cs2)
   | COr (cs1, cs2) -> COr (csub cs1, csub cs2)
   | CImpl (cs1, cs2) -> CImpl (csub cs1, csub cs2)
-  | CForall(y, i, s, cs') -> if x = y then csub cs' else CForall(y, i, s, csub cs')
-  | CExists(y, i, s, cs') -> if x = y then csub cs' else CExists(y, i, s, csub cs')
+  | CForall(y, s, cs') -> if x = y then csub cs' else CForall(y, s, csub cs')
+  | CExists(y, s, cs') -> if x = y then csub cs' else CExists(y, s, csub cs')
   | CArrPos (o,l) -> cs
-  | CBetaIn (l, b) -> CBetaIn ( iterm_subst x it l ,beta_subst x it b)
-  | CBetaSub (b1, b2) -> CBetaSub ( beta_subst x it b1 ,beta_subst x it b2)
-  | CBetaEq (b1, b2) -> CBetaEq ( beta_subst x it b1 ,beta_subst x it b2)
    |_ -> cs
 
 let rec constr_map f cs =
  let cmap = constr_map f in
  match cs with
   | CTrue | CFalse -> cs
-  | CEq (IConst 0.0, IConst 0.0) -> CTrue
+  | CEq (IConst 0, IConst 0) -> CTrue
   | CEq (it1, it2) -> if it1 = it2 then CTrue else CEq (f it1,f it2)
-(*   | CLeq (IConst 0.0, IConst 0.0) -> CTrue *)
-  | CLeq (IConst 0.0, IConst 0.0) -> CTrue
+(*   | CLeq (IConst 0, IConst 0) -> CTrue *)
+  | CLeq (IConst 0, IConst 0) -> CTrue
   | CLeq (it1, it2) -> if it1 = it2 then CTrue else CLeq (f it1, f it2)
   | CLeq (it1, it2) -> cs
-  | CLt (IConst 0.0, IConst 0.0) -> CFalse
+  | CLt (IConst 0, IConst 0) -> CFalse
   | CLt (it1, it2) -> if it1 = it2 then CFalse else CLt (f it1, f it2)
   | CLt (it1, it2) -> cs
   | CAnd (cs1, cs2) -> 
@@ -93,10 +87,9 @@ let rec constr_map f cs =
     if r1 = CTrue then r2 else if r2 = CTrue then r1 else CAnd (r1,r2)
   | COr (cs1, cs2) -> COr (cmap cs1, cmap cs2)
   | CImpl (cs1, cs2) -> CImpl (cmap cs1, cmap cs2)
-  | CForall(x, i, s, cs') -> CForall(x, i, s, cmap cs')
-  | CExists(x, i, s, cs') -> CExists(x, i, s, cmap cs')
+  | CForall(x, s, cs') -> CForall(x, s, cmap cs')
+  | CExists(x, s, cs') -> CExists(x, s, cmap cs')
   | CArrPos (o,l) -> cs
-  | CBetaIn (l, b) -> CBetaIn (f l, b ) 
    |_ -> cs
 
 let constr_simpl cs = 
@@ -113,12 +106,12 @@ let merge_cs c1 c2 =
 let rec  quantify_all_exist psi_ctx c : constr =
 match psi_ctx with
 | [] -> c
-| (id,s) :: tl ->  CExists (id, EXISTQ, s, (quantify_all_exist tl c))
+| (id,s) :: tl ->  CExists (id, s, (quantify_all_exist tl c))
 
 let rec  quantify_all_universal psi_ctx c : constr =
 match psi_ctx with
 | [] -> c
-| (id,s) :: tl ->  CForall (id, EXISTQ, s, (quantify_all_universal tl c))
+| (id,s) :: tl ->  CForall (id, s, (quantify_all_universal tl c))
 
 
 let option_combine (sl : iterm option) (sr : iterm option) (f: iterm * iterm -> 'a ) : 'a option =

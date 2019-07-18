@@ -129,7 +129,7 @@ let (>>=) (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
     match m ctx with
     | Right (cs, dps, z) ->
       begin 
-        match (f res ctx) with
+        match (f cs ctx) with
           | Right(cs', dps', z') 
             -> Right(merge_cs cs cs', merge_dmaps dps dps', add_adapts z z')
           | Left err -> Left e
@@ -262,31 +262,20 @@ let with_new_ctx (f : ty context -> ty context) (m : 'a checker) : 'a checker =
   fun (ctx) -> m (f ctx)
 
 
-let with_mode (mu :mode) (m : 'a checker) : 'a checker =
-  with_new_ctx (set_exec_mode mu) m
-
-
 let (|:|) (vi: var_info) (vty: ty) (m: constr checker) : constr checker =
   with_new_ctx (extend_var vi.v_name vty) m
 
 
-let (|:::|) (v: var_info) (s: sort) (i: info) (m: constr checker) : constr checker =
+(*let (|:::|) (v: var_info) (s: sort) (i: info) (m: constr checker) : constr checker =
   with_new_ctx (extend_e_var v.v_name s) m
-  >>= (fun cs -> return_ch @@ CExists(v, i, s, cs (* CAnd (CLeq(IConst 0, IVar v), cs) *)))
-
-let (|::::|) (v: var_info) (s: sort) (i: info)(m: constr checker) : constr checker =
-  with_new_ctx (extend_l_var v.v_name ) m
+  >>= (fun cs -> return_ch @@ CExists(v, i, s, cs ))
+*)
 
 
-let (|::|) (v: var_info) (s: sort) (i: info)(m: constr checker) : constr checker =
+let (|::|) (v: var_info) (s: sort) (m: constr checker) : constr checker =
     with_new_ctx (extend_i_var v.v_name s) m
 	>>=
-	  (fun cs ->
-	   let r_cs = 
-	     match s with 
-	     | Size -> cs (* CImpl(CAnd(CLeq(IConst 0, IVar v), CEq(IFloor(IVar v), ICeil (IVar v))),cs) *)
-	     | _ -> cs 
-	   in return_ch @@ CForall(v, i, s, r_cs))
+	  (fun cs -> return_ch @@ CForall(v, s, cs))
 
 	  
 
@@ -306,13 +295,6 @@ let check_size_leq  (sl : iterm) (sr : iterm) (m: constr checker)  : constr chec
         m >>= fun c -> return_ch @@ merge_cs c (CLeq (sl,sr))
 
 
-let check_dmap_leq (sl) () () : constr checker =
-      () 
-
-
-
-
-  
 
 end
 

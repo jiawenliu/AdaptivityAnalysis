@@ -1,6 +1,8 @@
 open Syntax
 open IndexSyntax
 open Constr
+open Map
+open DMap
 
 open Format
 
@@ -66,7 +68,10 @@ module Symbols = struct
     select (pp_symbol_table s)
 end
 
-let u_sym x = Symbols.string_of_symbol x
+(*module Map = Map.Make(var_info)
+*)
+
+let sym x = Symbols.string_of_symbol x
 
 
 let pp_bop fmt (p : Syntax.bop) = 
@@ -163,9 +168,9 @@ let rec pp_expression fmt (e : Syntax.expr) =
 
 
 let rec pp_primutype fmt ty = match ty with
-    Ty_PrimInt     -> fprintf fmt "@<1>%s" (u_sym Symbols.Int)
-  | Ty_PrimUnit    -> fprintf fmt "@<1>%s" (u_sym Symbols.Unit)
-  | Ty_PrimReal    -> fprintf fmt "@<1>%s" (u_sym Symbols.Real)
+    Ty_PrimInt     -> fprintf fmt "@<1>%s" (sym Symbols.Int)
+  | Ty_PrimUnit    -> fprintf fmt "@<1>%s" (sym Symbols.Unit)
+  | Ty_PrimReal    -> fprintf fmt "@<1>%s" (sym Symbols.Real)
 
 let rec pp_list pp fmt l = match l with
     []         -> fprintf fmt ""
@@ -193,36 +198,38 @@ let rec pp_iterm fmt ty = match ty with
 let rec pp_dterm fmt ty = match ty with
   | DConst i            -> fprintf fmt " Depth %d " i
   | DVar v              -> fprintf fmt " Depth %s " v.v_name
-  | DBot                -> fprintf fmt " @<1>%s " (u_sym Symbols.Bot)
-  | DInfty              -> fprintf fmt " @<1>%s " (u_sym Symbols.Inf)
+  | DBot                -> fprintf fmt " @<1>%s " (sym Symbols.Bot)
+  | DInfty              -> fprintf fmt " @<1>%s " (sym Symbols.Inf)
 
-let rec pp_dmap fmt d =
+let rec pp_dpsl fmt d =
   match d with
     | []       -> ()
-    | (v, depth) :: tl  -> fprintf fmt "(%s: %a), %a" v.v_name pp_dterm depth pp_dmap tl
+    | (v, depth) :: tl  -> fprintf fmt "(%s: %a), %a" v.v_name pp_dterm depth pp_dpsl tl
 
-let pp_adapt fmt cst = 
-    match cst with 
-    | Some k ->  fprintf fmt "(%a)" pp_iterm k
-    | None -> fprintf fmt "(%s)" "nocost"
+let rec pp_dmap fmt dmap =
+  let dps = Map.bindings dmap in
+    pp_dpsl fmt dps
+
+let pp_adapt fmt z = 
+    fprintf fmt "Adapt:(%a)" pp_iterm z
 
 
 
 let rec pp_type fmt ty = match ty with
   | Ty_Prim tp               -> fprintf fmt "%a " pp_primutype tp
-  | Ty_Bool                  -> fprintf fmt "@<1>%s" (u_sym Symbols.Bool)
+  | Ty_Bool                  -> fprintf fmt "@<1>%s" (sym Symbols.Bool)
 
-  | Ty_Prod(ty1, ty2)        -> fprintf fmt "(%a @<1>%s @[<h>%a@]) " pp_type ty1 (u_sym Symbols.Times) pp_type ty2
+  | Ty_Prod(ty1, ty2)        -> fprintf fmt "(%a @<1>%s @[<h>%a@]) " pp_type ty1 (sym Symbols.Times) pp_type ty2
   | Ty_Arrow(ity, q, d, a, oty) 
-                             -> fprintf fmt "%a , %a @<1>%s [%a] %a  @[<h>%a@] " pp_type ity pp_dterm q (u_sym Symbols.Arrow) pp_dmap d pp_iterm a pp_type oty
+                             -> fprintf fmt "%a , %a @<1>%s [%a] %a  @[<h>%a@] " pp_type ity pp_dterm q (sym Symbols.Arrow) pp_dpsl d pp_iterm a pp_type oty
 
   | Ty_Forall(i, s, d, z, ty1)     
-      -> fprintf fmt "@<1>%s %s ::(%a; %a) %a. %a " (u_sym Symbols.Forall) 
-      i.v_name pp_dmap d pp_iterm z pp_sort s pp_type ty1
-  | Ty_Exists(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (u_sym Symbols.Exists) i.v_name pp_sort s pp_type ty1
+      -> fprintf fmt "@<1>%s %s ::(%a; %a) %a. %a " (sym Symbols.Forall) 
+      i.v_name pp_dpsl d pp_iterm z pp_sort s pp_type ty1
+  | Ty_Exists(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (sym Symbols.Exists) i.v_name pp_sort s pp_type ty1
   | Ty_IntIndex(i)         -> fprintf fmt "Int[%a] " pp_iterm i
 
-  | Ty_Box ty1               -> fprintf fmt "@<1>%s %a " (u_sym Symbols.Box) pp_type ty1
+  | Ty_Box ty1               -> fprintf fmt "@<1>%s %a " (sym Symbols.Box) pp_type ty1
 
   | Ty_List ty1              -> fprintf fmt "%a list " pp_type ty1
 
@@ -240,25 +247,22 @@ let pp_ivar_ctx_elem ppf (v, s) =
 (* Pretty printing for constraints *)
 let rec pp_cs ppf cs =
   match cs with
-    | CTrue                -> fprintf ppf "%s" (u_sym Symbols.Top)
-    | CFalse               -> fprintf ppf "%s" (u_sym Symbols.Bot)
+    | CTrue                -> fprintf ppf "%s" (sym Symbols.Top)
+    | CFalse               -> fprintf ppf "%s" (sym Symbols.Bot)
     | CEq(i1, i2)          -> fprintf ppf "%a = %a" pp_iterm i1 pp_iterm i2
-    | CLeq(i1, i2)         -> fprintf ppf "%a %s %a" pp_iterm i1 (u_sym Symbols.Leq) pp_iterm i2
+    | CLeq(i1, i2)         -> fprintf ppf "%a %s %a" pp_iterm i1 (sym Symbols.Leq) pp_iterm i2
     | CLt(i1, i2)         -> fprintf ppf "%a %s.. %a" pp_iterm i1 ("<") pp_iterm i2 
-    | CAnd(cs1, cs2)       -> fprintf ppf "%a %s %a" pp_cs cs1 (u_sym Symbols.And) pp_cs cs2
-    | COr(cs1, cs2)        -> fprintf ppf "(%a) %s (%a)" pp_cs cs1 (u_sym Symbols.Or) pp_cs cs2
-    | CImpl(cs1, cs2)      -> fprintf ppf "%a %s (%a)" pp_cs cs1 (u_sym Symbols.Impl) pp_cs cs2
-    | CForall(bi_x, i, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (u_sym Symbols.Forall) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
-    | CExists(bi_x, i, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (u_sym Symbols.Exists) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
-    | CArrPos(o, l) ->        fprintf ppf "%a[%a] =  true" pp_iterm o pp_iterm l       
-    | CBetaIn (l, b) ->   fprintf ppf "%a IN %a " pp_iterm l pp_beta b 
-    | CBetaEq (b_1,b_2) ->       fprintf ppf "%a EQ %a " pp_beta b_1 pp_beta b_2 
-    | CBetaSub (b_1,b_2) ->       fprintf ppf "%a SB %a " pp_beta b_1 pp_beta b_2 
-    | CNot c ->  fprintf ppf "NOT %a " pp_cs c  
+    | CAnd(cs1, cs2)       -> fprintf ppf "%a %s %a" pp_cs cs1 (sym Symbols.And) pp_cs cs2
+    | COr(cs1, cs2)        -> fprintf ppf "(%a) %s (%a)" pp_cs cs1 (sym Symbols.Or) pp_cs cs2
+    | CImpl(cs1, cs2)      -> fprintf ppf "%a %s (%a)" pp_cs cs1 (sym Symbols.Impl) pp_cs cs2
+    | CForall(bi_x, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (sym Symbols.Forall) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
+    | CExists(bi_x, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (sym Symbols.Exists) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
+    | CArrPos(o, l)        -> fprintf ppf "%a[%a] =  true" pp_iterm o pp_iterm l       
+    | CNot c               ->  fprintf ppf "NOT %a " pp_cs c  
     | CDEq(d1, d2)
-    | CDLeq(d1,d2)
-    | CDAnd(cs1, cs2)
-    | CDOr(cs1, cs2) -> ()
+    | CDLeq(d1,d2)  -> ()
+    | _ -> ()
+
 
 
 
