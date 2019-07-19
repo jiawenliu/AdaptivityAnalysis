@@ -20,7 +20,7 @@ let dmap_cs d1 d2 =
             | [],[] -> CTrue
             | _     -> dfail
     in
-        helper (Map.to_alist d1) (Map.to_alist d2)    
+        helper (Map.bindings d1) (Map.bindings d2)    
 
 let rec dmap_cs_const ctx dmp i =
     let rec helper dps =
