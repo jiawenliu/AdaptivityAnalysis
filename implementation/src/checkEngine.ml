@@ -18,7 +18,6 @@ open Constr
 open Ctx
 open Ty_error
 open Support.FileInfo
-open Map
 open DMap
 
 module Opt = Support.Options

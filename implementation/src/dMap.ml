@@ -4,11 +4,12 @@
     open Ctx
     open Syntax
     open Support.FileInfo
-    open Core
-    open Map
+    
+    
 
-module Map = Map.Make(String)
+module Mapp = Map.Make(String)
 
+let ept = Mapp.empty
 
 let dfail = CFalse
 
@@ -20,7 +21,7 @@ let dmap_cs d1 d2 =
             | [],[] -> CTrue
             | _     -> dfail
     in
-        helper (Map.bindings d1) (Map.bindings d2)    
+        helper (Mapp.bindings d1) (Mapp.bindings d2)    
 
 let rec dmap_cs_const ctx dmp i =
     let rec helper dps =
