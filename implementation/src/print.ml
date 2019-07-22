@@ -1,7 +1,6 @@
 open Syntax
 open IndexSyntax
 open Constr
-open Map
 open DMap
 
 open Format
@@ -68,8 +67,6 @@ module Symbols = struct
     select (pp_symbol_table s)
 end
 
-(*module Map = Map.Make(var_info)
-*)
 
 let sym x = Symbols.string_of_symbol x
 
@@ -200,15 +197,23 @@ let rec pp_dterm fmt ty = match ty with
   | DVar v              -> fprintf fmt " Depth %s " v.v_name
   | DBot                -> fprintf fmt " @<1>%s " (sym Symbols.Bot)
   | DInfty              -> fprintf fmt " @<1>%s " (sym Symbols.Inf)
+  | DMaximal(d1, d2)    -> fprintf fmt " Max(%a, %a) " pp_dterm d1 pp_dterm d2
+  | DAdd(d1, d2)        -> fprintf fmt " %a + %a " pp_dterm d1 pp_dterm d2
+  | DSub(d1,d2)         -> fprintf fmt " %a - %a " pp_dterm d1 pp_dterm d2
 
-let rec pp_dpsl fmt d =
+let rec pp_dlist fmt d =
   match d with
     | []       -> ()
-    | (v, depth) :: tl  -> fprintf fmt "(%s: %a), %a" v.v_name pp_dterm depth pp_dpsl tl
+    | (v, depth) :: tl  -> fprintf fmt "(%s: %a), %a" v.v_name pp_dterm depth pp_dlist tl
 
 let rec pp_dmap fmt dmap =
-  let dps = Map.bindings dmap in
-    pp_dpsl fmt dps
+  let dps = DMap.to_dlist dmap in
+    let rec pp_dlist fmt d =
+      match d with
+        | []       -> ()
+        | (vname, depth) :: tl  -> fprintf fmt "(%s: %a), %a" vname pp_dterm depth pp_dlist tl
+      in
+    pp_dlist fmt dps
 
 let pp_adapt fmt z = 
     fprintf fmt "Adapt:(%a)" pp_iterm z
@@ -221,11 +226,11 @@ let rec pp_type fmt ty = match ty with
 
   | Ty_Prod(ty1, ty2)        -> fprintf fmt "(%a @<1>%s @[<h>%a@]) " pp_type ty1 (sym Symbols.Times) pp_type ty2
   | Ty_Arrow(ity, q, d, a, oty) 
-                             -> fprintf fmt "%a , %a @<1>%s [%a] %a  @[<h>%a@] " pp_type ity pp_dterm q (sym Symbols.Arrow) pp_dpsl d pp_iterm a pp_type oty
+                             -> fprintf fmt "%a , %a @<1>%s [%a] %a  @[<h>%a@] " pp_type ity pp_dterm q (sym Symbols.Arrow) pp_dlist d pp_iterm a pp_type oty
 
   | Ty_Forall(i, s, d, z, ty1)     
       -> fprintf fmt "@<1>%s %s ::(%a; %a) %a. %a " (sym Symbols.Forall) 
-      i.v_name pp_dpsl d pp_iterm z pp_sort s pp_type ty1
+      i.v_name pp_dlist d pp_iterm z pp_sort s pp_type ty1
   | Ty_Exists(i, s, ty1)     -> fprintf fmt "@<1>%s %s :: %a. %a " (sym Symbols.Exists) i.v_name pp_sort s pp_type ty1
   | Ty_IntIndex(i)         -> fprintf fmt "Int[%a] " pp_iterm i
 
@@ -255,8 +260,8 @@ let rec pp_cs ppf cs =
     | CAnd(cs1, cs2)       -> fprintf ppf "%a %s %a" pp_cs cs1 (sym Symbols.And) pp_cs cs2
     | COr(cs1, cs2)        -> fprintf ppf "(%a) %s (%a)" pp_cs cs1 (sym Symbols.Or) pp_cs cs2
     | CImpl(cs1, cs2)      -> fprintf ppf "%a %s (%a)" pp_cs cs1 (sym Symbols.Impl) pp_cs cs2
-    | CForall(bi_x, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (sym Symbols.Forall) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
-    | CExists(bi_x, s, cs) -> fprintf ppf "@<1>%s%a %a :: %a.@;(@[%a@])" (sym Symbols.Exists) pp_vinfo bi_x pp_fileinfo i pp_sort s pp_cs cs
+    | CForall(bi_x, s, cs) -> fprintf ppf "@<1>%s%s :: %a.@;(@[%a@])" (sym Symbols.Forall) bi_x.v_name pp_sort s pp_cs cs
+    | CExists(bi_x, s, cs) -> fprintf ppf "@<1>%s%s :: %a.@;(@[%a@])" (sym Symbols.Exists) bi_x.v_name pp_sort s pp_cs cs
     | CArrPos(o, l)        -> fprintf ppf "%a[%a] =  true" pp_iterm o pp_iterm l       
     | CNot c               ->  fprintf ppf "NOT %a " pp_cs c  
     | CDEq(d1, d2)

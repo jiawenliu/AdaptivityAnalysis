@@ -7,9 +7,12 @@
     
     
 
-module Mapp = Map.Make(String)
+module StdMap = Map.Make(String)
 
-let ept = Mapp.empty
+let empty_dmap = StdMap.empty
+
+(* The Depth Map of variables in programs *)
+type dmap = IndexSyntax.dterm StdMap.t
 
 let dfail = CFalse
 
@@ -21,7 +24,7 @@ let dmap_cs d1 d2 =
             | [],[] -> CTrue
             | _     -> dfail
     in
-        helper (Mapp.bindings d1) (Mapp.bindings d2)    
+        helper (StdMap.bindings d1) (StdMap.bindings d2)    
 
 let rec dmap_cs_const ctx dmp i =
     let rec helper dps =
@@ -29,7 +32,7 @@ let rec dmap_cs_const ctx dmp i =
         | [] -> empty_constr
         | (id, depth)::tl -> CAnd( CDLeq(depth, i), helper tl )
       in
-        helper (Map.to_alist dmp)
+        helper (StdMap.bindings dmp)
 
 
 let depth_eq q1 q2 = 
@@ -44,38 +47,23 @@ let dmap_eq d1 d2 =
             | [],[] -> CTrue
             | _     -> dfail
     in
-        helper (Map.to_alist d1) (Map.to_alist d2)    
+        helper (StdMap.bindings d1) (StdMap.bindings d2)    
 
 
+let rec adap_eq z1 z2 =
+  CEq(iterm_simpl z1, iterm_simpl z2)
 
-let empty_dmap = Map.empty
+
 
 let rec depth_cs d1 d2 =
   CDLeq(d1, d2)
 
 let rec get_depth d v = 
-  Map.find d v
-
-let rec merge_dmaps d1 d2 =
-  Map.merge d1 d2 (fun k (dp1, dp2) -> Some (max_depths dp1 dp2)) 
-
-let rec max_dmaps d1 d2 =
-  Map.union (fun key dp1 dp2 -> Some (max_depths dp1 dp2)) d1 d2
-
-let rec bot_dmap ctx =
-  let rec helper var_ctx dm =
-    match var_ctx with
-      | [] -> dm
-      | (v, ty) :: tl -> 
-      let dm' = Map.add v DBot dm in
-        helper tl dm'
-      in
-        helper ctx.var_ctx Map.empty
-
+  StdMap.find_opt v d
 
 
 let rec set_dmap dps v d = 
-  Map.update v 
+  StdMap.update v
   (fun y -> 
     match y with 
       | Some y -> Some d
@@ -84,20 +72,24 @@ let rec set_dmap dps v d =
   dps
 
 
-(* Add an adaptivity value into each binding in the depth map and return a new depth map *)  
-let rec sum_adap_dmap z dps =
-  Map.fold (
-    fun key d dps -> 
-    let dps' = Map.add key (sum_adap_depth z d) dps
-    in dps'
-      ) dps Map.empty
+
+let rec merge_dmaps d1 d2 =
+  StdMap.union (fun key dp1 dp2 -> Some (max_depths dp1 dp2)) d1 d2
+
+let rec max_dmaps d1 d2 =
+  StdMap.union (fun key dp1 dp2 -> Some (max_depths dp1 dp2)) d1 d2
+
+let rec bot_dmap ctx =
+  let rec helper var_ctx dm =
+    match var_ctx with
+      | [] -> dm
+      | (v, ty) :: tl -> 
+      let dm' = StdMap.add v.v_name DBot dm in
+        helper tl dm'
+      in
+        helper ctx.var_ctx StdMap.empty
 
 
-(* Add a depth value to each binding in the depth map and return a new depth map *)  
-let rec sum_depth_dmap q dps =
-  Map.fold (fun key d dps -> 
-    let dps' = Map.add key (add_depths d q) dps
-    in dps') dps Map.empty
 
 
 (* Add the adaptivity into Depth and return new Depth *)  
@@ -105,9 +97,9 @@ let rec sum_adap_depth z d =
   match z with
     | IConst z            -> add_depths d (DConst z)
     | IVar z              -> add_depths d (DVar z)
-    | IAdd(z1, z2)        -> DAdd((sum_adap_depth z1 d), (sum_adap_depth z2 (DConst 0)))
+    | IAdd(z1, z2)        -> DAdd((sum_adap_depth z1 d), (sum_adap_depth z2 (DConst 0)) )
     | ISub(z1, z2)        -> add_depths d 
-                             DSub( (sum_adap_depth z1 (DConst 0) ), (sum_adap_depth z2 (DConst 0) ))
+                             (DSub( (sum_adap_depth z1 (DConst 0) ), (sum_adap_depth z2 (DConst 0) ) ))
     | IMaximal(z1, z2)    -> DMaximal ((sum_adap_depth z1 d), (sum_adap_depth z2 d))
 
   
@@ -116,13 +108,31 @@ let rec sum_adap_depth z d =
 let rec add_adap_depth z d =
   match d with
     | DBot              -> z
-    | DInfy             -> z
+    | DInfty            -> z
     | DConst d          -> add_adapts z (IConst d)
     | DVar d            -> add_adapts z (IVar d)
     | DSub(d1,d2)       -> add_adapts z
-                           ISub((add_adap_depth (IConst 0) d1), (add_adap_depth (IConst 0) d2))
+                           (ISub((add_adap_depth (IConst 0) d1), (add_adap_depth (IConst 0) d2)))
     | DAdd(d1, d2)      -> IAdd ((add_adap_depth z d1), (add_adap_depth (IConst 0) d2))
     | DMaximal(d1,d2)   -> IMaximal ((add_adap_depth z d1), (add_adap_depth z d2))
+
+
+
+
+(* Add an adaptivity value into each binding in the depth map and return a new depth map *)  
+let rec sum_adap_dmap z dps =
+  StdMap.fold (
+    fun key d dps -> 
+    let dps' = StdMap.add key (sum_adap_depth z d) dps
+    in dps'
+      ) dps StdMap.empty
+
+
+(* Add a depth value to each binding in the depth map and return a new depth map *)  
+let rec sum_depth_dmap q dps =
+  StdMap.fold (fun key d dps -> 
+    let dps' = StdMap.add key (add_depths d q) dps
+    in dps') dps StdMap.empty
 
 
 (* Convert a List of Depth Binding from type annotation into Map *)  
@@ -132,7 +142,11 @@ let rec to_dmap dps =
     match dps with
       | [] -> dm
       | (v, d) :: tl -> 
-        let dm' = Map.add v d dm in
+        let dm' = StdMap.add v.v_name d dm in
           helper tl dm'
   in
-    helper dps Map.empty
+    helper dps StdMap.empty
+
+
+let rec to_dlist dmp =
+	StdMap.bindings dmp

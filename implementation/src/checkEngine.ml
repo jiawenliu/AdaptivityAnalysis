@@ -3,14 +3,14 @@
 (* ---------------------------------------------------------------------- *)
 
 open Tycheck
-module UnaryTy =
+module Ty =
 struct
       type ty = Syntax.ty
     end
     
-module AbstractUnary = TyCheck(UnaryTy)
+module Abstract = TyCheck(Ty)
      
-open AbstractUnary
+open Abstract
 open Fresh_var
 open Syntax
 open IndexSyntax
@@ -29,11 +29,13 @@ let debug   fi = Support.Error.message 4 General fi
 let typing_error fi = Err.error_msg    Opt.TypeChecker fi
 let typing_error_pp = Err.error_msg_pp Opt.TypeChecker
 
+let err = { i = UNKNOWN; v = Internal "UNKNOWN"}
+
 
 (** Check whether ty1 is a subtype of ty2, generating the necessary
     constraints along the way. **)
 let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
-  let fail = fail NotSubtype (ty1, ty2) in
+  let fail = Abstract.fail (NotSubtype(ty1, ty2)) in
   	(* BASE Case For Equivalent *)
     if ty1 = ty2 then return_leaf_eq_ch
   	else 
@@ -44,14 +46,14 @@ let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
 
 
         (* CASES WHEN NONE OF THE TYPES IS A BOX TYPE*)
-        | Ty_IntIndex i1, Ty_IntIndex i2 -> return_eq_ch (CEq(i, i1))
+        | Ty_IntIndex i1, Ty_IntIndex i2 -> return_eq_ch (CEq(i1, i2))
 
 
         | Ty_Arrow(ity, q, dps, z, oty), Ty_Arrow(ity', q', dps', z', oty') 
         						   -> 
                         let cs1 = depth_eq q q' in
                           let cs2 = adap_eq z z' in
-                            let cs3 = dmap_eq dps dps' in
+                            let cs3 = dmap_eq (to_dmap dps) (to_dmap dps') in
         						   	      (check_equiv ity' ity << check_equiv oty oty') 
                               <=<
                               merge_cs cs1 @@ merge_cs cs2 cs3 
@@ -64,7 +66,7 @@ let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
 
         | Ty_Forall(ix1, s1, dps1, z1, ty1), Ty_Forall(ix2, s2, dps2, z2, ty2)
                         -> let cs1 = adap_eq z1 z2 in
-                            let cs2 = dmap_eq dps1 dps2 in
+                            let cs2 = dmap_eq (to_dmap dps1) (to_dmap dps2) in
                               (check_equiv ty1 ty2) <=< (merge_cs cs1 cs2)
 
         | _ , _ -> fail
@@ -76,20 +78,20 @@ let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
     occuring in un_ty and k are declared in psi, otherwise it raises
     an exception. *)
 let rec inferType (e: expr) : ty inferer  =
-  let _ = debug dp "infer_TP:@\n@[e1 %a @]@.@\n"  Print.pp_expr e in
+  let _ = debug dp "infer_TP:@\n@[e1 %a @]@.@\n"  Print.pp_expression e in
     match e with
     | Var(vi)     -> get_var_ty vi <<= infer_var vi
     | Prim(ep)    -> return_inf(Syntax.type_of_prim ep) <<= infer_const
     | Fst(e)      -> inferType e <<= infer_proj fst
     | Snd(e)      -> inferType e <<= infer_proj snd
-    | App(e1,e2)  -> debug dp "infer_app:@\n@[e1 %a @]@.@\n"  Print.pp_expr e1 ;
+    | App(e1,e2)  -> debug dp "infer_app:@\n@[e1 %a @]@.@\n"  Print.pp_expression e1 ;
          infer_app (inferType e1) e2
     | IApp(e)     -> infer_iapp (inferType e) dp
     | Mech e      -> infer_mech (inferType e)
     (*| Anno(e, ty, dps, z) -> infer_check_anno e ty dps z*)
     | True | False
                    -> return_inf(Ty_Bool) <<= infer_bool 
-    |  _ -> fail dp (Internal ("no inference rule, try annotating the expression please."))
+    |  _ -> fail (Internal ("no inference rule, try annotating the expression please."))
 
 
 (*and infer_check_anno e ty dps z =*)
@@ -110,12 +112,14 @@ and infer_var vi =
 
 
 and infer_const =
+  fun ty ->
   fun ctx -> 
           let depthmap = bot_dmap ctx in
             Right (ty, empty_constr, depthmap, (IConst 0) )
 
 
 and infer_bool =
+  fun ty ->
   fun ctx -> 
           let depthmap = bot_dmap ctx in
             Right (ty, empty_constr, depthmap, (IConst 0) )
@@ -139,7 +143,7 @@ and infer_mech m =
               let dps' = sum_depth_dmap (IDConst 1) (max_dmap dps (sum_dmap_adap z dps'')) in
                 Right ( (Ty_Prim Ty_PrimReal), c, dps', z')
 
-          | _ -> fail dp (WrongShape (ty, " Mechanism operation Error ")) ctx
+          | _ -> fail (WrongShape (ty, " Mechanism operation Error ")) ctx
       end
       | Left err -> Left err
 
@@ -162,7 +166,7 @@ and infer_iapp m =
             (* New Adaptivity *)
             let z' = add_adapts (adapt_subst z1 x witn) z in 
               Right (ty_subst x witn ty, c, dps', z')
-        | _ -> fail dp (WrongShape (ty, "index quantified (forall) ")) ctx
+        | _ -> fail (WrongShape (ty, "index quantified (forall) ")) ctx
       end
     | Left err -> Left err
 
@@ -172,9 +176,9 @@ and infer_app m e2 =
     fun ty _ ->
       match ty with
       | Ty_Arrow(ty1, q, dps, z, ty2) ->
-         debug dp "inf_app :@\n@[ty is :%a, k'' is %a, e2 is %a @]@." Print.pp_type ty Print.pp_iterm k'' Print.pp_expr e2; 
+         debug dp "inf_app :@\n@[ty is :%a, k'' is %a, e2 is %a @]@." Print.pp_type ty Print.pp_iterm k'' Print.pp_expression e2; 
         ((checkType e2 ty1), ty2, q, to_dmap dps, z)
-      | _ -> (fail dp (WrongShape (ty, "function")), ty2, IConst 0, to_dmap dps, z)
+      | _ -> (fail (WrongShape (ty, "function")), ty2, IConst 0, to_dmap dps, z)
       )
 
   
@@ -183,20 +187,20 @@ and infer_proj f =
   fun ty ->
     match ty with
     | Ty_Prod (ty1, ty2) -> return_inf(f (ty1, ty2))
-    | _ -> fail dp (WrongShape (ty, "product"))
+    | _ -> fail (WrongShape (ty, "product"))
 
 (** [checkType e] verifies that expression [e] has type [ty]
     in the context [ctx] with the adapts [z]. If
     it does, it returns constrain checker, otherwise it raises an exception. *)
 and checkType (e: expr) (ty : ty) : constr checker =
-  debug dp "@[UCK  %a, ty is %a @]@." Print.pp_expr e Print.pp_type ty; 
+  debug dp "@[UCK  %a, ty is %a @]@." Print.pp_expression e Print.pp_type ty; 
 
   match e, ty with
 
   (* Primitive expressions *)
   |  Prim (ep), tp 
         ->
-           debug dp "primTInt :@\n@[%a, %a@]@." Print.pp_expr e Print.pp_type tp  ; 
+           debug dp "primTInt :@\n@[%a, %a@]@." Print.pp_expression e Print.pp_type tp  ; 
             begin
             match ep with
             | PrimInt x -> let ty_ep = Syntax.type_of_prim ep in             
@@ -204,11 +208,11 @@ and checkType (e: expr) (ty : ty) : constr checker =
                     match ty_ep, tp with
                     | Ty_IntIndex x, Ty_IntIndex y ->  Tycheck.check_size_eq x y  Tycheck.return_leaf_ch
                     | _, Ty_Prim Ty_PrimInt -> Tycheck.return_leaf_ch
-                    | _, _ -> fail dp @@ WrongShape (tp, "int[i] or int")
+                    | _, _ -> fail @@ WrongShape (tp, "int[i] or int")
                   end
                
             | _ -> if tp = Syntax.type_of_prim ep
-                   then Tycheck.return_leaf_ch else fail dp @@ WrongShape (tp, "primitive2")
+                   then Tycheck.return_leaf_ch else fail @@ WrongShape (tp, "primitive2")
              end
   | Fix( f, x, ty_x, e), _ 
         ->  check_fix f x ty_x e ty
@@ -221,13 +225,13 @@ and checkType (e: expr) (ty : ty) : constr checker =
           begin
             match ty with
             | Ty_List (ty') -> (checkType e1 ty') >> (checkType e2 (Ty_List ty'))
-            | _ -> fail dp (WrongShape (ty, "List in Cons"))
+            | _ -> fail (WrongShape (ty, "List in Cons"))
           end
 
 
   (* If statement *)
   | If( e, el, er), _ 
-        ->  debug dp "checkif, el is %a, ty is %a " Print.pp_expr el Print.pp_type ty ; 
+        ->  debug dp "checkif, el is %a, ty is %a " Print.pp_expression el Print.pp_type ty ; 
             (checkType e Ty_Bool) >&&> ((checkType el ty) >> (checkType er ty))
 
   (* Pairs *)
@@ -236,7 +240,7 @@ and checkType (e: expr) (ty : ty) : constr checker =
           begin
             match ty with
             | Ty_Prod (ty1,ty2) -> (checkType e1 ty1) >> (checkType e2 ty2)
-            | _ -> fail dp (WrongShape (ty, "product"))
+            | _ -> fail (WrongShape (ty, "product"))
           end
 
   (* Index abstraction *)
@@ -271,7 +275,7 @@ and check_fix (vi_x : var_info) (e : expr) (ty : ty) =
   match ty with
   | Ty_Arrow(ty1, q, dps, z, ty2) ->
 (*  debug dp "ck_fix:@\n@[e %a, ty1: %a, ty2: %a @]@.@\n"  
-      Print.pp_expr e Print.pp_type ty1 Print.pp_type ty2;
+      Print.pp_expression e Print.pp_type ty1 Print.pp_type ty2;
 *)
     let m = ((vi_f |:| ty)
                   ((vi_x |:| ty1)
@@ -290,7 +294,7 @@ and check_fix (vi_x : var_info) (e : expr) (ty : ty) =
                 let dps'' = bot_dmap ctx in
                   Right(CAnd(c, CAnd(cs1, cs2)), dps'', IConst 0) 
  
-  | _ ->  fail dp (WrongShape (ty, "fuction"))
+  | _ ->  fail (WrongShape (ty, "fuction"))
 
 
 
@@ -302,13 +306,13 @@ and check_nil i ty =
   | Ty_List(ty) 
       -> return_leaf_ch >>= (fun cs -> 
         fun ctx -> Right(empty_constr, bot_dmap ctx, IConst 0))
-  | _ -> fail i (WrongShape (ty, "list"))
+  | _ -> fail (WrongShape (ty, "list"))
 
 
 and check_cons e1 e2 i ty =
   match ty with
   | Ty_List(ty) -> checkType e1 ty
-  | _ -> fail i (WrongShape (ty, "list"))
+  | _ -> fail (WrongShape (ty, "list"))
 
 
 and check_pack e ty =
@@ -323,7 +327,7 @@ and infer_and_check (i: info) (e: expr) (ty : ty) : constr checker =
     match inferType e ctx with
     | Right (inf_ty, c, dps, z) ->
       debug dp "infer_and_check :@\n@[infer_type is %a, expr is %a, checked type is %a, depth map is :%a , adaptivity is %a @]@." 
-      Print.pp_type inf_ty Print.pp_expr e Print.pp_type ty Print.pp_dmap dps Print.pp_adapt z; 
+      Print.pp_type inf_ty Print.pp_expression e Print.pp_type ty Print.pp_dmap dps Print.pp_adapt z; 
       (
         match (check_equiv inf_ty ty ctx) with
           | Right c' -> 

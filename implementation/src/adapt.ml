@@ -7,7 +7,7 @@ open CheckEngine
 
 
 module T = Tycheck_sigs
-module WS = WhySolver
+(*module WS = WhySolver*)
 module E = Exist_elim
 module SE = Support.Error
 
@@ -64,7 +64,7 @@ let type_check file t=
     let ctx = Ctx.empty_context in
     let cs =  (CheckEngine.check_type ctx prgm ty) in
 
-    main_info dp "Typechecking engine: %fs\n" ((Unix.gettimeofday () -. t) -. !WhySolver.smt_time);
+    (*main_info dp "Typechecking engine: %fs\n" ((Unix.gettimeofday () -. t) -. !WhySolver.smt_time);*)
     main_debug dp "Resulting constraint:@\n@[%a@]@." Print.pp_cs cs
     
 (*    let tcons= Unix.gettimeofday ()  in

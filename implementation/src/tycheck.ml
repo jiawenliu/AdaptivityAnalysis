@@ -17,7 +17,6 @@ module TyCheck (Ty : CH_TYPE) =
     open Core
     open DMap
 
-    module Map = Map.Make(var_info)
     module Opt = Support.Options
 
     let dp = Support.FileInfo.dummyinfo
@@ -30,13 +29,14 @@ module TyCheck (Ty : CH_TYPE) =
         | Left  of Ty_error.ty_error_elem withinfo
     type ty = Ty.ty
    
+
+
    (* The Adaptivity of programs *)
     type adapt = iterm
 
+    type dmap = DMap.dmap
 
-   (* The Depth Map of variables in programs *)
-    type dmap = 'a Map.t
- 
+
    (* The context for Type Checking *)
     type ch_ctx = ty context
 
@@ -73,8 +73,6 @@ let return_leaf_ch  =
         Right (empty_constr, empty_dmap, IConst 0)      
 
 
-let rec adap_eq z1 z2 =
-  CEq(iterm_simpl z1, iterm_simpl z2)
 
 let (<<) (m1 : constr equiv_checker) (m2 : constr equiv_checker) : constr equiv_checker =
   fun ctx ->
