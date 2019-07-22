@@ -8,14 +8,14 @@ open CheckEngine
 
 module T = Tycheck_sigs
 (*module WS = WhySolver*)
-module E = Exist_elim
+(*module E = Exist_elim*)
 module SE = Support.Error
 
 let dp = Support.FileInfo.dummyinfo
 
-let main_error = SE.error_msg General
+(*let main_error = SE.error_msg General*)
 
-let smt_error = SE.error_msg SMT
+(*let smt_error = SE.error_msg SMT*)
 
 let main_warning fi = SE.message 1 General fi
 let main_info    fi = SE.message 2 General fi
@@ -60,9 +60,9 @@ let type_check file t=
  let (prgm, ty) = parse_prog file in
     (* Print the results of the parsing phase *)
     main_debug dp "Parsed program:@\n@[%a@]@.\n\nParsed type:@\n@[%a@]@." 
-         Print.pp_expr prgm Print.pp_type ty;
+         Print.pp_expression prgm Print.pp_type ty;
     let ctx = Ctx.empty_context in
-    let cs =  (CheckEngine.check_type ctx prgm ty) in
+    let (cs, dmp, z) =  (CheckEngine.check_type ctx prgm ty) in
 
     (*main_info dp "Typechecking engine: %fs\n" ((Unix.gettimeofday () -. t) -. !WhySolver.smt_time);*)
     main_debug dp "Resulting constraint:@\n@[%a@]@." Print.pp_cs cs

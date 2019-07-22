@@ -59,7 +59,8 @@ open IndexSyntax
 %token ADAPT
 %token DMAP
 %token BOT
-
+%token DEPTH
+%token INFTY
 
 /* tokens for modes */
 %token CHECK
@@ -92,6 +93,23 @@ ITerm:
   | ITerm ADD ITerm
     { IAdd($1, $3) }
 
+DTerm:
+  | DEPTH INTV 
+    { DConst $2}
+  | DEPTH VAR
+    { DVar { v_name = $2 }}
+  | MAX LPAREN DTerm COMMA DTerm RPAREN
+    { DMaximal($3, $5)}
+  | DTerm SUB DTerm
+    { DSub($1, $3) }
+  | DTerm ADD DTerm
+    { DAdd($1, $3) }
+  | DEPTH INFTY
+    { DInfty }
+
+  | DEPTH BOT
+    { DBot }
+
 
 expr:
   | INTV                                            { Prim (PrimInt $1) }
@@ -110,7 +128,7 @@ expr:
   | expr DBCOLON expr                                  { Cons($1, $3) }
   | MECH LPAREN expr RPAREN                         { Mech($3) }
   | app                                             { $1 }
-  | LET VAR COLON ITerm EQUAL expr IN expr   
+  | LET VAR COLON DTerm EQUAL expr IN expr   
                                                     { Let({v_name = $2}, $4, $6, $8) }
   | uop LPAREN expr RPAREN                          { Uop($1, $3) }                                                  
   | expr bop expr                                   { Bop($2, $1, $3) }

@@ -45,7 +45,7 @@ module type CHECK =
       val (>||>)  : constr checker -> constr checker -> constr checker
       val (<<=)  : 'a inferer -> ('a -> 'b inferer) -> 'b inferer
       val (<->=) : ty inferer -> (ty -> (constr checker * dterm * var_info)) -> constr checker
-      val (=<->) : ty inferer-> (ty -> (constr checker * ty * iterm * dmap * iterm) ) -> ty inferer      
+      val (=<->) : ty inferer-> (ty -> (constr checker * ty * dterm * dmap * iterm) ) -> ty inferer      
       val return_ch     : constr -> 'a * 'b  -> constr ty_error
       val return_inf    : 'a -> 'a inferer
       val return_leaf_ch : constr checker

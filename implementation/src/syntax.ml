@@ -74,7 +74,7 @@ expr =
   | Snd         of expr
   | If          of expr * expr * expr
 
-  | Let         of var_info * iterm * expr * expr
+  | Let         of var_info * dterm * expr * expr
 
 (*  | Case        of expr * var_info * expr * var_info * expr
 *)

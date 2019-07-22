@@ -93,9 +93,9 @@ let (<<) (m1 : constr equiv_checker) (m2 : constr equiv_checker) : constr equiv_
 
 let (<=<) (m : constr equiv_checker) (cs : constr) : constr equiv_checker =
   fun ctx ->
-      begin
         match m ctx with
         | Right c -> Right (merge_cs c cs)
+        | _ -> Left err
 
 
 
@@ -212,7 +212,7 @@ let (<->=) (m : ty  inferer) (f : ty  -> (constr checker * dterm * var_info)) : 
           | Left err -> Left err
 
 
-let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * iterm * dmap * iterm) ) : ty inferer =
+let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * dterm * dmap * iterm) ) : ty inferer =
     fun ctx ->
       match m ctx with
       | Right (ty, c1, dps1, z1) ->

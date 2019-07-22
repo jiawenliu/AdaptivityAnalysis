@@ -59,6 +59,8 @@ rule main =
   | "uniform"           { UNIFORM }
   | "dmap"              { DMAP }
   | "bot"               { BOT }
+  | "infty"             { INFTY }
+  | "depth"             { DEPTH }
 
   | "Lambda"            { BIGLAM }
 
