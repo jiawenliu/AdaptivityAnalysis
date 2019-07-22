@@ -65,11 +65,11 @@ let return_ch (cs : 'a) : 'a checker  =
 
 
 let return_inf(x : 'a) : 'a inferer = 
-    fun ctx -> Right (x, empty_constr, empty_dmap, (IConst 0) )
+    fun inf_ctx -> Right (x, empty_constr, empty_dmap, (IConst 0) )
 
 
 let return_leaf_ch  = 
-    fun ctx -> 
+    fun ch_ctx -> 
         Right (empty_constr, empty_dmap, IConst 0)      
 
 
@@ -95,7 +95,7 @@ let (<=<) (m : constr equiv_checker) (cs : constr) : constr equiv_checker =
   fun ctx ->
         match m ctx with
         | Right c -> Right (merge_cs c cs)
-        | _ -> Left err
+        | Left err -> Left err
 
 
 
@@ -112,7 +112,7 @@ let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
                 (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
                 let cs' =  merge_cs c1 c2 in
                   (*Generate the New Depth Map, is the Maximum of Existing Depth Maps*)
-                  let dps' = max_dmap dps1 dps2 in
+                  let dps' = max_dmaps dps1 dps2 in
                     (*Generate the New Adaptivity, is the Maximum of Existing Depth Adaptivity*)
                     let z' = max_adapts z1 z2 in   
                       Right (cs', dps', z')
@@ -122,7 +122,7 @@ let (>>)  (m : constr checker) (m' : constr checker) : constr checker =
       end
 
 
-let (>>=) (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
+let (>>=) (m : constr checker) (f : constr -> constr checker) : constr checker =
   fun ctx ->
     match m ctx with
     | Right (cs, dps, z) ->
@@ -130,7 +130,7 @@ let (>>=) (m : 'a checker) (f : 'a -> 'b checker) : 'b checker =
         match (f cs ctx) with
           | Right(cs', dps', z') 
             -> Right(merge_cs cs cs', merge_dmaps dps dps', add_adapts z z')
-          | Left err -> Left e
+          | Left err -> Left err
       end
     | Left e    -> Left e
 
@@ -150,7 +150,7 @@ let (>&&>) m1 m2 =
                 (* Combine the constraints of two checkers with the adapt constraint k1+k2 <= k*)
                 let cs' =  merge_cs c1 c2 in
                   (*Generate the New Depth Map, is the Maximum of Existing Depth Maps*)
-                  let dps' = max_dmap dps1 (sum_adap_dmap z1 dps2) in
+                  let dps' = max_dmaps dps1 (sum_adap_dmap z1 dps2) in
                     (*Generate the New Adaptivity, is the Maximum of Existing Depth Adaptivity*)
                     let z' = add_adapts z1 z2 in   
                       Right (cs', dps', z')
@@ -180,7 +180,7 @@ let (<<=) (m : 'a inferer) (f : 'a -> 'b inferer) : 'b inferer =
           | Right (res, c, psi, k) ->
              begin
                match (f res ctx) with
-               | Right (res',c', psi', k') -> 
+               | Right (res', c', psi', k') -> 
                   Right (res', merge_cs c c', merge_dmaps psi psi', (add_adapts k k'))
                | Left err' -> Left err'
              end
@@ -202,10 +202,17 @@ let (<->=) (m : ty  inferer) (f : ty  -> (constr checker * dterm * var_info)) : 
               match m ctx with
               | Right (c2, dps2, z2) ->
                 let z = max_adapts z2 (add_adap_depth z1 q) in
-                  let dps = max_dmap dps2 (sum_depth_dmap q dps1) in
-                    let csd = depth_cs (get_depth dps2 vi_x) q in
-                      
-                      Right (CAnd(CAnd(cs1, cs2), csd), dps, z )
+                  let dps = max_dmaps dps2 (sum_depth_dmap q dps1) in
+                    let dpsx = get_depth dps2 vi_x.v_name in
+                    begin
+                    match dpsx with
+                      | Some dpsx ->                   
+                              let csd = depth_cs dpsx q in
+                                
+                                Right (CAnd(CAnd(c1, c2), csd), dps, z )
+                      | None -> Left { i = UNKNOWN; v = Internal "Depth not Found"}
+
+                    end
 
               | Left err' -> Left err'
             end          
@@ -221,7 +228,7 @@ let (=<->) (m : ty inferer) (f: ty -> (constr checker * ty * dterm * dmap * iter
           match m' ctx with
           | Right(c2, dps2, z2) -> 
             (* Calculate the new Depth Map *)
-            let dps' = max_dmap dps1 (sum_adap_dmap z1 (max_dmap dps (sum_depth_dmap q dps2))) in
+            let dps' = max_dmaps dps1 (sum_adap_dmap z1 (max_dmaps dps (sum_depth_dmap q dps2))) in
               (* Calculate the new Adaptivity *)
               let z' = add_adapts z1 (max_adapts z (add_adap_depth z2 q) ) in
               Right (ty_inf, merge_cs c1 c2, dps', z')
@@ -240,7 +247,7 @@ let fail (e : Ty_error.ty_error_elem) = fun _ ->
 
 
 let get_infer_ctx : ty context inferer =
-        fun ctx -> Right (ctx, empty_constr, [], None)
+        fun ctx -> Right (ctx, empty_constr, empty_dmap, IConst 0)
 
 
 (*let get_heur  : heurMode checker =

@@ -59,8 +59,9 @@ let parse_prog file =
 let type_check file t= 
  let (prgm, ty) = parse_prog file in
     (* Print the results of the parsing phase *)
-    main_debug dp "Parsed program:@\n@[%a@]@.\n\nParsed type:@\n@[%a@]@." 
-         Print.pp_expression prgm Print.pp_type ty;
+    (*main_debug dp "Parsed program:@\n@[%a@]@.\n\nParsed type:@\n@[%a@]@."*) 
+         Print.pp_expression std_formatter prgm;
+         Print.pp_type std_formatter ty;
     let ctx = Ctx.empty_context in
     let (cs, dmp, z) =  (CheckEngine.check_type ctx prgm ty) in
 

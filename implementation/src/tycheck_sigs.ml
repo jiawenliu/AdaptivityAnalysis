@@ -14,7 +14,7 @@ module type CHECK =
       open DMap
 
       type ty
-      type cost = iterm option
+      (*type cost = iterm option*)
 
       type 'a ty_error = 
           Right of 'a
@@ -36,22 +36,31 @@ module type CHECK =
       (* Reader/Error monad for Equivalent-checking *)
       type 'a equiv_checker = ty context -> 'a ty_error
 
+      val return_ch     : 'a -> 'a checker
+
+      val return_inf    : 'a -> 'a inferer
+
+      val return_leaf_ch : constr checker
+
+      val return_eq_ch : 'a -> 'a equiv_checker
+
+      val return_leaf_eq_ch : constr equiv_checker
+
+      val fail : Ty_error.ty_error_elem -> 'a -> 'b ty_error
+
+
+
+
       val (<=<) : constr equiv_checker -> constr -> constr equiv_checker
       val (<<) : constr equiv_checker -> constr equiv_checker -> constr equiv_checker
-      val (>>=) : 'a checker -> ('a -> 'b checker) -> 'b checker
-      val (>>>=) : 'a checker -> ('a -> 'b checker) -> 'b checker
+      val (>>=) : constr checker -> (constr -> constr checker) -> constr checker
+      (*val (>>>=) : 'a checker -> ('a -> 'b checker) -> 'b checker*)
       val (>>)   : constr checker -> constr checker -> constr checker
       val (>&&>)  : constr checker -> constr checker -> constr checker
       val (>||>)  : constr checker -> constr checker -> constr checker
       val (<<=)  : 'a inferer -> ('a -> 'b inferer) -> 'b inferer
       val (<->=) : ty inferer -> (ty -> (constr checker * dterm * var_info)) -> constr checker
       val (=<->) : ty inferer-> (ty -> (constr checker * ty * dterm * dmap * iterm) ) -> ty inferer      
-      val return_ch     : constr -> 'a * 'b  -> constr ty_error
-      val return_inf    : 'a -> 'a inferer
-      val return_leaf_ch : constr checker
-      val return_eq_ch : 'a -> 'a equiv_checker
-      val return_leaf_eq_ch : 'a equiv_checker
-      val fail : Ty_error.ty_error_elem -> 'a -> 'b ty_error
 
       val get_infer_ctx  : ty context inferer
       val get_var_ty     : var_info -> ty inferer
@@ -74,12 +83,12 @@ module type CHECK =
       (*val with_mode : Syntax.mode -> 'a checker -> 'a checker*)
       
       val check_size_eq : iterm -> iterm -> constr checker -> constr checker
-      val assume_size_eq : iterm -> iterm -> constr checker -> constr checker
-      val assume_size_leq : iterm -> iterm -> constr checker -> constr checker
+      (*val assume_size_eq : iterm -> iterm -> constr checker -> constr checker
+      val assume_size_leq : iterm -> iterm -> constr checker -> constr checker*)
       val check_size_leq : iterm -> iterm -> constr checker -> constr checker
       
-      val cost_cs : 'a context -> iterm * iterm -> constr
-      val cost_cs_st : 'a context -> iterm * iterm -> constr
+      (*val cost_cs : 'a context -> iterm * iterm -> constr*)
+      (*val cost_cs_st : 'a context -> iterm * iterm -> constr*)
 
      (*  val check_predicate : predicate -> predicate -> bool
       val check_arrays : iterm -> iterm -> bool *)
