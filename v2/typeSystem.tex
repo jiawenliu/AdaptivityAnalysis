@@ -139,6 +139,26 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     }{
        \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type
     }~\textbf{subtype}
+    %
+    \and
+     \inferrule{
+      \Delta; \Gamma ; \dmap \tvdash{\nnatA} \expr : \treal
+    }{
+       \Delta; \Gamma; \dmap \tvdash{\nnatA} \bernoulli \eapp \expr: \treal
+    }~\textbf{bernoulli}
+    %
+     \and
+     \inferrule{
+      \Delta; \Gamma ; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \treal
+      \\
+      \Delta ; \Gamma ; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \treal
+      \\
+      \nnatA = \max(\nnatA_1, \nnatA_2)
+      \\
+      \dmap' = \max(\dmap_1, \dmap_2)
+    }{
+       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \uniform \eapp \expr_1 \eapp \expr_2: \treal
+    }~\textbf{uniform}
     
   \end{mathpar}
   \caption{Typing rules, part 1}
@@ -164,6 +184,18 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
     }{
        \Delta;\Gamma; \dmap \tvdash{\nnatA} \econst: \tbase
     }~\textbf{const}
+    \and
+    %
+   \wq{ \inferrule{
+    }{
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} n: \tint[n]
+    }~\textbf{intI} }
+    \and
+    %
+   \wq{ \inferrule{
+    }{
+       \Delta;\Gamma; \dmap \tvdash{\nnatA} n: \tint
+    }~\textbf{int} }
    \and
     %
     \inferrule{
@@ -229,7 +261,9 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
    %
   {
   \inferrule{
-      \Delta, i; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
+      i,\Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \type
+      \\
+      i \not\in  \fiv{\Gamma}
     }{
      \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \eilam \expr    :  \tforall{\dmap}{\nnatA}{i} \type 
     }~\textbf{ilam}
@@ -496,7 +530,7 @@ These are also formally defined in Figure~\ref{fig:type-rules}.
          \Delta \models \sub{\type_2 }{ \type_2'  }
     }{
        \Delta \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
-    }~\textbf{sb-box-pair}
+    }~\textbf{sb-pair}
     %
     \and
     %
