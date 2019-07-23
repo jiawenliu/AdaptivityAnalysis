@@ -269,6 +269,9 @@ let rec pp_cs ppf cs =
     | _ -> ()
 
 
+let rec main_print s = 
+  fprintf std_formatter s
+
 
 
 

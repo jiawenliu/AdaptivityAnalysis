@@ -48,6 +48,8 @@ let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
         (* CASES WHEN NONE OF THE TYPES IS A BOX TYPE*)
         | Ty_IntIndex i1, Ty_IntIndex i2 -> return_eq_ch (CEq(i1, i2))
 
+        | Ty_IntIndex i , Ty_Prim Ty_PrimInt -> return_leaf_eq_ch
+
 
         | Ty_Arrow(ity, q, dps, z, oty), Ty_Arrow(ity', q', dps', z', oty') 
         						   -> 
@@ -88,6 +90,10 @@ let rec inferType (e: expr) : ty inferer  =
          infer_app (inferType e1) e2
     | IApp(e)     -> infer_iapp (inferType e)
     | Mech e      -> infer_mech (inferType e)
+    | Uop(b, e)      -> return_inf(Ty_Prim Ty_PrimReal)
+    | Bop(b, e1, e2)     
+                  -> 
+                  infer_bop b e1 e2
     (*| Anno(e, ty, dps, z) -> infer_check_anno e ty dps z*)
     | True | False
                    -> return_inf(Ty_Bool) <<= infer_bool 
@@ -95,7 +101,26 @@ let rec inferType (e: expr) : ty inferer  =
 
 
 (*and infer_check_anno e ty dps z =*)
-  
+
+and infer_bop b e1 e2 = 
+    match b with
+    | Or 
+    | And 
+    | Xor 
+    | Equal 
+    | Leq 
+    | Geq 
+    | Less 
+    | Greater 
+              -> return_inf(Ty_Bool)
+    | Setminus 
+    | Dot 
+    | Add 
+    | Sub 
+    | Mul 
+    | Div 
+              -> inferType e1
+
 
 and infer_var vi =
   fun ty ->
@@ -195,7 +220,7 @@ and infer_proj f =
     in the context [ctx] with the adapts [z]. If
     it does, it returns constrain checker, otherwise it raises an exception. *)
 and checkType (e: expr) (ty : ty) : constr checker =
-  debug dp "@[UCK  %a, ty is %a @]@." Print.pp_expression e Print.pp_type ty; 
+  debug dp "@[Check_TY  %a, ty is %a @]@." Print.pp_expression e Print.pp_type ty; 
 
   match e, ty with
 

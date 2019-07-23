@@ -46,7 +46,7 @@ module Options = struct
 
   let debug_default = {
     components   = [General;Lexer;Parser;TypeChecker;SMT];
-    level        = 2;
+    level        = 10;
     unicode      = true;
     pr_level     = 8;
     iter_no      = 1;

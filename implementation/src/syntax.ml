@@ -249,3 +249,17 @@ let type_of_prim t = match t with
     PrimUnit       -> Ty_Prim Ty_PrimUnit
   | PrimInt i      -> Ty_IntIndex(IConst(i)) (* UTyPrim UPrimInt *)
   | PrimReal _     -> Ty_Prim Ty_PrimReal
+
+
+
+
+
+(************************************************************************)
+(* Info extraction *)
+
+
+
+
+
+
+
