@@ -1,0 +1,1041 @@
+\begin{figure}
+    \centering
+    \[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x:\type).\expr
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr)  ~|~  \eilam \expr ~|~ \expr \eapp []  \\
+& & & ~|~  \elet  x:q = \expr_1 \ein \expr_2  ~|~ \enil ~|~  \econs (
+      \expr_1, \expr_2) \\
+& & & ~|~  ~~~~~~~
+ \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+      \expr_2  \\
+%
+\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
+& & & (\eilam \expr , \env)  
+\end{array}\]
+    \caption{ADAPTFUN syntax}
+    \label{fig:syntax}
+\end{figure}
+\begin{figure}
+    \centering
+    \[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x:\type).\expr
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr)  ~|~  \eilam \expr ~|~ \expr \eapp []  \\
+& & & ~|~  \elet  x:q = \expr_1 \ein \expr_2  ~|~ \enil ~|~  \econs (
+      \expr_1, \expr_2) \\
+& & & ~|~  ~~~~~~~
+ \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+      \expr_2 ~|~ \cbox \eapp \expr ~|~ \cder \eapp \expr \\
+%
+\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
+& & & (\eilam \expr , \env)  
+\end{array}\]
+    \caption{ADAPTFUN core syntax}
+    \label{fig:algo-syntax}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x:\type).\expr
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr)  ~|~  \eilam \expr ~|~ \expr \eapp []  \\
+& & & ~|~  \elet  x:q = \expr_1 \ein \expr_2  ~|~ \enil ~|~  \econs (
+      \expr_1, \expr_2) \\
+& & & ~|~  ~~~~~~~
+ \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+      \expr_2 ~|~ \cbox \eapp \expr ~|~ \cder \eapp \expr ~|~ (\expr: \type, \dmap, \nnatA) \\
+%
+\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
+& & & (\eilam \expr , \env)  
+\end{array}\]
+    \caption{ADAPTFUN algorithmic syntax}
+    \label{fig:core-syntax}
+\end{figure}
+
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{
+      \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
+    }{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{x}{ \type}
+    }~\textbf{c-var}
+    %
+    \and
+    
+    \inferrule{ 
+      \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1} {\expr_1}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) } \\
+      \Delta; \Gamma; \dmap_2 \ctyping{\nnatA_2}{ \expr_2}{ \type_1} \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
+    }{
+      \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \expr_1 \eapp \expr_2 }{ \type_2}
+    }~\textbf{c-app}
+    %
+    \and 
+    %
+    \inferrule{
+      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA]
+      \ctyping{\nnatA}
+      {\expr}{ \type_2}
+    }{
+      \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \efix f(x: \type_1).\expr}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }
+    }~\textbf{c-fix}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1}{ \type_1} \\
+      \Delta; \Gamma; \dmap_2 \ctyping{\nnatA_2}{ \expr_2}{ \type_2} \\\\
+      \dmap' = \max(\dmap_1,\dmap_2) \\
+      \nnatA' = \max(\nnatA_1,\nnatA_2)
+    }{
+      \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ (\expr_1, \expr_2)}{ \type_1 \times \type_2}
+    }~\textbf{c-pair}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr}{ \type_1 \times \type_2}
+    }{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \eprojl(\expr)}{ \type_1}
+    }~\textbf{c-fst}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr}{ \type_1 \times \type_2}
+    }{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \eprojr(\expr) }{ \type_2}
+    }~\textbf{c-snd}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \etrue}{ \tbool}
+    }~\textbf{c-true}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \efalse}{ \tbool}
+    }~\textbf{c-false}
+    %
+    \and
+      \inferrule{
+        \Delta; \Gamma; \dmap' \ctyping{\nnatA'} \expr: \type'
+        \\
+        \dmap' < \dmap 
+        \\
+        \nnatA' < \nnatA
+        \\
+        \Delta \models \eqvc{\type' }{ \type  } 
+    }{
+       \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr}{ \type}
+    }~\textbf{c-$\equiv$}
+    %
+    \and
+     \inferrule{
+      \Delta; \Gamma ; \dmap \ctyping{\nnatA}{ \expr }{ \treal}
+    }{
+       \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \bernoulli \eapp \expr}{ \treal}
+    }~\textbf{c-bernoulli}
+    %
+     \and
+     \inferrule{
+      \Delta; \Gamma ; \dmap_1 \ctyping{\nnatA_1} {\expr_1 }{ \treal}
+      \\
+      \Delta ; \Gamma ; \dmap_2 \ctyping{\nnatA_2}{ \expr_2 }{ \treal}
+      \\
+      \nnatA = \max(\nnatA_1, \nnatA_2)
+      \\
+      \dmap' = \max(\dmap_1, \dmap_2)
+    }{
+       \Delta; \Gamma; \dmap' \ctyping{\nnatA'} {\uniform \eapp \expr_1 \eapp \expr_2}{\treal}
+    }~\textbf{c-uniform}
+    
+  \end{mathpar}
+  \caption{Core Typing rules, part 1}
+  \label{fig:core-type-rules}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+    %
+    \inferrule{
+       \Delta;\Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1}{ \tbool} \\
+       \Delta;\Gamma; \dmap \ctyping{\nnatA}{ \expr_2}{ \type} \\
+       \Delta;\Gamma; \dmap \ctyping{\nnatA}{ \expr_3}{ \type} \\\\
+      \nnatA' = \nnatA_1 + \nnatA \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
+    }{
+       \Delta;\Gamma; \dmap' \ctyping{\nnatA'} { \eif(\expr_1, \expr_2, \expr_3)}{   \type}
+    }~\textbf{c-if}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta;\Gamma; \dmap \ctyping{\nnatA}{ \econst}{ \tbase}
+    }~\textbf{c-const}
+   \and
+    %
+    \inferrule{
+      \Delta; \dmap \wf{\type} \\
+    }{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA} {\enil}{ \tlist{\type}}
+    }~\textbf{c-nil}
+    % 
+ 	\and
+    %
+    \inferrule
+    {
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr}{  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     } }  \\
+      \nnatA' = 1 + \nnatA \\
+      \wq{ \dmap' = 1 + \max(\dmap, \dmap''+\nnatA) } 
+    }
+    {
+       \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \eop(\expr)}{ \treal}
+    }~\textbf{c-$\delta$}
+%
+  \and
+%
+     
+     \inferrule
+     {
+        \Delta; \tbox{\Gamma}; \dmap \ctyping{\nnatA}{ \expr}{ \type} 
+           \\
+        \delta \not\in \expr
+    }
+    {
+        \Delta; \tbox{\Gamma}, \Gamma'; \dmap \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
+    } ~\textbf{c-box}
+    %
+    \and
+    \inferrule
+     {
+        \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr}{ \tbox{\type}} 
+    }
+    {
+        \Delta;  \Gamma; \dmap \ctyping{\nnatA}{ \cder \eapp \expr}{\type }
+    } ~\textbf{c-der}
+    %
+    \and
+    %
+   \inferrule{
+   \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1}{ \type} \\
+   \Delta; \Gamma; \dmap_2 \ctyping{\nnatA_2}{ \expr_2 }{ \tlist{\type}} \\
+   \dmap' = \max(\dmap_1, \dmap_2) \\
+   \nnatA' = \max ( \nnatA_1, \nnatA_2 )
+   }
+   { 
+   \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \econs(\expr_1, \expr_2)}{
+     \tlist{\type}}  } ~\textbf{c-cons}
+   %
+   \and
+   %
+   \inferrule{
+     \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1 }{ \type_1} \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \ctyping{\nnatA_2}{ \expr_2 }{
+     \type_2 }\\
+     \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+   }
+   {  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{ \type } }~\textbf{c-let}
+   %
+   \and
+   %
+  \inferrule{
+     i::S, \Delta; \Gamma ;\dmap \ctyping{\nnatA}{ \expr}{ \type}
+      \\
+      i \not\in \fiv{\Gamma}
+    }{
+     \Delta;  \Gamma; \dmap' \ctyping{\nnatA'} { \eilam i. \expr }{  \tforall{\dmap}{\nnatA}{i} \type } 
+    }~\textbf{c-ilam}
+    %
+    \and
+    %
+  \inferrule{
+      \Delta; \Gamma ;\dmap \ctyping{\nnatA} { \expr} { \tforall{\dmap_1}{\nnatA_1}{i} \type}
+      \and
+       \Delta \vdash  I ::  S
+       \\
+       \dmap' = \max(\dmap, \nnatA + \dmap_1)
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
+    }{
+     \Delta;  \Gamma; \dmap' \ctyping{\nnatA'}   { \expr \eapp [I]}{
+     \type[I/i]}
+    }
+	    ~\textbf{c-iapp}        
+\end{mathpar}
+
+  \caption{Core Typing rules, part 2}
+  \label{fig:core-type-rules2}
+\end{figure}
+
+
+\begin{figure}
+\begin{mathpar}
+\inferrule
+{ }
+{ \Delta \models \eqvc{ \tbase }{\tbase }  }~\textbf{core-eq-base}
+%
+\and
+%
+\inferrule
+{ }
+{ \Delta \models \eqvc{ \tbool }{\tbool }  }~\textbf{core-eq-bool}
+%
+\and
+%
+\inferrule
+{ \Delta \models \eqvc{\type_1}{\type_1'}
+  \\
+  \Delta \models \eqvc{\type_2}{\type_2'}
+  }
+{ \Delta \models \eqvc{ \type_1 \times \type_2 }{ \type_1' \times \type_2'
+  } }~\textbf{core-eq-pair}
+%
+\and
+%
+\inferrule
+{   \Delta \models \eqvc{\type_1}{\type_1' }
+  \\
+   \Delta \models \eqvc{\type_2}{\type_2' }
+   \\
+   \Delta \models \nnatbiA = \nnatbiA' 
+   \\
+   \Delta \models \nnatA = \nnatA'
+   \\
+   \Delta \models  \dmap = \dmap'
+}
+{ \Delta \models \eqvc{
+    \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}  }{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  }  }~\textbf{core-eq-arrow}
+%
+\and
+%
+\inferrule
+{ \Delta \models I = I'}
+{ \Delta \models \eqvc{ \tint[I] }{\tint[I'] } }~\textbf{core-eq-int}
+%
+\and
+%
+\inferrule
+{  \Delta \models \eqvc{\type}{\type'}}
+{ \Delta \models \eqvc{ \tbox{\type} }{\tbox{\type'} } }~\textbf{core-eq-box}
+%
+\and
+%
+\inferrule
+{ \Delta \models \eqvc{\type}{\type'} }
+{ \Delta \models \eqvc{ \tlist{\type} }{\tlist{\type'} } } ~\textbf{core-eq-list}
+%
+\and
+%
+\inferrule
+{ i,\Delta \models \eqvc{\type}{\type'} 
+   \\
+   \Delta \models \nnatA = \nnatA'
+   \\
+   \Delta \models  \dmap = \dmap'
+}
+{ \Delta \models \eqvc{ \tforall{\dmap}{\nnatA}{i} \type
+  }{\tforall{\dmap'}{\nnatA'}{i} \type' } }~\textbf{core-eq-$\forall$ }
+  
+\end{mathpar}
+\caption{Core equivalence Rules}
+  \label{fig:core-eq-rules}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  elaboration %%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+\begin{figure}
+\begin{mathpar}
+\inferrule{
+      \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
+    }{
+      \Delta; \Gamma; \dmap \elab{\nnatA}{x}{x}{ \type}
+    }~\textbf{e-var}
+    %
+    \and
+    
+    \inferrule{ 
+      \Delta; \Gamma; \dmap_1 \elab{\nnatA_1} {\expr_1}{\expr_1^*}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) } \\
+      \Delta; \Gamma; \dmap_2 \elab{\nnatA_2}{ \expr_2}{\expr_2^*}{ \type_1} \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
+    }{
+      \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \expr_1 \eapp \expr_2 }{\expr_1^* \eapp \expr_2^* }{ \type_2}
+    }~\textbf{e-app}
+    %
+    \and 
+    %
+    \inferrule{
+      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA]
+      \elab{\nnatA}
+      {\expr}{\expr^*}{ \type_2}
+    }{
+      \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \efix f(x: \type_1).\expr}{\efix f(x: \type_1).\expr^*}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }
+    }~\textbf{e-fix}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1}{\expr_1^*}{ \type_1} \\
+      \Delta; \Gamma; \dmap_2 \elab{\nnatA_2}{ \expr_2}{\expr_2^*}{ \type_2} \\\\
+      \dmap' = \max(\dmap_1,\dmap_2) \\
+      \nnatA' = \max(\nnatA_1,\nnatA_2)
+    }{
+      \Delta; \Gamma; \dmap' \elab{\nnatA'}{ (\expr_1, \expr_2)}{(\expr_1^*, \expr_2^*) }{ \type_1 \times \type_2}
+    }~\textbf{e-pair}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr^*}{ \type_1 \times \type_2}
+    }{
+      \Delta; \Gamma; \dmap \elab{\nnatA}{ \eprojl(\expr)}{ \eprojl(\expr^*) }{ \type_1}
+    }~\textbf{e-fst}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr^*}{ \type_1 \times \type_2}
+    }{
+      \Delta; \Gamma; \dmap \elab{\nnatA}{ \eprojr(\expr) }{ \eprojr(\expr^*) }{ \type_2}
+    }~\textbf{e-snd}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Delta; \Gamma; \dmap \elab{\nnatA}{ \etrue}{\etrue}{ \tbool}
+    }~\textbf{e-true}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta; \Gamma; \dmap \elab{\nnatA}{ \efalse}{\efalse}{ \tbool}
+    }~\textbf{e-false}
+    %
+    \and
+      \inferrule{
+        \Delta; \Gamma; \dmap' \elab{\nnatA'}{\expr}{\expr^*}{ \type'}
+        \\
+        \Delta \models \sub{\type'}{\type}
+        \\
+        \dmap' \leq \dmap 
+        \\
+        \nnatA' \leq \nnatA
+        \\
+        \expr' = \coerce{\type'}{\type}
+    }{
+       \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{ \expr' \eapp \expr^*  }{\type}
+    }~\textbf{e-subsumption}
+    %
+    \and
+     \inferrule{
+      \Delta; \Gamma ; \dmap \elab{\nnatA}{ \expr }{\expr^*}{ \treal}
+    }{
+       \Delta; \Gamma; \dmap \elab{\nnatA}{ \bernoulli \eapp \expr}{ \bernoulli \eapp \expr^* }{ \treal}
+    }~\textbf{e-bernoulli}
+    %
+     \and
+     \inferrule{
+      \Delta; \Gamma ; \dmap_1 \elab{\nnatA_1} {\expr_1 }{\expr_1^*}{ \treal}
+      \\
+      \Delta ; \Gamma ; \dmap_2 \elab{\nnatA_2}{ \expr_2 }{\expr_2^*}{ \treal}
+      \\
+      \nnatA = \max(\nnatA_1, \nnatA_2)
+      \\
+      \dmap' = \max(\dmap_1, \dmap_2)
+    }{
+       \Delta; \Gamma; \dmap' \elab{\nnatA'} {\uniform \eapp \expr_1 \eapp \expr_2}{\uniform \eapp \expr_1^* \eapp \expr_2^* }{\treal}
+    }~\textbf{e-uniform}
+
+\end{mathpar}
+    \caption{ Embedding rules, part 1}
+    \label{fig:elab-rule}
+\end{figure}
+
+\begin{figure}
+    \begin{mathpar}
+    \inferrule{
+       \Delta;\Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1}{\expr_1^*}{ \tbool} \\
+       \Delta;\Gamma; \dmap \elab{\nnatA}{ \expr_2}{\expr_2^*}{ \type} \\
+       \Delta;\Gamma; \dmap \elab{\nnatA}{ \expr_3}{\expr_3^*}{ \type} \\\\
+      \nnatA' = \nnatA_1 + \nnatA \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
+    }{
+       \Delta;\Gamma; \dmap' \elab{\nnatA'} { \eif(\expr_1, \expr_2, \expr_3)}{ \eif(\expr_1^*, \expr_2^*, \expr_3^*) }{   \type}
+    }~\textbf{e-if}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta;\Gamma; \dmap \elab{\nnatA}{ \econst}{\econst}{ \tbase}
+    }~\textbf{e-const}
+   \and
+    %
+    \inferrule{
+      \Delta; \dmap \wf{\type} \\
+    }{
+      \Delta; \Gamma; \dmap \elab{\nnatA} {\enil}{\enil}{ \tlist{\type}}
+    }~\textbf{e-nil}
+    % 
+ 	\and
+    %
+    \inferrule
+    {
+      \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr^*}{  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     } }  \\
+      \nnatA' = 1 + \nnatA \\
+      \wq{ \dmap' = 1 + \max(\dmap, \dmap''+\nnatA) } 
+    }
+    {
+       \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \eop(\expr)}{\eop (\expr^*)}{ \treal}
+    }~\textbf{e-$\delta$}
+%
+  \and
+%   
+     \inferrule
+     {
+        \Delta; \tbox{\Gamma}; \dmap \elab{\nnatA}{ \expr}{\expr^*}{ \type} 
+           \\
+        \delta \not\in \expr 
+        \\
+        \forall x_i \in \dom(\Gamma). \expr_i =  \coerce{\Gamma(x_i)}{\tbox{\Gamma(x_i)} }
+    }
+    {
+        \Delta; \Gamma, \Gamma'; \dmap \elab{0}{\expr}{\elet  \overline{y_i = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}])}{ \tbox{\type}}
+    } ~\textbf{e-box}
+    %
+    \and
+    %
+   \inferrule{
+   \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1}{\expr_1'}{ \type} \\
+   \Delta; \Gamma; \dmap_2 \elab{\nnatA_2}{ \expr_2 }{\expr_2'}{ \tlist{\type}} \\
+   \dmap' = \max(\dmap_1, \dmap_2) \\
+   \nnatA' = \max ( \nnatA_1, \nnatA_2 )
+   }
+   { 
+   \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \econs(\expr_1, \expr_2)}{ \econs(\expr_1', \expr_2')}{
+     \tlist{\type}}  } ~\textbf{e-cons}
+   %
+   \and
+   %
+   \inferrule{
+     \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1 }{\expr_1'}{ \type_1} \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \elab{\nnatA_2}{\expr_2}{ \expr_2' }{
+     \type_2 }\\
+     \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+   }
+   {  \Delta; \Gamma; \dmap' \elab{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{\elet x;q = \expr_1' \ein \expr_2' }{ \type } }~\textbf{e-let}
+   %
+   \and
+   %
+  \inferrule{
+      i::S,\Delta; \Gamma ;\dmap \elab{\nnatA}{ \expr}{\expr'}{ \type}
+      \\
+      i \not\in \fiv{\Gamma}
+    }{
+     \Delta;  \Gamma; \dmap' \elab{\nnatA'} { \eilam \expr }{\eilam i.\expr'}{  \tforall{\dmap}{\nnatA}{i} \type } 
+    }~\textbf{e-ilam}
+    %
+   \and
+    %
+  \inferrule{
+      \Delta; \Gamma ;\dmap \elab{\nnatA} { \expr}{\expr'} { \tforall{\dmap_1}{\nnatA_1}{i} \type}
+      \and
+       \Delta \vdash  I ::  S
+       \\
+       \dmap' = \max(\dmap, \nnatA + \dmap_1)
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
+    }{
+     \Delta;  \Gamma; \dmap' \elab{\nnatA'}{ \expr \eapp []}{\expr \eapp [I]  }{
+     \type[I/i]}
+    }~\textbf{e-iapp}        
+    \end{mathpar}
+    \caption{Embedding rules, part 2}
+    \label{fig:elab-rule2}
+\end{figure}
+
+
+\clearpage
+
+\begin{lem}[Coerse of subtyping in ADAPTFUN]
+\label{lem:coerse}
+If $\Delta \models \sub{\type}{\type'} $, then exists $\expr$ in the Core calculus, 
+such that $\Delta; \bot; \cdot \ctyping{0}{\expr}{\tarr{\type}{\type'}{0}{\bot}{0}} $.
+\end{lem}
+\begin{proof}
+By induction on the subtyping derivation.\\
+\caseL{$\inferrule{
+       % \forall x \in \dmap'. \dmap'(x) =0
+    }{
+       \Delta \models \sub{\tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )} 
+      }{\tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }
+    } ~\textbf{sb-box-arrow} $}
+    TS: exists $\expr$,  $\Delta; \dmap; \cdot \ctyping{0}{\expr}{\tarr{ \tbox{(
+          \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap'}{\nnatA} )}  }{  \tarr{(\tbox{\type_1}) }{(\tbox{\type_2})}{0}{\dmap'}{0} }{0}{\bot}{0}} $
+   \wq { ? $ \expr = \lambda x. \lambda y. \cbox ( (\cder x) (\cder y)  )  $.}\\
+   
+ \caseL{$  \inferrule{
+     \Delta \models \sub{\type_1 }{ \type_1'  } \\
+         \Delta \models \sub{\type_2 }{ \type_2'  }
+    }{
+       \Delta \models \sub{\type_1 \times \type_2 }{ \type_1' \times \type_2'  }
+    }~\textbf{sb-pair} $}  
+    
+\caseL{$  \inferrule{
+    }{
+      \Delta \models \sub{\tbool}{\tbox{\tbool} }
+    }~\textbf{sb-box-bool} $}
+    
+\end{proof}
+
+\begin{lem}[Reflexivity of algorithmic type equivalence  ]
+\label{sound-alg-type-eq}
+  Exists $\restriction$,$ \Delta \models \eqv{\type}{\type}{\restriction}$ and $ \Delta  \models \restriction$ is provable.
+\end{lem}
+\begin{proof}
+By structural induction on the type $\type$.\\
+\caseL{ Case: $ \type_1 \times \type_2 $} 
+TS:  $ \Delta \models \eqv{\type_1 \times \type_2}{\type_1 \times \type_2}{\restriction}$ and $ \Delta  \models \restriction$.\\
+By induction on $\type_1$,we get: $\exists \restriction_1. \Delta \models \eqv{\type_1}{\type_1}{\restriction_1}$ and $ \Delta  \models \restriction_1$ is provable. \\
+By induction on $\type_2$,we get: $\exists \restriction_2. \Delta \models \eqv{\type_2}{\type_2}{\restriction_2}$ and $ \Delta  \models \restriction_2$ is provable.\\
+By the above statement and the rule \textbf{alg-eq-pair}, we conclude the following statement where $ \restriction = \restriction_1 \land \restriction_2 $.\\
+
+$ \Delta \models \eqv{\type_1 \times \type_2}{\type_1 \times \type_2}{\restriction}$ and $ \Delta  \models \restriction$.\\
+
+\caseL{ Case: $\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}$   } \\ 
+TS:  $ \Delta \models \eqv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}}{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}}{\restriction}$ and $ \Delta  \models \restriction$.\\
+By induction on $\type_1$,we get: $\exists \restriction_1. \Delta \models \eqv{\type_1}{\type_1}{\restriction_1}$ and $ \Delta  \models \restriction_1$ is provable. \\
+By induction on $\type_2$,we get: $\exists \restriction_2. \Delta \models \eqv{\type_2}{\type_2}{\restriction_2}$ and $ \Delta  \models \restriction_2$ is provable.\\
+By the above statement and the rule \textbf{alg-eq-arrow}, we conclude the following statement where $ \restriction = \restriction_1 \land \restriction_2 \land \nnatbiA \leq \nnatbiA
+    \land \nnatA \leq \nnatA \land \dmap \leq \dmap $.\\
+ $ \Delta \models \eqv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}}{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}}{\restriction}$ and $ \Delta  \models \restriction$.\\
+  
+\caseL{ \textbf{Case} $ \tforall{\dmap}{\nnatA}{i} \type  $ }  \\  
+TS:  $ \Delta \models \eqv{\tforall{\dmap}{\nnatA}{i} \type}{\tforall{\dmap}{\nnatA}{i} \type}{\restriction}$ and $ \Delta  \models \restriction$.\\
+By induction on $\type$ where instantiated with $\Delta' = i, \Delta$, exists $\restriction'$ such that $\Delta' \models \eqv{\type}{\type}{\restriction'}$ and $ \Delta \models \restriction' $.\\
+By the above statement and the rule \textbf{alg-eq-$\forall$},we conclude the following statement where $ \restriction = \forall I::S.\restriction $.\\
+$ \Delta \models \eqv{\tforall{\dmap}{\nnatA}{i} \type}{\tforall{\dmap}{\nnatA}{i} \type}{\restriction}$ and $ \Delta  \models \restriction$.\\
+
+\end{proof}
+
+\begin{thm}[Soundness of algorithmic type equivalence]
+ If $\Delta \models \eqv{\type}{\type'}{\restriction}$ and $\fiv{\type, \type'} \subseteq \Delta $, and $\Delta \models \restriction $ is provable, then $ \Delta \models \eqvc{\type}{\type'} $.
+\end{thm}
+\begin{proof}
+By induction on the algorithmic type equivalence derivation.\\
+\caseL{ Case: $\inferrule
+{ }
+{ \Delta \models \eqv{ \tbase }{\tbase }{\top }  }~\textbf{alg-eq-base}  $}
+Assume $\fiv{\tbase}$,
+it is proved by the core equivalence rule \textbf{core-eq-base}.\\
+
+\caseL{ Case: $ \inferrule
+{ \Delta \models \eqv{\type_1}{\type_1'}{ \restriction_1 }
+  \\
+  \Delta \models \eqv{\type_2}{\type_2'}{\restriction_2}
+  }
+{ \Delta \models \eqv{ \type_1 \times \type_2 }{ \type_1' \times \type_2'
+  }{\restriction_1 \land \restriction_2  }  }~\textbf{alg-eq-pair} $ }
+  Assume $ \fiv{\type_1 \times \type_2, \type_1' \times \type_2'} \subseteq \Delta $ and $\Delta \models \restriction_1 \land \restriction_2  $.\\
+  TS: $\Delta \models \eqvc{\type_1 \times \type_2}{\type_1' \times \type_2'} $.\\
+ From the assumption $ \fiv{\type_1 \times \type_2, \type_1' \times \type_2'} \subseteq \Delta $, we know that :\\
+ $ \fiv{\type_1, \type_1'} \subseteq \Delta $ and $ \fiv{\type_2, \type_2'} \subseteq \Delta $.\\
+ Similarly, we also infer from the assumption that : \\
+ $\Delta \models \restriction_1  $ and $\Delta \models \restriction_2 $. \\
+ By IH on the premises, we know that : \\
+ $\Delta \models \eqvc{\type_1'}$ and $\Delta \models \eqvc{\type_2}{\type_2'}$.\\
+ From the rule $\textbf{core-eq-pair}$, we conclude that : $\Delta \models \eqvc{\type_1 \times \type_2}{\type_1' \times \type_2'} $.\\
+ 
+ \caseL{Case: $ \inferrule
+{   \Delta \models \eqv{\type_1}{\type_1' }{\restriction_1 } 
+  \\
+   \Delta \models \eqv{\type_2}{\type_2' }{\restriction_2 }
+}   
+{ \Delta \models \eqv{
+    \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}  }{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  }{
+    \restriction_1 \land \restriction_2 \land \nnatbiA = \nnatbiA'
+    \land \nnatA = \nnatA' \land \dmap = \dmap'  }  }~\textbf{alg-eq-arrow} $}
+    
+  Assume $ \fiv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA} , \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  } \subseteq \Delta $ and $\Delta \models \restriction_1 \land \restriction_2 \land \nnatbiA =\nnatbiA'
+    \land \nnatA = \nnatA' \land \dmap = \dmap'  $.\\  
+    %
+    TS: $\Delta \models \eqvc{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}}{\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}} $.\\
+ From the assumption we know that :\\
+ $ \fiv{\type_1, \type_1'} \subseteq \Delta $ and $ \fiv{\type_2, \type_2'} \subseteq \Delta $.\\
+ Similarly, we also infer from the assumption that : \\
+ $\Delta \models \restriction_1  $ and $\Delta \models \restriction_2 $ and $\Delta \models \nnatbiA =\nnatbiA'
+    \land \nnatA = \nnatA' \land \dmap = \dmap' $. \\
+ By IH on the premises, we know that : \\
+ $\Delta \models \eqvc{\type_1}{\type_1'}$ and $\Delta \models \eqvc{\type_2}{\type_2'}$.\\
+  From the rule $\textbf{core-eq-arrow}$, we conclude that : \\
+  $$\Delta \models \eqvc{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}}{\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}} $$.\\
+  
+\caseL{ $ \inferrule
+{ }
+{ \Delta \models \eqv{ \tint[I] }{\tint[I'] }{ I = I' }  }~\textbf{alg-eq-int} $}
+
+ Assume $ \fiv{\tint[I], \tint[I']} \subseteq \Delta $ and $\Delta \models I = I'  $.\\
+  TS: $\Delta \models \eqvc{\tint[I]}{\tint[I']} $.\\
+  By the assumption and the rule $\textbf{core-eq-int}$, we conclude that : \\
+   $\Delta \models \eqvc{\tint[I]}{\tint[I']} $.\\
+
+
+\caseL{ $ \inferrule
+{  \Delta \models \eqv{\type}{\type'}{\restriction} }
+{ \Delta \models \eqv{ \tbox{\type} }{\tbox{\type'} }{\restriction }  }~\textbf{alg-eq-box} $}
+Assume $ \fiv{\tbox{\type}, \tbox{\type'}} \subseteq \Delta $ and $\Delta \models \restriction  $.\\
+  TS: $\Delta \models \eqvc{\tbox{\type}}{\tbox{\type'}} $.\\
+From the assumption we know that :\\
+ $ \fiv{\type, \type'} \subseteq \Delta $ .\\
+ By IH on the premise, we know that : \\
+ $\Delta \models \eqvc{\type}{\type'}$ \\ 
+From the rule $\textbf{core-eq-box}$, we conclude that : \\
+ $\Delta \models \eqvc{\tbox{\type}}{\tbox{\type'}} $.\\
+ 
+\caseL{ $  \inferrule
+{ i,\Delta \models \eqv{\type}{\type'}{\restriction} }
+{ \Delta \models \eqv{ \tforall{\dmap}{\nnatA}{i} \type
+  }{\tforall{\dmap'}{\nnatA'}{i} \type' }{\forall I::S.\restriction
+    \land \dmap = \dmap' \land \nnatA = \nnatA' }  }~\textbf{alg-eq-$\forall$ }$}
+    %
+    Assume $ \fiv{\tforall{\dmap}{\nnatA}{i} \type,\tforall{\dmap'}{\nnatA'}{i} \type'   } \subseteq \Delta $ and $\Delta \models \forall I::S.\restriction
+    \land \dmap = \dmap' \land \nnatA = \nnatA'  $.\\
+  TS: $\Delta \models \eqvc{ \tforall{\dmap}{\nnatA}{i} \type }{ \tforall{\dmap'}{\nnatA'}{i} \type' } $.\\
+  From the assumption we know that :\\
+ $ \fiv{\type, \type',i} \subseteq (i,\Delta) $ and $  i,\Delta \models \restriction   $\\
+ 
+ 
+   By IH on the premise where $\Delta' = i, \Delta$, we know that : \\
+ $\Delta' \models \eqvc{\type}{\type'}$ \\ 
+ BY the above statements and the rule $\textbf{core-eq-$\forall$}$, we conclude that : \\
+  $\Delta \models \eqvc{ \tforall{\dmap}{\nnatA}{i} \type }{ \tforall{\dmap'}{\nnatA'}{i} \type' } $.\\
+    
+\end{proof}
+
+
+\begin{thm}[Completeness of the algorithmic type equivalence]
+ If $\Delta \models \eqvc{\type}{\type'}$, then exists $\restriction$ such that $\Delta \models \eqv{\type}{\type'}{\restriction}$ and  $\Delta \models \restriction $ .
+\end{thm}
+\begin{proof}
+By induction on the type equivalence derivation.\\
+\caseL{$ \inferrule
+{ \Delta \models \eqvc{\type_1}{\type_1'}
+  \\
+  \Delta \models \eqvc{\type_2}{\type_2'}
+  }
+{ \Delta \models \eqvc{ \type_1 \times \type_2 }{ \type_1' \times \type_2'
+  } }~\textbf{core-eq-pair}  $} 
+  TS: Exists $\restriction$ such that $\Delta \models \eqv{\type_1 \times \type_2  }{\type_1' \times \type_2' }{ \restriction}$ and $\Delta \models \restriction$.
+By IH on the premises, we know that \\
+Exists $\restriction_1 $ st  $\Delta \models \eqv{\type_1   }{\type_1' }{ \restriction_1}$ and $\Delta \models \restriction_1$. \\
+Exists $\restriction_2 $ st  $\Delta \models \eqv{\type_2 }{\type_2' }{ \restriction_2}$ and $\Delta \models \restriction_2$. \\
+By the above statements and the algorithmic type equivalence rule $\textbf{alg-eq-pair}$, we conclude the following statement where $\restriction = \restriction_1 \land \restriction_2 $ .\\
+$\Delta \models \eqv{\type_1 \times \type_2  }{\type_1' \times \type_2' }{ \restriction}$ and $\Delta \models \restriction$.\\
+  
+\caseL{ $ \inferrule
+{   \Delta \models \eqvc{\type_1}{\type_1' }
+  \\
+   \Delta \models \eqvc{\type_2}{\type_2' }
+   \\
+   \Delta \models \nnatbiA = \nnatbiA' 
+   \\
+   \Delta \models \nnatA = \nnatA'
+   \\
+   \Delta \models  \dmap = \dmap'
+}
+{ \Delta \models \eqvc{
+    \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}  }{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  }  }~\textbf{core-eq-arrow} $   }
+ TS: Exists $\restriction$ such that $\Delta \models \eqv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}   }{\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'} }{ \restriction}$ and $\Delta \models \restriction$.    \\
+ By IH on the premises, we know that \\
+Exists $\restriction_1 $ st  $\Delta \models \eqv{\type_1   }{\type_1' }{ \restriction_1}$ and $\Delta \models \restriction_1$. \\
+Exists $\restriction_2 $ st  $\Delta \models \eqv{\type_2 }{\type_2' }{ \restriction_2}$ and $\Delta \models \restriction_2$. \\
+$\Delta \models \nnatbiA = \nnatbiA' \land \nnatA = \nnatA' \land \dmap = \dmap'$.\\
+By the above statements and the algorithmic type equivalence rule $\textbf{alg-eq-arrow}$, we conclude the following statement where $\restriction = \restriction_1 \land \restriction_2 \land \nnatbiA = \nnatbiA' \land \nnatA = \nnatA' \land \dmap = \dmap'$ .\\
+  $\Delta \models \eqv{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}   }{\tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'} }{ \restriction}$ and $\Delta \models \restriction$.    \\  
+    
+\caseL{ $ \inferrule
+{ \Delta \models I = I'}
+{ \Delta \models \eqvc{ \tint[I] }{\tint[I'] } }~\textbf{core-eq-int} $ }    
+TS: Exists $\restriction$ such that $\Delta \models \eqv{\tint[I]   }{\tint[I'] }{ \restriction}$ and $\Delta \models \restriction$.\\
+By the algorithmic type equivalence rule $\textbf{alg-eq-int}$, we conclude the following statement where $\restriction = I = I'$ .\\
+$\Delta \models \eqv{\tint[I]   }{\tint[I'] }{ \restriction}$ and $\Delta \models \restriction$.\\
+    
+\caseL{$ \inferrule
+{ i,\Delta \models \eqvc{\type}{\type'} 
+   \\
+   \Delta \models \nnatA = \nnatA'
+   \\
+   \Delta \models  \dmap = \dmap'
+}
+{ \Delta \models \eqvc{ \tforall{\dmap}{\nnatA}{i} \type
+  }{\tforall{\dmap'}{\nnatA'}{i} \type' } }~\textbf{core-eq-$\forall$ } $}
+  TS: Exists $\restriction$ such that $\Delta \models \eqv{\tforall{\dmap}{\nnatA}{i} \type   }{\tforall{\dmap'}{\nnatA'}{i} \type' }{ \restriction}$ and $\Delta \models \restriction$.\\
+  By IH on the first premise where $\Delta' = i,\Delta$, we know that \\
+Exists $\restriction_1 $ st  $\Delta' \models \eqv{\type   }{\type' }{ \restriction_1}$ and $\Delta' \models \restriction_1$. \\
+From the statement$\Delta' \models \restriction_1$, we conclude the following statement by generalizing the index variable $i$:\\
+$\Delta \models \forall i. \restriction_1  $.\\
+From the other premises, we get:\\
+  $\Delta \models  \nnatA = \nnatA' \land \dmap = \dmap'$.\\
+  By the above statements and the algorithmic type equivalence rule $\textbf{alg-eq-$\forall$}$, we conclude the following statement where $\restriction = \forall i. \restriction_1  \land \nnatA = \nnatA' \land \dmap = \dmap'$ .\\
+  $\Delta \models \eqv{\tforall{\dmap}{\nnatA}{i} \type   }{\tforall{\dmap'}{\nnatA'}{i} \type' }{ \restriction}$ and $\Delta \models \restriction$.\\
+\end{proof}
+
+\begin{thm}[Type are preserved via embedding]
+If $  \Delta;  \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr'  }{
+     \type } $ , then $  \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr^*}{ \type  } $ and $   \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type$ .
+\end{thm}
+\begin{proof}
+By induction on the embedding derivation.\\
+\caseL{Case: \[ \inferrule{
+      \Gamma(x) = \type \\ 0 \leq \dmap(x) \mbox{ or equiv.\ } \dmap(x) \neq \bot
+    }{
+      \Delta; \Gamma; \dmap \elab{\nnatA}{x}{x}{ \type}
+    }~\textbf{e-var} \]}
+    By the rule \textbf{var}, we know: $   \Delta; \Gamma; \dmap \tvdash{\nnatA} x : \type $.\\
+     By the rule \textbf{c-var}, we know: $   \Delta; \Gamma; \dmap \ctyping{\nnatA}{ x}{ \type  } $.\\
+    
+\caseL{Case:  \[  \inferrule{ 
+      \Delta; \Gamma; \dmap_1 \elab{\nnatA_1} {\expr_1}{\expr_1^*}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }~(\star) \\
+      \Delta; \Gamma; \dmap_2 \elab{\nnatA_2}{ \expr_2}{\expr_2^*}{ \type_1}~(\diamond) \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
+    }{
+      \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \expr_1 \eapp \expr_2 }{\expr_1^* \eapp \expr_2^* }{ \type_2}
+    }~\textbf{e-app} \]  }
+    TS: $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \expr_1^* \eapp \expr_2^*}{ \type_2  } $ and $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2: \type_2$ .\\
+    %
+    By induction on $(\star)$, we get:$  \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1^*}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})  } $ and $   \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})$ .\\
+    %
+    By induction on $(\diamond)$, we get:$  \Delta; \Gamma; \dmap_2 \ctyping{\nnatA_2}{ \expr_2^*}{ \type_1  } $ and $   \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1$ .\\
+    By the above statements, the premises, and the rule \textbf{app}, we conclude that :  $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2: \type_2$ . \\
+    %
+     By the above statements, the premises, and the rule \textbf{c-app}, we conclude that :  $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \expr_1^* \eapp \expr_2^*}{ \type_2  } $. \\
+     
+\caseL{Case:  \[  \inferrule{
+      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA]
+      \elab{\nnatA}
+      {\expr}{\expr^*}{ \type_2}
+    }{
+      \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \efix f(x: \type_1).\expr}{\efix f(x: \type_1).\expr^*}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }
+    }~\textbf{e-fix}  \]  }
+    TS: $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \efix f(x: \type_1).\expr^* }{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})  } $ and $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x: \type_1).\expr :  (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) $ .\\
+    %
+    By induction on the premise instantiated with $\Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1$ and $ \dmap[f: \infty, x: \nnatbiA] $, we get: \\
+    $ \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA] \ctyping{\nnatA}{ \expr^* }{ \type_2  } $ \\
+    $ \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}), x: \type_1;
+      \dmap[f: \infty, x: \nnatbiA] \tvdash{\nnatA} \expr :  \type_2   $ \\  
+      %
+       By the above statements, the premises, and the rule \textbf{fix}, we conclude that :  $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \efix f(x: \type_1).\expr^* }{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA})  } $. \\
+    %
+     By the above statements, the premises, and the rule \textbf{c-app}, we conclude that :  $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \efix f(x: \type_1).\expr :  (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) $. \\
+    
+\caseL{ Case: \[     \inferrule{
+        \Delta; \Gamma; \dmap' \elab{\nnatA'}{\expr}{\expr^*}{ \type'}~(\star)
+        \\
+        \Delta \models \sub{\type'}{\type}~(\diamond)
+        \\
+        \dmap' \leq \dmap ~(\clubsuit)
+        \\
+        \nnatA' \leq \nnatA ~(\heartsuit)
+        \\
+        \expr' = \coerce{\type'}{\type}~(\spadesuit)
+    }{
+       \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{ \expr' \eapp \expr^*  }{\type}
+    }~\textbf{e-subsumption}  \]  }
+    TS: $  \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr' \eapp \expr^*  }{ \type } $ and $   \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr :  \type $ .\\
+    %
+    By induction on $(\star)$, we get:\\
+    $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \expr^*  }{ \type' }~(1) $ and $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr :  \type' ~(2)$ .\\
+    By  (2),$(\diamond), (\clubsuit), (\heartsuit)$ and the rule \textbf{subtype}, we conclude that ; 
+    \[     \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr :  \type  \]
+    %
+    By Lemma~\ref{lem:coerse} and $(\diamond)$, we have :  $\Delta;  \cdot ; \bot \ctyping{0}{\coerce{\type'}{\type} }{\tarr{\type'}{\type}{0}{\bot}{0}} $ \\
+    From the rule \textbf{c-app}, we know:
+    \[ 
+     \inferrule{ 
+      \Delta;  \cdot ; \bot \ctyping{0}{\coerce{\type'}{\type} }{\tarr{\type'}{\type}{0}{\bot}{0}}  \\
+      \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \expr^*  }{ \type' } \\\\
+      \nnatA' = 0 + \max(0, \nnatA' + 0) \\
+      \dmap' = \max(0, 0 + \max(\bot, \dmap' + 0))
+    }{
+      \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \coerce{\type'}{\type} \eapp \expr^* }{ \type}
+    }~\textbf{c-app}
+    \]
+    By the reflexivity of type equivalence, we know: $ \Delta \models \eqvc{\type }{ \type  } $. \\
+    By the above statements and $(\clubsuit), (\heartsuit)$ and the rule \textbf{c-$\equiv$}, we conclude that:\\
+    \[ 
+      \inferrule{
+        \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{\coerce{\type'}{\type} \eapp \expr^*}{ \type}
+        \\
+        \dmap' < \dmap 
+        \\
+        \nnatA' < \nnatA
+        \\
+        \Delta \models \eqvc{\type }{ \type  } 
+    }{
+       \Delta; \Gamma; \dmap \ctyping{\nnatA} \expr: \type
+    }~\textbf{c-$\equiv$}
+    \]
+    
+\caseL{Case:  \[  \inferrule
+    {
+      \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr^*}{  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     } }  \\
+      \nnatA' = 1 + \nnatA \\
+       \dmap' = 1 + \max(\dmap, \dmap''+\nnatA)  
+    }
+    {
+       \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \eop(\expr)}{\eop (\expr^*)}{ \treal}
+    }~\textbf{e-$\delta$} \]}
+     TS: $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \eop (\expr^*) }{ \treal } $ and $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr):  \treal $ .\\
+    %
+    By induction on the first premise, we get:
+     $  \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr^*  }{ \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     }}~(1) $ and $   \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr :  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     } ~(2)$ .\\
+        By the above statement and the premises, and the rule \textbf{$\delta$}, we conclude that: 
+     $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eop(\expr):  \treal $.\\
+     By the above statement and the premises, and the rule \textbf{c-$\delta$}, we conclude that: 
+     $    \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \eop (\expr^*) }{ \treal } $.\\
+     
+\caseL{Case:   \[  \inferrule
+     {
+        \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr^*}{ \type} 
+           \\
+        \delta \not\in \expr 
+        \\
+        \forall x_i \in \dom(\Gamma). \expr_i =  \coerce{\Gamma(x_i)}{\tbox{\Gamma(x_i)} }
+        \\
+         \forall x_i \in \dom(\Gamma). \Delta \models \sub{\Gamma(x_i)}{\tbox{\Gamma(x_i)}}
+    } 
+    {
+        \Delta; \Gamma, \Gamma'; \dmap \elab{0}{\expr}{\elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}])}{ \tbox{\type}}
+    } ~\textbf{e-box}  \]}
+    TS: $  \Delta; \Gamma, \Gamma'; \dmap \ctyping{0}{ \elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{ \tbox{\type} } $ and $   \Delta; \Gamma,\Gamma'; \dmap \tvdash{0} \expr :  \tbox{\type} $ .\\ 
+    %
+     By induction on the first premise, we get:
+     $  \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr^*  }{  \type   }~(1) $ and $   \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr :  \type   ~(2)$ .\\
+     By (2), the premises, and the rule \textbf{box}, we conclude that :\\
+     $   \Delta; \Gamma,\Gamma'; \dmap \tvdash{0} \expr :  \tbox{\type} $.\\
+     %
+     By the rule \textbf{c-let}\\
+     \[
+      \inferrule{
+     \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1 }{ \type_1} \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \ctyping{\nnatA_2}{ \expr_2 }{
+     \type_2 }\\
+     \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+   }
+   {  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{ \type } }~\textbf{c-let}
+     \]
+    By initiating with the goal we need to prove, we have:
+      \[
+      \inferrule{
+     \Delta; \Gamma,\Gamma'; \dmap_1 \ctyping{0}{ \expr_i \eapp x_i }{ \tbox{\Gamma(x_i)}} \\
+     \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
+     \tbox{\type} }\\
+     \dmap = \max( \dmap, \dmap_1 + 0 ) \\
+     \nnatA' = \max ( 0, 0 + 0 )
+   }
+   {  \Delta; \Gamma, \Gamma'; \dmap \ctyping{0}{ \elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{ \tbox{\type} } }~\textbf{c-let}
+     \]
+    where $\dmap_1 = \overline {[x_i:0]} \land \dom(\dmap_1) = dom(\Gamma)$, $\Gamma_1 = \overline{ [y_i: \Gamma(x_i)]}$
+    \\
+    STS: $$ \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
+     \tbox{\type} }$$
+     
+     By using the \textbf{c-box}
+     \[
+      \inferrule
+     {
+        \Delta; \tbox{\Gamma}; \dmap \ctyping{\nnatA}{ \expr}{ \type} 
+           \\
+        \delta \not\in \expr
+    }
+    {
+        \Delta; \tbox{\Gamma}, \Gamma'; \dmap \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
+    } ~\textbf{c-box}
+     \]
+     \[
+      \inferrule
+     {
+        \Delta; \tbox{\Gamma_1}; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} 
+           \\
+        \delta \not\in \expr
+    }
+    {
+        \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
+     \tbox{\type} }
+    } ~\textbf{c-box}
+     \]
+     STS: \[ \Delta; \tbox{\Gamma_1}; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} \]
+     We extend the context and dmap from (1), we get : \\
+     $ \Delta; \tbox{\Gamma_1},\Gamma; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*}{ \type} $.\\
+     By substitution on all the variable $x_i$ in $\Gamma$, we conclude that \\
+    $ \Delta; \tbox{\Gamma_1}; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} $
+\caseL{Case:   \[ \inferrule{
+       \Delta;\Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1}{\expr_1^*}{ \tbool} \\
+       \Delta;\Gamma; \dmap \elab{\nnatA}{ \expr_2}{\expr_2^*}{ \type} \\
+       \Delta;\Gamma; \dmap \elab{\nnatA}{ \expr_3}{\expr_3^*}{ \type} \\\\
+      \nnatA' = \nnatA_1 + \nnatA \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
+    }{
+       \Delta;\Gamma; \dmap' \elab{\nnatA'} { \eif(\expr_1, \expr_2, \expr_3)}{ \eif(\expr_1^*, \expr_2^*, \expr_3^*) }{   \type}
+    }~\textbf{e-if}   \]  }
+
+
+\caseL{Case:  \[   \inferrule{
+     \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1 }{\expr_1'}{ \type_1} \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \elab{\nnatA_2}{\expr_2}{ \expr_2' }{
+     \type_2 }\\
+     \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+   }
+   {  \Delta; \Gamma; \dmap' \elab{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{\elet x;q = \expr_1' \ein \expr_2' }{ \type } }~\textbf{e-let} \]   }
+   
+ \caseL{Case: \[  \]}  
+\end{proof}
+
+
+
+\begin{thm}[Completeness of embedding ]
+If $   \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type$, then  $\exists \expr'$ such that  $  \Delta;  \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr'  }{
+     \type } $.
+\end{thm}

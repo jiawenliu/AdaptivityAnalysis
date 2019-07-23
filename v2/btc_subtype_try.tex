@@ -37,7 +37,7 @@
 %
 \inferrule
 { }
-{ \Delta \models \eqvt{ \tint[I] }{\tint[I'] }{ I = I' }  }~\textbf{alg-sb-int}
+{ \Delta \models \eqvt{ \tint[I] }{\tint[I'] }{ I \leq I' }  }~\textbf{alg-sb-int}
 %
 \and
 %
@@ -184,4 +184,69 @@ TS: exists $\restriction_3$, $ \Delta \models \eqvt{ \tforall{\dmap}{\nnatA}{i} 
   By the rule \textbf{alg-sb-$\forall$}, we know that exists $\restriction_3 = \forall i::S.\restriction \land \restriction' \land \dmap \leq \dmap'' \land \nnatA \leq \nnatA'' $ such that $ \Delta \models \eqvt{ \tforall{\dmap}{\nnatA}{i} \type }{ \tforall{\dmap''}{\nnatA''}{i} \type'' 
   }{\restriction_3 } $ and $ \Delta \models \restriction_3 $.\\
   
+\end{proof}
+
+\begin{thm}[Soundness of algorithmic subtyping]
+ If $\Delta \models \eqvt{\type}{\type'}{\restriction}$ and $\fiv{\type, \type'} \subseteq \Delta $, and $\Delta \models \restriction $ is provable, then $ \Delta \models \sub{\type}{\type'} $.
+\end{thm}
+\begin{proof}
+By induction on the algorithmic subtyping derivation.\\
+\caseL{ $\inferrule
+{ }
+{ \Delta \models \eqvt{ \tbase }{\tbase }{\top }  }~\textbf{alg-sb-base}  $}
+It is proved by the rule $\textbf{sb-refl}$.\\
+
+\caseL{ $ \inferrule
+{ \Delta \models \eqvt{\type_1}{\type_1'}{ \restriction_1 }
+  \\
+  \Delta \models \eqvt{\type_2}{\type_2'}{\restriction_2}
+  }
+{ \Delta \models \eqvt{ \type_1 \times \type_2 }{ \type_1' \times \type_2'
+  }{\restriction_1 \land \restriction_2  }  }~\textbf{alg-sb-pair} $ }
+  TS: $\Delta \sub{\type_1 \times \type_2}{\type_1' \times \type_2'} $.\\
+ From the assumption $ \fiv{\type_1 \times \type_2, \type_1' \times \type_2'} \subseteq \Delta $, we know that :\\
+ $ \fiv{\type_1, \type_1'} \subseteq \Delta $ and $ \fiv{\type_2, \type_2'} \subseteq \Delta $.\\
+ Similarly, we also infer from the assumption that : \\
+ $\Delta \models \restriction_1  $ and $\Delta \models \restriction_2 $. \\
+ By IH on the premises, we know that : \\
+ $\Delta \models \sub{\type_1}{\type_1'}$ and $\Delta \models \sub{\type_2}{\type_2'}$.\\
+ From the rule $\textbf{sb-pair}$, we conclude that $\Delta \sub{\type_1 \times \type_2}{\type_1' \times \type_2'} $.\\
+ 
+ \caseL{$ \inferrule
+{   \Delta \models \eqvt{\type_1}{\type_1' }{\restriction_1 } 
+  \\
+   \Delta \models \eqvt{\type_2}{\type_2' }{\restriction_2 }
+}
+{ \Delta \models \eqvt{
+    \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}  }{
+    \tarr{\type_1'}{\type_2'}{\nnatbiA'}{\dmap'}{\nnatA'}  }{
+    \restriction_1 \land \restriction_2 \land \nnatbiA \leq \nnatbiA'
+    \land \nnatA \leq \nnatA' \land \dmap \leq \dmap'  }  }~\textbf{alg-sb-arrow} $}
+    
+\caseL{ $ \inferrule
+{ }
+{ \Delta \models \eqvt{ \tint[I] }{\tint[I'] }{ I \leq I' }  }~\textbf{alg-sb-int} $}
+
+\caseL{ $ \inferrule
+{  \Delta \models \eqvt{\type}{\type'}{\restriction} }
+{ \Delta \models \eqvt{ \tbox{\type} }{\tbox{\type'} }{\restriction }  }~\textbf{alg-sb-box} $}
+
+\caseL{ $  \inferrule
+{ i,\Delta \models \eqvt{\type}{\type'}{\restriction} }
+{ \Delta \models \eqvt{ \tforall{\dmap}{\nnatA}{i} \type
+  }{\tforall{\dmap'}{\nnatA'}{i} \type' }{\forall I::S.\restriction
+    \land \dmap \leq \dmap' \land \nnatA \leq \nnatA' }  }~\textbf{alg-sb-$\forall$ }$}
+    
+\end{proof}
+
+\begin{thm}
+ If $\Delta \models \sub{\type}{\type'}$, then exists $\restriction$ such that $\Delta \models \eqvt{\type}{\type'}{\restriction}$ and  $\Delta \models \restriction $ .
+\end{thm}
+\begin{proof}
+By induction on the subtyping derivation.\\
+\caseL{$ \inferrule{
+    }{
+      \Delta  \models \sub{ \tbox{\type}  }{ \type }
+    }~\textbf{sb-T}$} \wq{?}
+    
 \end{proof}
