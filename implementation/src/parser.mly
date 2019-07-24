@@ -218,8 +218,8 @@ Type:
   | BOX Type
     { Ty_Box $2 }
 
-  | Type TIMES Type
-    { Ty_Prod($1, $3) }
+  | TypePair
+    { $1 }
 
   | Type ARROW Type
     { Ty_Arrow($1, DConst 0, [], IConst 0, $3) }
@@ -239,4 +239,12 @@ Type:
   | INT LBRACK ITerm RBRACK
     { Ty_IntIndex($3)}
 
+  | LPAREN Type RPAREN
+    { $2 }
 
+
+TypePair :
+	| Type TIMES Type
+		{ Ty_Prod ($1, $3) }
+    | Type TIMES TypePair
+    	{ Ty_Prod ($1, $3) }

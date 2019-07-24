@@ -135,7 +135,7 @@ and infer_var vi =
             let dx = get_depth depthmap vi.v_name in
               match dx with
                 | Some dx -> Right (ty, depth_cs d0 dx, depthmap, (IConst 0) )
-                | None    -> Left err
+                | None    -> Left {i = EXISTQ; v = Internal "No depth to get."}
 
 
 and infer_const =
@@ -326,9 +326,9 @@ and check_fix (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty) =
                       (* Depth Map with All bottom*)
                       let dps'' = bot_dmap ctx in
                         Right(CAnd(c, CAnd(cs1, cs2)), dps'', IConst 0) 
-              | None -> Left err
+              | None -> Left {i = EXISTQ; v = Internal "No depth to get."}
             end
-        | _ -> Left err
+        | Left err -> Left err
       end
  
   | _ ->  fail (WrongShape (ty, "fuction"))
