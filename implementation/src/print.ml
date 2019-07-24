@@ -265,8 +265,8 @@ let rec pp_cs ppf cs =
     | CExists(bi_x, s, cs) -> fprintf ppf "@<1>%s%s :: %a.@;(@[%a@])" (sym Symbols.Exists) bi_x.v_name pp_sort s pp_cs cs
     | CArrPos(o, l)        -> fprintf ppf "%a[%a] =  true" pp_iterm o pp_iterm l       
     | CNot c               ->  fprintf ppf "NOT %a " pp_cs c  
-    | CDEq(d1, d2)
-    | CDLeq(d1,d2)  -> ()
+    | CDEq(d1, d2)         -> fprintf ppf "%a = %a" pp_dterm d1 pp_dterm d2
+    | CDLeq(d1,d2)         -> fprintf ppf "%a %s %a" pp_dterm d1 (sym Symbols.Leq) pp_dterm d2
     | _ -> ()
 
 
