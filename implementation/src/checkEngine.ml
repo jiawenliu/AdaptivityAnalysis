@@ -97,6 +97,8 @@ let rec inferType (e: expr) : ty inferer  =
     (*| Anno(e, ty, dps, z) -> infer_check_anno e ty dps z*)
     | True | False
                    -> return_inf(Ty_Bool) <<= infer_bool 
+    | Annotated(e, ty, d, z) 
+                   -> return_inf(ty)
     |  _ -> fail (Internal ("no inference rule, try annotating the expression please."))
 
 

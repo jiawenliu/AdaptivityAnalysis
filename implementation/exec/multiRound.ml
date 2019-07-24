@@ -14,16 +14,16 @@ let dataset = [1.0;1.0;1.0;1.0]
       (fun (i ) -> 
        (fun (nn ) -> 
          if( (( i ) < ( nn )) ) then 
-           if(   contains   ii    i  ) then 
-                      let x =
-                       ((   get   sc    i  ) +. ( (( (( a ) -. ( p )) ) *. ( (( 
-                       q   i  ) -. ( p )) )) ))  in
-                       let sc' =     updt   sc    i    x   in
-                       f   ()    sc'    a    p    q    ii    (( i ) +. ( 1.000000 ))   
-             nn  
+           if( ( ( contains   ii )   i ) ) then 
+             ( ( ( ( ( ( ( (  let x =
+                               (( ( ( get   sc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
+                               q   i ) ) -. ( p )) )) ))  in
+                               let sc' =  ( ( ( updt   sc )   i )   x )  in
+                               f   () )   sc' )   a )   p )   q )   ii )  
+               (( i ) +. ( 1.000000 )) )   nn ) 
            else 
-                     f   ()    sc    a    p    q    ii    (( i ) +. ( 1.000000 ))   
-             nn  
+             ( ( ( ( ( ( ( ( f   () )   sc )   a )   p )   q )   ii )  
+               (( i ) +. ( 1.000000 )) )   nn ) 
           
          else 
            sc 
@@ -45,12 +45,12 @@ let updtSC = f
      (fun (i ) -> 
       (fun (cc ) -> 
         if( (( i ) < ( cc )) ) then 
-                  let x =
-                   ((   get   scc    i  ) +. ( (( (( a ) -. ( p )) ) *. ( (( 
-                   qc   i  ) -. ( p )) )) ))  in
-                   let scc' =     updt   scc    i    x   in
-                   f   ()    scc'    a    p    qc    (( i ) +. ( 1.000000 ))   
-          cc  
+          ( ( ( ( ( ( (  let x =
+                          (( ( ( get   scc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
+                          qc   i ) ) -. ( p )) )) ))  in
+                          let scc' =  ( ( ( updt   scc )   i )   x )  in
+                          f   () )   scc' )   a )   p )   qc )   (( i ) +. ( 1.000000 )) )  
+          cc ) 
         else 
           scc 
        
@@ -68,11 +68,12 @@ let updtSCC = f
    (fun (i ) -> 
     (fun (nn ) -> 
       if( (( i ) < ( nn )) ) then 
-        if( ((   get   sc    i  ) < ( maxScc )) ) then 
-           i  ::       f   ()    maxScc    sc    (( i ) +. ( 1.000000 ))   
-          nn   
+        if( (( ( ( get   sc )   i ) ) < ( maxScc )) ) then 
+           i  ::  ( ( ( ( ( f   () )   maxScc )   sc )   (( i ) +. ( 1.000000 )) )  
+          nn )  
         else 
-               f   ()    maxScc    sc    (( i ) +. ( 1.000000 ))    nn  
+          ( ( ( ( ( f   () )   maxScc )   sc )   (( i ) +. ( 1.000000 )) )  
+          nn ) 
        
       else 
         [] 
@@ -100,29 +101,32 @@ let updtI = f
                let qc = (fun (x ) -> 
                          (sample_bernoulli( p ))
                         ) in
-                let qj =    restrict   q    db   in
+                let qj =  ( ( restrict   q )   db )  in
                  let a =  mech  qj  db  in
                   let sc' =
-                           updtSC   ()    sc    a    p    q    ii    0.000000   
-                   nn   in
+                   ( ( ( ( ( ( ( ( updtSC   () )   sc )   a )   p )   q )  
+                       ii )   0.000000 )   nn )  in
                    let scc' =
-                           updtSCC   ()    scc    a    p    qc    0.000000   
-                    cc   in
+                    ( ( ( ( ( ( ( updtSCC   () )   scc )   a )   p )   qc )  
+                      0.000000 )   cc )  in
                     let maxScc =
-                        List.fold_left  (fun (acc ) -> 
-                                         (fun (a ) -> 
-                                           if( (( acc ) < ( a )) ) then 
-                                             a 
-                                           else 
-                                             acc 
-                                          
-                                         )
-                                        )   0.000000    scc'   in
+                     ( ( ( List.fold_left  (fun (acc ) -> 
+                                            (fun (a ) -> 
+                                              if( (( acc ) < ( a )) ) then 
+                                                a 
+                                              else 
+                                                acc 
+                                             
+                                            )
+                                           ))   0.000000 )   scc' )  in
                      let ii' =
-                           updtI   ()    maxScc    sc    0.000000    nn   in
+                      ( ( ( ( ( updtI   () )   maxScc )   sc )   0.000000 )  
+                      nn )  in
                       let db' = (db_minus  db   ii' ) in
-                       a  ::           multiRound     ()      k    (( j ) +. ( 1.000000 ))   
-                                   sc'    scc'    ii'    nn    cc    db'   
+                       a  ::  ( ( ( ( ( ( ( ( ( multiRound     ()   )   k )  
+                                          (( j ) +. ( 1.000000 )) )  
+                                        sc' )   scc' )   ii' )   nn )  
+                                cc )   db' )  
           else 
             [] 
          

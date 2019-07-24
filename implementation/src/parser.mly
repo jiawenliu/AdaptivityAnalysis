@@ -31,6 +31,8 @@ open IndexSyntax
 %token UNPACK
 %token UNIFORM
 %token BERNOULLI
+%token RBRACE
+%token LBRACE
 
 /* Tokens for Operator     */
 %token LOG SIGN
@@ -50,6 +52,7 @@ open IndexSyntax
 %token FORALL
 %token EXISTS
 %token LIST
+%token ANNO
 
 /* tokens for Index terms */
 %token INDEX
@@ -110,6 +113,21 @@ DTerm:
   | DEPTH BOT
     { DBot }
 
+DMap:
+  LBRACK BOT RBRACK
+    { [] }
+
+  | LBRACK Dmap RBRACK
+    { $2 }
+
+Dmap:
+  | LPAREN VAR COLON INTV RPAREN
+    { [ ({v_name = $2}, (DConst $4) ) ] }
+  
+  | LPAREN VAR COLON INTV RPAREN COMMA Dmap
+    { ( {v_name = $2}, (DConst $4) ) :: $7 }
+
+
 
 expr:
   | INTV                                            { Prim (PrimInt $1) }
@@ -123,11 +141,18 @@ expr:
                                                     { If($3, $5, $7) }
   | FIX VAR LPAREN VAR COLON Type RPAREN DOT expr
                                                     { Fix( {v_name = $2}, {v_name = $4}, $6, $9) }
-  | LAM VAR COLON Type DOT expr                     { Fix( {v_name = "_"}, {v_name = $2}, $4, $6) }
+  | LAM LPAREN VAR COLON Type RPAREN DOT expr       
+                                                    { Fix( {v_name = "_"}, {v_name = $3}, $5, $8) }
+  | LAM VAR COLON Type DOT expr       
+                                                    { Fix( {v_name = "_"}, {v_name = $2}, $4, $6) }
   | NIL                                             { Nil }
-  | expr DBCOLON expr                                  { Cons($1, $3) }
+  | expr DBCOLON expr                               { Cons($1, $3) }
   | MECH LPAREN expr RPAREN                         { Mech($3) }
   | app                                             { $1 }
+  | LBRACE expr COLON Type RBRACE  
+                                                    { Annotated($2, $4, [], IConst 0) }
+  | LBRACE expr COLON Type SEMICOLON DMap SEMICOLON ITerm RBRACE  
+                                                    { Annotated($2, $4, $6, $8) }
   | LET VAR COLON DTerm EQUAL expr IN expr   
                                                     { Let({v_name = $2}, $4, $6, $8) }
   | uop LPAREN expr RPAREN                          { Uop($1, $3) }                                                  
@@ -139,6 +164,7 @@ expr:
   | UNPACK RPAREN expr COMMA VAR COMMA expr LPAREN  { Unpack($3, {v_name = $5}, $7) }
   | BERNOULLI expr                                  { Bernoulli $2 }
   | UNIFORM LPAREN expr COMMA expr RPAREN           { Uniform( $3, $5 ) }
+
 
 /* Applications */
 app:
@@ -175,20 +201,6 @@ Sort:
     { Adapt }
 
 
-
-DMap:
-  LBRACK BOT RBRACK
-    { [] }
-
-  | LBRACK Dmap RBRACK
-    { $2 }
-
-Dmap:
-  | LPAREN VAR COLON INTV RPAREN
-    { [ ({v_name = $2}, (DConst $4) ) ] }
-  
-  | LPAREN VAR COLON INTV RPAREN COMMA Dmap
-    { ( {v_name = $2}, (DConst $4) ) :: $7 }
 
 
 Type:

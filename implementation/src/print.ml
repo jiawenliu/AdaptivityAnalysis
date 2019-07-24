@@ -161,6 +161,7 @@ let rec pp_expression fmt (e : Syntax.expr) =
   | ILam e            -> fprintf fmt " %a " pp_expression(e)
   | Bernoulli(v)      -> fprintf fmt "(sample_bernoulli(%a))" pp_expression(v)
   | Uniform(v1, v2)   -> fprintf fmt "(sample_uniform %a %a)" pp_expression(v1) pp_expression(v2)
+  | Annotated(e, t, d, z)   -> pp_expression fmt e
   | _                 -> fprintf fmt " new "
 
 

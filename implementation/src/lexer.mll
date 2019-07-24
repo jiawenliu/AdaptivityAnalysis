@@ -87,11 +87,14 @@ rule main =
   | "]"                 { RBRACK }
   | "("                 { LPAREN }
   | ")"                 { RPAREN }
+  | "{"                 { LBRACE }
+  | "}"                 { RBRACE }
   | "="                 { EQUAL }
   | ":"                 { COLON }
   | ","                 { COMMA }
   | "."                 { DOT }
   | ";"                 { SEMICOLON }
+  | "|:"                { ANNO }
 
   | "X"                 { TIMES }
   | "box"               { BOX }

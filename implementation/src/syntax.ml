@@ -104,6 +104,9 @@ expr =
   | ILam        of expr
   | IApp        of expr
 
+  (* Annotated Expression *)
+  | Annotated   of expr * ty * dmap * iterm
+
 
 (* VALUES   *)
  type value = 
@@ -199,6 +202,9 @@ let rec is_equal_exp eL eR : bool =
 
   | ILam( e), ILam(e')
   | IApp( e), IApp( e') -> is_equal_exp e e'
+  
+  | Annotated(e, t, d, z), Annotated(e', t', d', z')
+            -> t = t' && d = d' && z = z' && is_equal_exp e e'
 
   | _   -> false
 
