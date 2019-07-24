@@ -1,1 +1,68 @@
 \section{Background: Adaptive Data Analysis}
+
+\newcommand{\dist}{P}
+\newcommand{\mech}{M}
+\newcommand{\univ}{\mathcal{X}}
+\newcommand{\anyl}{A}
+\newcommand{\query}{f}
+\newcommand{\qlen}{k}
+\newcommand{\qrounds}{r}
+\newcommand{\answer}{a}
+\newcommand{\sample}{X}
+\newcommand{\etal}{\emph{et al.}}
+\newcommand{\ex}[2]{{\ifx&#1& \mathbb{E} \else \underset{#1}{\mathbb{E}} \fi \left[#2\right]}}
+\newcommand{\pr}[2]{{\ifx&#1& \mathbb{P} \else \underset{#1}{\mathbb{P}} \fi \left[#2\right]}}
+\newcommand{\var}[2]{{\ifx&#1& \mathrm{Var} \else \underset{#1}{\mathrm{Var}} \fi \left[#2\right]}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\from}{:}
+
+\subsection{Motivation}
+
+Consider a dataset $X$ consisting of $n$ independent samples from some  unknown population $\dist$.  How can we ensure that the conclusions drawn from $X$ \emph{generalize} to the population $\dist$?  Despite decades of research in statistics and machine learning on methods for ensuring generalization, there is an increased recognition that many scientific findings generalize poorly (e.g. \cite{Ioannidis05}).  While there are many reasons a conclusion might fail to generalize, one that is receiving increasing attention is \emph{adaptivity}, which occurs when the choice of method for analyzing the dataset depends on previous interactions with the same dataset~\cite{???}.
+
+ Adaptivity can arise from many common practices, such as exploratory data analysis, using the same data set for feature selection and regression, and the re-use of datasets across research projects.  Unfortunately, adaptivity invalidates traditional methods for ensuring generalization and statistical validity, which assume that the method is selected independently of the data. The misinterpretation of adaptively selected results has even been blamed for a ``statistical crisis'' in empirical science~\cite{GelmanL13}.
+
+A recent line of work initiated by Dwork \etal~\cite{DworkFHPRR15} and Hardt and Ullman~\cite{HardtU14} posed the question: Can we design \emph{general-purpose} methods that ensure generalization in the presence of adaptivity, together with guarantees on their accuracy?  This line of work has identified many new algorithmic techniques for ensuring generalization in adaptive data analysis, leading to algorithms with greater statistical power than all previous approaches.  It has also identified problematic strategies for adaptive analysis, showing limitations on the statistical power one can hope to achieve.
+
+A key development in this line of work is that the best method for ensuring generalization in an adaptive data analysis depends to a large extent on the number of \emph{rounds of adaptivity}.  That is, not only does the analysis of the generalization error depend on the number of rounds, but knowing the number of rounds actually allows one to choose methods that lead to the smallest possible generalization error.
+
+\subsection{Review of Prior Work}
+
+To explain the key concepts and motivate our work, we review the model of adaptive data analysis of~\cite{DworkFHPRR15,HU14}.  We remark that many of the details of the model are immaterial for our work, and are included for illustrative purposes and concreteness.  
+
+In the model there is some distribution $\dist$ over a domain $\univ$ that an analyst would like to study.  For our purposes, the analyst wishes to answer \emph{statistical queries} (also known as \emph{linear queries} or \emph{linear functionals}) on the distribution.  A statistical query is defined by some function $\query \from \univ \to [-1,1]$.  The analyst wants to learn the \emph{population mean}, which (abusing notation) is defined as $$\query(\dist) = \ex{\sample \sim \dist}{\query(\sample)}.$$
+
+However, the distribution $\dist$ can only be accessed via a set of \emph{samples} $\sample_1,\dots,\sample_n$ drawn identically and independently from $\dist$.  These samples are held by a mechanism $\mech(\sample_1,\dots,\sample_n)$ who receives the query $\query$ and computes an answer $\answer \approx \query(\dist)$.
+
+In this work we consider analysts that ask a sequence of $\qlen$ queries $\query_1,\dots,\query_\qlen$.  If the queries are all chosen in advance, independently of the answers then we say they are \emph{non-adaptive}.  If the choice of each query $\query_j$ may depend on the prefix $\query_1,\answer_1,\dots,\query_{j-1},\answer_{j-1}$ then they are \emph{fully adaptive}.  An important intermediate notion is \emph{$\qrounds$-round adaptive}, where the sequence can be partitioned into $\qrounds$ batches of non-adaptive queries.  Note that non-interactive queries are $1$-round and fully adaptive queries are $\qlen$ rounds.
+
+We now review what is known about the problem of answering $r$-round adaptive queries.  Given the samples, the na\"ive way to approximate the population mean is to use the \emph{empirical mean}, which (abusing notation) is defined as $$\query(\sample_1,\dots,\sample_n) = \frac{1}{n} \sum_{i=1}^{n} \query(X_i).$$
+\begin{thm} For any distribution $\dist$, and any $k$ \emph{non-adaptive} statistical queries, the na\"ive mechanism satisfies
+$$
+\max_{j=1,\dots,\qlen} | \answer_j - \query_j(\dist) | = O\left( \sqrt{\frac{\log \qlen}{n}}  \right)
+$$
+For any $\qrounds \geq 2$ and any \emph{$\qrounds$-round adaptive} statistical queries, it satisfies
+$$
+\max_{j=1,\dots,\qlen} | \answer_j - \query_j(\dist) | = O\left( \sqrt{\frac{\qlen}{n}}  \right)
+$$
+And there exists analysts that make these bounds tight (up to constant factors).
+\end{thm}
+
+Note that even allowing one extra round of adaptivity leads to an exponential increase in the generalization error from $\log \qlen$ to $\qlen$.
+
+Perhaps surprisingly, Dwork \etal~\cite{DworkFHPRR15} and Bassily \etal~\cite{BassilyNSSSU16} showed that an alternative mechanism can actually achieve much stronger generalization error as a function of the number of queries, specifically, 
+\begin{thm}[\cite{DworkFHPRR15,BassilyNSSSU16}] \label{thm:gaussiannoise} For any $k$, there exists a mechanism such that for any distribution $\dist$, and any $\qrounds \geq 2$ any \emph{$\qrounds$-round adaptive} statistical queries, it satisfies
+$$
+\max_{j=1,\dots,\qlen} | \answer_j - \query_j(\dist) | = O\left( \frac{\sqrt[4]{\qlen}}{\sqrt{n}}  \right)
+$$
+And there is an analyst that make this bound tight (up to constant factors).
+\end{thm}
+Notice that Theorem~\ref{thm:gaussiannoise} has different quantification in that the optimal choice of mechanism depends on the number of queries.  Thus, we need to know the number of queries \emph{a priori} to choose the best mechanism.\footnote{ \label{fn1} One can, in principle, avoid knowing the number of queries and rounds \emph{a priori} using a ``guess-and-double'' strategy, however this would weaken the bound on generalization error considerably.}
+
+Later work by Dwork \etal~\cite{??} gave more refined bounds in terms of the number of rounds of adaptivity.  Similarly, if one knows a good \emph{a priori} upper bound on the number of rounds of adaptivity, one can get a much better guarantee of generalization error, but only by using an appropriate choice of mechanism.\footnotemark[\ref{fn1}]  Specifically, 
+\begin{thm}[\cite{??}] \label{thm:gaussiannoise} For any $r$ and $k$, there exists a mechanism such that for any distribution $\dist$, and any $\qrounds \geq 2$ any \emph{$\qrounds$-round adaptive} statistical queries, it satisfies
+$$
+\max_{j=1,\dots,\qlen} | \answer_j - \query_j(\dist) | = O\left( \frac{r \sqrt{\log k}}{\sqrt{n}}  \right)
+$$
+And there is an analyst that make this bound tight (up to constant factors).
+\end{thm}
