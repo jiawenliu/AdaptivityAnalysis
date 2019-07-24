@@ -226,7 +226,7 @@
         \delta \not\in \expr
     }
     {
-        \Delta; \tbox{\Gamma}, \Gamma'; \dmap \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
+        \Delta; \tbox{\Gamma}, \Gamma'; \dmap, \boxed{\dmap'} \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
     } ~\textbf{c-box}
     %
     \and
@@ -255,7 +255,7 @@
    \inferrule{
      \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1 }{ \type_1} \\
      \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \ctyping{\nnatA_2}{ \expr_2 }{
-     \type_2 }\\
+     \type }\\
      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
    }
@@ -521,55 +521,57 @@
 %
   \and
 %   
-     \inferrule
+    \inferrule
      {
-        \Delta; \tbox{\Gamma}; \dmap \elab{\nnatA}{ \expr}{\expr^*}{ \type} 
+        \Delta; \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr^*}{ \type} 
            \\
         \delta \not\in \expr 
         \\
         \forall x_i \in \dom(\Gamma). \expr_i =  \coerce{\Gamma(x_i)}{\tbox{\Gamma(x_i)} }
-    }
+        \\
+         \forall x_i \in \dom(\Gamma). \Delta \models \sub{\Gamma(x_i)}{\tbox{\Gamma(x_i)}}
+    } 
     {
-        \Delta; \Gamma, \Gamma'; \dmap \elab{0}{\expr}{\elet  \overline{y_i = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}])}{ \tbox{\type}}
+        \Delta; \Gamma, \Gamma'; \dmap, \dmap' \elab{0}{\expr}{\elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}])}{ \tbox{\type}}
     } ~\textbf{e-box}
     %
     \and
     %
    \inferrule{
-   \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1}{\expr_1'}{ \type} \\
-   \Delta; \Gamma; \dmap_2 \elab{\nnatA_2}{ \expr_2 }{\expr_2'}{ \tlist{\type}} \\
+   \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1}{\expr_1^*}{ \type} \\
+   \Delta; \Gamma; \dmap_2 \elab{\nnatA_2}{ \expr_2 }{\expr_2^*}{ \tlist{\type}} \\
    \dmap' = \max(\dmap_1, \dmap_2) \\
    \nnatA' = \max ( \nnatA_1, \nnatA_2 )
    }
    { 
-   \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \econs(\expr_1, \expr_2)}{ \econs(\expr_1', \expr_2')}{
+   \Delta; \Gamma; \dmap' \elab{\nnatA'}{ \econs(\expr_1, \expr_2)}{ \econs(\expr_1^*, \expr_2^*)}{
      \tlist{\type}}  } ~\textbf{e-cons}
    %
    \and
    %
    \inferrule{
-     \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1 }{\expr_1'}{ \type_1} \\
-     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \elab{\nnatA_2}{\expr_2}{ \expr_2' }{
-     \type_2 }\\
+     \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1 }{\expr_1^*}{ \type_1} \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \elab{\nnatA_2}{\expr_2}{ \expr_2^* }{
+     \type }\\
      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
    }
-   {  \Delta; \Gamma; \dmap' \elab{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{\elet x;q = \expr_1' \ein \expr_2' }{ \type } }~\textbf{e-let}
+   {  \Delta; \Gamma; \dmap' \elab{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{\elet x;q = \expr_1^* \ein \expr_2^* }{ \type } }~\textbf{e-let}
    %
    \and
    %
   \inferrule{
-      i::S,\Delta; \Gamma ;\dmap \elab{\nnatA}{ \expr}{\expr'}{ \type}
+      i::S,\Delta; \Gamma ;\dmap \elab{\nnatA}{ \expr}{\expr^*}{ \type}
       \\
       i \not\in \fiv{\Gamma}
     }{
-     \Delta;  \Gamma; \dmap' \elab{\nnatA'} { \eilam \expr }{\eilam i.\expr'}{  \tforall{\dmap}{\nnatA}{i} \type } 
+     \Delta;  \Gamma; \dmap' \elab{\nnatA'} { \eilam \expr }{\eilam i.\expr^*}{  \tforall{\dmap}{\nnatA}{i} \type } 
     }~\textbf{e-ilam}
     %
    \and
     %
   \inferrule{
-      \Delta; \Gamma ;\dmap \elab{\nnatA} { \expr}{\expr'} { \tforall{\dmap_1}{\nnatA_1}{i} \type}
+      \Delta; \Gamma ;\dmap \elab{\nnatA} { \expr}{\expr^*} { \tforall{\dmap_1}{\nnatA_1}{i} \type}
       \and
        \Delta \vdash  I ::  S
        \\
@@ -577,7 +579,7 @@
        \\
        \nnatA' = \nnatA_1[I/i] + \nnatA
     }{
-     \Delta;  \Gamma; \dmap' \elab{\nnatA'}{ \expr \eapp []}{\expr \eapp [I]  }{
+     \Delta;  \Gamma; \dmap' \elab{\nnatA'}{ \expr \eapp []}{\expr^* \eapp [I]  }{
      \type[I/i]}
     }~\textbf{e-iapp}        
     \end{mathpar}
@@ -945,14 +947,14 @@ By induction on the embedding derivation.\\
          \forall x_i \in \dom(\Gamma). \Delta \models \sub{\Gamma(x_i)}{\tbox{\Gamma(x_i)}}
     } 
     {
-        \Delta; \Gamma, \Gamma'; \dmap \elab{0}{\expr}{\elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}])}{ \tbox{\type}}
+        \Delta; \Gamma, \Gamma'; \dmap, \dmap' \elab{0}{\expr}{\elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}])}{ \tbox{\type}}
     } ~\textbf{e-box}  \]}
-    TS: $  \Delta; \Gamma, \Gamma'; \dmap \ctyping{0}{ \elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{ \tbox{\type} } $ and $   \Delta; \Gamma,\Gamma'; \dmap \tvdash{0} \expr :  \tbox{\type} $ .\\ 
+    TS: $  \Delta; \Gamma, \Gamma'; \dmap, \dmap' \ctyping{0}{ \elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{ \tbox{\type} } $ and $   \Delta; \Gamma,\Gamma'; \dmap, \dmap' \tvdash{0} \expr :  \tbox{\type} $ .\\ 
     %
      By induction on the first premise, we get:
      $  \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr^*  }{  \type   }~(1) $ and $   \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr :  \type   ~(2)$ .\\
      By (2), the premises, and the rule \textbf{box}, we conclude that :\\
-     $   \Delta; \Gamma,\Gamma'; \dmap \tvdash{0} \expr :  \tbox{\type} $.\\
+     $   \Delta; \Gamma,\Gamma'; \dmap, \dmap' \tvdash{0} \expr :  \tbox{\type} $.\\
      %
      By the rule \textbf{c-let}\\
      \[
@@ -969,16 +971,16 @@ By induction on the embedding derivation.\\
       \[
       \inferrule{
      \Delta; \Gamma,\Gamma'; \dmap_1 \ctyping{0}{ \expr_i \eapp x_i }{ \tbox{\Gamma(x_i)}} \\
-     \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
+     \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap_2,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
      \tbox{\type} }\\
-     \dmap = \max( \dmap, \dmap_1 + 0 ) \\
+     \dmap, \dmap' = \max( \dmap_2, \dmap_1 + 0 ) \\
      \nnatA' = \max ( 0, 0 + 0 )
    }
-   {  \Delta; \Gamma, \Gamma'; \dmap \ctyping{0}{ \elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{ \tbox{\type} } }~\textbf{c-let}
+   {  \Delta; \Gamma, \Gamma'; \dmap , \dmap' \ctyping{0}{ \elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{ \tbox{\type} } }~\textbf{c-let}
      \]
-    where $\dmap_1 = \overline {[x_i:0]} \land \dom(\dmap_1) = dom(\Gamma)$, $\Gamma_1 = \overline{ [y_i: \Gamma(x_i)]}$
+    where $ \dom(\dmap_1) = dom(\Gamma,\Gamma')$, $\Gamma_1 = \overline{ [y_i: \Gamma(x_i)]}$
     \\
-    STS: $$ \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
+    STS: $$ \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap_2,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
      \tbox{\type} }$$
      
      By using the \textbf{c-box}
@@ -990,26 +992,26 @@ By induction on the embedding derivation.\\
         \delta \not\in \expr
     }
     {
-        \Delta; \tbox{\Gamma}, \Gamma'; \dmap \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
+        \Delta; \tbox{\Gamma}, \Gamma'; \dmap, \dmap' \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
     } ~\textbf{c-box}
      \]
      \[
       \inferrule
      {
-        \Delta; \tbox{\Gamma_1}; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} 
+        \Delta; \tbox{\Gamma_1};  \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} 
            \\
         \delta \not\in \expr
     }
     {
-        \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
+        \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap_2,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
      \tbox{\type} }
     } ~\textbf{c-box}
      \]
-     STS: \[ \Delta; \tbox{\Gamma_1}; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} \]
+     STS: \[ \Delta; \tbox{\Gamma_1};  \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} \]
      We extend the context and dmap from (1), we get : \\
      $ \Delta; \tbox{\Gamma_1},\Gamma; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*}{ \type} $.\\
      By substitution on all the variable $x_i$ in $\Gamma$, we conclude that \\
-    $ \Delta; \tbox{\Gamma_1}; \dmap, \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} $
+    $ \Delta; \tbox{\Gamma_1};  \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} $
 \caseL{Case:   \[ \inferrule{
        \Delta;\Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1}{\expr_1^*}{ \tbool} \\
        \Delta;\Gamma; \dmap \elab{\nnatA}{ \expr_2}{\expr_2^*}{ \type} \\
@@ -1019,18 +1021,47 @@ By induction on the embedding derivation.\\
     }{
        \Delta;\Gamma; \dmap' \elab{\nnatA'} { \eif(\expr_1, \expr_2, \expr_3)}{ \eif(\expr_1^*, \expr_2^*, \expr_3^*) }{   \type}
     }~\textbf{e-if}   \]  }
-
+    %
+    TS: $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \eif(\expr_1^*, \expr_2^*, \expr_3^*)}{ \type } $ and $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type $ .\\
+    %
+    By induction on the first premise, we get: \\
+    $ \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1^*}{ \tbool }  $ and $  \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \tbool  $ \\
+    %
+    By induction on the second premise, we get: \\
+    $ \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr_2^*}{ \type }  $ and $  \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr_2 : \type  $ \\
+     %
+    By induction on the third premise, we get: \\
+    $ \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr_3^*}{ \type }  $ and $  \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr_3 : \type  $ \\
+    %
+    By the above statements and the rule \textbf{if}, we conclude that: 
+     $     \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type  $.\\
+     %
+      By the above statements and the rule \textbf{c-if}, we conclude that: 
+    $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \eif(\expr_1^*, \expr_2^*, \expr_3^*)}{ \type } $.\\ 
 
 \caseL{Case:  \[   \inferrule{
-     \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1 }{\expr_1'}{ \type_1} \\
-     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \elab{\nnatA_2}{\expr_2}{ \expr_2' }{
-     \type_2 }\\
+     \Delta; \Gamma; \dmap_1 \elab{\nnatA_1}{ \expr_1 }{\expr_1^*}{ \type_1} \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \elab{\nnatA_2}{\expr_2}{ \expr_2^* }{
+     \type }\\
      \dmap' = \max( \dmap_2, \dmap_1 + q ) \\
      \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
    }
-   {  \Delta; \Gamma; \dmap' \elab{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{\elet x;q = \expr_1' \ein \expr_2' }{ \type } }~\textbf{e-let} \]   }
-   
- \caseL{Case: \[  \]}  
+   {  \Delta; \Gamma; \dmap' \elab{\nnatA'}{  \elet x;q = \expr_1 \ein \expr_2 }{\elet x;q = \expr_1^* \ein \expr_2^* }{ \type } }~\textbf{e-let} \]   }
+   %
+    TS: $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \elet x;q = \expr_1^* \ein \expr_2^* }{ \type } $ and $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2:  \type $ .\\
+    %
+    By induction on the first premise, we get: \\
+    $ \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ \expr_1^*}{ \type_1 }  $ and $  \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type_1  $ \\
+    %
+    By induction on the second premise, we get: \\
+    $  \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \ctyping{\nnatA_2}{ \expr_2^*}{ \type }  $ and $  \Delta; \Gamma, x:\type_1 ; \dmap_2[x:q] \tvdash{\nnatA_2} \expr_2 : \type  $ \\
+     %
+    By the above statements and the rule \textbf{let}, we conclude that: 
+     $   \Delta; \Gamma; \dmap' \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2:  \type $ .\\
+     %
+      By the above statements and the rule \textbf{c-let}, we conclude that: 
+   $  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \elet x;q = \expr_1^* \ein \expr_2^* }{ \type } $.\\ 
+
 \end{proof}
 
 
@@ -1039,3 +1070,55 @@ By induction on the embedding derivation.\\
 If $   \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type$, then  $\exists \expr'$ such that  $  \Delta;  \Gamma; \dmap \elab{\nnatA}{ \expr}{\expr'  }{
      \type } $.
 \end{thm}
+\begin{proof}
+By induction on the typing derivation.\\
+%
+\caseL{ Case:  \[   \inferrule
+     {
+        \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
+           \\
+        \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{  \tbox{\Gamma(x)}
+         }
+           \\
+        \delta \not\in \expr
+    }
+    {
+        \Delta; \Gamma, \Gamma'; \dmap, \boxed{\dmap'} \tvdash{\nnatA} \expr: \tbox{\type}
+    } ~\textbf{box} \] }
+    
+\caseL{Case: \[ \inferrule{
+        \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr: \type'
+        \\
+        \dmap' < \dmap 
+        \\
+        \nnatA' < \nnatA
+        \\
+        \Delta \models \sub{\type' }{ \type  } 
+    }{
+       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type
+    }~\textbf{subtype} \] }
+    
+\caseL{Case: \[  \inferrule{
+      \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) \\
+      \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
+    }{
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app} \] }
+    
+\caseL{Case \[ \inferrule{
+        \Delta; \Gamma ;\dmap \tvdash{\nnatA} \expr: \tforall{\red{\dmap_1}}{\nnatA_1}{i} \type 
+      \and
+       \Delta \tvdash{}  I ::  S
+       \\
+       \dmap' = \max(\dmap, \nnatA + \dmap_1)
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
+    }{
+     \Delta;  \Gamma; \dmap' \tvdash{\nnatA'}    \expr \eapp []   :
+     \type[I/i]
+    }
+	 ~\textbf{iapp} \] }
+
+\end{proof}
