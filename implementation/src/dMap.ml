@@ -20,7 +20,12 @@ let dmap_cs d1 d2 =
   let rec helper d1 d2 =
           match d1,d2 with
             | (id1, depth1)::tl1, (id2, depth2)::tl2
-                  -> CAnd( CDLeq(depth1, depth2), (helper tl1 tl2) )
+                  -> 
+                  if depth1 = DBot && depth2 = DBot
+                  then
+                    helper tl1 tl2
+                    else
+                      CAnd( CDLeq(depth1, depth2), (helper tl1 tl2) )
             | [],[] -> CTrue
             | _     -> dfail
     in
@@ -34,10 +39,15 @@ let rec dmap_cs_const ctx dmp i =
       in
         helper (StdMap.bindings dmp)
 
+let dmap_length dmp =
+  StdMap.cardinal dmp
 
 let depth_eq q1 q2 = 
   CDEq(q1, q2)
 
+
+let dmap_rm dmp k =
+  StdMap.remove k dmp
 
 let dmap_eq d1 d2 =
   let rec helper d1 d2 =

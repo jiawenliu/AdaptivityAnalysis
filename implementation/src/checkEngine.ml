@@ -19,6 +19,8 @@ open Ctx
 open Ty_error
 open Support.FileInfo
 open DMap
+open Print
+open Format
 
 module Opt = Support.Options
 module Err = Support.Error
@@ -80,17 +82,27 @@ let rec check_equiv (ty1 : ty) (ty2 : ty) : constr equiv_checker =
     occuring in un_ty and k are declared in psi, otherwise it raises
     an exception. *)
 let rec inferType (e: expr) : ty inferer  =
-  let _ = debug dp "infer_TP:@\n@[e1 %a @]@.@\n"  Print.pp_expression e in
+  let _ = debug dp "infer_TP:@\n@[ %a @]@.@\n"  Print.pp_expression e in
     match e with
-    | Var(vi)     -> get_var_ty vi <<= infer_var vi
-    | Prim(ep)    -> return_inf(Syntax.type_of_prim ep) <<= infer_const
-    | Fst(e)      -> inferType e <<= infer_proj fst
-    | Snd(e)      -> inferType e <<= infer_proj snd
-    | App(e1,e2)  -> debug dp "infer_app:@\n@[e1 %a @]@.@\n"  Print.pp_expression e1 ;
-         infer_app (inferType e1) e2
-    | IApp(e)     -> infer_iapp (inferType e)
-    | Mech e      -> infer_mech (inferType e)
-    | Uop(b, e)      -> return_inf(Ty_Prim Ty_PrimReal)
+    | Var(vi)     
+                  -> debug dp "infer_variable:@\n@[ %a @]@.@\n"  Print.pp_expression e ;
+                   get_var_ty vi <<= infer_var vi
+    | Prim(ep)    
+                  -> return_inf(Syntax.type_of_prim ep) <<= infer_const
+    | Fst(e)      
+                  -> inferType e <<= infer_proj fst
+    | Snd(e)      
+                  -> inferType e <<= infer_proj snd
+    | App(e1,e2)  
+                  -> debug dp "infer_app:@\n@[(e1 :%a) %a @]@.@\n" 
+                     Print.pp_expression e1  Print.pp_expression e2 ;
+                     infer_app (inferType e1) e2
+    | IApp(i, e)  
+                  -> infer_iapp i (inferType e)
+    | Mech e      
+                  -> infer_mech (inferType e)
+    | Uop(b, e)      
+                  -> return_inf(Ty_Prim Ty_PrimReal)
     | Bop(b, e1, e2)     
                   -> 
                   infer_bop b e1 e2
@@ -177,23 +189,19 @@ and infer_mech m =
 
 
 
-and infer_iapp m =
+and infer_iapp i m =
   fun ctx ->
     match m ctx with
     | Right (ty, c, dps, z) ->
-    debug dp "inf_iapp2 :@\n@[c is :%a, ty  %a @]@." Print.pp_cs c Print.pp_type ty ; 
+    debug dp "inf_iapp :@\n@[c is :%a, ty  %a @]@." Print.pp_cs c Print.pp_type ty ; 
       begin
         match ty with
-        | Ty_Forall(x, s, dps1, z1, ty) ->
-          (* Generate New forall variable *)
-          let v = fresh_ivar in
-          let witn = IVar v in
-            let vx = IVar x in
+        | Ty_Forall(ix, s, dps1, z1, ty) ->
           (* New Depth Map *)
           let dps' = max_dmaps dps (sum_adap_dmap z (to_dmap dps1)) in
             (* New Adaptivity *)
-            let z' = add_adapts (adapt_subst z1 vx witn) z in 
-              Right (ty_subst x witn ty, c, dps', z')
+            let z' = add_adapts (adapt_subst ix i z1) z in 
+              Right (ty_subst ix i ty, c, dps', z')
         | _ -> fail (WrongShape (ty, "index quantified (forall) ")) ctx
       end
     | Left err -> Left err
@@ -273,7 +281,7 @@ and checkType (e: expr) (ty : ty) : constr checker =
           end
 
   (* Index abstraction *)
-  | ILam (e), Ty_Forall(ix, s, dps, z, ty)
+  | ILam (i, e), Ty_Forall(ix, s, dps, z, ty)
         ->           
           (ix |::| s) (checkType e ty)
 
@@ -320,12 +328,17 @@ and check_fix (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty) =
                   (* Constrain for depth of x *)
                   let cs1 = (depth_cs depthx q) in
 
-                    (* Constrains for depth of others *)
-                    let cs2 = dmap_cs dps' (to_dmap dps) in
+                    let dps' = DMap.dmap_rm dps' vi_x.v_name in
+                      let dps' = DMap.dmap_rm dps' vi_f.v_name in
+                        (* Constrains for depth of others *)
+                        let cs2 = dmap_cs dps' (to_dmap dps) in
 
-                      (* Depth Map with All bottom*)
-                      let dps'' = bot_dmap ctx in
-                        Right(CAnd(c, CAnd(cs1, cs2)), dps'', IConst 0) 
+                           let _ = fprintf std_formatter "depth from context: %a \n" pp_dmap dps';
+                                  fprintf std_formatter "depth from arrow type: %a \n" pp_dmap (to_dmap dps) in
+
+                          (* Depth Map with All bottom*)
+                          let dps'' = bot_dmap ctx in
+                            Right(CAnd(c, CAnd(cs1, cs2)), dps'', IConst 0) 
               | None -> Left {i = EXISTQ; v = Internal "No depth to get."}
             end
         | Left err -> Left err

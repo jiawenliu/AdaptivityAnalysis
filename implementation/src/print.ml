@@ -145,6 +145,12 @@ let rec pp_expression fmt (e : Syntax.expr) =
       then fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
       else 
         fprintf fmt "%a \nlet %s = %s\n%a" pp_expression(e1) x.v_name f.v_name pp_expression(e2)
+    | Annotated(e, _, _, _) ->
+      (
+        match e with
+          | Var {v_name = "contra"} -> pp_expression fmt e2 
+          | _                       -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
+      )
     | _ -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
   )
   | Nil               -> fprintf fmt " [] "
@@ -157,8 +163,8 @@ let rec pp_expression fmt (e : Syntax.expr) =
   )
 
   | Uop(p, e)         -> fprintf fmt " %a (%a) " pp_uop(p)  pp_expression(e)
-  | IApp e            -> fprintf fmt " %a " pp_expression(e)
-  | ILam e            -> fprintf fmt " %a " pp_expression(e)
+  | IApp(i, e)            -> fprintf fmt " %a " pp_expression(e)
+  | ILam(i, e)            -> fprintf fmt " %a " pp_expression(e)
   | Bernoulli(v)      -> fprintf fmt "(sample_bernoulli(%a))" pp_expression(v)
   | Uniform(v1, v2)   -> fprintf fmt "(sample_uniform %a %a)" pp_expression(v1) pp_expression(v2)
   | Annotated(e, t, d, z)   -> pp_expression fmt e

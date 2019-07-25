@@ -54,6 +54,9 @@ let lookup_ivar id ctx =
 *)
 (* Extend the context with a new variable binding. *)
 let extend_var id s ctx =
+  if id = "_" then
+    ctx
+  else
   let n_var = {
     v_name  = id
     } in

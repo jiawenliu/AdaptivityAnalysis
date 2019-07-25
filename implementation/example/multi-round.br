@@ -1,48 +1,91 @@
-let updtSC: depth 0 = fix f (z: unit). lambda sc: real list. lambda a : real. lambda p: int list -> real. lambda q: real. lambda ii:int list. lambda i: int. lambda nn : int.
+let get : depth 0 = {contra : real list -> int -> real } in
+
+let foldl : depth 0 = {contra : (real -> real -> real) -> real -> real list -> real } in
+
+let updtSC: depth 0 = 
+{
+fix f (z: unit). lambda sc: real list. lambda a : real. lambda p: real. lambda q:  (int list -> real). lambda ii:int list. lambda i: int. lambda nn : int.
 	if	(	(i < nn),
 			if( (contains ii  i),
-				let x: depth 0 = (get sc i) + (a - p) * ((q i) - p) in
+				let x: depth 0 = (get sc i) + (a - p) * ((q ii) - p) in
 					let sc': depth 0 = updt sc i x in
 						f () sc' a p q ii (i + 1) nn,
 				f () sc a p q ii (i + 1) nn),
 			sc
 		)
+:
+unit -> real list -> real  -> real -> (int list -> real) -> int list -> int -> int -> real list
+}
 in
-let updtSCC: depth 0 = fix f (z: unit). lambda scc: real list. lambda a : real. lambda p: int list -> real. lambda qc: int list -> real. lambda i: int. lambda cc: int.
+let updtSCC: depth 0 = 
+{
+fix f (z: unit). lambda scc: real list. lambda a : real. lambda p: real. lambda qc: (int list -> real). lambda i: int. lambda cc: int.
 	if	(	(i < cc),
-			let x: depth 0 = (get scc i) + (a - p) * ((qc i) - p) in
+			let x: depth 0 = (get scc i) + (a - p) * ((qc (i::nil)) - p) in
 				let scc': depth 0 = updt scc i x in
 					f () scc' a p qc (i + 1) cc,
 			scc
 		)
+:
+unit -> real list -> real -> real -> (int list -> real) -> int -> int -> real list
+}
 in
 
-let updtI: depth 0 = fix f (z: unit). lambda maxScc: real. lambda sc: real list. lambda i : int. lambda nn: int.
+let updtI: depth 0 = 
+{
+fix f (z: unit). lambda maxScc: real. lambda sc: real list. lambda i : int. lambda nn: int.
 	if(	(i < nn),
 		if(	((get sc i) < maxScc),
 			i :: (f () maxScc sc (i + 1) nn),
 			f () maxScc sc (i + 1) nn),
 		nil
 		)
-
+:
+unit -> real -> real list -> int -> int -> int list
+}
 in 
 
-fix multiRound (z: unit). Lambda. Lambda. lambda k : int. lambda j: int. lambda sc: real list. lambda scc: real list. lambda ii: int list. lambda nn: int. lambda cc: int. lambda db: int list list.
+fix multiRound (z: unit). Lambda. index k. Lambda. index j. lambda k : int. lambda j: int. lambda sc: real list. lambda scc: real list. lambda ii: int list. lambda nn: int. lambda cc: int. lambda db: int list list.
 	if(	(j < k),
-		let p: depth 1 = uniform(0, 1) in
-		let q: depth 1 = lambda x: int list. bernoulli p in
-		let qc: depth 1 = lambda x: int list. bernoulli p in
-		let qj: depth 1 = restrict q db in
-		let a: depth 0 = mech(qj) in 
-		let sc': depth 0 = updtSC () sc a p q ii 0 nn in
-		let scc': depth 0 = updtSCC () scc a p qc 0 cc in
-		let maxScc: depth 0 = foldl (lambda acc: real. lambda a: real. if(acc < a, a, acc)) 0 scc' in
+		let p: depth 1 = { uniform(0, 1) : real} 
+		in
+		let q: depth 1 = {lambda x: int list. bernoulli p : int list -> real} in
+		let qc: depth 1 = 
+						{lambda x: int list. bernoulli p : int list -> real} 
+						in
+		let qj: depth 1 = {restrict q db : int list -> real} 
+		in
+		let a: depth 0 = mech(qj) 
+		in 
+		let sc': depth 0 = updtSC () sc a p q ii 0 nn 
+		in
+		let scc': depth 0 = updtSCC () scc a p qc 0 cc 
+		in
+		let maxScc: depth 0 = { foldl (lambda acc: real. lambda a: real. if(acc < a, a, acc)) 0.0 scc' : real } 
+		in
 		let ii': depth 0 = updtI () maxScc sc 0 nn in 
 		let db': depth k - depth j - depth 1 = db \ ii' in
-			a::(multiRound () [] [] k (j + 1) sc' scc' ii' nn cc db') ,
+			a::(multiRound () [index k] [index j + index 1] k (j + 1) sc' scc' ii' nn cc db') ,
 		nil)
 
 
-|- forall k:::adapt. forall j:::adapt. int[index k] -> int[index j] -> real list -> real list -> int list -> int -> int -> int list, 0 -> (  [(sc:0), (scc : 0), (I : 0), (N : 0)] ; index k - index j) int list
+|- unit 
+	-> forall  k:::adapt. forall  j:::adapt. int[index k], bot
+	-> ([(updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot)]; index 0) 
+	int[index j], bot
+	-> ([(updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot)]; index 0) 
+	real list, bot 
+	-> ([(updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot)]; index 0) 
+	real list, bot 
+	-> ([(updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot)]; index 0) 
+	int list, bot 
+	-> ([(updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot), (scc: bot)]; index 0) 
+	int, bot 
+	-> ([(updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot), (scc: bot), (ii: bot)]; index 0) 
+	int, bot 
+	-> ([(updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot), (scc: bot), (ii: bot), (cc: bot)]; index 0) 
+	int list, 0 
+	-> ( [ (updtSC :0), (updtSCC: 0), (updtI: 0), (multiRound: 0), (j : 0), (sc: 0), (scc: 0), (ii: 0), (cc: 0), (nn: 0) ] ; index k - index j) 
+	real list
 
 

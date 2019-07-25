@@ -101,17 +101,10 @@ let rec max_adapts q1 q2 : iterm =
     | _, IConst 0         -> iterm_simpl q1
     | _                   -> IMaximal(iterm_simpl q1, iterm_simpl q2)
 
-let rec adapt_subst z i witn : iterm =
-  match z with
-    | IVar j ->  
-              if z = i 
-              then witn
-              else z
-    | IAdd(j1, j2)      
-      -> IAdd(adapt_subst j1 i witn, adapt_subst j2 i witn)
-    | IMaximal(j1, j2)  
-      -> IMaximal(adapt_subst j1 i witn, adapt_subst j2 i witn)
-    | _ -> z
+(* Substitution it[t/x] for adapttivity vars *)
+let adapt_subst x t it =
+  iterm_map (fun v -> if v = x then t else IVar v) it
+
 
 (* Depth Terms*)
 type dterm =
@@ -130,16 +123,22 @@ let add_depths d1 d2 =
   | DConst a, DConst b -> DConst (a + b)
   | DConst 0, _ -> d2
   | _, DConst 0 -> d1
+  | DBot, _ -> DBot
+  | _, DBot -> DBot
   | _ -> DAdd(d1, d2)
 
 let max_depths d1 d2 =
-  match d1,d2 with
-  | DConst a, DConst b -> 
-    if (a > b)
-    then 
-      DConst a
-    else
-      DConst b
-  | DBot, _ -> d2
-  | _, DBot -> d1
-  | _ -> DMaximal(d1, d2)
+  if d1 = d2
+  then 
+    d1
+  else
+    match d1,d2 with
+    | DConst a, DConst b -> 
+      if (a > b)
+      then 
+        DConst a
+      else
+        DConst b
+    | DBot, _ -> d2
+    | _, DBot -> d1
+    | _ -> DMaximal(d1, d2)

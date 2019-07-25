@@ -109,7 +109,6 @@ DTerm:
     { DAdd($1, $3) }
   | DEPTH INFTY
     { DInfty }
-
   | DEPTH BOT
     { DBot }
 
@@ -126,6 +125,12 @@ Dmap:
   
   | LPAREN VAR COLON INTV RPAREN COMMA Dmap
     { ( {v_name = $2}, (DConst $4) ) :: $7 }
+
+  | LPAREN VAR COLON BOT RPAREN
+    { [ ({v_name = $2}, DBot ) ] }
+  
+  | LPAREN VAR COLON BOT RPAREN COMMA Dmap
+    { ( {v_name = $2}, DBot ) :: $7 }
 
 
 
@@ -158,8 +163,9 @@ expr:
   | uop LPAREN expr RPAREN                          { Uop($1, $3) }                                                  
   | expr bop expr                                   { Bop($2, $1, $3) }
   | LPAREN expr RPAREN                              { $2 }
-  | BIGLAM DOT expr                                 { ILam $3 }
-  | expr LBRACK RBRACK                              { IApp $1 }
+  | BIGLAM DOT ITerm DOT expr                         
+                                                    { ILam ($3, $5) }
+  
   | PACK expr                                       { Pack $2 }
   | UNPACK RPAREN expr COMMA VAR COMMA expr LPAREN  { Unpack($3, {v_name = $5}, $7) }
   | BERNOULLI expr                                  { Bernoulli $2 }
@@ -172,6 +178,9 @@ app:
      { App($1, $2) }
   |  expr 
      { $1 }
+  | app LBRACK ITerm RBRACK
+     { IApp($3, $1) }
+
 
 
 bop:
@@ -225,7 +234,10 @@ Type:
     { Ty_Arrow($1, DConst 0, [], IConst 0, $3) }
 
   | Type COMMA INTV ARROW LPAREN DMap SEMICOLON ITerm RPAREN Type
-    { Ty_Arrow($1, DConst $3, $6, $8, $10) }
+    { Ty_Arrow($1, (DConst $3), $6, $8, $10) }
+
+  | Type COMMA BOT ARROW LPAREN DMap SEMICOLON ITerm RPAREN Type
+    { Ty_Arrow($1, DBot, $6, $8, $10) }
 
   | Type LIST
     { Ty_List $1 }

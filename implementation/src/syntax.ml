@@ -101,8 +101,8 @@ expr =
   | Uop         of uop * expr
 
   (* Indexed Expressions *)
-  | ILam        of expr
-  | IApp        of expr
+  | ILam        of iterm * expr
+  | IApp        of iterm * expr
 
   (* Annotated Expression *)
   | Annotated   of expr * ty * dmap * iterm
@@ -200,8 +200,8 @@ let rec is_equal_exp eL eR : bool =
   | Bernoulli v, Bernoulli v'  -> is_equal_exp v  v'
   | Uniform(v1, v2), Uniform(v1', v2')  -> is_equal_exp v1 v1' && is_equal_exp v2 v2'
 
-  | ILam( e), ILam(e')
-  | IApp( e), IApp( e') -> is_equal_exp e e'
+  | ILam(i, e), ILam(i', e')
+  | IApp(i, e), IApp(i', e') -> i = i' && is_equal_exp e e'
   
   | Annotated(e, t, d, z), Annotated(e', t', d', z')
             -> t = t' && d = d' && z = z' && is_equal_exp e e'
@@ -237,8 +237,8 @@ let rec exp_free_vars (e: expr) =
   | Let ( x, i, e1, e2) -> (exp_free_vars e1 ) @
     (List.filter (fun vi_x -> vi_x != x.v_name ) (exp_free_vars e2))
 
-  | ILam( e)
-  | IApp( e) -> (exp_free_vars e)
+  | ILam(i, e)
+  | IApp(i, e) -> (exp_free_vars e)
 
   | _ -> []
 

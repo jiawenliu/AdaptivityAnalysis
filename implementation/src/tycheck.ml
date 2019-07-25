@@ -204,6 +204,8 @@ let (<->=) (m : ty  inferer) (f : ty  -> (constr checker * dterm * var_info)) : 
               | Right (c2, dps2, z2) ->
                 let z = max_adapts z2 (add_adap_depth z1 q) in
                   let dps = max_dmaps dps2 (sum_depth_dmap q dps1) in
+                    let dps = dmap_rm dps vi_x.v_name 
+                    in 
                     let dpsx = get_depth dps2 vi_x.v_name in
                     begin
                     match dpsx with
