@@ -333,7 +333,8 @@ and check_fix (vi_f : var_info) (vi_x : var_info) (e : expr) (ty : ty) =
                         (* Constrains for depth of others *)
                         let cs2 = dmap_cs dps' (to_dmap dps) in
 
-                           let _ = fprintf std_formatter "depth from context: %a \n" pp_dmap dps';
+                           let _ = fprintf std_formatter "function name: %s\n" vi_f.v_name;
+                           		  fprintf std_formatter "depth from context: %a \n" pp_dmap dps';
                                   fprintf std_formatter "depth from arrow type: %a \n" pp_dmap (to_dmap dps) in
 
                           (* Depth Map with All bottom*)
