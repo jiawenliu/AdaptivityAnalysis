@@ -132,6 +132,17 @@ Dmap:
   | LPAREN VAR COLON BOT RPAREN COMMA Dmap
     { ( {v_name = $2}, DBot ) :: $7 }
 
+  | LPAREN VAR COLON VAR RPAREN
+    { [ ({v_name = $2}, (DVar {v_name = $4}) ) ] }
+  
+  | LPAREN VAR COLON VAR RPAREN COMMA Dmap
+    { ( {v_name = $2},  (DVar {v_name = $4}) ) :: $7 }
+
+  | LPAREN VAR COLON DTerm RPAREN
+    { [ ({v_name = $2}, $4 ) ] }
+  
+  | LPAREN VAR COLON DTerm RPAREN COMMA Dmap
+    { ( {v_name = $2},  $4 ) :: $7 }
 
 
 expr:

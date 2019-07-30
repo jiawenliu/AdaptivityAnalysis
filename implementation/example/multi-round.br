@@ -47,21 +47,21 @@ in
 
 fix multiRound (z: unit). Lambda. index k. Lambda. index j. lambda k : int. lambda j: int. lambda sc: real list. lambda scc: real list. lambda ii: int list. lambda nn: int. lambda cc: int. lambda db: int list list.
 	if(	(j < k),
-		let p: depth 1 = { uniform(0, 1) : real} 
+		let p: depth k - depth j = { uniform(0, 1) : real} 
 		in
-		let q: depth 1 = {lambda x: int list. bernoulli p : int list -> real} in
-		let qc: depth 1 = 
+		let q: depth k - depth j = {lambda x: int list. bernoulli p : int list -> real} in
+		let qc: depth k - depth j = 
 						{lambda x: int list. bernoulli p : int list -> real} 
 						in
-		let qj: depth 1 = {restrict q db : int list -> real} 
+		let qj: depth k - depth j = {restrict q db : int list -> real} 
 		in
-		let a: depth 0 = mech(qj) 
+		let a: depth k - depth j - depth 1 = mech(qj) 
 		in 
-		let sc': depth 0 = updtSC () sc a p q ii 0 nn 
+		let sc': depth k - depth j - depth 1 = updtSC () sc a p q ii 0 nn 
 		in
-		let scc': depth 0 = updtSCC () scc a p qc 0 cc 
+		let scc': depth k - depth j - depth 1 = updtSCC () scc a p qc 0 cc 
 		in
-		let maxScc: depth 0 = { foldl (lambda acc: real. lambda a: real. if(acc < a, a, acc)) 0.0 scc' : real } 
+		let maxScc: depth k - depth j - depth 1 = { foldl (lambda acc: real. lambda a: real. if(acc < a, a, acc)) 0.0 scc' : real } 
 		in
 		let ii': depth 0 = updtI () maxScc sc 0 nn in 
 		let db': depth k - depth j - depth 1 = db \ ii' in
@@ -86,7 +86,7 @@ fix multiRound (z: unit). Lambda. index k. Lambda. index j. lambda k : int. lamb
 	int, bot 
 	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot), (scc: bot), (ii: bot), (nn: bot)]; index 0) 
 	int list, 0 
-	-> ( [ (get:0), (foldl: 0), (z: 0), (updtSC :0), (updtSCC: 0), (updtI: 0), (multiRound: 0), (k : bot), (j : 0), (sc: 0), (scc: 0), (ii: 0), (cc: 0), (nn: 0) ] ; index k - index j) 
+	-> ( [ (get:0), (foldl: 0), (z: 0), (updtSC : depth k - depth j), (updtSCC: depth k - depth j), (updtI: depth k - depth j), (multiRound: depth k - depth j), (k : depth k - depth j), (j : depth k - depth j), (sc: depth k - depth j), (scc: depth k - depth j), (ii: depth k - depth j), (cc: depth k - depth j), (nn: depth k - depth j) ] ; index k - index j) 
 	real list
 
 

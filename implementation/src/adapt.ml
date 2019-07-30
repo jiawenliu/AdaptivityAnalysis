@@ -66,7 +66,8 @@ let type_check file t=
     let (cs, dmp, z) =  (CheckEngine.check_type ctx prgm ty) in
 
     (*main_info dp "Typechecking engine: %fs\n" ((Unix.gettimeofday () -. t) -. !WhySolver.smt_time);*)
-    main_debug dp "Resulting constraint:@\n@[%a@]@." Print.pp_cs cs
+    main_debug dp "Resulting constraint:@\n@[%a@]@. Adaptivity:@\n@[%a@]@." 
+    Print.pp_cs cs  Print.pp_iterm z
     
 (*    let tcons= Unix.gettimeofday ()  in
    try
