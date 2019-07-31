@@ -125,7 +125,7 @@
 	\chec{\efix f(x: \type ). \expr}{
           \tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}
         }{\restriction \land \dmap''(x) \leq \nnatbiA \land \forall y. y
-          \not = x.\dmap''(y) \leq \dmap(y) }
+          \in \dom(\dmap).\dmap''(y) \leq \dmap(y) }
 }~ \textbf{alg-fix-$\downarrow$ }
 %
 \and
@@ -191,14 +191,12 @@
         \\
         \delta \not \in \expr
         \\
-        \forall x \in \dom(\Gamma). \dmap'(x) = \dmap(x).
-        \\
         \forall x \in \dom(\Gamma'). \dmap'(x) = \bot 
         \\
-        \dom(\dmap') = \dom(\Gamma,\Gamma')
+        \dom(\dmap') = \dom(\Gamma')
 }
 {
-	\Delta; \Gamma',\tbox{\Gamma}; \red{\boxed { \dmap'} }
+	\Delta; \Gamma',\tbox{\Gamma}; \red{\dmap, \boxed { \dmap'} }
         \tvdash{\red{\nnatA} }
         \chec{\mathsf{BOX} \eapp\expr}{\tbox{\type}}{\restriction}
 } ~ \textbf{alg-box-$\downarrow$ }
@@ -231,14 +229,14 @@
 	 \\
 	\Delta; \Gamma, x : \type_1; \red{\dmap_2}
         \tvdash{\red{\nnatA_2} } 
-	\chec{\expr_2}{\type_2}{\restriction_2} 
+	\chec{\expr_2}{\type}{\restriction_2} 
         \\
         \nnatA = \max(\nnatA_2, \nnatA_1 + \nnatbiA)
         \\
-        \dmap = \max(\dmap_2, \dmap_1 + \nnatbiA)
+        \dmap = \max(\dmap_2/x, \dmap_1 + \nnatbiA)
 }
 {
-	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} } \chec{\elet x : \nnatbiA = \expr_1 \ein \expr_2 }{\type_2}
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} } \chec{\elet x : \nnatbiA = \expr_1 \ein \expr_2 }{\type}
 	{
 	\restriction_1 \land\restriction_2
         \land
@@ -271,6 +269,8 @@
 	\chec{\expr}{\type}{\restriction}
         \\
         \Delta \wf{\type}
+        \\
+        \fiv{\type, \dmap, \nnatA} \in \Delta
 }
 {
 	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA}}

@@ -142,9 +142,9 @@
       \inferrule{
         \Delta; \Gamma; \dmap' \ctyping{\nnatA'} \expr: \type'
         \\
-        \dmap' < \dmap 
+        \dmap' \leq \dmap 
         \\
-        \nnatA' < \nnatA
+        \nnatA' \leq \nnatA
         \\
         \Delta \models \eqvc{\type' }{ \type  } 
     }{
@@ -224,6 +224,8 @@
         \Delta; \tbox{\Gamma}; \dmap \ctyping{\nnatA}{ \expr}{ \type} 
            \\
         \delta \not\in \expr
+        \\
+        \dom(\Gamma') = \dom(\dmap')
     }
     {
         \Delta; \tbox{\Gamma}, \Gamma'; \dmap, \boxed{\dmap'} \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
@@ -530,6 +532,8 @@
         \forall x_i \in \dom(\Gamma). \expr_i =  \coerce{\Gamma(x_i)}{\tbox{\Gamma(x_i)} }
         \\
          \forall x_i \in \dom(\Gamma). \Delta \models \sub{\Gamma(x_i)}{\tbox{\Gamma(x_i)}}
+         \\
+         \dom(\Gamma') = \dom(\dmap')
     } 
     {
         \Delta; \Gamma, \Gamma'; \dmap, \dmap' \elab{0}{\expr}{\elet \overline{y_i;0 = (\expr_i \eapp x_i)} \ein (\cbox \eapp \expr^*[\overline{ y_i/x_i}])}{ \tbox{\type}}
@@ -990,6 +994,8 @@ By induction on the embedding derivation.\\
         \Delta; \tbox{\Gamma}; \dmap \ctyping{\nnatA}{ \expr}{ \type} 
            \\
         \delta \not\in \expr
+        \\
+        \dom(\Gamma')= \dom(\dmap')
     }
     {
         \Delta; \tbox{\Gamma}, \Gamma'; \dmap, \dmap' \ctyping{0}{ \cbox \eapp \expr}{ \tbox{\type}}
@@ -1001,6 +1007,8 @@ By induction on the embedding derivation.\\
         \Delta; \tbox{\Gamma_1};  \overline{[y_i:0]} \ctyping{\nnatA}{ \expr^*[\overline{y_i/x_i}]}{ \type} 
            \\
         \delta \not\in \expr
+        \\
+        \dom(\Gamma,\Gamma')= \dom(\dmap_2)
     }
     {
         \Delta; \tbox{\Gamma_1},\Gamma,\Gamma'; \dmap_2,\overline{[y_i:0]} \ctyping{0}{ (\cbox \eapp \expr^*[\overline{ y_i/x_i}]) }{
@@ -1180,4 +1188,452 @@ By induction on the typing derivation.\\
      \Delta;  \Gamma; \dmap' \elab{\nnatA'}{ \expr \eapp []}{\expr^* \eapp [I]  }{
      \type[I/i]}
     }~\textbf{e-iapp}       \]
+\end{proof}
+
+
+
+\begin{thm}[Invariant of algorithmic type checking][]
+\label{thm:invariant}
+\begin{enumerate}
+    \item  If $	\Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA}} \chec{\expr}{\type}{ \restriction }$ and $\fiv{\Gamma, \tau} \subseteq  \dom(\Delta) $, then $\fiv{\dmap, \nnatA,\restriction} \in \dom(\Delta)  $. 
+    \item  If $ \Delta; \Gamma;  \red {\dmap} \tvdash{\red{\nnatA } } \infr{\expr}{ 
+            \type }{\restriction}{.} $ , $\fiv{ \Gamma} \subseteq  \dom(\Delta) $, then  $\fiv{\dmap, \nnatA,\type, \restriction} \in \dom(\Delta)  $. 
+\end{enumerate}
+
+\end{thm}
+
+\begin{thm}[Soundness of algorithmic typechecking][]
+\begin{enumerate}
+    \item  If $	\Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA}} \chec{\expr}{\type}{ \restriction }$ and $\fiv{\Gamma, \tau} \subseteq  \dom(\Delta) $ and $\Delta \models \restriction$, then $ \Delta; \Gamma; \dmap \ctyping{\nnatA}{|\expr| }{ \type } $.
+    \item  If $ \Delta; \Gamma;  \red {\dmap} \tvdash{\red{\nnatA } } \infr{\expr}{ 
+            \type }{\restriction}{.} $ , $\fiv{ \Gamma} \subseteq  \dom(\Delta) $ and $\Delta \models \restriction$,  then $ \Delta; \Gamma; \dmap \ctyping{\nnatA}{|\expr| }{ \type } $.
+\end{enumerate}
+\end{thm}
+\begin{proof}
+By simultaneous induction on the algorithmic typing derivation.\\
+Proof of statement (1).\\
+\caseL{ Case: \[ \inferrule
+{
+	\Delta; \tbox{\Gamma};  \red{\dmap} \tvdash{\red{\nnatA} }
+        \chec{\expr}{\type}{\restriction} 
+        \\
+        \delta \not \in \expr
+        \\
+        \forall x \in \dom(\Gamma'). \dmap'(x) = \bot 
+        \\
+        \dom(\Gamma') = \dom(\dmap')
+}
+{
+	\Delta; \Gamma',\tbox{\Gamma}; \red{\dmap, \boxed { \dmap'} }
+        \tvdash{\red{\nnatA} }
+        \chec{\mathsf{BOX} \eapp \expr }{\tbox{\type}}{\restriction}
+} ~ \textbf{alg-box-$\downarrow$ } \] }
+The main assumption assumes $\fiv{ \Gamma,\Gamma', \tau}  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction~(2)$.\\
+TS: $ \Delta; \Gamma', \tbox{\Gamma}; \dmap' \ctyping{\nnatA}{\cbox \eapp |\expr| }{ \tbox{\type} } $\\
+%
+From (1), we infer that : $\fiv{ \Gamma, \tau}  \subseteq  \dom(\Delta)~(3)$.\\
+By IH1 on the first premise using (2),(3), we know:\\
+$  \Delta;  \tbox{\Gamma}; \dmap \ctyping{\nnatA}{ |\expr| }{ \type }  $.\\
+By the rule \textbf{c-box}, 
+ \[
+      \inferrule
+     {
+        \Delta; \tbox{\Gamma}; \dmap \ctyping{\nnatA}{ |\expr| }{ \type} 
+           \\
+        \delta \not\in \expr
+        \\
+        \dom(\Gamma')= \dom(\dmap')
+    }
+    {
+        \Delta; \tbox{\Gamma}, \Gamma'; \dmap, \dmap' \ctyping{0}{ \cbox \eapp |\expr|}{ \tbox{\type}}
+    } ~\textbf{c-box}
+     \]
+%
+\caseL{Case: \[ \inferrule
+{
+	\Delta; \Gamma; \red{\dmap_1} \tvdash{\red {\nnatA_1 } } \infr{\expr_1}{\tbool}{\restriction_1}{\psi}
+	\and
+	\Delta; \Gamma; \red{\dmap_2}
+        \tvdash{\red{\nnatA_2} } \chec{\expr_2}{\type}{\restriction_2}
+	\\
+	\Delta; \Gamma;  \red{\dmap_3}
+        \tvdash{\red{\nnatA_3} }
+        \chec{\expr_3}{\type}{\restriction_3} 
+        \\
+	 \nnatA' =  \nnatA_1 + \max(\nnatA_2, \nnatA_3)
+         \\
+         \dmap' = \max(\dmap_1, \nnatA_1 +
+          \max(\dmap_2,\dmap_3) )
+}
+{
+	\Delta; \Gamma; \red{\dmap'} \tvdash{\red{\nnatA'} } \chec{\eif (\expr_1, \expr_2, \expr_2) }{\type}
+	{ \restriction_1 \land \restriction_2 \land \restriction_3
+	}
+}~ \textbf{alg-if-$\downarrow$ } \] }
+The main assumption assumes $\fiv{ \Gamma, \tau}  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction_1 \land \restriction_2 \land \restriction_3 ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{\eif (|\expr_1|, |\expr_2|, |\expr_2|) }{ \type } $\\
+From (1), we infer that : $\fiv{ \Gamma, \tbool}  \subseteq  \dom(\Delta)~(3)$ .\\
+%
+Similarly, we infer that  $\fiv{ \Gamma, \type}  \subseteq  \dom(\Delta)~(4)$ . \\
+From (2), we know that $\Delta \models \restriction_1~(6)$, $\Delta \models \restriction_2~(7)$ and $\Delta \models \restriction_3~(8)$.\\
+By IH2 on the first premise with (3),(6), we know:\\
+$   \Delta;\Gamma; \dmap_1 \ctyping{\nnatA_1}{ |\expr_1| }{ \tbool}~(a) $\\
+By IH1 on the second premise with (4),(7), we know:\\
+$   \Delta;\Gamma; \dmap_2 \ctyping{\nnatA_2}{ |\expr_2| }{ \type}~(b) $\\
+By IH1 on the third premise with (4),(8), we know:\\
+$   \Delta;\Gamma; \dmap_3 \ctyping{\nnatA_3}{ |\expr_3| }{ \type}~(c) $\\
+By the rule \textbf{c-$\equiv$} on the (b), (c), we get: \\
+$   \Delta;\Gamma; \max(\dmap_2,\dmap_3) \ctyping{\max(\nnatA_2,\nnatA_3)}{ |\expr_2| }{ \type}~(\star) $\\
+$   \Delta;\Gamma; \max(\dmap_2,\dmap_3) \ctyping{\max(\nnatA_2,\nnatA_3)}{ |\expr_3| }{ \type}~(\diamond) $\\
+By the rule \textbf{c-if} with $(a),(\star), (\diamond)   $, we conclude that :
+\[
+\inferrule{
+        \Delta;\Gamma; \dmap_1 \ctyping{\nnatA_1}{ |\expr_1| }{ \tbool}~(a) \\
+      \Delta;\Gamma; \max(\dmap_2,\dmap_3) \ctyping{\max(\nnatA_2,\nnatA_3)}{ |\expr_2| }{ \type}~(\star) \\
+       \Delta;\Gamma; \max(\dmap_2,\dmap_3) \ctyping{\max(\nnatA_2,\nnatA_3)}{ |\expr_3| }{ \type}~(\diamond) \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA_2,\nnatA_3)\\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap_2,\dmap_3))
+    }{
+       \Delta;\Gamma; \dmap' \ctyping{\nnatA'} { \eif(|\expr_1|, |\expr_2|, |\expr_3|)}{   \type}
+    }~\textbf{c-if}
+\]
+%
+\caseL{Case: \[ \inferrule
+{      
+	\Delta; \Gamma;  \red{\dmap_1} \tvdash{\red{\nnatA_1} } \chec{\expr_1}{\type}{\restriction_1}
+	\\
+	\Delta; \Gamma; \red{\dmap_2} \tvdash{\red{\nnatA_2} }
+        \chec{\expr_2}{ \tlist{\type} }{\restriction_2}
+        \\
+        \nnatA = \max(\nnatA_1, \nnatA_2)
+        \\
+        \dmap = \max(\dmap_1, \dmap_2)
+}
+{
+	\Delta; \Gamma; \red{ \dmap} \tvdash{\red{\nnatA} } \chec{\econs(\expr_1, \expr_2)}{\tlist{\type}}
+	{
+          \restriction_1 \land \restriction_2
+	}
+}~ \textbf{alg-cons-$\downarrow$ } \] }
+%
+The main assumption assumes $\fiv{\Gamma, \tau}  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction_1 \land \restriction_2  ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap \ctyping{\nnatA}{\econs(|\expr_1|, |\expr_2|) }{ \tlist{\type} } $\\
+From (1), we infer that : $\fiv{ \Gamma, \type}  \subseteq  \dom(\Delta)~(3)$ .\\
+From (2), we know that $\Delta \models \restriction_1~(5)$, $\Delta \models \restriction_2~(6)$.\\
+%
+By IH1 on the first premise with (3),(5), we know:\\
+$   \Delta;\Gamma; \dmap_1 \ctyping{\nnatA_1}{ |\expr_1| }{ \type}~(a) $\\
+By IH1 on the second premise with (3),(6), we know:\\
+$   \Delta;\Gamma; \dmap_2 \ctyping{\nnatA_2}{ |\expr_2| }{ \tlist{\type} }~(b) $\\
+
+By the rule \textbf{c-cons} ,we conclude that :
+
+\[
+ \inferrule{
+   \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ |\expr_1|}{ \type} \\
+   \Delta; \Gamma; \dmap_2 \ctyping{\nnatA_2}{ |\expr_2 |}{ \tlist{\type}} \\
+   \dmap = \max(\dmap_1, \dmap_2) \\
+   \nnatA = \max ( \nnatA_1, \nnatA_2 )
+   }
+   { 
+   \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \econs(|\expr_1|, |\expr_2|)}{
+     \tlist{\type}}  } ~\textbf{c-cons}
+\]
+
+
+
+\caseL{Case: \[ \inferrule
+{
+	\Delta; \Gamma; \red{ \dmap_1} \tvdash{ \red {\nnatA_1} } \infr{\expr_1}{\type_1}{\restriction}{\psi}
+	 \\
+	\Delta; \Gamma, x : \type_1; \red{\dmap_2}
+        \tvdash{\red{\nnatA_2} } 
+	\chec{\expr_2}{\type}{\restriction_2} 
+        \\
+        \nnatA = \max(\nnatA_2, \nnatA_1 + \nnatbiA)
+        \\
+        \dmap = \max(\dmap_2 \setminus x, \dmap_1 + \nnatbiA)
+}
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} } \chec{\elet x : \nnatbiA = \expr_1 \ein \expr_2 }{\type}
+	{
+	\restriction_1 \land\restriction_2
+        \land
+        \dmap_2 (x) \leq \nnatbiA
+	}
+}~ \textbf{alg-let-$\downarrow$ } \]}
+%
+The main assumption assumes $\fiv{ \Gamma, \tau}  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction_1 \land \restriction_2 \land \dmap_2(x) \leq \nnatbiA  ~(2)$.\\
+TS: $  \Delta; \Gamma; \dmap \ctyping{\nnatA}{  \elet x;q = |\expr_1| \ein |\expr_2| }{ \type } $\\
+From (1), we infer that : $\fiv{ \Gamma, \type_1}  \subseteq  \dom(\Delta)~(3)$. \\
+%
+Similarly, we infer that  $\fiv{ \Gamma,x:\type_1, \type}  \subseteq  \dom(\Delta)~(4)$ \\
+From (2), we know that $\Delta \models \restriction_1~(5)$, $\Delta \models \restriction_2~(6)$ and $\Delta \models \dmap_2 (x) \leq \nnatbiA ~ (7)$.\\
+%
+By IH2 on the first premise with (3),(5), we know:\\
+$   \Delta;\Gamma; \dmap_1 \ctyping{\nnatA_1}{ |\expr_1| }{ \type_1}~(a) $\\
+By IH1 on the second premise with (4),(6), we know:\\
+$   \Delta;\Gamma; \dmap_2 \ctyping{\nnatA_2}{ |\expr_2| }{ \type }~(b) $\\
+Set $\dmap_2 = \dmap_2' , [x:\dmap_2(x)]$ and $\dmap_2' = \dmap_2 \setminus x$.\\
+We rewrite (b) as follows:\\
+$ \Delta;\Gamma; \dmap_2',[x:\dmap_2(x)] \ctyping{\nnatA_2}{ |\expr_2| }{ \type }~(c) $\\
+By the rule \textbf{c-$\equiv$} and $\dmap_2(x) \leq \nnatbiA$ on (c), we conclude that:
+\[  \Delta;\Gamma; \dmap_2',[x:\nnatbiA] \ctyping{\nnatA_2}{ |\expr_2| }{ \type }~(d) \]
+BY the rule \textbf{c-let}, we conclude the following statement.
+\[
+ \inferrule{
+     \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1}{ |\expr_1| }{ \type_1} \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2'[x:q] \ctyping{\nnatA_2}{ |\expr_2| }{
+     \type }\\
+     \dmap' = \max( \dmap_2', \dmap_1 + q ) \\
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+   }
+   {  \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{  \elet x;q = |\expr_1| \ein |\expr_2| }{ \type } }~\textbf{c-let}
+\]
+
+
+
+\caseL{ Case:  \[ \inferrule
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red {\nnatA} }
+	\infr{\expr}{\type}{\restriction}{\psi}
+	\\
+	\Delta \models
+	\eqv{\type}{\type'}{ \restriction'}
+}
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA}}
+	\chec{\expr}{\type'}
+	{ \restriction \land \restriction'
+	}
+} ~ \textbf{alg-$\uparrow$-$\downarrow$ }  \] }
+The main assumption assumes $\fiv{ \Gamma, \tau'}  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction_1 \land \restriction'  ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap \ctyping{\nnatA}{|\expr|  }{ \type' } $\\
+From (1), we infer that : $\fiv{ \Gamma}  \subseteq  \dom(\Delta)~(3)$ .\\
+From (2), we know that $\Delta \models \restriction~(4)$, $\Delta \models \restriction'~(5)$.\\
+By IH2 on the first premise with (3),(4), we know:\\
+$   \Delta;\Gamma; \dmap \ctyping{\nnatA}{ |\expr| }{ \type}~(a) $\\
+By the rule \textbf{c-$\equiv$}, we conclude that:
+\[  
+  \inferrule{
+        \Delta; \Gamma; \dmap \ctyping{\nnatA} {|\expr|}{ \type}
+        \\
+        \dmap \leq \dmap 
+        \\
+        \nnatA \leq \nnatA
+        \\
+        \Delta \models \eqvc{\type }{ \type'  } 
+    }{
+       \Delta; \Gamma; \dmap \ctyping{\nnatA}{ |\expr| }{ \type'}
+    }~\textbf{c-$\equiv$}
+\]
+
+%
+\caseL{Case: \[ \inferrule
+{
+	i::S, \Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA} }
+	\chec{\expr}{\type}{\restriction}
+}
+{
+	\Delta; \Gamma;\red{\dmap} \tvdash{\red{0}}
+	\chec{\eilam \expr}{ \tforall{\dmap}{\nnatA}{i} \type
+        }{\forall i. \restriction }
+}~ \textbf{alg-iabs-$\downarrow$ } \] }
+The main assumption assumes $\fiv{ \Gamma, \tforall{\dmap}{\nnatA}{i} \type  }  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \forall i.\restriction ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap \ctyping{0}{\eilam |\expr|  }{ \tforall{\dmap}{\nnatA}{i} \type  } $\\
+From (1), we can infer that : $i \not\in \fiv{\Gamma}  $. \wq{Can we ? }  \\
+From (1), we infer that : $\fiv{ \Gamma, \type}  \subseteq  i,\dom(\Delta)~(3)$ .\\
+From (2), we know that $i::S,\Delta \models \restriction~(4)$  \\
+By IH1 on the first premise with (3),(4), we know:\\
+$   i,\Delta;\Gamma; \dmap \ctyping{\nnatA}{ |\expr| }{ \type}~(a) $\\
+By the rule \textbf{c-iLam},we conclude :
+\[ 
+ \inferrule{
+     i::S, \Delta; \Gamma ;\dmap \ctyping{\nnatA}{ |\expr| }{ \type}
+      \\
+     \boxed{ i \not\in \fiv{\Gamma} }
+    }{
+     \Delta;  \Gamma; \dmap' \ctyping{\nnatA'} { \eilam i. |\expr| }{  \tforall{\dmap}{\nnatA}{i} \type } 
+    }~\textbf{c-ilam}
+\]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% infer%%%%%%%%%
+Proof of statement (2).\\
+
+\caseL{Case:  \[  \inferrule
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red {\nnatA} }
+	\chec{\expr}{\type}{\restriction}
+        \\
+        \Delta \wf{\type}
+         \\
+        \fiv{\type, \dmap, \nnatA} \in \dom(\Delta) ~(\star)
+}
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{\red{\nnatA}}
+	\infr{ ( \expr: \type, \dmap, \nnatA )}{\type}
+	{ \restriction
+	}{}
+} ~ \textbf{alg-anno-$\uparrow$ } \]     }
+The main assumption assumes $\fiv{ \Gamma }  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap \ctyping{\nnatA}{ |( \expr: \type, \dmap, \nnatA )|  }{  \type  } $\\
+From (1) and $(\star)$, we infer that : $\fiv{ \Gamma, \type}  \subseteq  \dom(\Delta)~(3)$ .\\
+%
+By IH1 on the first premise with (3),(2), we conclude:\\
+\[   \Delta;\Gamma; \dmap \ctyping{\nnatA}{ |\expr| }{ \type} \]
+
+
+
+
+
+\caseL{Case:  \[ \inferrule
+{
+	\Delta; \Gamma; \red{\dmap} \tvdash{ \red{\nnatA} } \infr{\expr}{ \tforall{\dmap_1 }{\nnatA_1}{i} \type }{ \restriction }{\psi}
+	\and
+	\Delta \tvdash{} I :: S
+        \\
+        \dmap' = \max(\dmap, \nnatA + \dmap_1) 
+        \\
+        \nnatA' = \nnatA_1[I/i] + \nnatA
+}
+{
+	\Delta; \Gamma; \red{\dmap'} \tvdash{ \red{\nnatA'} } \infr{\expr [ I]}{ \type[I/i] }
+	{
+	\restriction  
+	}{\psi}
+} ~ \textbf{alg-iapp$\uparrow$ }  \]  }
+The main assumption assumes $\fiv{ \Gamma }  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ |\expr [I]|  }{  \type[I/i]  } $\\
+%
+By IH2 on the first premise with (1),(2), we conclude:\\
+$   \Delta;\Gamma; \dmap \ctyping{\nnatA}{ |\expr| }{ \tforall{\dmap_1 }{\nnatA_1}{i} \type}~(a) $\\
+
+By the above statement and the premises, we conclude:
+\[
+ \inferrule{
+      \Delta; \Gamma ;\dmap \ctyping{\nnatA} { |\expr| } { \tforall{\dmap_1}{\nnatA_1}{i} \type}
+      \and
+       \Delta \vdash  I ::  S
+       \\
+       \dmap' = \max(\dmap, \nnatA + \dmap_1)
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
+    }{
+     \Delta;  \Gamma; \dmap' \ctyping{\nnatA'}   { |\expr| \eapp [I]}{
+     \type[I/i]}
+    }
+	    ~\textbf{c-iapp}      
+\]
+
+
+\caseL{Case:  \[ \inferrule
+{
+	\Delta; \Gamma; \red{\dmap_1} \tvdash{\red{\nnatA_1} } 
+	\infr{\expr_1}{ \tarr{\type_1}{\type_2}{\nnatbiA}{\boxed{\dmap}}{\nnatA} }{ \restriction_1 }{\psi}
+	\\
+	\Delta; \Gamma;   \red{\dmap_2} \tvdash{\red{
+            \nnatA_2} }
+        \chec{\expr_2}{\type_1}{\restriction_2} 
+        \\
+       \nnatA' = \nnatA_1 + \max(\nnatA,\nnatA_2 + \nnatbiA)
+       \\
+        \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2
+        + \nnatbiA))
+}
+{
+	\Delta; \Gamma;  \red{\dmap'}  \tvdash{\red {\nnatA'} } 
+	\infr{\expr_1 \eapp \expr_2}{\type_2}{\restriction_1 \land \restriction_2 
+	 }{\psi, \nnatA_2}
+}~ \textbf{alg-app-$\uparrow$ }  \] }
+The main assumption assumes $\fiv{ \Gamma }  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ |\expr_1 | \eapp | \expr_2 |  }{  \type_2  } $\\
+%
+By IH2 on the first premise with (1),(2), we conclude:\\
+$   \Delta;\Gamma; \dmap_1 \ctyping{\nnatA_1}{ |\expr_1| }{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) }~(a) $\\
+By theorem~\ref{thm:invariant} on the first premise and (1), we know: 
+\[   \fiv{ \dmap_1, \nnatA_1, (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) , \restriction_1 } \in \dom(\Delta) ~(3) \]
+From (1) and (3), we know: $ \fiv{\Gamma, \type_1} \in \dom(\Delta)~(4) $. \\
+By IH1 on the second premise vis (4), (2), we conclude: \\
+$   \Delta;\Gamma; \dmap_2 \ctyping{\nnatA_2}{ |\expr_2| }{ \type_1 }~(b) $\\
+%
+By the above statements and premises, using the rule \textbf{c-app}, we conclude that
+\[ 
+\inferrule{ 
+      \Delta; \Gamma; \dmap_1 \ctyping{\nnatA_1} {| \expr_1 |}{ (\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}) } \\
+      \Delta; \Gamma; \dmap_2 \ctyping{\nnatA_2}{ | \expr_2 |}{ \type_1} \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \max(\dmap, \dmap_2 + \nnatbiA))
+    }{
+      \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ |\expr_1| \eapp |\expr_2| }{ \type_2}
+    }~\textbf{c-app}
+\]
+
+
+
+\caseL{Case: \[ \inferrule
+{	
+       \Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA}} 
+	\infr{\expr}{ \tbox{\tarr{\type_1}{\type_2}{0}{\dmap''}{0} }
+        }{\restriction}{}
+        \\
+        \nnatA' = \nnatA + 1 
+        \\
+        \dmap' =  1 + \max(\dmap, \dmap''+ \nnatA)
+}
+{
+	\Delta; \Gamma; \red{\dmap'} \tvdash{\red {\nnatA'} }
+	\infr{\eop{\expr}}{\treal}
+	{
+	\restriction 
+	 }{\nnatA}
+} ~ \textbf{alg-$\delta$-$\uparrow$ } \] }
+
+The main assumption assumes $\fiv{ \Gamma }  \subseteq  \dom(\Delta) ~(1)$ and $\Delta \models \restriction ~(2)$.\\
+TS: $ \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \eop{|\expr|}  }{  \treal  } $\\
+%
+
+
+\[ 
+ \inferrule{
+      \Delta; \dmap \wf{\type} \\
+    }{
+      \Delta; \Gamma; \dmap \ctyping{\nnatA} {\enil}{ \tlist{\type}}
+    }~\textbf{c-nil}
+    % 
+ 	\and
+    %
+    \inferrule
+    {
+      \Delta; \Gamma; \dmap \ctyping{\nnatA}{ \expr}{  \tbox{  (\tarr{ \type_1
+        }{ \type_2 }{0}{\dmap''}{0})     } }  \\
+      \nnatA' = 1 + \nnatA \\
+      \wq{ \dmap' = 1 + \max(\dmap, \dmap''+\nnatA) } 
+    }
+    {
+       \Delta; \Gamma; \dmap' \ctyping{\nnatA'}{ \eop(\expr)}{ \treal}
+    }~\textbf{c-$\delta$}
+\]
+
+
+\caseL{Case \[ \inferrule
+{
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA} } \infr{\expr}{\type_1 \times \type_2}{\restriction}{\psi}
+}
+{
+  \Delta; \Gamma;  \red{\dmap} \tvdash{\red{\nnatA} } \infr{\eprojl(\expr)}{\type_1}{\restriction}{\psi}
+}~ \textbf{alg-fst-$\uparrow$ } \] }
+
+\caseL{Case:  \[ \inferrule
+{
+	\Gamma(x) = \type \\
+        \dmap = [x:0] \cup \bot
+}
+{
+	\Delta; \Gamma;  \textcolor{red} {\dmap} \tvdash{ \red{\nnatA} }
+        \infr{x}{\red {\type} }{\top}{.}
+}~ \textbf{alg-var-$\uparrow$ }
+ \] }
+
+
 \end{proof}
