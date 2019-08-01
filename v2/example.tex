@@ -771,10 +771,10 @@ $\Pi_R$:
  \hspace{0.8cm} \elet \eapp il': k - j - 1 =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
                 \eapp 0 \eapp n  \ein \\
  \hspace{0.8cm} \elet \eapp db': k - j - 1 =  db \setminus il' \ein \\
- \hspace{1.2cm} \mathsf{multiRound} () [k] [j + 1] \eapp  k 
-                \eapp (j+1)  \eapp sc' \eapp scc' \eapp il'
-                \eapp n \eapp cr \eapp db'\\ 
- \hspace{0.2cm} , a  \big )
+ \hspace{1.2cm} a :: (\mathsf{multiRound} \eapp () \eapp [k] \eapp [j + 1]  
+                 \eapp k \eapp (j+1) \eapp sc' \eapp scc' \eapp il'
+                 \eapp n \eapp cr \eapp db')\\ 
+ \hspace{0.2cm} , []  \big)
 \end{array}
 \]
 
@@ -815,7 +815,7 @@ Type Declaration for Multi-rounds example:
     &
     \tarr{\tint}
     {
-      \tarr{\tlist{\tint}}
+      \tarr{\tlist{\treal}}
       {
         \treal
       }{k - j}{\dmap^9}{k - j}
@@ -880,30 +880,30 @@ $\Delta = [J : S, K : S]$
 Type Derivation:\\
 UpdtSC:
 \begin{mathpar}
-      \inferrule*[right = FIX]
+      \inferrule*[right = fix]
       {
-        \inferrule*[right = FIX...]
+        \inferrule*[right = fix * 4]
         {
-          \inferrule*[right = IF]
+          \inferrule*[right = if]
           {
-            \inferrule*[right = BOOL]
+            \inferrule*[right = bool]
             {
               \empty
             }
             {
-             i:\tint , I : \tlist{\tint} , \Gamma \tvdash{0} {i
+             i:\tint , il : \tlist{\tint} , \Gamma \tvdash{0} {i
                <  N : \tbool}
             }
             \\
-            \inferrule*[right = IF]
+            \inferrule*[right = if]
             {
               \dots
             }
             {
-              f:., \Gamma; \tvdash{0}  \eif (i \in I)\cdots : \tlist{\treal }
+              f:., \Gamma; \tvdash{0}  \eif (i \in il)\cdots : \tlist{\treal }
             }
             \and
-            \inferrule*[right = VAR]
+            \inferrule[var]
             {
             }
             {
@@ -914,23 +914,23 @@ UpdtSC:
           }
           {
           f: ., sc: \tlist{\treal}, a:\tint, i:\tint \dots \Gamma
-            \tvdash{0} \eif (i < N)  \cdots : \tlist{\treal}
+            \tvdash{0} \eif (i < n)  \cdots : \tlist{\treal}
           }
         }
         {
           f: \tunit \rightarrow \dots
           \tlist{\treal}, \Gamma \tvdash{0} {\lambda
-            sc. \dots \lambda N.
+            sc. \dots \lambda n.
             \eif \cdots :  \tlist{\treal} \rightarrow \dots \tlist{\treal}   }
         }
       }
       {
        \Gamma \tvdash{0} \efix \eapp  f( \_ ). \lambda sc. \lambda
-        a. \dots \lambda N. \eif \Big ( (i <N), \dots, sc \Big ) : \tunit
+        a. \dots \lambda n. \eif \Big ( (i < n), \dots, sc \Big ) : \tunit
         \rightarrow \tlist{\treal} \rightarrow \dots \rightarrow \tlist{\treal} 
       }
 
-   \inferrule*[ right = IF ]
+   \inferrule*[ right = if ]
    {
      \inferrule
      {
@@ -954,11 +954,11 @@ UpdtSC:
      \eapp sc \dots N \big) : \tlist{\treal }    }
 
     
-    \inferrule*[right = LET]
+    \inferrule*[right = let]
     {
-    \inferrule*[right = LET]
+    \inferrule*[right = let]
         {
-        \inferrule*[right = APP]
+        \inferrule*[right = app]
             {
             }
             {
@@ -966,7 +966,7 @@ UpdtSC:
                 i \eapp x : \tlist{\treal}
             }
             \and
-        \inferrule*[right = APP]
+        \inferrule*[right = app]
             {
                 \dots
             }
@@ -1006,15 +1006,15 @@ UpdtSC:
 \tiny
 Multi-rounds:
 \begin{mathpar}
-\inferrule*[right = FIX]
+\inferrule*[right = fix]
 {
   \inferrule
   {
-    \inferrule*[right = FIX]
+    \inferrule*[right = fix*7]
     {
-      \inferrule*[right = IF]
+      \inferrule*[right = if]
       {
-        \inferrule
+        \inferrule[bool]
         {
           \empty
         }
@@ -1022,45 +1022,46 @@ Multi-rounds:
           \Delta; \Gamma; \dmap_1' = [j : 0, k : 0] \tvdash{0} j<k : \tbool
         }
         \\
-        \inferrule
+        \inferrule[]
         {
           \cdots
         }
         {
-          \Delta; \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\tint}
+          \Delta; \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\treal}
         }
         \and
-        \inferrule
+        \inferrule[nil]
         {
           \empty
         }
         {
-          \Delta; \Gamma; \dmap_1 \tvdash{0} D : \tlist{\tint}
+          \Delta; \Gamma; \dmap_1 \tvdash{0} [] : \tlist{\treal}
         }
       }
       {
         \Delta; \Gamma_0', sc: \tlist{\treal}, \cdots; \dmap_0 
-        \tvdash{k - j} \eif(j<k, \elet p = \cdots \ein \cdots, D) : \tlist{\tint}   
+        \tvdash{k - j} \eif(j<k, \elet p = \cdots \ein \cdots, []) 
+        : \tlist{\treal}
       }
     }
     {
-    \Delta; \Gamma_0'; [\mathsf{multiRound}: \infty, () : \bot] \tvdash{0} \lambda k. \cdots : \tint[K] \cdots  
+    \Delta; \Gamma_0'; \dmap^2 \tvdash{0} \lambda k. \cdots : \tint[k] \cdots  
     }
   }
   {
-  \Delta; \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; [\mathsf{multiRound}: \infty, () : \bot]
+  \Delta; \Gamma_0 , \mathsf{multiRound} : \tunit \to \cdots; \dmap^1[\mathsf{multiRound}: \infty, z : \bot]
   \tvdash{0} \Lambda. \Lambda. \cdots : \forall. \forall. \cdots  
   }
 }
 {
-  \Delta; \Gamma_0; [] \tvdash{0} \efix \, \mathsf{multiRound ()}. \cdots : \tunit \to \cdots
+  \Delta; \Gamma_0; \dmap^1 \tvdash{0} \efix \, \mathsf{multiRound} (z : \tunit) \cdots : \tarr{\tunit}{\cdots}{\bot}{\dmap^1}{0}
 }
 
-\inferrule*[right = LET]
+\inferrule*[right = let]
 {
   \inferrule
   {
-    \inferrule
+    \inferrule[base]
     {
     \empty
     }
@@ -1068,7 +1069,7 @@ Multi-rounds:
     \tvdash{0} 0: \treal    
     }
     \and
-    \inferrule
+    \inferrule[base]
     {
       \empty
     }
@@ -1078,9 +1079,9 @@ Multi-rounds:
   }
   {  
     \Gamma; [] \tvdash{0} \uniform \eapp 0 \eapp 1 : \treal
-  }  
+  }~\textbf{uniform}  
   \and
-  \inferrule
+  \inferrule*[right = let]
   {
     \cdots
   }
@@ -1089,7 +1090,7 @@ Multi-rounds:
   }
 }
 {
-  \Delta; \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\tint}
+  \Delta; \Gamma; \dmap_1 \tvdash{k - j} \elet p = \cdots \ein \cdots : \tlist{\treal}
 }
 
 \inferrule*[right = LET]
@@ -1100,35 +1101,36 @@ Multi-rounds:
     {
       \inferrule
       {
-        \inferrule
+        \inferrule[var]
         {
           \empty
         }
         {
+          \cdot; \Gamma_{1}, x: \tint; \dmap_2[x: 0]
           \tvdash{0} p : \treal        
         }
       }
       {
-        \Gamma_{1}, x: \tint; [x: 0] \tvdash{0} \bernoulli \eapp p : \tint
+        \cdot; \Gamma_{1}, x: \tint; \dmap_2[x: 0] \tvdash{0} \bernoulli \eapp p : \tint
       }
     }
     { 
-      \Gamma_{1}; [] \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
+     \cdot;  \Gamma_{1}; \dmap_2 \tvdash{0} \lambda x. \bernoulli \eapp p : \tint \to \tint
     }
   }
   {
-    \Gamma_{1}; [] \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\cdots}
+    \cdot; \Gamma_{1}; \dmap_2 \tvdash{0} \lambda x. \bernoulli \eapp p : \tbox{\cdots}
   }
   \and
-  \inferrule
+  \inferrule*[right = let]
   {
-    \inferrule
+    \inferrule*[right = let * 4]
     {
-      \inferrule
+      \inferrule*[right = let]
       {
         \inferrule
         {
-          \inferrule
+          \inferrule[var]
           {
             \empty
           }
@@ -1138,7 +1140,7 @@ Multi-rounds:
         }
         { 
           \Gamma_{3}; [q:1] \tvdash{1} \eop (q): \treal
-        }
+        }~\textbf{$\delta$}
         \and
         \Pi_1  \vartriangleright
       }
@@ -1155,32 +1157,32 @@ Multi-rounds:
   }
 }
 {
-  \Delta; \Gamma_{1}; \dmap_2 \tvdash{k - j} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\tint}
+  \Delta; \Gamma_{1}; \dmap_2 \tvdash{k - j} \elet q = \lambda x. \bernoulli \eapp p \ein \cdots : \tlist{\treal}
 }
 \end{mathpar}
 
 $\Pi_1:$
 \begin{mathpar}
-\inferrule*[right = LET]
+\inferrule*[right = let]
 { 
-  \inferrule
+  \inferrule*[right = app]
   {
-    \inferrule
+    \inferrule*[right = app * 4]
     {
-      \inferrule
+      \inferrule[var]
       {
         \empty
       }
       {
-        \Gamma_4;\dmap_6 \tvdash{0} \mathsf{updtSC} : \cdots
+        \cdot; \Gamma_4;\dmap_6 \tvdash{0} \mathsf{updtSC} : \cdots
       }
       \\
-      \inferrule
+      \inferrule[base]
       {
         \empty
       }
       {
-        \Gamma_4; \dmap_6 \tvdash{0} () : \tunit
+        \cdot; \Gamma_4; \dmap_6 \tvdash{0} () : \tunit
       }
     }
     {
@@ -1191,14 +1193,14 @@ $\Pi_1:$
     \Gamma_4; \dmap_6 \tvdash{0} \mathsf{updtSC} \eapp () \eapp sc \cdots : \tlist{\treal}
   }
   \and
-  \inferrule
+  \inferrule*[right = let]
   {
-    \inferrule
+    \inferrule*[right = let * 4]
     {
       \Pi_2 \vartriangleright
     }
     {
-      \Delta; \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+      \Delta; \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet db' = \cdots \ein \cdots : \tlist{\tint}
     }
   }
   {
@@ -1206,49 +1208,63 @@ $\Pi_1:$
   }
 }
 {
-  \Delta; \Gamma_3, a: \treal; \dmap_5 \tvdash{k - j - 1} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\tint}
+  \Delta; \Gamma_3, a: \treal; \dmap_5 \tvdash{k - j - 1} \elet sc' = \mathsf{updtSC} \cdots \ein \cdots : \tlist{\treal}
 }
 \end{mathpar}
 
 
 $\Pi_2$:
 \begin{mathpar}
-\inferrule
+\inferrule*[right = let]
   {
     \inferrule
     {
-      \inferrule
+      \inferrule[var]
       {
         \empty
       }
       {
-        \Gamma_7 \tvdash{0} D: \tlist{\tint}
+        \cdot; \Gamma_7; \dmap_8 \tvdash{0} db: \tlist{\tint}
       }
       \and
-      \inferrule
+      \inferrule[var]
       {
         \empty
       }
       {
-        \Gamma_7 \tvdash{0} I': \tlist{\tint}
+        \cdot; \Gamma_7; \dmap_8 \tvdash{0} il': \tlist{\tint}
       }
     }
     {
-      \Gamma_7; \dmap_8 \tvdash{0} D \setminus I' : \tlist{\tint}
+      \cdot; \Gamma_7; \dmap_8 \tvdash{0} d \setminus il' : \tlist{\tint}
     }
     \and
-    \inferrule
+    \inferrule*[right = cons]
     {
-      \cdots
+      \inferrule[var]
+      {
+        \empty
+      }
+      {
+        \Delta; \Gamma_8; \dmap_8 
+        \tvdash{0} a : \treal
+      }
+      \inferrule
+      {
+        \cdots
+      }
+      {
+        \Delta; \Gamma_8; \dmap_8 \tvdash{k - j - 1} \mathsf{multiRound} \cdots : \tlist{\treal}
+      }
     }
     {
-      \Delta; \Gamma_8; \dmap_8 \tvdash{k - j - 1} \mathsf{multiRound} \cdots : \tlist{\tint}
+      \Delta; \Gamma_8; \dmap_8 \tvdash{k - j - 1} a::(\mathsf{multiRound} \cdots) : \tlist{\treal}
       \\\\
-      \Gamma_8 = \Gamma_7, D' : \tlist{\tint}
+      \Gamma_8 = \Gamma_7, db' : \tlist{\tint}
     }
   }
   {
-    \Delta; \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet D' = \cdots \ein \cdots : \tlist{\tint}
+    \Delta; \Gamma_7; \dmap_7 \tvdash{k - j - 1} \elet db' = \cdots \ein \cdots : \tlist{\treal}
   }
 \end{mathpar}
 \end{figure}
@@ -1268,7 +1284,7 @@ $\Pi_2$:
       }
       {
         \Delta; \Gamma_8; \dmap_8 
-        \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [ ] : \tint[k] \to \tint[J + 1] \to \cdots
+        \tvdash{0} \mathsf{multiRound} \eapp () \eapp [k] \eapp [j + 1] : \tint[k] \to \tint[j + 1] \to \cdots
       }
     }
     {
@@ -1277,19 +1293,19 @@ $\Pi_2$:
   }
   {
     \Delta; \Gamma_8; \dmap_8 
-    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [] \cdot : \tarr{\cdot}{\cdot}{0}{\dmap}{K - (J + 1)}
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [k] [j + 1] \cdot : \tarr{\cdot}{\cdot}{0}{\dmap}{k - (j + 1)}
   }
   \and
-  \inferrule
+  \inferrule[var]
   {
   \empty
   }
   {
-    \Delta; \Gamma_8; [D':0] \tvdash{0} D' : \tlist{\tint}
+    \Delta; \Gamma_8; [db':0] \tvdash{0} db' : \tlist{\tint}
   }
 }
 {
-  \Delta; \Gamma_7, D' : \tlist{\tint}; \dmap_8 
+  \Delta; \Gamma_7, db' : \tlist{\tint}; \dmap_8 
   \tvdash{k - j - 1} \mathsf{multiRound} \eapp () \cdots : \tlist{\tint}
 }
 \end{mathpar}
@@ -1302,7 +1318,7 @@ $\Pi_3$:
   {
     \inferrule
     {
-          \inferrule
+      \inferrule[var]
       {
         \empty
       }
@@ -1310,7 +1326,7 @@ $\Pi_3$:
         \Delta; \Gamma_8; \dmap_8 \tvdash{0} \mathsf{multiRound} : \cdots
       }
       \and
-      \inferrule
+      \inferrule[base]
       {
         \empty
       }
@@ -1320,33 +1336,33 @@ $\Pi_3$:
     }
     {
       \Delta; \Gamma_8; \dmap_8 
-      \tvdash{0} \mathsf{multiRound} \eapp (): \eilam  \eilam  \tint[K] \to \tarr{\cdots}{\cdots}{0}{\dmap}{k - j}
+      \tvdash{0} \mathsf{multiRound} \eapp (): \eilam  \eilam  \tint[k] \to \tarr{\cdots}{\cdots}{0}{\dmap}{k - j}
     }
     \and
     \inferrule
     {
-      \Delta(K) = S
+      \Delta(k) = S
     }
     {
-      \Delta \tvdash{} K :: S
+      \Delta \tvdash{} k :: S
     }
   }
   {
     \Delta; \Gamma_8; \dmap_8 
-    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [] : \eilam \tint[K] \to \tint[J] \to \tarr{\cdots}{\cdots}{0}{\dmap}{k - j}
+    \tvdash{0} \mathsf{multiRound} \eapp () \eapp [k] : \eilam \tint[k] \to \tint[j] \to \tarr{\cdots}{\cdots}{0}{\dmap}{k - j}
   }
   \and
   \inferrule
   {
-    \Delta(J) = S
+    \Delta(j) = S
   }
   {
-    \Delta \tvdash{} J :: S
+    \Delta \tvdash{} j :: S
   }
 }
 {
   \Delta; \Gamma_8; \dmap_8 
-  \tvdash{0} \mathsf{multiRound} \eapp () \eapp [ ] [ ] : \tint[K] \to \tint[J + 1] \to \cdots \tarr{\cdots}{\cdots}{0}{\dmap}{K - (J + 1)}
+  \tvdash{0} \mathsf{multiRound} \eapp () \eapp [k ] \eapp [j + 1] : \tint[k] \to \tint[j + 1] \to \cdots \tarr{\cdots}{\cdots}{0}{\dmap}{k - (j + 1)}
 }
 
 \end{mathpar}
