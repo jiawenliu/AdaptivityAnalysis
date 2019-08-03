@@ -148,8 +148,13 @@ let rec pp_expression fmt (e : Syntax.expr) =
     | Annotated(e, _, _, _) ->
       (
         match e with
-          | Var {v_name = "contra"} -> pp_expression fmt e2 
-          | _                       -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
+          | Var {v_name = "contra"} -> pp_expression fmt e2
+          | Fix(f, _, _, e3)   -> 
+            if(f.v_name = "_")
+            then fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
+            else 
+              fprintf fmt "%a \nlet %s = %s\n%a" pp_expression(e1) x.v_name f.v_name pp_expression(e2)
+          | _ -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
       )
     | _ -> fprintf fmt " @[<v>@[<hov> let %s =@;<1 1>@[%a@]@] in@ %a@]" x.v_name pp_expression(e1) pp_expression(e2)
   )

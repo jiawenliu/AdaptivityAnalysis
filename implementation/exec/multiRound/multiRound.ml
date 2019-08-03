@@ -15,12 +15,12 @@ let dataset = [1.0;1.0;1.0;1.0]
        (fun (nn ) -> 
          if( (( i ) < ( nn )) ) then 
            if( ( ( contains   ii )   i ) ) then 
-             ( ( ( ( ( ( ( (  let x =
-                               (( ( ( get   sc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
-                               q   i ) ) -. ( p )) )) ))  in
-                               let sc' =  ( ( ( updt   sc )   i )   x )  in
-                               f   () )   sc' )   a )   p )   q )   ii )  
-               (( i ) +. ( 1.000000 )) )   nn ) 
+              let x =
+               (( ( ( get   sc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
+               q   ii ) ) -. ( p )) )) ))  in
+               let sc' =  ( ( ( updt   sc )   i )   x )  in
+               ( ( ( ( ( ( ( ( f   () )   sc' )   a )   p )   q )   ii )  
+                 (( i ) +. ( 1.000000 )) )   nn ) 
            else 
              ( ( ( ( ( ( ( ( f   () )   sc )   a )   p )   q )   ii )  
                (( i ) +. ( 1.000000 )) )   nn ) 
@@ -45,12 +45,12 @@ let updtSC = f
      (fun (i ) -> 
       (fun (cc ) -> 
         if( (( i ) < ( cc )) ) then 
-          ( ( ( ( ( ( (  let x =
-                          (( ( ( get   scc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
-                          qc   i ) ) -. ( p )) )) ))  in
-                          let scc' =  ( ( ( updt   scc )   i )   x )  in
-                          f   () )   scc' )   a )   p )   qc )   (( i ) +. ( 1.000000 )) )  
-          cc ) 
+           let x =
+            (( ( ( get   scc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
+            qc   i ) ) -. ( p )) )) ))  in
+            let scc' =  ( ( ( updt   scc )   i )   x )  in
+            ( ( ( ( ( ( ( f   () )   scc' )   a )   p )   qc )   (( i ) +. ( 1.000000 )) )  
+            cc ) 
         else 
           scc 
        
@@ -123,7 +123,7 @@ let updtI = f
                       ( ( ( ( ( updtI   () )   maxScc )   sc )   0.000000 )  
                       nn )  in
                       let db' = (db_minus  db   ii' ) in
-                       a  ::  ( ( ( ( ( ( ( ( ( multiRound     ()   )   k )  
+                       a  ::  ( ( ( ( ( ( ( (   ( multiRound   () )     k )  
                                           (( j ) +. ( 1.000000 )) )  
                                         sc' )   scc' )   ii' )   nn )  
                                 cc )   db' )  

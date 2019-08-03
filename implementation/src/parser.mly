@@ -164,13 +164,13 @@ expr:
   | NIL                                             { Nil }
   | expr DBCOLON expr                               { Cons($1, $3) }
   | MECH LPAREN expr RPAREN                         { Mech($3) }
+  | LET VAR COLON DTerm EQUAL expr IN expr   
+                                                    { Let({v_name = $2}, $4, $6, $8) }
   | app                                             { $1 }
   | LBRACE expr COLON Type RBRACE  
                                                     { Annotated($2, $4, [], IConst 0) }
   | LBRACE expr COLON Type SEMICOLON DMap SEMICOLON ITerm RBRACE  
                                                     { Annotated($2, $4, $6, $8) }
-  | LET VAR COLON DTerm EQUAL expr IN expr   
-                                                    { Let({v_name = $2}, $4, $6, $8) }
   | uop LPAREN expr RPAREN                          { Uop($1, $3) }                                                  
   | expr bop expr                                   { Bop($2, $1, $3) }
   | LPAREN expr RPAREN                              { $2 }
