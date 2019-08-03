@@ -3,14 +3,7 @@ open Printf
 open HeadFile
 
 
-let n = ref 0.0
-let k = ref 0.0
 
-let argDefs = argDefs @
-  [      
-      "-n", Arg.Float (fun s -> n :=  s ), "specify the argument n, -n real" ; 
-      "-k", Arg.Float (fun s -> k :=  s ), "specify the argument k, -k real" 
-  ]
 
 let write res oc =
     fprintf oc "%f\n" res

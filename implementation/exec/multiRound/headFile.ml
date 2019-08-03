@@ -8,6 +8,8 @@ let rounds = ref 0
 let cols = ref 0.0
 let rows = ref 0.0 
 let cdb = ref false
+let n = ref 10.0
+let k = ref 10.0
 
 let argDefs = [
 (*    "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
@@ -17,6 +19,12 @@ let argDefs = [
       "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name, -i string" ; 
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string" 
 ]
+@
+  [      
+      "-n", Arg.Float (fun s -> n :=  s ), "specify the argument n, -n real" ; 
+      "-k", Arg.Float (fun s -> k :=  s ), "specify the argument k, -k real" 
+  ]
+
 let delta = 0.0000001
 let epsilon = 1.0
 
