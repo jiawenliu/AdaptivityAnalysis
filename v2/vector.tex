@@ -1,0 +1,316 @@
+\[\begin{array}{lcl}
+\max(\bot, \nnatbiA) & = & \nnatbiA \\
+\max(\nnatbiA, \bot) & = & \nnatbiA \\
+\max(\infty, \nnatbiA) & = & \infty \\
+\max(\nnatbiA, \infty) & = & \infty \\
+\\
+%
+\bot + \nnatbiA & = & \bot \\
+\nnatbiA + \bot & = & \bot \\
+\infty + \nnatbiA & = & \infty ~~~~ \mbox{if } \nnatbiA \neq \bot \\
+\nnatbiA + \infty & = & \infty ~~~~ \mbox{if } \nnatbiA \neq \bot \\
+\\
+%
+\bot \leq \nnatbiA \\
+\nnatbiA \leq \infty
+\end{array}
+\]
+
+\[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \efix f(x).\expr
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr)  ~|~  {\eilam \expr ~|~ \expr \eapp [] } \\
+& & & ~|~  {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
+      \expr_1, \expr_2) \\
+& & & ~|~ { ~~~~~~~
+ \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+      \expr_2 } \\
+& & & ~|~  \mathsf{vec}(e_i \to e_i', e) \wq{ e = k} \\
+%
+\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
+& & & {(\eilam \expr , \env) } ~|~  \mathsf{vec}(\valr_i \to \valr_i', \valr) \wq{ \valr = k} \\
+%
+\mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
+\end{array}\]
+
+
+\[\begin{array}{llll}
+\mbox{Trace} & \tr & ::= &  {(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
+{ (\trfix f(x:\type).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+%
+& & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
+~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
+%
+& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~
+       {(\eilam \expr, \env)} \\
+& & & ~|~  \mathsf{vec}(\tr_i, \valr) \wq{ \valr = k} \\
+\end{array}\]
+
+
+
+\begin{figure}
+\begin{mathpar}
+  \wq { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
+  %
+  \and
+  %
+  \inferrule{ }{\env, \econst \bigstep \econst, \trconst}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \etrue \bigstep \etrue, \trtrue}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
+  %
+  \and
+  \wq{ \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+      \bernoulli (\tr)
+    } }
+  \and
+ \inferrule{ \env, \expr_1 \bigstep \econst, \tr_1 \\ \env, \expr_2 \bigstep \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
+      \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
+  \and
+  %
+  \wq{ \inferrule{
+  }{
+    \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
+    (\trfix f(x:\type).\expr, \env)
+  }
+}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
+    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstep \valr_2, \tr_2
+  }{
+    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojl(\expr) \bigstep \valr_1, \trprojl(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojr(\expr) \bigstep \valr_2, \trprojr(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \etrue, \tr \\
+    \env, \expr_1 \bigstep \valr, \tr_1
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \trift(\tr, \tr_1)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \efalse, \tr \\
+    \env, \expr_2 \bigstep \valr, \tr_2
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \triff(\tr, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \valr, \tr \\
+    \eop{}(\valr) = \valr'
+  }{
+    \env, \eop(\expr) \bigstep \valr', \trop(\tr)
+  }
+%
+\and
+%
+  \inferrule{
+}
+{ \env, \enil \bigstep \enil, \trnil }
+%
+\and
+%
+\inferrule{
+\env, \expr_1 \bigstep \valr_1, \tr_1 \\
+\env, \expr_2 \bigstep \valr_2, \tr_2
+}
+{ \env, \econs (\expr_1, \expr_2)  \bigstep \econs (\valr_1, \valr_2),
+  \trcons(\tr_1, \tr_2)
+}
+%
+\and
+%
+\inferrule{
+  \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+  \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
+}
+{\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
+  \tr_1, \tr_2) }
+%
+\\\\
+%
+\boxed{\color{red}
+\inferrule
+{
+  \empty
+}
+{
+  \env, \eilam \expr \bigstep (\eilam \expr, \env), (\eilam \expr , \env)
+}
+}
+%
+\and
+%
+\boxed{\color{red}
+\inferrule{
+  \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
+  \env, \expr' \bigstep \valr, \tr_2
+}
+{\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
+
+}
+\end{mathpar}
+  \caption{Big-step semantics with provenance, vector}
+  \label{fig:big-step-vector}
+\end{figure}
+
+
+\begin{figure}
+  \framebox{$\adap: \mbox{Traces} \to \nat$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \wq { \adap( (x,\env) )} & = & 0 \\
+      %
+      \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
+      \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
+      %
+      \wq {\adap( (\trfix f(x:\type).\expr, \env)  ) } & = & 0 \\
+      %
+      \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
+      %
+      \adap(\trprojl(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trprojr(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trtrue) & = & 0 \\
+      %
+      \adap(\trfalse) & = & 0 \\
+      %
+      \adap(\trift(\tr_b, \tr_t)) & = & \adap(\tr_b) + \adap(\tr_t) \\
+      %
+      \adap(\triff(\tr_b, \tr_f)) & = & \adap(\tr_b) + \adap(\tr_f) \\
+      %
+      \adap(\trconst) & = & 0 \\
+      %
+      \adap(\trop(\tr)) & = &\wq { 1 + \adap(\tr) } \\
+           & &       \wq{  +  \textsf{MAX}_{\valr \in \type} \Big(
+                              \max \big(\adap(\tr_3 (\valr) ),
+                              \ddep{x}(\tr_3(\valr)) \big) \Big) } \\
+      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
+      %
+     \adap(\trnil) & = & 0 \\
+     %
+     \adap(\trcons(\tr_1,\tr_2) ) & = &  \max(\adap(\tr_1),
+                                        \adap(\tr_2)) \\
+     %
+    \adap( \trlet (x, \tr_1,\tr_2) ) & = & \max (\adap(\tr_2),
+                                           \adap(\tr_1)+\ddep{x}(\tr_2)  )
+                                           \\
+     \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
+    %
+    \wq { \adap( (\eilam \expr, \env) ) } & = & 0 \\
+    \wq { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
+     \wq { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
+                                                      \adap(\tr_2) ) \\
+      \end{array}
+  \end{mathpar}
+  %
+  \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \wq { \ddep{x}( ( y, \env )) } & = &
+      \left\lbrace
+      \begin{array}{ll}
+        0 & \mbox{if } x = y \\
+        \bot & \mbox{if } x \neq y
+      \end{array}
+      \right.\\
+      %
+      \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
+      & & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
+      %
+     \wq { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
+      %
+      \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
+      %
+      \ddep{x}(\trprojl(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trprojr(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trtrue) & = & \bot \\
+      %
+      \ddep{x}(\trfalse) & = & \bot \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_t)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t)) \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_f)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_f)) \\
+      %
+      \ddep{x}(\trconst) & = & \bot \\
+      %
+      \ddep{x}(\trop(\tr)) & = & 1 +  \max(\ddep{x}(\tr),  \\
+      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \type} \Big(
+          \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) ) \\  
+ &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
+       %
+      \ddep{x}(\trnil) & = & \bot \\
+      %
+      \ddep{x}(\trcons(\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
+                                            \ddep{x}(\tr_2)) \\
+      %
+      \ddep{x}( \trlet(y, \tr_1, \tr_2) ) & = & \max( \ddep{x}(\tr_2),
+                                                \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )\\
+       \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
+                                                    \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
+    %
+    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
+    \ddep{x}(\uniform (\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
+                                            \ddep{x}(\tr_2)) \\
+  \ddep{x}(\bernoulli (\tr)) & = & \ddep{x}(\tr)
+    \end{array}
+  \end{mathpar}
+  \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
+  \label{fig:adap}
+\end{figure}
