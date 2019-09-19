@@ -27,12 +27,12 @@
 & & & ~|~ { ~~~~~~~
  \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
       \expr_2 } \\
-& & & ~|~  \mathsf{vec}(\expr_i \to \expr_i', \expr) \wq{ \expr = k} ~|~ \expr \{ \expr' \} \\\
+& & & ~|~  \wq{ \mathsf{vec}(\expr_i \to \expr_i'^{\, \, i \in 1\dots n})  ~|~ \expr \{ \expr' \}  } \\\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
 (\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
     ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
-& & & {(\eilam \expr , \env) } ~|~  \mathsf{vec}(\valr_i \to \valr_i', \valr) \wq{ \valr = k} \\
+& & & {(\eilam \expr , \env) } ~|~ \wq{ \mathsf{vec}(\valr_i \to \valr_i'^{\, \, i \in 1\dots n} )  } \\
 %
 \mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
 \end{array}\]
@@ -47,7 +47,7 @@
 %
 & & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~
        {(\eilam \expr, \env)} \\
-& & & ~|~  \mathsf{vec}(\tr_i, \valr) \wq{ \valr = k} \\
+& & & ~|~  \wq { \mathsf{vec}(\tr_i ^{\, \, i \in 1\dots n}) } \\
 \end{array}\]
 
 
@@ -191,18 +191,17 @@
 {\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
 \and
 \wq {\inferrule{
- \env, \expr_i \bigstep \valr_i, \tr_i \\
- \env, \expr_i' \bigstep \valr_i', \tr_i'\\
- \env, \expr \bigstep \valr, \tr
+ \env, \expr_i^{\, \, i \in 1\dots n} \bigstep \valr_i^{\, \, i \in 1\dots n}, \tr_i^{\, \, i \in 1\dots n} \\
+ \env, \expr_i'^{\, \, i \in 1\dots n} \bigstep \valr_i'^{\, \, i \in 1\dots n}, \tr_i'^{\, \, i \in 1\dots n}
 }
-{\env, \mathsf{vec}(\expr_i \to \expr_i', \expr) \bigstep \mathsf{vec}(\valr_i \to \valr_i', \valr), \mathsf{VEC}(\tr_i',\valr) }
+{\env, \mathsf{vec}(\expr_i \to \expr_i'^{\, \, i \in 1\dots n}) \bigstep \mathsf{vec}(\valr_i \to \valr_i'^{\, \, i \in 1\dots n}), \mathsf{VEC}(\tr_i'^{\, \, i \in 1\dots n}) }
 }
 %
 \and
 %
 \wq{
 \inferrule
-{\env, \expr \bigstep \mathsf{vec}(\valr_i \to \valr_i', \valr), \tr \\
+{\env, \expr \bigstep \mathsf{vec}(\valr_i \to \valr_i'^{\, \, i \in 1\dots n}), \tr \\
 \env, \expr' \bigstep \valr', \tr' \\ 
 \valr' = \valr_i 
 }
@@ -257,7 +256,7 @@
      { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
       { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
                                                       \adap(\tr_2) ) \\
-     \wq { \adap( \mathsf{VEC}(\tr_i, \tr)  ) } & = & \max (\adap(\tr_i) ) \\
+     \wq { \adap( \mathsf{VEC}(\tr_i^{\, \, i \in 1\dots n}  )  ) } & = & \max (\adap(\tr_i)^{\, \, i \in 1\dots n} ) \\
      \wq { \adap( \mathsf{GET}(\tr, \tr')  ) } & = & \adap(\tr) 
       \end{array}
   \end{mathpar}
@@ -352,20 +351,20 @@ Two-rounds:
   \hspace{.2cm}  \eif \big (  (j < k)  ,  \\
   \hspace{.8cm}  \elet \eapp  a: 0 = 
                  \eop \eapp  
-                 (\mathsf{vec}(\expr_i \to (\mathsf{get}\eapp \expr_i \eapp j) * (\mathsf{get} \eapp \expr_i \eapp  k) )) ) 
+             \Big(\mathsf{vec}\big(\expr_i \to (\mathsf{get}\eapp \expr_i \eapp j) * (\mathsf{get} \eapp \expr_i \eapp  k)^{\, \, i \in 1\dots 2^k} \big) \Big) 
                   \eapp \ein \\
   \hspace{1.2cm} (a, j) :: (f  \eapp (j+1) \eapp  k) \\
   \hspace{1.2cm} ,\eapp  [] \big) \eapp \ein\\
   \hspace{.2cm}  \efix \eapp \mathsf{twoRound}(k : \tint). 
                  \\
   \hspace{.8cm}  \elet \eapp  l: 1 = g \eapp  0 \eapp  k \eapp bd \eapp  \ein \\
-  \hspace{.8cm}  \elet \eapp  q: 1 = \mathsf{vec}\big(\expr_i \to
+  \hspace{.8cm}  \elet \eapp  q: 1 = \mathsf{vec}\Big(\expr_i \to
                     \mathsf{sign} \eapp \\ 
   \hspace{.8cm}  (\mathsf{foldl} \eapp  (\lambda acc: \treal. 
                  \lambda ai: \treal \cdot \tint. 
                  \big(acc\eapp + (\mathsf{get} \eapp \expr_i \eapp  (\eprojr \eapp ai)) 
                  \cdot \mathsf{log}(\frac{1+ (\eprojl \eapp ai) }{1- (\eprojl \eapp ai)}) \big)
-                 \eapp  0.0 \eapp  l )\big) \eapp  \ein \\
+                 \eapp  0.0 \eapp  l )^{\, \, i \in 1\dots 2^k} \Big) \eapp  \ein \\
   \hspace{.8cm}  \eop ( q )
 \end{array}
 \]
@@ -468,9 +467,9 @@ Two-rounds:
  \hspace{.2cm}  \eif   \big (   (j < k)  ,  \\
  \hspace{.2cm}  \elet \eapp p: k - j = \uniform \eapp 0 \eapp 1 \ein \\
  \hspace{0.4cm} \elet \eapp q: k - j = 
-   \mathsf{vec}(\expr_i \to \bernoulli \eapp p,n) \ein \\
- \hspace{0.4cm} \elet \eapp qc: k - j = \mathsf{vec}(\expr_i \to \bernoulli \eapp p,n) \ein \\
- \hspace{0.4cm} \elet \eapp qj : k - j = \mathsf{vec}( e_i \to if( (\mathsf{in}\eapp d \eapp e_i) \, , \, q\{e_i\} \,, \mathsf{else} 0, n) )\\
+   \mathsf{vec}(\expr_i \to \bernoulli \eapp p^{\, \, i \in 1\dots n}) \ein \\
+ \hspace{0.4cm} \elet \eapp qc: k - j = \mathsf{vec}(\expr_i \to \bernoulli \eapp p^{\, \, i \in 1\dots n}) \ein \\
+ \hspace{0.4cm} \elet \eapp qj : k - j = \mathsf{vec}( e_i \to if( (\mathsf{in}\eapp d \eapp e_i) \, , \, q\{e_i\} \,, \mathsf{else}\eapp 0)^{\, \, i \in 1\dots n} )\\
  \hspace{0.4cm} \elet \eapp a: k - j - 1 = \eop (q)  \ein \\
  \hspace{0.8cm} \elet \eapp sc': k - j - 1 =  \mathsf{updtSC} \eapp () \eapp sc  \eapp a \eapp p
                 \eapp qj \eapp il \eapp  \eapp 0 \eapp  n \eapp  \ein \\
