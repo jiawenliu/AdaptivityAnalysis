@@ -27,7 +27,7 @@
 & & & ~|~ { ~~~~~~~
  \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
       \expr_2 } \\
-& & & ~|~  \mathsf{vec}(e_i \to e_i', e) \wq{ e = k} \\
+& & & ~|~  \mathsf{vec}(\expr_i \to \expr_i', \expr) \wq{ \expr = k} ~|~ \expr \{ \expr' \} \\\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
 (\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
@@ -54,7 +54,7 @@
 
 \begin{figure}
 \begin{mathpar}
-  \wq { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
+   { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
   %
   \and
   %
@@ -69,7 +69,7 @@
   \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
   %
   \and
-  \wq{ \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+  { \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
       \bernoulli (\tr)
     } }
   \and
@@ -77,7 +77,7 @@
       \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
   \and
   %
-  \wq{ \inferrule{
+  { \inferrule{
   }{
     \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
     (\trfix f(x:\type).\expr, \env)
@@ -88,7 +88,7 @@
   %
   \inferrule{
     \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
+    { \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
     \env, \expr_2 \bigstep \valr_2, \tr_2 \\
     \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
   }{
@@ -174,7 +174,6 @@
 %
 \\\\
 %
-\boxed{\color{red}
 \inferrule
 {
   \empty
@@ -182,17 +181,32 @@
 {
   \env, \eilam \expr \bigstep (\eilam \expr, \env), (\eilam \expr , \env)
 }
-}
 %
 \and
 %
-\boxed{\color{red}
 \inferrule{
   \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
   \env, \expr' \bigstep \valr, \tr_2
 }
 {\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
-
+\and
+\wq {\inferrule{
+ \env, \expr_i \bigstep \valr_i, \tr_i \\
+ \env, \expr_i' \bigstep \valr_i', \tr_i'\\
+ \env, \expr \bigstep \valr, \tr
+}
+{\env, \mathsf{vec}(\expr_i \to \expr_i', \expr) \bigstep \mathsf{vec}(\valr_i \to \valr_i', \valr), \mathsf{VEC}(\tr_i',\valr) }
+}
+%
+\and
+%
+\wq{
+\inferrule
+{\env, \expr \bigstep \mathsf{vec}(\valr_i \to \valr_i', \valr), \tr \\
+\env, \expr' \bigstep \valr', \tr' \\ 
+\valr' = \valr_i 
+}
+{\env, \expr \{ \expr' \} \bigstep \valr_i',  \mathsf{GET}(\tr, \tr')  }
 }
 \end{mathpar}
   \caption{Big-step semantics with provenance, vector}
@@ -228,14 +242,6 @@
       \adap(\trconst) & = & 0 \\
       %
       \adap(\trop(\tr)) & = &\wq { 1 + \adap(\tr) } \\
-           & &       \wq{  +  \textsf{MAX}_{\valr \in \type} \Big(
-                              \max \big(\adap(\tr_3 (\valr) ),
-                              \ddep{x}(\tr_3(\valr)) \big) \Big) } \\
-      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
-                       \mathsf{extract}(\tr) } \\
- & & \wq{ \conj  \env[f \mapsto
-                       \valr_1, x \mapsto \valr], \expr \bigstep
-                       \valr', \tr_3(\valr) } \\ 
       %
      \adap(\trnil) & = & 0 \\
      %
@@ -247,17 +253,19 @@
                                            \\
      \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
     %
-    \wq { \adap( (\eilam \expr, \env) ) } & = & 0 \\
-    \wq { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
-     \wq { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
+     { \adap( (\eilam \expr, \env) ) } & = & 0 \\
+     { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
+      { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
                                                       \adap(\tr_2) ) \\
+     \wq { \adap( \mathsf{VEC}(\tr_i, \tr)  ) } & = & \max (\adap(\tr_i) ) \\
+     \wq { \adap( \mathsf{GET}(\tr, \tr')  ) } & = & \adap(\tr) 
       \end{array}
   \end{mathpar}
   %
   \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
   \begin{mathpar}
     \begin{array}{lcl}
-      \wq { \ddep{x}( ( y, \env )) } & = &
+      { \ddep{x}( ( y, \env )) } & = &
       \left\lbrace
       \begin{array}{ll}
         0 & \mbox{if } x = y \\
@@ -268,7 +276,7 @@
       \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
       & & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
       %
-     \wq { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
+      { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
       %
       \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
       %
@@ -286,14 +294,7 @@
       %
       \ddep{x}(\trconst) & = & \bot \\
       %
-      \ddep{x}(\trop(\tr)) & = & 1 +  \max(\ddep{x}(\tr),  \\
-      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \type} \Big(
-          \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) ) \\  
- &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
-                       \mathsf{extract}(\tr) } \\
- & & \wq{ \conj  \env[f \mapsto
-                       \valr_1, x \mapsto \valr], \expr \bigstep
-                       \valr', \tr_3(\valr) } \\ 
+      \ddep{x}(\trop(\tr)) & = & 1 +  \ddep{x}(\tr)  \\  
        %
       \ddep{x}(\trnil) & = & \bot \\
       %
@@ -305,7 +306,7 @@
        \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
                                                     \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
     %
-    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
+     { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
     \ddep{x}(\uniform (\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
                                             \ddep{x}(\tr_2)) \\
   \ddep{x}(\bernoulli (\tr)) & = & \ddep{x}(\tr)
@@ -314,3 +315,197 @@
   \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
   \label{fig:adap}
 \end{figure}
+
+
+%%%%%%EXAMPLES---TWO ROUNDS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\begin{algorithm}
+\caption{A two-round analyst strategy for random data (Algorithm 4 in ...)}
+\label{alg:BitGOF}
+\begin{algorithmic}
+\REQUIRE Mechanism $\mathcal{M}$ with a hidden state $X\in \{-1,+1\}^{n\times (k+1)}$.
+\STATE  {\bf for}\ $j\in [k]$\ {\bf do}.  
+\STATE \qquad {\bf define} $q_j(x)=x(j)\cdot x(k)$ where $x\in \{-1,+1\}^{k+1}$.
+\STATE \qquad {\bf let} $a_j=\mathcal{M}(q_j)$ 
+\STATE \qquad \COMMENT{In the line above, $\mathcal{M}$ computes approx. the exp. value  of $q_j$ over $X$. So, $a_j\in [-1,+1]$.}
+\STATE {\bf define} $q_{k+1}(x)=\mathrm{sign}\big (\sum_{i\in [k]} x(i)\times\ln\frac{1+a_i}{1-a_i} \big )$ where $x\in \{-1,+1\}^{k+1}$.
+\STATE\COMMENT{In the line above,  $\mathrm{sign}(y)=\left \{ \begin{array}{lr} +1 & \mathrm{if}\ y\geq 0\\ -1 &\mathrm{otherwise} \end{array} \right . $.}
+\STATE {\bf let} $a_{k+1}=\mathcal{M}(q_{k+1})$
+\STATE\COMMENT{In the line above,  $\mathcal{M}$ computes approx. the exp. value  of $q_{k+1}$ over $X$. So, $a_{k+1}\in [-1,+1]$.}
+\RETURN $a_{k+1}$.
+\ENSURE $a_{k+1}\in [-1,+1]$
+\end{algorithmic}
+\end{algorithm}
+
+
+\begin{figure}
+\small
+Two-rounds:
+
+
+
+\[
+\begin{array}{l}
+\boxed{  \elet e_i = \mathsf{gererated\_ by\_hidden\_dataset} } \ein \\
+  \elet \eapp  g: \bot = 
+  \efix \eapp f(j: \tint). \lambda k: \tint.\\
+  \hspace{.2cm}  \eif \big (  (j < k)  ,  \\
+  \hspace{.8cm}  \elet \eapp  a: 0 = 
+                 \eop \eapp  
+                 (\mathsf{vec}(\expr_i \to (\mathsf{get}\eapp \expr_i \eapp j) * (\mathsf{get} \eapp \expr_i \eapp  k) )) ) 
+                  \eapp \ein \\
+  \hspace{1.2cm} (a, j) :: (f  \eapp (j+1) \eapp  k) \\
+  \hspace{1.2cm} ,\eapp  [] \big) \eapp \ein\\
+  \hspace{.2cm}  \efix \eapp \mathsf{twoRound}(k : \tint). 
+                 \\
+  \hspace{.8cm}  \elet \eapp  l: 1 = g \eapp  0 \eapp  k \eapp bd \eapp  \ein \\
+  \hspace{.8cm}  \elet \eapp  q: 1 = \mathsf{vec}\big(\expr_i \to
+                    \mathsf{sign} \eapp \\ 
+  \hspace{.8cm}  (\mathsf{foldl} \eapp  (\lambda acc: \treal. 
+                 \lambda ai: \treal \cdot \tint. 
+                 \big(acc\eapp + (\mathsf{get} \eapp \expr_i \eapp  (\eprojr \eapp ai)) 
+                 \cdot \mathsf{log}(\frac{1+ (\eprojl \eapp ai) }{1- (\eprojl \eapp ai)}) \big)
+                 \eapp  0.0 \eapp  l )\big) \eapp  \ein \\
+  \hspace{.8cm}  \eop ( q )
+\end{array}
+\]
+\end{figure}
+
+%%%%%%EXAMPLES--- MULTI ROUNDS%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\clearpage
+\begin{algorithm}
+\footnotesize
+\caption{A multi-round analyst strategy for random data (Algorithm 5 in ...)}
+\label{alg:multiRound}
+\begin{algorithmic}
+\REQUIRE Mechanism $\mathcal{M}$ with a hidden state $X_0 \in [N]^{n}$ sampled u.a.r., control set size $c$
+\STATE Define control dataset $C = \{0,1, \cdots, c - 1\}$
+\STATE Initialize $Nscore(i) = 0$ for $i \in [N]$, $I = \emptyset$ and $Cscore(C(i)) = 0$ for $i \in [c]$
+\STATE  {\bf for}\ $j\in [k]$\ {\bf do} 
+\STATE \qquad {\bf let} $p=\uniform(0,1)$ 
+\STATE \qquad {\bf define} $q (x) = \bernoulli ( p )$ .
+\STATE \qquad {\bf define} $qc (x) = \bernoulli ( p )$ .
+\STATE \qquad {\bf define} $qj(x) = \mathsf{restrict}(q, X_j)$
+\STATE \qquad {\bf let} $a = \mathcal{M}(qj)$ 
+\STATE \qquad {\bf for}\ $i \in [N]$\ {\bf do}
+\STATE \qquad \qquad $Nscore(i) = Nscore(i) + (a - p)*(q (i) - p)$ if $i \notin I$
+\STATE \qquad {\bf for}\ $i \in [c]$\ {\bf do}
+\STATE \qquad \qquad $Cscore(C(i)) = Cscore(C(i)) + (a - p)*(qc (i) - p)$
+\STATE \qquad {\bf let} $I = \{i | i\in [N] \land Nscore(i) > \max(Cscore)\}$
+\STATE \qquad {\bf let} $X_j = X_{j - 1} \setminus I$ 
+\RETURN $X_j$.
+% \ENSURE 
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{figure}
+\small
+\[
+\begin{array}{l}
+\elet \mathsf{updtSC} =\\
+                 \efix \eapp  \mathsf{f}(z: \tunit). \lambda sc: \tlist{\treal}. 
+                 \lambda a: \treal. \lambda p: \treal. \lambda q.\\
+                 \lambda I: \tlist{\tint}. \lambda i: \tint. \lambda n: \tint. \\
+ \hspace{.2cm}   \eif \Big ( (i < n)  ,  \\
+ \hspace{0.4cm}  \eif \big( ( \mathsf{in} \eapp i \eapp I  ) ,       \\
+ \hspace{0.8cm}  \elet \eapp x: 0 =( \mathsf{get} \eapp sc \eapp i) 
+                 + (a-p)*(q \{ i\} - p)  \ein \\
+ \hspace{0.8cm}  \elet \eapp sc': 0 =  \mathsf{updt} \eapp sc \eapp i
+                 \eapp x \ein \\
+ \hspace{1.2cm}  \mathsf{f}  \eapp () \eapp sc' \eapp a \eapp p
+                 \eapp q \eapp I \eapp  \eapp (i+1) \eapp n  \\ 
+ \hspace{0.4cm}  , \mathsf{f}  \eapp () \eapp sc \eapp a \eapp p
+                 \eapp q \eapp I \eapp  \eapp (i+1) \eapp n \big )  \\ 
+ \hspace{0.2cm}  , sc  \Big ) \eapp \ein
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+\elet \mathsf{updtSCC} = \\
+                \efix \eapp  \mathsf{f}(z: \tunit). \lambda scc: \tlist{\treal}. \lambda a: \treal. 
+                \lambda p: \treal. \lambda qc\\ 
+                \lambda i: \tint. \lambda cr: \tint. \\
+ \hspace{.2cm}  \eif \Big ( (i < cr) ,  \\
+ \hspace{0.8cm} \elet \eapp x: 0 =( \mathsf{nth} \eapp scc \eapp i) 
+                + (a-p)*(qc \{ i\} - p)  \ein \\
+ \hspace{0.8cm} \elet \eapp scc': 0 =  \mathsf{updt} \eapp scc \eapp i
+                \eapp x \ein \\
+ \hspace{1.2cm} \mathsf{f}  \eapp () \eapp scc' \eapp a \eapp p \eapp qc
+                \eapp (i+1) \eapp  cr  \\ 
+ \hspace{0.2cm} , scc  \Big ) \eapp \ein
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+\elet \mathsf{updtI} = \\
+                 \efix \eapp  \mathsf{f}(z : \tunit). \lambda maxScc: \treal. 
+                 \lambda sc: \tlist{\treal}. \lambda i: \tint. \lambda n: \tint. \\
+ \hspace{.2cm}   \eif \Big (   (i < n)  ,  \\
+ \hspace{0.4cm}  \eif \big( ( ( \mathsf{nth} \eapp scc \eapp i)  >  maxScc  ) ,       \\
+ \hspace{0.8cm}  i :: ( \mathsf{f}  \eapp () \eapp maxScc \eapp sc
+                 \eapp (i+1) \eapp n  )\\
+ \hspace{0.8cm}  \mathsf{f}  \eapp () \eapp maxScc \eapp sc
+                 \eapp (i+1) \eapp n  \big )  \\
+ \hspace{0.2cm}  , [] \Big ) \eapp \ein
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+ \efix \eapp  \mathsf{multiRound}(z : \tunit). \Lambda k. \Lambda j. 
+        \lambda k: \tint[k]. \lambda j: \tint[j]. \lambda sc: \tlist{\treal}.\\
+        \lambda scc: \tlist{\treal}. \lambda il: \tlist{\tint}. \lambda n: \tint.
+        \lambda cr: \tint. \lambda d: \tlist{\tint}.\\
+ \hspace{.2cm}  \eif   \big (   (j < k)  ,  \\
+ \hspace{.2cm}  \elet \eapp p: k - j = \uniform \eapp 0 \eapp 1 \ein \\
+ \hspace{0.4cm} \elet \eapp q: k - j = 
+   \mathsf{vec}(\expr_i \to \bernoulli \eapp p,n) \ein \\
+ \hspace{0.4cm} \elet \eapp qc: k - j = \mathsf{vec}(\expr_i \to \bernoulli \eapp p,n) \ein \\
+ \hspace{0.4cm} \elet \eapp qj : k - j = \mathsf{vec}( e_i \to if( (\mathsf{in}\eapp d \eapp e_i) \, , \, q\{e_i\} \,, \mathsf{else} 0, n) )\\
+ \hspace{0.4cm} \elet \eapp a: k - j - 1 = \eop (q)  \ein \\
+ \hspace{0.8cm} \elet \eapp sc': k - j - 1 =  \mathsf{updtSC} \eapp () \eapp sc  \eapp a \eapp p
+                \eapp qj \eapp il \eapp  \eapp 0 \eapp  n \eapp  \ein \\
+ \hspace{0.8cm} \elet \eapp scc': k - j - 1 =  \mathsf{updtSCC} \eapp () \eapp scc \eapp a \eapp p
+                \eapp qc \eapp  \eapp 0 \eapp  cr \ein \\
+ \hspace{0.8cm} \elet \eapp maxScc: k - j - 1 =  \mathsf{foldl} \eapp 
+                (\lambda acc : \treal. \lambda a: \treal. 
+                \eif ( acc < a, a, acc)) \eapp 0 \eapp scc' \ein \\
+ \hspace{0.8cm} \elet \eapp il': k - j - 1 =  \mathsf{updtI}  \eapp () \eapp maxScc \eapp sc
+                \eapp 0 \eapp n  \ein \\
+ \hspace{0.8cm} \elet \eapp d': k - j - 1 =  d \setminus il' \ein \\
+ \hspace{1.2cm} a :: (\mathsf{multiRound} \eapp () \eapp [k] \eapp [j + 1]  
+                 \eapp k \eapp (j+1) \eapp sc' \eapp scc' \eapp il'
+                 \eapp n \eapp cr \eapp d')\\ 
+ \hspace{0.2cm} , []  \big)
+\end{array}
+\]
+
+\end{figure}
+
+
+% \begin{figure}
+% \[
+% \begin{array}{l}
+% q=\mathsf{vec}( 0 -> p_0,\\
+%              1 -> p_1,\\
+%              ...\\
+%              N -> p_N\\
+%              )\\
+% qj = restrict q d\\
+% \mathsf{vec}( e_0 -> if e_0 in d then q(e_0) else 0,
+%              1 -> if e_0 in d then q(e_1) else 0,
+%              ...
+%              N -> if e_0 in d then q(e_N) else 0
+%              )
+% \end{array}
+% \]
+% \end{figure}
