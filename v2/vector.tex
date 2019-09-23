@@ -220,7 +220,7 @@
       \valr' = \valr_i 
     }
     {
-      \env, \expr \{ \expr' \} \bigstep \valr_i',  \ddep(\tr, \tr')  
+      \env, \expr \{ \expr' \} \bigstep \valr_i',  \tr  
     }
   }
 \end{mathpar}
@@ -273,8 +273,7 @@
       { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
                                                       \adap(\tr_2) ) \\
      \wq { \adap( \evec 
-     ({\tr_i}^{i \in 1\dots n}  )  ) } & = & \max (\adap{(\tr_i)}^{i \in 1\dots n} ) \\
-     \wq { \adap( \ddep(\tr, \tr')  ) } & = & \adap(\tr) 
+     ({\tr_i}^{i \in 1\dots n}  )  ) } & = & \max (\adap{(\tr_i)}^{i \in 1\dots n} ) 
       \end{array}
   \end{mathpar}
   %
@@ -516,6 +515,272 @@ Two-rounds:
 \]
 
 \end{figure}
+
+\clearpage
+\[
+\begin{array}{llll}
+\mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+                                 - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+  \mbox{Sort} & S & ::= & \nat \\
+  \mbox{Type} & \type & ::= & \tbase ~|~ \tbool ~|~ \type_1 \times
+  \type_2 ~|~ \tarr{\type_1}{\type_2}{\nnatbiA}{}{\nnatA} ~|~
+                              \tlist{\type} ~|~ \tbox{\type} ~|~ \\
+    & & & {   \treal ~|~ \tint ~|~   \tint[I]  ~|~
+          \tforall{}{\nnatA}{i} \type  } ~|~ \mathsf{VC}(\type_i
+          \to {\type_i'}^{ \, i \in 1,2,\dots n} ) 
+\end{array}
+\]
+
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{
+      \Gamma(x) = \type \\
+    }{
+      \Delta; \Gamma  \tvdash{\nnatA} x: \type
+    }~\textbf{var}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma  \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{}{\nnatA}) \\
+      \Delta; \Gamma  \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
+      \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+    }{
+      \Delta; \Gamma;  \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{ }{\nnatA}), x: \type_1    
+      \tvdash{\nnatA}
+      \expr: \type_2
+    }{
+      \Delta; \Gamma \tvdash{\nnatA'} \efix f(x).\expr:
+      \tarr{\type_1}{( { \type_2} ) }{\nnatbiA}{}{\nnatA}
+    }~\textbf{fix}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma \tvdash{\nnatA_1} \expr_1: \type_1 \\
+      \Delta; \Gamma \tvdash{\nnatA_2} \expr_2: \type_2 \\\\
+      \nnatA' = \max(\nnatA_1,\nnatA_2)
+    }{
+      \Delta; \Gamma \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
+    }~\textbf{pair}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma \tvdash{\nnatA} \expr: \type_1 \times \type_2
+    }{
+      \Delta; \Gamma \tvdash{\nnatA} \eprojl(\expr): \type_1
+    }~\textbf{fst}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma \tvdash{\nnatA} \expr: \type_1 \times \type_2
+    }{
+      \Delta; \Gamma \tvdash{\nnatA} \eprojr(\expr): \type_2
+    }~\textbf{snd}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Delta; \Gamma \tvdash{\nnatA} \etrue: \tbool
+    }~\textbf{true}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta; \Gamma \tvdash{\nnatA} \efalse: \tbool
+    }~\textbf{false}
+    %
+    \and
+      \inferrule{
+        \Delta; \Gamma \tvdash{\nnatA'} \expr: \type'
+        \\
+        \nnatA' < \nnatA
+        \\
+        \Delta \models \sub{\type' }{ \type  } 
+    }{
+       \Delta; \Gamma \tvdash{\nnatA} \expr: \type
+    }~\textbf{subtype}
+    %
+    \and
+     \inferrule{
+      \Delta; \Gamma  \tvdash{\nnatA} \expr : \treal
+    }{
+       \Delta; \Gamma \tvdash{\nnatA} \bernoulli \eapp \expr: \treal
+    }~\textbf{bernoulli}
+    %
+     \and
+     \inferrule{
+      \Delta; \Gamma  \tvdash{\nnatA_1} \expr_1 : \treal
+      \\
+      \Delta ; \Gamma  \tvdash{\nnatA_2} \expr_2 : \treal
+      \\
+      \nnatA = \max(\nnatA_1, \nnatA_2)
+    }{
+       \Delta; \Gamma;  \tvdash{\nnatA'} \uniform \eapp \expr_1 \eapp \expr_2: \treal
+    }~\textbf{uniform}
+    
+  \end{mathpar}
+  \caption{Typing rules, part 1}
+  \label{fig:type-rules}
+\end{figure}
+
+
+\begin{figure}
+\begin{mathpar}
+    %
+    \inferrule{
+       \Delta;\Gamma \tvdash{\nnatA_1} \expr_1: \tbool \\
+       \Delta;\Gamma \tvdash{\nnatA} \expr_2: \type \\
+       \Delta;\Gamma \tvdash{\nnatA} \expr_3: \type \\\\
+      \nnatA' = \nnatA_1 + \nnatA 
+    }{
+       \Delta;\Gamma \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
+    }~\textbf{if}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta;\Gamma \tvdash{\nnatA} \econst: \tbase
+    }~\textbf{const}
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta;\Gamma \tvdash{\nnatA} n: \tint[n]
+    }~\textbf{intI} 
+    \and
+    %
+    \inferrule{
+    }{
+       \Delta;\Gamma \tvdash{\nnatA} n: \tint
+    }~\textbf{int} 
+   \and
+    %
+    \inferrule{
+      \Delta \wf{\type} \\
+    }{
+      \Delta; \Gamma \tvdash{\nnatA} \enil: \tlist{\type}
+    }~\textbf{nil}
+    % 
+ 	\and
+    %
+    \inferrule
+    {
+      \Delta; \Gamma \tvdash{\nnatA} \expr:  \mathsf{VC}(\type_i \to
+      {\type_i'}^{\, i \in 1,2\dots n} ) \\
+      \nnatA' = 1 + \nnatA 
+    }
+    {
+       \Delta; \Gamma \tvdash{\nnatA'} \eop(\expr): \treal
+    }~\textbf{$\delta$}
+%
+  % \and
+% %
+%      {
+%      \inferrule
+%      {
+%         \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type 
+%            \\
+%         \forall x \in \dom(\Gamma), \sub{\Gamma(x)}{  \tbox{\Gamma(x)}
+%          }
+%            \\
+%         \delta \not\in \expr
+%         \\
+%         \dom(\Gamma') = \dom(\dmap')
+%     }
+%     {
+%         \Delta; \Gamma, \Gamma'; \dmap, \boxed{\dmap'} \tvdash{\nnatA} \expr: \tbox{\type}
+%     } ~\textbf{box}
+%     }
+    %
+    \and
+    %
+   \inferrule{
+   \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type \\
+   \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \tlist{\type}\\
+   \nnatA' = \max ( \nnatA_1, \nnatA_2 )
+   }
+   { 
+   \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
+     \tlist{\type}  } ~\textbf{cons}
+   %
+   \and
+   %
+   \inferrule{
+     \Delta; \Gamma;  \tvdash{\nnatA_1} \expr_1 : \type_1 \\
+     \Delta; \Gamma, x:\type_1  \tvdash{\nnatA_2} \expr_2 :
+     \type \\
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+   }
+   {  \Delta; \Gamma \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2 : \type}~\textbf{let}
+   %
+   \and
+   %
+  \inferrule{
+      i,\Delta; \Gamma  \tvdash{\nnatA} \expr: \type
+      \\
+      i \not\in  \fiv{\Gamma}
+    }{
+     \Delta;  \Gamma \tvdash{\nnatA'}    \eilam \expr    :  \tforall{}{\nnatA}{i} \type 
+    }~\textbf{ilam}
+    %
+    \and
+    %
+  \inferrule{
+        \Delta; \Gamma  \tvdash{\nnatA} \expr: \tforall{}{\nnatA_1}{i} \type 
+      \and
+       \Delta \tvdash{}  I ::  S
+       \\
+       \nnatA' = \nnatA_1[I/i] + \nnatA
+    }{
+     \Delta;  \Gamma \tvdash{\nnatA'}    \expr \eapp []   :
+     \type[I/i]
+    }
+	 ~\textbf{iapp}         
+%
+\and
+%
+ \inferrule{
+        \Delta; \Gamma  \tvdash{\nnatA_i} \expr_i: \type_i 
+       \\
+ \Delta; \Gamma  \tvdash{\nnatA_i'} \expr_i': \type_i' 
+       \\
+       \nnatA' =\max({\nnatA_i'}^{\, 1,2\dots n})
+    }{
+     \Delta;  \Gamma \tvdash{\nnatA'}   \evec(\expr_i \to
+     {\expr_i'}^{\, i \in 1,2\dots n})  : \mathsf{VC}(\type_i \to
+     {\type_i'}^{\, i \in 1,2\dots n} )
+    }
+	 ~\textbf{vector}         
+
+
+\end{mathpar}
+
+%    \framebox{
+%   \begin{mathpar}
+%     \mbox{\textbf{where: }} \\
+% %    \dmapb \defeq \lambda x.\eapp  \bot \\
+%     \nnatbiA + \dmap \defeq \dmap + \nnatbiA \defeq \lambda x.\eapp  (\nnatbiA + \dmap(x)) \\
+%     \dmap_1 + \dmap_2 \defeq \lambda x.\eapp  (\dmap_1(x) + \dmap_2(x)) \\
+%     \max(\dmap_1, \dmap_2) \defeq \lambda x.\eapp  \max(\dmap_1(x), \dmap_2(x))
+%   \end{mathpar}}
+
+  \caption{Typing rules, part 2}
+  \label{fig:type-rules2}
+\end{figure}
+
 
 
 % \begin{figure}
