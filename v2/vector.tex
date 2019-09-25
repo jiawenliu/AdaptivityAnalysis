@@ -27,13 +27,13 @@
 & & & ~|~ { ~~~~~~~
  \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
       \expr_2 } \\
-& & & ~|~  \wq{ \evec({\expr_i \to \expr_i'}^{ i \in 1\dots n})  ~|~ \expr \{ \expr' \}  } \\\
+& & & ~|~  \wq{ \evec({\attr_i \to \expr_i'}^{ i \in 1\dots n})    } \\\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
 (\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
     ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
 & & & {(\eilam \expr , \env) } ~|~ \wq{ \evec 
-({\valr_i \to \valr_i'}^{ i \in 1\dots n} )  } \\
+({\attr_i \to \valr_i'}^{ i \in 1\dots n} )  } \\
 %
 \mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
 \end{array}\]
@@ -196,33 +196,16 @@
 {
   \inferrule
   {
-     \env, {\expr_i}^{i \in 1\dots n} 
-     \bigstep 
-     {\valr_i}^{i \in 1\dots n}, {\tr_i}^{i \in 1\dots n} \\
      \env, {\expr_i'}^{i \in 1\dots n} \bigstep {\valr_i'}^{i \in 1\dots n}, {\tr_i'}^{ i \in 1\dots n}
   }
   {
       \env, \evec 
-      (\expr_i \to {\expr_i'}^{i \in 1\dots n}) \bigstep \evec 
-      (\valr_i \to {\valr_i'}^{i \in 1\dots n}), \evec 
+      (\attr_i \to {\expr_i'}^{i \in 1\dots n}) \bigstep \evec 
+      (\attr_i \to {\valr_i'}^{i \in 1\dots n}), \evec 
       ({\tr_i'}^{i \in 1\dots n}) 
   }
 }
-%
-\and
-%
-\wq{
-  \inferrule
-    {
-      \env, \expr \bigstep \evec 
-      (\valr_i \to {\valr_i'}^{i \in 1\dots n}), \tr \\
-      \env, \expr' \bigstep \valr', \tr' \\ 
-      \valr' = \valr_i 
-    }
-    {
-      \env, \expr \{ \expr' \} \bigstep \valr_i',  \tr  
-    }
-  }
+
 \end{mathpar}
   \caption{Big-step semantics with provenance, vector}
   \label{fig:big-step-vector}
@@ -363,14 +346,13 @@ Two-rounds:
 
 \[
 \begin{array}{l}
-\boxed{  \elet e_i = \mathsf{gererated\_ by\_hidden\_dataset} } \ein \\
   \elet \eapp  g: \bot = 
   \efix \eapp f(j: \tint). \lambda k: \tint.\\
   \hspace{.2cm}  \eif \big (  (j < k)  ,  \\
   \hspace{.8cm}  \elet \eapp  a: 0 = 
                  \eop \eapp  
              \Big(\evec 
-             \big({\expr_i \to (\eget \eapp \expr_i \eapp j) * (\eget \eapp \expr_i \eapp  k)}^{i \in 1\dots 2^k} 
+             \big({\attr_i \to (\eget \eapp \attr_i \eapp j) * (\eget \eapp \attr_i \eapp  k)}^{i \in 1\dots 2^k} 
              \big) 
              \Big) 
                   \eapp \ein \\
@@ -380,11 +362,11 @@ Two-rounds:
                  \\
   \hspace{.8cm}  \elet \eapp  l: 1 = g \eapp  0 \eapp  k  \eapp  \ein \\
   \hspace{.8cm}  \elet \eapp  q: 1 = \evec 
-  \Big(\expr_i \to
+  \Big(\attr_i \to
                     \mathsf{sign} \eapp \\ 
   \hspace{.8cm}  (\mathsf{foldl} \eapp  (\lambda acc: \treal. 
                  \lambda ai: \treal \cdot \tint. 
-                 \big(acc\eapp + (\ddep \eapp \expr_i \eapp  (\eprojr \eapp ai)) 
+                 \big(acc\eapp + (\eget \eapp \attr_i \eapp  (\eprojr \eapp ai)) 
                  \cdot \mathsf{log}(\frac{1+ (\eprojl \eapp ai) }{1- (\eprojl \eapp ai)}) 
                  \big)
                  \eapp  0.0 \eapp  l )^{i \in 1\dots 2^k} \Big) \eapp  \ein \\
@@ -491,11 +473,11 @@ Two-rounds:
  \hspace{.2cm}  \elet \eapp p: k - j = \uniform \eapp 0 \eapp 1 \ein \\
  \hspace{0.4cm} \elet \eapp q: k - j = 
    \evec 
-   (\expr_i \to \bernoulli \eapp p^{i \in 1\dots n}) \ein \\
+   (\attr_i \to \bernoulli \eapp p^{i \in 1\dots n}) \ein \\
  \hspace{0.4cm} \elet \eapp qc: k - j = \evec 
- (\expr_i \to \bernoulli \eapp p^{i \in 1\dots n}) \ein \\
+ (\attr_i \to \bernoulli \eapp p^{i \in 1\dots n}) \ein \\
  \hspace{0.4cm} \elet \eapp qj : k - j = \evec 
- ( e_i \to if( (\mathsf{in}\eapp e_i \eapp d) \, , \, q\{e_i\} \,, \mathsf{else}\eapp 0)^{i \in 1\dots n} )\\
+ ( \attr_i \to if( (\mathsf{in}\eapp e_i \eapp d) \, , \, q\{e_i\} \,, \mathsf{else}\eapp 0)^{i \in 1\dots n} )\\
  \hspace{0.4cm} \elet \eapp a: k - j - 1 = \eop (q_j)  \ein \\
  \hspace{0.8cm} \elet \eapp sc': k - j - 1 =  \mathsf{updtSC} \eapp () \eapp sc  \eapp a \eapp p
                 \eapp qj \eapp il \eapp  \eapp 0 \eapp  n \eapp  \ein \\
@@ -536,98 +518,105 @@ Two-rounds:
   \begin{mathpar}
     \inferrule{
       \Gamma(x) = \type \\
+      \dmap(x) \geq 0
     }{
-      \Delta; \Gamma  \tvdash{\nnatA} x: \type
+      \Delta; \Gamma;\dmap \tvdash{0} x: \type
     }~\textbf{var}
     %
     \and
     %
     \inferrule{
-      \Delta; \Gamma  \tvdash{\nnatA_1} \expr_1: (\tarr{\type_1}{\type_2}{\nnatbiA}{}{\nnatA}) \\
-      \Delta; \Gamma  \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
+      \Delta; \Gamma ;\dmap_1  \tvdash{\nnatA_1} \expr_1: \wq{\tarr{\type_1}{\type_2}{}{\nnatbiA}{\nnatA}} \\
+      \Delta; \Gamma ; \dmap_2 \tvdash{\nnatA_2} \expr_2: \type_1 \\\\
       \nnatA' = \nnatA_1 + \max(\nnatA, \nnatA_2 + \nnatbiA) \\
+      \wq{ \dmap' = \max( \dmap_1, \nnatA_1 + \dmap_2 ) }
     }{
-      \Delta; \Gamma;  \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr_1 \eapp \expr_2 : \type_2
     }~\textbf{app}
     %
     \and
     %
     \inferrule{
-      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{\nnatbiA}{ }{\nnatA}), x: \type_1    
+      \Delta; \Gamma, f: (\tarr{\type_1}{\type_2}{}{\nnatbiA
+      }{\nnatA}), x: \type_1    ; \dmap, [x: \nnatbiA]
       \tvdash{\nnatA}
       \expr: \type_2
     }{
-      \Delta; \Gamma \tvdash{\nnatA'} \efix f(x).\expr:
-      \tarr{\type_1}{( { \type_2} ) }{\nnatbiA}{}{\nnatA}
+      \Delta; \Gamma; \wq{ \dmap } \tvdash{0} \efix f(x).\expr:
+      \tarr{\type_1}{( { \type_2} ) }{}{\nnatbiA}{\nnatA}
     }~\textbf{fix}
     %
     \and
     %
     \inferrule{
-      \Delta; \Gamma \tvdash{\nnatA_1} \expr_1: \type_1 \\
-      \Delta; \Gamma \tvdash{\nnatA_2} \expr_2: \type_2 \\\\
-      \nnatA' = \max(\nnatA_1,\nnatA_2)
+      \Delta; \Gamma ; \dmap_1 \tvdash{\nnatA_1} \expr_1: \type_1 \\
+      \Delta; \Gamma; \dmap_2  \tvdash{\nnatA_2} \expr_2: \type_2 \\\\
+      \nnatA' = \max(\nnatA_1,\nnatA_2) \\
+\dmap' = \max(\dmap_1, \dmap_2)
     }{
-      \Delta; \Gamma \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
+      \Delta; \Gamma; \dmap' \tvdash{\nnatA'} (\expr_1, \expr_2): \type_1 \times \type_2
     }~\textbf{pair}
     %
     \and
     %
     \inferrule{
-      \Delta; \Gamma \tvdash{\nnatA} \expr: \type_1 \times \type_2
+      \Delta; \Gamma ; \dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
     }{
-      \Delta; \Gamma \tvdash{\nnatA} \eprojl(\expr): \type_1
+      \Delta; \Gamma ; \dmap \tvdash{\nnatA} \eprojl(\expr): \type_1
     }~\textbf{fst}
     %
     \and
     %
     \inferrule{
-      \Delta; \Gamma \tvdash{\nnatA} \expr: \type_1 \times \type_2
+      \Delta; \Gamma;\dmap \tvdash{\nnatA} \expr: \type_1 \times \type_2
     }{
-      \Delta; \Gamma \tvdash{\nnatA} \eprojr(\expr): \type_2
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \eprojr(\expr): \type_2
     }~\textbf{snd}
     %
     \and
     %
     \inferrule{
     }{
-      \Delta; \Gamma \tvdash{\nnatA} \etrue: \tbool
+      \Delta; \Gamma;\dmap \tvdash{\nnatA} \etrue: \tbool
     }~\textbf{true}
     %
     \and
     %
     \inferrule{
     }{
-       \Delta; \Gamma \tvdash{\nnatA} \efalse: \tbool
+       \Delta; \Gamma;\dmap \tvdash{\nnatA} \efalse: \tbool
     }~\textbf{false}
     %
     \and
       \inferrule{
-        \Delta; \Gamma \tvdash{\nnatA'} \expr: \type'
+        \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr: \type'
         \\
         \nnatA' < \nnatA
         \\
+\dmap' < \dmap
+\\
         \Delta \models \sub{\type' }{ \type  } 
     }{
-       \Delta; \Gamma \tvdash{\nnatA} \expr: \type
+       \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type
     }~\textbf{subtype}
     %
     \and
      \inferrule{
-      \Delta; \Gamma  \tvdash{\nnatA} \expr : \treal
+      \Delta; \Gamma ; \dmap \tvdash{\nnatA} \expr : \treal
     }{
-       \Delta; \Gamma \tvdash{\nnatA} \bernoulli \eapp \expr: \treal
+       \Delta; \Gamma; \dmap \tvdash{\nnatA} \bernoulli \eapp \expr: \treal
     }~\textbf{bernoulli}
     %
      \and
      \inferrule{
-      \Delta; \Gamma  \tvdash{\nnatA_1} \expr_1 : \treal
+      \Delta; \Gamma ; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \treal
       \\
-      \Delta ; \Gamma  \tvdash{\nnatA_2} \expr_2 : \treal
+      \Delta ; \Gamma; \dmap_2  \tvdash{\nnatA_2} \expr_2 : \treal
       \\
-      \nnatA = \max(\nnatA_1, \nnatA_2)
+      \nnatA = \max(\nnatA_1, \nnatA_2)\\
+      \dmap' = \max( \dmap_1, \dmap_2  )
     }{
-       \Delta; \Gamma;  \tvdash{\nnatA'} \uniform \eapp \expr_1 \eapp \expr_2: \treal
+       \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \uniform \eapp \expr_1 \eapp \expr_2: \treal
     }~\textbf{uniform}
     
   \end{mathpar}
@@ -640,50 +629,51 @@ Two-rounds:
 \begin{mathpar}
     %
     \inferrule{
-       \Delta;\Gamma \tvdash{\nnatA_1} \expr_1: \tbool \\
-       \Delta;\Gamma \tvdash{\nnatA} \expr_2: \type \\
-       \Delta;\Gamma \tvdash{\nnatA} \expr_3: \type \\\\
-      \nnatA' = \nnatA_1 + \nnatA 
+       \Delta;\Gamma ; \dmap_1 \tvdash{\nnatA_1} \expr_1: \tbool \\
+       \Delta;\Gamma ; \dmap \tvdash{\nnatA} \expr_2: \type \\
+       \Delta;\Gamma ;  \dmap \tvdash{\nnatA} \expr_3: \type \\\\
+      \nnatA' = \nnatA_1 + \nnatA \\
+      \dmap' = \max(\dmap_1, \nnatA_1 + \dmap)
     }{
-       \Delta;\Gamma \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
+       \Delta;\Gamma ; \dmap' \tvdash{\nnatA'} \eif(\expr_1, \expr_2, \expr_3):  \type
     }~\textbf{if}
     %
     \and
     %
     \inferrule{
     }{
-       \Delta;\Gamma \tvdash{\nnatA} \econst: \tbase
+       \Delta;\Gamma ; \dmap \tvdash{\nnatA} \econst: \tbase
     }~\textbf{const}
     \and
     %
     \inferrule{
     }{
-       \Delta;\Gamma \tvdash{\nnatA} n: \tint[n]
+       \Delta;\Gamma ; \dmap \tvdash{\nnatA} n: \tint[n]
     }~\textbf{intI} 
     \and
     %
     \inferrule{
     }{
-       \Delta;\Gamma \tvdash{\nnatA} n: \tint
+       \Delta;\Gamma ;\dmap \tvdash{\nnatA} n: \tint
     }~\textbf{int} 
    \and
     %
     \inferrule{
       \Delta \wf{\type} \\
     }{
-      \Delta; \Gamma \tvdash{\nnatA} \enil: \tlist{\type}
+      \Delta; \Gamma; \dmap \tvdash{\nnatA} \enil: \tlist{\type}
     }~\textbf{nil}
     % 
  	\and
     %
     \inferrule
     {
-      \Delta; \Gamma \tvdash{\nnatA} \expr:  \mathsf{VC}(\type_i \to
+      \Delta; \Gamma ; \dmap \tvdash{\nnatA} \expr:  \mathsf{DICT}(\type_i \to
       {\type_i'}^{\, i \in 1,2\dots n} ) \\
       \nnatA' = 1 + \nnatA 
     }
     {
-       \Delta; \Gamma \tvdash{\nnatA'} \eop(\expr): \treal
+       \Delta; \Gamma; \dmap \tvdash{\nnatA'} \eop(\expr): \treal
     }~\textbf{$\delta$}
 %
   % \and
@@ -710,7 +700,8 @@ Two-rounds:
    \inferrule{
    \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type \\
    \Delta; \Gamma; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \tlist{\type}\\
-   \nnatA' = \max ( \nnatA_1, \nnatA_2 )
+   \nnatA' = \max ( \nnatA_1, \nnatA_2 ) \\
+  \dmap' = \max( \dmap_1, \dmap_2 )
    }
    { 
    \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \econs(\expr_1, \expr_2) :
@@ -719,33 +710,34 @@ Two-rounds:
    \and
    %
    \inferrule{
-     \Delta; \Gamma;  \tvdash{\nnatA_1} \expr_1 : \type_1 \\
-     \Delta; \Gamma, x:\type_1  \tvdash{\nnatA_2} \expr_2 :
+     \Delta; \Gamma; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \type_1 \\
+     \Delta; \Gamma, x:\type_1 ; \dmap_2  \tvdash{\nnatA_2} \expr_2 :
      \type \\
-     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q )
+     \nnatA' = \max ( \nnatA_2, \nnatA_1 + q ) \\
+   \dmap' = \max( \dmap_2, \dmap_1 + q  )
    }
    {  \Delta; \Gamma \tvdash{\nnatA'}  \elet x;q = \expr_1 \ein \expr_2 : \type}~\textbf{let}
    %
    \and
    %
   \inferrule{
-      i,\Delta; \Gamma  \tvdash{\nnatA} \expr: \type
+      i,\Delta; \Gamma ; \dmap  \tvdash{\nnatA} \expr: \type
       \\
       i \not\in  \fiv{\Gamma}
     }{
-     \Delta;  \Gamma \tvdash{\nnatA'}    \eilam \expr    :  \tforall{}{\nnatA}{i} \type 
+     \Delta;  \Gamma ; \dmap \tvdash{\nnatA'}    \eilam \expr    :  \tforall{}{\nnatA}{i} \type 
     }~\textbf{ilam}
     %
     \and
     %
   \inferrule{
-        \Delta; \Gamma  \tvdash{\nnatA} \expr: \tforall{}{\nnatA_1}{i} \type 
+        \Delta; \Gamma ; \dmap \tvdash{\nnatA} \expr: \tforall{}{\nnatA_1}{i} \type 
       \and
        \Delta \tvdash{}  I ::  S
        \\
        \nnatA' = \nnatA_1[I/i] + \nnatA
     }{
-     \Delta;  \Gamma \tvdash{\nnatA'}    \expr \eapp []   :
+     \Delta;  \Gamma ; \dmap \tvdash{\nnatA'}    \expr \eapp []   :
      \type[I/i]
     }
 	 ~\textbf{iapp}         
@@ -753,17 +745,15 @@ Two-rounds:
 \and
 %
  \inferrule{
-        \Delta; \Gamma  \tvdash{\nnatA_i} \expr_i: \type_i 
-       \\
- \Delta; \Gamma  \tvdash{\nnatA_i'} \expr_i': \type_i' 
+ \Delta; \Gamma; \dmap  \tvdash{\nnatA_i'} \expr_i': \type_i' 
        \\
        \nnatA' =\max({\nnatA_i'}^{\, 1,2\dots n})
     }{
-     \Delta;  \Gamma \tvdash{\nnatA'}   \evec(\expr_i \to
-     {\expr_i'}^{\, i \in 1,2\dots n})  : \mathsf{VC}(\type_i \to
+     \Delta;  \Gamma ; \dmap \tvdash{\nnatA'}   \evec(\attr_i \to
+     {\expr_i'}^{\, i \in 1,2\dots n})  : \mathsf{DICT}(\type_i \to
      {\type_i'}^{\, i \in 1,2\dots n} )
     }
-	 ~\textbf{vector}         
+	 ~\textbf{dict}         
 
 
 \end{mathpar}
