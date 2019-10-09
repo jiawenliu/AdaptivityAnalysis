@@ -1,0 +1,115 @@
+tau = !_k A
+A = tau —o tau| b
+
+——————————— (Ax)
+G,x:!_k A |-_k x: !_k A
+
+—————— (b)
+G |-_k v: !_k b
+
+
+G,x: tau |-_r e: sigma
+——————————————————(lambda)
+k+G |-_k+r \x.e: !_k(tau —o sigma)
+
+
+G|-_k e1: !_0 (tau —o sigma)
+H|-_r e2:tau
+——————————————————(app)
+max(G,H) |-_max(k,r) e1 e2 :sigma
+
+
+G|-_r e: !_k b
+—————————————(delta)
+1+G |-_1+r delta(e) : !_k b
+
+
+Example:
+                                                                                                 y:!_1 b |-_1 y: !_1 b   
+                                                                                —————————————————
+x:!_0 b |-_0 x: !_0 b                                                              y:!_2 b |-_2  delta(y): !_1 b      
+—————————————                                       —————————————————
+x:!_1 b |-_1 delta(x): !_0 b                                        |-_2 \y.delta(y):!_0(!_2 b —o !_1 b)      |-_2 v: !_2 b
+———————————————                  —————————————————————————————
+|-_1 \x.delta(x):!_0(!_1 b —o !_0 b)                                           |-_2 ((\y.delta(y)) v): !_1 b
+———————————————————————————————————————————
+|-_2 (\x.delta(x))((\y.delta(y)) v): !_0 b
+
+
+|-_1 \x.delta(x):!_0(!_1 b —o !_0 b)
+
+|-_1 (\x.delta(x)) v :!_0 b
+
+|-_2 \x.delta(delta(x)):!_0(!_2 b —o !_0 b)
+
+|-_1 (\z.\x.delta(x))delta(v): !_0(!_1 b —o !_0 b)
+
+
+Operational Semantics
+
+———————
+O, v => v, v
+
+————————
+O, x => O(x), x
+
+
+——————————
+O, \x.e => \x.e, \x.e
+
+
+O, e => v, T     delta(v)=v'  
+——————————————
+O, delta(e) => v', delta(T)
+
+
+O, e => v, T     delta(v)=v'  
+—————————————
+O, delta(e) => v', delta(T)
+
+
+O, e1 => \x.e, T1    O, e2 => v, T2    O[x=v], e => v', T3          
+————————————————————————————
+O, e1 e2 => v', \x(T1,T2,T3)
+
+Examples
+
+O[y=v],y => v,y   delta(v)=v'
+————————————
+O[y=v], delta(y) => v’,delta(y)
+O, v => v, v 
+O, \y.delta(y) => \y.delta(y), \y.delta(y)
+———————————————————————————————————————————————— 
+O, (\y.delta(y)) v => v’,\y(\y.delta(y),v,delta(y))
+
+O[x=v'], x => v', x
+---------------------------
+O[x=v'], delta(x) => v'', delta(x)
+O, (\y.delta(y)) v => v’,\y(\y.delta(y),v,delta(x))
+O, \x.delta(x) => \x.delta(x),\x.delta(x)
+———————————————————————————————————————————————— 
+O, (\x.delta(x))((\y.delta(y)) v) =>\x(\x.delta(x), \y(\y.delta(y),v,delta(y)), delta(x))
+
+
+Definitions of adaptivity and depth
+
+A(v)=0
+A(x)=0
+A(\x.e)=0
+A(delta(T))=A(T)+1
+A(\x(T1,T2,T3))=A(T1)+max(A(T2)+D(x,T3),A(T3))
+A(\x(T1,T2,T3))=A(T1)+A(T2)+A(T3)
+
+
+D(x,v)=0
+D(x,\x.e)=0
+D(x,x)=1
+D(x,y)=0
+D(x,delta(T))=D(x,T)+1
+D(x,\y(T1,T2,T3))= A(T1) + max(D(x,T2)+D(y,T3),D(x,T3))
+
+Example
+
+A(\x(\x.delta(x), \y(\y.delta(y),v,delta(y)), delta(x)))=
+A(\x.delta(x)) + max(A(\y(\y.delta(y),v,delta(y)))+D(x, delta(x)), A(delta(x)))=
+A(\x.delta(x)) + max(A(\y.delta(y))+max(A(v)+D(y,delta(y)), A(delta(y)))+D(x, delta(x)), A(delta(x)))
