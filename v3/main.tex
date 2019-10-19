@@ -1,0 +1,749 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{mathpartir}
+\usepackage{amsmath,amsthm,amsfonts}
+\usepackage{color}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{microtype}
+
+
+\input{ldefs}
+\newcommand{\mg}[1]{\textcolor[rgb]{.90,0.00,0.00}{[MG: #1]}}
+\newcommand{\dg}[1]{\textcolor[rgb]{0.00,0.5,0.5}{[DG: #1]}}
+\newcommand{\wq}[1]{\textcolor[rgb]{.50,0.0,0.7}{ #1}}
+
+\let\originalleft\left
+\let\originalright\right
+\renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
+\renewcommand{\right}{\aftergroup\egroup\originalright}
+
+\theoremstyle{definition}
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{defn}[thm]{Definition}
+
+\title{Adaptivity analysis}
+
+\author{}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+An adaptive data analysis is based on multiple queries over a data set, in which some queries rely on the results of some other queries. The error of each query is usually controllable and bound independently, but the error can propagate through the chain of different queries and bring to high generalization error. To address this issue, data analysts are adopting different mechanisms in their algorithms, such as Gaussian mechanism, etc. To utilize these mechanisms in the best way one needs to understand the depth of chain of queries that one can generate in a data analysis. In this work, we define a programming language which can provide, through its type system, an upper bound on the adaptivity  depth (the length of the longest chain of queries) of a program implementing an adaptive data analysis. We show how this language can help to analyze the generalization error of two data analyses with different adaptivity structures.
+\end{abstract}
+
+\input{background}
+
+\section{Everything Else}
+
+\paragraph{Adaptivity}
+Adaptivity is a measure of the nesting depth of a mechanism. To
+represent this depth, we use extended natural numbers. Define $\natb =
+\nat \cup \{\bot\}$, where $\bot$ is a special symbol and $\natbi =
+\natb \cup \{\infty\}$. We use $\nnatA, \nnatB$ to range over $\nat$,
+$\nnatbA, \nnatbB$ to range over $\natb$, and $\nnatbiA, \nnatbiB$ to
+range over $\natbi$.
+
+The functions $\max$ and $+$, and the order $\leq$ on natural numbers
+extend to $\natbi$ in the natural way:
+\[\begin{array}{lcl}
+\max(\bot, \nnatbiA) & = & \nnatbiA \\
+\max(\nnatbiA, \bot) & = & \nnatbiA \\
+\max(\infty, \nnatbiA) & = & \infty \\
+\max(\nnatbiA, \infty) & = & \infty \\
+\\
+%
+\bot + \nnatbiA & = & \bot \\
+\nnatbiA + \bot & = & \bot \\
+\infty + \nnatbiA & = & \infty ~~~~ \mbox{if } \nnatbiA \neq \bot \\
+\nnatbiA + \infty & = & \infty ~~~~ \mbox{if } \nnatbiA \neq \bot \\
+\\
+%
+\bot \leq \nnatbiA \\
+\nnatbiA \leq \infty
+\end{array}
+\]
+One can think of $\bot$ as $-\infty$, with the special proviso that,
+here, $-\infty + \infty$ is specifically defined to be $-\infty$.
+
+\paragraph{Language}
+Expressions are shown below. $\econst$ denotes constants (of some base
+type $\tbase$, which may, for example, be reals or rational
+numbers). $\eop$ represents a primitive operation (such as a
+mechanism), which determines adaptivity. For simplicity, we assume
+that $\eop$ can only have type $\tbase \to \tbool$. We make
+environments explicit in closures. This is needed for the tracing
+semantics later.
+\[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \wq{\efix f(x:\type).\expr}
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr)  ~|~ \wq {\eilam \expr ~|~ \expr \eapp [] } \\
+& & & ~|~ \wq {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
+      \expr_1, \expr_2) \\
+& & & ~|~ \wq{ ~~~~~~~
+ \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+      \expr_2 } \\
+%
+\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
+& & & \wq {(\eilam \expr , \env) } \\ 
+%
+\mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
+\end{array}\]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Tracing operational semantics and adaptivity}
+
+\paragraph{Traces}
+A trace $\tr$ is a representation of the big-step derivation of an
+expression's evaluation. Our big-step semantics output a trace. We use
+traces to define the adaptivity of a run. Our notion of traces and the
+tracing semantics is taken from~\cite[Section 4]{perera:dep}, but we
+omit their ``holes'' for which we have no need. The construct
+$\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$ records a trace of function
+application. $\tr_1$ is the trace of the head, $\tr_2$ the trace of
+the argument and $\tr_3$ is the trace of the function body. $f$ and
+$x$ are bound in $\tr_3$.
+%
+\[\begin{array}{llll}
+\mbox{Trace} & \tr & ::= & \wq{(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
+\wq{ (\trfix f(x:\type).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+%
+& & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
+~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
+%
+& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~
+      \wq {(\eilam \expr, \env)}
+\end{array}\]
+
+
+\paragraph{Big-step tracing semantics}
+The big-step, tracing semantics $\env, \expr \bigstep \valr, \tr$
+computes a value $\valr$ and a trace $\tr$ from an expression $\expr$
+and an enviroment $\env$ which maps the free variables of $\expr$ to
+\emph{closed} values. The rules, taken from~\cite{perera:dep}, are
+shown in Figure~\ref{fig:big-step}. Some salient points:
+\begin{itemize}
+\item[-] Erasing the traces from the semantics yields a standard
+  big-step semantics.
+\item[-] The trace of a primitive application $\eop(\expr)$
+  records that $\eop$ was applied to the trace of
+  $\expr$. This enables us to define adaptivity from a trace later.
+\item[-] The trace of a variable $x$ is $x$. This way traces record
+  where substitutions occur and, hence, variable dependencies. This is
+  also needed for defining adaptivity.
+\end{itemize}
+
+\begin{figure}
+\begin{mathpar}
+  \wq { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
+  %
+  \and
+  %
+  \inferrule{ }{\env, \econst \bigstep \econst, \trconst}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \etrue \bigstep \etrue, \trtrue}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
+  %
+  \and
+  \wq{ \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+      \bernoulli (\tr)
+    } }
+  \and
+ \inferrule{ \env, \expr_1 \bigstep \econst, \tr_1 \\ \env, \expr_2 \bigstep \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
+      \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
+  \and
+  %
+  \wq{ \inferrule{
+  }{
+    \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
+    (\trfix f(x:\type).\expr, \env)
+  }
+}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
+    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstep \valr_2, \tr_2
+  }{
+    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojl(\expr) \bigstep \valr_1, \trprojl(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojr(\expr) \bigstep \valr_2, \trprojr(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \etrue, \tr \\
+    \env, \expr_1 \bigstep \valr, \tr_1
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \trift(\tr, \tr_1)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \efalse, \tr \\
+    \env, \expr_2 \bigstep \valr, \tr_2
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \triff(\tr, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \valr, \tr \\
+    \eop{}(\valr) = \valr'
+  }{
+    \env, \eop(\expr) \bigstep \valr', \trop(\tr)
+  }
+%
+\and
+%
+  \inferrule{
+}
+{ \env, \enil \bigstep \enil, \trnil }
+%
+\and
+%
+\inferrule{
+\env, \expr_1 \bigstep \valr_1, \tr_1 \\
+\env, \expr_2 \bigstep \valr_2, \tr_2
+}
+{ \env, \econs (\expr_1, \expr_2)  \bigstep \econs (\valr_1, \valr_2),
+  \trcons(\tr_1, \tr_2)
+}
+%
+\and
+%
+\inferrule{
+  \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+  \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
+}
+{\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
+  \tr_1, \tr_2) }
+%
+\\\\
+%
+\boxed{\color{red}
+\inferrule
+{
+  \empty
+}
+{
+  \env, \eilam \expr \bigstep (\eilam \expr, \env), (\eilam \expr , \env)
+}
+}
+%
+\and
+%
+\boxed{\color{red}
+\inferrule{
+  \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
+  \env, \expr' \bigstep \valr, \tr_2
+}
+{\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
+
+}
+\end{mathpar}
+  \caption{Big-step semantics with provenance}
+  \label{fig:big-step}
+\end{figure}
+
+
+\paragraph{Adaptivity of a trace}
+We define the \emph{adaptivity} of a trace $\tr$, $\adap(\tr)$, which
+means the maximum number of nested $\eop$s in $\tr$, taking variable
+and control dependencies into account. To define this, we need an
+auxiliary notion called the \emph{depth of variable $x$} in trace
+$\tr$, written $\ddep{x}(\tr)$, which is the maximum number of
+$\eop{}$s in any path leading from the root of $\tr$ to an occurence
+of $x$ (at a leaf), again taking variable and control dependencies
+into account. Technically, $\adap: \mbox{Traces} \to \nat$ and
+$\ddep{x}: \mbox{Traces} \to \natb$. If $x$ does not appear free in
+$\tr$, $\ddep{x}(\tr)$ is $\bot$.
+
+The functions $\adap$ and $\ddep{x}$ are defined by mutual induction
+in Figure~\ref{fig:adap}. 
+
+\begin{figure}
+  \framebox{$\adap: \mbox{Traces} \to \nat$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \wq { \adap( (x,\env) )} & = & 0 \\
+      %
+      \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
+      \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
+      %
+      \wq {\adap( (\trfix f(x:\type).\expr, \env)  ) } & = & 0 \\
+      %
+      \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
+      %
+      \adap(\trprojl(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trprojr(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trtrue) & = & 0 \\
+      %
+      \adap(\trfalse) & = & 0 \\
+      %
+      \adap(\trift(\tr_b, \tr_t)) & = & \adap(\tr_b) + \adap(\tr_t) \\
+      %
+      \adap(\triff(\tr_b, \tr_f)) & = & \adap(\tr_b) + \adap(\tr_f) \\
+      %
+      \adap(\trconst) & = & 0 \\
+      %
+      \adap(\trop(\tr)) & = &\wq { 1 + \adap(\tr) } \\
+           & &       \wq{  +  \textsf{MAX}_{\valr \in \type} \Big(
+                              \max \big(\adap(\tr_3 (\valr) ),
+                              \ddep{x}(\tr_3(\valr)) \big) \Big) } \\
+      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
+      %
+     \adap(\trnil) & = & 0 \\
+     %
+     \adap(\trcons(\tr_1,\tr_2) ) & = &  \max(\adap(\tr_1),
+                                        \adap(\tr_2)) \\
+     %
+    \adap( \trlet (x, \tr_1,\tr_2) ) & = & \max (\adap(\tr_2),
+                                           \adap(\tr_1)+\ddep{x}(\tr_2)  )
+                                           \\
+     \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
+    %
+    \wq { \adap( (\eilam \expr, \env) ) } & = & 0 \\
+    \wq { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
+     \wq { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
+                                                      \adap(\tr_2) ) \\
+      \end{array}
+  \end{mathpar}
+  %
+  \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \wq { \ddep{x}( ( y, \env )) } & = &
+      \left\lbrace
+      \begin{array}{ll}
+        0 & \mbox{if } x = y \\
+        \bot & \mbox{if } x \neq y
+      \end{array}
+      \right.\\
+      %
+      \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
+      & & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
+      %
+     \wq { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
+      %
+      \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
+      %
+      \ddep{x}(\trprojl(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trprojr(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trtrue) & = & \bot \\
+      %
+      \ddep{x}(\trfalse) & = & \bot \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_t)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t)) \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_f)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_f)) \\
+      %
+      \ddep{x}(\trconst) & = & \bot \\
+      %
+      \ddep{x}(\trop(\tr)) & = & 1 +  \max(\ddep{x}(\tr),  \\
+      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \type} \Big(
+          \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) ) \\  
+ &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
+       %
+      \ddep{x}(\trnil) & = & \bot \\
+      %
+      \ddep{x}(\trcons(\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
+                                            \ddep{x}(\tr_2)) \\
+      %
+      \ddep{x}( \trlet(y, \tr_1, \tr_2) ) & = & \max( \ddep{x}(\tr_2),
+                                                \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )\\
+       \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
+                                                    \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
+    %
+    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
+    \ddep{x}(\uniform (\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
+                                            \ddep{x}(\tr_2)) \\
+  \ddep{x}(\bernoulli (\tr)) & = & \ddep{x}(\tr)
+    \end{array}
+  \end{mathpar}
+  \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
+  \label{fig:adap}
+\end{figure}
+
+\paragraph{Explanation of $\adap$}
+We explain the interesting cases of the definition of $\adap$. The
+case $\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$ corresponds to a function
+application with $\tr_1$, $\tr_2$, $\tr_3$ being the traces of the
+head, the argument and the body, respectively, and $x$ being the
+argument. The adaptivity is defined to be $\adap(\tr_1) +
+\max(\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))$. The term
+$\adap(\tr_1)$ occurs additively since the entire computation is
+control-dependent on the function the head of the application
+evaluates to. The rest of the term $\max(\adap(\tr_3), \adap(\tr_2) +
+\ddep{x}(\tr_3))$ is simply the maximum nesting depth in the body,
+taking the data dependency on the argument into account. To see this,
+consider the following exhaustive cases:
+\begin{itemize}
+  \item[-] When $x$ appears free in the trace $\tr_3$,
+    $\ddep{x}(\tr_3)$ is the maximum $\eop$-nesting depth of $x$ in
+    the body. Hence, $\max(\adap(\tr_3), \adap(\tr_2) +
+    \ddep{x}(\tr_3))$ represents the maximum number of nested $\eop$s
+    in the evaluation of $e[e'/x]$ where $e'$ is the argument
+    expression that generates the trace $\tr_2$ and $e$ is the body of
+    the function.
+  \item[-] When $x$ does not appear free in the trace $\tr_3$ of the
+    body (i.e., the body's evaluation does not depend on $x$),
+    $\ddep{x}(\tr_3) = \bot$, so $\max(\adap(\tr_3), \adap(\tr_2) +
+    \ddep{x}(\tr_3)) = \max(\adap(\tr_3), \adap(\tr_2) + \bot) =
+    \max(\adap(\tr_3), \bot) = \adap(\tr_3)$, which is the adaptivity
+    of the body in the absence of dependency from $x$.
+\end{itemize}
+
+The case $\trift(\tr_b, \tr_t)$ corresponds to the evaluation of
+$\eif(\expr_b, \expr_t, \_)$ where $\expr_b$ evaluates to $\etrue$
+with trace $\tr_b$ and $\tr_t$ is the trace of $\expr_t$. In this
+case, since the entire evaluation of $\expr_t$ is control dependent on
+$\expr_b$, the adaptivity is simply $\adap(\tr_b) + \adap(\tr_t)$.
+
+\paragraph{Explanation of $\ddep{x}$}
+We explain interesting cases in the definition of $\ddep{x}$.  For the
+trace $\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}$, $\ddep{x}$ is defined as
+$\max(\ddep{x}(\tr_1), \adap(\tr_1) + \max(\ddep{x}(\tr_3),
+\ddep{x}(\tr_2) + \ddep{y}(\tr_3)))$. Here, $\max(\ddep{x}(\tr_3),
+\ddep{x}(\tr_2) + \ddep{y}(\tr_3))$ is the maximum depth of $x$ in the
+body ($\tr_3$), taking the dependency on the argument into
+account. Specifically, when the argument variable $y$ is not used in
+the body, $\ddep{y}(\tr_3) = \bot$, and this term is
+$\ddep{x}(\tr_3)$.  The term $\adap(\tr_1)$ is added since the body's
+entire execution is control-flow dependent on the function that the
+head of the application evaluates to.
+
+For the trace $\trift(\tr_b, \tr_t)$, $\ddep{x}$ is defined as
+$\max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t))$. The term
+$\ddep{x}(\tr_b)$ is simply the maximum depth of $x$ in $\tr_b$. We
+take the $\max$ of this with $\adap(\tr_b) + \ddep{x}(\tr_t)$, the
+maximum depth of $x$ in $\tr_t$, taking the control dependency on
+$\tr_b$ into account. Note that when $x$ is not used in $\tr_t$, then
+$\ddep{x}(\tr_t) = \bot$ and $\ddep{x}(\trift(\tr_b, \tr_t)) =
+\ddep{x}(\tr_b)$.
+
+\begin{lem}\label{lem:ddep-leq-adap}
+For all $\tr$ and $x$, $\ddep{x}(\tr) \leq \adap(\tr)$ in $\natb$.
+\end{lem}
+%
+\begin{proof}
+By easy induction on $\tr$, following the definitions of $\ddep{x}$
+and $\adap$.
+\end{proof}
+
+
+
+\paragraph{Remark}
+At first glance it may seem that Lemma~\ref{lem:ddep-leq-adap} can be
+used to simplify the definition of $\ddep{x}(\trift(\tr_b, \tr_t))$
+from $\max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t))$ to
+$\adap(\tr_b) + \ddep{x}(\tr_t)$ since $\ddep{x}(\tr_b) \leq
+\adap(\tr_b)$. However, this simplification is not correct, since
+$\ddep{x}(\tr_t)$ may be $\bot$. In that case, $\max(\ddep{x}(\tr_b),
+\adap(\tr_b) + \ddep{x}(\tr_t))$ equals $\ddep{x}(\tr_b)$ while
+$\adap(\tr_b) + \ddep{x}(\tr_t)$ equals $\bot$.
+
+More generally, since $\bot$ behaves like $-\infty$, we do not have
+the implication $a \leq b \Rightarrow a \leq b + c$ as $c$ may be
+$-\infty$ ($\bot$). As a result, $a \leq b$ does not imply $\max(a, b
++ c) = b + c$.
+
+\begin{lem}\label{lem:trace_extract}
+Exists a function $\mathsf{extract}$, if $\env, \expr \bigstep \valr,
+\tr  $, then $\mathsf{extract}(\tr) = \valr$.
+\end{lem}
+%
+\begin{proof}
+\wq{ By induction on the derivation of the operational semantics.}\\
+%
+\textsf{Case} 
+\[\inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }\]
+$\mathsf{extract}  ( (x, \env) )  = \env (x) \Rightarrow
+\mathsf{extract} = \lambda x . \mathsf{fst}(x) \eapp \mathsf{snd}(x)
+$.\\
+
+\textsf{Case}
+\[
+\inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \valr_1 = (\efix f(x).\expr, \env') \\\\
+    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+  }
+\]
+By IH on the first premise, we get : exists $\mathsf{extract}_1 (\tr_1) = \valr_1$
+and because we know $v_1$ is a function, we know from the second
+premise :  $\mathsf{extract}_1 (\tr_1) = \valr_1 = (\efix f(x).\expr,
+\env')$. \\
+By IH on the thrid premise, we get: exists $\mathsf{extract}_2 (\tr_2) =
+\valr_2$.\\
+By IH on the fourth premise, we know that : exists $ \mathsf{extract_3}
+(\tr) = \valr$.\\
+So we know : exists $\mathsf{extract}$ so that
+$\mathsf{extract}(\trapp{\tr_1}{\tr_2}{f}{x}{\tr}) =
+\mathsf{extract_3} (\tr) = \valr$. \\
+
+%
+\textsf{Case}
+\[
+ \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstep \valr_2, \tr_2
+  }{
+    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+  }\]
+By IH on the first premise, we get : exists $\mathsf{extract}_1 (\tr_1) = \valr_1$.
+By IH on the second premise, we get : exists $\mathsf{extract}_2 (\tr_2)
+= \valr_2$.\\
+So we know : exists $\mathsf{extract} ( (\tr_1, \tr_2) )=
+(\mathsf{extract}_1 (\tr_1), \mathsf{extract}_2 (\tr_2) )$.
+
+%
+
+\textsf{Case}
+\[
+\inferrule{
+    \env, \expr \bigstep \valr, \tr \\
+    \eop{}(\valr) = \valr'
+  }{
+    \env, \eop(\expr) \bigstep \valr', \trop(\tr)
+  }
+\]
+By IH on the first premise, exists $\mathsf{extract}_1 (\tr) =
+\valr$. \\
+We know : 
+ exists $\mathsf{extract} (\trop(\tr) ) =
+\trop( \mathsf{extract}_1 (\tr) ) = \valr'$.\\
+
+%
+\textsf{Case}
+\[
+ \inferrule{
+    \env, \expr \bigstep \etrue, \tr \\
+    \env, \expr_1 \bigstep \valr, \tr_1
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \trift(\tr, \tr_1)
+  }
+\]
+By IH on the second premise, exists $\mathsf{extract}_1 (\tr_1) =
+\valr$. \\
+We know : 
+ exists $\mathsf{extract} ( \trift(\tr, \tr_1) ) =
+ \mathsf{extract}_1 (\tr_1)  = \valr$.\\
+%
+\textsf{Case}
+\[
+\inferrule{
+  \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+  \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
+}
+{\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
+  \tr_1, \tr_2) }
+\]
+By IH on the second premise, exists $\mathsf{extract}_2 (\tr_2) =
+\valr$. \\
+ exists $\mathsf{extract} ( \trlet (x,
+  \tr_1, \tr_2)) =
+ \mathsf{extract}_2 (\tr_2)  = \valr$.\\
+
+
+\end{proof}
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Type system}
+\label{ts}
+\input{typeSystem}
+
+
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Algorithmic rules}
+\label{algorithmic rules}
+
+\input{bidirectional}
+
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% \begin{figure}
+%   \begin{mathpar}
+%     \begin{array}{lll}
+%       \lr{\tbool} & = & \mathbb{B}\\
+%       \lr{\type_1 \times \type_2} & = & \lrv{\type_1}\times\lrv{\type_2}\\
+%       %
+%       \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+%       \lr{\type_1} \to \lrv{\type_2}\\
+%       %
+%       \lr{\tmonad \type} & = & \mathcal{M}\lrv{\type}\\
+%       \\
+%        \\
+%       \lr{\etrue}_{\env} &=& t\in \mathbb{B}\\
+%       \lr{\efalse}_{\env}&=& f \in \mathbb{B}\\
+%       \lr{(\expr_1,\expr_2)}_{\env}&=& (\lr{\expr_1}_{\env}, \lr{\expr_2}_{\env})\\
+%       \lr{x}_{\env} &=& \env(x)\\
+%       \lr{\lambda x:\type.\expr}_{\env} &=&  \hat{\lambda} v\in\lr{\type}. \lr{\expr}_{\env[x=v]}\\
+%       \lr{\expr_1\expr_2}_{\env} &=&  \lr{\expr_1}_{\env}\lr{\expr_2}_{\env}\\
+%       \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
+%       \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& {\tt mlet}\ v=\lr{\expr_1}_{\env}
+%                                              \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]} \\
+%     \end{array}
+%   \end{mathpar}
+%   \caption{Denotational Semantics without Traces}
+%   \label{fig:denSem}
+% \end{figure}
+
+% where $\mathcal{M} A$ is the set of discrete distributions over $A$ defined as 
+% $\{d: A \to [0,1] | \sum_{a\in A} d(a)=1 \}$ and $\hat{\delta}$ is the
+% Dirac distribution.
+
+% \begin{figure}
+%   \begin{mathpar}
+%     \begin{array}{lll}
+%       \lrt{\type} & = & \lr{\type}\times\mathcal{\tr} \\
+%       % \lr{\type_1 \times \type_2} & = & \lrv{\type_1}\times\lrv{\type_2}\\
+%       % %
+%       % \lr{\tarr{\type_1}{\type_2}{\nnatbiA}{\dmap}{\nnatA}} & = &
+%       % \lr{\type_1} \to \lrv{\type_2}\\
+%       % %
+%       % \lr{M\type} & = & \mathcal{M}\lrv{\type}\\
+%       \\
+%        \\
+%       \lrt{\etrue}_{\env} &=& (t,\etrue) \\
+%       \lrt{\efalse}_{\env}&=& (f,\efalse)\\
+%       \lrt{(\expr_1,\expr_2)}_{\env}&=& \elet (\valr_1,\tr_1)=\lrt{\expr_1}_{\env} \ein 
+%                                                \elet (\valr_2, \tr_2)=\lrt{\expr_2}_{\env}) \ein 
+%                                                ((\valr_1,\valr_2),(\tr_1,\tr_2))\\
+%       \lrt{x}_{\env} &=& (\env(x),x)\\
+%       \lrt{\lambda x:\type.\expr}_{\env} &=&  (\hat{\lambda} \valr\in\lr{\type}. \lr{\expr}_{\env[x=\valr]}, \lambda x:\type.\expr)\\
+%       \lrt{\expr_1\expr_2}_{\env} &=&  
+%       % (\lr{\expr_1}_{\env}\lr{\expr_2}_{\env},\\ 
+%         % & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\env} \ein\\
+%         % & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\env} \ein\\
+%         % & & \elet \valr_1 = \lr{\lambda x:\type. \expr}_{\env} \ein \\
+%         % & & \elet (\valr, \tr) = \lrt{\expr}_{\env[x \to \valr_2]} \ein\\
+%         % & & (\tr_1, \tr_2, \mathrel{\triangleright} \lambda x:\type. \tr))\\
+% \\
+% \\
+%       \lr{\return(\expr)}_{\env} &=& \hat{\delta}\lr{\expr}_{\env}\\
+%       \lr{\elet x=\expr_1 \ein \expr_2 }_{\env} &=& ({\tt mlet}\ \valr=\lr{\expr_1}_{\env}
+                                                   
+%                                                   \ {\tt in}\ \lr{\expr_2}_{\env[x=\valr]},\\
+%       & & \elet (\valr_1, \tr_1) = \lrt{\expr_1}_{\theta} \ein \\
+%       & & \elet (\valr_2, \tr_2) = \lrt{\expr_2}_{\theta[x \to \valr_1]} \ein \\
+%       & & (x, \tr_1, \tr_2)
+%       ) \\
+%     \end{array}
+%   \end{mathpar}
+%   \caption{Denotational Semantics with Traces}
+%   \label{fig:denSem_trace}
+% \end{figure}
+
+\clearpage
+\section{Logical relation and soundness}
+\label{lg}
+\input{logicalrelation}
+
+\input{subtype}
+
+\clearpage
+\input{theorem}
+
+
+\clearpage
+\section{Bidirectional Type Checking soundness}
+%\input{btc_subtype_try}
+\input{btc_soundness}
+
+\clearpage
+\section{Examples Detail}
+\input{example_v2.tex}
+
+\clearpage
+\section{vectors}
+\input{vector}
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{adaptivity.bib}
+
+
+
+\end{document}
+
+
+
