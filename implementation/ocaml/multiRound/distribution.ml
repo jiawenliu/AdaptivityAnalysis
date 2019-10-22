@@ -38,6 +38,11 @@ let stdrng = {
   sample01 = ( fun () -> Random.float 1.0 );
 }
 
+let sample_uniform ?(rng=stdrng) floor ceil = 
+  let u = rng.sample01 ()
+  in
+    u *. (ceil -. floor) +. floor
+
 let sample_bernoulli ?(rng=stdrng) rate =
   let u = rng.sample01 () in
   if u <= rate then 1.0 else 0.0
