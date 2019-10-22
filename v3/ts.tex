@@ -1,0 +1,131 @@
+
+
+
+\[
+\begin{array}{llll}
+ \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+%                                  \mbox{Sort} & S & ::= & \nat \\
+  \mbox{Linear type} & \ltype &::=  &  \type \lto \type ~|~ \tbase \\
+  \mbox{Type} & \type & ::= & \bang{\idx} \ltype   \\
+\end{array}
+\]
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{
+    }{
+      \Delta; \Gamma , x: \bang{\nnatA} \ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \Delta; \Gamma; \tvdash{\nnatA} c : \bang{\nnatA}\tbase
+    }~\textbf{b}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma, x: \type_1
+      \tvdash{k}
+      \expr: \type_2
+    }{
+      \Delta; r+\Gamma \tvdash{k+r} \lambda x. \expr : \bang{r}  ( \type_1
+      \lto \type_2)
+    }~\textbf{lambda}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto \type_2      )\\
+      \Delta; \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \Delta; \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
+    }{
+      \Delta; 1+\Gamma  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+    }~\textbf{delta}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma_1 \tvdash{\nnatA} \expr: \type_1 \\
+      \Delta; \Gamma_2, x: \type_1 \tvdash{\nnatA'} \expr' : \type
+    }{
+      \Delta; \max(\Gamma_1,\Gamma_2) \tvdash{\max(\nnatA, \nnatA') } \elet x =  (\expr) \ein \expr': \type
+    }~\textbf{let}
+    %
+    \and
+    %
+    \inferrule{
+      \Delta; \Gamma_1 \tvdash{\nnatA_1} \expr_1 : \bang{0} \tbase\\
+      \Delta; \Gamma_2 \tvdash{\nnatA_2} \expr_2 : \type\\
+      \Delta; \Gamma_2 \tvdash{\nnatA_2} \expr_3 : \type
+    }{
+      \Delta; \boxed{\max(\Gamma_1,\Gamma_2) } \tvdash{\nnatA_1 + \nnatA_2} \eif \eapp \expr_1 \eapp \expr_2
+      \eapp \expr_3 \tbool
+    }~\textbf{if}
+    %
+    % \and
+    % %
+    % \inferrule{
+    % }{
+    %    \Delta; \Gamma; \dmap \tvdash{\nnatA} \efalse: \tbool
+    % }~\textbf{false}
+    % %
+    % \and
+    %   \inferrule{
+    %     \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr: \type'
+    %     \\
+    %     \dmap' < \dmap 
+    %     \\
+    %     \nnatA' < \nnatA
+    %     \\
+    %     \Delta \models \sub{\type' }{ \type  } 
+    % }{
+    %    \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type
+    % }~\textbf{subtype}
+    %
+    % \and
+    %  \inferrule{
+    %   \Delta; \Gamma ; \dmap \tvdash{\nnatA} \expr : \treal
+    % }{
+    %    \Delta; \Gamma; \dmap \tvdash{\nnatA} \bernoulli \eapp \expr: \treal
+    % }~\textbf{bernoulli}
+    % %
+    %  \and
+    %  \inferrule{
+    %   \Delta; \Gamma ; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \treal
+    %   \\
+    %   \Delta ; \Gamma ; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \treal
+    %   \\
+    %   \nnatA = \max(\nnatA_1, \nnatA_2)
+    %   \\
+    %   \dmap' = \max(\dmap_1, \dmap_2)
+    % }{
+    %    \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \uniform \eapp \expr_1 \eapp \expr_2: \treal
+    % }~\textbf{uniform}
+    
+  \end{mathpar}
+  % \wq{    $( \tarr{\type_1}{ \type_2  }{\nnatbiA}{\dmap}{\nnatA} )  \setminus x $ $==$ $\tarr{(\type_1 \setminus x)}{ (\type_2 \setminus x) }{\nnatbiA}{(\dmap \setminus x) }{\nnatA} $  \\
+  %  $\type \setminus x$ means removing x in all the $\dmap$ of arrow types containing in the type $\type$.  
+  % }
+  \caption{Typing rules, part 1}
+  \label{fig:type-rules}
+\end{figure}
+
+
+\begin{thm}[Adaptivity Soundness theorem]
+  If $\Delta; x_i: \bang{k_i} \ltype_i \tvdash{\nnatA} \expr: \type$ and  $\env = x_i \to v_i \forall v_i.  \Delta; \empty
+  \tvdash{r_i} v_i : \bang{k_i} \ltype_i $,   $c_i =
+  \weight(\ltype_i)$   and   $\env, \expr \bigstep \valr, \tr $,
+  then $ A(\tr) \leq k  $.
+\end{thm}%
