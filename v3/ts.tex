@@ -6,7 +6,8 @@
  % \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
  %                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
 %                                  \mbox{Sort} & S & ::= & \nat \\
-  \mbox{Linear type} & \ltype &::=  &  \type \lto \type ~|~ \tbase \\
+  \mbox{Linear type} & \ltype &::=  &  \type \lto \type ~|~ \tbase ~|~
+  \tbool\\
   \mbox{Type} & \type & ::= & \bang{\idx} \ltype   \\
 \end{array}
 \]
@@ -25,6 +26,12 @@
       \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase
     }~\textbf{b}
     %
+    \and
+    %
+    \inferrule{
+    }{
+      \ictx \Gamma \tvdash{\nnatA} \etrue : \bang{\nnatA}\tbool
+    }~\textbf{true}
     \and
     %
     \inferrule{
@@ -60,78 +67,162 @@
       \ictx \Gamma_1 \tvdash{\nnatA} \expr: \type_1 \\
       \ictx \Gamma_2, x: \type_1 \tvdash{\nnatA'} \expr' : \type
     }{
-      \ictx \max(\Gamma_1,\Gamma_2) \tvdash{\max(\nnatA, \nnatA') } \elet x =  (\expr) \ein \expr': \type
+      \ictx \max(\Gamma_1,\Gamma_2) \tvdash{\max(\nnatA, \nnatA') } \elet x =  \expr \ein \expr': \type
     }~\textbf{let}
     %
     \and
     %
     \inferrule{
-      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1 : \bang{0} \tbase\\
+      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1 : \bang{k} \tbool\\
       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2 : \type\\
       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_3 : \type
     }{
-      \ictx \boxed{\max(\Gamma_1,\Gamma_2) } \tvdash{\nnatA_1 + \nnatA_2} \eif \eapp \expr_1 \eapp \expr_2
-      \eapp \expr_3 \tbool
+      \ictx \boxed{\max(\Gamma_1, \nnatA_1+ \Gamma_2) } \tvdash{\nnatA_1 + \nnatA_2} \eif \eapp \expr_1 \eapp \expr_2
+      \eapp \expr_3 : \type
     }~\textbf{if}
-    %
-    % \and
-    % %
-    % \inferrule{
-    % }{
-    %    \Delta; \Gamma; \dmap \tvdash{\nnatA} \efalse: \tbool
-    % }~\textbf{false}
-    % %
-    % \and
-    %   \inferrule{
-    %     \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \expr: \type'
-    %     \\
-    %     \dmap' < \dmap 
-    %     \\
-    %     \nnatA' < \nnatA
-    %     \\
-    %     \Delta \models \sub{\type' }{ \type  } 
-    % }{
-    %    \Delta; \Gamma; \dmap \tvdash{\nnatA} \expr: \type
-    % }~\textbf{subtype}
-    %
-    % \and
-    %  \inferrule{
-    %   \Delta; \Gamma ; \dmap \tvdash{\nnatA} \expr : \treal
-    % }{
-    %    \Delta; \Gamma; \dmap \tvdash{\nnatA} \bernoulli \eapp \expr: \treal
-    % }~\textbf{bernoulli}
-    % %
-    %  \and
-    %  \inferrule{
-    %   \Delta; \Gamma ; \dmap_1 \tvdash{\nnatA_1} \expr_1 : \treal
-    %   \\
-    %   \Delta ; \Gamma ; \dmap_2 \tvdash{\nnatA_2} \expr_2 : \treal
-    %   \\
-    %   \nnatA = \max(\nnatA_1, \nnatA_2)
-    %   \\
-    %   \dmap' = \max(\dmap_1, \dmap_2)
-    % }{
-    %    \Delta; \Gamma; \dmap' \tvdash{\nnatA'} \uniform \eapp \expr_1 \eapp \expr_2: \treal
-    % }~\textbf{uniform}
-    
   \end{mathpar}
-  % \wq{    $( \tarr{\type_1}{ \type_2  }{\nnatbiA}{\dmap}{\nnatA} )  \setminus x $ $==$ $\tarr{(\type_1 \setminus x)}{ (\type_2 \setminus x) }{\nnatbiA}{(\dmap \setminus x) }{\nnatA} $  \\
-  %  $\type \setminus x$ means removing x in all the $\dmap$ of arrow types containing in the type $\type$.  
-  % }
   \caption{Typing rules, part 1}
   \label{fig:type-rules}
 \end{figure}
 
-\begin{thm}[Substitution]
-  If $ \Gamma,x_i : \type_i \tvdash{ \nnatA} \expr : \type $ and $
-  \Gamma \tvdash{\nnatA_i} \valr : \type_i  $, then  $\Gamma
-  \tvdash{\nnatA+ \nnatA'} \expr[\valr/x]  : \type$.
+\begin{thm}[Context Raising]
+  If $ \Gamma \tvdash{ \nnatA} \expr : \type $ and $r \in \mathbb{N}$,
+  then $ r+\Gamma \tvdash{ r+ \nnatA} \expr : r+ \type $.
 \end{thm}
+
+\begin{thm}[Context Max]
+  If $ \Gamma_1 \tvdash{ \nnatA_1} \expr : \type $ and $ \Gamma_2 \tvdash{ \nnatA_2} \expr : \type $,
+  then $\max(\Gamma_1,\Gamma_2) \tvdash{\max( \nnatA_1 , \nnatA_2 )} \expr : \type $.
+\end{thm}
+
+\begin{thm}[Substitution]
+  If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
+  \Gamma \tvdash{\nnatA'} \valr : \type'  $, then  $\Gamma
+  \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$.
+\end{thm}
+
+\begin{proof}
+By induction on the typing derivation.\\
+\caseL{
+  $  \inferrule{
+    }{
+      \ictx \tctx , x: \bang{\nnatA} \ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax}  $
+  }
+  Assume  $\Gamma \tvdash{\nnatA'} \valr : \bang{\nnatA} \ltype ~(\star) $.\\
+  TS:   $\Gamma \tvdash{\max(\nnatA, \nnatA')} x [\valr/x]  :
+  \bang{\nnatA} \ltype$.\\
+  It is proved from the assumption $(\star)$ by weaking from $\nnatA'$
+  to $\max(\nnatA,\nnatA')$.\\
+
+\caseL{
+  $  \inferrule{
+    }{
+      \ictx \tctx , x: \bang{\nnatA} \ltype, y : \type' \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax}  $
+  }
+  Assume  $\Gamma \tvdash{\nnatA'} \valr : \type' ~(\star) $.\\
+  TS:   $\Gamma \tvdash{\max(\nnatA, \nnatA')} x [\valr/y]  :
+  \bang{\nnatA} \ltype$.\\
+  It is proved from the assumption by weaking.\\ 
+ 
+
+  \caseL{
+  $  \inferrule{
+      \ictx \Gamma, y: \type',  x: \type_1
+      \tvdash{k}
+      \expr: \type_2 (\diamond)
+    }{
+      \ictx r+\Gamma, y: (r+\type') \tvdash{k+r} \lambda x. \expr : \bang{r}  ( \type_1
+      \lto \type_2)
+    }~\textbf{lambda} $
+  }
+  Assume  $\Gamma \tvdash{\nnatA'} \valr : \type' ~(\star) $.\\
+  By Theorem 2 context raisig, we know: $r+\Gamma \tvdash{\nnatA'+r} \valr : r+\type' ~(\star\star) $\\
+  TS:   $r+\Gamma \tvdash{\max(k+r, \nnatA'+r)} \lambda x. \expr [\valr/y]  :
+  \bang{r}  ( \type_1 \lto \type_2) $.\\
+  By IH on $\diamond$ along with $(\star)$, we get:  $\Gamma,x:\type_1 \tvdash{\max(k, \nnatA')}  \expr [\valr/y]  :
+  \type_2 ~(1)$.\\
+  Using the lambda rule, we conclude: \\
+  $r+\Gamma \tvdash{\max(k+r, \nnatA'+r)} \lambda x. \expr [\valr/y]  :
+  \bang{r}  ( \type_1 \lto \type_2) $.\\
+
   
+  \caseL{
+     $  \inferrule{
+      \ictx \Gamma_1 ,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto \type_2   ) ~(\diamond)\\
+      \ictx \Gamma_2 ,x:\type' \tvdash{\nnatA_2} \expr_2: \type_1 ~(\clubsuit)
+    }{
+      \ictx \max (\Gamma_1, \Gamma_2 ),x:\type' \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app} $
+  }
+  Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
+  Assume $\Gamma_2 \tvdash{\nnatA_2'} \valr : \type' ~(2) $.\\
+  From Theorem 3, we know : $\max(\Gamma_1,\Gamma_2)
+  \tvdash{\max(\nnatA_1', \nnatA_2')} \valr : \type' ~(3) $.\\
+   TS:   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
+     \nnatA_1,\nnatA_2) , \max(\nnatA_1', \nnatA_2') ) } (\expr_1 \eapp \expr_2)[\valr/x] : \type_2$.\\
+By IH on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
+\tvdash{\max(\nnatA_1, \nnatA_1' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
+\lto \type_2   )  $.\\
+By IH on $(\clubsuit)$ and $(2)$, we get: $ \Gamma_2
+\tvdash{\max(\nnatA_2, \nnatA_2')}
+\expr_2 [\valr/x]: \type_1  $.\\
+By using the rule app, we conclude:\\
+  $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
+     \nnatA_1,\nnatA_1') , \max(\nnatA_2, \nnatA_2') ) } (\expr_1 \eapp \expr_2)[\valr/x] : \type_2$.\\
+
+  \caseL{
+   $   \inferrule{
+      \ictx \Gamma , x: \type' \tvdash{\nnatA} \expr: \bang{k} \ltype 
+    }{
+      \ictx \Gamma' ,1+\Gamma ,x : 1+\type' \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+    }~\textbf{delta} $
+  }
+  Assume  $\Gamma  \tvdash{\nnatA'} \valr : \type' ~(1) $.\\
+   By Theorem 2 context raisig, we know: $1+\Gamma \tvdash{\nnatA'+1} \valr : 1+\type' ~(2) $\\
+   TS:
+   $\Gamma' ,1+\Gamma \tvdash{ \max( 1+\nnatA, \nnatA'+1)  } \delta(\expr): \bang{k} \ltype $
+   By IH on the premise, we know: $ \Gamma
+   \tvdash{\max(\nnatA,\nnatA')} \expr[\valr/x]: \bang{k} \ltype $.\\
+   By the rule delta, we get :
+      $\Gamma' ,1+\Gamma \tvdash{1+ \max( \nnatA, \nnatA')  } \delta(\expr[\valr/x]): \bang{k} \ltype $
+.\\
+  
+  % \caseL{
+  %     $   \inferrule{
+  %     \ictx \Gamma_1 \tvdash{\nnatA} \expr: \type_1 \\
+  %     \ictx \Gamma_2, x: \type_1 \tvdash{\nnatA'} \expr' : \type
+  %   }{
+  %     \ictx \max(\Gamma_1,\Gamma_2) \tvdash{\max(\nnatA, \nnatA') } \elet x =  \expr \ein \expr': \type
+  %   }~\textbf{let}  $
+  % }
+  
+
+  % \caseL{
+  % $  \inferrule{
+  %     \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1 : \bang{k} \tbool\\
+  %     \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2 : \type\\
+  %     \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_3 : \type
+  %   }{
+  %     \ictx \max(\Gamma_1, \nnatA_1+ \Gamma_2)  \tvdash{\nnatA_1 + \nnatA_2} \eif \eapp \expr_1 \eapp \expr_2
+  %     \eapp \expr_3 : \type
+  %   }~\textbf{if} $
+  % }
+
+  
+
+
+  \end{proof} 
+
+
+
+
 
 \begin{thm}[Adaptivity Soundness theorem]
   If $ x_i : \bang{k_i} \ltype_i  \tvdash{\nnatA} \expr : \type$
   and  $\exists \env = x_i \to v_i , $ so that $   \empty
   \tvdash{r_i} v_i : \bang{k_i} \ltype_i $  , and  $\env, \expr \bigstep \valr, \tr $,
-  then $ A(\tr) \leq \max(k, r_i)  $.
+  then $ A(\tr) \leq \nnatA  $.
 \end{thm}%
