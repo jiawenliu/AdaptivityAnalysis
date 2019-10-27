@@ -3,7 +3,6 @@ open HeadFile
 
 open Distribution 
 
-let dataset = [1.0;1.0;1.0;1.0]   
 
  let rec round (j ) = 
  (fun (db ) -> 
@@ -16,8 +15,7 @@ let dataset = [1.0;1.0;1.0;1.0]
         ( a ,  j ) ::  ( ( ( round   (( j ) +. ( 1.000000 )) )   db )  
        k )  
     else 
-      [] 
-   
+      []
   )
  )
  

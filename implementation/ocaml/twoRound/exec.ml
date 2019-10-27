@@ -21,9 +21,17 @@ let rec write_list res oc =
 
   let main  = 
     let (ifile, ofile) = parseArgs() in
-
     let oc = open_out ofile in 
-        let ic = open_in ifile in
+    if !cdb 
+    then
+      let dbc = open_out ifile in
+          let dataset = create_db !rows !cols in 
+            let _ = experiments_tr 0 oc dataset in
+            let _ = record_db dataset dbc in
+            let _ =  close_out oc in
+              close_out dbc
+    else 
+        let ic = open_in ifile in  
           let dataset = read_db ic !rows !cols in 
             let _ = experiments_tr 0 oc dataset in
               close_out oc;

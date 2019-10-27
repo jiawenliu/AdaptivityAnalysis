@@ -10,11 +10,11 @@ let rows = ref 0.0
 let cdb = ref false
 
 let argDefs = [
-(*    "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
-*)    "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
+      "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
+      "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
       "-cl", Arg.Float (fun i -> cols := i) , "specify the cols of the database, -cl float"; 
       "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
-      "-i", Arg.String (fun s -> infile := Some s ), "specify the input file name, -i string" ; 
+      "-db", Arg.String (fun s -> infile := Some s ), "specify the database file name, -i string" ; 
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string" 
 ]
 let delta = 0.0000001
@@ -39,16 +39,16 @@ let parseArgs () =
 
   
 
-let rec creat_db (col : float) (row : float)  =
+let rec create_db (col : float) (row : float)  =
   if row > 0.0
     then 
-      let rec creat_row (col : float) = 
+      let rec create_row (col : float) = 
         if col > 0.0
         then 
-          (float_of_int (Random.int 2)) :: creat_row (col -. 1.0)
+          (float_of_int (Random.int 2)) :: create_row (col -. 1.0)
         else
           []
-      in (creat_row col) :: creat_db col (row -. 1.0)
+      in (create_row col) :: create_db col (row -. 1.0)
     else
       []
 
@@ -71,7 +71,7 @@ let rec read_db ic rows cols =
 
 
 let thresholdout_mech (q:query) db =
-  let holdout_db = creat_db (float_of_int (List.length (hd db))) (float_of_int(List.length db)) in
+  let holdout_db = create_db (float_of_int (List.length (hd db))) (float_of_int(List.length db)) in
     let threshold = 1.0 in
       let noise_rate = 1.0 in
         let budget = (List.length db) in
@@ -114,7 +114,7 @@ let gauss_mech (q:query) db =
         in  
         sm /.  float_of_int (List.length db)
       in
-        let mu = 1.0 (*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
+        let mu = log(1.25) /. log(delta) (*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
         in 
           mean +. (sample_normal_boxmuller3 0.0 mu) 
   in 
@@ -193,7 +193,7 @@ let rec mr_initial n =
 	 [5.];
 	 [8.]]
 *)
-let mech =  nonoise_mech
+let mech =  gauss_mech
 
 
 
