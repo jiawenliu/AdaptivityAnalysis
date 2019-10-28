@@ -2,7 +2,7 @@ open TwoRound
 open Printf 
 open HeadFile
 open TwoRoundSplit
-
+open TwoRoundNone
 
 
   let write res oc =
@@ -25,32 +25,44 @@ let rec write_list res oc =
         experiments_tr (r+1) db (result +. x) k
       else result /. (float_of_int !rounds )
 
-  let rec experiments_tr_split r db1 db2 result k =
+  let rec experiments_tr_split r result k =
      if r < !rounds then
-        let x = TwoRoundSplit.twoRound k db1 db2 in
-        experiments_tr (r+1) db1 db2 (result +. x) k
+       let (db1, db2) =  (create_db !rows k, create_db !rows k)
+      in
+          let x = TwoRoundSplit.twoRound k db1 db2 in
+          experiments_tr_split (r+1) (result +. x) k
+    else result /. (float_of_int !rounds )
+
+  let rec experiments_tr_none r result k =
+     if r < !rounds then
+    let db = create_db !rows k
+      in 
+        let x = TwoRoundNone.twoRound k db in
+        experiments_tr_none (r+1) (result +. x) k
       else result /. (float_of_int !rounds )
 
 let experimet_for_one_col ifile oc colnum =
   if (!mech_name = "split") then
-  let (db1, db2) =  (create_db !rows colnum, create_db !rows colnum)
-    in 
-      let result = experiments_tr_split 0 db1 db2 0.0 colnum in
+      let result = experiments_tr_split 0 0.0 colnum in
         write result oc 
 
 else
-    let db =  
-      if (!cdb) 
-      then
-          create_db !rows colnum
-      else 
-          let ic = open_in ifile in  
-            let data = read_db ic !rows colnum in
-            let _ = close_in ic in
-            data
-    in 
-          let result = experiments_tr 0 db 0.0 colnum in
-          write result oc
+  if (!mech_name = "non") then
+      let result = experiments_tr_none 0 0.0 colnum in
+        write result oc
+    else 
+      let db =  
+        if (!cdb) 
+        then
+            create_db !rows colnum
+        else 
+            let ic = open_in ifile in  
+              let data = read_db ic !rows colnum in
+              let _ = close_in ic in
+              data
+      in 
+            let result = experiments_tr 0 db 0.0 colnum in
+            write result oc
 
 let rec experiments_for_cols colnum oc =
  if colnum < !cols
@@ -71,6 +83,6 @@ else
 let main  = 
     let (ifile, ofile) = parseArgs() in
     let oc = open_out ofile in
-    experiments_for_cols 10.0 oc
+    experiments_for_cols (!colst) oc
 
               
