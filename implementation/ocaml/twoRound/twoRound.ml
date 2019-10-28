@@ -2,7 +2,7 @@ open Printf
 open HeadFile 
 
 open Distribution 
-
+let mech = gauss_mech
 
  let rec round (j ) = 
  (fun (db ) -> 

@@ -120,8 +120,10 @@ let gauss_mech (q:query) db =
           ) 0.0 db  
         in  
         sm /.  float_of_int (List.length db)
+
       in
-        let mu = sqrt(float_of_int (List.length (List.nth db 0))) /. sqrt(float_of_int (List.length db)) (*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
+(*       let _ = print_endline(string_of_int(List.length db) ^ (string_of_int(List.length (List.nth db 0)))) in
+ *)        let mu = ( sqrt( (sqrt (float_of_int (List.length (List.nth db 0))) )   /. (float_of_int (List.length db)) ))(*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
         in 
           mean +. (sample_normal_boxmuller3 0.0 mu) 
   in 
@@ -149,7 +151,7 @@ let dot (l1:float ) (l2: float) : float = l1 *. l2
   
 
 let sign (y: float) : float = 
-  if y > 0.0 then 1.0 else -1.0
+  if y >= 0.0 then 1.0 else -1.0
 
 let get (row:float list) (i:float) : float  =
   List.nth row (int_of_float i)
