@@ -45,7 +45,11 @@ let rec create_db (col : float) (row : float)  =
       let rec create_row (col : float) = 
         if col > 0.0
         then 
-          (float_of_int (Random.int 2)) :: create_row (col -. 1.0)
+          if (Random.int 2) == 0
+          then
+            (- 1.0 ) :: create_row (col -. 1.0)
+          else
+            (1.0 ) :: create_row (col -. 1.0)
         else
           []
       in (create_row col) :: create_db col (row -. 1.0)
@@ -114,7 +118,7 @@ let gauss_mech (q:query) db =
         in  
         sm /.  float_of_int (List.length db)
       in
-        let mu = log(1.25) /. log(delta) (*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
+        let mu = log(!cols) /. log(!rows) (*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
         in 
           mean +. (sample_normal_boxmuller3 0.0 mu) 
   in 

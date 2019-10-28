@@ -7,7 +7,7 @@ OCAMLBUILD=ocamlbuild
 VERSION=byte
 
 
-NAME=exec
+NAME=exec_cols
 # Program main file
 MAIN=$(NAME)
 
