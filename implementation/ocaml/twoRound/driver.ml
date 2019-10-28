@@ -1,6 +1,7 @@
 open TwoRound
 open Printf 
 open HeadFile
+open TwoRoundSplit
 
 
 
@@ -12,34 +13,43 @@ let rec write_list res oc =
     | x::xs -> write x oc; write_list xs oc
     | [] -> ()
 
-  let rec experiments_tr r oc dataset =
+(*   let rec experiments_tr r oc dataset =
      if r < !rounds then
         let x = TwoRound.twoRound 6.0 dataset in
         write (x) oc ; experiments_tr (r+1) oc dataset
-      else close_out oc
+      else close_out oc *)
 
-  let rec experiments_tr r dataset result =
+  let rec experiments_tr r db result k =
      if r < !rounds then
-        let x = TwoRound.twoRound 6.0 dataset in
-        experiments_tr (r+1) dataset (result +. x)
+        let x = TwoRound.twoRound k db in
+        experiments_tr (r+1) db (result +. x) k
       else result /. (float_of_int !rounds )
 
+  let rec experiments_tr_split r db1 db2 result k =
+     if r < !rounds then
+        let x = TwoRoundSplit.twoRound k db1 db2 in
+        experiments_tr (r+1) db1 db2 (result +. x) k
+      else result /. (float_of_int !rounds )
 
 let experimet_for_one_col ifile oc colnum =
-    let dataset =  
+  if (!mech_name = "split") then
+  let (db1, db2) =  (create_db !rows colnum, create_db !rows colnum)
+    in 
+      let result = experiments_tr_split 0 db1 db2 0.0 colnum in
+        write result oc 
+
+else
+    let db =  
       if (!cdb) 
       then
-        let dbc = open_out ifile in
-          let data =  create_db !rows colnum in 
-              let _ = record_db data dbc in
-              data
+          create_db !rows colnum
       else 
           let ic = open_in ifile in  
             let data = read_db ic !rows colnum in
             let _ = close_in ic in
             data
     in 
-          let result = experiments_tr 0 dataset 0.0 in
+          let result = experiments_tr 0 db 0.0 colnum in
           write result oc
 
 let rec experiments_for_cols colnum oc =
