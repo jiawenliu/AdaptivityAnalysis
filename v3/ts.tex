@@ -90,19 +90,47 @@
   then $ r+\Gamma \tvdash{ r+ \nnatA} \expr : r+ \type $.
 \end{thm}
 
+\begin{thm}[Context Weaking]
+  If $ \Gamma \tvdash{ \nnatA} \expr : \type $,  $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $.
+\end{thm}
+
+\begin{thm}[Context Strengthening]
+  If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $x \not\
+  in \fv{\expr} $, then $ \Gamma , x \tvdash{ \nnatA} \expr : \type $.
+\end{thm}
+
 \begin{thm}[Context Max]
   If $ \Gamma_1 \tvdash{ \nnatA_1} \expr : \type $ and $ \Gamma_2 \tvdash{ \nnatA_2} \expr : \type $,
   then $\max(\Gamma_1,\Gamma_2) \tvdash{\max( \nnatA_1 , \nnatA_2 )} \expr : \type $.
 \end{thm}
 
+\begin{thm}[Adaptivity Monotonicity]
+   If $ \Gamma \tvdash{ \nnatA} \expr : \type $ and $\nnatA' >
+   \nnatA$, then $ \Gamma \tvdash{ \nnatA'} \expr : \type $.
+\end{thm}
+
 \begin{thm}[Substitution]
-  If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
-  \Gamma \tvdash{\nnatA'} \valr : \type'  $, then  $\Gamma
-  \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$.
+  \begin{enumerate} 
+   \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
+  \Gamma \tvdash{\nnatA'} \valr : \type'  $ and $ x \in \fv{\expr} $,  then  $\Gamma
+  \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$. 
+  \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
+  \Gamma \tvdash{\nnatA'} \valr : \type'  $ and $ x \not \in \fv{\expr} $,  then  $\Gamma
+  \tvdash{\nnatA } \expr[\valr/x]  : \type$.
+  \end{enumerate}
 \end{thm}
 
 \begin{proof}
-By induction on the typing derivation.\\
+  By simultaneous induction on the typing derivation.\\
+  Proof of Statement (2).\\
+  Since we know $x \not \in \fv{\expr}$ so that $\expr[\valr/x]  =
+  \expr$. \\
+  From the assumption $ \Gamma,x : \type' \tvdash{ \nnatA} \expr :
+  \type $, by context strengthening,  we know that $   \Gamma  \tvdash{
+    \nnatA} \expr : \type $.\\
+
+  Proof of Statement (1).\\
+  
 \caseL{
   $  \inferrule{
     }{
@@ -115,16 +143,16 @@ By induction on the typing derivation.\\
   It is proved from the assumption $(\star)$ by weaking from $\nnatA'$
   to $\max(\nnatA,\nnatA')$.\\
 
-\caseL{
-  $  \inferrule{
-    }{
-      \ictx \tctx , x: \bang{\nnatA} \ltype, y : \type' \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-    }~\textbf{Ax}  $
-  }
-  Assume  $\Gamma \tvdash{\nnatA'} \valr : \type' ~(\star) $.\\
-  TS:   $\Gamma \tvdash{\max(\nnatA, \nnatA')} x [\valr/y]  :
-  \bang{\nnatA} \ltype$.\\
-  It is proved from the assumption by weaking.\\ 
+% \caseL{
+%   $  \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA} \ltype, y : \type' \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}  $
+%   }
+%   Assume  $\Gamma \tvdash{\nnatA'} \valr : \type' ~(\star) $.\\
+%   TS:   $\Gamma \tvdash{\max(\nnatA, \nnatA')} x [\valr/y]  :
+%   \bang{\nnatA} \ltype$.\\
+%   It is proved from the assumption by weaking.\\ 
  
 
   \caseL{
@@ -141,6 +169,7 @@ By induction on the typing derivation.\\
   By Theorem 2 context raisig, we know: $r+\Gamma \tvdash{\nnatA'+r} \valr : r+\type' ~(\star\star) $\\
   TS:   $r+\Gamma \tvdash{\max(k+r, \nnatA'+r)} \lambda x. \expr [\valr/y]  :
   \bang{r}  ( \type_1 \lto \type_2) $.\\
+  We know that $y \in \fv{\expr}$ from the assumption $ y \in \fv{\lambda x.\expr} $.\\
   By IH on $\diamond$ along with $(\star)$, we get:  $\Gamma,x:\type_1 \tvdash{\max(k, \nnatA')}  \expr [\valr/y]  :
   \type_2 ~(1)$.\\
   Using the lambda rule, we conclude: \\
@@ -162,13 +191,35 @@ By induction on the typing derivation.\\
   From Theorem 3, we know : $\max(\Gamma_1,\Gamma_2)
   \tvdash{\max(\nnatA_1', \nnatA_2')} \valr : \type' ~(3) $.\\
    TS:   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
-     \nnatA_1,\nnatA_2) , \max(\nnatA_1', \nnatA_2') ) } (\expr_1 \eapp \expr_2)[\valr/x] : \type_2$.\\
-By IH on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
+     \nnatA_1,\nnatA_2) , \max(\nnatA_1', \nnatA_2') ) } (\expr_1
+   \eapp \expr_2)[\valr/x] : \type_2$.\\
+   There are three situations:
+   \begin{enumerate}
+   \item $x \in \fv{\expr_1}, x \in \fv{\expr_2}$, \\
+     By IH1 on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
 \tvdash{\max(\nnatA_1, \nnatA_1' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
 \lto \type_2   )  $.\\
-By IH on $(\clubsuit)$ and $(2)$, we get: $ \Gamma_2
+By IH1 on $(\clubsuit)$ and $(2)$, we get: $ \Gamma_2
 \tvdash{\max(\nnatA_2, \nnatA_2')}
 \expr_2 [\valr/x]: \type_1  $.\\
+\item $x \not\in \fv{\expr_1}, x \in \fv{\expr_2}$\\
+  By IH2 on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
+\tvdash{\nnatA_1} \expr_1 [\valr/x]:  \bang{0} ( \type_1
+\lto \type_2 ) $, by Lemma Adaptivity Monotonicity, we know: $\Gamma_1
+\tvdash{\max(\nnatA_1, \nnatA_1' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
+\lto \type_2 ) $.\\
+By IH1 on $(\clubsuit)$ and $(2)$, we get: $ \Gamma_2
+\tvdash{\max(\nnatA_2, \nnatA_2')}
+\expr_2 [\valr/x]: \type_1  $.\\
+\item $x \in \fv{\expr_1}, x \not\in \fv{\expr_2}$\\
+  By IH1 on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
+\tvdash{\max(\nnatA_1, \nnatA_1' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
+\lto \type_2   )  $.\\
+By IH2 on $(\clubsuit)$ and $(2)$, by Lemma Adaptivity Monotonicty, we get: $ \Gamma_2
+\tvdash{\max(\nnatA_2, \nnatA_2')}
+\expr_2 [\valr/x]: \type_1  $.\\
+     \end{enumerate}
+   
 By using the rule app, we conclude:\\
   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
      \nnatA_1,\nnatA_1') , \max(\nnatA_2, \nnatA_2') ) } (\expr_1 \eapp \expr_2)[\valr/x] : \type_2$.\\
@@ -183,22 +234,37 @@ By using the rule app, we conclude:\\
   Assume  $\Gamma  \tvdash{\nnatA'} \valr : \type' ~(1) $.\\
    By Theorem 2 context raisig, we know: $1+\Gamma \tvdash{\nnatA'+1} \valr : 1+\type' ~(2) $\\
    TS:
-   $\Gamma' ,1+\Gamma \tvdash{ \max( 1+\nnatA, \nnatA'+1)  } \delta(\expr): \bang{k} \ltype $
-   By IH on the premise, we know: $ \Gamma
+   $\Gamma' ,1+\Gamma \tvdash{ \max( 1+\nnatA, \nnatA'+1)  }
+   \delta(\expr): \bang{k} \ltype $.\\
+   We know :$ x \in \fv{\expr}$ from the assumption $ x \in \fv{\delta{\expr}}$.\\
+   By IH2 on the premise, we know: $ \Gamma
    \tvdash{\max(\nnatA,\nnatA')} \expr[\valr/x]: \bang{k} \ltype $.\\
    By the rule delta, we get :
       $\Gamma' ,1+\Gamma \tvdash{1+ \max( \nnatA, \nnatA')  } \delta(\expr[\valr/x]): \bang{k} \ltype $
 .\\
   
-  % \caseL{
-  %     $   \inferrule{
-  %     \ictx \Gamma_1 \tvdash{\nnatA} \expr: \type_1 \\
-  %     \ictx \Gamma_2, x: \type_1 \tvdash{\nnatA'} \expr' : \type
-  %   }{
-  %     \ictx \max(\Gamma_1,\Gamma_2) \tvdash{\max(\nnatA, \nnatA') } \elet x =  \expr \ein \expr': \type
-  %   }~\textbf{let}  $
-  % }
-  
+  \caseL{
+      $   \inferrule{
+      \ictx \Gamma_1, y: \type'  \tvdash{\nnatA} \expr: \type_1 \\
+      \ictx \Gamma_2, y: \type',  x: \type_1 \tvdash{\nnatA'} \expr' : \type
+    }{
+      \ictx \max(\Gamma_1,\Gamma_2), y: \type' \tvdash{\max(\nnatA, \nnatA') } \elet x =  \expr \ein \expr': \type
+    }~\textbf{let}  $
+  }
+Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
+  Assume $\Gamma_2 \tvdash{\nnatA_2'} \valr : \type' ~(2) $.\\
+  From Theorem 3, we know : $\max(\Gamma_1,\Gamma_2)
+  \tvdash{\max(\nnatA_1', \nnatA_2')} \valr : \type' ~(3) $.\\
+   TS:   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
+     \nnatA_1',\nnatA_2') , \max(\nnatA', \nnatA) ) } ( \elet x =  \expr \ein \expr' )[\valr/x] : \type_2$.\\
+   Similar to the application rule, we have 3 situations.\\
+   By IH on the first premise, we know :$\Gamma_1
+   \tvdash{\max(\nnatA_1', \nnatA )}  \expr[\valr/y] : \type_1  $. \\
+   By IH on the second premise, we know : $ \Gamma_2, x: \type_1
+   \tvdash{\max(\nnatA_2', \nnatA'  )} $.\\
+   By the rule let, we conclude that: \\
+    $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
+     \nnatA_1',\nnatA_2') , \max(\nnatA, \nnatA') ) } (\elet x =  \expr \ein \expr')[\valr/y] : \type_2$.\\
 
   % \caseL{
   % $  \inferrule{
