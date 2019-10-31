@@ -287,8 +287,80 @@ Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
 
 
 \begin{thm}[Adaptivity Soundness theorem]
-  If $ x_i : \bang{k_i} \ltype_i  \tvdash{\nnatA} \expr : \type$
-  and  $\exists \env = x_i \to v_i , $ so that $   \empty
-  \tvdash{r_i} v_i : \bang{k_i} \ltype_i $  , and  $\env, \expr \bigstep \valr, \tr $,
-  then $ A(\tr) \leq \nnatA  $.
+  If $ \Gamma  \tvdash{\nnatA} \expr : \type$
+  and  exists $\env $ satisfies $\Gamma$  and  $\env, \expr \bigstep \valr, \tr $,
+  then $ A(\tr) \leq \nnatA  $.\\(
+  $\env$ satisfies $\Gamma$ means $\dom(\env) = \dom(\Gamma) \land
+  \forall x_i \in \dom(\Gamma).  \exists r_i.$ so that $\empty
+  \tvdash{r_i} \env(xi) : \Gamma(x) $  )
 \end{thm}%
+
+\begin{thm}[Adaptivity Soundness theorem]
+  If $ \Gamma  \tvdash{\nnatA} \expr : \type$
+  and  exists $\env $ satisfies $\Gamma$  and  $\env, \expr \bigstep \valr, \tr $,
+  then $ \Gamma  \tvdash{\nnatA- A(\tr)} \valr : \type$.\\(
+  $\env$ satisfies $\Gamma$ means $\dom(\env) = \dom(\Gamma) \land
+  \forall x_i \in \dom(\Gamma).  \exists r_i.$ so that $\empty
+  \tvdash{r_i} \env(xi) : \Gamma(x) $  )
+\end{thm}%
+
+\begin{proof}
+  By indution on the typing derivation.\\
+
+
+  \caseL{
+    \inferrule{
+    }{
+      \ictx \tctx , x: \bang{\nnatA} \ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax}
+  }
+  Assume exists the enviroment $\env$ and $\env(x) =\valr$ and
+  $\empty \tvdash{ \nnatA} \valr: \bang{\nnatA}\ltype $. so that
+  $\inferrule{ }{\env, x \bigstep \valr, (x, \env ) }  $. \\
+  So we conclude that: $ A(  (x, \env)  ) = 0 \leq \nnatA $.
+   
+  
+  \caseL{
+    \inferrule{
+      \ictx \Gamma, x: \type_1
+      \tvdash{k}
+      \expr: \type_2
+    }{
+      \ictx r+\Gamma \tvdash{k+r} \lambda x. \expr : \bang{r}  ( \type_1
+      \lto \type_2)
+    }~\textbf{lambda}
+  }
+ Assume exists the enviroment $\env$ and $\env(x) =\valr$ and
+  $\empty \tvdash{ \nnatA} \valr: \bang{\nnatA}\ltype $. so that
+  $\inferrule{ }{\env, x \bigstep \valr, (x, \env ) }  $. \\
+
+$$\wq{ \inferrule{
+  }{
+    \env, \lambda x. \expr \bigstep (\lambda x.\expr, \env),
+    (\lambda x.\expr, \env)
+  }
+}$$
+  
+  \caseL{
+     \inferrule{
+      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto \type_2      )\\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+  }
+  \[
+\inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
+    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+  }
+  \]
+
+  
+  
+  \end{proof}
