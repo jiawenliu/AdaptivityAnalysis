@@ -16,12 +16,14 @@ def plot_lines(ys, x):
 		print y
 		plt.plot(x, y, label=label)
 	plt.grid(True)
+	plt.xlabel("k")
+	plt.ylabel("error")
 	plt.legend(loc="best")
 	plt.show()
 
-datas = read_files("results1/*.txt")
+datas = read_files("results/*40.txt")
 print datas
-plot_lines(datas,  np.arange(10, 100, 5) )
+plot_lines(datas,  np.arange(2, 40, 1) )
 
 # for  y,label in enumerate(datas):
 # 	plt.plot(y, np.arange(10, 100, 5), label=label)

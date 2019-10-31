@@ -19,29 +19,29 @@ let rec write_list res oc =
         write (x) oc ; experiments_tr (r+1) oc dataset
       else close_out oc *)
 
-  let rec experiments_tr r result k =
+  let rec experiments_tr r error k =
      if r < !rounds then
      let db = create_db k !rows 
       in
         let x = TwoRound.twoRound (k -. 1.0) db in
-        experiments_tr (r+1) (result +. x) k
-      else abs_float(result /. (float_of_int !rounds ))
+        experiments_tr (r+1) (error +. abs_float(x)) k
+      else abs_float(error /. (float_of_int !rounds ))
 
-  let rec experiments_tr_split r result k =
+  let rec experiments_tr_split r error k =
      if r < !rounds then
        let (db1, db2) =  (create_db k (!rows/. 2.0), create_db k (!rows/. 2.0))
       in
           let x = TwoRoundSplit.twoRound (k -. 1.0) db1 db2 in
-          experiments_tr_split (r+1) (result +. x) k
-    else abs_float(result /. (float_of_int !rounds ))
+          experiments_tr_split (r+1) (error +. abs_float(x)) k
+    else abs_float(error /. (float_of_int !rounds ))
 
-  let rec experiments_tr_none r result k =
+  let rec experiments_tr_none r error k =
      if r < !rounds then
     let db = create_db k !rows
       in 
         let x = TwoRoundNone.twoRound (k -. 1.0) db in
-        experiments_tr_none (r+1) (result +. x) k
-      else abs_float(result /. (float_of_int !rounds ))
+        experiments_tr_none (r+1) (error +. abs_float(x) ) k
+      else abs_float(error /. (float_of_int !rounds ))
 
 
 
@@ -74,11 +74,7 @@ let rec experiments_for_cols colnum oc =
  then 
   let _ = experimet_for_one_col ("datas/data"^string_of_int(int_of_float(colnum))^".txt") oc (colnum)
   in 
-    let coln = if colnum < 100.0
-      then colnum +. 5.0
-      else if colnum < 1000.0
-      then  colnum +. 100.0
-      else colnum +. 1000.0
+    let coln = colnum +. 1.0
     in
       experiments_for_cols coln oc
 else

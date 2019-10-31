@@ -14,11 +14,11 @@ let argDefs = [
       "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
       "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
       "-cl", Arg.Float (fun i -> cols := i) , "specify the cols of the database, -cl float"; 
-      "--clst", Arg.Float (fun i -> colst := i) , "specify the start numbers of cols of the database, -cl float"; 
+      "-clst", Arg.Float (fun i -> colst := i) , "specify the start numbers of cols of the database, -cl float"; 
       "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
-      "-db", Arg.String (fun s -> infile := Some "datas/data.txt" ), "specify the database file name, -i string" ; 
+      "-db", Arg.String (fun s -> infile := Some s ), "specify the database file name, -i string" ; 
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string";
-      "--mech", Arg.String (fun s -> mech_name := s ), "specify the mechanism name, -mech string"  
+      "-mech", Arg.String (fun s -> mech_name := s ), "specify the mechanism name, -mech string"  
 ]
 let delta = 0.0000001
 let epsilon = 1.0
