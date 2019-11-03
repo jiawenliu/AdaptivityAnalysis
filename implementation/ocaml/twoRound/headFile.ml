@@ -123,9 +123,10 @@ let gauss_mech (q:query) db =
 
       in
 (*       let _ = print_endline(string_of_int(List.length db) ^ (string_of_int(List.length (List.nth db 0)))) in
- *)        let mu = ( sqrt( (sqrt (float_of_int (List.length (List.nth db 0))) )   /. (float_of_int (List.length db)) ))(*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
-        in 
-          mean +. (sample_normal_boxmuller3 0.0 mu) 
+ *)        let sigma = ( sqrt( (sqrt (float_of_int (List.length (List.nth db 0))) )   /. (float_of_int (List.length db)) ))(*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
+        in
+        print_endline (string_of_float sigma);
+          mean +. (sample_normal_boxmuller3 0.0 sigma) 
   in 
   if result > 1.0 then 1.0 
   else  if result < -1.0 then -1.0 else result 
