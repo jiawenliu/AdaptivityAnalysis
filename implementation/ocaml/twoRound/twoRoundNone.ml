@@ -1,7 +1,5 @@
-open Printf 
-open HeadFile 
+open Mechs 
 
-open Distribution 
 let mech = nonoise_mech
 
  let rec round (j ) = 

@@ -1,7 +1,4 @@
-open Printf 
-open HeadFile 
-
-open Distribution 
+open Mechs
 
 let mech = nonoise_mech
 

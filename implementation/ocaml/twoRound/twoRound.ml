@@ -1,7 +1,6 @@
-open Printf 
-open HeadFile 
+open Mechs 
 
-open Distribution 
+
 let mech = gauss_mech
 
  let rec round (j ) = 

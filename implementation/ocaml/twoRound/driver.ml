@@ -1,9 +1,9 @@
 open TwoRound
 open Printf 
-open HeadFile
+open Mechs
 open TwoRoundSplit
 open TwoRoundNone
-
+open Support
 
   let write res oc =
     fprintf oc "%f\n" res
@@ -13,12 +13,8 @@ let rec write_list res oc =
     | x::xs -> write x oc; write_list xs oc
     | [] -> ()
 
-(*   let rec experiments_tr r oc dataset =
-     if r < !rounds then
-        let x = TwoRound.twoRound 6.0 dataset in
-        write (x) oc ; experiments_tr (r+1) oc dataset
-      else close_out oc *)
-
+(* ****************************************************************************** *)
+(* ****************************TwoRound with Gauss Mech*************************** *)
   let rec experiments_tr r error k =
      if r < !rounds then
      let db = create_db k !rows 
@@ -27,6 +23,8 @@ let rec write_list res oc =
         experiments_tr (r+1) (error +. abs_float(x)) k
       else abs_float(error /. (float_of_int !rounds ))
 
+(* ****************************************************************************** *)
+(* ****************************TwoRound with Split Mech*************************** *)
   let rec experiments_tr_split r error k =
      if r < !rounds then
        let (db1, db2) =  (create_db k (!rows/. 2.0), create_db k (!rows/. 2.0))
@@ -35,6 +33,8 @@ let rec write_list res oc =
           experiments_tr_split (r+1) (error +. abs_float(x)) k
     else abs_float(error /. (float_of_int !rounds ))
 
+(* ****************************************************************************** *)
+(* *************************TwoRound without Noise************************ *)
   let rec experiments_tr_none r error k =
      if r < !rounds then
     let db = create_db k !rows
@@ -43,49 +43,43 @@ let rec write_list res oc =
         experiments_tr_none (r+1) (error +. abs_float(x) ) k
       else abs_float(error /. (float_of_int !rounds ))
 
+(* ****************************************************************************** *)
+(* *************************Experiment driver with colnum************************ *)
+(* ****************************************************************************** *)
 
-
-let experimet_for_one_col ifile oc colnum =
-  if (!mech_name = "split") then
+let experimet_for_one_colnum oc colnum =
+if (!mech_name = "split") then
       let result = experiments_tr_split 0 0.0 colnum in
         write result oc 
 else
   if (!mech_name = "non") then
       let result = experiments_tr_none 0 0.0 colnum in
         write result oc
-    else 
-(*       let db =  
-        if (!cdb) 
-        then
-            create_db !rows colnum
-        else 
-            let ic = open_in ifile in  
-              let data = read_db ic !rows colnum in
-              let _ = close_in ic in
-              data
-      in  *)
-            let result = experiments_tr 0 0.0 colnum in
-            write result oc
+  else 
+      let result = experiments_tr 0 0.0 colnum in
+        write result oc
 
+(* ****************************************************************************** *)
+(* Experiment driver with colnum range from colst to col *)
+(* ****************************************************************************** *)
 
-
-let rec experiments_for_cols colnum oc =
- if colnum < !cols
- then 
-  let _ = experimet_for_one_col ("datas/data"^string_of_int(int_of_float(colnum))^".txt") oc (colnum)
-  in 
-    let coln = colnum +. 1.0
-    in
-      experiments_for_cols coln oc
-else
-  close_out oc
+let rec experiments_for_colnums colnum oc =
+if colnum < !cols
+  then 
+    let _ = experimet_for_one_colnum oc (colnum)
+    in 
+      let coln = colnum +. 1.0
+      in
+        experiments_for_colnums coln oc
+  else
+    close_out oc
 
 
 
 
 let main  = 
-    let (ifile, ofile) = parseArgs() in
+    let (ofile) = parseArgs() in
     let oc = open_out ofile in
-    experiments_for_cols (!colst) oc
+    experiments_for_colnums (!colst) oc
 
               
