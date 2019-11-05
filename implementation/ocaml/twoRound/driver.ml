@@ -24,8 +24,8 @@ let rec write_list res oc =
 (*  let _ = record_db db stdout in
  *)        
  let x = TwoRound.twoRound (k -. 1.0) db in
-        experiments_tr (r+1) (error +. abs_float(x)) k
-      else abs_float(error /. (float_of_int !rounds ))
+        experiments_tr (r+1) (error +. (abs_float(x) ** 2.0)) k
+      else sqrt(error /. (float_of_int !rounds ))
 
 (* ****************************************************************************** *)
 (* ****************************TwoRound with Split Mech*************************** *)
@@ -37,8 +37,8 @@ let rec write_list res oc =
         let _ = record_db db2 stdout in
  *)
            let x = TwoRoundSplit.twoRound (k -. 1.0) db1 db2 in
-          experiments_tr_split (r+1) (error +. abs_float(x)) k
-    else abs_float(error /. (float_of_int !rounds ))
+          experiments_tr_split (r+1) (error +. (abs_float(x) ** 2.0)) k
+    else sqrt(error /. (float_of_int !rounds ))
 
 (* ****************************************************************************** *)
 (* *************************TwoRound without Noise************************ *)
@@ -51,23 +51,27 @@ let rec write_list res oc =
  (*  	let db = db in  
  *) 	
  let x = TwoRoundNone.twoRound (k -. 1.0) db in
-        experiments_tr_none (r+1) (error +. abs_float(x) ) k
-      else abs_float(error /. (float_of_int !rounds ))
+        experiments_tr_none (r+1) (error +. (abs_float(x)**2.0) ) k
+      else sqrt(error /. (float_of_int !rounds ))
 
 (* ****************************************************************************** *)
 (* *************************Experiment driver with colnum************************ *)
 (* ****************************************************************************** *)
 
 let experimet_for_one_colnum oc colnum =
+let _ = print_endline ("column number: " ^ string_of_float(colnum)) in
 if (!mech_name = "split") then
       let result = experiments_tr_split 0 0.0 colnum in
+	let _ = print_endline (string_of_float(result)) in
         write result oc 
 else
   if (!mech_name = "non") then
       let result = experiments_tr_none 0 0.0 colnum in
+	let _ = print_endline (string_of_float(result)) in
         write result oc
   else 
       let result = experiments_tr 0 0.0 colnum in
+	let _ = print_endline (string_of_float(result)) in
         write result oc
 
 (* ****************************************************************************** *)
