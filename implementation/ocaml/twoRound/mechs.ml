@@ -41,19 +41,21 @@ let sum_q (db: float list list) =
 let gauss_mech (q:query) db =  
   let result =
     let mean = 
-      let sm =  List.fold_left 
+      	let sm =  List.fold_left 
           ( fun sum rw ->  
               sum +. (q rw)
           ) 0.0 db  
         in  
         sm /.  float_of_int (List.length db)
 
-      in
+    in
 (*       let _ = print_endline(string_of_int(List.length db) ^ (string_of_int(List.length (List.nth db 0)))) in
- *)        let sigma = ( sqrt( (sqrt (float_of_int (List.length (List.nth db 0))) )   /. (float_of_int (List.length db)) ))(*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
-      in
-        let _ = print_endline (string_of_float sigma)
-         in mean +. (sample_normal_boxmuller3 0.0 sigma) 
+ *)        
+ 		let sigma = ( sqrt( (sqrt (float_of_int (List.length (List.nth db 0))) )   /. (float_of_int (List.length db)) ))(*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
+      	in
+        (* let _ = print_endline (string_of_float sigma)
+         in *) 
+        mean +. (sample_normal_boxmuller3 0.0 sigma) 
   in 
   if result > 1.0 then 1.0 
   else  if result < -1.0 then -1.0 else result 
@@ -74,61 +76,5 @@ let restrict q db =
     match x with
       [] -> 0.0
     | _ -> q x
-
-let dot (l1:float ) (l2: float) : float = l1 *. l2
-  
-
-let sign (y: float) : float = 
-  if y >= 0.0 then 1.0 else -1.0
-
-let get (row:float list) (i:float) : float  =
-  List.nth row (int_of_float i)
-
-
-let updt l pos a = 
-  List.mapi (fun i x -> if i = (int_of_float pos) then a else x) l
-
-
-
-
-let rec listminus l1 l2 = 
-  match l2 with
-    | hd::tl -> listminus (List.filter (fun a -> if (a = hd) then false else true) l1) tl
-    | [] -> l1
-
-
-let contains l i = 
-  List.exists (fun a -> if (a = i) then true else false) l
-
-let rec db_minus d l = 
-	match d with
-		| hd :: tl -> (listminus hd l) :: (db_minus tl l)
-		| [] -> []
-
-
-let rec mr_initial n =
-	if n = 0.0 then
-		[]
-	else
-	0.0 :: mr_initial (n -. 1.0)
-
-(*let dataset = 
-   [[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
-	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
-	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
-	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
-	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
-	[1.0;1.0;0.0;1.0;0.0;0.0;1.0];
-	[1.0;1.0;0.0;1.0;0.0;0.0;1.0]]
-*)
-(*let dataset = 
-	[[1.];
-	 [2.];
-	 [2.];
-	 [1.];
-	 [4.];
-	 [5.];
-	 [8.]]
-*)
 
 

@@ -1,4 +1,5 @@
 open Mechs 
+open Support
 
 
 let mech = gauss_mech

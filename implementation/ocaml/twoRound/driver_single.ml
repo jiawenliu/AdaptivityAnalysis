@@ -46,21 +46,29 @@ let rec write_list res oc =
 
 
 let main  = 
-    let (ifile, ofile) = parseArgs() in
+    let (ofile) = parseArgs() in
     let oc = open_out ofile in 
     let dataset =  
       if !cdb 
       then
-        let dbc = open_out ifile in
-          let data =  create_db !rows !cols in 
-              let _ = record_db data dbc in
-              data
+(*         let dbc = open_out ifile in
+ *)          let data =  create_db !rows !cols in 
+(*               let _ = record_db data dbc in
+ *)              data
       else 
-          let ic = open_in ifile in  
+(*           let ic = open_in ifile in  
             let data = read_db ic !rows !cols in
             let _ = close_in ic in
             data
-    in 
+
+ *)    
+ (*         let dbc = open_out ifile in
+ *)          
+ 			let data =  create_db !rows !cols in 
+(*               let _ = record_db data dbc in
+ *)              data
+
+	in 
           let result = experiments_tr 0 dataset 0.0 in
           let _ = write result oc in
               close_out oc

@@ -5,6 +5,8 @@ open TwoRoundSplit
 open TwoRoundNone
 open Support
 
+let db = [[1.0; 1.0; 1.0]; [-1.0; -1.0; -1.0]; [1.0; 1.0; 1.0]; [-1.0; -1.0; -1.0]]
+
   let write res oc =
     fprintf oc "%f\n" res
 
@@ -18,8 +20,10 @@ let rec write_list res oc =
   let rec experiments_tr r error k =
      if r < !rounds then
      let db = create_db k !rows 
-      in
-        let x = TwoRound.twoRound (k -. 1.0) db in
+ in
+(*  let _ = record_db db stdout in
+ *)        
+ let x = TwoRound.twoRound (k -. 1.0) db in
         experiments_tr (r+1) (error +. abs_float(x)) k
       else abs_float(error /. (float_of_int !rounds ))
 
@@ -29,7 +33,10 @@ let rec write_list res oc =
      if r < !rounds then
        let (db1, db2) =  (create_db k (!rows/. 2.0), create_db k (!rows/. 2.0))
       in
-          let x = TwoRoundSplit.twoRound (k -. 1.0) db1 db2 in
+(*        let _ = record_db db1 stdout in
+        let _ = record_db db2 stdout in
+ *)
+           let x = TwoRoundSplit.twoRound (k -. 1.0) db1 db2 in
           experiments_tr_split (r+1) (error +. abs_float(x)) k
     else abs_float(error /. (float_of_int !rounds ))
 
@@ -39,7 +46,11 @@ let rec write_list res oc =
      if r < !rounds then
     let db = create_db k !rows
       in 
-        let x = TwoRoundNone.twoRound (k -. 1.0) db in
+(*  let _ = record_db db stdout in 
+ *)
+ (*  	let db = db in  
+ *) 	
+ let x = TwoRoundNone.twoRound (k -. 1.0) db in
         experiments_tr_none (r+1) (error +. abs_float(x) ) k
       else abs_float(error /. (float_of_int !rounds ))
 
@@ -78,6 +89,7 @@ if colnum < !cols
 
 
 let main  = 
+    let _ = Random.init( int_of_float(Unix.time ()) ) in 
     let (ofile) = parseArgs() in
     let oc = open_out ofile in
     experiments_for_colnums (!colst) oc

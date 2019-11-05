@@ -1,8 +1,8 @@
 # Program main file
 
 # Ocamlbuild
-OCBOPTS=-use-ocamlfind -pkg unix -tag debug  -cflags -g
-OCAMLBUILD=ocamlbuild 
+OCBOPTS=-use-ocamlfind -pkg unix,menhirLib -tag debug,thread  -cflags -g
+OCAMLBUILD=ocamlbuild $(OCBOPTS)
 
 VERSION=byte
 
@@ -12,7 +12,7 @@ NAME=driver
 MAIN=$(NAME)
 
 
-.PHONY: $(NAME) clean clean-py $(NAME).byte $(NAME).native 
+.PHONY: $(NAME) clean clean-py $(NAME).byte $(NAME).native $(NAME).d.byte $(NAME).d.native 
 
 all: $(NAME)
 
@@ -30,9 +30,16 @@ $(NAME).byte:
 $(NAME).native:
 	$(OCAMLBUILD) $(MAIN).native
 
+$(NAME).p.byte:
+	$(OCAMLBUILD) $(MAIN).p.byte
+
+$(NAME).d.byte:
+	$(OCAMLBUILD) $(MAIN).d.byte
+
+$(NAME).p.native:
+	$(OCAMLBUILD) $(MAIN).p.native
 
 clean::
 	$(OCAMLBUILD) -clean
-
-
-
+	rm -f parser.conflicts
+	rm -rf $(NAME) $(NAME).byte $(NAME).exe TAGS
