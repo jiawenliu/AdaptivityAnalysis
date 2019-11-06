@@ -19,7 +19,7 @@ let g = round
  let rec twoRound (k ) db1 db2 = 
     let l =  ( ( ( g   0.000000 )   db1 )   k )  in
      let q =
-     (fun (x ) -> 
+     (fun (x ) -> (get x k) *.
        sign ( ( ( ( List.fold_left  (fun (acc ) -> 
                                      (fun (ai ) -> 
                                        (( acc ) +. ( (( ( ( get   x )  

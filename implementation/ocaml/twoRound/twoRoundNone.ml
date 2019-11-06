@@ -23,7 +23,7 @@ let g = round
  (fun (db ) -> 
     let l =  ( ( ( g   0.000000 )   db )   k )  in
      let q =
-     (fun (x ) -> 
+     (fun (x ) -> (get x k) *.
        sign ( ( ( ( List.fold_left  (fun (acc ) -> 
                                      (fun (ai ) -> 
                                        (( acc ) +. ( (( ( ( get   x )  
