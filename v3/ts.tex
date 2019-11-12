@@ -16,21 +16,21 @@
   \begin{mathpar}
     \inferrule{
     }{
-      \ictx \tctx , x: \bang{\nnatA} \ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+      \ictx \tctx , x: \bang{\nnatA}\ltype \whynot{r}  \tvdash{\nnatA} x: \bang{\nnatA}\ltype\whynot{0}
     }~\textbf{Ax}
     %
     \and
     %
     \inferrule{
     }{
-      \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase
+      \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase \whynot{0}
     }~\textbf{b}
     %
     \and
     %
     \inferrule{
     }{
-      \ictx \Gamma \tvdash{\nnatA} \etrue : \bang{\nnatA}\tbool
+      \ictx \Gamma \tvdash{\nnatA} \etrue : \bang{\nnatA}\tbool\whynot{0}
     }~\textbf{true}
     \and
     %
@@ -40,25 +40,37 @@
       \expr: \type_2
     }{
       \ictx r+\Gamma \tvdash{k+r} \lambda x. \expr : \bang{r}  ( \type_1
-      \lto \type_2)
+      \lto \type_2)\whynot{0}
     }~\textbf{lambda}
+    %
+        \and
+    %
+    \inferrule{
+      \Gamma \tvdash{\nnatA} (\lambda x. \expr) : \bang{r}  ( \type_1
+      \lto \type_2)\whynot{0}
+      \\
+      \env |= \Gamma
+    }{
+       \cdot \tvdash{\nnatA} (\lambda x. \expr, \env) : \bang{r}  ( \type_1
+      \lto \type_2)\whynot{0}
+    }~\textbf{closure}
     %
     \and
     %
     \inferrule{
       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto \type_2      )\\
+      \lto \type_2      ) \whynot{r} \\
       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
     }{
-      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,r+\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
     }~\textbf{app}
     %
     \and
     %
     \inferrule{
-      \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
+      \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype \whynot{r}
     }{
-      \ictx \Gamma' ,1+\Gamma  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+      \ictx \Gamma' ,1+\Gamma  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype \whynot{r+1}
     }~\textbf{delta}
     %
     \and
@@ -73,7 +85,7 @@
     \and
     %
     \inferrule{
-      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1 : \bang{k} \tbool\\
+      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1 : \bang{k} \tbool\whynot{r}\\
       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2 : \type\\
       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_3 : \type
     }{
@@ -95,8 +107,8 @@
 \end{thm}
 
 \begin{thm}[Context Strengthening]
-  If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $x \not\
-  in \fv{\expr} $, then $ \Gamma , x \tvdash{ \nnatA} \expr : \type $.
+  If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $x \not
+ \in \fv{\expr} $, then $ \Gamma  \tvdash{ \nnatA} \expr : \type $.
 \end{thm}
 
 \begin{thm}[Context Max]
@@ -112,10 +124,10 @@
 \begin{thm}[Substitution]
   \begin{enumerate} 
    \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
-  \Gamma \tvdash{\nnatA'} \valr : \type'  $ and $ x \in \fv{\expr} $,  then  $\Gamma
+  \empty \tvdash{\nnatA'} \valr : \type'  $ and $ x \in \fv{\expr} $,  then  $\Gamma
   \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$. 
   \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
-  \Gamma \tvdash{\nnatA'} \valr : \type'  $ and $ x \not \in \fv{\expr} $,  then  $\Gamma
+  \empty \tvdash{\nnatA'} \valr : \type'  $ and $ x \not \in \fv{\expr} $,  then  $\Gamma
   \tvdash{\nnatA } \expr[\valr/x]  : \type$.
   \end{enumerate}
 \end{thm}
@@ -134,12 +146,12 @@
 \caseL{
   $  \inferrule{
     }{
-      \ictx \tctx , x: \bang{\nnatA} \ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+      \ictx \tctx , x: \bang{\nnatA} \ltype \whynot{r} \tvdash{\nnatA} x : \bang{\nnatA}\ltype\whynot{0}
     }~\textbf{Ax}  $
   }
-  Assume  $\Gamma \tvdash{\nnatA'} \valr : \bang{\nnatA} \ltype ~(\star) $.\\
+  Assume  $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA} \ltype \whynot{0}  ~(\star) $.\\
   TS:   $\Gamma \tvdash{\max(\nnatA, \nnatA')} x [\valr/x]  :
-  \bang{\nnatA} \ltype$.\\
+  \bang{\nnatA} \ltype \whynot{0} $.\\
   It is proved from the assumption $(\star)$ by weaking from $\nnatA'$
   to $\max(\nnatA,\nnatA')$.\\
 
@@ -162,67 +174,65 @@
       \expr: \type_2 (\diamond)
     }{
       \ictx r+\Gamma, y: (r+\type') \tvdash{k+r} \lambda x. \expr : \bang{r}  ( \type_1
-      \lto \type_2)
+      \lto \type_2) \whynot{0}
     }~\textbf{lambda} $
   }
-  Assume  $\Gamma \tvdash{\nnatA'} \valr : \type' ~(\star) $.\\
-  By Theorem 2 context raisig, we know: $r+\Gamma \tvdash{\nnatA'+r} \valr : r+\type' ~(\star\star) $\\
+  Assume  $\empty \tvdash{\nnatA'} \valr : \type' ~(\star) $.\\
+  By Theorem 2 context raisig, we know: $\empty \tvdash{\nnatA'+r} \valr : r+\type' ~(\star\star) $\\
   TS:   $r+\Gamma \tvdash{\max(k+r, \nnatA'+r)} \lambda x. \expr [\valr/y]  :
-  \bang{r}  ( \type_1 \lto \type_2) $.\\
+  \bang{r}  ( \type_1 \lto \type_2)\whynot{0}$.\\
   We know that $y \in \fv{\expr}$ from the assumption $ y \in \fv{\lambda x.\expr} $.\\
   By IH on $\diamond$ along with $(\star)$, we get:  $\Gamma,x:\type_1 \tvdash{\max(k, \nnatA')}  \expr [\valr/y]  :
   \type_2 ~(1)$.\\
   Using the lambda rule, we conclude: \\
   $r+\Gamma \tvdash{\max(k+r, \nnatA'+r)} \lambda x. \expr [\valr/y]  :
-  \bang{r}  ( \type_1 \lto \type_2) $.\\
+  \bang{r}  ( \type_1 \lto \type_2)\whynot{0} $.\\
 
   
   \caseL{
      $  \inferrule{
       \ictx \Gamma_1 ,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto \type_2   ) ~(\diamond)\\
+      \lto \type_2   )\whynot{r} ~(\diamond)\\
       \ictx \Gamma_2 ,x:\type' \tvdash{\nnatA_2} \expr_2: \type_1 ~(\clubsuit)
     }{
-      \ictx \max (\Gamma_1, \Gamma_2 ),x:\type' \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+      \ictx \max (\Gamma_1, \Gamma_2 ),x:\type' \tvdash{\max( \nnatA_1,r+\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
     }~\textbf{app} $
   }
-  Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
-  Assume $\Gamma_2 \tvdash{\nnatA_2'} \valr : \type' ~(2) $.\\
-  From Theorem 3, we know : $\max(\Gamma_1,\Gamma_2)
-  \tvdash{\max(\nnatA_1', \nnatA_2')} \valr : \type' ~(3) $.\\
+  Assume  $\empty \tvdash{\nnatA'} \valr : \type' ~(1) $.\\
+  So we also know: $\empty \tvdash{\nnatA'+r} \valr : \type' ~(2)$. \\
    TS:   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
-     \nnatA_1,\nnatA_2) , \max(\nnatA_1', \nnatA_2') ) } (\expr_1
+     \nnatA_1,r+\nnatA_2) , r+\nnatA') } (\expr_1
    \eapp \expr_2)[\valr/x] : \type_2$.\\
    There are three situations:
    \begin{enumerate}
    \item $x \in \fv{\expr_1}, x \in \fv{\expr_2}$, \\
      By IH1 on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
-\tvdash{\max(\nnatA_1, \nnatA_1' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
-\lto \type_2   )  $.\\
-By IH1 on $(\clubsuit)$ and $(2)$, we get: $ \Gamma_2
-\tvdash{\max(\nnatA_2, \nnatA_2')}
+\tvdash{\max(\nnatA_1, \nnatA' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
+\lto \type_2   ) \whynot{r} $.\\
+By IH1 on $(\clubsuit)$ and $(1)$, we get: $ \Gamma_2
+\tvdash{\max(\nnatA_2, \nnatA')}
 \expr_2 [\valr/x]: \type_1  $.\\
 \item $x \not\in \fv{\expr_1}, x \in \fv{\expr_2}$\\
   By IH2 on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
 \tvdash{\nnatA_1} \expr_1 [\valr/x]:  \bang{0} ( \type_1
-\lto \type_2 ) $, by Lemma Adaptivity Monotonicity, we know: $\Gamma_1
-\tvdash{\max(\nnatA_1, \nnatA_1' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
-\lto \type_2 ) $.\\
+\lto \type_2 )\whynot{r} $, by Lemma Adaptivity Monotonicity, we know: $\Gamma_1
+\tvdash{\max(\nnatA_1, \nnatA' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
+\lto \type_2 )\whynot{r} $.\\
 By IH1 on $(\clubsuit)$ and $(2)$, we get: $ \Gamma_2
-\tvdash{\max(\nnatA_2, \nnatA_2')}
+\tvdash{\max(\nnatA_2, \nnatA')}
 \expr_2 [\valr/x]: \type_1  $.\\
 \item $x \in \fv{\expr_1}, x \not\in \fv{\expr_2}$\\
   By IH1 on $(\diamond)$ with $(1)$, we get: $ \Gamma_1
-\tvdash{\max(\nnatA_1, \nnatA_1' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
-\lto \type_2   )  $.\\
+\tvdash{\max(\nnatA_1, \nnatA' )} \expr_1 [\valr/x]:  \bang{0} ( \type_1
+\lto \type_2   )\whynot{r}  $.\\
 By IH2 on $(\clubsuit)$ and $(2)$, by Lemma Adaptivity Monotonicty, we get: $ \Gamma_2
-\tvdash{\max(\nnatA_2, \nnatA_2')}
+\tvdash{\max(\nnatA_2, \nnatA')}
 \expr_2 [\valr/x]: \type_1  $.\\
      \end{enumerate}
    
 By using the rule app, we conclude:\\
   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
-     \nnatA_1,\nnatA_1') , \max(\nnatA_2, \nnatA_2') ) } (\expr_1 \eapp \expr_2)[\valr/x] : \type_2$.\\
+     \nnatA_1,\nnatA') , r+\max(\nnatA_2, \nnatA') ) } (\expr_1 \eapp \expr_2)[\valr/x] : \type_2$.\\
 
   \caseL{
    $   \inferrule{
@@ -231,12 +241,12 @@ By using the rule app, we conclude:\\
       \ictx \Gamma' ,1+\Gamma ,x : 1+\type' \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
     }~\textbf{delta} $
   }
-  Assume  $\Gamma  \tvdash{\nnatA'} \valr : \type' ~(1) $.\\
-   By Theorem 2 context raisig, we know: $1+\Gamma \tvdash{\nnatA'+1} \valr : 1+\type' ~(2) $\\
+  Assume  $\empty  \tvdash{\nnatA'} \valr : \type' ~(1) $.\\
+   By Theorem 2 context raisig, we know: $ \empty \tvdash{\nnatA'+1} \valr : 1+\type' ~(2) $\\
    TS:
    $\Gamma' ,1+\Gamma \tvdash{ \max( 1+\nnatA, \nnatA'+1)  }
    \delta(\expr): \bang{k} \ltype $.\\
-   We know :$ x \in \fv{\expr}$ from the assumption $ x \in \fv{\delta{\expr}}$.\\
+   We know :$ x \in \fv{\expr}$ from the assumption $ x \in \fv{\delta{(\expr)}}$.\\
    By IH2 on the premise, we know: $ \Gamma
    \tvdash{\max(\nnatA,\nnatA')} \expr[\valr/x]: \bang{k} \ltype $.\\
    By the rule delta, we get :
@@ -251,20 +261,17 @@ By using the rule app, we conclude:\\
       \ictx \max(\Gamma_1,\Gamma_2), y: \type' \tvdash{\max(\nnatA, \nnatA') } \elet x =  \expr \ein \expr': \type
     }~\textbf{let}  $
   }
-Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
-  Assume $\Gamma_2 \tvdash{\nnatA_2'} \valr : \type' ~(2) $.\\
-  From Theorem 3, we know : $\max(\Gamma_1,\Gamma_2)
-  \tvdash{\max(\nnatA_1', \nnatA_2')} \valr : \type' ~(3) $.\\
-   TS:   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
-     \nnatA_1',\nnatA_2') , \max(\nnatA', \nnatA) ) } ( \elet x =  \expr \ein \expr' )[\valr/x] : \type_2$.\\
+Assume  $\empty \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
+   TS:   $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(
+     \nnatA_1' , \max(\nnatA', \nnatA) ) } ( \elet x =  \expr \ein \expr' )[\valr/x] : \type_2$.\\
    Similar to the application rule, we have 3 situations.\\
    By IH on the first premise, we know :$\Gamma_1
    \tvdash{\max(\nnatA_1', \nnatA )}  \expr[\valr/y] : \type_1  $. \\
    By IH on the second premise, we know : $ \Gamma_2, x: \type_1
-   \tvdash{\max(\nnatA_2', \nnatA'  )} $.\\
+   \tvdash{\max(\nnatA_1', \nnatA'  )} $.\\
    By the rule let, we conclude that: \\
-    $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(\max(
-     \nnatA_1',\nnatA_2') , \max(\nnatA, \nnatA') ) } (\elet x =  \expr \ein \expr')[\valr/y] : \type_2$.\\
+    $\max (\Gamma_1, \Gamma_2 ) \tvdash{ \max(
+     \nnatA_1' , \max(\nnatA, \nnatA') ) } (\elet x =  \expr \ein \expr')[\valr/y] : \type_2$.\\
 
   % \caseL{
   % $  \inferrule{
@@ -282,26 +289,32 @@ Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
 
   \end{proof} 
 
-
-
-
-
-\begin{thm}[Adaptivity Soundness theorem]
-  If $ \Gamma  \tvdash{\nnatA} \expr : \type$
-  and  exists $\env $ satisfies $\Gamma$  and  $\env, \expr \bigstep \valr, \tr $,
-  then $ A(\tr) \leq \nnatA  $.\\(
-  $\env$ satisfies $\Gamma$ means $\dom(\env) = \dom(\Gamma) \land
-  \forall x_i \in \dom(\Gamma).  \exists r_i.$ so that $\empty
-  \tvdash{r_i} \env(xi) : \Gamma(x) $  )
+\begin{thm}[Adaptivity Monotonicity ]
+  If $ \empty  \tvdash{\nnatA} \valr : \bang{k} \ltype \whynot{r}$ and
+  $r' \geq r$, 
+  then $ \empty  \tvdash{\nnatA} \valr : \bang{k} \ltype \whynot{r}$.
 \end{thm}%
 
+
+
+% \begin{thm}[Adaptivity Soundness theorem]
+%   If $ \Gamma  \tvdash{\nnatA} \expr : \type$
+%   and  exists $\env $ satisfies $\Gamma$  and  $\env, \expr \bigstep \valr, \tr $,
+%   then $ A(\tr) \leq \nnatA  $.\\(
+%   $\env$ satisfies $\Gamma$ means $\dom(\env) = \dom(\Gamma) \land
+%   \forall x_i \in \dom(\Gamma).  \exists r_i.$ so that $\empty
+%   \tvdash{r_i} \env(x_i) : \Gamma(x) $  )
+% \end{thm}%
+
 \begin{thm}[Adaptivity Soundness theorem]
   If $ \Gamma  \tvdash{\nnatA} \expr : \type$
   and  exists $\env $ satisfies $\Gamma$  and  $\env, \expr \bigstep \valr, \tr $,
-  then $ \Gamma  \tvdash{\nnatA- A(\tr)} \valr : \type$.\\(
+  then $ \empty  \tvdash{\nnatA- A(\tr)} \valr : \type[?0]$ and
+  $\nnatA- A(\tr) \geq 0 $. \\(
   $\env$ satisfies $\Gamma$ means $\dom(\env) = \dom(\Gamma) \land
   \forall x_i \in \dom(\Gamma).  \exists r_i.$ so that $\empty
-  \tvdash{r_i} \env(xi) : \Gamma(x) $  )
+  \tvdash{r_i} \env(x_i) : \Gamma(x)[?0] $ , and $\type[?0] $ means that $
+  \type = \bang{k}\ltype \whynot{r} \land \type[?0]= \bang{k}\ltype \whynot{0}$ )
 \end{thm}%
 
 \begin{proof}
@@ -311,13 +324,14 @@ Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
   \caseL{
     \inferrule{
     }{
-      \ictx \tctx , x: \bang{\nnatA} \ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+      \ictx \tctx , x: \bang{\nnatA} \ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype\whynot{0}
     }~\textbf{Ax}
   }
   Assume exists the enviroment $\env$ and $\env(x) =\valr$ and
-  $\empty \tvdash{ \nnatA} \valr: \bang{\nnatA}\ltype $. so that
+  $\empty \tvdash{ \nnatA} \valr: \bang{\nnatA}\ltype \whynot{0} $. so that
   $\inferrule{ }{\env, x \bigstep \valr, (x, \env ) }  $. \\
-  So we conclude that: $ A(  (x, \env)  ) = 0 \leq \nnatA $.
+  So we conclude that: $ \nnatA- A(  (x, \env)  ) = \nnatA $ and
+  $\empty \tvdash{ \nnatA- A(  (x, \env)  ) } \valr: \bang{\nnatA}\ltype\whynot{0}$.\\
    
   
   \caseL{
@@ -327,40 +341,183 @@ Assume  $\Gamma_1 \tvdash{\nnatA_1'} \valr : \type' ~(1) $.\\
       \expr: \type_2
     }{
       \ictx r+\Gamma \tvdash{k+r} \lambda x. \expr : \bang{r}  ( \type_1
-      \lto \type_2)
+      \lto \type_2) \whynot{0}
     }~\textbf{lambda}
   }
- Assume exists the enviroment $\env$ and $\env(x) =\valr$ and
-  $\empty \tvdash{ \nnatA} \valr: \bang{\nnatA}\ltype $. so that
-  $\inferrule{ }{\env, x \bigstep \valr, (x, \env ) }  $. \\
+ Assume exists the enviroment $\env$ so that\\
+  $\inferrule{ }{\env, \lambda x. \expr \bigstep (\lambda
+    x.\expr,\env), (\lambda x.\expr, \env ) }  $. \\
+  So by the rule closure we conclude that: \\
+  $ \nnatA- A(  (\lambda x.\expr,\env)  ) = \nnatA $ and
+  $\empty \tvdash{ \nnatA- A(  (\lambda x.\expr, \env)  ) }   (\lambda
+    x.\expr,\env) : \bang{r}  ( \type_1
+      \lto \type_2)\whynot{0}$.\\
 
-$$\wq{ \inferrule{
-  }{
-    \env, \lambda x. \expr \bigstep (\lambda x.\expr, \env),
-    (\lambda x.\expr, \env)
-  }
-}$$
+  
+
+
   
   \caseL{
      \inferrule{
       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto \type_2      )\\
-      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+      \lto \type_2  ) \whynot{r} ~(\star) \\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 ~(\diamond)
     }{
-      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,r+\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
     }~\textbf{app}
   }
+
+   For all the variables $x_i $ in $\dom(\max(\Gamma_1, \Gamma_2  )) $ and
+   $x_i \not\in \dom(\Gamma_1)$. 
+   We extend $\Gamma_1 $ to $\Gamma_1, x_i : \type_i \land \type_i =\Gamma_2(x_i) $. With the
+   Theorem 11, from $(\star)$, we know :\\
+   $\Gamma_1, x_i : \type_i \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+   \lto \type_2  )\whynot{r}  ~(\star \star)   $.\\
+   
+   For all the variables $x_i' $ in $\dom(\max(\Gamma_1, \Gamma_2  )) $ and
+   $x_i \not\in \dom(\Gamma_2)$. 
+   We extend $\Gamma_2 $ to $\Gamma_2, x_i' : \type_i' \land \type'=\Gamma_1(x_i')$. With the
+   Theorem 11, from $(\diamond)$, we know :\\
+   $  \Gamma_2, x_i': \type_i' \tvdash{\nnatA_2} \expr_2: \type_1 ~(\diamond\diamond)$.   \\
+
+   Assume $\env$ satisfies $\min(\Gamma_1, \Gamma_2)$. \\
+   $ \min(\Gamma_1,\Gamma_2) = \{  \Gamma | \dom(\Gamma) = \dom(\Gamma_1)
+   \cup \dom(\Gamma_2) \land    \Gamma(x) = \min(\Gamma_1(x),
+   \Gamma_2(x) )   \} $. \\
+
+  From Theorem 10, we conclude that $ \env $ satisfies $ \Gamma_1, x_i
+  : \type_i $, as well as  $ \env $ satisfies $ \Gamma_2, x_i'
+  : \type_i' $, also  $\env$ satisfies $ \max(\Gamma_1, \Gamma_2)$.\\
+
+  By IH on $(\star\star)$, assume $ \env, \expr_1 \bigstep \valr_1,
+  \tr_1  $,  we know: $ \empty  \tvdash{\nnatA_1- A(\tr_1)} \valr_1:  \bang{0} ( \type_1
+  \lto \type_2  )\whynot{0}  \land A(\tr_1) \leq r ~(e) $.\\
+  Because $\valr_1$ is a function, we assume: $\valr_1 = ( \lambda
+  x.\expr, \env')$. So we have:  $ \empty \tvdash{\nnatA_1- A(\tr_1)} ( \lambda
+  x.\expr, \env'):  \bang{0} ( \type_1
+  \lto \type_2  )\whynot{0}  ~(\clubsuit)$, from the closure rule, we
+  know : $\env' $ satisfies $\Gamma_1' \land  \Gamma_1'  \tvdash{\nnatA_1- A(\tr_1)}  \lambda
+  x.\expr:  \bang{0} ( \type_1
+  \lto \type_2  )\whynot{0}   ~(\clubsuit\clubsuit)$. \\
+
+  By IH on $(\diamond\diamond)$, assume $\env, \expr_2 \bigstep
+  \valr_2, \tr_2  $, we know $\empty
+  \tvdash{\nnatA_2- A(\tr_2)} \valr_2: \type_1[?0]~(a)$. \\
+
+  From $(\clubsuit \clubsuit )$ and the rule lambda:
+  \[
+    \inferrule{
+        \Gamma_1' , x: \type_1
+      \tvdash{ \nnatA_1- A(\tr_1) }
+      \expr: \type_2 (\heartsuit)
+    }{
+       \Gamma_1' \tvdash{\nnatA_1- A(\tr_1) + 0} \lambda x. \expr : \bang{0} ( \type_1
+  \lto \type_2  )
+    }~\textbf{lambda}
+  \]
+  
+ We know that : $ \env'[x \to \valr_2] $satisfies $ \Gamma_1', x: \type_1$ and
+ assume $\env'[ x \mapsto \valr_2], \expr \bigstep \valr, \tr$.\\
+By IH on $(\heartsuit)$, we know:  $ \empty \tvdash{\nnatA_1- A(\tr_1)
+  - A(\tr)} \valr : \type_2[?0]~(d) $ and $ \nnatA_1- A(\tr_1)
+  - A(\tr) \geq 0 \implies \nnatA_1 \geq A(\tr_1)
+  + A(\tr)~ (b)$.\\
+
+  From the theorem Depth Bound on $\heartsuit $, we assume that
+  $\type_1 = \bang{k_1} \ltype_1 \whynot{r_1}$.\\
+So we know that $ k_1 \geq \ddep{x}(\tr) $. \\
+
+By the Theorem 13 on $(a)$, we know that:
+ $ \nnatA_2- A(\tr_2) \geq k_1 \implies  \nnatA_2 - A(\tr_2) \geq \ddep{x}(\tr) $. \\
+  So we conclude that  $\nnatA_2 \geq A(\tr_2) + \ddep{x}(\tr) ~(c)$.\\     
+
+From the application evaluation rule, we have:
   \[
 \inferrule{
     \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
+    \wq{ \valr_1 = ( \lambda x.\expr, \env')} \\\\
     \env, \expr_2 \bigstep \valr_2, \tr_2 \\
-    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+    \env'[ x \mapsto \valr_2], \expr \bigstep \valr, \tr
   }{
     \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
   }
   \]
 
-  
+TS1:  $ \empty \tvdash{ \max( \nnatA_1,r+\nnatA_2)  -  A(\trapp{\tr_1}{\tr_2}{f}{x}{\tr}  )}
+\valr : \type_2[?0] $.\\
+        It is proved from (d) and Theorem Aaptivity Monotonicity.\\
+TS2: $ \max( \nnatA_1,r+\nnatA_2) \geq A(\trapp{\tr_1}{\tr_2}{f}{x}{\tr} $.\\
+      It is proved by (b),(c), (e).\\
   
   \end{proof}
+
+
+  \begin{thm}
+    $\empty \tvdash{\nnatA }   \valr : \bang{k} \ltype \whynot{r}  $ and $k \leq
+    k' $ and $r \leq r'$, then exists $\nnatA'$ so that $\empty
+    \tvdash{\nnatA'}  \valr : \bang{k'} \ltype \whynot{r'} $.
+  \end{thm}
+  \begin{proof}
+    By induction on the value $\valr$.\\
+    \caseL{
+        \inferrule{
+    }{
+     \empty \tvdash{\nnatA} c : \bang{\nnatA}\tbase
+    }~\textbf{b}
+  }
+
+  Assume $\nnatA \leq k'$. From the const rule, we know:\\
+   \[   \inferrule{
+    }{
+     \empty \tvdash{k'} c : \bang{k'}\tbase
+    }~\textbf{b}
+  \]
+  
+  \caseL{
+\inferrule{
+      x: \type_1
+      \tvdash{k}
+      \expr: \type_2
+    }{
+      \empty \tvdash{k+r} \lambda x. \expr : \bang{r}  ( \type_1
+      \lto \type_2)
+    }~\textbf{lambda}
+  }
+  Assume $ k' = r + r'  \geq r$. Choose $\nnatA' = k+r +r'  $ so
+  that by the rule lambda:\\
+  \[
+\inferrule{
+      x: \type_1
+      \tvdash{k}
+      \expr: \type_2
+    }{
+      \empty \tvdash{k+r+r'} \lambda x. \expr : \bang{k'}  ( \type_1
+      \lto \type_2)
+    }~\textbf{lambda}
+  \]
+    
+    \end{proof}
+
+
+  
+  \begin{thm}
+   $\Gamma \tvdash{\nnatA} \expr: \type$ and $ x \not \in \fv{\expr}
+   $, then  $\forall \type'. \Gamma, x: \type' \tvdash{\nnatA} \expr: \type  $. 
+   \end{thm}
+
+\begin{thm}
+  If  $\Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype \whynot{r} $ and
+  $\env |= \Gamma$ and  $\env, \expr \bigstep
+  \valr, \tr$, then $\adap(\tr) \leq r $. 
+\end{thm}
+
+\begin{thm}
+  If  $\Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype \whynot{r} $,
+  then $\nnatA \geq k$.
+   \end{thm}
+
+ \begin{thm}[Depth Bound]
+  If  $\Gamma, x: \bang{k} \ltype \whynot{r} \tvdash{\nnatA} \expr: \type$ and
+  $\env |= \Gamma, x: \bang{k} \ltype \whynot{r}$ and  $\env, \expr \bigstep
+  \valr, \tr$, then $\ddep{x}(\tr) \leq k$. 
+   \end{thm}
