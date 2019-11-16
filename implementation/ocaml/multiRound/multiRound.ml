@@ -1,9 +1,9 @@
 open Printf 
-open HeadFile 
+open Support
+open Mechs 
 
 open Distribution 
 
-let dataset = [1.0;1.0;1.0;1.0]   
 
  let rec f (z ) = 
  (fun (sc ) -> 
