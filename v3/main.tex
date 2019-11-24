@@ -98,7 +98,7 @@ semantics later.
     ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
 & & & \wq {(\eilam \expr , \env) } \\ 
 %
-\mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
+\mbox{Environment} & \env & ::= & x_1 \mapsto (\valr_1, \tr_1), \ldots, x_n \mapsto (\valr_n,\tr_n)
 \end{array}\]
 
 
@@ -151,7 +151,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
 
 \begin{figure}
 \begin{mathpar}
-  \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  
+  \wq{ \inferrule{ }{\env, x \bigstep \env_1(x),   (x, \env) }  }
   %
   \and
   %
@@ -176,8 +176,8 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   %
   \wq{ \inferrule{
   }{
-    \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
-    (\trfix f(x:\type).\expr, \env)
+    \env, \efix f(x). \expr \bigstep (\efix f(x).\expr, \env),
+    (\trfix f(x).\expr, \env)
   }
 }
   %
@@ -187,7 +187,8 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
     \env, \expr_1 \bigstep \valr_1, \tr_1 \\
     \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
     \env, \expr_2 \bigstep \valr_2, \tr_2 \\
-    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+    \env'[f \mapsto (\valr_1, (\efix f(x:\type).\expr, \env')  )  , x
+    \mapsto (\valr_2,   \tr_2  ) ], \expr \bigstep \valr, \tr
   }{
     \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
   }
@@ -264,7 +265,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
 %
 \inferrule{
   \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-  \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
+  \env[x \mapsto (\valr_1, \tr_1  )] , \expr_2 \bigstep \valr, \tr_2
 }
 {\env, \elet x = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
   \tr_1, \tr_2) }
@@ -316,12 +317,12 @@ in Figure~\ref{fig:adap}.
   \framebox{$\adap: \mbox{Traces} \to \nat$}
   \begin{mathpar}
     \begin{array}{lcl}
-      \wq { \adap( (x,\env) )} & = & 0 \\
+      \wq { \adap( (x,\env) )} & = & \wq{ \adap( \env_2(x) ) } \\
       %
       \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
       \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
       %
-      \wq {\adap( (\trfix f(x:\type).\expr, \env)  ) } & = & 0 \\
+      \adap( (\trfix f(x:\type).\expr, \env)  )  & = & 0 \\
       %
       \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
       %
