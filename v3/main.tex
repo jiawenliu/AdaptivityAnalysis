@@ -102,6 +102,183 @@ semantics later.
 \end{array}\]
 
 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% sementics
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\begin{figure}
+\begin{mathpar}
+   \inferrule{ }{\env[x \to (\valr, R)  ], x \bigstep{R} \valr }~\textsf{var1}  
+  %
+  \and
+  %
+  \inferrule{ x \not \in  dom(\env)
+  }{\env, x \bigstep{0} x }~\textsf{var2}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \etrue \bigstep{0} \etrue}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \efalse \bigstep{0} \efalse}
+  %
+  \and
+ \inferrule{  \env, \expr \bigstep{K} \econst }{\env, \bernoulli \eapp \expr \bigstep{K} \econst
+    }~\textsf{bernoulli} 
+  \and
+ \inferrule{ \env, \expr_1 \bigstep{R} \econst \\ \env, \expr_2 \bigstep{S} \econst  }{\env, \uniform \eapp \expr_1 \eapp
+      \expr_2\bigstep{R+S} \econst  } ~\textsf{uniform}
+  \and
+  %
+ \inferrule{
+      \env, \expr \bigstep{R} \valr
+  }{
+    \env, \efix f(x). \expr \bigstep{R} \efix f(x).\valr,
+  }~\textsf{fix}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep{K} \efix f(x).\expr  \\
+    \env, \expr_2 \bigstep{R} \valr_2 \\
+    \env[f \to (\efix f(x).\expr, K )  , x
+    \to (\valr_2,   R  ) ], \expr \bigstep{S} \valr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep{K+S} \valr
+  }~\textsf{app1}
+  %
+   \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep{K} \valr_1 \not\equiv \efix f(x).\expr  \\
+    \env, \expr_2 \bigstep{R} \valr_2 
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep{K+R} \valr_1 \eapp \valr_2
+  }~\textsf{app2}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep{R} \valr_1 \\
+    \env, \expr_2 \bigstep{S} \valr_2  }
+  {
+    \env, (\expr_1, \expr_2) \bigstep{\max(R,S)} (\valr_1, \valr_2)
+  }~\textsf{pair}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep{R} (\valr_1, \valr_2)
+  }{
+    \env, \eprojl(\expr) \bigstep{R} \valr_1
+  }~\textsf{fst}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep{R} (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojr(\expr) \bigstep{R} \valr_2, \trprojr(\tr)
+  }~\textsf{snd}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep{R} \etrue\\
+    \env, \expr_1 \bigstep{S} \valr, \tr_1
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep{R+S} \valr
+  }~\textsf{if-true}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep{R} \efalse \\
+    \env, \expr_2 \bigstep{S} \valr
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep{R+S } \valr
+  }~\textsf{if-false}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep{R} \valr' \\
+    \eop{}(\valr') = \valr\\
+    \valr' \in \mathsf{Vec}
+  }{
+    \env, \eop(\expr) \bigstep{R +1} \valr', \trop(\tr)
+  }~\textsf{delta1}
+  %
+   \and
+  %
+  \inferrule{
+    \env, \expr \bigstep{R} \valr' \\
+    \valr' \not\in \mathsf{Vec}
+  }{
+    \env, \eop(\expr) \bigstep{R } \valr', \trop(\tr)
+  }~\textsf{delta2}
+\and
+%
+  \inferrule{
+}
+{ \env, \enil \bigstep{0} \enil, \trnil }~\textsf{nil}
+%
+\and
+%
+\inferrule{
+\env, \expr_1 \bigstep{R} \valr_1 \\
+\env, \expr_2 \bigstep{S} \valr_2
+}
+{ \env, \econs (\expr_1, \expr_2)  \bigstep{  \max(R,S)} \econs (\valr_1, \valr_2)
+}~\textsf{cons}
+%
+\and
+%
+\inferrule{
+  \env, \expr_1 \bigstep{R} \valr_1 \\
+  \env[x \mapsto (\valr_1, R  )] , \expr_2 \bigstep{S} \valr
+}
+{\env, \elet x = \expr_1 \ein \expr_2 \bigstep{S} \valr }~\textsf{let}
+%
+\\\\
+%
+\inferrule
+{
+  \env, \expr \bigstep{R} \valr
+}
+{
+  \env, \eilam \expr \bigstep{0} \eilam \valr,
+}~\textsf{eilam}
+%
+\and
+%
+\inferrule{
+  \env, \expr \bigstep{K} (\eilam \expr') \\
+  \env, \expr' \bigstep{S} \valr
+}
+{\env, \expr [] \bigstep{K+S} \valr, \triapp{\tr_1}{\tr_2}
+}~\textsf{eiapp1}
+%
+\and
+%
+\inferrule{
+  \env, \expr \bigstep{K} \valr \not\equiv (\eilam \expr') \\
+}
+{\env, \expr [] \bigstep{K} \valr []
+}~\textsf{eiapp2}
+\end{mathpar}
+  \caption{Big-step semantics}
+  \label{fig:semantics1}
+\end{figure}
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
