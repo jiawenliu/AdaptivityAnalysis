@@ -133,7 +133,7 @@ $x$ are bound in $\tr_3$.
 
 
 \paragraph{Big-step tracing semantics}
-The big-step, tracing semantics $\env, \expr \bigstep \valr, \tr$
+The big-step, tracing semantics $\env, \expr \bigstep{\num} \valr, \tr$
 computes a value $\valr$ and a trace $\tr$ from an expression $\expr$
 and an enviroment $\env$ which maps the free variables of $\expr$ to
 \emph{closed} values. The rules, taken from~\cite{perera:dep}, are
@@ -151,32 +151,32 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
 
 \begin{figure}
 \begin{mathpar}
-  \wq{ \inferrule{ }{\env, x \bigstep \env_1(x),   (x, \env) }  }
+  \wq{ \inferrule{ }{\env, x \bigstep{0} \env_1(x),   (x, \env) }  }
   %
   \and
   %
-  \inferrule{ }{\env, \econst \bigstep \econst, \trconst}
+  \inferrule{ }{\env, \econst \bigstep{0} \econst, \trconst}
   %
   \and
   %
-  \inferrule{ }{\env, \etrue \bigstep \etrue, \trtrue}
+  \inferrule{ }{\env, \etrue \bigstep{0} \etrue, \trtrue}
   %
   \and
   %
-  \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
+  \inferrule{ }{\env, \efalse \bigstep{0} \efalse, \trfalse}
   %
   \and
-  \wq{ \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+  \wq{ \inferrule{  \env, \expr \bigstep{\num} \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep{\num} \econst,
       \bernoulli (\tr)
     } }
   \and
- \inferrule{ \env, \expr_1 \bigstep \econst, \tr_1 \\ \env, \expr_2 \bigstep \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
-      \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
+ \inferrule{ \env, \expr_1 \bigstep{\num_1} \econst, \tr_1 \\ \env, \expr_2 \bigstep{\num_2} \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
+      \expr_2\bigstep{\num_1+\num_2} \econst, \uniform(\tr_1,\tr_2)  } 
   \and
   %
   \wq{ \inferrule{
   }{
-    \env, \efix f(x). \expr \bigstep (\efix f(x).\expr, \env),
+    \env, \efix f(x). \expr \bigstep{0} (\efix f(x).\expr, \env),
     (\trfix f(x).\expr, \env)
   }
 }
@@ -184,90 +184,90 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   \and
   %
   \inferrule{
-    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_1 \bigstep{\num_1} \valr_1, \tr_1 \\
     \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
-    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env, \expr_2 \bigstep{\num_2} \valr_2, \tr_2 \\
     \env'[f \mapsto (\valr_1, (\efix f(x:\type).\expr, \env')  )  , x
-    \mapsto (\valr_2,   \tr_2  ) ], \expr \bigstep \valr, \tr
+    \mapsto (\valr_2,   \tr_2  ) ], \expr \bigstep{\num_3} \valr, \tr
   }{
-    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+    \env, \expr_1 \eapp \expr_2 \bigstep{\num_1+\num_2+\num_3} \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-    \env, \expr_2 \bigstep \valr_2, \tr_2
+    \env, \expr_1 \bigstep{\num_1} \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstep{\num_2} \valr_2, \tr_2
   }{
-    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+    \env, (\expr_1, \expr_2) \bigstep{\num_1+\num_2} (\valr_1, \valr_2), (\tr_1, \tr_2)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+    \env, \expr \bigstep{\num} (\valr_1, \valr_2), \tr
   }{
-    \env, \eprojl(\expr) \bigstep \valr_1, \trprojl(\tr)
+    \env, \eprojl(\expr) \bigstep{\num} \valr_1, \trprojl(\tr)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+    \env, \expr \bigstep{\num} (\valr_1, \valr_2), \tr
   }{
-    \env, \eprojr(\expr) \bigstep \valr_2, \trprojr(\tr)
+    \env, \eprojr(\expr) \bigstep{\num} \valr_2, \trprojr(\tr)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep \etrue, \tr \\
-    \env, \expr_1 \bigstep \valr, \tr_1
+    \env, \expr \bigstep{\num} \etrue, \tr \\
+    \env, \expr_1 \bigstep{\num_1} \valr, \tr_1
   }{
-    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \trift(\tr, \tr_1)
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep{\num+\num_1} \valr, \trift(\tr, \tr_1)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep \efalse, \tr \\
-    \env, \expr_2 \bigstep \valr, \tr_2
+    \env, \expr \bigstep{\num} \efalse, \tr \\
+    \env, \expr_2 \bigstep{\num_2} \valr, \tr_2
   }{
-    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \triff(\tr, \tr_2)
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep{\num+\num_2} \valr, \triff(\tr, \tr_2)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep \valr, \tr \\
+    \env, \expr \bigstep{\num} \valr, \tr \\
     \eop{}(\valr) = \valr'
   }{
-    \env, \eop(\expr) \bigstep \valr', \trop(\tr)
+    \env, \eop(\expr) \bigstep{\num +1} \valr', \trop(\tr)
   }
 %
 \and
 %
   \inferrule{
 }
-{ \env, \enil \bigstep \enil, \trnil }
+{ \env, \enil \bigstep{0} \enil, \trnil }
 %
 \and
 %
 \inferrule{
-\env, \expr_1 \bigstep \valr_1, \tr_1 \\
-\env, \expr_2 \bigstep \valr_2, \tr_2
+\env, \expr_1 \bigstep{\num_1} \valr_1, \tr_1 \\
+\env, \expr_2 \bigstep{\num_2} \valr_2, \tr_2
 }
-{ \env, \econs (\expr_1, \expr_2)  \bigstep \econs (\valr_1, \valr_2),
+{ \env, \econs (\expr_1, \expr_2)  \bigstep{\num_1+\num_2} \econs (\valr_1, \valr_2),
   \trcons(\tr_1, \tr_2)
 }
 %
 \and
 %
 \inferrule{
-  \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-  \env[x \mapsto (\valr_1, \tr_1  )] , \expr_2 \bigstep \valr, \tr_2
+  \env, \expr_1 \bigstep{\num_1} \valr_1, \tr_1 \\
+  \env[x \mapsto (\valr_1, \tr_1  )] , \expr_2 \bigstep{\num_2} \valr, \tr_2
 }
-{\env, \elet x = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
+{\env, \elet x = \expr_1 \ein \expr_2 \bigstep{\num_1+\num_2} \valr, \trlet (x,
   \tr_1, \tr_2) }
 %
 \\\\
@@ -278,7 +278,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   \empty
 }
 {
-  \env, \eilam \expr \bigstep (\eilam \expr, \env), (\eilam \expr , \env)
+  \env, \eilam \expr \bigstep{0} (\eilam \expr, \env), (\eilam \expr , \env)
 }
 }
 %
@@ -286,10 +286,10 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
 %
 \boxed{\color{red}
 \inferrule{
-  \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
-  \env, \expr' \bigstep \valr, \tr_2
+  \env, \expr \bigstep{\num_1} (\eilam \expr', \env'), \tr_1 \\
+  \env, \expr' \bigstep{\num_2} \valr, \tr_2
 }
-{\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
+{\env, \expr [] \bigstep{\num_1+\num_2} \valr, \triapp{\tr_1}{\tr_2} }
 
 }
 \end{mathpar}
