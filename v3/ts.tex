@@ -8,9 +8,111 @@
 %                                  \mbox{Sort} & S & ::= & \nat \\
   \mbox{Linear type} & \ltype &::=  &  \type \lto \type ~|~ \tbase ~|~
   \tbool\\
-  \mbox{Type} & Nonlinear \type & ::= & \bang{\idx} \ltype   \\
+  \mbox{Nonlinear Type} & \type & ::= & \bang{\idx} \ltype   \\
 \end{array}
 \]
+
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{
+    }{
+      \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase 
+    }~\textbf{b}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \ictx \Gamma \tvdash{\nnatA} \evec : \bang{\nnatA}\tbase 
+    }~\textbf{Dict}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \ictx \Gamma \tvdash{\nnatA} \etrue : \bang{\nnatA}\tbool
+    }~\textbf{true}
+     %
+    \and
+    %
+    \inferrule{
+    }{
+      \ictx \Gamma \tvdash{\nnatA} \efalse : \bang{\nnatA}\tbool
+    }~\textbf{false}
+    %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma, x: \type_1
+      \tvdash{r}
+      \expr: \type_2
+    }{
+      \ictx r+\Gamma \tvdash{k+r} \lambda x. \expr : \bang{k}  ( \type_1
+      \lto \type_2)
+    }~\textbf{lambda}
+    % %
+    %     \and
+    % %
+    % \inferrule{
+    %   \Gamma \tvdash{\nnatA} (\lambda x. \expr) : \bang{r}  ( \type_1
+    %   \lto \type_2)
+    %   \\
+    %   \env \vDash \Gamma
+    % }{
+    %    \cdot \tvdash{\nnatA} (\lambda x. \expr, \env) : \bang{r}  ( \type_1
+    %   \lto \type_2)\whynot{0}
+    % }~\textbf{closure}
+    %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto \type_2      ) \\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+    %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
+    }{
+      \ictx \Gamma' ,1+\Gamma  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+    }~\textbf{delta}
+    %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma_1 \tvdash{\nnatA} \expr: \type_1 \\
+      \ictx \Gamma_2, x: \type_1 \tvdash{\nnatA'} \expr' : \type
+    }{
+      \ictx \max(\Gamma_1,\Gamma_2) \tvdash{\max(\nnatA, \nnatA') } \elet x =  \expr \ein \expr': \type
+    }~\textbf{let}
+    %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1 : \bang{k} \tbool\\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2 : \type\\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_3 : \type
+    }{
+      \ictx \boxed{\max(\Gamma_1, \nnatA_1+ \Gamma_2) } \tvdash{\nnatA_1 + \nnatA_2} \eif \eapp \expr_1 \eapp \expr_2
+      \eapp \expr_3 : \type
+    }~\textbf{if}
+  \end{mathpar}
+  \caption{Typing rules, first version}
+  \label{fig:type-rules1}
+\end{figure}
+
 
 \begin{figure}
   \begin{mathpar}
