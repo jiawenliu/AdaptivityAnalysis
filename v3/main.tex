@@ -162,27 +162,31 @@ semantics later.
   %
   \and
   %
+  \wq{
   \inferrule{
     \env, \expr_1 \bigstep{R} \valr_1 \\
     \env, \expr_2 \bigstep{S} \valr_2  }
   {
-    \env, (\expr_1, \expr_2) \bigstep{\max(R,S)} (\valr_1, \valr_2)
+    \env, (\expr_1, \expr_2) \bigstep{(R,S)} (\valr_1, \valr_2)
   }~\textsf{pair}
+  }
   %
   \and
   %
+  \wq{
   \inferrule{
-    \env, \expr \bigstep{R} (\valr_1, \valr_2)
+    \env, \expr \bigstep{(R_1,R_2)} (\valr_1, \valr_2)
   }{
-    \env, \eprojl(\expr) \bigstep{R} \valr_1
+    \env, \eprojl(\expr) \bigstep{R_1} \valr_1
   }~\textsf{fst}
+  }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep{R} (\valr_1, \valr_2), \tr
+    \env, \expr \bigstep{(R_1,R_2)} (\valr_1, \valr_2), \tr
   }{
-    \env, \eprojr(\expr) \bigstep{R} \valr_2, \trprojr(\tr)
+    \env, \eprojr(\expr) \bigstep{(R, )} \valr_2, \trprojr(\tr)
   }~\textsf{snd}
   %
   \and
@@ -210,7 +214,7 @@ semantics later.
     \eop{}(\valr') = \valr\\
     \valr' \in \mathsf{Vec}
   }{
-    \env, \eop(\expr) \bigstep{R +1} \valr', \trop(\tr)
+    \env, \eop(\expr) \bigstep{R +1} \valr, \trop(\tr)
   }~\textsf{delta1}
   %
    \and
@@ -219,7 +223,7 @@ semantics later.
     \env, \expr \bigstep{R} \valr' \\
     \valr' \not\in \mathsf{Vec}
   }{
-    \env, \eop(\expr) \bigstep{R } \valr', \trop(\tr)
+    \env, \eop(\expr) \bigstep{R } \eop( \valr') , \trop(\tr)
   }~\textsf{delta2}
 \and
 %
@@ -270,6 +274,26 @@ semantics later.
 }
 {\env, \expr [] \bigstep{K} \valr []
 }~\textsf{eiapp2}
+%
+\and
+%
+\wq{
+ \inferrule{
+    \env, \expr \bigstep{R} \valr \not\equiv \mathbb{B} 
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep{R } \eif(\valr, \expr_1, \expr_2)
+  }~\textsf{if}
+}
+%
+\and
+%
+\wq{
+ \inferrule{
+    \env, \expr \bigstep{R} \valr
+  }{
+    \env, \eprojl(\expr) \bigstep{fst(R)} \eprojl(\valr)
+  }~\textsf{fst1}
+}
 \end{mathpar}
   \caption{Big-step semantics}
   \label{fig:semantics1}
