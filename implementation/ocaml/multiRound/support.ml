@@ -5,24 +5,24 @@ open Unix
 
 let infile = ref (None : string option)
 let outfile = ref (None : string option)
-let rounds = ref 0
-let cols = ref 0.0
+let cols = ref 1.0
 let rows = ref 0.0 
 let cdb = ref false
 let mech_name = ref ""
-let colst = ref 10.0
-
+let population_N = ref 0
+let rounds = ref 0.0
+let trails = ref 0
 
 let argDefs = [
       "--createdb" , Arg.Unit (fun l -> cdb := true ), "create a new db";
-      "-rw", Arg.Float (fun i -> rows := i) , "specify the rows of the database, -rw float"; 
-      "-cl", Arg.Float (fun i -> cols := i) , "specify the cols of the database, -cl float"; 
-      "-clst", Arg.Float (fun i -> colst := i) , "specify the start numbers of cols of the database, -cl float"; 
-      "-r", Arg.Int (fun i -> rounds := i) , "specify the rounds of the experiments, -r int"; 
+      "-rw", Arg.Float (fun i -> rows := i), "specify the rows of the database, -rw float"; 
+      "-r", Arg.Float (fun i -> rounds := i) , "specify the rounds (parameter k) of the multiRounds algorithm, -r int";
+      "-t", Arg.Int (fun i -> trails := i) , "specify the trails of the experiments, -t int";
 (*       "-db", Arg.String (fun s -> infile := Some s ), "specify the database file name, -i string" ; 
  *)   
       "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name, -o string";
-      "-mech", Arg.String (fun s -> mech_name := s ), "specify the mechanism name, -mech string"  
+      "-mech", Arg.String (fun s -> mech_name := s ), "specify the mechanism name, -mech string";
+      "-N", Arg.Int (fun i -> population_N := i) , "specify the size of the population, -N int"
 ]
 let delta = 0.0000001
 let epsilon = 1.0
@@ -32,6 +32,19 @@ type database = row list
 type query = row -> float
 type mech = query -> database -> float
 type result = float * float
+
+let rec zip f a b = 
+  match a, b with
+  | xa::tla, xb::tlb -> (f xa xb) :: (zip f tla tlb)
+  | _ -> []
+
+let rec gen_dataset n = 
+  if n = 0
+  then []
+else [float_of_int(n)] :: gen_dataset (n - 1)
+
+let population = 
+  ref (gen_dataset (!population_N) )
 
 let parseArgs () =  
         let oname = ref (None : string option) in 
@@ -55,11 +68,7 @@ let rec create_db_helper (col : float) (row : float)  =
       let rec create_row (col : float) = 
         if col > 0.0
         then
-          if ((Random.int 2) = 0)
-          then
-            (- 1.0 ) :: create_row (col -. 1.0)
-          else
-            (1.0 ) :: create_row (col -. 1.0)
+          (float_of_int (Random.int (!population_N))) :: create_row (col -. 1.0)
         else
           []
       in (create_row col) :: create_db_helper col (row -. 1.0)
@@ -105,11 +114,15 @@ let updt l pos a =
   List.mapi (fun i x -> if i = (int_of_float pos) then a else x) l
 
 
-let restrict q db =
+let contains l i = 
+  List.exists (fun a -> if (a = i) then true else false) l
+
+
+let restrict q seti =
   fun x -> 
     match x with
-      [] -> 0.0
-    | _ -> q x
+    | x::[] -> if (contains seti x) then 0.0 else q x
+    | _ -> 0.0
 
 
 
@@ -120,8 +133,6 @@ let rec listminus l1 l2 =
     | [] -> l1
 
 
-let contains l i = 
-  List.exists (fun a -> if (a = i) then true else false) l
 
 let rec db_minus d l = 
 	match d with

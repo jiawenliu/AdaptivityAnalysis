@@ -4,6 +4,7 @@ open Mechs
 
 open Distribution 
 
+(* let population = Support.gen_dataset (!population_N) *) 
 
  let rec f (z ) = 
  (fun (sc ) -> 
@@ -68,7 +69,7 @@ let updtSCC = f
    (fun (i ) -> 
     (fun (nn ) -> 
       if( (( i ) < ( nn )) ) then 
-        if( (( ( ( get   sc )   i ) ) < ( maxScc )) ) then 
+        if( (( ( ( get   sc )   i ) ) > ( maxScc )) ) then 
            i  ::  ( ( ( ( ( f   () )   maxScc )   sc )   (( i ) +. ( 1.000000 )) )  
           nn )  
         else 
@@ -101,8 +102,9 @@ let updtI = f
                let qc = (fun (x ) -> 
                          (sample_bernoulli( p ))
                         ) in
-                let qj =  ( ( restrict   q )   db )  in
+                let qj =  ( ( restrict   q )   ii )  in
                  let a =  mech  qj  db  in
+                  let true_v = nonoise_mech qj (Support.gen_dataset (!population_N)) in 
                   let sc' =
                    ( ( ( ( ( ( ( ( updtSC   () )   sc )   a )   p )   q )  
                        ii )   0.000000 )   nn )  in
@@ -122,11 +124,10 @@ let updtI = f
                      let ii' =
                       ( ( ( ( ( updtI   () )   maxScc )   sc )   0.000000 )  
                       nn )  in
-                      let db' = (db_minus  db   ii' ) in
-                       a  ::  ( ( ( ( ( ( ( (   ( multiRound   () )     k )  
+                       (a, true_v)  ::  ( ( ( ( ( ( ( (   ( multiRound   () )     k )  
                                           (( j ) +. ( 1.000000 )) )  
                                         sc' )   scc' )   ii' )   nn )  
-                                cc )   db' )  
+                                cc )   db )  
           else 
             [] 
          

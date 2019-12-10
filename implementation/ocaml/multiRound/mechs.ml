@@ -66,15 +66,15 @@ let nonoise_mech (q:query) db =
           ( fun sum rw ->  
               sum +.  (q rw)
           ) 0.0 db  
-        in  
+        in 
+        (* let _ =  fprintf stdout "%f " sm in  *)
         sm /.  float_of_int (List.length db)
+
       in
+      (* let _ =  fprintf stdout "%f " mean in *)
     mean 
 
-let restrict q db =
-  fun x -> 
-    match x with
-      [] -> 0.0
-    | _ -> q x
+
+let mech = nonoise_mech
 
 
