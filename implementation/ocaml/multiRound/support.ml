@@ -105,6 +105,13 @@ let updt l pos a =
   List.mapi (fun i x -> if i = (int_of_float pos) then a else x) l
 
 
+let restrict q db =
+  fun x -> 
+    match x with
+      [] -> 0.0
+    | _ -> q x
+
+
 
 
 let rec listminus l1 l2 = 

@@ -21,9 +21,9 @@ def plot_lines(ys, x):
 	plt.legend(loc="best")
 	plt.show()
 
-datas = read_files("results/non5000row.txt")
+datas = read_files("results/1000row100round/*.txt")
 print datas
-plot_lines(datas,  np.arange(0, 100, 1) )
+plot_lines(datas,  np.arange(1, 50, 1) )
 
 # for  y,label in enumerate(datas):
 # 	plt.plot(y, np.arange(10, 100, 5), label=label)
