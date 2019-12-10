@@ -289,7 +289,17 @@
 %   }{
 %     \env, \eprojr(\expr) \bigstep{R} \eprojr(\valr)
 %   }~\textsf{snd1}
-%}
+%   }
+  \\\\
+\begin{array}{llll}
+   \adap(\expr, \emptyset)  &::=  &  0 & \\
+  \adap(\expr, [x \to (\valr, \adapt) ] \uplus \env ) & ::= & \max(\adapt,
+                                                  \adap(\expr[\valr/x],
+                                                               \env )
+                                                  )   & x \in
+                                                  \fv{\expr}.\\
+  & ::= &  \adap(\expr, \env  )  & x \not\in \fv{\expr)}
+\end{array}
 \end{mathpar}
   \caption{Big-step semantics}
   \label{fig:semantics1}
@@ -382,6 +392,23 @@
     }{
       \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
     }~\textbf{exchange}
+    \\\\
+\begin{array}{lll}
+   k+\bang{r} \ltype  &\triangleq  &  \bang{k+r} \ltype  \\
+  k + \emptyset   & \triangleq & \emptyset   \\
+  k + ( [x : \type], \Gamma) & \triangleq &  [x : k+\type], k+\Gamma   
+  \\
+  \max(\bang{k_1} \ltype, \bang{k_2} \ltype) & \triangleq& \bang{ \max(k_1,
+                                                    k_2) } \ltype \\
+  \max(\Gamma, \emptyset) & \triangleq & \Gamma \\
+  \max(\emptyset, \Gamma) & \triangleq & \Gamma \\
+  \max\Big(  ([x : \type ],\Gamma),  ([x: \type'],\Delta)  \Big) & \triangleq
+                            & [x: \max(\type, \type')], \max(\Gamma,
+                              \Delta )\\
+  \sub{\Gamma}{\Delta} & \triangleq &  \dom(\Gamma) = \dom(\Delta)
+                                      \land \forall x \in
+                                      \dom(\Gamma), \sub{\Delta(x)}{\Gamma(x)}  
+\end{array}
   \end{mathpar}
   \caption{Typing rules, first version}
   \label{fig:type-rules1}
@@ -554,7 +581,26 @@ Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:  $\Gamma
    \tvdash{\nnatA - (k+r) } \expr: \type_2 ~(1)$. Choose $\nnatA' =
    \nnatA -r$, we know that $\Gamma  \tvdash{\nnatA' } \valr :
   \bang{r} \type_1 \lto \ltype_2$ from the rule lambda.
-  \end{proof}
+\end{proof}
+
+\begin{thm}[Soundness]
+If $\Gamma \tvdash{\nnatA} \expr : \type$, exists $\env$ , $\env'$ and $\valr$,
+so that $\env \vDash \Gamma$ and $\env , \expr \bigstep{\adapt} \valr,
+\env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env,\Gamma)$.  
+\end{thm}
+\[
+  \begin{array}{lll}
+     \env \vDash \Gamma &\triangleq  &  \dom(\env) = \dom(\Gamma)
+                                       \land \forall x_i. \env(x_i) =
+                                       (\valr_i, \adapt_i) \land
+                                       \empty \tvdash{\nnatA_i} \valr_i
+                                       : \Gamma(x)   \\
+    F(\env,\Gamma) & ::= &  \max(\nnatA_i)    \\
+    & where &   \forall x_i \in \dom(\Gamma). \empty \tvdash{\nnatA_i}
+              \mathsf{fst} (\env(x_i) )
+                                       : \Gamma(x)   \\
+    \end{array}
+\]
 
 \end{document}
 
