@@ -141,7 +141,7 @@
    %
  \inferrule{
   }{
-    \env, \lambda x. \expr \bigstep{\adapt} \lambda x.\expr, \env
+    \env, \lambda x. \expr \bigstep{0} \lambda x.\expr, \env
   }~\textsf{lambda}
   %
   \and
@@ -291,7 +291,12 @@
 %   }~\textsf{snd1}
 %   }
   \\\\
-\begin{array}{llll}
+  \begin{array}{llll}
+    \env_1 \uplus \emptyset & \triangleq & \env_1 &\\
+     \emptyset \uplus \env_2 & \triangleq & \env_2 &\\
+    (\env_1,[x \to (\valr, \adapt_1)] )\uplus (\env_2, [x \to (\valr,
+    \adapt_2)] )  &  \triangleq & (\env_1 \uplus \env_2),[x \to
+                                  (\valr, \max(\adapt_1, \adapt_2))] & \\
    \adap(\expr, \emptyset)  &::=  &  0 & \\
   \adap(\expr, [x \to (\valr, \adapt) ] \uplus \env ) & ::= & \max(\adapt,
                                                   \adap(\expr[\valr/x],
@@ -584,17 +589,18 @@ Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:  $\Gamma
 \end{proof}
 
 \begin{thm}[Soundness]
+\label{soundness}
 If $\Gamma \tvdash{\nnatA} \expr : \type$, exists $\env$ , $\env'$ and $\valr$,
 so that $\env \vDash \Gamma$ and $\env , \expr \bigstep{\adapt} \valr,
 \env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env,\Gamma)$.  
 \end{thm}
 \[
   \begin{array}{lll}
-     \env \vDash \Gamma &\triangleq  &  \dom(\env) = \dom(\Gamma)
-                                       \land \forall x_i. \env(x_i) =
+     \env \vDash \Gamma &\triangleq  & 
+                                        \forall x_i \in \dom( \Gamma) . \env(x_i) =
                                        (\valr_i, \adapt_i) \land
                                        \empty \tvdash{\nnatA_i} \valr_i
-                                       : \Gamma(x)   \\
+                                       : \Gamma(x_i)   \\
     F(\env,\Gamma) & ::= &  \max(\nnatA_i)    \\
     & where &   \forall x_i \in \dom(\Gamma). \empty \tvdash{\nnatA_i}
               \mathsf{fst} (\env(x_i) )
@@ -602,6 +608,87 @@ so that $\env \vDash \Gamma$ and $\env , \expr \bigstep{\adapt} \valr,
     \end{array}
 \]
 
+\begin{proof}
+  By Induction on the typing derivation.
+  \caseL{
+     $   \inferrule{
+    }{
+      \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax}  $
+  }
+  Choose $\adapt \leq \nnatA$ and $\env= \env' = \Big( [x \to (\valr,\adapt
+  )] , \env_1 \Big) $ where $\env_1 \vDash \Gamma$. We know that $\env
+  \vDash \tctx , x: \bang{\nnatA}\ltype $ and $\env , x \bigstep{\adapt} \valr,
+\env'  $. TS:  $ \adapt + adap(\valr, \env')  \leq  \nnatA +
+F(\env,\Gamma)$. Because $x_i \not\in \fv{\valr}$, so that
+$\adap(\valr, \env') =0$.  We know that $\adapt \leq \nnatA$, then
+$\adapt \leq \nnatA + F(\env,\Gamma)$.
+\caseL{
+  $
+    \inferrule{
+      \ictx \Gamma, x: \type_1
+      \tvdash{\nnatA }
+      \expr: \type_2
+    }{
+      \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
+      \lto \type_2)
+    }~\textbf{lambda}
+  $
+}
+Choose $\env = \env' = [x_1 \to (\valr_1,0 ) \dots x_i \to (\valr_i, 0
+)]$ for all $x_i$ in $\dom(k+\Gamma)$ so that $\empty
+\tvdash{\nnatA_i} \valr_i:\Gamma(x_i) $. From the evaluation rule $\env, \lambda x. \expr \bigstep{0}
+                                       \lambda x.\expr, \env $, TS: $0
+                                       + 0 \leq k+\nnatA + F(\env,
+                                       k+\Gamma)$, which is trivially
+                                       true.
+\caseL{
+    $  \inferrule{
+      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto \type_2      ) \\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}  $
+  }
+  Choose $\env = [x_i \to (\valr_i,0)] $ for all $x_i$ in
+  $\dom(\max(\Gamma_1,\Gamma_2))$
+  so that  $\empty \tvdash{\nnatA_i} \valr_i  : (\max(\Gamma_1,
+  \Gamma_2)(x_i) $.
+  From the definition, we know that $\env \vDash \Gamma_1$ and $\env
+  \vDash \Gamma_2$. Because $\expr_1$ has the arrow type and will be
+  evaluated to a function, assume exists $\env_1$ so that $\env,
+  \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 $.  By induction
+  hypothesis on the first premise, we know that: $\adapt_1 +
+  \adap(\lambda x. \expr, \env_1) \leq \nnatA_1 + F(\env,
+  \Gamma_1)~(1)$.Assume exists $\env_2$ so that $\expr_2$ is evaluated
+  to an arbitrary value $\valr_2$ : $ \env, \expr_2 \bigstep{\adapt_2}
+  \valr_2 , \env_2$, by induction hypothesis, we conclude that :  $\adapt_2 +
+  \adap(\valr , \env_2) \leq \nnatA_2 + F(\env,
+  \Gamma_2)~(2)$.
+                            
+
+
+\[
+\inferrule{
+    \env, \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
+    \env, \expr_2 \bigstep{\adapt_2} \valr_2 , \env_2 \\
+    (\env_1 \uplus \env_2)[ x  \to (\valr_2,   \adapt_2  ) ], \expr
+    \bigstep{\adapt_3} \valr, \env_3
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep{\adapt_1+\adapt_3} \valr, \env_3
+  }~\textsf{app}
+\]
+ \end{proof} 
+
+
+\begin{thm}[Subject Reduction]
+\label{sub-red}
+If $\Gamma \tvdash{\nnatA} \expr : \type$, exists $\env$ , $\env'$ and $\valr$,
+so that $\env \vDash \Gamma$ and $\env , \expr \bigstep{\adapt} \valr,
+\env'  $, then  exist $\nnatA'$ so that $ \Gamma  \tvdash{\nnatA'} \valr : \type $.  
+\end{thm}
+By induction on the typing derivation.
 \end{document}
 
 
