@@ -460,113 +460,113 @@
 
 \begin{proof}
   By induction on the typing derivation.\\
-\caseL{
-  $   \inferrule{
-    }{
-      \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-    }~\textbf{Ax}  $
-  }
-Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:  $\Gamma
-  \tvdash{\max(\nnatA,\nnatA' )} x[\valr/x]  : \type$. proved by
-  subtype rule on the assumption.
-\caseL{
- $   \inferrule{
-    }{
-      \ictx \tctx ,y:\type', x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-    }~\textbf{Ax2}  $
-  }
-  Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:
-  $\Gamma,   x: \bang{\nnatA}\ltype
-  \tvdash{\max(\nnatA,\nnatA' )} x[\valr/y]  : \type$. proved by rule
-  AX and then subtype.
-  \caseL{
-   \inferrule{
-      \ictx \Gamma, x: \type_1, y:\type'
-      \tvdash{\nnatA }
-      \expr: \type_2
-    }{
-      \ictx k+\Gamma, y: k + \type' \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
-      \lto \type_2)
-    }~\textbf{lambda}
-  }
-   Assume $\empty \tvdash{k+\nnatA'} \valr : k+\type' $, TS:
-  $k+\Gamma
-  \tvdash{\max(k+\nnatA,k+\nnatA' )} (\lambda x. \expr)[\valr/y]  : \type$. From the
-  Lemma~\ref{para-dec} on the assumption, we know: $\empty
-  \tvdash{\nnatA'} \valr : \type' ~(1)$.\\
-  By Induction hypothesis on the premise, we get: $ \Gamma, x:\type_1
-  \tvdash{\max( \nnatA, \nnatA' )}
-      \expr[\valr/y]: \type_2 ~(2)$. By rule lambda, we conclude that
-      $k+\Gamma \tvdash{ k+ ( \max(\nnatA,\nnatA ) }
-      \lambda x.\expr[\valr/y]: \type_2 $.
-      \caseL{
-      \inferrule{
-      \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto \type_2      ) \\
-      \ictx \Gamma_2 ,x: \type'', \tvdash{\nnatA_2} \expr_2: \type_1 
-    }{
-      \ictx \max (\Gamma_1, \Gamma_2 ), x:\max(\type',\type'') \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-    }~\textbf{app}
-  }
-  Assume $\empty \tvdash{\nnatA'} \valr : \max(\type',\type'')$, TS: $\max (\Gamma_1, \Gamma_2 )
-  \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
-  \expr_2)[\valr/x]  : \type_2$. From the definition of $\max(\type',
-  \type'')$, we know that $\type'$ and $\type''$ have similar
-  form. Let us assume $\type'= \bang{k_1} \ltype$ and $\type'' =
-  \bang{k_2} \ltype$ so that $\max(\type',\type'') = \bang{\max(k_1,k_2)}
-  \ltype$.\\
-  From the Lemma~\ref{para-dec} on the assumption, we have $\empty
-  \tvdash{\nnatA' - (\max(k_1,k_2)-k_1) } \valr : \bang{k_1}
-  \ltype~(1)$ and $\empty
-  \tvdash{\nnatA' - (\max(k_1,k_2)-k_2) } \valr : \bang{k_2}
-  \ltype~(2)$.\\ By induction hypothesis on $(1)$ and $(2)$ respctively,
-  we know that:  $ \Gamma_1  \tvdash{ \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) ) } \expr_1[\valr/x]:  \bang{0} ( \type_1
-  \lto \type_2   ) ~(3)$  and $ \Gamma_2  \tvdash{\max(\nnatA_2 ,
-    \nnatA' - (\max(k_1,k_2)-k_2)   )} \expr_2[\valr/x]: \type_1 ~(4)$.  By the
-  rule app and $(3)$, $(4)$, we conclude that $$\max (\Gamma_1, \Gamma_2 )
-  \tvdash{\max(  \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) )  , \max(\nnatA_2 ,
-    \nnatA' - (\max(k_1,k_2)-k_2)   )  )} \expr_1[\valr/x] \eapp
-  \expr_2[\valr/x]  : \type_2 ~(5).$$
-  Because $\max(\nnatA' - (\max(k_1,k_2)-k_1) ) , \nnatA' -
-  (\max(k_1,k_2)-k_2)   ) \leq \nnatA' $, by subtype, we raise the
-  adaptivity to  $\max(\nnatA_1,\nnatA_2, \nnatA' ) $ from $(5)$.
-   \caseL{
-      \inferrule{
-      \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto \type_2      ) \\
-      \ictx \Gamma_2  \tvdash{\nnatA_2} \expr_2: \type_1 
-    }{
-      \ictx \max (\Gamma_1, \Gamma_2 ), x:\type' \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-    }~\textbf{app2}
-  }
-  It is another case for application when x only appear in the first
-  premise. In this case, $\expr_2[\valr/x] = \expr_2$. Another case
-  when variable x only appears in the second premise can be proved in
-  a similar way.\\
-  Assume $\empty \tvdash{\nnatA'} \valr :\type'$. TS:$\max (\Gamma_1, \Gamma_2 )
-  \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
-  \expr_2)[\valr/x]  : \type_2$.  By Induction Hypothesis on the first
-  premise using the assumption, we get: $\Gamma_1
-  \tvdash{\max(\nnatA_1, \nnatA')} \expr_1[\valr/x]:  \bang{0} ( \type_1
-      \lto \type_2  )  ~(1)$. By the rule app using (1) and the second
-      premise, we conclude that $$ \max (\Gamma_1, \Gamma_2 )
-      \tvdash{\max( \max(\nnatA_1,\nnatA'),\nnatA_2) }
-      \expr_1[\valr/x] \eapp \expr_2 : \type_2$$
-      \caseL{
- \inferrule{
-      \ictx \Gamma, x:\type' \tvdash{\nnatA} \expr: \bang{k} \ltype 
-    }{
-      \ictx \Gamma' ,1+\Gamma, x:1+\type'  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
-    }~\textbf{delta}
-  }
-  Assume $\empty \tvdash{\nnatA'+1} \valr : 1+\type' $, TS: $ \Gamma'
-  ,1+\Gamma \tvdash{\max(1+\nnatA, 1+\nnatA')} \delta(\expr)
-  [\valr/x]: \bang{k} \ltype $.
-  By Lemma~\ref{para-dec} on the assumption, we have $\empty
-  \tvdash{\nnatA'} \valr : \type'~(1) $. By IH on the first premise
-  along with (1), we have: $\Gamma \tvdash{\max(\nnatA, \nnatA')}
-  \expr[\valr/x]: \bang{k} \ltype~ (2)$.
-  By the rule delta using (2), we conclude that $\Gamma' ,1+\Gamma  \tvdash{1+(\nnatA,\nnatA')} \delta(\expr[\valr/x]): \bang{k} \ltype$.
+% \caseL{
+%   $   \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}  $
+%   }
+% Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:  $\Gamma
+%   \tvdash{\max(\nnatA,\nnatA' )} x[\valr/x]  : \type$. proved by
+%   subtype rule on the assumption.
+% \caseL{
+%  $   \inferrule{
+%     }{
+%       \ictx \tctx ,y:\type', x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax2}  $
+%   }
+%   Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:
+%   $\Gamma,   x: \bang{\nnatA}\ltype
+%   \tvdash{\max(\nnatA,\nnatA' )} x[\valr/y]  : \type$. proved by rule
+%   AX and then subtype.
+%   \caseL{
+%    \inferrule{
+%       \ictx \Gamma, x: \type_1, y:\type'
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma, y: k + \type' \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto \type_2)
+%     }~\textbf{lambda}
+%   }
+%    Assume $\empty \tvdash{k+\nnatA'} \valr : k+\type' $, TS:
+%   $k+\Gamma
+%   \tvdash{\max(k+\nnatA,k+\nnatA' )} (\lambda x. \expr)[\valr/y]  : \type$. From the
+%   Lemma~\ref{para-dec} on the assumption, we know: $\empty
+%   \tvdash{\nnatA'} \valr : \type' ~(1)$.\\
+%   By Induction hypothesis on the premise, we get: $ \Gamma, x:\type_1
+%   \tvdash{\max( \nnatA, \nnatA' )}
+%       \expr[\valr/y]: \type_2 ~(2)$. By rule lambda, we conclude that
+%       $k+\Gamma \tvdash{ k+ ( \max(\nnatA,\nnatA ) }
+%       \lambda x.\expr[\valr/y]: \type_2 $.
+%       \caseL{
+%       \inferrule{
+%       \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto \type_2      ) \\
+%       \ictx \Gamma_2 ,x: \type'', \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \max (\Gamma_1, \Gamma_2 ), x:\max(\type',\type'') \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}
+%   }
+%   Assume $\empty \tvdash{\nnatA'} \valr : \max(\type',\type'')$, TS: $\max (\Gamma_1, \Gamma_2 )
+%   \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
+%   \expr_2)[\valr/x]  : \type_2$. From the definition of $\max(\type',
+%   \type'')$, we know that $\type'$ and $\type''$ have similar
+%   form. Let us assume $\type'= \bang{k_1} \ltype$ and $\type'' =
+%   \bang{k_2} \ltype$ so that $\max(\type',\type'') = \bang{\max(k_1,k_2)}
+%   \ltype$.\\
+%   From the Lemma~\ref{para-dec} on the assumption, we have $\empty
+%   \tvdash{\nnatA' - (\max(k_1,k_2)-k_1) } \valr : \bang{k_1}
+%   \ltype~(1)$ and $\empty
+%   \tvdash{\nnatA' - (\max(k_1,k_2)-k_2) } \valr : \bang{k_2}
+%   \ltype~(2)$.\\ By induction hypothesis on $(1)$ and $(2)$ respctively,
+%   we know that:  $ \Gamma_1  \tvdash{ \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) ) } \expr_1[\valr/x]:  \bang{0} ( \type_1
+%   \lto \type_2   ) ~(3)$  and $ \Gamma_2  \tvdash{\max(\nnatA_2 ,
+%     \nnatA' - (\max(k_1,k_2)-k_2)   )} \expr_2[\valr/x]: \type_1 ~(4)$.  By the
+%   rule app and $(3)$, $(4)$, we conclude that $$\max (\Gamma_1, \Gamma_2 )
+%   \tvdash{\max(  \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) )  , \max(\nnatA_2 ,
+%     \nnatA' - (\max(k_1,k_2)-k_2)   )  )} \expr_1[\valr/x] \eapp
+%   \expr_2[\valr/x]  : \type_2 ~(5).$$
+%   Because $\max(\nnatA' - (\max(k_1,k_2)-k_1) ) , \nnatA' -
+%   (\max(k_1,k_2)-k_2)   ) \leq \nnatA' $, by subtype, we raise the
+%   adaptivity to  $\max(\nnatA_1,\nnatA_2, \nnatA' ) $ from $(5)$.
+%    \caseL{
+%       \inferrule{
+%       \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto \type_2      ) \\
+%       \ictx \Gamma_2  \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \max (\Gamma_1, \Gamma_2 ), x:\type' \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app2}
+%   }
+%   It is another case for application when x only appear in the first
+%   premise. In this case, $\expr_2[\valr/x] = \expr_2$. Another case
+%   when variable x only appears in the second premise can be proved in
+%   a similar way.\\
+%   Assume $\empty \tvdash{\nnatA'} \valr :\type'$. TS:$\max (\Gamma_1, \Gamma_2 )
+%   \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
+%   \expr_2)[\valr/x]  : \type_2$.  By Induction Hypothesis on the first
+%   premise using the assumption, we get: $\Gamma_1
+%   \tvdash{\max(\nnatA_1, \nnatA')} \expr_1[\valr/x]:  \bang{0} ( \type_1
+%       \lto \type_2  )  ~(1)$. By the rule app using (1) and the second
+%       premise, we conclude that $$ \max (\Gamma_1, \Gamma_2 )
+%       \tvdash{\max( \max(\nnatA_1,\nnatA'),\nnatA_2) }
+%       \expr_1[\valr/x] \eapp \expr_2 : \type_2$$
+%       \caseL{
+%  \inferrule{
+%       \ictx \Gamma, x:\type' \tvdash{\nnatA} \expr: \bang{k} \ltype 
+%     }{
+%       \ictx \Gamma' ,1+\Gamma, x:1+\type'  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+%     }~\textbf{delta}
+%   }
+%   Assume $\empty \tvdash{\nnatA'+1} \valr : 1+\type' $, TS: $ \Gamma'
+%   ,1+\Gamma \tvdash{\max(1+\nnatA, 1+\nnatA')} \delta(\expr)
+%   [\valr/x]: \bang{k} \ltype $.
+%   By Lemma~\ref{para-dec} on the assumption, we have $\empty
+%   \tvdash{\nnatA'} \valr : \type'~(1) $. By IH on the first premise
+%   along with (1), we have: $\Gamma \tvdash{\max(\nnatA, \nnatA')}
+%   \expr[\valr/x]: \bang{k} \ltype~ (2)$.
+%   By the rule delta using (2), we conclude that $\Gamma' ,1+\Gamma  \tvdash{1+(\nnatA,\nnatA')} \delta(\expr[\valr/x]): \bang{k} \ltype$.
 \end{proof}
 
 \begin{lem}[Parameter Decreasing]
@@ -588,25 +588,25 @@ Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:  $\Gamma
   \bang{r} \type_1 \lto \ltype_2$ from the rule lambda.
 \end{proof}
 
-\begin{thm}[Soundness]
-\label{soundness}
-If $\Gamma \tvdash{\nnatA} \expr : \type$, exists $\env$ , $\env'$ and $\valr$,
-so that $\env \vDash \Gamma$ and $\env , \expr \bigstep{\adapt} \valr,
-\env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env,\Gamma)$.  
-\end{thm}
 \[
   \begin{array}{lll}
      \env \vDash \Gamma &\triangleq  & 
                                         \forall x_i \in \dom( \Gamma) . \env(x_i) =
                                        (\valr_i, \adapt_i) \land
-                                       \empty \tvdash{\nnatA_i} \valr_i
+                                       \empty \tvdash{\adapt_i} \valr_i
                                        : \Gamma(x_i)   \\
-    F(\env,\Gamma) & ::= &  \max(\nnatA_i)    \\
-    & where &   \forall x_i \in \dom(\Gamma). \empty \tvdash{\nnatA_i}
-              \mathsf{fst} (\env(x_i) )
-                                       : \Gamma(x)   \\
+    F(\env, \expr) & ::= &  \max(\adapt_i)    \\
+    & where &   \forall x_i \in \fv{\expr} . \env(x_i) = (\valr_i, \adapt_i).
+                                          \\
     \end{array}
 \]
+\begin{thm}[Soundness]
+\label{soundness}
+If $\Gamma \tvdash{\nnatA} \expr : \type$, $ \forall \env$ that $\env
+\vDash \Gamma$, exists $\env'$ and $\valr$ so that $\env , \expr \bigstep{\adapt} \valr,
+\env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env, \expr)$.  
+\end{thm}
+
 
 \begin{proof}
   By Induction on the typing derivation.
@@ -616,13 +616,14 @@ so that $\env \vDash \Gamma$ and $\env , \expr \bigstep{\adapt} \valr,
       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
     }~\textbf{Ax}  $
   }
-  Choose $\adapt \leq \nnatA$ and $\env= \env' = \Big( [x \to (\valr,\adapt
-  )] , \env_1 \Big) $ where $\env_1 \vDash \Gamma$. We know that $\env
-  \vDash \tctx , x: \bang{\nnatA}\ltype $ and $\env , x \bigstep{\adapt} \valr,
-\env'  $. TS:  $ \adapt + adap(\valr, \env')  \leq  \nnatA +
-F(\env,\Gamma)$. Because $x_i \not\in \fv{\valr}$, so that
-$\adap(\valr, \env') =0$.  We know that $\adapt \leq \nnatA$, then
-$\adapt \leq \nnatA + F(\env,\Gamma)$.
+  Assume $\env= \Big( \env_1, [x \to (\valr,\adapt
+  )] , \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1 \vDash \Gamma$. We know that $
+  \empty \tvdash{\adapt} \valr : \bang{\nnatA}\ltype $.
+  From the evaluation rule var, we know $\env , x \bigstep{\adapt} \valr,
+  \env  $.
+  TS:  $ \adapt + adap(\valr, \env)  \leq  \nnatA +
+  F(\env) \implies \adapt + 0 \leq \nnatA + \max( \adapt, F(\env_1))
+  $.It is trivially true.
 \caseL{
   $
     \inferrule{
@@ -635,13 +636,16 @@ $\adapt \leq \nnatA + F(\env,\Gamma)$.
     }~\textbf{lambda}
   $
 }
-Choose $\env = \env' = [x_1 \to (\valr_1,0 ) \dots x_i \to (\valr_i, 0
-)]$ for all $x_i$ in $\dom(k+\Gamma)$ so that $\empty
-\tvdash{\nnatA_i} \valr_i:\Gamma(x_i) $. From the evaluation rule $\env, \lambda x. \expr \bigstep{0}
+Choose $\env \vDash  (k+\Gamma)$ so that $\forall x_i \in
+(\Gamma). \env(x_1) =(\valr_i, \adapt_i ) \land \empty
+\tvdash{\adapt_i } \valr_i: k+\Gamma(x_i) $.  By the evaluation rule
+we know $\env, \lambda x. \expr \bigstep{0}
                                        \lambda x.\expr, \env $, TS: $0
-                                       + 0 \leq k+\nnatA + F(\env,
-                                       k+\Gamma)$, which is trivially
-                                       true.
+                                       + \adap(\lambda x.\expr, \env)
+                                       \leq  k+\nnatA + F(\env)$, which is trivially
+                                       true because $ \adap(\lambda
+                                       x.\expr, \env) \leq F(\env) $.
+                                       
 \caseL{
     $  \inferrule{
       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
@@ -684,9 +688,9 @@ Choose $\env = \env' = [x_1 \to (\valr_1,0 ) \dots x_i \to (\valr_i, 0
 
 \begin{thm}[Subject Reduction]
 \label{sub-red}
-If $\Gamma \tvdash{\nnatA} \expr : \type$, exists $\env$ , $\env'$ and $\valr$,
-so that $\env \vDash \Gamma$ and $\env , \expr \bigstep{\adapt} \valr,
-\env'  $, then  exist $\nnatA'$ so that $ \Gamma  \tvdash{\nnatA'} \valr : \type $.  
+If $\Gamma \tvdash{\nnatA} \expr : \type$, $\forall \env . \env
+\vDash \Gamma$,   exists $\env'$ and $\valr$, $\env , \expr \bigstep{\adapt} \valr,
+\env'  $, then $ \Gamma  \tvdash{? } \valr : \type $.  
 \end{thm}
 By induction on the typing derivation.
 \end{document}
