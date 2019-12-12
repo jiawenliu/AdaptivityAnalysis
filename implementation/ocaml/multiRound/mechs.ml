@@ -51,19 +51,22 @@ let gauss_mech (q:query) db =
     in
 (*       let _ = print_endline(string_of_int(List.length db) ^ (string_of_int(List.length (List.nth db 0)))) in
  *)        
- 		let sigma = ( sqrt( (sqrt (float_of_int (List.length (List.nth db 0))) )   /. (float_of_int (List.length db)) ))(*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
+ 		(* let sigma = ( sqrt( (sqrt (float_of_int (List.length (List.nth db 0))) )   /. (float_of_int (List.length db)) )) *)
+ 		(*2.0 *. log(1.25 /. delta) *. 2.0 *. 2.0 /. epsilon*)
+ 		let sigma = ( sqrt( (sqrt (!rounds) )   /. (float_of_int (List.length db)) ))
       	in
         (* let _ = print_endline (string_of_float sigma)
          in *) 
         mean +. (sample_normal_boxmuller3 0.0 sigma) 
   in 
   if result > 1.0 then 1.0 
-  else  if result < -1.0 then -1.0 else result 
+  else  if result < 0.0 then 0.0 else result 
 
 let nonoise_mech (q:query) db =  
     let mean = 
       let sm =  List.fold_left 
-          ( fun sum rw ->  
+          ( fun sum rw -> 
+
               sum +.  (q rw)
           ) 0.0 db  
         in 
@@ -75,6 +78,6 @@ let nonoise_mech (q:query) db =
     mean 
 
 
-let mech = nonoise_mech
+let mech = gauss_mech
 
 

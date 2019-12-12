@@ -6,7 +6,7 @@ open Distribution
 
 (* let population = Support.gen_dataset (!population_N) *) 
 
- let rec f (z ) = 
+ let rec updtSC (z ) = 
  (fun (sc ) -> 
   (fun (a ) -> 
    (fun (p ) -> 
@@ -16,15 +16,15 @@ open Distribution
        (fun (nn ) -> 
          if( (( i ) < ( nn )) ) then 
            if( ( ( contains   ii )   i ) ) then 
+             ( ( ( ( ( ( ( ( updtSC   () )   sc )   a )   p )   q )   ii )  
+               (( i ) +. ( 1.000000 )) )   nn ) 
+           else 
               let x =
                (( ( ( get   sc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
-               q   ii ) ) -. ( p )) )) ))  in
+               q   i ) ) -. ( p )) )) ))  in
                let sc' =  ( ( ( updt   sc )   i )   x )  in
-               ( ( ( ( ( ( ( ( f   () )   sc' )   a )   p )   q )   ii )  
+               ( ( ( ( ( ( ( ( updtSC   () )   sc' )   a )   p )   q )   ii )  
                  (( i ) +. ( 1.000000 )) )   nn ) 
-           else 
-             ( ( ( ( ( ( ( ( f   () )   sc )   a )   p )   q )   ii )  
-               (( i ) +. ( 1.000000 )) )   nn ) 
           
          else 
            sc 
@@ -37,8 +37,8 @@ open Distribution
   )
  )
  
-let updtSC = f
- let rec f (z ) = 
+
+let rec updtSCC (z ) = 
  (fun (scc ) -> 
   (fun (a ) -> 
    (fun (p ) -> 
@@ -50,7 +50,7 @@ let updtSC = f
             (( ( ( get   scc )   i ) ) +. ( (( (( a ) -. ( p )) ) *. ( (( (
             qc   i ) ) -. ( p )) )) ))  in
             let scc' =  ( ( ( updt   scc )   i )   x )  in
-            ( ( ( ( ( ( ( f   () )   scc' )   a )   p )   qc )   (( i ) +. ( 1.000000 )) )  
+            ( ( ( ( ( ( ( updtSCC   () )   scc' )   a )   p )   qc )   (( i ) +. ( 1.000000 )) )  
             cc ) 
         else 
           scc 
@@ -62,29 +62,30 @@ let updtSC = f
   )
  )
  
-let updtSCC = f
- let rec f (z ) = 
+
+let rec updtI (z ) = 
  (fun (maxScc ) -> 
   (fun (sc ) -> 
    (fun (i ) -> 
-    (fun (nn ) -> 
-      if( (( i ) < ( nn )) ) then 
-        if( (( ( ( get   sc )   i ) ) > ( maxScc )) ) then 
-           i  ::  ( ( ( ( ( f   () )   maxScc )   sc )   (( i ) +. ( 1.000000 )) )  
-          nn )  
+    (fun (nn ) ->
+    fun ii db -> 
+      if( (( i ) < ( nn ))  ) then 
+        if( (( ( ( get   sc )   i ) ) > ( maxScc )) && (not (contains ii i)) && (contains db i)) then 
+           i  ::  ( ( ( ( ( updtI   () )   maxScc )   sc )   (( i ) +. ( 1.000000 )) )  
+          nn ii db)  
         else 
-          ( ( ( ( ( f   () )   maxScc )   sc )   (( i ) +. ( 1.000000 )) )  
-          nn ) 
+          ( ( ( ( ( updtI   () )   maxScc )   sc )   (( i ) +. ( 1.000000 )) )  
+          nn ii db) 
        
       else 
-        [] 
+        ii 
      
     )
    )
   )
  )
  
-let updtI = f
+
  let rec multiRound (z ) = 
    (fun (k ) -> 
   (fun (j ) -> 
@@ -93,7 +94,7 @@ let updtI = f
      (fun (ii ) -> 
       (fun (nn ) -> 
        (fun (cc ) -> 
-        (fun (db ) -> 
+        (fun (db ) dom -> 
           if( (( j ) < ( k )) ) then 
              let p = (sample_uniform  0.000000   1.000000 ) in
               let q = (fun (x ) -> 
@@ -120,14 +121,15 @@ let updtI = f
                                                 acc 
                                              
                                             )
-                                           ))   0.000000 )   scc' )  in
+                                           ))   (-10.000000) )   scc' )  in
                      let ii' =
-                      ( ( ( ( ( updtI   () )   maxScc )   sc )   0.000000 )  
-                      nn )  in
+                      (( ( ( ( ( updtI   () )   maxScc )   sc )   0.000000 )  
+                                              nn ) ii dom)  in
+                       (* let _ = write_list ii' stdout in *)
                        (a, true_v)  ::  ( ( ( ( ( ( ( (   ( multiRound   () )     k )  
                                           (( j ) +. ( 1.000000 )) )  
                                         sc' )   scc' )   ii' )   nn )  
-                                cc )   db )  
+                                cc )   db dom)  
           else 
             [] 
          

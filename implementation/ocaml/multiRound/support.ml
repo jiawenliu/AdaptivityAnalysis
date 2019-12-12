@@ -1,8 +1,8 @@
 open List
 open Distribution
 open Printf
-open Unix
-
+(* open Unix
+ *)
 let infile = ref (None : string option)
 let outfile = ref (None : string option)
 let cols = ref 1.0
@@ -118,10 +118,21 @@ let contains l i =
   List.exists (fun a -> if (a = i) then true else false) l
 
 
+let domain db = 
+	let rec domain_without_duplicate db r = 
+		match db with
+		| [x] :: xs -> if contains r x 
+						then domain_without_duplicate xs r 
+						else domain_without_duplicate xs (x::r)
+		| _ -> r
+	in
+	domain_without_duplicate db []
+
 let restrict q seti =
   fun x -> 
     match x with
-    | x::[] -> if (contains seti x) then 0.0 else q x
+    | x::[] -> (* let _ =  fprintf stdout "data: %f " x in *)  if (contains seti x) 
+    					then (* let _ = fprintf stdout " in selected set,\n " in *) 0.0 else let r = q x in (* let _ = fprintf stdout " not in selected set: %f\n " r in *) r
     | _ -> 0.0
 
 
@@ -145,3 +156,21 @@ let rec mr_initial n =
 		[]
 	else
 	0.0 :: mr_initial (n -. 1.0)
+
+
+
+
+
+let write res oc =
+  fprintf oc "%f\n" res
+
+let rec write_list res oc = 
+  match res with
+    | x::xs -> write x oc; write_list xs oc
+    | [] -> fprintf oc "\n" 
+
+let rec write_lists res oc = 
+  match res with
+  | x::xs -> write_list x oc; write_lists xs oc
+  | [] -> fprintf oc "\n" 
+
