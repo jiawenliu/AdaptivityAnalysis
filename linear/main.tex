@@ -341,7 +341,7 @@
     \inferrule{
     }{
       \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase 
-    }~\textbf{b}
+    }~\textbf{const}
     %
     % \and
     % %
@@ -398,6 +398,26 @@
       \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
     }~\textbf{exchange}
     \\\\
+    \boxed{
+ \inferrule{
+      \ictx \Gamma, x: \type_1
+      \tvdash{\nnatA }
+      \expr: \type_2
+    }{
+      \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
+      \lto^{\nnatA} \type_2)
+    }~\textbf{lambda}
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto^{\nnatA} \type_2      ) \\
+      \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+    }
+    \\\\
 \begin{array}{lll}
    k+\bang{r} \ltype  &\triangleq  &  \bang{k+r} \ltype  \\
   k + \emptyset   & \triangleq & \emptyset   \\
@@ -447,19 +467,35 @@
   \caption{subtyping}
  \end{figure}
 
-\clearpage
+ \clearpage
 
-\begin{thm}[Substitution]
+ \begin{thm}[Weaking]
   \label{sub}
   \begin{enumerate} 
    \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
-  \empty \tvdash{\nnatA'} \valr : \type'  $ , then  $\Gamma
-  \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$. 
+  x \not \in \fv{\expr}  $ ,  then  $ \Gamma \tvdash{ \nnatA} \expr : \type $.
   \end{enumerate}
 \end{thm}
 
-\begin{proof}
-  By induction on the typing derivation.\\
+\begin{thm}[Value Adaptivity]
+  \label{sub}
+  \begin{enumerate} 
+   \item for all type $\bang{k} \ltype$,  exist value $\valr$, then  $
+     \empty \tvdash{ k} \valr : \bang{k} \ltype $.
+  \end{enumerate}
+\end{thm}
+
+% \begin{thm}[Substitution]
+%   \label{sub}
+%   \begin{enumerate} 
+%    \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
+%   \empty \tvdash{\nnatA'} \valr : \type'  $ , then  $\Gamma
+%   \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$. 
+%   \end{enumerate}
+% \end{thm}
+
+% \begin{proof}
+%   By induction on the typing derivation.\\
 % \caseL{
 %   $   \inferrule{
 %     }{
@@ -566,7 +602,95 @@
 %   \tvdash{\nnatA'} \valr : \type'~(1) $. By IH on the first premise
 %   along with (1), we have: $\Gamma \tvdash{\max(\nnatA, \nnatA')}
 %   \expr[\valr/x]: \bang{k} \ltype~ (2)$.
-%   By the rule delta using (2), we conclude that $\Gamma' ,1+\Gamma  \tvdash{1+(\nnatA,\nnatA')} \delta(\expr[\valr/x]): \bang{k} \ltype$.
+%    By the rule delta using (2), we conclude that $\Gamma' ,1+\Gamma  \tvdash{1+(\nnatA,\nnatA')} \delta(\expr[\valr/x]): \bang{k} \ltype$.
+% \end{proof}
+
+\begin{thm}[Substitution]
+  \label{sub}
+  \begin{enumerate} 
+   \item If $ \Gamma,x : \bang{k} \ltype \tvdash{ \nnatA} \expr : \type $ and $
+  \empty \tvdash{k} \valr : \bang{k} \ltype  $ , then  $\Gamma
+  \tvdash{ \nnatA } \expr[\valr/x]  : \type$. 
+  \end{enumerate}
+\end{thm}
+
+\begin{proof}
+  By induction on the typing derivation.\\
+%%%%%%%%%%%%%%%%%%%%%
+\caseL{
+  $   \inferrule{
+    }{
+      \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax}  $
+  }
+  
+Assume $\empty \tvdash{\nnatA} \valr : \bang{\nnatA}\ltype $ TS:  $\Gamma
+\tvdash{\nnatA } x[\valr/x]  : \type$. proved by the assumption.\\
+
+\caseL{
+ $   \inferrule{
+    }{
+      \ictx \tctx ,y:\type', x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+    }~\textbf{Ax2}  $
+  }
+  
+Assume $\empty \tvdash{\nnatA} \valr : \bang{\nnatA}\ltype $, TS:
+   $\Gamma,   x: \bang{\nnatA}\ltype
+   \tvdash{\nnatA } x[\valr/y]  : \type$. proved by the assumption.\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \caseL{
+   \inferrule{
+      \ictx \Gamma, x: \type_1, y: \bang{k_1} \ltype
+      \tvdash{\nnatA }
+      \expr: \type_2
+    }{
+      \ictx k+\Gamma, y: k + \bang{k_1} \ltype \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
+      \lto^{\nnatA} \type_2)
+    }~\textbf{lambda}
+  }
+
+   Assume $\empty \tvdash{k+k_1 } \valr : k+ \bang{k_1} \ltype $, TS:
+  $k+\Gamma
+  \tvdash{ k } (\lambda x. \expr)[\valr/y]  : \bang{k}  ( \type_1
+      \lto^{\nnatA} \type_2)$.
+
+ From the  Lemma~\ref{para-dec} on the assumption, we know: $\empty
+  \tvdash{ k_1} \valr : \bang{k_1} \ltype ~(1)$.
+
+  By Induction hypothesis on the premise: $ \Gamma, x:\type_1
+  \tvdash{\nnatA }
+      \expr[\valr/y]: \type_2 ~(2)$. 
+
+By rule lambda, we conclude that
+      $k+\Gamma \tvdash{ k }
+      \lambda x.\expr[\valr/y]: \bang{k}  ( \type_1
+      \lto^{\nnatA} \type_2) $.\\
+      
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+      
+      \caseL{
+      \inferrule{
+      \ictx \Gamma ,x:\bang{k} \ltype  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto^{\nnatA} \type_2      ) \\
+      \ictx \Gamma ,x:\bang{k} \ltype  \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \ictx \Gamma, x:\bang{k} \ltype \tvdash{ \nnatA+ \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+  }
+  
+  Assume $\empty \tvdash{k} \valr : \bang{k} \ltype$, TS: $\Gamma
+  \tvdash{ \nnatA_1+ \max(\nnatA,\nnatA_2)  } (\expr_1 \eapp
+  \expr_2)[\valr/x]  : \type_2$.
+  
+By induction hypothesis on the first and second premise, we conclude
+: $\ictx \Gamma \tvdash{\nnatA_1}  \expr_1[\valr/x]  :  \bang{0}
+( \type_1 \lto^{\nnatA} \type_2 )~(1)$ and $ \ictx \Gamma \tvdash{\nnatA_2} \expr_2[\valr/x]: \type_1(2)$.
+
+ By the rule app and $(1)$, $(2)$,  we prove that $$ \Gamma
+  \tvdash{  \nnatA_1 + \max(\nnatA, \nnatA_2)  }  \expr_1[\valr/x] \eapp
+  \expr_2[\valr/x]  : \type_2$$
+
 \end{proof}
 
 \begin{lem}[Parameter Decreasing]
@@ -577,15 +701,39 @@
   \type$ and  $\nnatA' \leq \nnatA-k $.
 \end{lem}
 \begin{proof}
-  if $\valr$ is a constant, then it is trivial, assume $\type =
-  \bang{r} \tbase$, choose
-  $\nnatA' = r, k'=k$, from the rule $b$.  \\
-  If $\valr = \lambda
-  x. \expr$. Assume $\type = \bang{r} \type_1 \lto \ltype_2 $, then $k+\type =
-  \bang{k+r} \type_1 \lto \ltype_2 $. From its typing derivation, we know: $\Gamma-r, x: \type_1, 
-   \tvdash{\nnatA - (k+r) } \expr: \type_2 ~(1)$. Choose $\nnatA' =
-   \nnatA -r$, we know that $\Gamma  \tvdash{\nnatA' } \valr :
-  \bang{r} \type_1 \lto \ltype_2$ from the rule lambda.
+  
+  If $\valr$ is a constant, then it is trivial, assume $\type =
+  \bang{r} \tbase$, then $\nnatA = r+k$,  choose
+  $\nnatA' = r$, proved from the rule $const$.
+  
+  If $\valr$ is an abstraction term, assuming $\valr = \lambda
+  x. \expr$. Correspondingly, the type of $\valr$ is an arrow type,
+  assuming $\Gamma = r+ \Gamma_1 $ and   $\type =\bang{r} (\type_1
+  \lto^{\nnatA} \ltype_2)$, from the typing derivation, we know : 
+  \[
+  \inferrule{
+      \ictx \Gamma_1, x: \type_1
+      \tvdash{\nnatA }
+      \expr: \type_2  ~(1)
+    }{
+      \ictx k+r+\Gamma_1  \tvdash{k+r} \lambda x. \expr : k + \bang{r}  ( \type_1
+      \lto^{\nnatA} \type_2)
+    }~\textbf{lambda}
+\]
+
+Use $(1)$ as premise, we use lambda rule again.
+
+ \[
+  \inferrule{
+      \ictx \Gamma_1, x: \type_1
+      \tvdash{\nnatA }
+      \expr: \type_2  ~(1)
+    }{
+      \ictx r+\Gamma_1  \tvdash{r} \lambda x. \expr :  \bang{r}  ( \type_1
+      \lto^{\nnatA} \type_2)
+    }~\textbf{lambda}
+\]
+
 \end{proof}
 
 \[
@@ -595,19 +743,18 @@
                                        (\valr_i, \adapt_i) \land
                                        \empty \tvdash{\adapt_i} \valr_i
                                        : \Gamma(x_i)   \\
-    F(\env, \expr) & ::= &  \max(\adapt_i)    \\
+    F(\env, \expr) & ::= &  \max(\max(\adapt_i) , 0 )    \\
     & where &   \forall x_i \in \fv{\expr} . \env(x_i) = (\valr_i, \adapt_i).
                                           \\
     \end{array}
 \]
-\begin{thm}[Soundness]
+
+\begin{thm}[Soundness- one attempt]
 \label{soundness}
-If $\Gamma \tvdash{\nnatA} \expr : \type$, $ \forall \env$ that $\env
+If $\Gamma \tvdash{\nnatA} \expr : \bang{k} \ltype$, $ \forall \env$ that $\env
 \vDash \Gamma$, exists $\env'$ and $\valr$ so that $\env , \expr \bigstep{\adapt} \valr,
-\env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env, \expr)$.  
+\env'  $, then  $ \adapt + k \leq  \nnatA + F(\env, \expr)$.  
 \end{thm}
-
-
 \begin{proof}
   By Induction on the typing derivation.
   \caseL{
@@ -616,81 +763,149 @@ If $\Gamma \tvdash{\nnatA} \expr : \type$, $ \forall \env$ that $\env
       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
     }~\textbf{Ax}  $
   }
+  
   Assume $\env= \Big( \env_1, [x \to (\valr,\adapt
-  )] , \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1 \vDash \Gamma$. We know that $
-  \empty \tvdash{\adapt} \valr : \bang{\nnatA}\ltype $.
-  From the evaluation rule var, we know $\env , x \bigstep{\adapt} \valr,
+  )]  \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1
+  \vDash \Gamma$.
+  
+  We know from the evaluation rule var: $\Big( \env_1, [x \to (\valr,\adapt
+  )]  \Big) , x \bigstep{\adapt} \valr,
   \env  $.
-  TS:  $ \adapt + adap(\valr, \env)  \leq  \nnatA +
-  F(\env) \implies \adapt + 0 \leq \nnatA + \max( \adapt, F(\env_1))
-  $.It is trivially true.
+  
+  TS:  $ \adapt +\nnatA  \leq  \nnatA +
+  F(\env,x) \implies \adapt + \nnatA \leq \nnatA +  R
+  $. It is trivially true.\\
+
 \caseL{
-  $
-    \inferrule{
+ $
+\inferrule{
       \ictx \Gamma, x: \type_1
       \tvdash{\nnatA }
       \expr: \type_2
     }{
-      \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
-      \lto \type_2)
+      \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
+      \lto^{\nnatA} \type_2)
     }~\textbf{lambda}
-  $
+    \and
+    %
+ $
 }
-Choose $\env \vDash  (k+\Gamma)$ so that $\forall x_i \in
-(\Gamma). \env(x_1) =(\valr_i, \adapt_i ) \land \empty
-\tvdash{\adapt_i } \valr_i: k+\Gamma(x_i) $.  By the evaluation rule
-we know $\env, \lambda x. \expr \bigstep{0}
-                                       \lambda x.\expr, \env $, TS: $0
-                                       + \adap(\lambda x.\expr, \env)
-                                       \leq  k+\nnatA + F(\env)$, which is trivially
-                                       true because $ \adap(\lambda
-                                       x.\expr, \env) \leq F(\env) $.
-                                       
+
+Assume $\env \vDash k+\Gamma $,  from the evaluation rule lambda:
+$\env , \lambda x. \expr \bigstep{0}   \lambda x. \expr ,
+  \env  $.
+
+TS: $ 0 + k  \leq  k  +
+  F(\env, \lambda x. \expr)  
+  $, which is trivially true. \\
+  
 \caseL{
-    $  \inferrule{
-      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto \type_2      ) \\
-      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+$
+    \inferrule{
+      \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+      \lto^{\nnatA} \type_2      ) \\
+      \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
     }{
-      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-    }~\textbf{app}  $
-  }
-  Choose $\env = [x_i \to (\valr_i,0)] $ for all $x_i$ in
-  $\dom(\max(\Gamma_1,\Gamma_2))$
-  so that  $\empty \tvdash{\nnatA_i} \valr_i  : (\max(\Gamma_1,
-  \Gamma_2)(x_i) $.
-  From the definition, we know that $\env \vDash \Gamma_1$ and $\env
-  \vDash \Gamma_2$. Because $\expr_1$ has the arrow type and will be
-  evaluated to a function, assume exists $\env_1$ so that $\env,
-  \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 $.  By induction
-  hypothesis on the first premise, we know that: $\adapt_1 +
-  \adap(\lambda x. \expr, \env_1) \leq \nnatA_1 + F(\env,
-  \Gamma_1)~(1)$.Assume exists $\env_2$ so that $\expr_2$ is evaluated
-  to an arbitrary value $\valr_2$ : $ \env, \expr_2 \bigstep{\adapt_2}
-  \valr_2 , \env_2$, by induction hypothesis, we conclude that :  $\adapt_2 +
-  \adap(\valr , \env_2) \leq \nnatA_2 + F(\env,
-  \Gamma_2)~(2)$.
+      \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+$
+}
+
+\end{proof}
+
+
+
+\begin{thm}[Soundness-original]
+\label{soundness}
+If $\Gamma \tvdash{\nnatA} \expr : \type$, $ \forall \env$ that $\env
+\vDash \Gamma$, exists $\env'$ and $\valr$ so that $\env , \expr \bigstep{\adapt} \valr,
+\env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env, \expr)$.  
+\end{thm}
+
+
+% \begin{proof}
+%   By Induction on the typing derivation.
+%   \caseL{
+%      $   \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}  $
+%   }
+%   Assume $\env= \Big( \env_1, [x \to (\valr,\adapt
+%   )] , \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1 \vDash \Gamma$. We know that $
+%   \empty \tvdash{\adapt} \valr : \bang{\nnatA}\ltype $.
+%   From the evaluation rule var, we know $\env , x \bigstep{\adapt} \valr,
+%   \env  $.
+%   TS:  $ \adapt + adap(\valr, \env)  \leq  \nnatA +
+%   F(\env) \implies \adapt + 0 \leq \nnatA + \max( \adapt, F(\env_1))
+%   $.It is trivially true.
+% \caseL{
+%   $
+%     \inferrule{
+%       \ictx \Gamma, x: \type_1
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto \type_2)
+%     }~\textbf{lambda}
+%   $
+% }
+% Choose $\env \vDash  (k+\Gamma)$ so that $\forall x_i \in
+% (\Gamma). \env(x_1) =(\valr_i, \adapt_i ) \land \empty
+% \tvdash{\adapt_i } \valr_i: k+\Gamma(x_i) $.  By the evaluation rule
+% we know $\env, \lambda x. \expr \bigstep{0}
+%                                        \lambda x.\expr, \env $, TS: $0
+%                                        + \adap(\lambda x.\expr, \env)
+%                                        \leq  k+\nnatA + F(\env)$, which is trivially
+%                                        true because $ \adap(\lambda
+%                                        x.\expr, \env) \leq F(\env) $.
+                                       
+% \caseL{
+%     $  \inferrule{
+%       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto \type_2      ) \\
+%       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}  $
+%   }
+%   Choose $\env = [x_i \to (\valr_i,0)] $ for all $x_i$ in
+%   $\dom(\max(\Gamma_1,\Gamma_2))$
+%   so that  $\empty \tvdash{\nnatA_i} \valr_i  : (\max(\Gamma_1,
+%   \Gamma_2)(x_i) $.
+%   From the definition, we know that $\env \vDash \Gamma_1$ and $\env
+%   \vDash \Gamma_2$. Because $\expr_1$ has the arrow type and will be
+%   evaluated to a function, assume exists $\env_1$ so that $\env,
+%   \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 $.  By induction
+%   hypothesis on the first premise, we know that: $\adapt_1 +
+%   \adap(\lambda x. \expr, \env_1) \leq \nnatA_1 + F(\env,
+%   \Gamma_1)~(1)$.Assume exists $\env_2$ so that $\expr_2$ is evaluated
+%   to an arbitrary value $\valr_2$ : $ \env, \expr_2 \bigstep{\adapt_2}
+%   \valr_2 , \env_2$, by induction hypothesis, we conclude that :  $\adapt_2 +
+%   \adap(\valr , \env_2) \leq \nnatA_2 + F(\env,
+%   \Gamma_2)~(2)$.
                             
 
 
-\[
-\inferrule{
-    \env, \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
-    \env, \expr_2 \bigstep{\adapt_2} \valr_2 , \env_2 \\
-    (\env_1 \uplus \env_2)[ x  \to (\valr_2,   \adapt_2  ) ], \expr
-    \bigstep{\adapt_3} \valr, \env_3
-  }{
-    \env, \expr_1 \eapp \expr_2 \bigstep{\adapt_1+\adapt_3} \valr, \env_3
-  }~\textsf{app}
-\]
- \end{proof} 
+% \[
+% \inferrule{
+%     \env, \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
+%     \env, \expr_2 \bigstep{\adapt_2} \valr_2 , \env_2 \\
+%     (\env_1 \uplus \env_2)[ x  \to (\valr_2,   \adapt_2  ) ], \expr
+%     \bigstep{\adapt_3} \valr, \env_3
+%   }{
+%     \env, \expr_1 \eapp \expr_2 \bigstep{\adapt_1+\adapt_3} \valr, \env_3
+%   }~\textsf{app}
+% \]
+%  \end{proof} 
 
 
 \begin{thm}[Subject Reduction]
 \label{sub-red}
-If $\Gamma \tvdash{\nnatA} \expr : \type$, $\forall \env . \env
+If $\Gamma \tvdash{\nnatA} \expr : \bang{k} \ltype$, $\forall \env . \env
 \vDash \Gamma$,   exists $\env'$ and $\valr$, $\env , \expr \bigstep{\adapt} \valr,
-\env'  $, then $ \Gamma  \tvdash{? } \valr : \type $.  
+\env'  $, then $ \Gamma  \tvdash{ k} \valr :\bang{k} \ltype $.  
 \end{thm}
 By induction on the typing derivation.
 \end{document}
