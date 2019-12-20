@@ -86,7 +86,8 @@
  ~|~ \lambda x. \expr% ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~|
     \\
 %
-& & & % \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+             & & & % \etrue ~|~ \efalse ~|~
+  \eif(\expr_1, \expr_2, \expr_3) ~|~
 \econst ~|~ \eop(\expr)  % ~|~ \wq {\eilam \expr ~|~ \expr \eapp [] }
     \\
 % & & & ~|~ \wq {\elet  x = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
@@ -101,7 +102,7 @@
     \\
 % & & & \wq {(\eilam \expr , \env) } ~|~  \wq{ \evec({\attr_i \to \valr_i'}^{ i \in 1\dots n})    } \ \\ 
 %
-  \mbox{Adaptivity} & \adapt& ::= & n\\
+ % \mbox{Adaptivity} & \adapt& ::= & n\\
 \mbox{Environment} & \env & ::= & x_1 \mapsto (\valr_1, \adapt_1), \ldots, x_n \mapsto (\valr_n,\adapt_n)
 \end{array}\]
 
@@ -149,7 +150,7 @@
   \inferrule{
     \env, \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
     \env, \expr_2 \bigstep{\adapt_2} \valr_2 , \env_2 \\
-    \fresh x' \\
+    \fresh \eapp x' \\
     (\env_1 \uplus \env_2)[ x'  \to (\valr_2,   \adapt_2  ) ], \expr[x'/x]
     \bigstep{\adapt_3} \valr, \env_3
   }{
@@ -322,11 +323,13 @@
 
 \[
 \begin{array}{llll}
- % \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+  \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n \\
  %                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
 %                                  \mbox{Sort} & S & ::= & \nat \\
-  \mbox{Linear type} & \ltype &::=  &  \type \lto \type ~|~ \tbase \\
-  \mbox{Nonlinear Type} & \type & ::= & \bang{\idx} \ltype   \\
+  \mbox{Linear type} & \type &::=  &  \ltype \lto{\nnatA} \type ~|~ \tbase \\
+  \mbox{Nonlinear Type} & \ltype & ::= & \bang{\idx} \type   \\
+  \mbox{Typing context } & \Gamma & ::= & x_1 \to \ltype_1, \ldots,
+                                          x_k \to \ltype_k
 \end{array}
 \]
 
@@ -334,14 +337,14 @@
   \begin{mathpar}
     \inferrule{
     }{
-      \ictx \tctx , x: \bang{\nnatA}\ltype, \Gamma' \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+      \ictx \tctx , x: \bang{1} \type \tvdash{0} x: \type
     }~\textbf{Ax}
     %
     \and
     %
     \inferrule{
     }{
-      \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase 
+      \ictx \Gamma \tvdash{0} c : \tbase 
     }~\textbf{const}
     %
     % \and
@@ -354,29 +357,30 @@
     \and
     %
     \inferrule{
-      \ictx \Gamma, x: \type_1
+      \ictx \Gamma, x: \ltype
       \tvdash{\nnatA }
-      \expr: \type_2
+      \expr: \type
     }{
-      \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
-      \lto \type_2)
+      \ictx \Gamma \tvdash{0} \lambda x. \expr : \ltype
+      \lto{\nnatA} \type
     }~\textbf{lambda}
     \and
     %
     \inferrule{
-      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto \type_2      ) \\
+      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{\idx} \type_1
+      \lto{\nnatA} \type_2      \\
       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
     }{
-      \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+      \ictx   \Gamma_1 + \idx \times \Gamma_2  \tvdash{    \nnatA_1 +
+        \idx \times \nnatA_2 + \nnatA    } \expr_1 \eapp \expr_2 : \type_2
     }~\textbf{app}
     %
     \and
     %
     \inferrule{
-      \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
+      \ictx \Gamma \tvdash{\nnatA} \expr:  \tbase 
     }{
-      \ictx \Gamma' ,1+\Gamma  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+      \ictx \Gamma  \tvdash{1+\nnatA} \delta(\expr): \tbase
     }~\textbf{delta}
      %
     \and
@@ -398,42 +402,41 @@
     }{
       \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
     }~\textbf{exchange}
-    \\\\
-    \boxed{
- \inferrule{
-      \ictx \Gamma, x: \type_1
-      \tvdash{\nnatA }
-      \expr: \type_2
-    }{
-      \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
-      \lto^{\nnatA} \type_2)
-    }~\textbf{lambda}
-    \and
-    %
-    \inferrule{
-      \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto^{\nnatA} \type_2      ) \\
-      \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
-    }{
-      \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-    }~\textbf{app}
-    }
-    \\\\
-\begin{array}{lll}
-   k+\bang{r} \ltype  &\triangleq  &  \bang{k+r} \ltype  \\
-  k + \emptyset   & \triangleq & \emptyset   \\
-  k + ( [x : \type], \Gamma) & \triangleq &  [x : k+\type], k+\Gamma   
-  \\
-  \max(\bang{k_1} \ltype, \bang{k_2} \ltype) & \triangleq& \bang{ \max(k_1,
-                                                    k_2) } \ltype \\
-  \max(\Gamma, \emptyset) & \triangleq & \Gamma \\
-  \max(\emptyset, \Gamma) & \triangleq & \Gamma \\
-  \max\Big(  ([x : \type ],\Gamma),  ([x: \type'],\Delta)  \Big) & \triangleq
-                            & [x: \max(\type, \type')], \max(\Gamma,
-                              \Delta )\\
-  \sub{\Gamma}{\Delta} & \triangleq &  \dom(\Gamma) = \dom(\Delta)
-                                      \land \forall x \in
-                                      \dom(\Gamma), \sub{\Delta(x)}{\Gamma(x)}  
+   %  \\\\
+ %    \boxed{
+ % \inferrule{
+ %      \ictx \Gamma, x: \type_1
+ %      \tvdash{\nnatA }
+ %      \expr: \type_2
+ %    }{
+ %      \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
+ %      \lto^{\nnatA} \type_2)
+ %    }~\textbf{lambda}
+ %    \and
+ %    %
+ %    \inferrule{
+ %      \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+ %      \lto^{\nnatA} \type_2      ) \\
+ %      \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
+ %    }{
+ %      \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+ %    }~\textbf{app}
+ %    }
+     \\\\
+\begin{array}{llll}
+  \idx \times \Gamma &\triangleq  &  \Gamma  & \idx =1  \\
+                     &\triangleq  &  \emptyset & \idx =0 \\
+  \bang{\idx_1} \type + \bang{\idx_2} \type  &\triangleq  & \bang{
+                                                          \max(\idx_1,\idx_2)
+                                                          } \type &  \\
+  \Gamma + \emptyset & \triangleq & \Gamma & \\
+  \emptyset+ \Gamma  & \triangleq & \Gamma & \\
+  ( [x : \ltype ],\Gamma) +  ([x: \ltype'],\Delta)  & \triangleq
+                            & [x: \ltype + \ltype' ], \Gamma +
+                              \Delta &   \\
+  % \sub{\Gamma}{\Delta} & \triangleq &  \dom(\Gamma) = \dom(\Delta)
+  %                                     \land \forall x \in
+  %                                     \dom(\Gamma), \sub{\Delta(x)}{\Gamma(x)}  
 \end{array}
   \end{mathpar}
   \caption{Typing rules, first version}
@@ -443,7 +446,7 @@
 \begin{figure}
   \begin{mathpar}
     \inferrule{
-      k_1 \leq k \\
+      k \leq k_1 \\
       \sub{\ltype}{\ltype_1}
     }{
       \sub{\bang{k} \ltype}{\bang{k_1} \ltype_1}
@@ -451,11 +454,12 @@
     %
     \and
     %
-     \inferrule{
+    \inferrule{
+        \nnatA \leq \nnatA' \\
         \sub{\type_1}{\type}   \\
       \sub{\type'}{\type_1'}
     }{
-      \sub{\type \lto \type' }{\type_1 \lto \ltype_1'}
+      \sub{\type \lto{\nnatA} \type' }{\type_1 \lto{\nnatA'} \ltype_1'}
     }~\textsf{arrow}
     %
     \and
@@ -615,204 +619,204 @@
   \end{enumerate}
 \end{thm}
 
-\begin{proof}
-  By induction on the typing derivation.\\
+% \begin{proof}
+%   By induction on the typing derivation.\\
 %%%%%%%%%%%%%%%%%%%%%
-\caseL{
-  $   \inferrule{
-    }{
-      \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-    }~\textbf{Ax}  $
-  }
+% \caseL{
+%   $   \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}  $
+%   }
   
-Assume $\empty \tvdash{\nnatA} \valr : \bang{\nnatA}\ltype $ TS:  $\Gamma
-\tvdash{\nnatA } x[\valr/x]  : \type$. proved by the assumption.\\
+% Assume $\empty \tvdash{\nnatA} \valr : \bang{\nnatA}\ltype $ TS:  $\Gamma
+% \tvdash{\nnatA } x[\valr/x]  : \type$. proved by the assumption.\\
 
-\caseL{
- $   \inferrule{
-    }{
-      \ictx \tctx ,y:\type', x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-    }~\textbf{Ax2}  $
-  }
+% \caseL{
+%  $   \inferrule{
+%     }{
+%       \ictx \tctx ,y:\type', x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax2}  $
+%   }
   
-Assume $\empty \tvdash{\nnatA} \valr : \bang{\nnatA}\ltype $, TS:
-   $\Gamma,   x: \bang{\nnatA}\ltype
-   \tvdash{\nnatA } x[\valr/y]  : \type$. proved by the assumption.\\
+% Assume $\empty \tvdash{\nnatA} \valr : \bang{\nnatA}\ltype $, TS:
+%    $\Gamma,   x: \bang{\nnatA}\ltype
+%    \tvdash{\nnatA } x[\valr/y]  : \type$. proved by the assumption.\\
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \caseL{
-   \inferrule{
-      \ictx \Gamma, x: \type_1, y: \bang{k_1} \ltype
-      \tvdash{\nnatA }
-      \expr: \type_2
-    }{
-      \ictx k+\Gamma, y: k + \bang{k_1} \ltype \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
-      \lto^{\nnatA} \type_2)
-    }~\textbf{lambda}
-  }
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%   \caseL{
+%    \inferrule{
+%       \ictx \Gamma, x: \type_1, y: \bang{k_1} \ltype
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma, y: k + \bang{k_1} \ltype \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto^{\nnatA} \type_2)
+%     }~\textbf{lambda}
+%   }
 
-   Assume $\empty \tvdash{k+k_1 } \valr : k+ \bang{k_1} \ltype $, TS:
-  $k+\Gamma
-  \tvdash{ k } (\lambda x. \expr)[\valr/y]  : \bang{k}  ( \type_1
-      \lto^{\nnatA} \type_2)$.
+%    Assume $\empty \tvdash{k+k_1 } \valr : k+ \bang{k_1} \ltype $, TS:
+%   $k+\Gamma
+%   \tvdash{ k } (\lambda x. \expr)[\valr/y]  : \bang{k}  ( \type_1
+%       \lto^{\nnatA} \type_2)$.
 
- From the  Lemma~\ref{para-dec} on the assumption, we know: $\empty
-  \tvdash{ k_1} \valr : \bang{k_1} \ltype ~(1)$.
+%  From the  Lemma~\ref{para-dec} on the assumption, we know: $\empty
+%   \tvdash{ k_1} \valr : \bang{k_1} \ltype ~(1)$.
 
-  By Induction hypothesis on the premise: $ \Gamma, x:\type_1
-  \tvdash{\nnatA }
-      \expr[\valr/y]: \type_2 ~(2)$. 
+%   By Induction hypothesis on the premise: $ \Gamma, x:\type_1
+%   \tvdash{\nnatA }
+%       \expr[\valr/y]: \type_2 ~(2)$. 
 
-By rule lambda, we conclude that
-      $k+\Gamma \tvdash{ k }
-      \lambda x.\expr[\valr/y]: \bang{k}  ( \type_1
-      \lto^{\nnatA} \type_2) $.\\
+% By rule lambda, we conclude that
+%       $k+\Gamma \tvdash{ k }
+%       \lambda x.\expr[\valr/y]: \bang{k}  ( \type_1
+%       \lto^{\nnatA} \type_2) $.\\
       
-      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
-      \caseL{
-      \inferrule{
-      \ictx \Gamma ,x:\bang{k} \ltype  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto^{\nnatA} \type_2      ) \\
-      \ictx \Gamma ,x:\bang{k} \ltype  \tvdash{\nnatA_2} \expr_2: \type_1 
-    }{
-      \ictx \Gamma, x:\bang{k} \ltype \tvdash{ \nnatA+ \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-    }~\textbf{app}
-  }
+%       \caseL{
+%       \inferrule{
+%       \ictx \Gamma ,x:\bang{k} \ltype  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto^{\nnatA} \type_2      ) \\
+%       \ictx \Gamma ,x:\bang{k} \ltype  \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \Gamma, x:\bang{k} \ltype \tvdash{ \nnatA+ \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}
+%   }
   
-  Assume $\empty \tvdash{k} \valr : \bang{k} \ltype$, TS: $\Gamma
-  \tvdash{ \nnatA_1+ \max(\nnatA,\nnatA_2)  } (\expr_1 \eapp
-  \expr_2)[\valr/x]  : \type_2$.
+%   Assume $\empty \tvdash{k} \valr : \bang{k} \ltype$, TS: $\Gamma
+%   \tvdash{ \nnatA_1+ \max(\nnatA,\nnatA_2)  } (\expr_1 \eapp
+%   \expr_2)[\valr/x]  : \type_2$.
   
-By induction hypothesis on the first and second premise, we conclude
-: $\ictx \Gamma \tvdash{\nnatA_1}  \expr_1[\valr/x]  :  \bang{0}
-( \type_1 \lto^{\nnatA} \type_2 )~(1)$ and $ \ictx \Gamma \tvdash{\nnatA_2} \expr_2[\valr/x]: \type_1(2)$.
+% By induction hypothesis on the first and second premise, we conclude
+% : $\ictx \Gamma \tvdash{\nnatA_1}  \expr_1[\valr/x]  :  \bang{0}
+% ( \type_1 \lto^{\nnatA} \type_2 )~(1)$ and $ \ictx \Gamma \tvdash{\nnatA_2} \expr_2[\valr/x]: \type_1(2)$.
 
- By the rule app and $(1)$, $(2)$,  we prove that $$ \Gamma
-  \tvdash{  \nnatA_1 + \max(\nnatA, \nnatA_2)  }  \expr_1[\valr/x] \eapp
-  \expr_2[\valr/x]  : \type_2$$
+%  By the rule app and $(1)$, $(2)$,  we prove that $$ \Gamma
+%   \tvdash{  \nnatA_1 + \max(\nnatA, \nnatA_2)  }  \expr_1[\valr/x] \eapp
+%   \expr_2[\valr/x]  : \type_2$$
 
-\end{proof}
+% \end{proof}
 
-\begin{lem}[Parameter Decreasing]
-  \label{para-dec}
-  if  $k+\Gamma \tvdash{\nnatA} \valr : k+ \type  $, then exists 
-  $\nnatA'$ so
-  that   $\Gamma \tvdash{\nnatA' } \valr :
-  \type$ and  $\nnatA' \leq \nnatA-k $.
-\end{lem}
-\begin{proof}
+% \begin{lem}[Parameter Decreasing]
+%   \label{para-dec}
+%   if  $k+\Gamma \tvdash{\nnatA} \valr : k+ \type  $, then exists 
+%   $\nnatA'$ so
+%   that   $\Gamma \tvdash{\nnatA' } \valr :
+%   \type$ and  $\nnatA' \leq \nnatA-k $.
+% \end{lem}
+% \begin{proof}
   
-  If $\valr$ is a constant, then it is trivial, assume $\type =
-  \bang{r} \tbase$, then $\nnatA = r+k$,  choose
-  $\nnatA' = r$, proved from the rule $const$.
+%   If $\valr$ is a constant, then it is trivial, assume $\type =
+%   \bang{r} \tbase$, then $\nnatA = r+k$,  choose
+%   $\nnatA' = r$, proved from the rule $const$.
   
-  If $\valr$ is an abstraction term, assuming $\valr = \lambda
-  x. \expr$. Correspondingly, the type of $\valr$ is an arrow type,
-  assuming $\Gamma = r+ \Gamma_1 $ and   $\type =\bang{r} (\type_1
-  \lto^{\nnatA} \ltype_2)$, from the typing derivation, we know : 
-  \[
-  \inferrule{
-      \ictx \Gamma_1, x: \type_1
-      \tvdash{\nnatA }
-      \expr: \type_2  ~(1)
-    }{
-      \ictx k+r+\Gamma_1  \tvdash{k+r} \lambda x. \expr : k + \bang{r}  ( \type_1
-      \lto^{\nnatA} \type_2)
-    }~\textbf{lambda}
-\]
+%   If $\valr$ is an abstraction term, assuming $\valr = \lambda
+%   x. \expr$. Correspondingly, the type of $\valr$ is an arrow type,
+%   assuming $\Gamma = r+ \Gamma_1 $ and   $\type =\bang{r} (\type_1
+%   \lto^{\nnatA} \ltype_2)$, from the typing derivation, we know : 
+%   \[
+%   \inferrule{
+%       \ictx \Gamma_1, x: \type_1
+%       \tvdash{\nnatA }
+%       \expr: \type_2  ~(1)
+%     }{
+%       \ictx k+r+\Gamma_1  \tvdash{k+r} \lambda x. \expr : k + \bang{r}  ( \type_1
+%       \lto^{\nnatA} \type_2)
+%     }~\textbf{lambda}
+% \]
 
-Use $(1)$ as premise, we use lambda rule again.
+% Use $(1)$ as premise, we use lambda rule again.
 
- \[
-  \inferrule{
-      \ictx \Gamma_1, x: \type_1
-      \tvdash{\nnatA }
-      \expr: \type_2  ~(1)
-    }{
-      \ictx r+\Gamma_1  \tvdash{r} \lambda x. \expr :  \bang{r}  ( \type_1
-      \lto^{\nnatA} \type_2)
-    }~\textbf{lambda}
-\]
+%  \[
+%   \inferrule{
+%       \ictx \Gamma_1, x: \type_1
+%       \tvdash{\nnatA }
+%       \expr: \type_2  ~(1)
+%     }{
+%       \ictx r+\Gamma_1  \tvdash{r} \lambda x. \expr :  \bang{r}  ( \type_1
+%       \lto^{\nnatA} \type_2)
+%     }~\textbf{lambda}
+% \]
 
-\end{proof}
+% \end{proof}
 
-\[
-  \begin{array}{lll}
-     \env \vDash \Gamma &\triangleq  & 
-                                        \forall x_i \in \dom( \Gamma) . \env(x_i) =
-                                       (\valr_i, \adapt_i) \land
-                                       \empty \tvdash{\adapt_i} \valr_i
-                                       : \Gamma(x_i)   \\
-    F(\env, \expr) & ::= &  \max(\max(\adapt_i) , 0 )    \\
-    & where &   \forall x_i \in \fv{\expr} . \env(x_i) = (\valr_i, \adapt_i).
-                                          \\
-    \end{array}
-\]
+% \[
+%   \begin{array}{lll}
+%      \env \vDash \Gamma &\triangleq  & 
+%                                         \forall x_i \in \dom( \Gamma) . \env(x_i) =
+%                                        (\valr_i, \adapt_i) \land
+%                                        \empty \tvdash{\adapt_i} \valr_i
+%                                        : \Gamma(x_i)   \\
+%     F(\env, \expr) & ::= &  \max(\max(\adapt_i) , 0 )    \\
+%     & where &   \forall x_i \in \fv{\expr} . \env(x_i) = (\valr_i, \adapt_i).
+%                                           \\
+%     \end{array}
+% \]
 
-\begin{thm}[Soundness- one attempt]
-\label{soundness}
-If $\Gamma \tvdash{\nnatA} \expr : \bang{k} \ltype$, $ \forall \env$ that $\env
-\vDash \Gamma$, exists $\env'$ and $\valr$ so that $\env , \expr \bigstep{\adapt} \valr,
-\env'  $, then  $ \adapt + k \leq  \nnatA + F(\env, \expr)$.  
-\end{thm}
-\begin{proof}
-  By Induction on the typing derivation.
-  \caseL{
-     $   \inferrule{
-    }{
-      \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-    }~\textbf{Ax}  $
-  }
+% \begin{thm}[Soundness- one attempt]
+% \label{soundness}
+% If $\Gamma \tvdash{\nnatA} \expr : \bang{k} \ltype$, $ \forall \env$ that $\env
+% \vDash \Gamma$, exists $\env'$ and $\valr$ so that $\env , \expr \bigstep{\adapt} \valr,
+% \env'  $, then  $ \adapt + k \leq  \nnatA + F(\env, \expr)$.  
+% \end{thm}
+% \begin{proof}
+%   By Induction on the typing derivation.
+%   \caseL{
+%      $   \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}  $
+%   }
   
-  Assume $\env= \Big( \env_1, [x \to (\valr,\adapt
-  )]  \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1
-  \vDash \Gamma$.
+%   Assume $\env= \Big( \env_1, [x \to (\valr,\adapt
+%   )]  \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1
+%   \vDash \Gamma$.
   
-  We know from the evaluation rule var: $\Big( \env_1, [x \to (\valr,\adapt
-  )]  \Big) , x \bigstep{\adapt} \valr,
-  \env  $.
+%   We know from the evaluation rule var: $\Big( \env_1, [x \to (\valr,\adapt
+%   )]  \Big) , x \bigstep{\adapt} \valr,
+%   \env  $.
   
-  TS:  $ \adapt +\nnatA  \leq  \nnatA +
-  F(\env,x) \implies \adapt + \nnatA \leq \nnatA +  R
-  $. It is trivially true.\\
+%   TS:  $ \adapt +\nnatA  \leq  \nnatA +
+%   F(\env,x) \implies \adapt + \nnatA \leq \nnatA +  R
+%   $. It is trivially true.\\
 
-\caseL{
- $
-\inferrule{
-      \ictx \Gamma, x: \type_1
-      \tvdash{\nnatA }
-      \expr: \type_2
-    }{
-      \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
-      \lto^{\nnatA} \type_2)
-    }~\textbf{lambda}
-    \and
-    %
- $
-}
+% \caseL{
+%  $
+% \inferrule{
+%       \ictx \Gamma, x: \type_1
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto^{\nnatA} \type_2)
+%     }~\textbf{lambda}
+%     \and
+%     %
+%  $
+% }
 
-Assume $\env \vDash k+\Gamma $,  from the evaluation rule lambda:
-$\env , \lambda x. \expr \bigstep{0}   \lambda x. \expr ,
-  \env  $.
+% Assume $\env \vDash k+\Gamma $,  from the evaluation rule lambda:
+% $\env , \lambda x. \expr \bigstep{0}   \lambda x. \expr ,
+%   \env  $.
 
-TS: $ 0 + k  \leq  k  +
-  F(\env, \lambda x. \expr)  
-  $, which is trivially true. \\
+% TS: $ 0 + k  \leq  k  +
+%   F(\env, \lambda x. \expr)  
+%   $, which is trivially true. \\
   
-\caseL{
-$
-    \inferrule{
-      \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-      \lto^{\nnatA} \type_2      ) \\
-      \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
-    }{
-      \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-    }~\textbf{app}
-$
-}
+% \caseL{
+% $
+%     \inferrule{
+%       \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto^{\nnatA} \type_2      ) \\
+%       \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}
+% $
+% }
 
-\end{proof}
+% \end{proof}
 
 
 
@@ -909,6 +913,7 @@ If $\Gamma \tvdash{\nnatA} \expr : \bang{k} \ltype$, $\forall \env . \env
 \env'  $, then $ \Gamma  \tvdash{ k} \valr :\bang{k} \ltype $.  
 \end{thm}
 By induction on the typing derivation.
+
 \end{document}
 
 
