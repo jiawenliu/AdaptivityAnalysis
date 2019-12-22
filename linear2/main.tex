@@ -116,7 +116,7 @@
 
 \begin{figure}
 \begin{mathpar}
-   \inferrule{ \env(x) =  (\valr, \adapt)  }{\env , x \bigstep{\adapt} \valr, \env }~\textsf{var}  
+   \inferrule{  \mathsf{fetch} (\env,x)  =  (\valr, \adapt)  }{x, \env  \bigstep{\adapt} \valr, \env }~\textsf{var}  
   %
   % \and
   % %
@@ -136,22 +136,23 @@
  %
    \and
   %
-   \inferrule{ }{\env, \econst \bigstep{0} \econst, \env}~\textsf{const}
+   \inferrule{ }{\econst , \env \bigstep{0} \econst, \env}~\textsf{const}
    %
    \and
    %
  \inferrule{
   }{
-    \env, \lambda x. \expr \bigstep{0} \lambda x.\expr, \env
+    \lambda x. \expr, \env
+    \bigstep{0} \lambda x.\expr, \env
   }~\textsf{lambda}
   %
   \and
   %
   \inferrule{
-    \env, \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
-    \env, \expr_2 \bigstep{\adapt_2} \valr_2 , \env_2 \\
+     \expr_1, \env \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
+     \expr_2, \env \bigstep{\adapt_2} \valr_2 , \env_2 \\
     \fresh \eapp x' \\
-    (\env_1 \uplus \env_2)[ x'  \to (\valr_2,   \adapt_2  ) ], \expr[x'/x]
+    \expr[x'/x], \env_1[ x'  \to (\valr_2, \env_2, \adapt_2  ) ] 
     \bigstep{\adapt_3} \valr, \env_3
   }{
     \env, \expr_1 \eapp \expr_2 \bigstep{\adapt_1+\adapt_3} \valr, \env_3
@@ -296,17 +297,26 @@
   \begin{array}{llll}
     \env_1 \uplus \emptyset & \triangleq & \env_1 &\\
      \emptyset \uplus \env_2 & \triangleq & \env_2 &\\
-    (\env_1,[x \to (\valr, \adapt_1)] )\uplus (\env_2, [x \to (\valr,
-    \adapt_2)] )  &  \triangleq & (\env_1 \uplus \env_2),[x \to
-                                  (\valr, \max(\adapt_1, \adapt_2))] & \\
-   \adap(\expr, \emptyset)  &::=  &  0 & \\
-  \adap(\expr, [x \to (\valr, \adapt) ] \uplus \env ) & ::= & \max(\adapt,
-                                                  \adap(\expr[\valr/x],
-                                                               \env )
-                                                  )   & x \in
-                                                  \fv{\expr}.\\
-  & ::= &  \adap(\expr, \env  )  & x \not\in \fv{\expr)}
-\end{array}
+    % (\env_1,[x \to (\valr, \adapt_1)] )\uplus (\env_2, [x \to (\valr,
+    % \adapt_2)] )  &  \triangleq & (\env_1 \uplus \env_2),[x \to
+    %                               (\valr, \max(\adapt_1, \adapt_2))] & \\       
+    
+  \end{array}
+  \\\\
+  \begin{array}{lllll}
+    \mathsf{fetch} (\env, x) & ::=  &  \mathsf{Some} ( \Pi_1
+                                      (\env(x)), \Pi_3(\env(x)) ) &   &  x \in  \dom(\env) \\
+            &  & \mathsf{match} \eapp \env  \eapp \mathsf{with} & & x \not\in  \dom(\env) \\
+             &    &     | (y \to (\valr', \env', R)) :: \env_t \to & 
+                    \mathsf{match} \eapp \mathsf{fetch} (\env', x) \eapp
+                    \mathsf{with} & \\                             
+              &  &   & \mathsf{None}  \to \mathsf{fetch}(\env_t, x ) &
+    \\
+             &   &   & \mathsf{Some} (\valr, r) \to \mathsf{Some} (\valr,
+                   r)  & \\ 
+             & & | [ ] \to  \mathsf{None} & &                     
+  \end{array}  
+  
 \end{mathpar}
   \caption{Big-step semantics}
   \label{fig:semantics1}
@@ -474,19 +484,109 @@
 
  \clearpage
 
- \begin{thm}[Weaking]
+ \begin{figure}
+  \begin{mathpar}
+    \inferrule{
+       \env(x) = (\valr, \env, R)
+    }{
+     \tvdash{R}   (\env, x):  \type
+    }~\textbf{C-Ax}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \tvdash{0} ( \env, c) : \tbase 
+    }~\textbf{C-const}
+   
+    \and
+    %
+    \inferrule{
+      \forall \theta', \valr', R'.  \tvdash{\_} (\theta', \valr') : \type_1 
+      \tvdash{  \idx \times R' +\nnatA }
+      \expr: \type_2
+    }{
+     \tvdash{0} ( \env, \lambda x. \expr )  : \bang{\idx} \type_1
+      \lto{\nnatA} \type_2
+    }~\textbf{C-lambda}
+    \and
+    %
+    \inferrule{
+       \tvdash{\nnatA_1} (\env_1, \expr_1) :  \bang{\idx} \type_1
+      \lto{\nnatA} \type_2      \\
+      \tvdash{\nnatA_2} (\env_2, \expr_2): \type_1 
+    }{
+       \tvdash{    \nnatA_1 +
+        \idx \times \nnatA_2 + \nnatA    } ( \env_1 \uplus \env_2 ,  \expr_1 \eapp \expr_2) : \type_2
+    }~\textbf{C-app}
+    %
+    \and
+    %
+    \inferrule{
+      \tvdash{\nnatA} (\env, \expr) :  \tbase 
+    }{  \tvdash{1+\nnatA} (\env, \delta(\expr)) : \tbase
+    }~\textbf{C-delta}
+   
+  \end{mathpar}
+  \caption{Typing rules, configure}
+  \label{fig:configure-rules}
+\end{figure}
+
+\begin{figure}
+  \begin{mathpar}
+    \begin{array}{lll}
+      \lrv{\tbase} & = & \{  (\env, \econst, R)  \} \\
+      %
+      % \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
+      %
+      \lrv{\bang{k} \type } & = & \{  (\env, \valr,  R) |  (\env, \valr,
+                                   R ) \in \lrv{\type}  \} \\
+      %
+      \lrv{ \bang{k} \type_1 \lto{\nnatA} \type_2    } & = &
+      \{(\env, \lambda x.\expr, R) ~|~ \forall \valr', \env',
+                                                             R'. (\env',
+                                                             \valr,
+                                                            
+                                                             R') \in
+                                                             \lrv{
+                                                             \bang{k} \type_1}.\\
+      & & 
+      \implies (\env[x \mapsto (\valr', \env', R' )],  \expr ) \in
+          \lre{    }{ \nnatA }{\type_2}     \} \\
+      %
+      \\
+      %
+      \lre{}{\nnatA}{\type} & = & \{  (\env, \expr) ~|~  (\env, \expr
+                                  \bigstep{R} \env', \valr ) \\
+      & & ~~~~~~~~~~~~~~~~~\Rightarrow R \leq \nnatA \conj 
+     (\env', \valr, R) \in \lrv{\type})
+      \}
+    \end{array}
+  \end{mathpar}
+  \caption{Logical relation without step-indexing}
+  \label{fig:lr:non-step}
+\end{figure}
+
+
+\clearpage
+
+ \begin{thm}[Monotonicity]
   \label{sub}
   \begin{enumerate} 
-   \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
-  x \not \in \fv{\expr}  $ ,  then  $ \Gamma \tvdash{ \nnatA} \expr : \type $.
+   \item If  $(\env,
+     \expr) \in  \lre{}{\nnatA}{ \type} $ and $\nnatA' \geq \nnatA$,  then  $  (\env,
+     \expr) \in  \lre{}{\nnatA'}{ \type} $.
+   \item   If  $(\env,
+     \valr, R) \in  \lrv{\type} $ and $R' \geq R$,  then  $ (\env,
+     \valr, R') \in  \lrv{\type} $.
   \end{enumerate}
 \end{thm}
 
-\begin{thm}[Value Adaptivity]
+\begin{thm}[Soundness]
   \label{sub}
   \begin{enumerate} 
-   \item for all type $\bang{k} \ltype$,  exist value $\valr$, then  $
-     \empty \tvdash{ k} \valr : \bang{k} \ltype $.
+   \item $ \tvdash{\nnatA}  (\env, \expr) : \type $, then $(\env,
+     \expr) \in  \lre{}{\nnatA}{ \type} $
   \end{enumerate}
 \end{thm}
 
@@ -610,14 +710,14 @@
 %    By the rule delta using (2), we conclude that $\Gamma' ,1+\Gamma  \tvdash{1+(\nnatA,\nnatA')} \delta(\expr[\valr/x]): \bang{k} \ltype$.
 % \end{proof}
 
-\begin{thm}[Substitution]
-  \label{sub}
-  \begin{enumerate} 
-   \item If $ \Gamma,x : \bang{k} \ltype \tvdash{ \nnatA} \expr : \type $ and $
-  \empty \tvdash{k} \valr : \bang{k} \ltype  $ , then  $\Gamma
-  \tvdash{ \nnatA } \expr[\valr/x]  : \type$. 
-  \end{enumerate}
-\end{thm}
+% \begin{thm}[Substitution]
+%   \label{sub}
+%   \begin{enumerate} 
+%    \item If $ \Gamma,x : \bang{k} \ltype \tvdash{ \nnatA} \expr : \type $ and $
+%   \empty \tvdash{k} \valr : \bang{k} \ltype  $ , then  $\Gamma
+%   \tvdash{ \nnatA } \expr[\valr/x]  : \type$. 
+%   \end{enumerate}
+% \end{thm}
 
 % \begin{proof}
 %   By induction on the typing derivation.\\
@@ -820,12 +920,12 @@
 
 
 
-\begin{thm}[Soundness-original]
-\label{soundness}
-If $\Gamma \tvdash{\nnatA} \expr : \type$, $ \forall \env$ that $\env
-\vDash \Gamma$, exists $\env'$ and $\valr$ so that $\env , \expr \bigstep{\adapt} \valr,
-\env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env, \expr)$.  
-\end{thm}
+% \begin{thm}[Soundness-original]
+% \label{soundness}
+% If $\Gamma \tvdash{\nnatA} \expr : \type$, $ \forall \env$ that $\env
+% \vDash \Gamma$, exists $\env'$ and $\valr$ so that $\env , \expr \bigstep{\adapt} \valr,
+% \env'  $, then  $ \adapt + adap(\valr, \env')  \leq  \nnatA + F(\env, \expr)$.  
+% \end{thm}
 
 
 % \begin{proof}
@@ -906,13 +1006,13 @@ If $\Gamma \tvdash{\nnatA} \expr : \type$, $ \forall \env$ that $\env
 %  \end{proof} 
 
 
-\begin{thm}[Subject Reduction]
-\label{sub-red}
-If $\Gamma \tvdash{\nnatA} \expr : \bang{k} \ltype$, $\forall \env . \env
-\vDash \Gamma$,   exists $\env'$ and $\valr$, $\env , \expr \bigstep{\adapt} \valr,
-\env'  $, then $ \Gamma  \tvdash{ k} \valr :\bang{k} \ltype $.  
-\end{thm}
-By induction on the typing derivation.
+% \begin{thm}[Subject Reduction]
+% \label{sub-red}
+% If $\Gamma \tvdash{\nnatA} \expr : \bang{k} \ltype$, $\forall \env . \env
+% \vDash \Gamma$,   exists $\env'$ and $\valr$, $\env , \expr \bigstep{\adapt} \valr,
+% \env'  $, then $ \Gamma  \tvdash{ k} \valr :\bang{k} \ltype $.  
+% \end{thm}
+% By induction on the typing derivation.
 
 \end{document}
 
