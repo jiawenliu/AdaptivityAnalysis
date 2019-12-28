@@ -115,8 +115,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \begin{figure}
-\begin{mathpar}
-   \inferrule{  \mathsf{fetch} (\env,x)  =  (\valr, \adapt)  }{x, \env  \bigstep{\adapt} \valr, \env }~\textsf{var}  
+  \begin{mathpar}
+    \inferrule{
+    }{
+     \valr, \env \bigstep{0} \valr, \env} ~\textsf{val}
+    \and
+   \inferrule{  \mathsf{fetch} (\env,x)  =  (\valr, \adapt)  }{x, \env
+     \bigstep{\adapt} \valr, \env }~\textsf{var}
+   \and
+   %
+     \inferrule{  \env(x)  =  (\valr, \env_1,  \adapt)  }{x,
+       \env  \bigstep{\adapt} \valr, \env_1 }~\textsf{var2}
+     %
   %
   % \and
   % %
@@ -149,13 +159,13 @@
   \and
   %
   \inferrule{
-     \expr_1, \env \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
-     \expr_2, \env \bigstep{\adapt_2} \valr_2 , \env_2 \\
+     \expr_1, \env_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1' \\
+     \expr_2, \env_2 \bigstep{\adapt_2} \valr_2 , \env_2' \\
     \fresh \eapp x' \\
-    \expr[x'/x], \env_1[ x'  \to (\valr_2, \env_2, \adapt_2  ) ] 
+    \expr[x'/x], \env_1'[ x'  \to (\valr_2, \env_2', \adapt_2  ) ] 
     \bigstep{\adapt_3} \valr, \env_3
   }{
-    \env, \expr_1 \eapp \expr_2 \bigstep{\adapt_1+\adapt_3} \valr, \env_3
+     \expr_1 \eapp \expr_2 , (\env_1 \uplus \env_)\bigstep{\adapt_1+\adapt_3} \valr, \env_3
   }~\textsf{app}
  %
   \and
@@ -208,10 +218,10 @@
   \and
   %
   \inferrule{
-    \env, \expr \bigstep{\adapt} \valr' , \env_1 \\
+    \expr , \env \bigstep{\adapt} \valr' , \env_1 \\
     \eop{}(\valr') = \valr
   }{
-    \env, \eop(\expr) \bigstep{\adapt +1} \valr,  \env_1
+    \eop(\expr), \env \bigstep{\adapt +1} \valr,  \env_1
   }~\textsf{delta}
   %
    % \and
@@ -339,7 +349,7 @@
   \mbox{Linear type} & \type &::=  &  \ltype \lto{\nnatA} \type ~|~ \tbase \\
   \mbox{Nonlinear Type} & \ltype & ::= & \bang{\idx} \type   \\
   \mbox{Typing context } & \Gamma & ::= & x_1 : \ltype_1, \ldots,
-                                          x_k : \ltype_k
+                                          x_n : \ltype_n
 \end{array}
 \]
 
@@ -434,7 +444,7 @@
      \\\\
 \begin{array}{llll}
   \idx \times \Gamma &\triangleq  &  \Gamma  & \idx =1  \\
-                     &\triangleq  &  \emptyset & \idx =0 \\
+                     &\triangleq  &  \bang{0} \Gamma & \idx =0 \\
   \bang{\idx_1} \type + \bang{\idx_2} \type  &\triangleq  & \bang{
                                                           \max(\idx_1,\idx_2)
                                                           } \type &  \\
@@ -487,46 +497,80 @@
  \begin{figure}
   \begin{mathpar}
     \inferrule{
-       \env(x) = (\valr, \env, R)
+     \env ( x ) = (\valr, \env', R)
+      \\
+      \tvdash{0} ( \valr, \env') : \type
+      \\
+      \Gamma \vDash \env
+      \\
+      \Gamma \tvdash{0} x: \type
     }{
-     \tvdash{R}   (\env, x):  \type
+     \tvdash{R}   ( x, \env):  \type
     }~\textbf{C-Ax}
     %
     \and
     %
     \inferrule{
+      \Gamma \vDash \env
+      \\
+      \Gamma \tvdash{0} c: \tbase
     }{
-      \tvdash{0} ( \env, c) : \tbase 
+      \tvdash{0} (  c, \env) : \tbase
     }~\textbf{C-const}
    
     \and
     %
     \inferrule{
-      \forall \theta', \valr', R'.  \tvdash{\_} (\theta', \valr') : \type_1 
+      \tvdash{\_} ( \valr', \theta') : \type_1
+      \\
+      \fresh\eapp  x'
+      \\
       \tvdash{  \idx \times R' +\nnatA }
-      \expr: \type_2
+     ( \expr[x'/x], \env[x' \to (\valr', \theta', R')]      ) :
+     \type_2
+     \\
+       \Gamma \vDash \env
+      \\
+      \Gamma \tvdash{0} \lambda x. \expr :  \bang{\idx} \type_1
+      \lto{\nnatA} \type_2
     }{
-     \tvdash{0} ( \env, \lambda x. \expr )  : \bang{\idx} \type_1
+     \tvdash{0} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
       \lto{\nnatA} \type_2
     }~\textbf{C-lambda}
     \and
     %
     \inferrule{
-       \tvdash{\nnatA_1} (\env_1, \expr_1) :  \bang{\idx} \type_1
+       \tvdash{\nnatA_1} ( \expr_1, \env_1) :  \bang{\idx} \type_1
       \lto{\nnatA} \type_2      \\
-      \tvdash{\nnatA_2} (\env_2, \expr_2): \type_1 
+      \tvdash{\nnatA_2} ( \expr_2, \env_2 ): \type_1
+      \\
+        \Gamma \vDash \env
+      \\
+      \Gamma \tvdash{  \nnatA_1 +\idx \times \nnatA_2 + \nnatA  }  \expr_1 \eapp \expr_2 : \type_2
     }{
        \tvdash{    \nnatA_1 +
-        \idx \times \nnatA_2 + \nnatA    } ( \env_1 \uplus \env_2 ,  \expr_1 \eapp \expr_2) : \type_2
+        \idx \times \nnatA_2 + \nnatA    } (  \expr_1 \eapp \expr_2, \env_1 \uplus \env_2   ) : \type_2
     }~\textbf{C-app}
     %
     \and
     %
     \inferrule{
-      \tvdash{\nnatA} (\env, \expr) :  \tbase 
-    }{  \tvdash{1+\nnatA} (\env, \delta(\expr)) : \tbase
+      \tvdash{\nnatA} (\expr, \env) :  \tbase
+      \\
+       \Gamma \vDash \env
+      \\
+      \Gamma \tvdash{\nnatA} \expr: \tbase
+    }{  \tvdash{1+\nnatA} (\delta(\expr) , \env ) : \tbase
     }~\textbf{C-delta}
-   
+    \\\\
+    \begin{array}{lll}
+       \theta  & \triangleq (x_i \to (\valr_i, \env_i, R_i)) & i \in
+                                                               \mathbb{N}\\
+      (x_i : \type_i), \Gamma \vDash (x_i \to (\valr_i, \env_i, R_i))
+      \uplus \theta & \triangleq ~~~\tvdash{0} (\valr_i, \env_i)
+                                          : \bang{1} \type_i  &\conj
+                                   \Gamma \vDash \theta
+      \end{array}
   \end{mathpar}
   \caption{Typing rules, configure}
   \label{fig:configure-rules}
@@ -535,31 +579,30 @@
 \begin{figure}
   \begin{mathpar}
     \begin{array}{lll}
-      \lrv{\tbase} & = & \{  (\env, \econst, R)  \} \\
+      \lrv{\tbase} & = & \{  ( \econst, \env,  R)  \} \\
       %
       % \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
       %
-      \lrv{\bang{k} \type } & = & \{  (\env, \valr,  R) |  (\env, \valr,
+      \lrv{\bang{k} \type } & = & \{  ( \valr, \env,   R) |  (\valr, \env,
                                    R ) \in \lrv{\type}  \} \\
       %
       \lrv{ \bang{k} \type_1 \lto{\nnatA} \type_2    } & = &
-      \{(\env, \lambda x.\expr, R) ~|~ \forall \valr', \env',
-                                                             R'. (\env',
-                                                             \valr,
-                                                            
+      \{( \lambda x.\expr, \env,  R) ~|~ \forall \valr', \env',
+                                                             R'. (
+                                                             \valr',\env'                                   
                                                              R') \in
                                                              \lrv{
                                                              \bang{k} \type_1}.\\
       & & 
-      \implies (\env[x \mapsto (\valr', \env', R' )],  \expr ) \in
-          \lre{    }{ \nnatA }{\type_2}     \} \\
+   \implies   \fresh \eapp x' \land  ( \expr[x'/x], \env[x' \mapsto (\valr', \env', R' )] ) \in
+          \lre{    }{ \nnatA+ k\times R' }{\type_2}     \} \\
       %
       \\
       %
-      \lre{}{\nnatA}{\type} & = & \{  (\env, \expr) ~|~  (\env, \expr
-                                  \bigstep{R} \env', \valr ) \\
+      \lre{}{\nnatA}{\type} & = & \{  ( \expr, \env) ~|~  ( \expr , \env
+                                  \bigstep{R}  \valr, \env' ) \\
       & & ~~~~~~~~~~~~~~~~~\Rightarrow R \leq \nnatA \conj 
-     (\env', \valr, R) \in \lrv{\type})
+     ( \valr, \env', R) \in \lrv{\type})
       \}
     \end{array}
   \end{mathpar}
@@ -571,7 +614,7 @@
 \clearpage
 
  \begin{thm}[Monotonicity]
-  \label{sub}
+  \label{mono}
   \begin{enumerate} 
    \item If  $(\env,
      \expr) \in  \lre{}{\nnatA}{ \type} $ and $\nnatA' \geq \nnatA$,  then  $  (\env,
@@ -582,13 +625,27 @@
   \end{enumerate}
 \end{thm}
 
+\begin{thm}[ConfigurationToTyping]
+  \label{sound}
+  \begin{enumerate} 
+   \item $ \tvdash{\nnatA}  (\env, \expr) : \type $ and $\Gamma \vDash
+     \env $, then $ \Gamma \tvdash{\nnatA} \env: \type
+     $.
+  \end{enumerate}
+\end{thm}
+\begin{proof}
+  TO BE ADDED.
+ \end{proof} 
+
 \begin{thm}[Soundness]
-  \label{sub}
+  \label{sound}
   \begin{enumerate} 
    \item $ \tvdash{\nnatA}  (\env, \expr) : \type $, then $(\env,
      \expr) \in  \lre{}{\nnatA}{ \type} $
   \end{enumerate}
 \end{thm}
+
+\input{soundness}
 
 % \begin{thm}[Substitution]
 %   \label{sub}
