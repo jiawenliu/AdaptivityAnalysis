@@ -159,13 +159,14 @@
   \and
   %
   \inferrule{
-     \expr_1, \env_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1' \\
+    \expr_1, \env_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1' \\
+    %\forall x_i \in \dom(\env_1 \cap \env_2).  \fresh \eapp x_i' \\
      \expr_2, \env_2 \bigstep{\adapt_2} \valr_2 , \env_2' \\
     \fresh \eapp x' \\
     \expr[x'/x], \env_1'[ x'  \to (\valr_2, \env_2', \adapt_2  ) ] 
     \bigstep{\adapt_3} \valr, \env_3
   }{
-     \expr_1 \eapp \expr_2 , (\env_1 \uplus \env_)\bigstep{\adapt_1+\adapt_3} \valr, \env_3
+     \expr_1 \eapp \expr_2 , (\env_1 \uplus \env_2)\bigstep{\adapt_1+\adapt_3} \valr, \env_3
   }~\textsf{app}
  %
   \and
@@ -500,20 +501,13 @@
      \env ( x ) = (\valr, \env', R)
       \\
       \tvdash{0} ( \valr, \env') : \type
-      \\
-      \Gamma \vDash \env
-      \\
-      \Gamma \tvdash{0} x: \type
-    }{
+          }{
      \tvdash{R}   ( x, \env):  \type
     }~\textbf{C-Ax}
     %
     \and
     %
     \inferrule{
-      \Gamma \vDash \env
-      \\
-      \Gamma \tvdash{0} c: \tbase
     }{
       \tvdash{0} (  c, \env) : \tbase
     }~\textbf{C-const}
@@ -525,16 +519,11 @@
       \\
       \fresh\eapp  x'
       \\
-      \tvdash{  \idx \times R' +\nnatA }
+      \tvdash{ S+ \idx \times R' +\nnatA }
      ( \expr[x'/x], \env[x' \to (\valr', \theta', R')]      ) :
      \type_2
-     \\
-       \Gamma \vDash \env
-      \\
-      \Gamma \tvdash{0} \lambda x. \expr :  \bang{\idx} \type_1
-      \lto{\nnatA} \type_2
     }{
-     \tvdash{0} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
+     \tvdash{S} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
       \lto{\nnatA} \type_2
     }~\textbf{C-lambda}
     \and
@@ -566,9 +555,9 @@
     \begin{array}{lll}
        \theta  & \triangleq (x_i \to (\valr_i, \env_i, R_i)) & i \in
                                                                \mathbb{N}\\
-      (x_i : \type_i), \Gamma \vDash (x_i \to (\valr_i, \env_i, R_i))
+      (x_i : \bang{1}\type_i), \Gamma \vDash (x_i \to (\valr_i, \env_i, R_i))
       \uplus \theta & \triangleq ~~~\tvdash{0} (\valr_i, \env_i)
-                                          : \bang{1} \type_i  &\conj
+                                          :  \type_i  &\conj
                                    \Gamma \vDash \theta
       \end{array}
   \end{mathpar}
@@ -629,13 +618,13 @@
   \label{sound}
   \begin{enumerate} 
    \item If $ \tvdash{\nnatA}  ( \expr, \env) : \type $ and $\Gamma \vDash
-     \env $, then $ \Gamma \tvdash{\nnatA} \expr: \type
+     \env $, then $ \Gamma \tvdash{\nnatA - F(\env, \expr) } \expr: \type
      $.
   \end{enumerate}
 \end{thm}
-\begin{proof}
-  TO BE ADDED.
-\end{proof}
+% \input{configure2typing}
+
+
 
 \begin{thm}[TypingtoConfiguration]
   \label{sound}
@@ -647,10 +636,7 @@
      ( \expr, [ x_1 \to (\valr_1, \env_1, R_1), \ldots,  x_i \to (\valr_i, \env_i, R_i)   ] ) : \type $ .
   \end{enumerate}
 \end{thm}
-\begin{proof}
-  TO BE ADDED.
- \end{proof} 
-
+\input{typing2configuration}
 
 
 \begin{thm}[ConfigurationSoundness]
