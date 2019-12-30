@@ -611,6 +611,8 @@
    \item   If  $(
      \valr,\env,  R) \in  \lrv{\type} $ and $R' \geq R$,  then  $ (
      \valr,\env, R') \in  \lrv{\type} $.
+     \item If $ \tvdash{\nnatA} (\expr, \env) : \type$ and $\nnatA
+       \leq \nnatA'$, then $\tvdash{\nnatA'} (\expr, \env) : \type $.
   \end{enumerate}
 \end{thm}
 
@@ -618,22 +620,35 @@
   \label{sound}
   \begin{enumerate} 
    \item If $ \tvdash{\nnatA}  ( \expr, \env) : \type $ and $\Gamma \vDash
-     \env $, then $ \Gamma \tvdash{\nnatA - F(\env, \expr) } \expr: \type
+     \env $, then $ \Gamma \tvdash{\nnatA - F_1(\env, \expr) } \expr: \type
      $.
   \end{enumerate}
 \end{thm}
 % \input{configure2typing}
-
-
+\[
+\begin{array}{ll}
+ F(\expr, \env, \Gamma) & where \eapp ~~ \Gamma(x_i) = \bang{k_i}
+                                           \type_i \land \env(x_i) =
+                                        (\valr_i, \env_i, R_i)  \\
+   F(x, \env, \Gamma) & = \sum_{x_i \in \fv{x}  } k_i \times R_i  \\
+F(\lambda x. \expr , \env,\Gamma) & = \sum_{x_i \in \fv{\lambda x.\expr} } k_i \times R_i  \\
+F(\delta(\expr) , \env,\Gamma) & = \sum_{x_i \in \fv{\delta(\expr)} } k_i \times R_i  \\
+F(c, \env,\Gamma) & = 0  \\
+F(\expr_1 \eapp \expr_2, \env,\Gamma) & = F(\expr_1, \env, \Gamma) +
+                                        F(\expr_2,\env, \Gamma)
+\end{array} 
+\]
 
 \begin{thm}[TypingtoConfiguration]
   \label{sound}
   \begin{enumerate} 
    \item If $ x_1: \bang{\idx_1} \type_1, \ldots ,  x_i : \bang{\idx_i} \type_i
      \tvdash{\nnatA} \expr: \type$,  let $  (\valr_i, \env_i,
-     R_i) \in \lrv{ \bang{\idx_i} \type_i }   $,  then   $
-     \tvdash{\nnatA + \idx_i \times R_i}
-     ( \expr, [ x_1 \to (\valr_1, \env_1, R_1), \ldots,  x_i \to (\valr_i, \env_i, R_i)   ] ) : \type $ .
+     R_i) \in \lrv{ \bang{\idx_i} \type_i }   $,  let $\env = [ x_1
+     \to (\valr_1, \env_1, R_1), \ldots,  x_i \to (\valr_i, \env_i,
+     R_i)   ]$, then   $
+     \tvdash{\nnatA +  F( \expr, \env,  x_1: \bang{\idx_1} \type_1, \ldots ,  x_i : \bang{\idx_i} \type_i) }
+     ( \expr, \env ) : \type $ .
   \end{enumerate}
 \end{thm}
 \input{typing2configuration}

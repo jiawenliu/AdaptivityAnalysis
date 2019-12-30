@@ -10,10 +10,20 @@
     $
   }
 
-  let $(\valr, \env', R) \in \lrv{\bang{1} \type}$ and $(\valr_i, \env_i, R_i) \in \lrv{\Gamma(x_i)}$,   TS:
-  $\tvdash{0 + 1\times R} ( x,   [x \to (\valr, \env', R)] \uplus [ x_i \to (\valr_i, \env_i, R_i)]   ) $.
+  let $(\valr, \env', R) \in \lrv{\bang{1} \type}$ and $(\valr_i,
+  \env_i, R_i) \in \lrv{\Gamma(x_i)}$,
+ 
 
-  let $\env =  [x \to (\valr, \env', R)] \uplus [ x_i \to (\valr_i, \env_i, R_i)]   $. 
+  let $\env =  [x \to (\valr, \env', R)] \uplus [ x_1 \to (\valr_1,
+  \env_1, R_1), \ldots,   x_i \to (\valr_i,
+  \env_i, R_i)]   $.
+
+  $F\big(x,\env, (\Gamma, x: \bang{1} \type) \big) = 1 \times R $.
+
+  TS:$\tvdash{0 +1 \times R} ( x,   \env  ) $.
+
+   
+  
   We conclude from the configuratio rule C-Ax.
   
   \[ \inferrule{
@@ -42,13 +52,26 @@
 
   Assume $(\valr', \env', R') \in \lrv{ \bang{k} \type_1}~(1)$ and $ (\valr_i, \env_i, R_i) \in \lrv{\bang{k_i} \type_i } $.
 
-  TS: $ \tvdash{0 + k_1 \times R_1 + , \ldots, +  k_i \times R_i   }   (\lambda x.\expr,  [x_1 \to (\valr_1, \env_1, R_1), \ldots,   x_i \to (\valr_i, \env_i, R_i)] ) $.
+Let  $ \env =  [x_1 \to (\valr_1, \env_1, R_1), \ldots,   x_i \to (\valr_i, \env_i, R_i)]  $.
+  
+  TS: $ \tvdash{0 + F(\lambda x. \expr, \env, \Gamma)  }   (\lambda
+  x.\expr,  \env) $.
+  
 
-  Let $S = k_1 \times R_1 + , \ldots, +  k_i \times R_i  $ and $ \env =  [x_1 \to (\valr_1, \env_1, R_1), \ldots,   x_i \to (\valr_i, \env_i, R_i)]  $.
+  Let $S = \sum_{x_i \in \fv{\lambda x. \expr} } k_i \times R_i $ .
 
   From assumption $(1)$, we know :  $\tvdash{\_} ( \valr', \theta') : \type_1~(\star)$.
 
-  Take a fresh variable x', doing alpha renaming on the premise,then by induction hypothesis on the premise , we know: $\tvdash{ \nnatA+ k_1 \times R_1 + , \ldots, +  k_i \times R_i + k \times R' }   ( \expr[x'/x],  [x' \to (\valr', \env', R')] \uplus \env  ) ~(\diamond) $.
+  Take a fresh variable x', doing alpha renaming on the premise,then
+  by induction hypothesis on the premise , we know: $\tvdash{ \nnatA+
+ F(\expr[x'/x], [x' \to (\valr', \env', R')] \uplus \env),  (\Gamma,x:
+ \ltype) }   ( \expr[x'/x],  [x' \to (\valr', \env', R')] \uplus \env
+) ~(\diamond) $.
+
+ $F(\expr[x'/x], [x' \to (\valr', \env', R')] \uplus \env),  (\Gamma,x:
+ \ltype)  = \sum_{x_i \in \fv{\lambda x. \expr} } k_i \times R_i  + k
+ \times R'  =  S + k \times R'$.
+
 
  We can conclude the following by the configuration rule. 
     
@@ -83,42 +106,56 @@
   }
   
   Let us assume $\Gamma_1 = x_i : \bang{k_i} \type_i $ and $\Gamma_2 = x_i' : \bang{k_i'} \type_i'$,($\Gamma_1$ and $\Gamma_2$ may overleap.).
+  
+  forall the variables $x_i''$ in $\dom (\Gamma_1 + k \times \Gamma_2
+  )$, we assume: $(\valr_i'', \env'', R'') \in \lrv{ (\Gamma_1 + k
+    \times \Gamma_2)(x_i'')  }$ and set $ (\Gamma_1 + k \times
+  \Gamma_2 )(x_i'') = \bang{k_i''} \type_i'' $.
 
-  forall the variables $x_i''$ in $\dom{\Gamma_1 + k \times \Gamma_2 }$, we assume: $(\valr_i'', \env'', R'') \in \lrv{ (\Gamma_1 + k \times \Gamma_2)(x_i'')  }$ and $ (\Gamma_1 + k \times \Gamma_2 )(x_i'') = \bang{k_i''} \type_i'' $.
+  let $\env = [x_1'' \to (\valr_1'', \env_1'', R_1''), \ldots,   x_i'' \to (\valr_i'', \env_i'', R_i'')]$.
 
-  TS: $ \tvdash{\nnatA_1+ k \times \nnatA_2 + \nnatA + k_1'' \times R_i'' +, \ldots ,+ k_i'' \times R_i''  }   (\expr_1 \eapp \expr_2 ,  [x_1'' \to (\valr_1'', \env_1'', R_1''), \ldots,   x_i'' \to (\valr_i'', \env_i'', R_i'')]   ) $.
+  TS: $ \tvdash{\nnatA_1 + \idx \times \nnatA_2 + \nnatA   +   F(\expr_1 \eapp \expr_2,\env, \Gamma_1 + k
+    \times \Gamma_2 )  }   (\expr_1 \eapp \expr_2 , \env) $.\\
 
   let $\env_1 = \{  [x_i'' \to (\valr_i'', \env_i'', R_i'') ]   |     x_i'' \in \dom(\Gamma_1)  \}   $.
 
-  let $\env_2 = \{  [x_i'' \to (\valr_i'', \env_i'', R_i'') ]   |     x_i'' \in \dom(\Gamma_2)  \}   $.
+  let $\env_2 = \{  [x_i'' \to (\valr_i'', \env_i'', R_i'') ]   |
+  x_i'' \in \dom(\Gamma_2)  \}   $.
+
+  We know  $ \dom(\env) = \dom(\Gamma_1) \uplus \dom(\Gamma_2) \implies   \env = \env_1 \uplus \env_2 $
 
   By induction hypothesis on the first premise, we have:
-  $ \tvdash{ \nnatA_1 + k_i'' \times R_i'' } (\expr_1, \env_1) : \bang{\idx} \type_1 \lto{\nnatA} \type_2 ~(\star)$ where $x_i'' \in dom(\Gamma_1) $.
+  $ \tvdash{ \nnatA_1 + F(\expr_1, \env_1, \Gamma_1) } (\expr_1, \env_1) : \bang{\idx} \type_1 \lto{\nnatA} \type_2 ~(\star)$ where $x_i'' \in dom(\Gamma_1) $.
 
   By induction hypothesis on the second premise, we have:
-  $ \tvdash{ \nnatA_2 + k_i'' \times R_i'' } (\expr_2, \env_2) : \type_1 $ where $x_i'' \in dom(\Gamma_2)~(\diamond) $.
+  $ \tvdash{ \nnatA_2 + F(\expr_2, \env_2, \Gamma_2)  } (\expr_2, \env_2) : \type_1 $ where $x_i'' \in dom(\Gamma_2)~(\diamond) $.
 
   
   
   
 
-  
+  From the configuration rule C-app, we get:
 
   
   \[
  \inferrule{
-       \tvdash{\nnatA_1} ( \expr_1, \env_1) :  \bang{\idx} \type_1
+       \tvdash{\nnatA_1 + F(\expr_1, \env_1, \Gamma_1) } ( \expr_1, \env_1) :  \bang{\idx} \type_1
       \lto{\nnatA} \type_2    ~(\star)  \\
-      \tvdash{\nnatA_2} ( \expr_2, \env_2 ): \type_1 ~(\diamond)
-      \\
-        \Gamma \vDash \env
-      \\
-      \Gamma \tvdash{  \nnatA_1 +\idx \times \nnatA_2 + \nnatA  }  \expr_1 \eapp \expr_2 : \type_2
-    }{
-       \tvdash{    \nnatA_1 +\idx \times \nnatA_2 + \nnatA    } (  \expr_1 \eapp \expr_2, \env_1 \uplus \env_2   ) : \type_2
-    }~\textbf{C-app}
+      \tvdash{\nnatA_2 +  F(\expr_2, \env_2, \Gamma_2)} ( \expr_2, \env_2 ): \type_1 ~(\diamond)
+        }{
+       \tvdash{    \nnatA_1 + F(\expr_1, \env_1, \Gamma_1) + \idx
+         \times (\nnatA_2 +  F(\expr_2, \env_2, \Gamma_2)) + \nnatA
+       } (  \expr_1 \eapp \expr_2, \env_1 \uplus \env_2   ) : \type_2 ~(\clubsuit)
+    }~\textbf{C-app} 
   \]
-  
+
+  Because $ F(\expr_1, \env_1, \Gamma_1)  + \idx \times F(\expr_2,
+  \env_2, \Gamma_2) \leq F(\expr_1 \eapp \expr_2,  \env, \Gamma_1 +
+  \idx \times \Gamma_2 ) $, so we conclude :$  \nnatA_1 + F(\expr_1, \env_1, \Gamma_1) + \idx \times
+  (\nnatA_2 +  F(\expr_2, \env_2, \Gamma_2)) + \nnatA  \leq \nnatA_1 + \idx \times \nnatA_2 + \nnatA   +   F(\expr_1 \eapp \expr_2,\env, \Gamma_1 + k
+  \times \Gamma_2 )  $ .
+
+  The TS can be shown using Lemma~\ref{mono} on the $\clubsuit$.
   
   
  \end{proof} 
