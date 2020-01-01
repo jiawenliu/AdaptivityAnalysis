@@ -4,17 +4,25 @@
  \caseL{ Case$     \inferrule{
      \env ( x ) = (\valr, \env', R) ~ (\star)
       \\
-      \tvdash{0} ( \valr, \env') : \type ~(\star)
+      \tvdash{0} ( \valr, \env') : \type ~(\diamond)
     }{
      \tvdash{R}   ( x, \env):  \type
     }~\textbf{C-Ax}
     $
   }
 
-  Asssume $\Gamma \vDash \env$,  TS: $\Gamma \tvdash{R} x: \type $.
+  Asssume $\Gamma \vDash \env$,  TS: $\Gamma \tvdash{  \max(0, \nnatA-
+    F_{c2t}(\env) ) } x: \type $.
   
-  From $(\star)$ and the definition of $\Gamma \vDash \env$, we know $\Gamma(x) = \bang{1} \type$,
-  So we conclude $\Gamma \tvdash{0} x: \type ~(1)$ by the typing rule Ax. This case is proved by subtyping on $(1)$.
+  From $(\star), (\diamond)$ and the definition of $\Gamma \vDash
+  \env$, we know $\Gamma(x) = \bang{1} \type$. In this sense, $
+  F_{c2t}(\env)  \geq R $ so that $\max(0, \nnatA- F_{c2t}(\env) ) =0$.
+  
+ It is proved by typing rule Ax. \\
+
+  
+
+  
 
     \caseL{ Case
     $
@@ -23,19 +31,65 @@
       \\
       \fresh\eapp  x'
       \\
-      \tvdash{  \idx \times R' +\nnatA }
+      \tvdash{ S+  \idx \times R' +\nnatA }
      ( \expr[x'/x], \env[x' \to (\valr', \theta', R')]      ) :
      \type_2~(\diamond)
-     \\
-       \Gamma \vDash \env
-      \\
-      \Gamma \tvdash{0} \lambda x. \expr :  \bang{\idx} \type_1
-      \lto{\nnatA} \type_2
     }{
-     \tvdash{0} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
+     \tvdash{S} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
       \lto{\nnatA} \type_2
     }~\textbf{C-lambda}
     $
   }
+
+  Asssume $\Gamma \vDash \env$,  TS: $\Gamma \tvdash{ \max(0,  S-
+    F_{c2t}(\env) ) } \lambda
+  x. \expr: \bang{\idx} \type_1 \lto{\nnatA} \type_2 $.
+
+  By induction hypothesis on $(\star)$, we know : $ \tvdash{ \_ }
+  (\valr',\env') : \type_1 $.
+
+  From the above statement, we conclude : $ \Gamma, x': \bang{\idx} \type_1
+  \vDash ( \env[x' \to (\valr', \theta', R')] )~(1) $.
+
+  By induction hypothesis on $(1)$, we have : $ \ictx \Gamma, x': \bang{\idx} \type_1
+      \tvdash{\nnatA }
+      \expr[x'/x]: \type_2 ~(a) $. 
+  
+  \[
+ \inferrule{
+      \ictx \Gamma, x': \bang{\idx} \type_1
+      \tvdash{\nnatA }
+      \expr[x'/x]: \type
+    }{
+      \ictx \Gamma \tvdash{0} \lambda x'. \expr[x'/x] : \bang{\idx} \type_1
+      \lto{\nnatA} \type
+    }~\textbf{lambda}
+  \]
+
+
+  \caseL{Case
+    $
+        \inferrule{
+       \tvdash{\nnatA_1} ( \expr_1, \env_1) :  \bang{\idx} \type_1
+      \lto{\nnatA} \type_2      \\
+      \tvdash{\nnatA_2} ( \expr_2, \env_2 ): \type_1
+    }{
+       \tvdash{    \nnatA_1 +
+        \idx \times \nnatA_2 + \nnatA    } (  \expr_1 \eapp \expr_2, \env_1 \uplus \env_2   ) : \type_2
+    }~\textbf{C-app}
+    $
+  }
+
+  \[
+   \inferrule{
+      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{\idx} \type_1
+      \lto{\nnatA} \type_2      \\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \ictx   \Gamma_1 + \idx \times \Gamma_2  \tvdash{    \nnatA_1 +
+        \idx \times \nnatA_2 + \nnatA    } \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+  \]
+  
 
 \end{proof}

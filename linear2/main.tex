@@ -498,11 +498,11 @@
  \begin{figure}
   \begin{mathpar}
     \inferrule{
-     \env ( x ) = (\valr, \env', R)
+     \env ( x ) = (\valr, \env', \adapt)
       \\
-      \tvdash{0} ( \valr, \env') : \type
+      \tvdash{\nnatA} ( \valr, \env') : \type
           }{
-     \tvdash{R}   ( x, \env):  \type
+     \tvdash{\adapt + \nnatA}   ( x, \env):  \type
     }~\textbf{C-Ax}
     %
     \and
@@ -515,15 +515,15 @@
     \and
     %
     \inferrule{
-      \tvdash{\_} ( \valr', \theta') : \type_1
+      \tvdash{\nnatA' } ( \valr', \theta') : \type_1
       \\
-      \fresh\eapp  x'
+      \fresh\eapp  x' ~~ \forall \adapt'
       \\
-      \tvdash{ 0+ \idx \times R' +\nnatA }
+      \tvdash{ S+ \idx \times \adapt' +\nnatA }
      ( \expr[x'/x], \env[x' \to (\valr', \theta', R')]      ) :
      \type_2
     }{
-     \tvdash{0} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
+     \tvdash{S} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
       \lto{\nnatA} \type_2
     }~\textbf{C-lambda}
     \and
@@ -560,30 +560,31 @@
 \begin{figure}
   \begin{mathpar}
     \begin{array}{lll}
-      \lrv{\tbase} & = & \{  ( \econst, \env,  R)  \} \\
+      \lrv{\tbase} & = & \{  ( \econst, \env,  \nnatA)  \} \\
       %
       % \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
       %
-      \lrv{\bang{k} \type } & = & \{  ( \valr, \env,   R) |  (\valr, \env,
-                                   R ) \in \lrv{\type}  \} \\
+      \lrv{\bang{k} \type } & = & \{  ( \valr, \env,   \nnatA) |  (\valr, \env,
+                                   \nnatA ) \in \lrv{\type}  \} \\
       %
       \lrv{ \bang{k} \type_1 \lto{\nnatA} \type_2    } & = &
-      \{( \lambda x.\expr, \env,  R) ~|~ \forall \valr', \env',
-                                                             R'. (
-                                                             \valr',\env'                                   
-                                                             R') \in
+      \{( \lambda x.\expr, \env,  \nnatA_1) ~|~ \forall \valr', \env',
+                                                             \nnatA'. (
+                                                             \valr',\env',                                   
+                                                             \nnatA') \in
                                                              \lrv{
                                                              \bang{k} \type_1}.\\
       & & 
-   \implies   \fresh \eapp x' \land  ( \expr[x'/x], \env[x' \mapsto (\valr', \env', R' )] ) \in
-          \lre{    }{ \nnatA+ k\times R' }{\type_2}     \} \\
+          \implies   \fresh \eapp x' \land \\
+      & & \forall \adapt. ( \expr[x'/x], \env[x' \mapsto (\valr', \env', \adapt )] ) \in
+          \lre{    }{ \nnatA_1+\nnatA+ \idx \times \adapt }{\type_2}     \} \\
       %
       \\
       %
       \lre{}{\nnatA}{\type} & = & \{  ( \expr, \env) ~|~  ( \expr , \env
                                   \bigstep{R}  \valr, \env' ) \\
-      & & ~~~~~~~~~~~~~~~~~\Rightarrow R \leq \nnatA \conj 
-     ( \valr, \env', R) \in \lrv{\type})
+      & & ~~~~~~~~~~~~~\implies R \leq \nnatA \conj 
+     ( \valr, \env', \nnatA- \adapt) \in \lrv{\type})
       \}
     \end{array}
   \end{mathpar}
