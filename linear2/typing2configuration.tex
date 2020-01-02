@@ -10,17 +10,20 @@
     $
   }
 
-  let $(\valr, \env', R) \in \lrv{\bang{1} \type}$ and $(\valr_i,
-  \env_i, R_i) \in \lrv{\Gamma(x_i)}$,
+  assume $ \tvdash{\nnatA} (\valr, \env') :  \type$ and $ \tvdash{\nnatA_i} (\valr_i,
+  \env_i) :  \type_i  $,
  
 
-  let $\env =  [x \to (\valr, \env', R)] \uplus [ x_1 \to (\valr_1,
+  assume $\env =  [x \to (\valr, \env', R)] \uplus [ x_1 \to (\valr_1,
   \env_1, R_1), \ldots,   x_i \to (\valr_i,
   \env_i, R_i)]   $.
 
-  $F\big(x,\env, (\Gamma, x: \bang{1} \type) \big) = 1 \times R $.
+  So $\phi = [x \to (1, \adapt, \nnatA) ] \uplus [ x_1 \to (\idx_1,
+  \adapt_1, \nnatA_1), \ldots,   x_i \to (\idx_i,  \adapt_i, \nnatA_i)] $
 
-  TS:$\tvdash{0 +1 \times R} ( x,   \env  ) $.
+  $F\big(x, \phi \big) = 1 \times (\adapt + \nnatA)  $.
+
+  TS:$\tvdash{0 +1 \times (\adapt+ \nnatA ) } ( x,   \env  ) : \type $.
 
    
   
@@ -29,9 +32,9 @@
   \[ \inferrule{
      \env ( x ) = (\valr, \env', R)
       \\
-      \tvdash{0} ( \valr, \env') : \type
+      \tvdash{\nnatA} ( \valr, \env') : \type
     }{
-     \tvdash{R}   ( x, \env):  \type
+     \tvdash{\adapt+\nnatA}   ( x, \env):  \type
     }~\textbf{C-Ax}
   \]
 
@@ -48,29 +51,35 @@
     $
   }
 
-  let $\Gamma = x_i : \bang{k_i} \type_i$ and  $\ltype = \bang{k} \type_1$.
+  let $\Gamma =x_1: \bang{k_1} \type_1 , \ldots,  x_i : \bang{k_i} \type_i$ and  $\ltype = \bang{k} \type_1$.
 
-  Assume $(\valr', \env', R') \in \lrv{ \bang{k} \type_1}~(1)$ and $ (\valr_i, \env_i, R_i) \in \lrv{\bang{k_i} \type_i } $.
+  Assume $\tvdash{\nnatA'}  (\valr', \env')  :  \type_1 ~(1)$ and $
+  \tvdash{\nnatA_i} (\valr_i, \env_i) :  \type_i  $.
 
-Let  $ \env =  [x_1 \to (\valr_1, \env_1, R_1), \ldots,   x_i \to (\valr_i, \env_i, R_i)]  $.
+Assume  $ \env =  [x_1 \to (\valr_1, \env_1, \adapt_1), \ldots,   x_i \to (\valr_i, \env_i, \adapt_i)]  $.
+
+So $\phi =  [ x_1 \to (\idx_1,
+  \adapt_1, \nnatA_1), \ldots,   x_i \to (\idx_i,  \adapt_i, \nnatA_i)] $
+
+  TS: $ \tvdash{0 + F(\lambda x. \expr,  \phi )  }   (\lambda
+  x.\expr,  \env) :  \bang{\idx} \type_1  \lto{\nnatA} \type_2 $. 
+
+  Let $S = \sum_{x_i \in \fv{\lambda x. \expr} } \idx_i \times
+  (\adapt_i + \nnatA_i)    $ .
+
+  From assumption $(1)$, we know :  $\tvdash{\nnatA' } ( \valr', \env) : \type_1~(\star)$.
+
+  Take a fresh variable x', doing alpha renaming on the premise, pick
+  $\adapt'$ so that $\env' = [x' \to (\valr', \env', \adapt' )] \uplus
+  \env$ and $\phi'= [x' \to (\idx, \adapt', \nnatA')] \uplus \phi$.
   
-  TS: $ \tvdash{0 + F(\lambda x. \expr, \env, \Gamma)  }   (\lambda
-  x.\expr,  \env) $.
-  
+  By induction hypothesis on the premise, we know: $\tvdash{ \nnatA+
+ F(\expr[x'/x], \phi' ) }  ( \expr[x'/x],  [x' \to (\valr', \env', \adapt')] \uplus \env
+) : \type~(\diamond) $.
 
-  Let $S = \sum_{x_i \in \fv{\lambda x. \expr} } k_i \times R_i    $ .
-
-  From assumption $(1)$, we know :  $\tvdash{\_} ( \valr', \theta') : \type_1~(\star)$.
-
-  Take a fresh variable x', doing alpha renaming on the premise,then
-  by induction hypothesis on the premise , we know: $\tvdash{ \nnatA+
- F(\expr[x'/x], [x' \to (\valr', \env', R')] \uplus \env,  (\Gamma,x:
- \ltype) )  }   ( \expr[x'/x],  [x' \to (\valr', \env', R')] \uplus \env
-) ~(\diamond) $.
-
- $F(\expr[x'/x], [x' \to (\valr', \env', R')] \uplus \env),  (\Gamma,x:
- \ltype)  = \sum_{x_i \in \fv{\lambda x. \expr} } k_i \times R_i  + k
- \times R'  =  S + k \times R'$.
+ $F(\expr[x'/x], \phi' )  = \sum_{x_i \in \fv{\lambda x. \expr} } \idx_i
+ \times (\adapt_i +\nnatA_i)  + \idx
+ \times (\adapt'+\nnatA')  =  S + \idx \times (\adapt'+ \nnatA' )$.
 
 
  We can conclude the following by the configuration rule. 
@@ -78,16 +87,16 @@ Let  $ \env =  [x_1 \to (\valr_1, \env_1, R_1), \ldots,   x_i \to (\valr_i, \env
   
   \[
        \inferrule{
-      \tvdash{\_} ( \valr', \theta') : \type_1 ~(\star)
+      \tvdash{\nnatA'} ( \valr', \theta') : \type_1 ~(\star)
       \\
       \fresh\eapp  x'
       \\
-      \tvdash{ S+  \idx \times R' +\nnatA }
-     ( \expr[x'/x], \env[x' \to (\valr', \theta', R')]      ) :
-     \type_2~(\diamond)
+      \tvdash{ S+  \idx \times (\adapt'+\nnatA') +\nnatA }
+     ( \expr[x'/x], \env[x' \to (\valr', \env', \adapt')]      ) :
+     \type~(\diamond)
     }{
      \tvdash{S} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
-      \lto{\nnatA} \type_2
+      \lto{\nnatA} \type
     }~\textbf{C-lambda}
   \]
 
@@ -107,33 +116,39 @@ Let  $ \env =  [x_1 \to (\valr_1, \env_1, R_1), \ldots,   x_i \to (\valr_i, \env
   
   Let us assume $\Gamma_1 = x_i : \bang{k_i} \type_i $ and $\Gamma_2 = x_i' : \bang{k_i'} \type_i'$,($\Gamma_1$ and $\Gamma_2$ may overleap.).
   
-  forall the variables $x_i''$ in $\dom (\Gamma_1 + k \times \Gamma_2
-  )$, we assume: $(\valr_i'', \env'', R'') \in \lrv{ (\Gamma_1 + k
-    \times \Gamma_2)(x_i'')  }$ and set $ (\Gamma_1 + k \times
-  \Gamma_2 )(x_i'') = \bang{k_i''} \type_i'' $.
+  Forall the variables $x_i''$ in $\dom (\Gamma_1 + k \times \Gamma_2
+  )$, we assume $ (\Gamma_1 + k \times
+  \Gamma_2 )(x_i'') = \bang{k_i''} \type_i'' $ so that
+  $ \tvdash{\nnatA_i''}  (\valr_i'', \env_i'')  : \type_i'' $
 
-  let $\env = [x_1'' \to (\valr_1'', \env_1'', R_1''), \ldots,   x_i'' \to (\valr_i'', \env_i'', R_i'')]$.
+  assume $\env = [x_1'' \to (\valr_1'', \env_1'', \adapt_1''), \ldots,
+  x_i'' \to (\valr_i'', \env_i'', \adapt_i'')]$.
 
-  TS: $ \tvdash{\nnatA_1 + \idx \times \nnatA_2 + \nnatA   +   F(\expr_1 \eapp \expr_2,\env, \Gamma_1 + k
-    \times \Gamma_2 )  }   (\expr_1 \eapp \expr_2 , \env) $.\\
+  So $\phi =  [x_1'' \to (\idx_1'', \adapt_1'', \nnatA_1''), \ldots,
+  x_i'' \to (\idx_i'', \adapt_i'', \nnatA_i'')]$
+
+  TS: $ \tvdash{\nnatA_1 + \idx \times \nnatA_2 + \nnatA   +
+    F(\expr_1 \eapp \expr_2, \phi ) }   (\expr_1 \eapp \expr_2 , \env)
+  : \type_2 $.\\
 
   let $\env_1 = \{  [x_i'' \to (\valr_i'', \env_i'', R_i'') ]   |     x_i'' \in \dom(\Gamma_1)  \}   $.
 
   let $\env_2 = \{  [x_i'' \to (\valr_i'', \env_i'', R_i'') ]   |
   x_i'' \in \dom(\Gamma_2)  \}   $.
 
-  We know  $ \dom(\env) = \dom(\Gamma_1) \uplus \dom(\Gamma_2) \implies   \env = \env_1 \uplus \env_2 $
+  We know  $ \dom(\env) = \dom(\env_1) \uplus \dom(\env_2) \implies   \env = \env_1 \uplus \env_2 $
 
+  We set $\phi_1 =\{  [x_i \to (\idx_i'', \adapt_i'', \nnatA_i'')] |
+  x_i'' \in \dom(\Gamma_1)  \} $. and $\phi_2 =\{  [x_i \to (\idx_i'', \adapt_i'', \nnatA_i'')] |    x_i'' \in \dom(\Gamma_2)  \} $
+  
   By induction hypothesis on the first premise, we have:
-  $ \tvdash{ \nnatA_1 + F(\expr_1, \env_1, \Gamma_1) } (\expr_1, \env_1) : \bang{\idx} \type_1 \lto{\nnatA} \type_2 ~(\star)$ where $x_i'' \in dom(\Gamma_1) $.
+  $ \tvdash{ \nnatA_1 + F(\expr_1, \phi_1) } (\expr_1, \env_1) : \bang{\idx} \type_1 \lto{\nnatA} \type_2 ~(\star)$.
 
   By induction hypothesis on the second premise, we have:
-  $ \tvdash{ \nnatA_2 + F(\expr_2, \env_2, \Gamma_2)  } (\expr_2, \env_2) : \type_1 $ where $x_i'' \in dom(\Gamma_2)~(\diamond) $.
+  $ \tvdash{ \nnatA_2 + F(\expr_2, \phi_2 )  } (\expr_2, \env_2) : \type_1 $ .
 
+ From the definition, we know: $ F(\expr_1, \phi_1) = F (\expr_1, \phi) $ and $ F(\expr_2, \phi_2) = F (\expr_2, \phi) $ .
   
-  
-  
-
   From the configuration rule C-app, we get:
 
   
@@ -149,11 +164,10 @@ Let  $ \env =  [x_1 \to (\valr_1, \env_1, R_1), \ldots,   x_i \to (\valr_i, \env
     }~\textbf{C-app} 
   \]
 
-  Because $ F(\expr_1, \env_1, \Gamma_1)  + \idx \times F(\expr_2,
-  \env_2, \Gamma_2) \leq F(\expr_1 \eapp \expr_2,  \env, \Gamma_1 +
-  \idx \times \Gamma_2 ) $, so we conclude :$  \nnatA_1 + F(\expr_1, \env_1, \Gamma_1) + \idx \times
-  (\nnatA_2 +  F(\expr_2, \env_2, \Gamma_2)) + \nnatA  \leq \nnatA_1 + \idx \times \nnatA_2 + \nnatA   +   F(\expr_1 \eapp \expr_2,\env, \Gamma_1 + k
-  \times \Gamma_2 )  $ .
+  Because $ F(\expr_1,\phi_1)  + \idx \times F(\expr_2,
+  \phi_2 ) \leq F(\expr_1 \eapp \expr_2,  \phi) $, so we conclude :$  \nnatA_1 + F(\expr_1,\phi_1) + \idx \times
+  (\nnatA_2 +  F(\expr_2, \phi_2)) + \nnatA  \leq \nnatA_1 + \idx
+  \times \nnatA_2 + \nnatA   +   F(\expr_1 \eapp \expr_2, \phi )  $ .
 
   The TS can be shown using Lemma~\ref{mono} on the $\clubsuit$.
   

@@ -519,7 +519,7 @@
       \\
       \fresh\eapp  x' ~~ \forall \adapt'
       \\
-      \tvdash{ S+ \idx \times \adapt' +\nnatA }
+      \tvdash{ S+ \idx \times (\adapt' + \nnatA' ) +\nnatA }
      ( \expr[x'/x], \env[x' \to (\valr', \theta', R')]      ) :
      \type_2
     }{
@@ -577,13 +577,13 @@
       & & 
           \implies   \fresh \eapp x' \land \\
       & & \forall \adapt. ( \expr[x'/x], \env[x' \mapsto (\valr', \env', \adapt )] ) \in
-          \lre{    }{ \nnatA_1+\nnatA+ \idx \times \adapt }{\type_2}     \} \\
+          \lre{    }{ \nnatA_1+\nnatA+ \idx \times (\adapt + \nnatA') }{\type_2}     \} \\
       %
       \\
       %
       \lre{}{\nnatA}{\type} & = & \{  ( \expr, \env) ~|~  ( \expr , \env
-                                  \bigstep{R}  \valr, \env' ) \\
-      & & ~~~~~~~~~~~~~\implies R \leq \nnatA \conj 
+                                  \bigstep{\adapt}  \valr, \env' ) \\
+      & & ~~~~~~~~~~~~~\implies \adapt \leq \nnatA \conj 
      ( \valr, \env', \nnatA- \adapt) \in \lrv{\type})
       \}
     \end{array}
@@ -633,15 +633,13 @@
 
  \[
 \begin{array}{ll}
- F(\expr, \env, \Gamma) & where \eapp ~~ \Gamma(x_i) = \bang{k_i}
-                                           \type_i \land \env(x_i) =
-                                        (\valr_i, \env_i, R_i)  \\
-   F(x, \env, \Gamma) & = \sum_{x_i \in \fv{x}  } k_i \times R_i  \\
-F(\lambda x. \expr , \env,\Gamma) & = 0 \\  %\sum_{x_i \in \fv{\lambda x.\expr} } k_i \times R_i  \\
-F(\delta(\expr) , \env,\Gamma) & = \sum_{x_i \in \fv{\delta(\expr)} } k_i \times R_i  \\
-F(c, \env,\Gamma) & = 0  \\
-F(\expr_1 \eapp \expr_2, \env,\Gamma) & = F(\expr_1, \env, \Gamma) +
-                                        F(\expr_2,\env, \Gamma)
+ F(\expr, \phi ) & where \eapp ~~ \phi(x_i) = (\idx_i, \adapt_i, \nnatA_i ) \\
+   F(x,\phi) & = \sum_{x_i \in \fv{x}  } \idx_i \times (\adapt_i+ \nnatA_i)  \\
+F(\lambda x. \expr ,  \phi  ) & = 0 \\  %\sum_{x_i \in \fv{\lambda x.\expr} } k_i \times R_i  \\
+F(\delta(\expr) , \phi ) & = \sum_{x_i \in \fv{\delta(\expr)} } \idx_i \times (\adapt_i+ \nnatA_i)  \\
+F(c, \phi ) & = 0  \\
+F(\expr_1 \eapp \expr_2, \phi ) & = F(\expr_1, \phi ) +
+                                        F(\expr_2,\phi )
 \end{array} 
 \]
 
@@ -649,12 +647,13 @@ F(\expr_1 \eapp \expr_2, \env,\Gamma) & = F(\expr_1, \env, \Gamma) +
   \label{sound}
   \begin{enumerate} 
    \item If $ x_1: \bang{\idx_1} \type_1, \ldots ,  x_i : \bang{\idx_i} \type_i
-     \tvdash{\nnatA} \expr: \type$,  let $  (\valr_i, \env_i,
-     R_i) \in \lrv{ \bang{\idx_i} \type_i }   $,  let $\env = [ x_1
+     \tvdash{\nnatA} \expr: \type$,  and $ \tvdash{\nnatA_I } (\valr_i, \env_i
+    ) : \type_i    $,  and $\env = [ x_1
      \to (\valr_1, \env_1, R_1), \ldots,  x_i \to (\valr_i, \env_i,
-     R_i)   ]$, $ \Gamma =  x_1: \bang{\idx_1} \type_1, \ldots ,  x_i
-     : \bang{\idx_i} \type_i $ , then   $
-     \tvdash{\nnatA +  F( \expr, \env, \Gamma)  }
+     R_i)   ]$, $ \phi = [x_1
+     \to (\idx_1, \adapt_1, \nnatA_1), \ldots,  x_i \to (\idx_i, \adapt_i,
+     \nnatA_i)  ] $ , then   $
+     \tvdash{\nnatA +  F( \expr, \phi )  }
      ( \expr, \env ) : \type $ .
   \end{enumerate}
 \end{thm}
@@ -667,6 +666,8 @@ F(\expr_1 \eapp \expr_2, \env,\Gamma) & = F(\expr_1, \env, \Gamma) +
   \begin{enumerate} 
    \item $ \tvdash{\nnatA}  ( \expr, \env) : \type $, then $(
      \expr, \env) \in  \lre{}{\nnatA}{ \type} $
+   \item $ \tvdash{\nnatA} (\valr, \env) : \type  $, then $ (\valr,
+     \env, \nnatA) \in \lrv{\type} $  .
   \end{enumerate}
 \end{thm}
 
