@@ -119,9 +119,9 @@
     \inferrule{
     }{
      \valr, \env \bigstep{0} \valr, \env} ~\textsf{val}
-    \and
-   \inferrule{  \mathsf{fetch} (\env,x)  =  (\valr, \adapt)  }{x, \env
-     \bigstep{\adapt} \valr, \env }~\textsf{var}
+   %  \and
+   % \inferrule{  \mathsf{fetch} (\env,x)  =  (\valr, \adapt)  }{x, \env
+   %   \bigstep{\adapt} \valr, \env }~\textsf{var}
    \and
    %
      \inferrule{  \env(x)  =  (\valr, \env_1,  \adapt)  }{x,
@@ -313,21 +313,20 @@
     %                               (\valr, \max(\adapt_1, \adapt_2))] & \\       
     
   \end{array}
-  \\\\
-  \begin{array}{lllll}
-    \mathsf{fetch} (\env, x) & ::=  &  \mathsf{Some} ( \Pi_1
-                                      (\env(x)), \Pi_3(\env(x)) ) &   &  x \in  \dom(\env) \\
-            &  & \mathsf{match} \eapp \env  \eapp \mathsf{with} & & x \not\in  \dom(\env) \\
-             &    &     | (y \to (\valr', \env', R)) :: \env_t \to & 
-                    \mathsf{match} \eapp \mathsf{fetch} (\env', x) \eapp
-                    \mathsf{with} & \\                             
-              &  &   & \mathsf{None}  \to \mathsf{fetch}(\env_t, x ) &
-    \\
-             &   &   & \mathsf{Some} (\valr, r) \to \mathsf{Some} (\valr,
-                   r)  & \\ 
-             & & | [ ] \to  \mathsf{None} & &                     
-  \end{array}  
-  
+  % \\\\
+  % \begin{array}{lllll}
+  %   \mathsf{fetch} (\env, x) & ::=  &  \mathsf{Some} ( \Pi_1
+  %                                     (\env(x)), \Pi_3(\env(x)) ) &   &  x \in  \dom(\env) \\
+  %           &  & \mathsf{match} \eapp \env  \eapp \mathsf{with} & & x \not\in  \dom(\env) \\
+  %            &    &     | (y \to (\valr', \env', R)) :: \env_t \to & 
+  %                   \mathsf{match} \eapp \mathsf{fetch} (\env', x) \eapp
+  %                   \mathsf{with} & \\                             
+  %             &  &   & \mathsf{None}  \to \mathsf{fetch}(\env_t, x ) &
+  %   \\
+  %            &   &   & \mathsf{Some} (\valr, r) \to \mathsf{Some} (\valr,
+  %                  r)  & \\ 
+  %            & & | [ ] \to  \mathsf{None} & &                     
+  % \end{array}    
 \end{mathpar}
   \caption{Big-step semantics}
   \label{fig:semantics1}
@@ -602,8 +601,8 @@
      \expr, \env) \in  \lre{}{\nnatA}{ \type} $ and $\nnatA' \geq \nnatA$,  then  $  (
      \expr, \env) \in  \lre{}{\nnatA'}{ \type} $.
    \item   If  $(
-     \valr,\env,  R) \in  \lrv{\type} $ and $R' \geq R$,  then  $ (
-     \valr,\env, R') \in  \lrv{\type} $.
+     \valr,\env,  \nnatA) \in  \lrv{\type} $ and $\nnatA' \geq \nnatA$,  then  $ (
+     \valr,\env, \nnatA') \in  \lrv{\type} $.
      \item If $ \tvdash{\nnatA} (\expr, \env) : \type$ and $\nnatA
        \leq \nnatA'$, then $\tvdash{\nnatA'} (\expr, \env) : \type $.
      \item If $\Gamma \tvdash{\nnatA} \expr: \type$ and $\nnatA
@@ -620,7 +619,7 @@
   \]
   
 \begin{thm}[ConfigurationToTyping]
-  \label{sound}
+  \label{c2t}
   \begin{enumerate} 
    \item If $ \tvdash{\nnatA}  ( \expr, \env) : \type $ and $\forall
      x_i \in \dom(\env). \env(x_i) = (\valr_i, \env_i, \adapt_i) \land
@@ -637,7 +636,7 @@
 \begin{array}{ll}
  F(\expr, \phi ) & where \eapp ~~ \phi(x_i) = (\idx_i, \adapt_i, \nnatA_i ) \\
    F(x,\phi) & = \sum_{x_i \in \fv{x}  } \idx_i \times (\adapt_i+ \nnatA_i)  \\
-F(\lambda x. \expr ,  \phi  ) & = 0 \\  %\sum_{x_i \in \fv{\lambda x.\expr} } k_i \times R_i  \\
+F(\lambda x. \expr ,  \phi  ) & = \sum_{x_i \in \fv{\lambda x.\expr}  } \idx_i \times (\adapt_i+ \nnatA_i)   \\ 
 F(\delta(\expr) , \phi ) & = \sum_{x_i \in \fv{\delta(\expr)} } \idx_i \times (\adapt_i+ \nnatA_i)  \\
 F(c, \phi ) & = 0  \\
 F(\expr_1 \eapp \expr_2, \phi ) & = F(\expr_1, \phi ) +
@@ -646,7 +645,7 @@ F(\expr_1 \eapp \expr_2, \phi ) & = F(\expr_1, \phi ) +
 \]
 
 \begin{thm}[TypingtoConfiguration]
-  \label{sound}
+  \label{t2c}
   \begin{enumerate} 
    \item If $ x_1: \bang{\idx_1} \type_1, \ldots ,  x_i : \bang{\idx_i} \type_i
      \tvdash{\nnatA} \expr: \type$,  and $ \tvdash{\nnatA_I } (\valr_i, \env_i
@@ -1098,6 +1097,10 @@ F(\expr_1 \eapp \expr_2, \phi ) & = F(\expr_1, \phi ) +
 % \env'  $, then $ \Gamma  \tvdash{ k} \valr :\bang{k} \ltype $.  
 % \end{thm}
 % By induction on the typing derivation.
+
+\clearpage
+\section{Typable Approach}
+\input{typable}
 
 \end{document}
 
