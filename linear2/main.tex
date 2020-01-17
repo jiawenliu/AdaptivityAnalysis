@@ -83,11 +83,10 @@
 % semantics later.
 \[\begin{array}{llll}
 \mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 
- ~|~ \lambda x. \expr% ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~|
+ ~|~ \lambda x. \expr 
     \\
-%
-             & & & % \etrue ~|~ \efalse ~|~
-  \eif(\expr_1, \expr_2, \expr_3) ~|~
+             & & &  \etrue ~|~ \efalse ~|~
+  \eif  \expr \ethen \expr_2 \eelse \expr_3 ~|~
 \econst ~|~ \eop(\expr)  % ~|~ \wq {\eilam \expr ~|~ \expr \eapp [] }
     \\
 % & & & ~|~ \wq {\elet  x = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
@@ -275,15 +274,29 @@
 % {\env, \expr [] \bigstep{K} \valr []
 % }~\textsf{eiapp2}
 % %
-% \and
-% %
-% \wq{
-%  \inferrule{
-%     \env, \expr \bigstep{R} \valr \not\equiv \mathbb{B} 
-%   }{
-%     \env, \eif(\expr, \expr_1, \expr_2) \bigstep{R } \eif(\valr, \expr_1, \expr_2)
-%   }~\textsf{if}
-% }
+\and
+ %
+\wq{
+ \inferrule{
+   \expr, \env \bigstep{\adapt} \efalse, \env'
+   \\
+   \expr_2 , \env \bigstep{\adapt_2} \valr_2, \env_2
+  }{
+    \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
+      \adapt_2 } \valr_2, \env_2
+  }~\textsf{if-f}
+}
+\and
+\wq{
+ \inferrule{
+   \expr , \env \bigstep{\adapt} \etrue, \env'
+   \\
+    \expr_1, \env \bigstep{\adapt_1} \valr_1, \env_1
+  }{
+    \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
+      \adapt_1 } \valr_1, \env_1
+  }~\textsf{if-t}
+}
 % %
 % \and
 % %
@@ -346,7 +359,8 @@
   \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n \\
  %                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
 %                                  \mbox{Sort} & S & ::= & \nat \\
-  \mbox{Linear type} & \type &::=  &  \ltype \lto{\nnatA} \type ~|~ \tbase \\
+  \mbox{Linear type} & \type &::=  &  \ltype \lto{\nnatA} \type ~|~
+                                     \tbase ~|~ \tbool \\
   \mbox{Nonlinear Type} & \ltype & ::= & \bang{\idx} \type   \\
   \mbox{Typing context } & \Gamma & ::= & x_1 : \ltype_1, \ldots,
                                           x_n : \ltype_n
@@ -421,26 +435,24 @@
     }{
       \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
     }~\textbf{exchange}
-   %  \\\\
- %    \boxed{
- % \inferrule{
- %      \ictx \Gamma, x: \type_1
- %      \tvdash{\nnatA }
- %      \expr: \type_2
- %    }{
- %      \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
- %      \lto^{\nnatA} \type_2)
- %    }~\textbf{lambda}
- %    \and
- %    %
- %    \inferrule{
- %      \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
- %      \lto^{\nnatA} \type_2      ) \\
- %      \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
- %    }{
- %      \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
- %    }~\textbf{app}
- %    }
+    %
+    \and
+    %
+    \wq{
+    \inferrule{
+      \ictx \Gamma \tvdash{\nnatA} \expr: \tbool
+      \\
+      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1: \type
+      \\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type
+      \\
+      \Gamma' = \Gamma + \Gamma_1 + \Gamma_2
+      \\
+      \nnatA' = \nnatA + \max(\nnatA_1, \nnatA_2)
+    }{
+      \ictx \Gamma' \tvdash{\nnatA'}  \eif \expr  \ethen \expr_1 \eelse \expr_2 : \type 
+    }~\textbf{if}
+    }
      \\\\
 \begin{array}{llll}
   \idx \times \Gamma &\triangleq  &  \Gamma  & \idx =1  \\

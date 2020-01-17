@@ -6,7 +6,8 @@ F(\lambda x. \expr ,  \phi  ) & =  \sum_{x_i \in \fv{\lambda x.\expr}  } \idx_i 
 F(\delta(\expr) , \phi ) & = \sum_{x_i \in \fv{\delta(\expr)} } \idx_i \times (\adapt_i+ \nnatA_i)  \\
 F(c, \phi ) & = 0  \\
 F(\expr_1 \eapp \expr_2, \phi ) & = F(\expr_1, \phi ) +
-                                        F(\expr_2,\phi )
+                                  F(\expr_2,\phi ) \\
+F(\eif \expr \ethen \expr_1 \eelse \expr_2, \phi ) & = F(\expr, \phi) + \max(F(\expr_1, \phi),  F(\expr_2, \phi)   )  
 \end{array} 
 \]
 
@@ -128,14 +129,13 @@ F(\expr_1 \eapp \expr_2, \phi ) & = F(\expr_1, \phi ) +
 
    
    $$ \inferrule{
-      \ictx \Gamma_1', x: \bang{\idx} \type_1
+      \ictx \Gamma_1'', x: \bang{\idx} \type_1
       \tvdash{\nnatA }
       \expr: \type_2 ~(\star)
     }{
-      \ictx \Gamma_1' \tvdash{0} \lambda x. \expr : \bang{\idx} \type_1
+      \ictx \Gamma_1'' \tvdash{0} \lambda x. \expr : \bang{\idx} \type_1
       \lto{\nnatA} \type_2
     }~\textbf{lambda} $$
-
     and we know $J_1 - \adapt_1 = 0 + F(  \lambda x. \expr , \phi_1'' )$.
 
     Take a fresh variable $x'$, from $(\star)$, we know: $\ictx \Gamma_1, x': \bang{\idx} \type_1 \tvdash{\nnatA }  \expr[x/x']: \type_2 ~(\star\star) $.
@@ -153,6 +153,65 @@ Because  $ F( \expr[x'/x], \phi_1''' ) =   F(\lambda x.\expr, \phi_1'') +\idx \t
     $ \nnatA + J_1 - \adapt_1 +\idx \times  J_2 - \adapt_3  = \nnatA + \nnatA_1 + F(\expr_1, \phi_1)  + \idx \times \nnatA_2 + \idx \times F(\expr_2, \phi_2)  - (\adapt_1 + \adapt_3) \leq  J- (\adapt_1+\adapt_3) $.
 
     The TS is proved by lemma~\ref{tmono} on the above statement.
+
+    \caseL{Case
+      \[
+         \inferrule{
+  \expr , \env \bigstep{\adapt} \efalse, \env'
+   \\
+    \expr_2 , \env \bigstep{\adapt_2} \valr_2, \env_2
+  }{
+    \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
+      \adapt_2 } \valr_2, \env_2
+  }~\textsf{if-f}
+      \]
+    }
+
+    Assume for all the variables $x_i \in \dom(\env)$, $ \env(x_i) = (\valr_i, \env_i, \adapt_i)$ and $(\valr_i, \env_i)$ is typable with $\type_i$ and $I_i$.
     
-   
+    We assume exists $\Gamma' = x_1 : \bang{\idx_1} \type_1 , \ldots, x_i: \bang{\idx_i} \type_i$ and $\dom(\Gamma') = \dom(\env)$, and assume the follwoing using the typing rule if.
+
+    \[
+      \inferrule{
+      \ictx \Gamma \tvdash{\nnatA} \expr: \tbool ~(\star)
+      \\
+      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1: \type
+      \\
+       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type ~(\diamond)
+      \\
+      \Gamma' = \Gamma + \Gamma_1 + \Gamma_2
+      \\
+      \nnatA' = \nnatA + \max(\nnatA_1, \nnatA_2)
+    }{
+      \ictx \Gamma' \tvdash{\nnatA'}  \eif \expr  \ethen \expr_1 \eelse \expr_2 : \type 
+    }~\textbf{if}
+  \]
+  
+Set $\phi = [x_1 \to (\idx_1, \adapt_1, I_1) , \ldots, x_i \to (\idx_i, \adapt_i, I_i)]$ where $x_i \in \dom(\env)$.
+
+  We have :  $(\eif \expr \ethen \expr_1 \eelse \expr_2 , \env )$ is typable with $\type$ and $J$, where $J = \nnatA' + F(\eif \expr \ethen \expr_1 \eelse \expr_2, \phi )$
+
+  TS: $(\valr_2, \env_2 )$ is typable with $\type$ and $J-(\adapt + \adapt_2)$.
+  
+  From $(\star)$, we know from weaking rule that $\Gamma, x_j: \bang{0} \type_j \tvdash{\nnatA} \expr: \tbool ~(1) $ where $x_j \in \dom(\env) \setminus \dom(\Gamma) $.
+
+  Set $\phi_1 = [x_1 \to (\idx_1, \adapt_1, I_1) , \ldots, x_i \to (\idx_i, \adapt_i, I_i)]$ where $\idx_j = 0 $ for $x_j \in \dom(\env) \setminus \dom(\Gamma) $.
+
+  Similaly, from $(\diamond)$, we have  $ \Gamma_2, x_j: \bang{0} \type_j \tvdash{\nnatA_2} \expr_2: \type ~(2)$  where $x_j \in \dom(\env) \setminus \dom(\Gamma_2) $.
+
+   Set $\phi_2 = [x_1 \to (\idx_1, \adapt_1, I_1) , \ldots, x_i \to (\idx_i, \adapt_i, I_i)]$ where $\idx_j = 0 $ for $x_j \in \dom(\env) \setminus \dom(\Gamma_2) $.
+  
+   From $(1)$, we know that $(\expr, \env )$ is typable with $\tbool$ and $J_1$, where $J_1 = \nnatA + F(\expr, \phi_1 )~(3)$.
+
+    From $(2)$, we know that $(\expr_2, \env )$ is typable with $\type$ and $J_2$, where $J_2 = \nnatA_2 + F(\expr_2, \phi_2 )~(4)$.
+
+    By IH on $(3)$, $(4)$, we have $(\efalse, \env_1')$ is typable with $\tbool$ and $J_1 - \adapt~(5)$ and $(\valr_2, \env_2)$ is typable with $\type$ and $J_2 - \adapt_2(6)$.
+
+    we know that $ J = \nnatA' +  F(\eif \expr \ethen \expr_1 \eelse \expr_2, \phi )  = \nnatA + F(\expr, \phi) + \max(\nnatA_1, \nnatA_1) + \max(F(\expr_1, \phi) , F(\expr_2, \phi) )  \geq (J_1 + J_2) $.
+
+     We also know $J_1 -\adapt \geq 0$ from $(5)$, 
+
+    So we know $ J - (\adapt + \adapt_2) \geq (J_1 + J_2) - (\adapt+\adapt_2) \geq J_2 - \adapt_2 $.  Our TS can be proved using Lemma~\ref{tmono} on $(6)$.
+  
+    
    \end{proof}  
