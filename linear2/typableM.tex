@@ -1,0 +1,266 @@
+\begin{defn}[Typable Closures]
+  \label{def:typable}
+Let $\env=[ x_1 \to (\valr_1 ,  \env_1 , R_1 ) ,
+  \ldots, x_n \to (\valr_n, \env_n, R_n )]$. 
+  The closure $( \expr, \env)$ is typable with
+  type $\type$ and adaptivity $J$ if:
+\begin{enumerate}\item  
+     $x_1 : \bang{k_1} \type_1, \ldots, \bang{k_i} \type_i 
+     \tvdash{Z}  \expr : \type$, for some types $\bang{k_i}
+   \type_i$ for $(1\leq i\leq n)$, 
+\item each closure $(\valr_i, \env_i)$ for $(1\leq i\leq n)$ is typable with type
+  $\bang{k_i} \type_i$ and adaptivity $Z_i$,
+\item $J = Z + \sum_{(v_i,\theta_i,S_i)\in\theta} k_i \times (R_i
+  +Z_i)$.
+\end{enumerate}
+ \end{defn}
+To justify why we chose $\sum$ in the third clause above it is worth
+to consider the following configuration:
+$$
+[x\mapsto (\lambda u.\lambda w.\delta(u)+\delta(w),[\,],0)
+,y:\mapsto (v,[\,],2) ], x\, y\, y
+$$
+\mg{To elaborate the example above}
+   
+\begin{lem}[Soundness]
+  \label{tsound}
+  If a closure $D$ is typable with type $\type$ and adaptivity $J$, and $D \bigstep{R} E$, then
+    the closure $E$ is typable with type $\type$ and adaptivity $I$,
+    where $I+R\leq J$. 
+   \end{lem}
+
+   \begin{proof}
+     By induction on the derivation showing $D \bigstep{R} E$. The
+     rules \textsf{lambda},\textsf{val}, and \textsf{const} dollow
+     from the hypothesis. We will discuss the other cases. \\
+
+     \caseL{Case
+       \[
+         \inferrule{  \env(x)  =  (\valr, \env',  R)  }
+         {x,\env  \bigstep{R} \valr, \env' }~\textsf{var}
+       \]
+     }
+
+     By assumption, the closure $(x,\env)$ is typable with type
+     $\type$ and adaptivity $J$. Let us assume without loss of
+     generality that
+     $\env=[x\to (\valr , \env' , R ), x_1 \to (\valr_1 , \env_1 , R_1 ) , \ldots, x_n \to
+     (\valr_n, \env_n, R_n )]$.  By Definition~\ref{def:typable} we have that
+     there exist $k$ and $\bang{k_i} \type_i$ for $(1\leq i\leq n)$ such
+     that:
+     \[ x: \bang{k}\type, x_1 : \bang{k_1} \type_1, \ldots, x_n:\bang{k_n} \type_n \tvdash{Z} x : \type \]
+    Moreover, we have that the closure $(\valr,\env')$ is typable with
+    type $\type$ and adaptivity $I$, and that each closure $ (\valr_i, \env_i) $ is
+    typable with type $\type_i$ and adaptivity $Z_i$, and that 
+$$J = Z + k\times (R+I)+ \sum_{1\leq
+  i\leq n, i\neq j} k_i \times (R_i
+  +Z_i).$$
+By inversion on the typing rules, we have that $k= 1$, hence
+we can rewrite $J$ as 
+$$J = Z + R+I+ \sum_{1\leq
+  i\leq n, i\neq j} k_i \times (R_i
+  +Z_i)).$$
+Hence, it is easy to see that $ I+R\leq J$ which is
+what we need to show.\\
+
+
+     \caseL{Case
+       \[
+         \inferrule{
+    \expr_1, \env \bigstep{R_1} \lambda x.\expr , \env^1 \\
+    %\forall x_i \in \dom(\env_1 \cap \env_2).  \fresh \eapp x_i' \\
+     \expr_2, \env \bigstep{R_2} \valr_2 , \env^2 \\
+    \fresh \eapp x' \\
+    \expr[x'/x], \env^1[ x'  \to (\valr_2, \env^2, R_2  ) ] 
+    \bigstep{R_3} \valr, \env^3 ~(\clubsuit)
+  }{
+     \expr_1 \eapp \expr_2 , \env\bigstep{R_1+R_3} \valr, \env^3
+  }~\textsf{app}
+     \]
+   }
+   By assumption, the closure $(\expr_1 \eapp \expr_2 , \env)$ is
+   typable with type $\tau$ and adaptivity $J$.  Let us assume without
+   loss of generality that
+   $\env=[x_1 \to (\valr_1 , \env_1 ,
+   S_1 ) , \ldots, x_n \to (\valr_n, \env_n, S_n )]$.  By
+   Definition~\ref{def:typable} we have that there exist 
+   $\bang{k_i} \type_i$ for $(1\leq i\leq n)$ such that:
+     \begin{equation}
+\label{fact:app}
+       x_1 : \bang{k_1} \type_1, \ldots, x_n:\bang{k_n} \type_n
+       \tvdash{Z} \expr_1\expr_2 : \type 
+\end{equation}
+    Moreover, we have that each closure $ (\valr_i, \env_i)\in\theta $ is
+    typable with type $\type_i$ and adaptivity $Z_i$, and that 
+$$J = Z + \sum_{(v_i,\theta_i,S_i)\in\theta} k_i \times (S_i
+  +Z_i).$$
+By inversion on Fact~\ref{fact:app} we have that there exist
+$\sigma,Z',Z^1, k$ and $k_i^1$ for $(1\leq i\leq n)$ such that:
+\begin{equation}
+\label{fact:head}
+ x_1 : \bang{k_1^1} \type_1, \ldots, x_n:\bang{k_n^1} \type_n
+       \tvdash{Z^1} \expr_1 : \bang{k} \sigma
+      \lto{Z'} \type
+\end{equation}
+Similarly, 
+we have that there exist
+$Z^2$ and $k_i^2$ for $(1\leq i\leq n)$ such that:
+\begin{equation}
+\label{fact:arg}
+ x_1 : \bang{k_1^2} \type_1, \ldots, x_n:\bang{k_n^2} \type_n
+       \tvdash{Z^2} \expr_2 : \sigma
+\end{equation}
+Moreover, we have that $Z=Z^1+k\times Z^2+Z'$, and that
+$k_i=k_i^1+k\times k_i^2$.  
+
+Using  Fact~\ref{fact:head} and the assumption
+that each closure $ (\valr_i, \env_i) $ in $\theta$ is typable with
+type $\type_i$ and adaptivity $Z_i$ we have that the closure
+$(e_1,\theta)$ is typable with type $\bang{k} \sigma
+      \lto{Z'} \type$ and adaptivity:
+$$
+Z^1+\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^1\times(S_i+Z_i)
+$$
+By induction hypothesis we then have that the closure 
+$(\lambda x. e,\theta^1)$ is typable with type $\bang{k} \sigma
+      \lto{Z'} \type$ and adaptivity $I_1$ where 
+$$I_1+R_1\leq Z^1+\sum_{(v_i,\theta_i,S_i)\in\theta }k_i^1\times(S_i+Z_i)$$
+It is worth to stress here that by definition, using the fact that 
+$$
+ x_1 : \bang{k_1^1} \type_1, \ldots, x_n:\bang{k_n^1} \type_n
+       \tvdash{0} \lambda x. \expr : \bang{k} \sigma
+      \lto{Z'} \type
+$$
+which follows from Fact~\ref{fact:head} and inversion on the rule {\bf
+  lambda} \mg{here we actually want a lemma that says that values are typable
+  with $\vdash_0$, and that takes care of the free variables that we may
+  have added} we have:
+$$
+I_1=\sum_{(v_i,\theta_i,S_i)\in\theta^1}k_i^1\times(S_i+Z_i)
+$$
+%
+Using  Fact~\ref{fact:arg} and again the assumption
+that each closure $ (\valr_i, \env_i) $ in $\theta$ is typable with
+type $\type_i$ and adaptivity $Z_i$ we have that the closure
+$(e_2,\theta)$ is typable with type $\type$ and adaptivity:
+$$
+Z^2+\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^2\times(S_i+Z_i)
+$$
+
+By induction hypothesis we than have that the closure 
+$(v_2,\theta_2)$ is typable with type $\type$ and adaptivity $I_2$ where 
+$$I_2+R_2\leq Z^2+\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^2\times(S_i+Z_i)$$
+%
+It is again worth to stress here that by definition, using the fact
+that $v_2$ is a value we have:
+$$
+I_2=\sum_{(v_i,\theta_i,S_i)\in\theta^2}k_i^2\times(S_i+Z_i)
+$$
+By Fact~\ref{fact:head}, and type preservation and some other Lemma
+\mg{TODO: we need to be more clear and handle the fact that the adaptivity can be 0 in the
+lambda rule} we have 
+\begin{equation}
+\label{fact:reduct}
+ x_1 : \bang{k_1^1} \type_1, \ldots, x_n:\bang{k_n^1} \type_n,
+       x: \bang{k} \sigma\tvdash{{Z'}} \expr : 
+       \type
+\end{equation}
+By composing this with the previous assumptions, we have that the closure 
+$(e[x'/x],\theta^1[x'\mapsto (v_2,\theta_2,R_2)])$ is typable with
+type $\type$ and adaptivity $I_3$ where 
+$$I_3=Z'+k\times(R_2+I_2)+\sum_{(v_i,\theta_i,S_i)\in\theta^1}k_i^1\times(S_i+Z_i)$$
+By induction hypothesis we then get that the closure $(v,\theta^3)$ is
+typable with type $\type$ and adaptivity $I$ where $I+R_3\leq
+I_3$. Notice also that we have a $\theta^4$ such that
+$\theta^3=\theta^4[x' \mapsto (v_2,\theta_2,R_2) ]$.
+Moreover, once again, note that by Lemma~\mg{Lemma showing that we can
+  type values with adaptivity 0} we have:
+$$
+I=\sum_{(v_i,\theta_i,S_i)\in\theta^3}k_i\times(S_i+Z_i)= k\times(R_2+I_2)+\sum_{(v_i,\theta_i,S_i)\in\theta^4}k_i\times(S_i+Z_i)
+$$
+We want to prove $I+R_1+R_3\leq J$.  
+
+Starting from the left hand side we have 
+$$
+\begin{array}{rcl}
+I+R_1+R_3&=&
+             \sum_{(v_i,\theta_i,S_i)\in\theta^3}(k_i\times(S_i+Z_i)) +R_1+R_3\\
+&=&
+             k\times(R_2+I_2)+\sum_{(v_i,\theta_i,S_i)\in\theta^4}k_i\times(S_i+Z_i) +R_3+R_1\\
+&\leq&
+    k\times(R_2+I_2)+Z'+\sum_{(v_i,\theta_i,S_i)\in\theta^1}k_i^1\times(S_i+Z_i)
+    +R_1\\
+&\leq&
+    k\times(R_2+I_2)+Z'+Z^1+\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^1\times(S_i+Z_i)\\
+&=&
+    k\times(R_2+\sum_{(v_i,\theta_i,S_i)\in\theta^2}k_i^2\times(S_i+Z_i))\\
+&&+Z'+Z^1+\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^1\times(S_i+Z_i)\\
+&\leq&
+    k\times(Z^2+\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^2\times(S_i+Z_i))\\
+&&+Z'+Z^1+\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^1\times(S_i+Z_i)\\
+&=&
+    k\times Z^2 +Z'+Z^1+\\
+&&\sum_{(v_i,\theta_i,S_i)\in\theta}k\times k_i^2\times(S_i+Z_i)) +\sum_{(v_i,\theta_i,S_i)\in\theta}k_i^1\times(S_i+Z_i)\\
+&=&
+    k\times Z^2 +Z'+Z^1+\sum_{(v_i,\theta_i,S_i)\in\theta}(k_i^1
+    +k\times k_i^2)\times(S_i+Z_i)) \\
+&=&J\\
+\end{array}
+$$
+This concludes this case.
+     \caseL{Case
+       \[
+           \inferrule{
+    \expr , \env \bigstep{\adapt} \valr , \env_1 \\
+    \eop{}(\valr\env_1) = \valr'\\
+    FV(\valr')=\emptyset
+  }{
+    \eop(\expr), \env \bigstep{\adapt +1} \valr',  \env_1
+  }~\textsf{delta}
+       \]
+     }
+   By assumption, the closure $(\eop(\expr) , \env)$ is
+   typable with type $\tau$ and adaptivity $J$.  
+Let us assume without
+   loss of generality that
+   $\env=[x_1 \to (\valr_1 , \env_1 ,
+   S_1 ) , \ldots, x_n \to (\valr_n, \env_n, S_n )]$.  By
+   Definition~\ref{def:typable} we have that there exist $Z$ and 
+   $\bang{k_i} \type_i$ for $(1\leq i\leq n)$ such that:
+     \begin{equation}
+\label{fact:delta}
+       x_1 : \bang{k_1} \type_1, \ldots, x_n:\bang{k_n} \type_n
+\tvdash{Z} \eop(\expr) : \type 
+\end{equation}
+    Moreover, we have that each closure $ (\valr_i, \env_i)\in\theta $ is
+    typable with type $\type_i$ and adaptivity $Z_i$, and that 
+$$J = Z + \sum_{(v_i,\theta_i,S_i)\in\theta} k_i \times (S_i
+  +Z_i).$$
+By inversion on Fact~\ref{fact:delta} we have that $Z=Z'+1$ for some
+$Z'$, that $\type=\tbase$, that $k_i= k_i'+1$ for $(1\leq i\leq n)$,
+and that:
+     \begin{equation}
+\label{fact:delta}
+       x_1 : \bang{k_1'} \type_1, \ldots, x_n:\bang{k_n'} \type_n
+\tvdash{Z'} \expr : \tbase.
+\end{equation}
+Hence, it is easy to see that the closure
+$(\expr, \env)$
+is typable with type $\tbase$ and adaptivity 
+$$Z' + \sum_{(v_i,\theta_i,S_i)\in\theta} k_i' \times (S_i
+  +Z_i)$$
+By applying the induction hypothesis we have that also 
+the closure 
+$(v, \env')$ is typable with type $\tbase$ and adaptivity $I'$ such
+that:
+$$
+I'+R\leq Z' + \sum_{(v_i,\theta_i,S_i)\in\theta} k_i' \times (S_i
+  +Z_i)
+$$
+From this and the fact that $\vdash_0 v' :\tbase$, we have:
+$$
+I'+R+1\leq Z'+1 + \sum_{(v_i,\theta_i,S_i)\in\theta} (k_i'+1) \times (S_i
+  +Z_i)
+$$
+This councludes this case. 
+   \end{proof}  
