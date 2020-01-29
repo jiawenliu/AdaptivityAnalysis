@@ -13,6 +13,7 @@
 \newcommand{\mg}[1]{\textcolor[rgb]{.90,0.00,0.00}{[MG: #1]}}
 \newcommand{\dg}[1]{\textcolor[rgb]{0.00,0.5,0.5}{[DG: #1]}}
 \newcommand{\wq}[1]{\textcolor[rgb]{.50,0.0,0.7}{ #1}}
+\newcommand{\jl}[1]{\textcolor[rgb]{0.0, 0.5, 0.0}{[#1]}}
 
 \let\originalleft\left
 \let\originalright\right
@@ -347,6 +348,102 @@
 \end{figure}
 
 
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{
+    }{
+     \valr, \env \bigstep{0} \valr, \env} ~\textsf{val}
+   %  \and
+   % \inferrule{  \mathsf{fetch} (\env,x)  =  (\valr, \adapt)  }{x, \env
+   %   \bigstep{\adapt} \valr, \env }~\textsf{var}
+   \and
+   %
+     \inferrule{  \env(x)  =  (\valr, \env_1,  \adapt)  }{x,
+       \env  \bigstep{\adapt} \valr, \env_1 }~\textsf{var}
+     %
+   \and
+  %
+   \inferrule{ }{\econst , \env \bigstep{0} \econst, \env}~\textsf{const}
+   %
+   \and
+   %
+ \inferrule{
+  }{
+    \lambda x. \expr, \env
+    \bigstep{0} \lambda x.\expr, \env
+  }~\textsf{lambda}
+  %
+  \and
+  %
+  \inferrule{
+    \expr_1, \env_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1' \\
+    %\forall x_i \in \dom(\env_1 \cap \env_2).  \fresh \eapp x_i' \\
+     \expr_2, \env_2 \bigstep{\adapt_2} \valr_2 , \env_2' \\
+    \fresh \eapp x' \\
+    \expr[x'/x], \env_1'[ x'  \to (\valr_2, \env_2', \adapt_2  ) ] 
+    \bigstep{\adapt_3} \valr, \env_3
+  }{
+     \expr_1 \eapp \expr_2 , (\env_1 \uplus \env_2)\bigstep{\jl{\max(\adapt_1, \adapt_3)}} \valr, \env_3
+  }~\textsf{app}
+ %
+  \and
+  %
+ \jl{
+  \inferrule{
+     \expr , \env \bigstep{\adapt} \valr , \env_1 
+   }{
+     \eop(\expr), \env \bigstep{\adapt +1} \eop(\valr),  \env_1
+   }~\textsf{delta}
+ }%
+\and
+ %
+ \inferrule{
+   \expr, \env \bigstep{\adapt} \efalse, \env'
+   \\
+   \expr_2 , \env \bigstep{\adapt_2} \valr_2, \env_2
+  }{
+    \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
+      \adapt_2 } \valr_2, \env_2
+  }~\textsf{if-f}
+%
+\and
+%
+\inferrule{
+   \expr , \env \bigstep{\adapt} \etrue, \env'
+   \\
+    \expr_1, \env \bigstep{\adapt_1} \valr_1, \env_1
+  }{
+    \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
+      \adapt_1 } \valr_1, \env_1
+  }~\textsf{if-t}
+  %
+  \and
+  %
+\jl{  
+\inferrule{
+    \expr, \env \bigstep{\adapt} (\expr_1, \expr_2) , \env_1 \\
+    %\forall x_i \in \dom(\env_1 \cap \env_2).  \fresh \eapp x_i' \\
+     \expr_1, \env_1 \bigstep{\adapt_1} \valr_1 , \env_1' \\
+     \expr_2, \env_1 \bigstep{\adapt_2} \valr_2 , \env_2' \\
+    \fresh \eapp x', y' \\
+    \expr'[x'/x][y'/y], 
+    \env_1[ x'  \to (\valr_1, \env_1', \adapt_1), 
+    y' \to (\valr_2, \env_2', \adapt_2) ] 
+    \bigstep{\adapt'} \valr, \env'
+  }{
+     \elet \eapp (x, y) = \expr \ein \expr' , \env \bigstep{{\max(\adapt, \adapt')}} \valr, \env'
+  }~\textsf{bind}
+  }
+  \\\\
+  \begin{array}{llll}
+    \env_1 \uplus \emptyset & \triangleq & \env_1 &\\
+     \emptyset \uplus \env_2 & \triangleq & \env_2 &\\
+  \end{array}
+\end{mathpar}
+  \caption{Big-step semantics - Jan.28}
+  \label{fig:semantics1}
+\end{figure}
 
 
 
