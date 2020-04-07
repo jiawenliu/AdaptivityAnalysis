@@ -1,0 +1,1920 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{mathpartir}
+\usepackage{amsmath,amsthm,amsfonts}
+\usepackage{ amssymb }
+\usepackage{color}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{microtype}
+
+
+\input{ldefs}
+\input{prelude}
+\newcommand{\aexpr}{a}
+\newcommand{\bexpr}{b}
+\newcommand{\cmd}{c}
+\newcommand{\node}{N}
+\newcommand{\assign}[2]{ \mathrel{ #1  \leftarrow #2 } }
+\newcommand{\fassign}[3]{ \mathrel{ #1  \leftarrow^{#3}  \delta^{#3}(
+    #2 ) } }
+\newcommand{\impif}[3]{\mathrel{\eif \eapp #1\eapp \ethen \eapp #2 \eapp
+    \eelse \eapp #3 }}
+\newcommand{\impwhile}[2]{\mathrel{ \kw{while} (#1) \eapp #2 } }
+\newcommand{\labl}{l}
+
+\let\originalleft\left
+\let\originalright\right
+\renewcommand{\left}{\mathopen{}\mathclose\bgroup\originalleft}
+\renewcommand{\right}{\aftergroup\egroup\originalright}
+
+\theoremstyle{definition}
+
+\title{Revisit of Adaptivity analysis}
+
+\author{}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Attempt 1: linear-type based}
+
+\begin{figure}[h]
+ $$
+ \begin{array}{rcl}
+     \text{Types} & \quad & \tau ::= b \sep \tau \multimap \tau' \sep !_n \tau \sep
+     \tau \times \tau \sep \tforallN{i}{\tau} \sep \query \\[2mm]
+
+     \text{Term} & \quad & t ::= c \sep \fix{t} \sep \app{t}{t} \sep !t \sep (t_1,t_2) \sep  \letx{!x}{t_1}{t_2} \sep \Lambda.t \sep t[] \sep \abs{x}{t} \sep  M(t) \sep x \sep q \sep\\
+     && \quad   \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  \sep \letx{(x_1,x_2)}{t_1}{t_2} \\[2mm]
+      
+     \text{Normal Form} &\quad & v ::=  c \sep \fix{t} \sep !t \sep (v_1, v_2) \sep \Lambda. t \sep \abs{x}{t}  \sep x \sep q \sep \tcaseof{v}\ \{c_i \Rightarrow v_i\}_{c_i \in b_i} \sep\\
+     && \enil \sep \econs(v_1,v_2)  \\[2mm]
+
+     \text{Mechanisms} &\quad & M ::=  {\tt gauss} \sep {\tt thdt} \\[2mm]
+
+
+	\text{Tree} &\quad& T_b :: = c \sep M(T_{query}) \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{b_i}\}_{c_i \in b} \\
+
+	\text{} &\quad& T_{query} :: = q \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{query_i}\}_{c_i \in b} \\[2mm]
+     \text{Depth} &\quad&   \ddep(c) = 0 \\
+       &\quad& \ddep(!t) = \ddep(t) \\
+           &\quad&      \ddep( \app{t_1}{t_2} ) = \max(\ddep(t_1), \ddep(t_2)) \\
+            &\quad&  \ddep(M(t)) = 1 + \ddep(t) \\
+             &\quad&  \ddep(\abs{x}{t}) = \ddep(t) \\
+              &\quad& \ddep(x) = 0 \\
+              & \quad & \ddep(q) = 0 \\
+              & \quad & \ddep((t_1, t_2)) = \max(\ddep(t_1), \ddep(t_2))\\
+              & \quad & \ddep(\letx{(x_1, x_2)}{t}{t'}) = \max(\ddep(t), \ddep(t'))\\
+              & \quad & \ddep(\letx{!x}{t}{t'}) = \max(\ddep(t), \ddep(t'))\\
+              & \quad & \ddep(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) = \max(\ddep(t), \ddep(t_i))\\
+            & \quad & \ddep(\Lambda.t) = \ddep(t)\\
+              & \quad & \ddep(t\, []) = \ddep(t)\\
+\end{array}
+$$
+\caption{syntax}
+\end{figure}
+
+%
+%
+\begin{figure}[h]
+\boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }\\
+\boxed{  \Gamma :: = \emptyset \sep \Gamma, x : \tau \sep \Gamma, x : [\tau]_p   }
+
+\begin{mathpar}
+  \inferrule*[right = const]
+   {\empty}
+   {\Gamma \jtype{n,m}{}{c}{b}  }
+   
+   \and
+    \inferrule*[right = abs]
+   {\Gamma, x: \tau_1 \jtype{n}{}{t}{\tau_2}}
+   { \Gamma \jtype{n,m}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
+   
+   \and
+   \inferrule*[right = pr]
+   {[\Gamma] \jtype{n}{}{t}{\tau}}
+   {\Delta, p + [\Gamma] \jtype{n+p}{}{!t}{!_p \tau}  }
+%   \boxed{
+%   \inferrule*[right = pr]
+%   {[\Gamma] \jtype{n}{}{t}{\tau}}
+%   {p + [\Gamma]\textbf{} \jtype{n}{}{!t}{!_p \tau}  }}
+   
+   \and
+    \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, x:\tau \jtype{n}{}{x}{\tau}  } 
+   
+   \and
+   \inferrule*[ right = MT ]
+   {[\Gamma] \jtype{n}{}{t}{query}}
+   {\Delta, 1 + [\Gamma] \jtype{n+1}{}{M(t)}{b}  }
+   
+   \and
+    \inferrule*[right = query]
+   {\empty}
+   {\Gamma \jtype{n}{}{q}{query}  }
+   
+   \and
+%     \inferrule*[ right = app ]
+%   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma \jtype{n_2}{}{t_2}{\tau_1}}
+%   { \Gamma_2 \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+  \inferrule*[ right = app ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \multimap \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
+   { \max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+   
+   \and 
+   
+%   \inferrule*[ right = der ]
+%   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+%   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
+   \boxed{
+   \inferrule*[ right = der ]
+   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+   { \Gamma , x: [\tau]_0 \jtype{n }{}{t }{\tau }  }
+ }
+   
+   \and 
+   
+   \inferrule*[ right = let-b ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   
+   \and 
+   \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+   
+   \and
+     \inferrule*[right = pair]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+ 
+   \and
+    \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
+   {\max(n_2 + \Gamma_1, \Gamma_2)  \jtype{ (n_1+n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+   
+   \and
+    \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{ (n_1+n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+   
+   \inferrule*[right = iabs]
+  { 
+    \inferrule*[]
+    {}
+    {i::\mathbb{N};\Gamma \jtype{n}{}{t}{ \tau } }
+    \and
+    \inferrule*[]
+    {}
+    { i \notin \fiv{\Gamma }  } 
+  }
+  { \Gamma \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+  
+   \inferrule*[ right =  iapp]
+  { 
+    \inferrule*[]
+    {}
+    { \Gamma  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } }
+    \and
+    \inferrule*[]
+    {}
+    { \jiterm{I}{ \mathbb{N} } } 
+  }
+  {\Gamma \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+
+  \inferrule*[right = sub]
+  { 
+   { \Gamma \jtype{n}{}{t}{\tau} } \\
+   {  \Gamma' \subseteq \Gamma } \\
+   { \vDash n \leq n' } \\
+   { \tau \subseteq \tau' }
+  }
+  { \Gamma' \jtype{n'}{}{t}{\tau'} }
+\end{mathpar}
+\caption{Typing judgment}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[h]
+ \begin{mathpar}
+  
+  \inferrule*[right= S-ID]
+  { }
+  { \tau <: \tau  }
+  \and
+  \inferrule*[right = S-B]
+  { 
+   {A <: B}
+   \\
+   { q \leq p }
+  }
+  { !_p A <: !_q B  }
+  \and
+  \inferrule*[right =  S-ARROW]
+  { {A' <: A}
+    \\
+    {B <: B'}
+  }
+  { A \multimap B <: A' \multimap B' }
+  \and
+  \inferrule*[right = S-D ]
+  {
+    { A \subseteq B }\\
+    { q \leq p }
+  }
+  { [A]_p \subseteq [B]_q }
+  
+  \and
+  \inferrule*[right = S-IDC]
+  { }
+  { \Gamma \subseteq \Gamma }
+  
+   \and
+  \inferrule*[right = S-empty]
+  { }
+  { \Gamma \subseteq \emptyset }
+  
+  \and
+  \inferrule*[right = S-Ctx]
+  {
+  {A \subseteq B}\\
+  { \Gamma \subseteq \Delta }
+  }
+  { \Gamma, x: A \subseteq \Delta, x: B }
+  
+  \and
+  \inferrule*[right = S-xctx1]
+  {
+  { \Delta \subseteq \Gamma }
+  }
+  { x : \tau, \Delta \subseteq \Gamma }
+  
+  \and
+  \inferrule*[right = S-xctx2]
+  {
+  { \Delta \subseteq \Gamma }
+  }
+  { x : [\tau]_p, \Delta \subseteq \Gamma }
+  
+ \end{mathpar}
+ \caption{sub typing}
+\end{figure}
+
+
+
+\begin{figure}[h]
+\boxed{\eval{t }{v }{m}}
+\begin{mathpar}
+%  \inferrule*[ right=E-values]
+%   { }
+%   { \eval{ F   }{ F  }{0}}   
+%   \and
+ \inferrule*[ right=E-const]
+  { }
+  { \eval{ c   }{ c  }{0}}   
+  
+  \and
+
+ \inferrule*[ right=E-query]
+  { }
+  { \eval{  q  }{ q  }{0}}   
+  
+  \and
+
+ \inferrule*[ right=E-ABS]
+  { }
+  { \eval{ \abs{x}{t}   }{ \abs{x}{t}  }{0}}   
+  
+  \and
+  
+  \inferrule*[ right=E-bang]
+  { }
+  { \eval{ ! t   }{ ! t  }{0}}   
+  
+  \and
+  
+   \inferrule*[ right=E-pair]
+  {   
+    { \eval{ t_1  }{ v_1  }{m_1} }
+    \\
+    { \eval{ t_2  }{ v_2  }{m_2} } 
+  }
+  { \eval{  (t_1,t_2)  }{ (v_1,v_2)  }{ \max(m_1, m_2) %m_1+m_2
+  } }  
+  
+  \and
+
+   \inferrule*[ right=E-app]
+  {   
+    { \eval{ t_1  }{ \abs{x}{t}  }{m_1} }
+    \\
+    { \eval{ t_2  }{ v  }{m_2} } 
+    \\
+    { \eval{t[v/x] }{ v'}{m_3 } }
+  }
+  { \eval{ \app{t_1}{t_2}  }{ v'  }{ \max(m_1, m_2 ) + m_3  } }  
+ 
+ \boxed{ 
+   \inferrule*[ right=E-let-bang]
+  {   
+    { \eval{ t_1  }{ !t_3  }{m_1} } 
+    \\
+    {\eval{t_3}{v'}{m_2}}
+    \\
+    { \eval{t_2[v'/x] }{v}{m_3 } }
+  }
+  { \eval{  \letx{!x}{t_1}{t_2}  }{ v  }{ \max(m_1+ m_2, m_3)  } }  
+}
+
+%  \inferrule*[ right=E-let-bang]
+%   {   
+%     { \eval{ t_1  }{ !t_3  }{m_1} } 
+%     \\
+%     { \eval{t_2[!t_3 /x] }{ F}{m_3 } }
+%   }
+%   { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_3  } } 
+  
+  \inferrule*[ right=E-let-p]
+  {   
+    { \eval{ t  }{ (v_1,v_2)  }{m_1} } 
+    \\
+    { \eval{t'[v_1/x_1][v_2/x_2] }{v}{m2 } }
+  }
+  { \eval{  \letx{(x_1,x_2)}{t}{t'}  }{ v  }{ \max(m_1,m_2)  } } 
+  
+ 
+
+  \inferrule*[ right=E-case]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ v }{m }  }
+    \\
+    \inferrule*[]
+    {}
+    { \eval{ t_i  }{ v_i   }{ m_i }  }
+  }
+  { \eval{ \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  }{ \tcaseof{v}\ \{c_i \Rightarrow v_i\}_{c_i \in b}  }{  m + \max(m_i) } }
+  
+    \inferrule*[ right=E-fix]
+  { 
+  }
+  { \eval{  \fix{t}  }{ \fix{t}  }{ 0 } }
+  
+      \inferrule*[ right=E-x]
+  { 
+  \empty
+  }
+  { \eval{  x  }{ x  }{ 0 } }
+  
+      \inferrule*[ right=E-ILAM]
+  { 
+    \empty
+  }
+  { \eval{  \Lambda. t  }{  \Lambda. t }{ 0 } }
+  
+      \inferrule*[ right=E-iapp]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ \Lambda. t' }{m }  }
+  }
+  { \eval{  t[]  }{  t' }{  m } }
+  
+      \inferrule*[ right=E-mech]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ v }{m }
+    \and 
+    \eval{M(v)}{v'}{1}
+    }
+  }
+  { \eval{  M(t)  }{ v'  }{  m + 1 } }
+  
+\end{mathpar}
+ \caption{Evaluation Rules}
+\end{figure}
+
+\begin{figure}[h]
+\begin{mathpar}
+
+\inferrule*[right = E-if-true]
+{
+ \eval{b}{true}{0}
+ \and 
+ \eval{t_1}{v_1}{m} 
+}
+{
+\eval{\tif{b}{t_1}{t_2}}{v_1}{m}
+}
+
+\inferrule*[right = E-if-false]
+{
+ \eval{b}{false}{0}
+ \and 
+ \eval{t_2}{v_2}{m} 
+}
+{
+\eval{\tif{b}{t_1}{t_2}}{v_2}{m}
+}
+
+\inferrule*[right = E-nil]
+{
+ \empty
+}
+{
+\eval{\enil}{\enil}{0}
+}
+
+\inferrule*[right = E-cons]
+{
+\eval{t_1}{v_1}{m_1}
+\and 
+\eval{t_2}{v_2}{m_2}
+}
+{
+\eval{\econs(t_1,t_2)}{\econs(v_1,v_2)}{\max(m_1,m_2)}
+}
+
+
+\inferrule*[right = E-let]
+{
+\eval{t_2}{v_2}{m_2}
+\and
+\eval{t[v_2/x]}{v}{m}
+}
+{
+\eval{\letx{x}{t_2}{t}}{v}{\max(m_2,m)}
+}
+
+\end{mathpar}
+ \caption{New Added Evaluation Rules}
+\end{figure}
+
+
+\begin{figure*}[h]
+$$
+\begin{array}{rcl}
+      \llu{\tau}{\epsilon}  &\quad &  = \{ \, e \, | \, \exists v. e \Downarrow v \land v \in   \llu{\tau}{v} \,  \}  \\[2mm]
+      \llu{b}{v} &\quad &  = \{ \,  v  \, | \, v = T_b \}  \\[2mm]
+      \llu{query}{v} &\quad &  = \{ \,  v \, |  \, v = T_{query} \}  \\[2mm]
+      \llu{\tau_1 \rightarrow \tau_2}{v} & \quad & = \{\, \abs{x}{t} \, | \, \forall v \in\llu{\tau}{v}. t[v/x] \in \llu{\tau_2}{\epsilon} \, \} \\[2mm]
+      \llu{ \ !_n \tau}{v} & \quad & = \{\, !t \, | \, t \in \llu{\tau}{\epsilon} \, \} \\[2mm]
+      \llu{\tforallN{i}{\tau}}{v}  & \quad & = \{  \Lambda. t \, | \, \forall I. \vdash i :: \mathbb{N}. t[I/i] \in \llu{\tau}{\epsilon}   \}  \\[2mm]
+      \llu{\tau_1 * \tau_2}{v}  & \quad & = \{  (v_1, v_2) \, | \, v_1 \in \llu{\tau_1}{v} \land v_2 \in \llu{\tau_2}{v}     \} \\[2mm]
+      \llu{\cdot}{} &\quad & = \{ \emptyset \} \\[2mm]
+      \llu{\Gamma, x : [\tau]_p}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \boxed{\llu{\Gamma, x : [\tau]_p}{}}  & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{!_p \tau}{v}  \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \llu{\Gamma, x : \tau}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \gamma \vDash \Gamma &\quad & \triangleq dom(\gamma) = dom(\Gamma) \land \forall x \in dom(\Gamma). \gamma(x) \in \llu{\Gamma(x)}{v}
+\end{array}
+$$
+\caption{denotations}
+\end{figure*}
+
+
+\clearpage
+\begin{lem} $ $
+	\label{lem:1}
+    \begin{enumerate}
+\item If $\jtype{n,m}{}{v}{b} $ then $ \exists T_{b} : v = T_{b}$.\\
+\item If $\jtype{n,m}{}{v}{query} $ then $ \exists T_{query} : v = T_{query}$
+\end{enumerate}
+	
+	
+\end{lem}
+
+\begin{lem}[Depth Definition] 
+	\label{lem:2}
+	If $\Gamma \jtype{n,m}{}{t}{\tau} $ then $\depth(t) \leq n$\\
+\end{lem}
+%
+%
+%
+\begin{lem}[Depth Weakening1] 
+	\label{lem:deweaken1}
+	$\Gamma \jtype{n_1,m}{}{t}{\tau} \land n_1 \leq n_2 \implies \Gamma \jtype{n_2,m}{}{t}{\tau}$\\
+\end{lem}
+\begin{proof}
+  By induction on $\Gamma \jtype{n_1}{}{t}{\tau}  $.
+\end{proof}
+
+\begin{lem}[Depth Weakening2] 
+	\label{lem:deweaken2}
+	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau} \land p_1 \leq p_2 \implies \exists m. n \leq m$ s.t. $\Gamma, x:[\tau]_{p_2} \jtype{n}{}{t}{\tau} $\\
+% 	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \land \Gamma \subseteq \Gamma' \land n \leq n' \implies \Gamma', x:[\tau]_{p_2} \jtype{n'}{}{e}{\tau} $\\
+\end{lem}
+%
+%
+%
+\begin{lem}[Context weakening - 1]
+    \label{lem:coweaken1}
+    $\Gamma \jtype{n,m}{}{t}{\tau}  \implies \Gamma, x:\tau \jtype{n,m}{}{t}{\tau} $\\
+\end{lem}
+
+\begin{lem}[Context weakening - 2]
+    \label{lem:coweaken2}
+    $\Gamma \jtype{n,m}{}{t}{\tau}  \implies \Gamma, x:[\tau]_p \jtype{n,m}{}{t}{\tau} $\\
+\end{lem}
+
+
+
+\begin{lem}[Context exchange]
+    \label{lem:coex}
+    $\Gamma, x : \tau_1, \Delta, y : \tau_2 \jtype{n,m}{}{t}{\tau}  \implies \Gamma, y : \tau_2, \Delta, x : \tau_1 \jtype{n,m}{}{t}{\tau} $\\
+\end{lem}
+
+\begin{lem}
+	\label{lem:sub}
+	If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash \Gamma$, then $ \cdot \jtype{n}{}{\gamma(t)}{\tau} $\\
+\end{lem}
+
+\begin{lem}
+	\label{lem:subext}
+	If $\Gamma \subseteq \Gamma'$,  and $\Gamma' \jtype{n}{}{t}{\tau}$, then $\exists m. n \leq m$ s.t.  $\Gamma  \jtype{m}{}{t}{\tau} $. \\
+\end{lem}
+%
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thm}[Type Safety]
+	If $\cdot \jtype{n,m}{}{t}{\tau} $ then $ \exists F. t \Downarrow F \land \jtype{n,m}{}{F}{\tau}$
+\end{thm}
+%
+\begin{coro}
+\label{cor:typesafety}
+	If $ \cdot\jtype{n,m}{}{t}{b} $ then $ \exists T_b. t \Downarrow T_b \land \depth(T_b) \leq n$
+\end{coro}
+%
+
+\begin{thm}[Normalization] 
+	If $\cdot\jtype{n,m}{}{t}{\tau} $ then $ \exists F: t \Downarrow F $
+\end{thm}
+We prove two theorems instead.
+\begin{thm}
+If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)}{ F}{}$.
+\end{thm}
+%
+%
+\begin{thm}
+ If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash{\Gamma}$, then $\gamma(t) \in \llu{\tau}{\epsilon} $.
+\end{thm} 
+
+\begin{thm}[Preservation]
+	If $\cdot\jtype{n}{}{t}{\tau} \land t \Downarrow F$ then $ \jtype{n}{}{F}{\tau} $
+\end{thm}
+%
+%
+\begin{thm} [Substitution]
+	If $\Gamma \jtype{n_1}{}{t_1}{\tau_1}$  and   $\Delta, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$ then $\max( \Gamma,\Delta) \jtype{\max{(p + n_1, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+\end{thm}
+%
+%
+\begin{thm} [Substitution] $ $
+\label{thm:sub}
+\begin{enumerate}
+    \item If $\Gamma \jtype{n_1}{}{t_1}{\tau_1}$  and   $\Delta, x: \tau_1 \jtype{n_2}{}{t_2}{\tau_2}$ then $max(\Gamma, \Delta) \jtype{\max{(n_1, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+    \item If $\Gamma \jtype{n_1}{}{ t_1}{!_p \tau_1}$  and   $\Delta, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$ then $max(\Gamma, \Delta) \jtype{\max{(n_1 + p, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+\end{enumerate}
+\end{thm}
+
+%
+%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Attempt 2: Trace-based effect system}
+\[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \wq{\efix f(x:\type).\expr}
+ ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
+%
+& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr)  ~|~ \wq {\eilam \expr ~|~ \expr \eapp [] } \\
+& & & ~|~ \wq {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
+      \expr_1, \expr_2) \\
+& & & ~|~ \wq{ ~~~~~~~
+ \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
+      \expr_2 } \\
+%
+\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+(\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
+    ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
+& & & \wq {(\eilam \expr , \env) } \\ 
+%
+\mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
+\end{array}\]
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\subsection{Tracing operational semantics and adaptivity}
+
+\paragraph{Traces}
+A trace $\tr$ is a representation of the big-step derivation of an
+expression's evaluation. Our big-step semantics output a trace. We use
+traces to define the adaptivity of a run. Our notion of traces and the
+tracing semantics is taken from~\cite[Section 4]{perera:dep}, but we
+omit their ``holes'' for which we have no need. The construct
+$\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$ records a trace of function
+application. $\tr_1$ is the trace of the head, $\tr_2$ the trace of
+the argument and $\tr_3$ is the trace of the function body. $f$ and
+$x$ are bound in $\tr_3$.
+%
+\[\begin{array}{llll}
+\mbox{Trace} & \tr & ::= & \wq{(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
+\wq{ (\trfix f(x:\type).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+%
+& & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
+~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
+%
+& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~
+      \wq {(\eilam \expr, \env)}
+\end{array}\]
+
+
+\paragraph{Big-step tracing semantics}
+The big-step, tracing semantics $\env, \expr \bigstep \valr, \tr$
+computes a value $\valr$ and a trace $\tr$ from an expression $\expr$
+and an enviroment $\env$ which maps the free variables of $\expr$ to
+\emph{closed} values. The rules, taken from~\cite{perera:dep}, are
+shown in Figure~\ref{fig:big-step}. Some salient points:
+\begin{itemize}
+\item[-] Erasing the traces from the semantics yields a standard
+  big-step semantics.
+\item[-] The trace of a primitive application $\eop(\expr)$
+  records that $\eop$ was applied to the trace of
+  $\expr$. This enables us to define adaptivity from a trace later.
+\item[-] The trace of a variable $x$ is $x$. This way traces record
+  where substitutions occur and, hence, variable dependencies. This is
+  also needed for defining adaptivity.
+\end{itemize}
+
+\begin{figure}
+\begin{mathpar}
+  \wq { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
+  %
+  \and
+  %
+  \inferrule{ }{\env, \econst \bigstep \econst, \trconst}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \etrue \bigstep \etrue, \trtrue}
+  %
+  \and
+  %
+  \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
+  %
+  \and
+  \wq{ \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+      \bernoulli (\tr)
+    } }
+  \and
+ \inferrule{ \env, \expr_1 \bigstep \econst, \tr_1 \\ \env, \expr_2 \bigstep \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
+      \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
+  \and
+  %
+  \wq{ \inferrule{
+  }{
+    \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
+    (\trfix f(x:\type).\expr, \env)
+  }
+}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
+    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+  }{
+    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstep \valr_2, \tr_2
+  }{
+    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojl(\expr) \bigstep \valr_1, \trprojl(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+  }{
+    \env, \eprojr(\expr) \bigstep \valr_2, \trprojr(\tr)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \etrue, \tr \\
+    \env, \expr_1 \bigstep \valr, \tr_1
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \trift(\tr, \tr_1)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \efalse, \tr \\
+    \env, \expr_2 \bigstep \valr, \tr_2
+  }{
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \triff(\tr, \tr_2)
+  }
+  %
+  \and
+  %
+  \inferrule{
+    \env, \expr \bigstep \valr, \tr \\
+    \eop{}(\valr) = \valr'
+  }{
+    \env, \eop(\expr) \bigstep \valr', \trop(\tr)
+  }
+%
+\and
+%
+  \inferrule{
+}
+{ \env, \enil \bigstep \enil, \trnil }
+%
+\and
+%
+\inferrule{
+\env, \expr_1 \bigstep \valr_1, \tr_1 \\
+\env, \expr_2 \bigstep \valr_2, \tr_2
+}
+{ \env, \econs (\expr_1, \expr_2)  \bigstep \econs (\valr_1, \valr_2),
+  \trcons(\tr_1, \tr_2)
+}
+%
+\and
+%
+\inferrule{
+  \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+  \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
+}
+{\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
+  \tr_1, \tr_2) }
+%
+\\\\
+%
+\boxed{\color{red}
+\inferrule
+{
+  \empty
+}
+{
+  \env, \eilam \expr \bigstep (\eilam \expr, \env), (\eilam \expr , \env)
+}
+}
+%
+\and
+%
+\boxed{\color{red}
+\inferrule{
+  \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
+  \env, \expr' \bigstep \valr, \tr_2
+}
+{\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
+
+}
+\end{mathpar}
+  \caption{Big-step semantics with provenance}
+  \label{fig:big-step}
+\end{figure}
+
+
+\paragraph{Adaptivity of a trace}
+We define the \emph{adaptivity} of a trace $\tr$, $\adap(\tr)$, which
+means the maximum number of nested $\eop$s in $\tr$, taking variable
+and control dependencies into account. To define this, we need an
+auxiliary notion called the \emph{depth of variable $x$} in trace
+$\tr$, written $\ddep{x}(\tr)$, which is the maximum number of
+$\eop{}$s in any path leading from the root of $\tr$ to an occurence
+of $x$ (at a leaf), again taking variable and control dependencies
+into account. Technically, $\adap: \mbox{Traces} \to \nat$ and
+$\ddep{x}: \mbox{Traces} \to \natb$. If $x$ does not appear free in
+$\tr$, $\ddep{x}(\tr)$ is $\bot$.
+
+The functions $\adap$ and $\ddep{x}$ are defined by mutual induction
+in Figure~\ref{fig:adap}. 
+
+\begin{figure}
+  \framebox{$\adap: \mbox{Traces} \to \nat$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \wq { \adap( (x,\env) )} & = & 0 \\
+      %
+      \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
+      \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
+      %
+      \wq {\adap( (\trfix f(x:\type).\expr, \env)  ) } & = & 0 \\
+      %
+      \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
+      %
+      \adap(\trprojl(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trprojr(\tr)) & = & \adap(\tr) \\
+      %
+      \adap(\trtrue) & = & 0 \\
+      %
+      \adap(\trfalse) & = & 0 \\
+      %
+      \adap(\trift(\tr_b, \tr_t)) & = & \adap(\tr_b) + \adap(\tr_t) \\
+      %
+      \adap(\triff(\tr_b, \tr_f)) & = & \adap(\tr_b) + \adap(\tr_f) \\
+      %
+      \adap(\trconst) & = & 0 \\
+      %
+      \adap(\trop(\tr)) & = &\wq { 1 + \adap(\tr) } \\
+           & &       \wq{  +  \textsf{MAX}_{\valr \in \type} \Big(
+                              \max \big(\adap(\tr_3 (\valr) ),
+                              \ddep{x}(\tr_3(\valr)) \big) \Big) } \\
+      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
+      %
+     \adap(\trnil) & = & 0 \\
+     %
+     \adap(\trcons(\tr_1,\tr_2) ) & = &  \max(\adap(\tr_1),
+                                        \adap(\tr_2)) \\
+     %
+    \adap( \trlet (x, \tr_1,\tr_2) ) & = & \max (\adap(\tr_2),
+                                           \adap(\tr_1)+\ddep{x}(\tr_2)  )
+                                           \\
+     \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
+    %
+    \wq { \adap( (\eilam \expr, \env) ) } & = & 0 \\
+    \wq { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
+     \wq { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
+                                                      \adap(\tr_2) ) \\
+      \end{array}
+  \end{mathpar}
+  %
+  \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
+  \begin{mathpar}
+    \begin{array}{lcl}
+      \wq { \ddep{x}( ( y, \env )) } & = &
+      \left\lbrace
+      \begin{array}{ll}
+        0 & \mbox{if } x = y \\
+        \bot & \mbox{if } x \neq y
+      \end{array}
+      \right.\\
+      %
+      \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
+      & & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
+      %
+     \wq { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
+      %
+      \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
+      %
+      \ddep{x}(\trprojl(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trprojr(\tr)) & = & \ddep{x}(\tr) \\
+      %
+      \ddep{x}(\trtrue) & = & \bot \\
+      %
+      \ddep{x}(\trfalse) & = & \bot \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_t)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_t)) \\
+      %
+      \ddep{x}(\trift(\tr_b, \tr_f)) & = & \max(\ddep{x}(\tr_b), \adap(\tr_b) + \ddep{x}(\tr_f)) \\
+      %
+      \ddep{x}(\trconst) & = & \bot \\
+      %
+      \ddep{x}(\trop(\tr)) & = & 1 +  \max(\ddep{x}(\tr),  \\
+      & &  \adap(\tr) + \textsf{MAX}_{\valr \in \type} \Big(
+          \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) ) \\  
+ &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+                       \mathsf{extract}(\tr) } \\
+ & & \wq{ \conj  \env[f \mapsto
+                       \valr_1, x \mapsto \valr], \expr \bigstep
+                       \valr', \tr_3(\valr) } \\ 
+       %
+      \ddep{x}(\trnil) & = & \bot \\
+      %
+      \ddep{x}(\trcons(\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
+                                            \ddep{x}(\tr_2)) \\
+      %
+      \ddep{x}( \trlet(y, \tr_1, \tr_2) ) & = & \max( \ddep{x}(\tr_2),
+                                                \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )\\
+       \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
+                                                    \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
+    %
+    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
+    \ddep{x}(\uniform (\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
+                                            \ddep{x}(\tr_2)) \\
+  \ddep{x}(\bernoulli (\tr)) & = & \ddep{x}(\tr)
+    \end{array}
+  \end{mathpar}
+  \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
+  \label{fig:adap}
+\end{figure}
+
+\subsection{Challenge (Couterexample)}
+
+
+
+\clearpage
+\section{Attempt 3: Linear type based 2}
+
+\[\begin{array}{llll}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 
+ ~|~ \lambda x. \expr 
+    \\
+             & & &  \etrue ~|~ \efalse ~|~
+  \eif  \expr \ethen \expr_2 \eelse \expr_3 ~|~
+\econst ~|~ \eop(\expr)  \\
+\mbox{Environment} & \env & ::= & x_1 \mapsto (\valr_1, \adapt_1), \ldots, x_n \mapsto (\valr_n,\adapt_n)
+\end{array}\]
+
+\[
+\begin{array}{llll}
+  \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n \\
+ %                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+%                                  \mbox{Sort} & S & ::= & \nat \\
+  \mbox{Linear type} & \type &::=  &  \ltype \lto{\nnatA} \type ~|~
+                                     \tbase ~|~ \tbool \\
+  \mbox{Nonlinear Type} & \ltype & ::= & \bang{\idx} \type   \\
+  \mbox{Typing context } & \Gamma & ::= & x_1 : \ltype_1, \ldots,
+                                          x_n : \ltype_n
+\end{array}
+\]
+
+
+\begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+    }{
+     \valr, \env \bigstep{0} \valr, \env} ~\textsf{val}
+   %  \and
+   % \inferrule{  \mathsf{fetch} (\env,x)  =  (\valr, \adapt)  }{x, \env
+   %   \bigstep{\adapt} \valr, \env }~\textsf{var}
+   \and
+   %
+     \inferrule{  \env(x)  =  (\valr, \env_1,  \adapt)  }{x,
+       \env  \bigstep{\adapt} \valr, \env_1 }~\textsf{var}
+     %
+   \and
+  %
+   \inferrule{ }{\econst , \env \bigstep{0} \econst, \env}~\textsf{const}
+   %
+   \and
+   %
+ \inferrule{
+  }{
+    \lambda x. \expr, \env
+    \bigstep{0} \lambda x.\expr, \env
+  }~\textsf{lambda}
+  %
+  \and
+  %
+  \inferrule{
+    \expr_1, \env_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1' \\
+    %\forall x_i \in \dom(\env_1 \cap \env_2).  \fresh \eapp x_i' \\
+     \expr_2, \env_2 \bigstep{\adapt_2} \valr_2 , \env_2' \\
+    \fresh \eapp x' \\
+    \expr[x'/x], \env_1'[ x'  \to (\valr_2, \env_2', \adapt_2  ) ] 
+    \bigstep{\adapt_3} \valr, \env_3
+  }{
+     \expr_1 \eapp \expr_2 , (\env_1 \uplus \env_2)\bigstep{{\max(\adapt_1, \adapt_3)}} \valr, \env_3
+  }
+ %
+  \and
+  %
+{
+  \inferrule{
+     \expr , \env \bigstep{\adapt} \valr , \env_1 
+   }{
+     \eop(\expr), \env \bigstep{\adapt +1} \eop(\valr),  \env_1
+   }~\textsf{delta}
+ }%
+\and
+ %
+ \inferrule{
+   \expr, \env \bigstep{\adapt} \efalse, \env'
+   \\
+   \expr_2 , \env \bigstep{\adapt_2} \valr_2, \env_2
+  }{
+    \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
+      \adapt_2 } \valr_2, \env_2
+  }~\textsf{if-f}
+%
+\and
+%
+\inferrule{
+   \expr , \env \bigstep{\adapt} \etrue, \env'
+   \\
+    \expr_1, \env \bigstep{\adapt_1} \valr_1, \env_1
+  }{
+    \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
+      \adapt_1 } \valr_1, \env_1
+  }~\textsf{if-t}
+  %
+  \and
+  %
+{  
+\inferrule{
+    \expr, \env \bigstep{\adapt} (\expr_1, \expr_2) , \env_1 \\
+    %\forall x_i \in \dom(\env_1 \cap \env_2).  \fresh \eapp x_i' \\
+     \expr_1, \env_1 \bigstep{\adapt_1} \valr_1 , \env_1' \\
+     \expr_2, \env_1 \bigstep{\adapt_2} \valr_2 , \env_2' \\
+    \fresh \eapp x', y' \\
+    \expr'[x'/x][y'/y], 
+    \env_1[ x'  \to (\valr_1, \env_1', \adapt_1), 
+    y' \to (\valr_2, \env_2', \adapt_2) ] 
+    \bigstep{\adapt'} \valr, \env'
+  }{
+     \elet \eapp (x, y) = \expr \ein \expr' , \env \bigstep{{\max(\adapt, \adapt')}} \valr, \env'
+  }~\textsf{bind}
+  }
+  \\\\
+  \begin{array}{llll}
+    \env_1 \uplus \emptyset & \triangleq & \env_1 &\\
+     \emptyset \uplus \env_2 & \triangleq & \env_2 &\\
+  \end{array}
+\end{mathpar}
+  \caption{Big-step semantics }
+  \label{fig:semantics1}
+\end{figure}
+
+
+\begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+    }{
+      \ictx \tctx , x: \bang{1} \type \tvdash{0} x: \type
+    }~\textbf{Ax}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \ictx \Gamma \tvdash{0} c : \tbase 
+    }~\textbf{const}
+    %
+    % \and
+    % %
+    % \inferrule{
+    % }{
+    %   \ictx \Gamma \tvdash{\nnatA} \evec : \bang{\nnatA}\tbase 
+    % }~\textbf{Dict}
+    %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma, x: \ltype
+      \tvdash{\nnatA }
+      \expr: \type
+    }{
+      \ictx \Gamma \tvdash{0} \lambda x. \expr : \ltype
+      \lto{\nnatA} \type
+    }~\textbf{lambda}
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{\idx} \type_1
+      \lto{\nnatA} \type_2      \\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+    }{
+      \ictx   \Gamma_1 + \idx \times \Gamma_2  
+      \tvdash{    \nnatA_1 +
+        \idx \times \nnatA_2 + \nnatA    } 
+        \expr_1 \eapp \expr_2 : \type_2
+    }~\textbf{app}
+    %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma \tvdash{\nnatA} \expr:  \tbase 
+    }{
+      \ictx \Gamma  \tvdash{1+\nnatA} \delta(\expr): \tbase
+    }~\textbf{delta}
+     %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma'  \tvdash{\nnatA'} \expr: \type' \\
+      \Gamma' \leqslant \Gamma \\
+      \nnatA' \leq \nnatA\\
+      \sub{\type'}{\type} 
+    }{
+      \ictx \Gamma  \tvdash{\nnatA} \expr: \type 
+    }~\textbf{subtype}
+      %
+    \and
+    %
+    \inferrule{
+      \ictx \Gamma, y: \type', x: \type ,\Gamma'  \tvdash{\nnatA} \expr: \type 
+    }{
+      \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
+    }~\textbf{exchange}
+    %
+    \and
+    %
+    \wq{
+    \inferrule{
+      \ictx \Gamma \tvdash{\nnatA} \expr: \tbool
+      \\
+      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1: \type
+      \\
+      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type
+      \\
+      \Gamma' = \Gamma + \Gamma_1 + \Gamma_2
+      \\
+      \nnatA' = \nnatA + \max(\nnatA_1, \nnatA_2)
+    }{
+      \ictx \Gamma' \tvdash{\nnatA'}  \eif \expr  \ethen \expr_1 \eelse \expr_2 : \type 
+    }~\textbf{if}
+    }
+     \\\\
+\begin{array}{llll}
+  \idx \times \Gamma &\triangleq  &  \Gamma  & \idx =1  \\
+                     &\triangleq  &  \bang{0} \Gamma & \idx =0 \\
+  \bang{\idx_1} \type + \bang{\idx_2} \type  &\triangleq  & \bang{
+                                                          \max(\idx_1,\idx_2)
+                                                          } \type &  \\
+  \Gamma + \emptyset & \triangleq & \Gamma & \\
+  \emptyset+ \Gamma  & \triangleq & \Gamma & \\
+  ( [x : \ltype ],\Gamma) +  ([x: \ltype'],\Delta)  & \triangleq
+                            & [x: \ltype + \ltype' ], \Gamma +
+                              \Delta &   \\
+   \sub{\Gamma}{\Delta} & \triangleq &  \dom(\Gamma) = \dom(\Delta) & \\
+    & &                                    \land \forall x \in
+                                      \dom(\Gamma),
+        \sub{\Delta(x)}{\Gamma(x)} &  
+\end{array}
+  \end{mathpar}
+  \caption{Typing rules, first version}
+  \label{fig:type-rules1}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+      \idx_1 \leq \idx \\
+      \sub{\ltype}{\ltype_1}
+    }{
+      \sub{\bang{\idx} \ltype}{\bang{\idx_1} \ltype_1}
+    }~\textsf{bang}
+    %
+    \and
+    %
+    \inferrule{
+        \nnatA \leq \nnatA' \\
+        \sub{\type_1}{\type}   \\
+      \sub{\type'}{\type_1'}
+    }{
+      \sub{\type \lto{\nnatA} \type' }{\type_1 \lto{\nnatA'} \ltype_1'}
+    }~\textsf{arrow}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+    \sub{\tbase}{\tbase}
+    }~\textsf{base}
+  \end{mathpar}
+  \caption{subtyping}
+ \end{figure}
+
+ \clearpage
+
+ \begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+     \env ( x ) = (\valr, \env', \adapt)
+      \\
+      \tvdash{\nnatA} ( \valr, \env') : \type
+          }{
+     \tvdash{\adapt + \nnatA}   ( x, \env):  \type
+    }~\textbf{C-Ax}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \tvdash{0} (  c, \env) : \tbase
+    }~\textbf{C-const}
+   
+    \and
+    %
+    \inferrule{
+      \tvdash{\nnatA' } ( \valr', \theta') : \type_1
+      \\
+      \fresh\eapp  x' ~~ \forall \adapt'
+      \\
+      \tvdash{ S+ \idx \times (\adapt' + \nnatA' ) +\nnatA }
+     ( \expr[x'/x], \env[x' \to (\valr', \theta', R')]      ) :
+     \type_2
+    }{
+     \tvdash{S} (  \lambda x. \expr, \env )  : \bang{\idx} \type_1
+      \lto{\nnatA} \type_2
+    }~\textbf{C-lambda}
+    \and
+    %
+    \inferrule{
+       \tvdash{\nnatA_1} ( \expr_1, \env_1) :  \bang{\idx} \type_1
+      \lto{\nnatA} \type_2      \\
+      \tvdash{\nnatA_2} ( \expr_2, \env_2 ): \type_1
+    }{
+       \tvdash{    \nnatA_1 +
+        \idx \times \nnatA_2 + \nnatA    } (  \expr_1 \eapp \expr_2, \env_1 \uplus \env_2   ) : \type_2
+    }~\textbf{C-app}
+    %
+    \and
+    %
+    \inferrule{
+      \tvdash{\nnatA} (\expr, \env) :  \tbase
+   }{  \tvdash{1+\nnatA} (\delta(\expr) , \env ) : \tbase
+    }~\textbf{C-delta}
+    \\\\
+    \begin{array}{lll}
+       \theta  & \triangleq (x_i \to (\valr_i, \env_i, R_i)) & i \in
+                                                               \mathbb{N}\\
+      (x_i : \bang{ \idx }\type_i), \Gamma \vDash (x_i \to (\valr_i, \env_i, R_i))
+      \uplus \theta & \triangleq ~~~\tvdash { \_ } (\valr_i, \env_i)
+                                          :  \type_i  &\conj
+                                   \Gamma \vDash \theta
+      \end{array}
+  \end{mathpar}
+  \caption{Typing rules, configure}
+  \label{fig:configure-rules}
+\end{figure}
+
+\begin{figure}[h]
+  \begin{mathpar}
+    \begin{array}{lll}
+      \lrv{\tbase} & = & \{  ( \econst, \env,  \nnatA)  \} \\
+      %
+      % \lrv{\type_1 \times \type_2} & = & \{(\valr_1, \valr_2) ~|~ \valr_1 \in \lrv{\type_1} \conj \valr_2 \in \lrv{\type_2} \}\\
+      %
+      \lrv{\bang{k} \type } & = & \{  ( \valr, \env,   \nnatA) |  (\valr, \env,
+                                   \nnatA ) \in \lrv{\type}  \} \\
+      %
+      \lrv{ \bang{k} \type_1 \lto{\nnatA} \type_2    } & = &
+      \{( \lambda x.\expr, \env,  \nnatA_1) ~|~ \forall \valr', \env',
+                                                             \nnatA'. (
+                                                             \valr',\env',                                   
+                                                             \nnatA') \in
+                                                             \lrv{
+                                                             \bang{k} \type_1}.\\
+      & & 
+          \implies   \fresh \eapp x' \land \\
+      & & \forall \adapt. ( \expr[x'/x], \env[x' \mapsto (\valr', \env', \adapt )] ) \in
+          \lre{    }{ \nnatA_1+\nnatA+ \idx \times (\adapt + \nnatA') }{\type_2}     \} \\
+      %
+      \\
+      %
+      \lre{}{\nnatA}{\type} & = & \{  ( \expr, \env) ~|~  ( \expr , \env
+                                  \bigstep{\adapt}  \valr, \env' ) \\
+      & & ~~~~~~~~~~~~~\implies \adapt \leq \nnatA \conj 
+     ( \valr, \env', \nnatA- \adapt) \in \lrv{\type})
+      \}
+    \end{array}
+  \end{mathpar}
+  \caption{Logical relation without step-indexing}
+  \label{fig:lr:non-step}
+\end{figure}
+
+\paragraph{Typable Approach By Weihao}
+\[
+\begin{array}{ll}
+ F(\expr, \phi ) & where \eapp ~~ \phi(x_i) = (\idx_i, \adapt_i, \nnatA_i ) \\
+   F(x,\phi) & = \sum_{x_i \in \fv{x}  } \idx_i \times (\adapt_i+ \nnatA_i)  \\
+F(\lambda x. \expr ,  \phi  ) & =  \sum_{x_i \in \fv{\lambda x.\expr}  } \idx_i \times (\adapt_i+ \nnatA_i)   \\  %\sum_{x_i \in \fv{\lambda x.\expr} } k_i \times R_i  \\
+F(\delta(\expr) , \phi ) & = \sum_{x_i \in \fv{\delta(\expr)} } \idx_i \times (\adapt_i+ \nnatA_i)  \\
+F(c, \phi ) & = 0  \\
+F(\expr_1 \eapp \expr_2, \phi ) & = F(\expr_1, \phi ) +
+                                  F(\expr_2,\phi ) \\
+F(\eif \expr \ethen \expr_1 \eelse \expr_2, \phi ) & = F(\expr, \phi) + \max(F(\expr_1, \phi),  F(\expr_2, \phi)   )  
+\end{array} 
+\]
+
+\begin{defn}[Typable]
+  \label{typable}
+  A closure $( \expr, [ x_1 \to (\valr_1 ,  \env_1 , \adapt_1 ) , \ldots, x_i \to (\valr_i, \env_i, \adapt_i )] )$ is typable with type $\type$ and adaptivity $J$ if exists $k_i$\\
+  \[
+     x_1 : \bang{\idx_1} \type_1, \ldots, \bang{\idx_i} \type_i 
+     \tvdash{\nnatA}  \expr : \type  \]
+   and each closure $(\valr_i, \env_i)$  is also typable with type $\bang{\idx_i} \type_i$ and adaptivity $\nnatA_i$, $ \phi = [x_1
+     \to (\idx_1, \adapt_1, \nnatA_1), \ldots,  x_i \to (\idx_i, \adapt_i,
+     \nnatA_i)  ] $,  $J = \nnatA + F( \expr, \phi ) $.
+ \end{defn}
+
+ \begin{defn}[ClosedClosure]
+  \label{closure}
+   A closure $(\expr, \env)$ is closed if $\fv{\expr} \subseteq \dom(\env)$. 
+ \end{defn}
+
+% \begin{lem}[ClosureTypable ]
+%   \label{ct}
+%    If a closure $(\expr, \env)$ is closed, then there exists $\type$ and $J$ so that $(\expr, \env)$ is typable with $\type$ and $J$.
+%    \end{lem}
+ 
+
+\begin{lem}[programTypable]
+  \label{proglemma}
+   If $ \tvdash{\nnatA}   \expr : \type $, then $(
+     \expr, \emptyset ) $ is typable with $\type$ and adaptivity $\nnatA$. 
+   \end{lem}
+
+   \begin{lem}[TypableMono]
+     \label{tmono}
+     If a closure is $D$ is typable with $\type$ and $\nnatA$, and $\nnatA \leq \nnatA'$, then
+     D is typable with $\type$ and $\nnatA'$.
+    \end{lem} 
+
+   
+\begin{lem}[TypableSoundness]
+  \label{tsound}
+  If a closure $D$ is typable with $\type$ and $J$, and $D \bigstep{\adapt} E$, then
+    closure $E$ is typable with $\type$ and adaptivity $J - \adapt$. 
+   \end{lem}
+\paragraph{Typable Approach By Marco}
+\begin{defn}[Typable Closures]
+  \label{def:typable}
+Let $\env=[ x_1 \to (\valr_1 ,  \env_1 , R_1 ) ,
+  \ldots, x_n \to (\valr_n, \env_n, R_n )]$. 
+  The closure $( \expr, \env)$ is typable with
+  type $\type$ and adaptivity $J$ if:
+\begin{enumerate}\item  
+     $x_1 : \bang{k_1} \type_1, \ldots, \bang{k_i} \type_i 
+     \tvdash{Z}  \expr : \type$, for some types $\bang{k_i}
+   \type_i$ for $(1\leq i\leq n)$, 
+\item each closure $(\valr_i, \env_i)$ for $(1\leq i\leq n)$ is typable with type
+  $\bang{k_i} \type_i$ and adaptivity $Z_i$,
+\item $J = Z + \sum_{(v_i,\theta_i,S_i)\in\theta} k_i \times (R_i
+  +Z_i)$.
+\end{enumerate}
+ \end{defn}
+To justify why we chose $\sum$ in the third clause above it is worth
+to consider the following configuration:
+$$
+[x\mapsto (\lambda u.\lambda w.\delta(u)+\delta(w),[\,],0)
+,y:\mapsto (v,[\,],2) ], x\, y\, y
+$$
+\mg{To elaborate the example above}
+   
+\begin{lem}[Soundness]
+  \label{tsound}
+  If a closure $D$ is typable with type $\type$ and adaptivity $J$, and $D \bigstep{R} E$, then
+    the closure $E$ is typable with type $\type$ and adaptivity $I$,
+    where $I+R\leq J$. 
+   \end{lem}
+
+
+\section{dependency graph}
+
+
+
+\[\begin{array}{llll}
+\mbox{AExpr.} & \aexpr & ::= & n~|~ x ~|~ \aexpr_1 + \aexpr_2  ~|~  \aexpr_1 -
+                            \aexpr_2 ~|~ \aexpr_1 * \aexpr_2 \\
+%
+\mbox{BExpr} & \bexpr & ::= & v ~|~  \aexpr_1 < \aexpr_2 ~|~ \aexpr_1
+                              = \aexpr_2 ~|~ \neg \bexpr ~|~ \bexpr_1
+                              \land \bexpr_2 ~|~ \bexpr_1 \lor \bexpr_2
+\\
+  \mbox{Command} & \cmd& ::= & Skip ~|~ \cmd_1 ; \cmd_2 ~|~ \impif{\bexpr}{\cmd_1}{\cmd_2}
+                               ~|~             \impwhile{\bexpr}{\cmd}  \\
+              &&& ~|~\assign{x}{\aexpr} ~|~ \fassign{x}{\aexpr}{l}  
+    \\
+    \mbox{Label}  & \labl & \in &  \mathbb{Z} \\
+    \mbox{Trace} & T & ::= &   \{  [(x_1,\labl_1),\dots, (x_i,
+                             \labl_i)],  \dots,  [(y_1,\labl_1),\dots, (y_i,
+                             \labl_i)]  \}    \\
+\mbox{Environment} & \env & ::= & x_1 \mapsto (n_1, T_1),
+                                  \ldots, x_n \mapsto
+                                  (\valr_n,T_n) \\
+    \mbox{Node}  & \node & ::=&  Empty ~|~D_1(x, T) ~|~ D_2(x,T) ~|~ IFT(T_b, \node) ~|~
+                                IFF(T_b, \node) ~|~ W (T_b, \node)
+                                ~|~ \node_1 ; \node_2\\
+                                  \mbox{Trace} & T & \in  & Set <
+                                                            List<Var
+                                                            \times Label> >
+\end{array}\]
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% sementics
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\begin{figure}
+  \boxed{ \env, \aexpr \bigstep{T} n  }
+  \begin{mathpar}
+   \inferrule{ \env(x) =  (n, T)  }{\env , x \bigstep{T} n
+   }~\textsf{var}
+   %
+   \and
+   %
+   \inferrule{  }{\env , n \bigstep{()} n
+   }~\textsf{const}
+  \and
+  %
+  \inferrule{
+    \env, \aexpr_1 \bigstep{T_1} n_1\\
+    \env, \aexpr_2 \bigstep{T_2} n_2
+  }{\env, \aexpr_1 + \aexpr_2 \bigstep{ T_1 \cup T_2 }
+     n_1 + n_2}~\textsf{sum} 
+\end{mathpar}
+\boxed{\env, \bexpr \bigstep{T} v }
+\begin{mathpar}
+   \inferrule{
+    \env, \aexpr_1 \bigstep{T_1} n_1\\
+    \env, \aexpr_2 \bigstep{T_2} n_2
+  }{\env, \aexpr_1 + \aexpr_2 \bigstep{ T_1 \cup T_2 }
+    n_1 < n_2}~\textsf{les}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \bexpr_1 \bigstep{T_1} v_1\\
+    \env, \bexpr_2 \bigstep{T_2} v_2
+  }{\env, \bexpr_1 \land \bexpr_2 \bigstep{ T_1 \cup T_2 }
+    v_1 \land v_2}~\textsf{land}
+\end{mathpar}
+\boxed{ \env, \cmd \bigstep{\node} \env'  }
+\begin{mathpar}
+  \inferrule{ }{\env, Skip \bigstep{} \env
+  }~\textsf{skip}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \cmd_1 \bigstep{\node_1} \env_1\\
+    \env_1, \cmd_2 \bigstep{\node_2} \env_2
+  }{\env, \cmd_1 ; \cmd_2 \bigstep{ \node_1 ; \node_2 }
+    \env_2}~\textsf{Seq}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \aexpr \bigstep{ T } n 
+  }{\env, \assign{x}{\aexpr} \bigstep{ D_1(x, T)  }
+    \env[x \to (n, T)]  }~\textsf{Assign}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \aexpr \bigstep{ T } n \\
+    \eop(n) = n_1
+    }{\env, \fassign{x}{\aexpr}{\labl} \bigstep{ D_2(x,T+(x,l))}
+    \env[x \to (n_1, T +(x,l) )] }~\textsf{FAssign}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \bexpr \bigstep{ T_b } false \\
+    \env, \cmd_2 \bigstep{\node_2} \env_2
+    }{\env, \impif{\bexpr}{\cmd_1}{\cmd_2}  \bigstep{ IFF(T_b, \node_2)}
+    \env_2 }~\textsf{IFF}
+ %
+  \and
+  %
+  \inferrule{
+    \env, \bexpr \bigstep{ T_b } true \\
+    \env, \cmd_1 \bigstep{\node_1} \env_1
+    }{\env, \impif{\bexpr}{\cmd_1}{\cmd_2}  \bigstep{ IFT(T_b, \node_1)}
+      \env_1 }~\textsf{IFT}
+    %
+    \and
+    %
+    \inferrule{
+    \env, \bexpr \bigstep{ T_b } false 
+    }{\env, \impwhile{\bexpr}{\cmd}  \bigstep{ WF(T_b)}
+      \env }~\textsf{WHILEF}
+    %
+    \and
+    %
+    \inferrule{
+      \env, \bexpr \bigstep{ T_b } true\\
+      \env, \cmd \bigstep{\node_1} \env_1  \\
+      \env_1, \impwhile{\bexpr}{\cmd} \bigstep{\node_2} \env_2
+    }{\env, \impwhile{\bexpr}{\cmd}  \bigstep{ WT(T_b,\node_1, \node_2 )}
+      \env_2 }~\textsf{WHILET}
+ \\\\
+  \begin{array}{lll}
+    \{ \} + (x,l) & \triangleq & \{ (x,l)  \}   \\
+     \{  [(x_1, l_1), \dots, (x_i, l_i)] , \dots, [(y_1, l_1'), \dots, (y_i,
+    l_i')]  \} + (x,l)   & \triangleq & 
+    \\
+     \{  [(x_1, l_1), \dots, (x_i,
+                                       l_i),(x,l)] , \dots, [ (y_1,
+                                        l_1'), \dots, (y_i, l_i'),
+    (x,l) ]\}  & &
+  \end{array}
+\end{mathpar}
+  \caption{Big-step semantics}
+  \label{fig:semantics1}
+\end{figure}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% \[
+% \begin{array}{llll}
+%  % \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
+%  %                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
+% %                                  \mbox{Sort} & S & ::= & \nat \\
+%   \mbox{Linear type} & \ltype &::=  &  \type \lto \type ~|~ \tbase \\
+%   \mbox{Nonlinear Type} & \type & ::= & \bang{\idx} \ltype   \\
+% \end{array}
+% \]
+
+% \begin{figure}
+%   \begin{mathpar}
+%     \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA}\ltype, \Gamma' \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}
+%     %
+%     \and
+%     %
+%     \inferrule{
+%     }{
+%       \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase 
+%     }~\textbf{const}
+%     %
+%     % \and
+%     % %
+%     % \inferrule{
+%     % }{
+%     %   \ictx \Gamma \tvdash{\nnatA} \evec : \bang{\nnatA}\tbase 
+%     % }~\textbf{Dict}
+%     %
+%     \and
+%     %
+%     \inferrule{
+%       \ictx \Gamma, x: \type_1
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto \type_2)
+%     }~\textbf{lambda}
+%     \and
+%     %
+%     \inferrule{
+%       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto \type_2      ) \\
+%       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}
+%     %
+%     \and
+%     %
+%     \inferrule{
+%       \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
+%     }{
+%       \ictx \Gamma' ,1+\Gamma  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+%     }~\textbf{delta}
+%      %
+%     \and
+%     %
+%     \inferrule{
+%       \ictx \Gamma'  \tvdash{\nnatA'} \expr: \type' \\
+%       \Gamma' \leqslant \Gamma \\
+%       \nnatA' \leq \nnatA\\
+%       \sub{\type'}{\type} \\
+%       \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
+%     }{
+%       \ictx \Gamma  \tvdash{\nnatA} \expr: \type 
+%     }~\textbf{subtype}
+%       %
+%     \and
+%     %
+%     \inferrule{
+%       \ictx \Gamma, y: \type', x: \type ,\Gamma'  \tvdash{\nnatA} \expr: \type 
+%     }{
+%       \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
+%     }~\textbf{exchange}
+%     \\\\
+%     \boxed{
+%  \inferrule{
+%       \ictx \Gamma, x: \type_1
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto^{\nnatA} \type_2)
+%     }~\textbf{lambda}
+%     \and
+%     %
+%     \inferrule{
+%       \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto^{\nnatA} \type_2      ) \\
+%       \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}
+%     }
+%     \\\\
+% \begin{array}{lll}
+%    k+\bang{r} \ltype  &\triangleq  &  \bang{k+r} \ltype  \\
+%   k + \emptyset   & \triangleq & \emptyset   \\
+%   k + ( [x : \type], \Gamma) & \triangleq &  [x : k+\type], k+\Gamma   
+%   \\
+%   \max(\bang{k_1} \ltype, \bang{k_2} \ltype) & \triangleq& \bang{ \max(k_1,
+%                                                     k_2) } \ltype \\
+%   \max(\Gamma, \emptyset) & \triangleq & \Gamma \\
+%   \max(\emptyset, \Gamma) & \triangleq & \Gamma \\
+%   \max\Big(  ([x : \type ],\Gamma),  ([x: \type'],\Delta)  \Big) & \triangleq
+%                             & [x: \max(\type, \type')], \max(\Gamma,
+%                               \Delta )\\
+%   \sub{\Gamma}{\Delta} & \triangleq &  \dom(\Gamma) = \dom(\Delta)
+%                                       \land \forall x \in
+%                                       \dom(\Gamma), \sub{\Delta(x)}{\Gamma(x)}  
+% \end{array}
+%   \end{mathpar}
+%   \caption{Typing rules, first version}
+%   \label{fig:type-rules1}
+% \end{figure}
+
+% \begin{figure}
+%   \begin{mathpar}
+%     \inferrule{
+%       k_1 \leq k \\
+%       \sub{\ltype}{\ltype_1}
+%     }{
+%       \sub{\bang{k} \ltype}{\bang{k_1} \ltype_1}
+%     }~\textsf{bang}
+%     %
+%     \and
+%     %
+%      \inferrule{
+%         \sub{\type_1}{\type}   \\
+%       \sub{\type'}{\type_1'}
+%     }{
+%       \sub{\type \lto \type' }{\type_1 \lto \ltype_1'}
+%     }~\textsf{arrow}
+%     %
+%     \and
+%     %
+%     \inferrule{
+%     }{
+%     \sub{\tbase}{\tbase}
+%     }~\textsf{base}
+%   \end{mathpar}
+%   \caption{subtyping}
+%  \end{figure}
+
+%  \clearpage
+
+%  \begin{thm}[Weaking]
+%   \label{sub}
+%   \begin{enumerate} 
+%    \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
+%   x \not \in \fv{\expr}  $ ,  then  $ \Gamma \tvdash{ \nnatA} \expr : \type $.
+%   \end{enumerate}
+% \end{thm}
+
+% \begin{thm}[Value Adaptivity]
+%   \label{sub}
+%   \begin{enumerate} 
+%    \item for all type $\bang{k} \ltype$,  exist value $\valr$, then  $
+%      \empty \tvdash{ k} \valr : \bang{k} \ltype $.
+%   \end{enumerate}
+% \end{thm}
+
+% \begin{thm}[Substitution]
+%   \label{sub}
+%   \begin{enumerate} 
+%    \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
+%   \empty \tvdash{\nnatA'} \valr : \type'  $ , then  $\Gamma
+%   \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$. 
+%   \end{enumerate}
+% \end{thm}
+
+% \begin{proof}
+%   By induction on the typing derivation.\\
+% \caseL{
+%   $   \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}  $
+%   }
+% Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:  $\Gamma
+%   \tvdash{\max(\nnatA,\nnatA' )} x[\valr/x]  : \type$. proved by
+%   subtype rule on the assumption.
+% \caseL{
+%  $   \inferrule{
+%     }{
+%       \ictx \tctx ,y:\type', x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax2}  $
+%   }
+%   Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:
+%   $\Gamma,   x: \bang{\nnatA}\ltype
+%   \tvdash{\max(\nnatA,\nnatA' )} x[\valr/y]  : \type$. proved by rule
+%   AX and then subtype.
+%   \caseL{
+%    \inferrule{
+%       \ictx \Gamma, x: \type_1, y:\type'
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma, y: k + \type' \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto \type_2)
+%     }~\textbf{lambda}
+%   }
+%    Assume $\empty \tvdash{k+\nnatA'} \valr : k+\type' $, TS:
+%   $k+\Gamma
+%   \tvdash{\max(k+\nnatA,k+\nnatA' )} (\lambda x. \expr)[\valr/y]  : \type$. From the
+%   Lemma~\ref{para-dec} on the assumption, we know: $\empty
+%   \tvdash{\nnatA'} \valr : \type' ~(1)$.\\
+%   By Induction hypothesis on the premise, we get: $ \Gamma, x:\type_1
+%   \tvdash{\max( \nnatA, \nnatA' )}
+%       \expr[\valr/y]: \type_2 ~(2)$. By rule lambda, we conclude that
+%       $k+\Gamma \tvdash{ k+ ( \max(\nnatA,\nnatA ) }
+%       \lambda x.\expr[\valr/y]: \type_2 $.
+%       \caseL{
+%       \inferrule{
+%       \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto \type_2      ) \\
+%       \ictx \Gamma_2 ,x: \type'', \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \max (\Gamma_1, \Gamma_2 ), x:\max(\type',\type'') \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}
+%   }
+%   Assume $\empty \tvdash{\nnatA'} \valr : \max(\type',\type'')$, TS: $\max (\Gamma_1, \Gamma_2 )
+%   \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
+%   \expr_2)[\valr/x]  : \type_2$. From the definition of $\max(\type',
+%   \type'')$, we know that $\type'$ and $\type''$ have similar
+%   form. Let us assume $\type'= \bang{k_1} \ltype$ and $\type'' =
+%   \bang{k_2} \ltype$ so that $\max(\type',\type'') = \bang{\max(k_1,k_2)}
+%   \ltype$.\\
+%   From the Lemma~\ref{para-dec} on the assumption, we have $\empty
+%   \tvdash{\nnatA' - (\max(k_1,k_2)-k_1) } \valr : \bang{k_1}
+%   \ltype~(1)$ and $\empty
+%   \tvdash{\nnatA' - (\max(k_1,k_2)-k_2) } \valr : \bang{k_2}
+%   \ltype~(2)$.\\ By induction hypothesis on $(1)$ and $(2)$ respctively,
+%   we know that:  $ \Gamma_1  \tvdash{ \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) ) } \expr_1[\valr/x]:  \bang{0} ( \type_1
+%   \lto \type_2   ) ~(3)$  and $ \Gamma_2  \tvdash{\max(\nnatA_2 ,
+%     \nnatA' - (\max(k_1,k_2)-k_2)   )} \expr_2[\valr/x]: \type_1 ~(4)$.  By the
+%   rule app and $(3)$, $(4)$, we conclude that $$\max (\Gamma_1, \Gamma_2 )
+%   \tvdash{\max(  \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) )  , \max(\nnatA_2 ,
+%     \nnatA' - (\max(k_1,k_2)-k_2)   )  )} \expr_1[\valr/x] \eapp
+%   \expr_2[\valr/x]  : \type_2 ~(5).$$
+%   Because $\max(\nnatA' - (\max(k_1,k_2)-k_1) ) , \nnatA' -
+%   (\max(k_1,k_2)-k_2)   ) \leq \nnatA' $, by subtype, we raise the
+%   adaptivity to  $\max(\nnatA_1,\nnatA_2, \nnatA' ) $ from $(5)$.
+%    \caseL{
+%       \inferrule{
+%       \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto \type_2      ) \\
+%       \ictx \Gamma_2  \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \max (\Gamma_1, \Gamma_2 ), x:\type' \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app2}
+%   }
+%   It is another case for application when x only appear in the first
+%   premise. In this case, $\expr_2[\valr/x] = \expr_2$. Another case
+%   when variable x only appears in the second premise can be proved in
+%   a similar way.\\
+%   Assume $\empty \tvdash{\nnatA'} \valr :\type'$. TS:$\max (\Gamma_1, \Gamma_2 )
+%   \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
+%   \expr_2)[\valr/x]  : \type_2$.  By Induction Hypothesis on the first
+%   premise using the assumption, we get: $\Gamma_1
+%   \tvdash{\max(\nnatA_1, \nnatA')} \expr_1[\valr/x]:  \bang{0} ( \type_1
+%       \lto \type_2  )  ~(1)$. By the rule app using (1) and the second
+%       premise, we conclude that $$ \max (\Gamma_1, \Gamma_2 )
+%       \tvdash{\max( \max(\nnatA_1,\nnatA'),\nnatA_2) }
+%       \expr_1[\valr/x] \eapp \expr_2 : \type_2$$
+%       \caseL{
+%  \inferrule{
+%       \ictx \Gamma, x:\type' \tvdash{\nnatA} \expr: \bang{k} \ltype 
+%     }{
+%       \ictx \Gamma' ,1+\Gamma, x:1+\type'  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
+%     }~\textbf{delta}
+%   }
+%   Assume $\empty \tvdash{\nnatA'+1} \valr : 1+\type' $, TS: $ \Gamma'
+%   ,1+\Gamma \tvdash{\max(1+\nnatA, 1+\nnatA')} \delta(\expr)
+%   [\valr/x]: \bang{k} \ltype $.
+%   By Lemma~\ref{para-dec} on the assumption, we have $\empty
+%   \tvdash{\nnatA'} \valr : \type'~(1) $. By IH on the first premise
+%   along with (1), we have: $\Gamma \tvdash{\max(\nnatA, \nnatA')}
+%   \expr[\valr/x]: \bang{k} \ltype~ (2)$.
+%    By the rule delta using (2), we conclude that $\Gamma' ,1+\Gamma  \tvdash{1+(\nnatA,\nnatA')} \delta(\expr[\valr/x]): \bang{k} \ltype$.
+% \end{proof}
+
+
+
+% \begin{proof}
+%   By Induction on the typing derivation.
+%   \caseL{
+%      $   \inferrule{
+%     }{
+%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
+%     }~\textbf{Ax}  $
+%   }
+%   Assume $\env= \Big( \env_1, [x \to (\valr,\adapt
+%   )] , \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1 \vDash \Gamma$. We know that $
+%   \empty \tvdash{\adapt} \valr : \bang{\nnatA}\ltype $.
+%   From the evaluation rule var, we know $\env , x \bigstep{\adapt} \valr,
+%   \env  $.
+%   TS:  $ \adapt + adap(\valr, \env)  \leq  \nnatA +
+%   F(\env) \implies \adapt + 0 \leq \nnatA + \max( \adapt, F(\env_1))
+%   $.It is trivially true.
+% \caseL{
+%   $
+%     \inferrule{
+%       \ictx \Gamma, x: \type_1
+%       \tvdash{\nnatA }
+%       \expr: \type_2
+%     }{
+%       \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
+%       \lto \type_2)
+%     }~\textbf{lambda}
+%   $
+% }
+% Choose $\env \vDash  (k+\Gamma)$ so that $\forall x_i \in
+% (\Gamma). \env(x_1) =(\valr_i, \adapt_i ) \land \empty
+% \tvdash{\adapt_i } \valr_i: k+\Gamma(x_i) $.  By the evaluation rule
+% we know $\env, \lambda x. \expr \bigstep{0}
+%                                        \lambda x.\expr, \env $, TS: $0
+%                                        + \adap(\lambda x.\expr, \env)
+%                                        \leq  k+\nnatA + F(\env)$, which is trivially
+%                                        true because $ \adap(\lambda
+%                                        x.\expr, \env) \leq F(\env) $.
+                                       
+% \caseL{
+%     $  \inferrule{
+%       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
+%       \lto \type_2      ) \\
+%       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
+%     }{
+%       \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
+%     }~\textbf{app}  $
+%   }
+%   Choose $\env = [x_i \to (\valr_i,0)] $ for all $x_i$ in
+%   $\dom(\max(\Gamma_1,\Gamma_2))$
+%   so that  $\empty \tvdash{\nnatA_i} \valr_i  : (\max(\Gamma_1,
+%   \Gamma_2)(x_i) $.
+%   From the definition, we know that $\env \vDash \Gamma_1$ and $\env
+%   \vDash \Gamma_2$. Because $\expr_1$ has the arrow type and will be
+%   evaluated to a function, assume exists $\env_1$ so that $\env,
+%   \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 $.  By induction
+%   hypothesis on the first premise, we know that: $\adapt_1 +
+%   \adap(\lambda x. \expr, \env_1) \leq \nnatA_1 + F(\env,
+%   \Gamma_1)~(1)$.Assume exists $\env_2$ so that $\expr_2$ is evaluated
+%   to an arbitrary value $\valr_2$ : $ \env, \expr_2 \bigstep{\adapt_2}
+%   \valr_2 , \env_2$, by induction hypothesis, we conclude that :  $\adapt_2 +
+%   \adap(\valr , \env_2) \leq \nnatA_2 + F(\env,
+%   \Gamma_2)~(2)$.
+                            
+
+
+% \[
+% \inferrule{
+%     \env, \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
+%     \env, \expr_2 \bigstep{\adapt_2} \valr_2 , \env_2 \\
+%     (\env_1 \uplus \env_2)[ x  \to (\valr_2,   \adapt_2  ) ], \expr
+%     \bigstep{\adapt_3} \valr, \env_3
+%   }{
+%     \env, \expr_1 \eapp \expr_2 \bigstep{\adapt_1+\adapt_3} \valr, \env_3
+%   }~\textsf{app}
+% \]
+%  \end{proof} 
+
+
+\end{document}
+
+
+
