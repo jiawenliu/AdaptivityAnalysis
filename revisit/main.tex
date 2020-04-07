@@ -60,19 +60,19 @@
 	\text{Tree} &\quad& T_b :: = c \sep M(T_{query}) \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{b_i}\}_{c_i \in b} \\
 
 	\text{} &\quad& T_{query} :: = q \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{query_i}\}_{c_i \in b} \\[2mm]
-     \text{Depth} &\quad&   \ddep(c) = 0 \\
-       &\quad& \ddep(!t) = \ddep(t) \\
-           &\quad&      \ddep( \app{t_1}{t_2} ) = \max(\ddep(t_1), \ddep(t_2)) \\
-            &\quad&  \ddep(M(t)) = 1 + \ddep(t) \\
-             &\quad&  \ddep(\abs{x}{t}) = \ddep(t) \\
-              &\quad& \ddep(x) = 0 \\
-              & \quad & \ddep(q) = 0 \\
-              & \quad & \ddep((t_1, t_2)) = \max(\ddep(t_1), \ddep(t_2))\\
-              & \quad & \ddep(\letx{(x_1, x_2)}{t}{t'}) = \max(\ddep(t), \ddep(t'))\\
-              & \quad & \ddep(\letx{!x}{t}{t'}) = \max(\ddep(t), \ddep(t'))\\
-              & \quad & \ddep(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) = \max(\ddep(t), \ddep(t_i))\\
-            & \quad & \ddep(\Lambda.t) = \ddep(t)\\
-              & \quad & \ddep(t\, []) = \ddep(t)\\
+     \text{Depth} &\quad&   \depth(c) = 0 \\
+       &\quad& \depth(!t) = \depth(t) \\
+           &\quad&      \depth( \app{t_1}{t_2} ) = \max(\depth(t_1), \depth(t_2)) \\
+            &\quad&  \depth(M(t)) = 1 + \depth(t) \\
+             &\quad&  \depth(\abs{x}{t}) = \depth(t) \\
+              &\quad& \depth(x) = 0 \\
+              & \quad & \depth(q) = 0 \\
+              & \quad & \depth((t_1, t_2)) = \max(\depth(t_1), \depth(t_2))\\
+              & \quad & \depth(\letx{(x_1, x_2)}{t}{t'}) = \max(\depth(t), \depth(t'))\\
+              & \quad & \depth{}(\letx{!x}{t}{t'}) = \max(\depth(t), \depth(t'))\\
+              & \quad & \depth{}(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) = \max(\depth(t), \depth(t_i))\\
+            & \quad & \depth(\Lambda.t) = \depth(t)\\
+              & \quad & \depth(t\, []) = \depth(t)\\
 \end{array}
 $$
 \caption{syntax}
@@ -587,6 +587,7 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)}{ F}{
 
 %
 %
+\fail{multi-Round case doesn't work under this semantics}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1080,12 +1081,6 @@ in Figure~\ref{fig:adap}.
       \ictx \Gamma \tvdash{0} c : \tbase 
     }~\textbf{const}
     %
-    % \and
-    % %
-    % \inferrule{
-    % }{
-    %   \ictx \Gamma \tvdash{\nnatA} \evec : \bang{\nnatA}\tbase 
-    % }~\textbf{Dict}
     %
     \and
     %
@@ -1158,9 +1153,8 @@ in Figure~\ref{fig:adap}.
 \begin{array}{llll}
   \idx \times \Gamma &\triangleq  &  \Gamma  & \idx =1  \\
                      &\triangleq  &  \bang{0} \Gamma & \idx =0 \\
-  \bang{\idx_1} \type + \bang{\idx_2} \type  &\triangleq  & \bang{
-                                                          \max(\idx_1,\idx_2)
-                                                          } \type &  \\
+  \bang{\idx_1} \type + \bang{\idx_2} \type  &\triangleq  
+  & \bang{ \max(\idx_1,\idx_2)} \type &  \\
   \Gamma + \emptyset & \triangleq & \Gamma & \\
   \emptyset+ \Gamma  & \triangleq & \Gamma & \\
   ( [x : \ltype ],\Gamma) +  ([x: \ltype'],\Delta)  & \triangleq
@@ -1257,8 +1251,8 @@ in Figure~\ref{fig:adap}.
     }~\textbf{C-delta}
     \\\\
     \begin{array}{lll}
-       \theta  & \triangleq (x_i \to (\valr_i, \env_i, R_i)) & i \in
-                                                               \mathbb{N}\\
+       \theta  & \triangleq (x_i \to (\valr_i, \env_i, R_i)) & i \in 
+       \mathbb{N}\\
       (x_i : \bang{ \idx }\type_i), \Gamma \vDash (x_i \to (\valr_i, \env_i, R_i))
       \uplus \theta & \triangleq ~~~\tvdash { \_ } (\valr_i, \env_i)
                                           :  \type_i  &\conj
@@ -1281,11 +1275,8 @@ in Figure~\ref{fig:adap}.
       %
       \lrv{ \bang{k} \type_1 \lto{\nnatA} \type_2    } & = &
       \{( \lambda x.\expr, \env,  \nnatA_1) ~|~ \forall \valr', \env',
-                                                             \nnatA'. (
-                                                             \valr',\env',                                   
-                                                             \nnatA') \in
-                                                             \lrv{
-                                                             \bang{k} \type_1}.\\
+      \nnatA'. ( \valr',\env',  \nnatA') \in
+      \lrv{ \bang{k} \type_1 }.\\
       & & 
           \implies   \fresh \eapp x' \land \\
       & & \forall \adapt. ( \expr[x'/x], \env[x' \mapsto (\valr', \env', \adapt )] ) \in
@@ -1381,7 +1372,6 @@ $$
 [x\mapsto (\lambda u.\lambda w.\delta(u)+\delta(w),[\,],0)
 ,y:\mapsto (v,[\,],2) ], x\, y\, y
 $$
-\mg{To elaborate the example above}
    
 \begin{lem}[Soundness]
   \label{tsound}
@@ -1389,7 +1379,7 @@ $$
     the closure $E$ is typable with type $\type$ and adaptivity $I$,
     where $I+R\leq J$. 
    \end{lem}
-
+\fail{Soundness is unable to be proven}
 
 \section{dependency graph}
 
