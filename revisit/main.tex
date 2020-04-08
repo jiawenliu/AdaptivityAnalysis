@@ -594,21 +594,21 @@ If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)}{ F}{
 
 \section{Attempt 2: Trace-based effect system}
 \[\begin{array}{llll}
-\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ \wq{\efix f(x:\type).\expr}
+\mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ {\efix f(x:\type).\expr}
  ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
 %
 & & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
-\econst ~|~ \eop(\expr)  ~|~ \wq {\eilam \expr ~|~ \expr \eapp [] } \\
-& & & ~|~ \wq {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
+\econst ~|~ \eop(\expr)  ~|~  {\eilam \expr ~|~ \expr \eapp [] } \\
+& & & ~|~  {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
       \expr_1, \expr_2) \\
-& & & ~|~ \wq{ ~~~~~~~
+& & & ~|~ { ~~~~~~~
  \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
       \expr_2 } \\
 %
 \mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
 (\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
     ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
-& & & \wq {(\eilam \expr , \env) } \\ 
+& & &  {(\eilam \expr , \env) } \\ 
 %
 \mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
 \end{array}\]
@@ -633,14 +633,14 @@ the argument and $\tr_3$ is the trace of the function body. $f$ and
 $x$ are bound in $\tr_3$.
 %
 \[\begin{array}{llll}
-\mbox{Trace} & \tr & ::= & \wq{(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
-\wq{ (\trfix f(x:\type).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
+\mbox{Trace} & \tr & ::= & {(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
+{ (\trfix f(x:\type).e, \env) } ~|~ (\tr_1, \tr_2) ~|~ \trprojl(\tr) ~|\\ 
 %
 & & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
 ~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
 %
 & & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~
-      \wq {(\eilam \expr, \env)}
+       {(\eilam \expr, \env)}
 \end{array}\]
 
 
@@ -663,7 +663,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
 
 \begin{figure}
 \begin{mathpar}
-  \wq { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
+   { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
   %
   \and
   %
@@ -678,7 +678,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
   %
   \and
-  \wq{ \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+  { \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
       \bernoulli (\tr)
     } }
   \and
@@ -686,7 +686,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
       \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
   \and
   %
-  \wq{ \inferrule{
+  { \inferrule{
   }{
     \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
     (\trfix f(x:\type).\expr, \env)
@@ -697,7 +697,7 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   %
   \inferrule{
     \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-    \wq{ \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
+    { \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
     \env, \expr_2 \bigstep \valr_2, \tr_2 \\
     \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
   }{
@@ -828,12 +828,12 @@ in Figure~\ref{fig:adap}.
   \framebox{$\adap: \mbox{Traces} \to \nat$}
   \begin{mathpar}
     \begin{array}{lcl}
-      \wq { \adap( (x,\env) )} & = & 0 \\
+       { \adap( (x,\env) )} & = & 0 \\
       %
       \adap(\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}) & = &
       \adap(\tr_1) + \max (\adap(\tr_3), \adap(\tr_2) + \ddep{x}(\tr_3))\\
       %
-      \wq {\adap( (\trfix f(x:\type).\expr, \env)  ) } & = & 0 \\
+       {\adap( (\trfix f(x:\type).\expr, \env)  ) } & = & 0 \\
       %
       \adap((\tr_1, \tr_2)) & = & \max(\adap(\tr_1), \adap(\tr_2)) \\
       %
@@ -851,13 +851,13 @@ in Figure~\ref{fig:adap}.
       %
       \adap(\trconst) & = & 0 \\
       %
-      \adap(\trop(\tr)) & = &\wq { 1 + \adap(\tr) } \\
-           & &       \wq{  +  \textsf{MAX}_{\valr \in \type} \Big(
+      \adap(\trop(\tr)) & = & { 1 + \adap(\tr) } \\
+           & &       {  +  \textsf{MAX}_{\valr \in \type} \Big(
                               \max \big(\adap(\tr_3 (\valr) ),
                               \ddep{x}(\tr_3(\valr)) \big) \Big) } \\
-      &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+      &\mathsf{where}&  { \valr_1 = (\efix f(x: \type). \expr, \env ) =
                        \mathsf{extract}(\tr) } \\
- & & \wq{ \conj  \env[f \mapsto
+ & & { \conj  \env[f \mapsto
                        \valr_1, x \mapsto \valr], \expr \bigstep
                        \valr', \tr_3(\valr) } \\ 
       %
@@ -871,9 +871,9 @@ in Figure~\ref{fig:adap}.
                                            \\
      \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
     %
-    \wq { \adap( (\eilam \expr, \env) ) } & = & 0 \\
-    \wq { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
-     \wq { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
+     { \adap( (\eilam \expr, \env) ) } & = & 0 \\
+     { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
+      { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
                                                       \adap(\tr_2) ) \\
       \end{array}
   \end{mathpar}
@@ -881,7 +881,7 @@ in Figure~\ref{fig:adap}.
   \framebox{$\ddep{x}: \mbox{Traces} \to \natb$}
   \begin{mathpar}
     \begin{array}{lcl}
-      \wq { \ddep{x}( ( y, \env )) } & = &
+       { \ddep{x}( ( y, \env )) } & = &
       \left\lbrace
       \begin{array}{ll}
         0 & \mbox{if } x = y \\
@@ -892,7 +892,7 @@ in Figure~\ref{fig:adap}.
       \ddep{x}(\trapp{\tr_1}{\tr_2}{f}{y}{\tr_3}) & = & \max(\ddep{x}(\tr_1), \\
       & & \adap(\tr_1) + \max(\ddep{x}(\tr_3), \ddep{x}(\tr_2) + \ddep{y}(\tr_3))) \\
       %
-     \wq { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
+      { \ddep{x}(  (\trfix f(y:\type).\expr,\env)  )  }& = & \bot \\
       %
       \ddep{x}((\tr_1, \tr_2)) & = & \max(\ddep{x}(\tr_1), \ddep{x}(\tr_2)) \\
       %
@@ -913,9 +913,9 @@ in Figure~\ref{fig:adap}.
       \ddep{x}(\trop(\tr)) & = & 1 +  \max(\ddep{x}(\tr),  \\
       & &  \adap(\tr) + \textsf{MAX}_{\valr \in \type} \Big(
           \max(\ddep{x}(\tr_3(\valr)), \bot )   \Big ) ) \\  
- &\mathsf{where}& \wq { \valr_1 = (\efix f(x: \type). \expr, \env ) =
+ &\mathsf{where}&  { \valr_1 = (\efix f(x: \type). \expr, \env ) =
                        \mathsf{extract}(\tr) } \\
- & & \wq{ \conj  \env[f \mapsto
+ & & { \conj  \env[f \mapsto
                        \valr_1, x \mapsto \valr], \expr \bigstep
                        \valr', \tr_3(\valr) } \\ 
        %
@@ -929,7 +929,7 @@ in Figure~\ref{fig:adap}.
        \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
                                                     \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
     %
-    \wq { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
+     { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
     \ddep{x}(\uniform (\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
                                             \ddep{x}(\tr_2)) \\
   \ddep{x}(\bernoulli (\tr)) & = & \ddep{x}(\tr)
@@ -1134,7 +1134,7 @@ in Figure~\ref{fig:adap}.
     %
     \and
     %
-    \wq{
+    {
     \inferrule{
       \ictx \Gamma \tvdash{\nnatA} \expr: \tbool
       \\
