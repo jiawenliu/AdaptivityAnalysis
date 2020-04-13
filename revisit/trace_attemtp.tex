@@ -1,19 +1,30 @@
+
+\paragraph{Traces}
+A trace $\tr$ is a representation of the big-step derivation of an
+expression's evaluation.
+
+The \emph{adaptivity} of a trace $\tr$, $\adap(\tr)$, which
+means the maximum number of nested $\eop$s in $\tr$.
+
+The \emph{depth of variable $x$} in trace
+$\tr$, written $\ddep{x}(\tr)$, which is the maximum number of
+$\eop{}$s in any path leading from the root of $\tr$ to an occurence
+of $x$ (at a leaf),.% Technically, $\adap: \mbox{Traces} \to \nat$ and
+% $\ddep{x}: \mbox{Traces} \to \natb$. If $x$ does not appear free in
+% $\tr$, $\ddep{x}(\tr)$ is $\bot$.
+
+
 \[\begin{array}{llll}
 \mbox{Expr.} & \expr & ::= & x ~|~ \expr_1 \eapp \expr_2 ~|~ {\efix f(x:\type).\expr}
  ~|~ (\expr_1, \expr_2) ~|~ \eprojl(\expr) ~|~ \eprojr(\expr) ~| \\
 %
-& & & \etrue ~|~ \efalse ~|~ \eif(\expr_1, \expr_2, \expr_3) ~|~
-\econst ~|~ \eop(\expr)  ~|~  {\eilam \expr ~|~ \expr \eapp [] } \\
-& & & ~|~  {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
+& & & \eif(\expr_1, \expr_2, \expr_3) ~|~
+\econst ~|~ \eop(\expr)  ~|~  {\elet  x:q = \expr_1 \ein \expr_2 } ~|~ \enil ~|~  \econs (
       \expr_1, \expr_2) \\
-& & & ~|~ { ~~~~~~~
- \bernoulli \eapp \expr ~|~ \uniform \eapp \expr_1 \eapp
-      \expr_2 } \\
 %
-\mbox{Value} & \valr & ::= & \etrue ~|~ \efalse ~|~ \econst ~|~
+\mbox{Value} & \valr & ::= & \econst ~|~
 (\efix f(x:\type).\expr, \env) ~|~ (\valr_1, \valr_2) 
     ~|~ \enil ~|~ \econs (\valr_1, \valr_2) | \\
-& & &  {(\eilam \expr , \env) } \\ 
 %
 \mbox{Environment} & \env & ::= & x_1 \mapsto \valr_1, \ldots, x_n \mapsto \valr_n
 \end{array}\]
@@ -24,18 +35,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\subsection{Tracing operational semantics and adaptivity}
 
-\paragraph{Traces}
-A trace $\tr$ is a representation of the big-step derivation of an
-expression's evaluation. Our big-step semantics output a trace. We use
-traces to define the adaptivity of a run. Our notion of traces and the
-tracing semantics is taken from~\cite[Section 4]{perera:dep}, but we
-omit their ``holes'' for which we have no need. The construct
-$\trapp{\tr_1}{\tr_2}{f}{x}{\tr_3}$ records a trace of function
-application. $\tr_1$ is the trace of the head, $\tr_2$ the trace of
-the argument and $\tr_3$ is the trace of the function body. $f$ and
-$x$ are bound in $\tr_3$.
 %
 \[\begin{array}{llll}
 \mbox{Trace} & \tr & ::= & {(x, \env)} ~|~ \trapp{\tr_1}{\tr_2}{f}{x}{\tr_3} ~|~
@@ -43,57 +43,38 @@ $x$ are bound in $\tr_3$.
 %
 & & & \trprojr(\tr) ~|~ \trtrue ~|~ \trfalse ~|~ \trift(\tr_b, \tr_t)
 ~|~ \triff(\tr_b, \tr_f) ~|~ \trconst ~|~ \trop(\tr) \\
-%
-& & & \trnil ~|~ \trcons (\tr_1, \tr_2) ~|~ \triapp{\tr_1}{\tr_2} ~|~
-       {(\eilam \expr, \env)}
 \end{array}\]
 
 
-\paragraph{Big-step tracing semantics}
-The big-step, tracing semantics $\env, \expr \bigstep \valr, \tr$
-computes a value $\valr$ and a trace $\tr$ from an expression $\expr$
-and an enviroment $\env$ which maps the free variables of $\expr$ to
-\emph{closed} values. The rules, taken from~\cite{perera:dep}, are
-shown in Figure~\ref{fig:big-step}. Some salient points:
-\begin{itemize}
-\item[-] Erasing the traces from the semantics yields a standard
-  big-step semantics.
-\item[-] The trace of a primitive application $\eop(\expr)$
-  records that $\eop$ was applied to the trace of
-  $\expr$. This enables us to define adaptivity from a trace later.
-\item[-] The trace of a variable $x$ is $x$. This way traces record
-  where substitutions occur and, hence, variable dependencies. This is
-  also needed for defining adaptivity.
-\end{itemize}
 
-\begin{figure}
+\begin{figure}[b]
 \begin{mathpar}
-   { \inferrule{ }{\env, x \bigstep \env(x), (x, \env ) }  }
+   { \inferrule{ }{\env, x \bigstepT \env(x), (x, \env ) }  }
   %
   \and
   %
-  \inferrule{ }{\env, \econst \bigstep \econst, \trconst}
-  %
-  \and
-  %
-  \inferrule{ }{\env, \etrue \bigstep \etrue, \trtrue}
-  %
-  \and
-  %
-  \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
-  %
-  \and
-  { \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
-      \bernoulli (\tr)
-    } }
-  \and
- \inferrule{ \env, \expr_1 \bigstep \econst, \tr_1 \\ \env, \expr_2 \bigstep \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
-      \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
-  \and
+  \inferrule{ }{\env, \econst \bigstepT \econst, \trconst}
+  % %
+ %  \and
+ %  %
+ %  \inferrule{ }{\env, \etrue \bigstep \etrue, \trtrue}
+ %  %
+ %  \and
+ %  %
+ %  \inferrule{ }{\env, \efalse \bigstep \efalse, \trfalse}
+ %  %
+ %  \and
+ %  { \inferrule{  \env, \expr \bigstep \econst, \tr }{\env, \bernoulli \eapp \expr \bigstep \econst,
+ %      \bernoulli (\tr)
+ %    } }
+ %  \and
+ % \inferrule{ \env, \expr_1 \bigstep \econst, \tr_1 \\ \env, \expr_2 \bigstep \econst, \tr_2  }{\env, \uniform \eapp \expr_1 \eapp
+ %      \expr_2\bigstep \econst, \uniform(\tr_1,\tr_2)  } 
+ %  \and
   %
   { \inferrule{
   }{
-    \env, \efix f(x:\type). \expr \bigstep (\efix f(:\type).\expr, \env),
+    \env, \efix f(x:\type). \expr \bigstepT (\efix f(:\type).\expr, \env),
     (\trfix f(x:\type).\expr, \env)
   }
 }
@@ -101,133 +82,118 @@ shown in Figure~\ref{fig:big-step}. Some salient points:
   \and
   %
   \inferrule{
-    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+    \env, \expr_1 \bigstepT \valr_1, \tr_1 \\
     { \valr_1 = (\efix f(x:\type).\expr, \env')} \\\\
-    \env, \expr_2 \bigstep \valr_2, \tr_2 \\
-    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstep \valr, \tr
+    \env, \expr_2 \bigstepT \valr_2, \tr_2 \\
+    \env'[f \mapsto \valr_1, x \mapsto \valr_2], \expr \bigstepT \valr, \tr
   }{
-    \env, \expr_1 \eapp \expr_2 \bigstep \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
+    \env, \expr_1 \eapp \expr_2 \bigstepT \valr, \trapp{\tr_1}{\tr_2}{f}{x}{\tr}
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-    \env, \expr_2 \bigstep \valr_2, \tr_2
+    \env, \expr_1 \bigstepT \valr_1, \tr_1 \\
+    \env, \expr_2 \bigstepT \valr_2, \tr_2
   }{
-    \env, (\expr_1, \expr_2) \bigstep (\valr_1, \valr_2), (\tr_1, \tr_2)
+    \env, (\expr_1, \expr_2) \bigstepT (\valr_1, \valr_2), (\tr_1, \tr_2)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+    \env, \expr \bigstepT (\valr_1, \valr_2), \tr
   }{
-    \env, \eprojl(\expr) \bigstep \valr_1, \trprojl(\tr)
+    \env, \eprojl(\expr) \bigstepT \valr_1, \trprojl(\tr)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep (\valr_1, \valr_2), \tr
+    \env, \expr \bigstepT (\valr_1, \valr_2), \tr
   }{
-    \env, \eprojr(\expr) \bigstep \valr_2, \trprojr(\tr)
+    \env, \eprojr(\expr) \bigstepT \valr_2, \trprojr(\tr)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep \etrue, \tr \\
-    \env, \expr_1 \bigstep \valr, \tr_1
+    \env, \expr \bigstepT \etrue, \tr \\
+    \env, \expr_1 \bigstepT \valr, \tr_1
   }{
-    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \trift(\tr, \tr_1)
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstepT \valr, \trift(\tr, \tr_1)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep \efalse, \tr \\
-    \env, \expr_2 \bigstep \valr, \tr_2
+    \env, \expr \bigstepT \efalse, \tr \\
+    \env, \expr_2 \bigstepT \valr, \tr_2
   }{
-    \env, \eif(\expr, \expr_1, \expr_2) \bigstep \valr, \triff(\tr, \tr_2)
+    \env, \eif(\expr, \expr_1, \expr_2) \bigstepT \valr, \triff(\tr, \tr_2)
   }
   %
   \and
   %
   \inferrule{
-    \env, \expr \bigstep \valr, \tr \\
+    \env, \expr \bigstepT \valr, \tr \\
     \eop{}(\valr) = \valr'
   }{
-    \env, \eop(\expr) \bigstep \valr', \trop(\tr)
+    \env, \eop(\expr) \bigstepT \valr', \trop(\tr)
   }
-%
-\and
-%
-  \inferrule{
-}
-{ \env, \enil \bigstep \enil, \trnil }
-%
-\and
-%
-\inferrule{
-\env, \expr_1 \bigstep \valr_1, \tr_1 \\
-\env, \expr_2 \bigstep \valr_2, \tr_2
-}
-{ \env, \econs (\expr_1, \expr_2)  \bigstep \econs (\valr_1, \valr_2),
-  \trcons(\tr_1, \tr_2)
-}
-%
-\and
-%
-\inferrule{
-  \env, \expr_1 \bigstep \valr_1, \tr_1 \\
-  \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
-}
-{\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
-  \tr_1, \tr_2) }
-%
-\\\\
-%
-\boxed{\color{red}
-\inferrule
-{
-  \empty
-}
-{
-  \env, \eilam \expr \bigstep (\eilam \expr, \env), (\eilam \expr , \env)
-}
-}
-%
-\and
-%
-\boxed{\color{red}
-\inferrule{
-  \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
-  \env, \expr' \bigstep \valr, \tr_2
-}
-{\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
+% %
+% \and
+% %
+%   \inferrule{
+% }
+% { \env, \enil \bigstep \enil, \trnil }
+% %
+% \and
+% %
+% \inferrule{
+% \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+% \env, \expr_2 \bigstep \valr_2, \tr_2
+% }
+% { \env, \econs (\expr_1, \expr_2)  \bigstep \econs (\valr_1, \valr_2),
+%   \trcons(\tr_1, \tr_2)
+% }
+% %
+% \and
+% %
+% \inferrule{
+%   \env, \expr_1 \bigstep \valr_1, \tr_1 \\
+%   \env[x \mapsto \valr_1] , \expr_2 \bigstep \valr, \tr_2
+% }
+% {\env, \elet x;q = \expr_1 \ein \expr_2 \bigstep \valr, \trlet (x,
+%   \tr_1, \tr_2) }
+% %
+% \\\\
+% %
+% \boxed{\color{red}
+% \inferrule
+% {
+%   \empty
+% }
+% {
+%   \env, \eilam \expr \bigstep (\eilam \expr, \env), (\eilam \expr , \env)
+% }
+% }
+% %
+% \and
+% %
+% \boxed{\color{red}
+% \inferrule{
+%   \env, \expr \bigstep (\eilam \expr', \env'), \tr_1 \\
+%   \env, \expr' \bigstep \valr, \tr_2
+% }
+% {\env, \expr [] \bigstep \valr, \triapp{\tr_1}{\tr_2} }
 
-}
+% }
 \end{mathpar}
   \caption{Big-step semantics with provenance}
   \label{fig:big-step}
 \end{figure}
 
-
-\paragraph{Adaptivity of a trace}
-We define the \emph{adaptivity} of a trace $\tr$, $\adap(\tr)$, which
-means the maximum number of nested $\eop$s in $\tr$, taking variable
-and control dependencies into account. To define this, we need an
-auxiliary notion called the \emph{depth of variable $x$} in trace
-$\tr$, written $\ddep{x}(\tr)$, which is the maximum number of
-$\eop{}$s in any path leading from the root of $\tr$ to an occurence
-of $x$ (at a leaf), again taking variable and control dependencies
-into account. Technically, $\adap: \mbox{Traces} \to \nat$ and
-$\ddep{x}: \mbox{Traces} \to \natb$. If $x$ does not appear free in
-$\tr$, $\ddep{x}(\tr)$ is $\bot$.
-
-The functions $\adap$ and $\ddep{x}$ are defined by mutual induction
-in Figure~\ref{fig:adap}. 
 
 \begin{figure}
   \framebox{$\adap: \mbox{Traces} \to \nat$}
@@ -265,21 +231,6 @@ in Figure~\ref{fig:adap}.
  & & { \conj  \env[f \mapsto
                        \valr_1, x \mapsto \valr], \expr \bigstep
                        \valr', \tr_3(\valr) } \\ 
-      %
-     \adap(\trnil) & = & 0 \\
-     %
-     \adap(\trcons(\tr_1,\tr_2) ) & = &  \max(\adap(\tr_1),
-                                        \adap(\tr_2)) \\
-     %
-    \adap( \trlet (x, \tr_1,\tr_2) ) & = & \max (\adap(\tr_2),
-                                           \adap(\tr_1)+\ddep{x}(\tr_2)  )
-                                           \\
-     \adap(\triapp{\tr_1}{\tr_2}) & = & \adap(\tr_1) + \adap(\tr_2)\\
-    %
-     { \adap( (\eilam \expr, \env) ) } & = & 0 \\
-     { \adap( \bernoulli (\tr)  ) } & = & \adap(\tr) \\
-      { \adap( \uniform  (\tr_1, \tr_2)  ) } & = & \max (\adap(\tr_1),
-                                                      \adap(\tr_2) ) \\
       \end{array}
   \end{mathpar}
   %
@@ -323,25 +274,25 @@ in Figure~\ref{fig:adap}.
  & & { \conj  \env[f \mapsto
                        \valr_1, x \mapsto \valr], \expr \bigstep
                        \valr', \tr_3(\valr) } \\ 
-       %
-      \ddep{x}(\trnil) & = & \bot \\
-      %
-      \ddep{x}(\trcons(\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
-                                            \ddep{x}(\tr_2)) \\
-      %
-      \ddep{x}( \trlet(y, \tr_1, \tr_2) ) & = & \max( \ddep{x}(\tr_2),
-                                                \ddep{x}(\tr_1)+\ddep{y}(\tr_2)  )\\
-       \ddep{x}(\triapp{\tr_1}{\tr_2})  & = & 
-                                                    \max(\ddep{x}(\tr_1), \adap(\tr_1) + \ddep{x}(\tr_2))\\
-    %
-     { \ddep{x}( (\eilam \expr, \env) ) } & = & \bot \\
-    \ddep{x}(\uniform (\tr_1,\tr_2) ) & = & \max(\ddep{x}(\tr_1),
-                                            \ddep{x}(\tr_2)) \\
-  \ddep{x}(\bernoulli (\tr)) & = & \ddep{x}(\tr)
     \end{array}
   \end{mathpar}
   \caption{Adaptivity of a trace and depth of variable $x$ in a trace}
   \label{fig:adap}
 \end{figure}
 
-\subsection{Challenge (Couterexample)}
+\subsection{Challenge (Couterexample) in this setting}
+
+\begin{mainitem}
+\item[1] adaptivity is not precise. The definition of the max number
+  of nested $\delta$s is not very accurate, especially the way it handles the
+  application. Another way of understanding adaptivity is not only the
+  occurence of $\delta$, but the times the program accesses the
+  database ($\delta$).  For instance, $\lambda
+  x. ( \eif \, (x < 10 ) \ethen \, x \eelse x  ) \, \delta(v) $ and $
+   ( \eif \, ( \delta(v) < 10 ) \ethen \, \delta(v) \eelse \delta(v)  )
+   $. should distinguish the two definition of adaptivity. \\
+\item[2] This operational semantics has trouble to give the reasonable trace to
+  nested lambdas. Consider $\lambda x. lambda y. (x y)$. $adapt(\tr)$
+  does not make sense. \\
+\item[3] The typing system is not consistent for $\alpha$ renaming.
+  \end{mainitem}
