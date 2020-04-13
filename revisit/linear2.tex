@@ -36,6 +36,7 @@
      \inferrule{  \env(x)  =  (\valr, \env_1,  \adapt)  }{x,
        \env  \bigstep{\adapt} \valr, \env_1 }~\textsf{var}
      %
+ %
    \and
   %
    \inferrule{ }{\econst , \env \bigstep{0} \econst, \env}~\textsf{const}
@@ -58,20 +59,24 @@
     \expr[x'/x], \env_1'[ x'  \to (\valr_2, \env_2', \adapt_2  ) ] 
     \bigstep{\adapt_3} \valr, \env_3
   }{
-     \expr_1 \eapp \expr_2 , (\env_1 \uplus \env_2)\bigstep{{\max(\adapt_1, \adapt_3)}} \valr, \env_3
-  }
+     \expr_1 \eapp \expr_2 , (\env_1 \uplus \env_2)\bigstep{\adapt_1+\adapt_3} \valr, \env_3
+  }~\textsf{app}
  %
   \and
+  % %
+  \and
   %
-{
   \inferrule{
-     \expr , \env \bigstep{\adapt} \valr , \env_1 
-   }{
-     \eop(\expr), \env \bigstep{\adapt +1} \eop(\valr),  \env_1
-   }~\textsf{delta}
- }%
+    \expr , \env \bigstep{\adapt} \valr , \env_1 \\
+    \eop{}(\valr\env) = \valr' \\
+    FV(\valr')=\emptyset
+  }{
+    \eop(\expr), \env \bigstep{\adapt +1} \valr,  \env_1
+  }~\textsf{delta}
+% %
 \and
  %
+\wq{
  \inferrule{
    \expr, \env \bigstep{\adapt} \efalse, \env'
    \\
@@ -80,10 +85,10 @@
     \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
       \adapt_2 } \valr_2, \env_2
   }~\textsf{if-f}
-%
+}
 \and
-%
-\inferrule{
+\wq{
+ \inferrule{
    \expr , \env \bigstep{\adapt} \etrue, \env'
    \\
     \expr_1, \env \bigstep{\adapt_1} \valr_1, \env_1
@@ -91,168 +96,19 @@
     \eif \expr \ethen \expr_1 \eelse \expr_2 , \env \bigstep{\adapt +
       \adapt_1 } \valr_1, \env_1
   }~\textsf{if-t}
-  %
-  \and
-  %
-{  
-\inferrule{
-    \expr, \env \bigstep{\adapt} (\expr_1, \expr_2) , \env_1 \\
-    %\forall x_i \in \dom(\env_1 \cap \env_2).  \fresh \eapp x_i' \\
-     \expr_1, \env_1 \bigstep{\adapt_1} \valr_1 , \env_1' \\
-     \expr_2, \env_1 \bigstep{\adapt_2} \valr_2 , \env_2' \\
-    \fresh \eapp x', y' \\
-    \expr'[x'/x][y'/y], 
-    \env_1[ x'  \to (\valr_1, \env_1', \adapt_1), 
-    y' \to (\valr_2, \env_2', \adapt_2) ] 
-    \bigstep{\adapt'} \valr, \env'
-  }{
-     \elet \eapp (x, y) = \expr \ein \expr' , \env \bigstep{{\max(\adapt, \adapt')}} \valr, \env'
-  }~\textsf{bind}
-  }
+}
+% %
+%   }
   \\\\
   \begin{array}{llll}
     \env_1 \uplus \emptyset & \triangleq & \env_1 &\\
      \emptyset \uplus \env_2 & \triangleq & \env_2 &\\
+  
   \end{array}
 \end{mathpar}
-  \caption{Big-step semantics }
+  \caption{Big-step semantics}
   \label{fig:semantics1}
 \end{figure}
-
-
-\begin{figure}[h]
-  \begin{mathpar}
-    \inferrule{
-    }{
-      \ictx \tctx , x: \bang{1} \type \tvdash{0} x: \type
-    }~\textbf{Ax}
-    %
-    \and
-    %
-    \inferrule{
-    }{
-      \ictx \Gamma \tvdash{0} c : \tbase 
-    }~\textbf{const}
-    %
-    %
-    \and
-    %
-    \inferrule{
-      \ictx \Gamma, x: \ltype
-      \tvdash{\nnatA }
-      \expr: \type
-    }{
-      \ictx \Gamma \tvdash{0} \lambda x. \expr : \ltype
-      \lto{\nnatA} \type
-    }~\textbf{lambda}
-    \and
-    %
-    \inferrule{
-      \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{\idx} \type_1
-      \lto{\nnatA} \type_2      \\
-      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
-    }{
-      \ictx   \Gamma_1 + \idx \times \Gamma_2  
-      \tvdash{    \nnatA_1 +
-        \idx \times \nnatA_2 + \nnatA    } 
-        \expr_1 \eapp \expr_2 : \type_2
-    }~\textbf{app}
-    %
-    \and
-    %
-    \inferrule{
-      \ictx \Gamma \tvdash{\nnatA} \expr:  \tbase 
-    }{
-      \ictx \Gamma  \tvdash{1+\nnatA} \delta(\expr): \tbase
-    }~\textbf{delta}
-     %
-    \and
-    %
-    \inferrule{
-      \ictx \Gamma'  \tvdash{\nnatA'} \expr: \type' \\
-      \Gamma' \leqslant \Gamma \\
-      \nnatA' \leq \nnatA\\
-      \sub{\type'}{\type} 
-    }{
-      \ictx \Gamma  \tvdash{\nnatA} \expr: \type 
-    }~\textbf{subtype}
-      %
-    \and
-    %
-    \inferrule{
-      \ictx \Gamma, y: \type', x: \type ,\Gamma'  \tvdash{\nnatA} \expr: \type 
-    }{
-      \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
-    }~\textbf{exchange}
-    %
-    \and
-    %
-    {
-    \inferrule{
-      \ictx \Gamma \tvdash{\nnatA} \expr: \tbool
-      \\
-      \ictx \Gamma_1 \tvdash{\nnatA_1} \expr_1: \type
-      \\
-      \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type
-      \\
-      \Gamma' = \Gamma + \Gamma_1 + \Gamma_2
-      \\
-      \nnatA' = \nnatA + \max(\nnatA_1, \nnatA_2)
-    }{
-      \ictx \Gamma' \tvdash{\nnatA'}  \eif \expr  \ethen \expr_1 \eelse \expr_2 : \type 
-    }~\textbf{if}
-    }
-     \\\\
-\begin{array}{llll}
-  \idx \times \Gamma &\triangleq  &  \Gamma  & \idx =1  \\
-                     &\triangleq  &  \bang{0} \Gamma & \idx =0 \\
-  \bang{\idx_1} \type + \bang{\idx_2} \type  &\triangleq  
-  & \bang{ \max(\idx_1,\idx_2)} \type &  \\
-  \Gamma + \emptyset & \triangleq & \Gamma & \\
-  \emptyset+ \Gamma  & \triangleq & \Gamma & \\
-  ( [x : \ltype ],\Gamma) +  ([x: \ltype'],\Delta)  & \triangleq
-                            & [x: \ltype + \ltype' ], \Gamma +
-                              \Delta &   \\
-   \sub{\Gamma}{\Delta} & \triangleq &  \dom(\Gamma) = \dom(\Delta) & \\
-    & &                                    \land \forall x \in
-                                      \dom(\Gamma),
-        \sub{\Delta(x)}{\Gamma(x)} &  
-\end{array}
-  \end{mathpar}
-  \caption{Typing rules, first version}
-  \label{fig:type-rules1}
-\end{figure}
-
-\begin{figure}[h]
-  \begin{mathpar}
-    \inferrule{
-      \idx_1 \leq \idx \\
-      \sub{\ltype}{\ltype_1}
-    }{
-      \sub{\bang{\idx} \ltype}{\bang{\idx_1} \ltype_1}
-    }~\textsf{bang}
-    %
-    \and
-    %
-    \inferrule{
-        \nnatA \leq \nnatA' \\
-        \sub{\type_1}{\type}   \\
-      \sub{\type'}{\type_1'}
-    }{
-      \sub{\type \lto{\nnatA} \type' }{\type_1 \lto{\nnatA'} \ltype_1'}
-    }~\textsf{arrow}
-    %
-    \and
-    %
-    \inferrule{
-    }{
-    \sub{\tbase}{\tbase}
-    }~\textsf{base}
-  \end{mathpar}
-  \caption{subtyping}
- \end{figure}
-
- \clearpage
 
  \begin{figure}[h]
   \begin{mathpar}
@@ -432,4 +288,15 @@ $$
     the closure $E$ is typable with type $\type$ and adaptivity $I$,
     where $I+R\leq J$. 
    \end{lem}
-\fail{Soundness is unable to be proven}
+\fail{Soundness is unable to be proven:
+%
+\\
+%
+In the semantics app rule: $R_1 + R_3$ adaptivity is numerically added.
+%
+\\
+% 
+In the typing-configuration (typable closure): $J = Z + \sum_{(v_i,\theta_i,S_i)\in\theta} k_i \times (R_i +Z_i)$, adaptivity adding is by $\max$. 
+  \\
+The adpativity in typing rule cannot bound the adaptivity in semantics. We need to have a better understanding on the adptivity flow
+}
