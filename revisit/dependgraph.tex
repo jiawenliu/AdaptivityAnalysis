@@ -1,0 +1,148 @@
+
+
+\[\begin{array}{llll}
+\mbox{AExpr.} & \aexpr & ::= & n~|~ x ~|~ \aexpr_1 + \aexpr_2  ~|~  \aexpr_1 -
+                            \aexpr_2 ~|~ \aexpr_1 * \aexpr_2 \\
+%
+\mbox{BExpr} & \bexpr & ::= & v ~|~  \aexpr_1 < \aexpr_2 ~|~ \aexpr_1
+                              = \aexpr_2 ~|~ \neg \bexpr ~|~ \bexpr_1
+                              \land \bexpr_2 ~|~ \bexpr_1 \lor \bexpr_2
+\\
+  \mbox{Command} & \cmd& ::= & Skip ~|~ \cmd_1 ; \cmd_2 ~|~ \impif{\bexpr}{\cmd_1}{\cmd_2}
+                               ~|~             \impwhile{\bexpr}{\cmd}  \\
+              &&& ~|~\assign{x}{\aexpr} ~|~ \fassign{x}{\aexpr}{l}  
+    \\
+    \mbox{Label}  & \labl & \in &  \mathbb{Z} \\
+    \mbox{Trace} & T & ::= &   \{  [(x_1,\labl_1),\dots, (x_i,
+                             \labl_i)],  \dots,  [(y_1,\labl_1),\dots, (y_i,
+                             \labl_i)]  \}    \\
+\mbox{Environment} & \env & ::= & x_1 \mapsto (n_1, T_1),
+                                  \ldots, x_n \mapsto
+                                  (\valr_n,T_n) \\
+    \mbox{Node}  & \node & ::=&  Empty ~|~D_1(x, T) ~|~ D_2(x,T) ~|~ IFT(T_b, \node) ~|~
+                                IFF(T_b, \node) ~|~ W (T_b, \node)
+                                ~|~ \node_1 ; \node_2\\
+                                  \mbox{Trace} & T & \in  & Set <
+                                                            List<Var
+                                                            \times Label> >
+\end{array}\]
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% sementics
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\begin{figure}
+  \boxed{ \env, \aexpr \bigstep{T} n  }
+  \begin{mathpar}
+   \inferrule{ \env(x) =  (n, T)  }{\env , x \bigstep{T} n
+   }~\textsf{var}
+   %
+   \and
+   %
+   \inferrule{  }{\env , n \bigstep{()} n
+   }~\textsf{const}
+  \and
+  %
+  \inferrule{
+    \env, \aexpr_1 \bigstep{T_1} n_1\\
+    \env, \aexpr_2 \bigstep{T_2} n_2
+  }{\env, \aexpr_1 + \aexpr_2 \bigstep{ T_1 \cup T_2 }
+     n_1 + n_2}~\textsf{sum} 
+\end{mathpar}
+\boxed{\env, \bexpr \bigstep{T} v }
+\begin{mathpar}
+   \inferrule{
+    \env, \aexpr_1 \bigstep{T_1} n_1\\
+    \env, \aexpr_2 \bigstep{T_2} n_2
+  }{\env, \aexpr_1 + \aexpr_2 \bigstep{ T_1 \cup T_2 }
+    n_1 < n_2}~\textsf{les}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \bexpr_1 \bigstep{T_1} v_1\\
+    \env, \bexpr_2 \bigstep{T_2} v_2
+  }{\env, \bexpr_1 \land \bexpr_2 \bigstep{ T_1 \cup T_2 }
+    v_1 \land v_2}~\textsf{land}
+\end{mathpar}
+\boxed{ \env, \cmd \bigstep{\node} \env'  }
+\begin{mathpar}
+  \inferrule{ }{\env, Skip \bigstep{} \env
+  }~\textsf{skip}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \cmd_1 \bigstep{\node_1} \env_1\\
+    \env_1, \cmd_2 \bigstep{\node_2} \env_2
+  }{\env, \cmd_1 ; \cmd_2 \bigstep{ \node_1 ; \node_2 }
+    \env_2}~\textsf{Seq}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \aexpr \bigstep{ T } n 
+  }{\env, \assign{x}{\aexpr} \bigstep{ D_1(x, T)  }
+    \env[x \to (n, T)]  }~\textsf{Assign}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \aexpr \bigstep{ T } n \\
+    \eop(n) = n_1
+    }{\env, \fassign{x}{\aexpr}{\labl} \bigstep{ D_2(x,T+(x,l))}
+    \env[x \to (n_1, T +(x,l) )] }~\textsf{FAssign}
+  %
+  \and
+  %
+  \inferrule{
+    \env, \bexpr \bigstep{ T_b } false \\
+    \env, \cmd_2 \bigstep{\node_2} \env_2
+    }{\env, \impif{\bexpr}{\cmd_1}{\cmd_2}  \bigstep{ IFF(T_b, \node_2)}
+    \env_2 }~\textsf{IFF}
+ %
+  \and
+  %
+  \inferrule{
+    \env, \bexpr \bigstep{ T_b } true \\
+    \env, \cmd_1 \bigstep{\node_1} \env_1
+    }{\env, \impif{\bexpr}{\cmd_1}{\cmd_2}  \bigstep{ IFT(T_b, \node_1)}
+      \env_1 }~\textsf{IFT}
+    %
+    \and
+    %
+    \inferrule{
+    \env, \bexpr \bigstep{ T_b } false 
+    }{\env, \impwhile{\bexpr}{\cmd}  \bigstep{ WF(T_b)}
+      \env }~\textsf{WHILEF}
+    %
+    \and
+    %
+    \inferrule{
+      \env, \bexpr \bigstep{ T_b } true\\
+      \env, \cmd \bigstep{\node_1} \env_1  \\
+      \env_1, \impwhile{\bexpr}{\cmd} \bigstep{\node_2} \env_2
+    }{\env, \impwhile{\bexpr}{\cmd}  \bigstep{ WT(T_b,\node_1, \node_2 )}
+      \env_2 }~\textsf{WHILET}
+ \\\\
+  \begin{array}{lll}
+    \{ \} + (x,l) & \triangleq & \{ (x,l)  \}   \\
+     \{  [(x_1, l_1), \dots, (x_i, l_i)] , \dots, [(y_1, l_1'), \dots, (y_i,
+    l_i')]  \} + (x,l)   & \triangleq & 
+    \\
+     \{  [(x_1, l_1), \dots, (x_i,
+                                       l_i),(x,l)] , \dots, [ (y_1,
+                                        l_1'), \dots, (y_i, l_i'),
+    (x,l) ]\}  & &
+  \end{array}
+\end{mathpar}
+  \caption{Big-step semantics}
+  \label{fig:semantics1}
+\end{figure}
+
+
+

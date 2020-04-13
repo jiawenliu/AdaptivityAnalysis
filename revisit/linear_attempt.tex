@@ -1,0 +1,547 @@
+
+\begin{figure}[h]
+ $$
+ \begin{array}{rcl}
+     \text{Types} & \quad & \tau ::= b \sep \tau \multimap \tau' \sep !_n \tau \sep
+     \tau \times \tau \sep \tforallN{i}{\tau} \sep \query \\[2mm]
+
+     \text{Term} & \quad & t ::= c \sep \fix{t} \sep \app{t}{t} \sep !t \sep (t_1,t_2) \sep  \letx{!x}{t_1}{t_2} \sep \Lambda.t \sep t[] \sep \abs{x}{t} \sep  M(t) \sep x \sep q \sep\\
+     && \quad   \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  \sep \letx{(x_1,x_2)}{t_1}{t_2} \\[2mm]
+      
+     \text{Normal Form} &\quad & v ::=  c \sep \fix{t} \sep !t \sep (v_1, v_2) \sep \Lambda. t \sep \abs{x}{t}  \sep x \sep q \sep \tcaseof{v}\ \{c_i \Rightarrow v_i\}_{c_i \in b_i} \sep\\
+     && \enil \sep \econs(v_1,v_2)  \\[2mm]
+
+     \text{Mechanisms} &\quad & M ::=  {\tt gauss} \sep {\tt thdt} \\[2mm]
+
+
+	\text{Tree} &\quad& T_b :: = c \sep M(T_{query}) \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{b_i}\}_{c_i \in b} \\
+
+	\text{} &\quad& T_{query} :: = q \sep \tcaseof{T_b}\ \{ c_i \Rightarrow T_{query_i}\}_{c_i \in b} \\[2mm]
+     \text{Depth} &\quad&   \depth(c) = 0 \\
+       &\quad& \depth(!t) = \depth(t) \\
+           &\quad&      \depth( \app{t_1}{t_2} ) = \max(\depth(t_1), \depth(t_2)) \\
+            &\quad&  \depth(M(t)) = 1 + \depth(t) \\
+             &\quad&  \depth(\abs{x}{t}) = \depth(t) \\
+              &\quad& \depth(x) = 0 \\
+              & \quad & \depth(q) = 0 \\
+              & \quad & \depth((t_1, t_2)) = \max(\depth(t_1), \depth(t_2))\\
+              & \quad & \depth(\letx{(x_1, x_2)}{t}{t'}) = \max(\depth(t), \depth(t'))\\
+              & \quad & \depth{}(\letx{!x}{t}{t'}) = \max(\depth(t), \depth(t'))\\
+              & \quad & \depth{}(\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}) = \max(\depth(t), \depth(t_i))\\
+            & \quad & \depth(\Lambda.t) = \depth(t)\\
+              & \quad & \depth(t\, []) = \depth(t)\\
+\end{array}
+$$
+\caption{syntax}
+\end{figure}
+
+%
+%
+\begin{figure}[h]
+\boxed{  \Gamma \jtype{n,m}{}{t}{\tau}    }\\
+\boxed{  \Gamma :: = \emptyset \sep \Gamma, x : \tau \sep \Gamma, x : [\tau]_p   }
+
+\begin{mathpar}
+  \inferrule*[right = const]
+   {\empty}
+   {\Gamma \jtype{n,m}{}{c}{b}  }
+   
+   \and
+    \inferrule*[right = abs]
+   {\Gamma, x: \tau_1 \jtype{n}{}{t}{\tau_2}}
+   { \Gamma \jtype{n,m}{}{\abs{x}{t}}{\tau_1 \multimap \tau_2}  }
+   
+   \and
+   \inferrule*[right = pr]
+   {[\Gamma] \jtype{n}{}{t}{\tau}}
+   {\Delta, p + [\Gamma] \jtype{n+p}{}{!t}{!_p \tau}  }
+%   \boxed{
+%   \inferrule*[right = pr]
+%   {[\Gamma] \jtype{n}{}{t}{\tau}}
+%   {p + [\Gamma]\textbf{} \jtype{n}{}{!t}{!_p \tau}  }}
+   
+   \and
+    \inferrule*[ right = var]
+   {\empty}
+   {\Gamma, x:\tau \jtype{n}{}{x}{\tau}  } 
+   
+   \and
+   \inferrule*[ right = MT ]
+   {[\Gamma] \jtype{n}{}{t}{query}}
+   {\Delta, 1 + [\Gamma] \jtype{n+1}{}{M(t)}{b}  }
+   
+   \and
+    \inferrule*[right = query]
+   {\empty}
+   {\Gamma \jtype{n}{}{q}{query}  }
+   
+   \and
+%     \inferrule*[ right = app ]
+%   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \rightarrow \tau_2} \\ \Gamma \jtype{n_2}{}{t_2}{\tau_1}}
+%   { \Gamma_2 \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+  \inferrule*[ right = app ]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1 \multimap \tau_2} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_1}}
+   { \max(\Gamma_1, \Gamma_2) \jtype{\max(n_1,n_2)}{}{\app{t_1}{t_2}}{\tau_2}  }
+   
+   \and 
+   
+%   \inferrule*[ right = der ]
+%   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+%   { \Gamma , x: [\tau]_p \jtype{n }{}{t }{\tau }  }
+   \boxed{
+   \inferrule*[ right = der ]
+   {\Gamma, x: \tau \jtype{n}{}{t}{ \tau }  }
+   { \Gamma , x: [\tau]_0 \jtype{n }{}{t }{\tau }  }
+ }
+   
+   \and 
+   
+   \inferrule*[ right = let-b ]
+   {\Gamma_1 \jtype{n_1}{}{t}{!_p \tau} \\ \Gamma_2, x: [\tau]_p \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{\letx{!x}{t}{t'}}{\tau'}  }
+   
+   \and 
+   \inferrule*[ right = let-p ]
+   {\Gamma_1 \jtype{n_1}{}{t}{\tau_1 \times \tau_2 } \\ \Gamma_2, x_1: \tau_1, x_2 : \tau_2 \jtype{n_2}{}{t'}{\tau'}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{ \letx{(x_1,x_2)}{t}{t'} }{\tau'}  }
+   
+   \and
+     \inferrule*[right = pair]
+   {\Gamma_1 \jtype{n_1}{}{t_1}{\tau_1} \\ \Gamma_2 \jtype{n_2}{}{t_2}{\tau_2}}
+   { \max(\Gamma_1, \Gamma_2)  \jtype{\max(n_1,n_2)}{}{(t_1, t_2)}{\tau_1 \times \tau_2}  }
+ 
+   \and
+    \inferrule*[ right = case-const ]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{b} }
+   {\max(n_2 + \Gamma_1, \Gamma_2)  \jtype{ (n_1+n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {b} }
+   
+   \and
+    \inferrule*[ right = case-query]
+   {\Gamma_1 \jtype{n_1}{}{t}{b} \\ \Gamma_2 \jtype{n_2}{}{t_i}{query} }
+   {\max(\Gamma_1, \Gamma_2) \jtype{ (n_1+n_2)}{}{\tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b} } {query} }
+   
+   \inferrule*[right = iabs]
+  { 
+    \inferrule*[]
+    {}
+    {i::\mathbb{N};\Gamma \jtype{n}{}{t}{ \tau } }
+    \and
+    \inferrule*[]
+    {}
+    { i \notin \fiv{\Gamma }  } 
+  }
+  { \Gamma \jtype{n}{ }{  \Lambda.t  }{ \tforallN{i}{\tau}  } }
+  
+   \inferrule*[ right =  iapp]
+  { 
+    \inferrule*[]
+    {}
+    { \Gamma  \jtype{n}{}{t}{ \tforallN{i}{\tau}   } }
+    \and
+    \inferrule*[]
+    {}
+    { \jiterm{I}{ \mathbb{N} } } 
+  }
+  {\Gamma \jtype{n }{ }{t\, [] }{ \tau \{ I/i \}  } }
+
+  \inferrule*[right = sub]
+  { 
+   { \Gamma \jtype{n}{}{t}{\tau} } \\
+   {  \Gamma' \subseteq \Gamma } \\
+   { \vDash n \leq n' } \\
+   { \tau \subseteq \tau' }
+  }
+  { \Gamma' \jtype{n'}{}{t}{\tau'} }
+\end{mathpar}
+\caption{Typing judgment}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[h]
+ \begin{mathpar}
+  
+  \inferrule*[right= S-ID]
+  { }
+  { \tau <: \tau  }
+  \and
+  \inferrule*[right = S-B]
+  { 
+   {A <: B}
+   \\
+   { q \leq p }
+  }
+  { !_p A <: !_q B  }
+  \and
+  \inferrule*[right =  S-ARROW]
+  { {A' <: A}
+    \\
+    {B <: B'}
+  }
+  { A \multimap B <: A' \multimap B' }
+  \and
+  \inferrule*[right = S-D ]
+  {
+    { A \subseteq B }\\
+    { q \leq p }
+  }
+  { [A]_p \subseteq [B]_q }
+  
+  \and
+  \inferrule*[right = S-IDC]
+  { }
+  { \Gamma \subseteq \Gamma }
+  
+   \and
+  \inferrule*[right = S-empty]
+  { }
+  { \Gamma \subseteq \emptyset }
+  
+  \and
+  \inferrule*[right = S-Ctx]
+  {
+  {A \subseteq B}\\
+  { \Gamma \subseteq \Delta }
+  }
+  { \Gamma, x: A \subseteq \Delta, x: B }
+  
+  \and
+  \inferrule*[right = S-xctx1]
+  {
+  { \Delta \subseteq \Gamma }
+  }
+  { x : \tau, \Delta \subseteq \Gamma }
+  
+  \and
+  \inferrule*[right = S-xctx2]
+  {
+  { \Delta \subseteq \Gamma }
+  }
+  { x : [\tau]_p, \Delta \subseteq \Gamma }
+  
+ \end{mathpar}
+ \caption{sub typing}
+\end{figure}
+
+
+
+\begin{figure}[h]
+\boxed{\eval{t }{v }{m}}
+\begin{mathpar}
+%  \inferrule*[ right=E-values]
+%   { }
+%   { \eval{ F   }{ F  }{0}}   
+%   \and
+ \inferrule*[ right=E-const]
+  { }
+  { \eval{ c   }{ c  }{0}}   
+  
+  \and
+
+ \inferrule*[ right=E-query]
+  { }
+  { \eval{  q  }{ q  }{0}}   
+  
+  \and
+
+ \inferrule*[ right=E-ABS]
+  { }
+  { \eval{ \abs{x}{t}   }{ \abs{x}{t}  }{0}}   
+  
+  \and
+  
+  \inferrule*[ right=E-bang]
+  { }
+  { \eval{ ! t   }{ ! t  }{0}}   
+  
+  \and
+  
+   \inferrule*[ right=E-pair]
+  {   
+    { \eval{ t_1  }{ v_1  }{m_1} }
+    \\
+    { \eval{ t_2  }{ v_2  }{m_2} } 
+  }
+  { \eval{  (t_1,t_2)  }{ (v_1,v_2)  }{ \max(m_1, m_2) %m_1+m_2
+  } }  
+  
+  \and
+
+   \inferrule*[ right=E-app]
+  {   
+    { \eval{ t_1  }{ \abs{x}{t}  }{m_1} }
+    \\
+    { \eval{ t_2  }{ v  }{m_2} } 
+    \\
+    { \eval{t[v/x] }{ v'}{m_3 } }
+  }
+  { \eval{ \app{t_1}{t_2}  }{ v'  }{ \max(m_1, m_2 ) + m_3  } }  
+ 
+ \boxed{ 
+   \inferrule*[ right=E-let-bang]
+  {   
+    { \eval{ t_1  }{ !t_3  }{m_1} } 
+    \\
+    {\eval{t_3}{v'}{m_2}}
+    \\
+    { \eval{t_2[v'/x] }{v}{m_3 } }
+  }
+  { \eval{  \letx{!x}{t_1}{t_2}  }{ v  }{ \max(m_1+ m_2, m_3)  } }  
+}
+
+%  \inferrule*[ right=E-let-bang]
+%   {   
+%     { \eval{ t_1  }{ !t_3  }{m_1} } 
+%     \\
+%     { \eval{t_2[!t_3 /x] }{ F}{m_3 } }
+%   }
+%   { \eval{  \letx{!x}{t_1}{t_2}  }{ F  }{ m_1+m_3  } } 
+  
+  \inferrule*[ right=E-let-p]
+  {   
+    { \eval{ t  }{ (v_1,v_2)  }{m_1} } 
+    \\
+    { \eval{t'[v_1/x_1][v_2/x_2] }{v}{m2 } }
+  }
+  { \eval{  \letx{(x_1,x_2)}{t}{t'}  }{ v  }{ \max(m_1,m_2)  } } 
+  
+ 
+
+  \inferrule*[ right=E-case]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ v }{m }  }
+    \\
+    \inferrule*[]
+    {}
+    { \eval{ t_i  }{ v_i   }{ m_i }  }
+  }
+  { \eval{ \tcaseof{t}\ \{c_i \Rightarrow t_i\}_{c_i \in b}  }{ \tcaseof{v}\ \{c_i \Rightarrow v_i\}_{c_i \in b}  }{  m + \max(m_i) } }
+  
+    \inferrule*[ right=E-fix]
+  { 
+  }
+  { \eval{  \fix{t}  }{ \fix{t}  }{ 0 } }
+  
+      \inferrule*[ right=E-x]
+  { 
+  \empty
+  }
+  { \eval{  x  }{ x  }{ 0 } }
+  
+      \inferrule*[ right=E-ILAM]
+  { 
+    \empty
+  }
+  { \eval{  \Lambda. t  }{  \Lambda. t }{ 0 } }
+  
+      \inferrule*[ right=E-iapp]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ \Lambda. t' }{m }  }
+  }
+  { \eval{  t[]  }{  t' }{  m } }
+  
+      \inferrule*[ right=E-mech]
+  { 
+    \inferrule*[]
+    {}
+    {\eval{  t  }{ v }{m }
+    \and 
+    \eval{M(v)}{v'}{1}
+    }
+  }
+  { \eval{  M(t)  }{ v'  }{  m + 1 } }
+  
+\end{mathpar}
+ \caption{Evaluation Rules}
+\end{figure}
+
+\begin{figure}[h]
+\begin{mathpar}
+
+\inferrule*[right = E-if-true]
+{
+ \eval{b}{true}{0}
+ \and 
+ \eval{t_1}{v_1}{m} 
+}
+{
+\eval{\tif{b}{t_1}{t_2}}{v_1}{m}
+}
+
+\inferrule*[right = E-if-false]
+{
+ \eval{b}{false}{0}
+ \and 
+ \eval{t_2}{v_2}{m} 
+}
+{
+\eval{\tif{b}{t_1}{t_2}}{v_2}{m}
+}
+
+\inferrule*[right = E-nil]
+{
+ \empty
+}
+{
+\eval{\enil}{\enil}{0}
+}
+
+\inferrule*[right = E-cons]
+{
+\eval{t_1}{v_1}{m_1}
+\and 
+\eval{t_2}{v_2}{m_2}
+}
+{
+\eval{\econs(t_1,t_2)}{\econs(v_1,v_2)}{\max(m_1,m_2)}
+}
+
+
+\inferrule*[right = E-let]
+{
+\eval{t_2}{v_2}{m_2}
+\and
+\eval{t[v_2/x]}{v}{m}
+}
+{
+\eval{\letx{x}{t_2}{t}}{v}{\max(m_2,m)}
+}
+
+\end{mathpar}
+ \caption{New Added Evaluation Rules}
+\end{figure}
+
+
+\begin{figure*}[h]
+$$
+\begin{array}{rcl}
+      \llu{\tau}{\epsilon}  &\quad &  = \{ \, e \, | \, \exists v. e \Downarrow v \land v \in   \llu{\tau}{v} \,  \}  \\[2mm]
+      \llu{b}{v} &\quad &  = \{ \,  v  \, | \, v = T_b \}  \\[2mm]
+      \llu{query}{v} &\quad &  = \{ \,  v \, |  \, v = T_{query} \}  \\[2mm]
+      \llu{\tau_1 \rightarrow \tau_2}{v} & \quad & = \{\, \abs{x}{t} \, | \, \forall v \in\llu{\tau}{v}. t[v/x] \in \llu{\tau_2}{\epsilon} \, \} \\[2mm]
+      \llu{ \ !_n \tau}{v} & \quad & = \{\, !t \, | \, t \in \llu{\tau}{\epsilon} \, \} \\[2mm]
+      \llu{\tforallN{i}{\tau}}{v}  & \quad & = \{  \Lambda. t \, | \, \forall I. \vdash i :: \mathbb{N}. t[I/i] \in \llu{\tau}{\epsilon}   \}  \\[2mm]
+      \llu{\tau_1 * \tau_2}{v}  & \quad & = \{  (v_1, v_2) \, | \, v_1 \in \llu{\tau_1}{v} \land v_2 \in \llu{\tau_2}{v}     \} \\[2mm]
+      \llu{\cdot}{} &\quad & = \{ \emptyset \} \\[2mm]
+      \llu{\Gamma, x : [\tau]_p}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \boxed{\llu{\Gamma, x : [\tau]_p}{}}  & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{!_p \tau}{v}  \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \llu{\Gamma, x : \tau}{} & \quad & = \{ \gamma[x \rightarrow v] | v \in \llu{\tau}{v} \land \gamma \in \llu{\Gamma}{}   \}  \\ [2mm]
+      \gamma \vDash \Gamma &\quad & \triangleq dom(\gamma) = dom(\Gamma) \land \forall x \in dom(\Gamma). \gamma(x) \in \llu{\Gamma(x)}{v}
+\end{array}
+$$
+\caption{denotations}
+\end{figure*}
+
+
+\clearpage
+\begin{lem} $ $
+	\label{lem:1}
+    \begin{enumerate}
+\item If $\jtype{n,m}{}{v}{b} $ then $ \exists T_{b} : v = T_{b}$.\\
+\item If $\jtype{n,m}{}{v}{query} $ then $ \exists T_{query} : v = T_{query}$
+\end{enumerate}
+	
+	
+\end{lem}
+
+\begin{lem}[Depth Definition] 
+	\label{lem:2}
+	If $\Gamma \jtype{n,m}{}{t}{\tau} $ then $\depth(t) \leq n$\\
+\end{lem}
+%
+%
+%
+\begin{lem}[Depth Weakening1] 
+	\label{lem:deweaken1}
+	$\Gamma \jtype{n_1,m}{}{t}{\tau} \land n_1 \leq n_2 \implies \Gamma \jtype{n_2,m}{}{t}{\tau}$\\
+\end{lem}
+\begin{proof}
+  By induction on $\Gamma \jtype{n_1}{}{t}{\tau}  $.
+\end{proof}
+
+\begin{lem}[Depth Weakening2] 
+	\label{lem:deweaken2}
+	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{t}{\tau} \land p_1 \leq p_2 \implies \exists m. n \leq m$ s.t. $\Gamma, x:[\tau]_{p_2} \jtype{n}{}{t}{\tau} $\\
+% 	$\Gamma, x:[\tau]_{p_1} \jtype{n}{}{e}{\tau} \land p_1 \leq p_2 \land \Gamma \subseteq \Gamma' \land n \leq n' \implies \Gamma', x:[\tau]_{p_2} \jtype{n'}{}{e}{\tau} $\\
+\end{lem}
+%
+%
+%
+\begin{lem}[Context weakening - 1]
+    \label{lem:coweaken1}
+    $\Gamma \jtype{n,m}{}{t}{\tau}  \implies \Gamma, x:\tau \jtype{n,m}{}{t}{\tau} $\\
+\end{lem}
+
+\begin{lem}[Context weakening - 2]
+    \label{lem:coweaken2}
+    $\Gamma \jtype{n,m}{}{t}{\tau}  \implies \Gamma, x:[\tau]_p \jtype{n,m}{}{t}{\tau} $\\
+\end{lem}
+
+
+
+\begin{lem}[Context exchange]
+    \label{lem:coex}
+    $\Gamma, x : \tau_1, \Delta, y : \tau_2 \jtype{n,m}{}{t}{\tau}  \implies \Gamma, y : \tau_2, \Delta, x : \tau_1 \jtype{n,m}{}{t}{\tau} $\\
+\end{lem}
+
+\begin{lem}
+	\label{lem:sub}
+	If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash \Gamma$, then $ \cdot \jtype{n}{}{\gamma(t)}{\tau} $\\
+\end{lem}
+
+\begin{lem}
+	\label{lem:subext}
+	If $\Gamma \subseteq \Gamma'$,  and $\Gamma' \jtype{n}{}{t}{\tau}$, then $\exists m. n \leq m$ s.t.  $\Gamma  \jtype{m}{}{t}{\tau} $. \\
+\end{lem}
+%
+%
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thm}[Type Safety]
+	If $\cdot \jtype{n,m}{}{t}{\tau} $ then $ \exists F. t \Downarrow F \land \jtype{n,m}{}{F}{\tau}$
+\end{thm}
+%
+\begin{coro}
+\label{cor:typesafety}
+	If $ \cdot\jtype{n,m}{}{t}{b} $ then $ \exists T_b. t \Downarrow T_b \land \depth(T_b) \leq n$
+\end{coro}
+%
+
+\begin{thm}[Normalization] 
+	If $\cdot\jtype{n,m}{}{t}{\tau} $ then $ \exists F: t \Downarrow F $
+\end{thm}
+We prove two theorems instead.
+\begin{thm}
+If $\gamma(t) \in \llu{\tau}{\epsilon} $, then $\exists F.\eval{ \gamma(t)}{ F}{}$.
+\end{thm}
+%
+%
+\begin{thm}
+ If $\Gamma \jtype{n}{}{t}{\tau}$ and $\gamma \vDash{\Gamma}$, then $\gamma(t) \in \llu{\tau}{\epsilon} $.
+\end{thm} 
+
+\begin{thm}[Preservation]
+	If $\cdot\jtype{n}{}{t}{\tau} \land t \Downarrow F$ then $ \jtype{n}{}{F}{\tau} $
+\end{thm}
+%
+%
+\begin{thm} [Substitution]
+	If $\Gamma \jtype{n_1}{}{t_1}{\tau_1}$  and   $\Delta, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$ then $\max( \Gamma,\Delta) \jtype{\max{(p + n_1, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+\end{thm}
+%
+%
+\begin{thm} [Substitution] $ $
+\label{thm:sub}
+\begin{enumerate}
+    \item If $\Gamma \jtype{n_1}{}{t_1}{\tau_1}$  and   $\Delta, x: \tau_1 \jtype{n_2}{}{t_2}{\tau_2}$ then $max(\Gamma, \Delta) \jtype{\max{(n_1, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+    \item If $\Gamma \jtype{n_1}{}{ t_1}{!_p \tau_1}$  and   $\Delta, x: [\tau_1]_p \jtype{n_2}{}{t_2}{\tau_2}$ then $max(\Gamma, \Delta) \jtype{\max{(n_1 + p, n_2)}}{}{t_2[t_1/x]}{\tau_2} $
+\end{enumerate}
+\end{thm}
+
+%
+%
+\fail{multi-Round case doesn't work under this semantics}
