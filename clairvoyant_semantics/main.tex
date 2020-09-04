@@ -30,7 +30,7 @@
 
 \theoremstyle{definition}
 
-\title{Revisit of Adaptivity analysis}
+\title{Clairvoyant Semantics for Adaptivity Analysis}
 
 \author{}
 
@@ -40,399 +40,272 @@
 
 \maketitle
 
-% \section{Attempt 1: linear-type based}
-% \input{linear_attempt}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% \clearpage
-% \section{Attempt 2: Trace-based effect system}
-% \input{trace_attemtp}
 
 
-% \clearpage
-% \section{Attempt 3: Linear type based 2}
-% \input{linear2}
-
-
-
-\clearpage
-\section{Attemp4: Call by need style}
-\input{cbneed}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-% \[
-% \begin{array}{llll}
-%  % \mbox{Index Term} & \idx, \nnatA & ::= &     i ~|~ n ~|~ \idx_1 + \idx_2 ~|~  \idx_1
-%  %                                  - \idx_2 ~|~ \smax{\idx_1}{\idx_2}\\
-% %                                  \mbox{Sort} & S & ::= & \nat \\
-%   \mbox{Linear type} & \ltype &::=  &  \type \lto \type ~|~ \tbase \\
-%   \mbox{Nonlinear Type} & \type & ::= & \bang{\idx} \ltype   \\
-% \end{array}
-% \]
-
-% \begin{figure}
-%   \begin{mathpar}
-%     \inferrule{
-%     }{
-%       \ictx \tctx , x: \bang{\nnatA}\ltype, \Gamma' \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-%     }~\textbf{Ax}
-%     %
-%     \and
-%     %
-%     \inferrule{
-%     }{
-%       \ictx \Gamma \tvdash{\nnatA} c : \bang{\nnatA}\tbase 
-%     }~\textbf{const}
-%     %
-%     % \and
-%     % %
-%     % \inferrule{
-%     % }{
-%     %   \ictx \Gamma \tvdash{\nnatA} \evec : \bang{\nnatA}\tbase 
-%     % }~\textbf{Dict}
-%     %
-%     \and
-%     %
-%     \inferrule{
-%       \ictx \Gamma, x: \type_1
-%       \tvdash{\nnatA }
-%       \expr: \type_2
-%     }{
-%       \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
-%       \lto \type_2)
-%     }~\textbf{lambda}
-%     \and
-%     %
-%     \inferrule{
-%       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-%       \lto \type_2      ) \\
-%       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
-%     }{
-%       \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-%     }~\textbf{app}
-%     %
-%     \and
-%     %
-%     \inferrule{
-%       \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
-%     }{
-%       \ictx \Gamma' ,1+\Gamma  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
-%     }~\textbf{delta}
-%      %
-%     \and
-%     %
-%     \inferrule{
-%       \ictx \Gamma'  \tvdash{\nnatA'} \expr: \type' \\
-%       \Gamma' \leqslant \Gamma \\
-%       \nnatA' \leq \nnatA\\
-%       \sub{\type'}{\type} \\
-%       \ictx \Gamma \tvdash{\nnatA} \expr: \bang{k} \ltype 
-%     }{
-%       \ictx \Gamma  \tvdash{\nnatA} \expr: \type 
-%     }~\textbf{subtype}
-%       %
-%     \and
-%     %
-%     \inferrule{
-%       \ictx \Gamma, y: \type', x: \type ,\Gamma'  \tvdash{\nnatA} \expr: \type 
-%     }{
-%       \ictx \Gamma, x: \type, y: \type' ,\Gamma'  \tvdash{\nnatA} \expr: \type 
-%     }~\textbf{exchange}
-%     \\\\
-%     \boxed{
-%  \inferrule{
-%       \ictx \Gamma, x: \type_1
-%       \tvdash{\nnatA }
-%       \expr: \type_2
-%     }{
-%       \ictx k+\Gamma \tvdash{k} \lambda x. \expr : \bang{k}  ( \type_1
-%       \lto^{\nnatA} \type_2)
-%     }~\textbf{lambda}
-%     \and
-%     %
-%     \inferrule{
-%       \ictx \Gamma  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-%       \lto^{\nnatA} \type_2      ) \\
-%       \ictx \Gamma \tvdash{\nnatA_2} \expr_2: \type_1 
-%     }{
-%       \ictx \Gamma  \tvdash{ \nnatA_1 + \max( \nnatA,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-%     }~\textbf{app}
-%     }
-%     \\\\
-% \begin{array}{lll}
-%    k+\bang{r} \ltype  &\triangleq  &  \bang{k+r} \ltype  \\
-%   k + \emptyset   & \triangleq & \emptyset   \\
-%   k + ( [x : \type], \Gamma) & \triangleq &  [x : k+\type], k+\Gamma   
-%   \\
-%   \max(\bang{k_1} \ltype, \bang{k_2} \ltype) & \triangleq& \bang{ \max(k_1,
-%                                                     k_2) } \ltype \\
-%   \max(\Gamma, \emptyset) & \triangleq & \Gamma \\
-%   \max(\emptyset, \Gamma) & \triangleq & \Gamma \\
-%   \max\Big(  ([x : \type ],\Gamma),  ([x: \type'],\Delta)  \Big) & \triangleq
-%                             & [x: \max(\type, \type')], \max(\Gamma,
-%                               \Delta )\\
-%   \sub{\Gamma}{\Delta} & \triangleq &  \dom(\Gamma) = \dom(\Delta)
-%                                       \land \forall x \in
-%                                       \dom(\Gamma), \sub{\Delta(x)}{\Gamma(x)}  
-% \end{array}
-%   \end{mathpar}
-%   \caption{Typing rules, first version}
-%   \label{fig:type-rules1}
-% \end{figure}
-
-% \begin{figure}
-%   \begin{mathpar}
-%     \inferrule{
-%       k_1 \leq k \\
-%       \sub{\ltype}{\ltype_1}
-%     }{
-%       \sub{\bang{k} \ltype}{\bang{k_1} \ltype_1}
-%     }~\textsf{bang}
-%     %
-%     \and
-%     %
-%      \inferrule{
-%         \sub{\type_1}{\type}   \\
-%       \sub{\type'}{\type_1'}
-%     }{
-%       \sub{\type \lto \type' }{\type_1 \lto \ltype_1'}
-%     }~\textsf{arrow}
-%     %
-%     \and
-%     %
-%     \inferrule{
-%     }{
-%     \sub{\tbase}{\tbase}
-%     }~\textsf{base}
-%   \end{mathpar}
-%   \caption{subtyping}
-%  \end{figure}
-
-%  \clearpage
-
-%  \begin{thm}[Weaking]
-%   \label{sub}
-%   \begin{enumerate} 
-%    \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
-%   x \not \in \fv{\expr}  $ ,  then  $ \Gamma \tvdash{ \nnatA} \expr : \type $.
-%   \end{enumerate}
-% \end{thm}
-
-% \begin{thm}[Value Adaptivity]
-%   \label{sub}
-%   \begin{enumerate} 
-%    \item for all type $\bang{k} \ltype$,  exist value $\valr$, then  $
-%      \empty \tvdash{ k} \valr : \bang{k} \ltype $.
-%   \end{enumerate}
-% \end{thm}
-
-% \begin{thm}[Substitution]
-%   \label{sub}
-%   \begin{enumerate} 
-%    \item If $ \Gamma,x : \type' \tvdash{ \nnatA} \expr : \type $ and $
-%   \empty \tvdash{\nnatA'} \valr : \type'  $ , then  $\Gamma
-%   \tvdash{\max(\nnatA,\nnatA' )} \expr[\valr/x]  : \type$. 
-%   \end{enumerate}
-% \end{thm}
-
-% \begin{proof}
-%   By induction on the typing derivation.\\
-% \caseL{
-%   $   \inferrule{
-%     }{
-%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-%     }~\textbf{Ax}  $
-%   }
-% Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:  $\Gamma
-%   \tvdash{\max(\nnatA,\nnatA' )} x[\valr/x]  : \type$. proved by
-%   subtype rule on the assumption.
-% \caseL{
-%  $   \inferrule{
-%     }{
-%       \ictx \tctx ,y:\type', x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-%     }~\textbf{Ax2}  $
-%   }
-%   Assume $\empty \tvdash{\nnatA'} \valr : \bang{\nnatA}\ltype $, TS:
-%   $\Gamma,   x: \bang{\nnatA}\ltype
-%   \tvdash{\max(\nnatA,\nnatA' )} x[\valr/y]  : \type$. proved by rule
-%   AX and then subtype.
-%   \caseL{
-%    \inferrule{
-%       \ictx \Gamma, x: \type_1, y:\type'
-%       \tvdash{\nnatA }
-%       \expr: \type_2
-%     }{
-%       \ictx k+\Gamma, y: k + \type' \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
-%       \lto \type_2)
-%     }~\textbf{lambda}
-%   }
-%    Assume $\empty \tvdash{k+\nnatA'} \valr : k+\type' $, TS:
-%   $k+\Gamma
-%   \tvdash{\max(k+\nnatA,k+\nnatA' )} (\lambda x. \expr)[\valr/y]  : \type$. From the
-%   Lemma~\ref{para-dec} on the assumption, we know: $\empty
-%   \tvdash{\nnatA'} \valr : \type' ~(1)$.\\
-%   By Induction hypothesis on the premise, we get: $ \Gamma, x:\type_1
-%   \tvdash{\max( \nnatA, \nnatA' )}
-%       \expr[\valr/y]: \type_2 ~(2)$. By rule lambda, we conclude that
-%       $k+\Gamma \tvdash{ k+ ( \max(\nnatA,\nnatA ) }
-%       \lambda x.\expr[\valr/y]: \type_2 $.
-%       \caseL{
-%       \inferrule{
-%       \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-%       \lto \type_2      ) \\
-%       \ictx \Gamma_2 ,x: \type'', \tvdash{\nnatA_2} \expr_2: \type_1 
-%     }{
-%       \ictx \max (\Gamma_1, \Gamma_2 ), x:\max(\type',\type'') \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-%     }~\textbf{app}
-%   }
-%   Assume $\empty \tvdash{\nnatA'} \valr : \max(\type',\type'')$, TS: $\max (\Gamma_1, \Gamma_2 )
-%   \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
-%   \expr_2)[\valr/x]  : \type_2$. From the definition of $\max(\type',
-%   \type'')$, we know that $\type'$ and $\type''$ have similar
-%   form. Let us assume $\type'= \bang{k_1} \ltype$ and $\type'' =
-%   \bang{k_2} \ltype$ so that $\max(\type',\type'') = \bang{\max(k_1,k_2)}
-%   \ltype$.\\
-%   From the Lemma~\ref{para-dec} on the assumption, we have $\empty
-%   \tvdash{\nnatA' - (\max(k_1,k_2)-k_1) } \valr : \bang{k_1}
-%   \ltype~(1)$ and $\empty
-%   \tvdash{\nnatA' - (\max(k_1,k_2)-k_2) } \valr : \bang{k_2}
-%   \ltype~(2)$.\\ By induction hypothesis on $(1)$ and $(2)$ respctively,
-%   we know that:  $ \Gamma_1  \tvdash{ \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) ) } \expr_1[\valr/x]:  \bang{0} ( \type_1
-%   \lto \type_2   ) ~(3)$  and $ \Gamma_2  \tvdash{\max(\nnatA_2 ,
-%     \nnatA' - (\max(k_1,k_2)-k_2)   )} \expr_2[\valr/x]: \type_1 ~(4)$.  By the
-%   rule app and $(3)$, $(4)$, we conclude that $$\max (\Gamma_1, \Gamma_2 )
-%   \tvdash{\max(  \max( \nnatA_1, \nnatA' - (\max(k_1,k_2)-k_1) )  , \max(\nnatA_2 ,
-%     \nnatA' - (\max(k_1,k_2)-k_2)   )  )} \expr_1[\valr/x] \eapp
-%   \expr_2[\valr/x]  : \type_2 ~(5).$$
-%   Because $\max(\nnatA' - (\max(k_1,k_2)-k_1) ) , \nnatA' -
-%   (\max(k_1,k_2)-k_2)   ) \leq \nnatA' $, by subtype, we raise the
-%   adaptivity to  $\max(\nnatA_1,\nnatA_2, \nnatA' ) $ from $(5)$.
-%    \caseL{
-%       \inferrule{
-%       \ictx \Gamma_1,x:\type'  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-%       \lto \type_2      ) \\
-%       \ictx \Gamma_2  \tvdash{\nnatA_2} \expr_2: \type_1 
-%     }{
-%       \ictx \max (\Gamma_1, \Gamma_2 ), x:\type' \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-%     }~\textbf{app2}
-%   }
-%   It is another case for application when x only appear in the first
-%   premise. In this case, $\expr_2[\valr/x] = \expr_2$. Another case
-%   when variable x only appears in the second premise can be proved in
-%   a similar way.\\
-%   Assume $\empty \tvdash{\nnatA'} \valr :\type'$. TS:$\max (\Gamma_1, \Gamma_2 )
-%   \tvdash{\max(\nnatA_1,\nnatA_2, \nnatA' )} (\expr_1 \eapp
-%   \expr_2)[\valr/x]  : \type_2$.  By Induction Hypothesis on the first
-%   premise using the assumption, we get: $\Gamma_1
-%   \tvdash{\max(\nnatA_1, \nnatA')} \expr_1[\valr/x]:  \bang{0} ( \type_1
-%       \lto \type_2  )  ~(1)$. By the rule app using (1) and the second
-%       premise, we conclude that $$ \max (\Gamma_1, \Gamma_2 )
-%       \tvdash{\max( \max(\nnatA_1,\nnatA'),\nnatA_2) }
-%       \expr_1[\valr/x] \eapp \expr_2 : \type_2$$
-%       \caseL{
-%  \inferrule{
-%       \ictx \Gamma, x:\type' \tvdash{\nnatA} \expr: \bang{k} \ltype 
-%     }{
-%       \ictx \Gamma' ,1+\Gamma, x:1+\type'  \tvdash{1+\nnatA} \delta(\expr): \bang{k} \ltype 
-%     }~\textbf{delta}
-%   }
-%   Assume $\empty \tvdash{\nnatA'+1} \valr : 1+\type' $, TS: $ \Gamma'
-%   ,1+\Gamma \tvdash{\max(1+\nnatA, 1+\nnatA')} \delta(\expr)
-%   [\valr/x]: \bang{k} \ltype $.
-%   By Lemma~\ref{para-dec} on the assumption, we have $\empty
-%   \tvdash{\nnatA'} \valr : \type'~(1) $. By IH on the first premise
-%   along with (1), we have: $\Gamma \tvdash{\max(\nnatA, \nnatA')}
-%   \expr[\valr/x]: \bang{k} \ltype~ (2)$.
-%    By the rule delta using (2), we conclude that $\Gamma' ,1+\Gamma  \tvdash{1+(\nnatA,\nnatA')} \delta(\expr[\valr/x]): \bang{k} \ltype$.
-% \end{proof}
+\[\begin{array}{llll}
+    \mbox{Pure Expr.} & \expr & ::= & \econst ~|~ x ~|~ \expr \eapp \expr 
+                                      ~|~ \lambda x. \expr  ~|~
+                                      \epair{\expr}{\expr} ~|~
+                                      \eprojl\, \expr ~|~ \eprojr\, \expr\\ 
+                      & & &  \etrue ~|~ \efalse ~|~ \eif (\expr, \expr , \expr)  ~|~ \emonadic{m} \\
+    % 
+    \mbox{Monadic Expr.} & \mexpr & ::= & \mreturn(\expr) ~|~ \mlet{x}{\expr}{\mexpr} ~|~ \eop(\mexpr)\\
+    %
+    \mbox{Value.} & v & ::= & \econst ~|~ \lambda x. \expr ~|~ \pair{\valr_1}{\valr_2} ~|~  \etrue ~|~ \efalse  ~|~ \emonadic{m}\\
+    %
+    \mbox{Types} & \type &::=  &  \tbase ~|~ \type \to \type ~|~ \tmonad(\type)  \\
+  \end{array}\]
 
 
 
-% \begin{proof}
-%   By Induction on the typing derivation.
-%   \caseL{
-%      $   \inferrule{
-%     }{
-%       \ictx \tctx , x: \bang{\nnatA}\ltype \tvdash{\nnatA} x: \bang{\nnatA}\ltype
-%     }~\textbf{Ax}  $
-%   }
-%   Assume $\env= \Big( \env_1, [x \to (\valr,\adapt
-%   )] , \Big) \vDash (\tctx , x: \bang{\nnatA}\ltype  )$ where $\env_1 \vDash \Gamma$. We know that $
-%   \empty \tvdash{\adapt} \valr : \bang{\nnatA}\ltype $.
-%   From the evaluation rule var, we know $\env , x \bigstep{\adapt} \valr,
-%   \env  $.
-%   TS:  $ \adapt + adap(\valr, \env)  \leq  \nnatA +
-%   F(\env) \implies \adapt + 0 \leq \nnatA + \max( \adapt, F(\env_1))
-%   $.It is trivially true.
-% \caseL{
-%   $
-%     \inferrule{
-%       \ictx \Gamma, x: \type_1
-%       \tvdash{\nnatA }
-%       \expr: \type_2
-%     }{
-%       \ictx k+\Gamma \tvdash{k+\nnatA} \lambda x. \expr : \bang{k}  ( \type_1
-%       \lto \type_2)
-%     }~\textbf{lambda}
-%   $
-% }
-% Choose $\env \vDash  (k+\Gamma)$ so that $\forall x_i \in
-% (\Gamma). \env(x_1) =(\valr_i, \adapt_i ) \land \empty
-% \tvdash{\adapt_i } \valr_i: k+\Gamma(x_i) $.  By the evaluation rule
-% we know $\env, \lambda x. \expr \bigstep{0}
-%                                        \lambda x.\expr, \env $, TS: $0
-%                                        + \adap(\lambda x.\expr, \env)
-%                                        \leq  k+\nnatA + F(\env)$, which is trivially
-%                                        true because $ \adap(\lambda
-%                                        x.\expr, \env) \leq F(\env) $.
-                                       
-% \caseL{
-%     $  \inferrule{
-%       \ictx \Gamma_1  \tvdash{\nnatA_1} \expr_1:  \bang{0} ( \type_1
-%       \lto \type_2      ) \\
-%       \ictx \Gamma_2 \tvdash{\nnatA_2} \expr_2: \type_1 
-%     }{
-%       \ictx \max (\Gamma_1, \Gamma_2 ) \tvdash{\max( \nnatA_1,\nnatA_2) } \expr_1 \eapp \expr_2 : \type_2
-%     }~\textbf{app}  $
-%   }
-%   Choose $\env = [x_i \to (\valr_i,0)] $ for all $x_i$ in
-%   $\dom(\max(\Gamma_1,\Gamma_2))$
-%   so that  $\empty \tvdash{\nnatA_i} \valr_i  : (\max(\Gamma_1,
-%   \Gamma_2)(x_i) $.
-%   From the definition, we know that $\env \vDash \Gamma_1$ and $\env
-%   \vDash \Gamma_2$. Because $\expr_1$ has the arrow type and will be
-%   evaluated to a function, assume exists $\env_1$ so that $\env,
-%   \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 $.  By induction
-%   hypothesis on the first premise, we know that: $\adapt_1 +
-%   \adap(\lambda x. \expr, \env_1) \leq \nnatA_1 + F(\env,
-%   \Gamma_1)~(1)$.Assume exists $\env_2$ so that $\expr_2$ is evaluated
-%   to an arbitrary value $\valr_2$ : $ \env, \expr_2 \bigstep{\adapt_2}
-%   \valr_2 , \env_2$, by induction hypothesis, we conclude that :  $\adapt_2 +
-%   \adap(\valr , \env_2) \leq \nnatA_2 + F(\env,
-%   \Gamma_2)~(2)$.
-                            
+\begin{definition}
+  Let $\vdash \mexpr : \tmonad(\type)$, its \emph{adaptivity} is defined as:
+  $$
+  \min\{\adapt ~|~ \exists \expr',\valr. \mexpr\bigstepf{\adapt} \expr' \land \expr' \bigstep \valr \}
+  $$
+\end{definition}
 
 
-% \[
-% \inferrule{
-%     \env, \expr_1 \bigstep{\adapt_1} \lambda x.\expr , \env_1 \\
-%     \env, \expr_2 \bigstep{\adapt_2} \valr_2 , \env_2 \\
-%     (\env_1 \uplus \env_2)[ x  \to (\valr_2,   \adapt_2  ) ], \expr
-%     \bigstep{\adapt_3} \valr, \env_3
-%   }{
-%     \env, \expr_1 \eapp \expr_2 \bigstep{\adapt_1+\adapt_3} \valr, \env_3
-%   }~\textsf{app}
-% \]
-%  \end{proof} 
+\begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{}{
+     \tctx, x:\type \vdash x :  \type
+    }~\textbf{ST-AX}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \tctx \vdash c: \tbase
+    }~\textbf{ST-CST}   
+    \and
+    %
+    \inferrule{
+      \tctx, x: \type_1 \vdash \expr : \type_2
+    }{
+     \tctx \vdash \lambda x. \expr  :\type_1 \to \type_2
+    }~\textbf{ST-LAM}
+    \and
+    %
+    \inferrule{
+       \tctx \vdash\expr_1:  \type_1 \to \type_2      \\
+      \tctx \vdash\expr_2 : \type_1
+    }{
+      \tctx \vdash ( \expr_1 \eapp \expr_2) : \type_2
+    }~\textbf{ST-app}
+    %
+    \\
+    ....
+  \end{mathpar}
+  \caption{Simple Types - pure rules}
+  \label{fig:simple-types-pure}
+\end{figure}
+
+ \begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+      \tctx \vdash \expr :  \type
+    }{
+     \tctx \vdash \return(\expr) : \tmonad( \type)
+    }~\textbf{ST-RET}
+    %
+    \and
+    %
+    \inferrule{
+      \tctx \vdash \expr :  \tmonad(\type_1)
+      \\
+      \tctx, x: \type_1 \vdash \mexpr :  \tmonad(\type_2)
+    }{
+      \tctx \vdash \mlet{\expr}{x}{\mexpr} : \tmonad(\type_2)
+    }~\textbf{ST-LET}
+    %
+    \and
+    %
+    \inferrule{
+      \tctx \vdash \expr  :  \tmonad({\tt row})
+      \\
+      \hat{\delta}:{\tt row} \to [0,1]
+   }{  \tctx \vdash \delta(\expr) : \tmonad([0,1])
+    }~\textbf{ST-DELTA}
+  \end{mathpar}
+  \caption{Simple Types - monadic rules}
+  \label{fig:simple-types-monadic}
+\end{figure}
 
 
+\begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+    }{
+     \valr \bigstep \valr } ~\textsf{S-VAL}
+   \and
+   %
+   \and
+  %
+  \inferrule{
+    \expr_1 \bigstep \lambda x.\expr  \\
+     \expr_2 \bigstep \valr_2  \\
+   \expr[\valr_2/x] \bigstep \valr_3
+  }{
+     \expr_1 \eapp \expr_2 \bigstep \valr_3
+   }~\textsf{S-APP}
+    %
+  \and
+ %
+ \inferrule{
+  \expr_1 \bigstep  \etrue
+   \\
+   \expr_2  \bigstep \valr_2
+  }{
+   \env, \eif (\expr_1 ,\expr_2 , \expr_3) \bigstep \valr_2
+  }~\textsf{S-IFT}
+\and
+ \inferrule{
+  \env, \expr_1 \bigstep{\adapt_1} \env_1, \etrue
+   \\
+   \expr_3  \bigstep \valr_3
+  }{
+   \eif (\expr_1 ,\expr_2 , \expr_3) \bigstep  \valr_3
+  }~\textsf{S-IFF}
+  % %
+ %
+  \and
+  %
+  \inferrule{
+     \expr_1  \bigstep \valr_1 \\
+     \expr_2  \bigstep \valr_2 \\
+  }{
+   \pair{\expr_1}{\expr_2} \bigstep
+   \pair{ \valr_1}{\valr_2}
+ }~\textsf{S-PROD}
+ %
+  \and
+  %
+  \inferrule{
+    \expr  \bigstep (\valr_1, \valr_2) 
+  }{
+   \eprojl{\, \expr} \bigstep \valr_1
+ }~\textsf{S-PL}
+ %
+  \and
+  %
+  \inferrule{
+    \expr  \bigstep (\valr_1, \valr_2) 
+  }{
+   \eprojr{(\expr)} \bigstep \valr_2
+ }~\textsf{S-PR}
+\end{mathpar}
+  \caption{Big-step semantics, pure  rules.}
+  \label{fig:semantics-pure}
+\end{figure}
+
+
+\begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+    }{
+     \return(\expr) \bigstepf{0}{0} \expr } ~\textsf{FS-RET}
+   \and
+   %
+  \inferrule{
+    \expr\bigstep \emonadic{\mexpr_1}  \\
+     \mexpr_1\bigstepf{\adapt_1} \expr_1  \\
+     \mexpr[\expr_1/x] \bigstepf{\adapt_2} \expr_2  \\
+  }{
+     \mlet{\expr}{x}{\mexpr} \bigstepf{\adapt_1+\adapt_2} \expr_2
+   }~\textsf{S-APP-A}
+    %
+ \and
+   %
+  \inferrule{
+     \mexpr\bigstepf{\adapt_2} \expr_2  \\
+   }{
+     \mlet{\expr_1}{x}{\expr_2} \bigstepf{\adapt_2} \expr_2
+   }~\textsf{S-APP-Z}
+   \and
+  \inferrule{
+    \mexpr \bigstepf{\adapt} \expr  \\
+    \expr \bigstep \valr\\
+    \hat{\eop}(\valr)=\valr'
+  }{
+     \eop(\mexpr)  \bigstepf{\adapt+1} \valr'
+   }~\textsf{S-APP}
+    %
+\end{mathpar}
+  \caption{Big-step semantics, forcing rules.}
+  \label{fig:semantics-forcing}
+\end{figure}
+
+
+
+\begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{}{
+     \tctx, x:!_1\type \vdash x :  \type
+    }~\textbf{ST-AX}
+    %
+    \and
+    %
+    \inferrule{
+    }{
+      \tctx \vdash c: \tbase
+    }~\textbf{ST-CST}   
+    \and
+    %
+    \inferrule{
+      \tctx, x: !_i \type_1 \vdash \expr : \type_2
+    }{
+     \tctx \vdash \lambda x. \expr  :!_i \type_1 \to \type_2
+    }~\textbf{ST-LAM}
+    \and
+    %
+    \inferrule{
+       \tctx_1 \vdash\expr_1:  !_i\type_1 \to \type_2      \\
+      \tctx_2 \vdash\expr_2 : \type_1
+    }{
+      \tctx_1+i*\tctx_2 \vdash ( \expr_1 \eapp \expr_2) : \type_2
+    }~\textbf{ST-app}
+    %
+    \\
+    ....
+  \end{mathpar}
+  \caption{Simple Types - pure rules}
+  \label{fig:simple-types-pure}
+\end{figure}
+
+ \begin{figure}[h]
+  \begin{mathpar}
+    \inferrule{
+      \tctx \vdash \expr :  \type
+    }{
+     \tctx \vdash \return(\expr) : \tmonad( \type)
+    }~\textbf{ST-RET}
+    %
+    \and
+    %
+    \inferrule{
+      \tctx \vdash \expr :  \tmonad(\type_1)
+      \\
+      \tctx, x: \type_1 \vdash \mexpr :  \tmonad(\type_2)
+    }{
+      \tctx \vdash \mlet{\expr}{x}{\mexpr} : \tmonad(\type_2)
+    }~\textbf{ST-LET}
+    %
+    \and
+    %
+    \inferrule{
+      \tctx \vdash \expr  :  \tmonad({\tt row})
+      \\
+      \hat{\delta}:{\tt row} \to [0,1]
+   }{  \tctx \vdash \delta(\expr) : \tmonad([0,1])
+    }~\textbf{ST-DELTA}
+  \end{mathpar}
+  \caption{Simple Types - monadic rules}
+  \label{fig:simple-types-monadic}
+\end{figure}
+
+
+  
 \end{document}
 
 
