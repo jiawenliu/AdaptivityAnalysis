@@ -44,16 +44,23 @@
 
 \[\begin{array}{llll}
     \mbox{Pure Expr.} & \expr & ::= & \econst ~|~ x ~|~ \expr \eapp \expr 
-                                      ~|~ \lambda x. \expr  ~|~
+                                      ~|~ \lambda x. \expr  ~|~ \efix
+                                      \, f(x) \, \expr ~|~
                                       \epair{\expr}{\expr} ~|~
                                       \eprojl\, \expr ~|~ \eprojr\, \expr\\ 
-                      & & &  \etrue ~|~ \efalse ~|~ \eif (\expr, \expr , \expr)  ~|~ \emonadic{m} \\
+                      & & &  \etrue ~|~ \efalse ~|~ \eif (\expr, \expr
+                            , \expr)  ~|~ \enil ~|~ \expr \,  \econs
+                            \, \expr ~|~  \emonadic{m} \\
     % 
-    \mbox{Monadic Expr.} & \mexpr & ::= & \mreturn(\expr) ~|~ \mlet{x}{\expr}{\mexpr} ~|~ \eop(\mexpr)\\
+    \mbox{Monadic Expr.} & \mexpr & ::= & \mreturn(\expr) ~|~
+                                          \mlet{x}{\expr}{\mexpr} ~|~
+                                         \mpair{\mexpr}{\mexpr} ~|~ \eop(\mexpr)\\
     %
     \mbox{Value.} & v & ::= & \econst ~|~ \lambda x. \expr ~|~ \pair{\valr_1}{\valr_2} ~|~  \etrue ~|~ \efalse  ~|~ \emonadic{m}\\
     %
-    \mbox{Types} & \type &::=  &  \tbase ~|~ \type \to \type ~|~ \tmonad(\type)  \\
+    \mbox{Types} & \type &::=  &  \tbase ~|~ \type \to \type ~|~ \type
+                                 \times \type
+                                 ~|~ \tmonad(\type)  \\
   \end{array}\]
 
 
@@ -213,7 +220,7 @@
      \mexpr[\expr_1/x] \bigstepf{\adapt_2} \expr_2  \\
   }{
      \mlet{x}{\expr}{\mexpr} \bigstepf{\adapt_1+\adapt_2} \expr_2
-   }~\textsf{S-APP-A}
+   }~\textsf{FS-BIND}
     %
  \and
    %
@@ -221,7 +228,7 @@
      \mexpr\bigstepf{\adapt_2} \expr_2  \\
    }{
      \mlet{x}{\expr_1}{\mexpr} \bigstepf{\adapt_2} \expr_2
-   }~\textsf{S-APP-Z}
+   }~\textsf{FS-SKIP}
    \and
   \inferrule{
     \mexpr \bigstepf{\adapt} \expr  \\
@@ -229,8 +236,17 @@
     \hat{\eop}(\valr)=\valr'
   }{
      \eop(\mexpr)  \bigstepf{\adapt+1} \valr'
-   }~\textsf{S-APP}
-    %
+   }~\textsf{FS-MECH}
+   %
+  \and
+  %
+  \inferrule{
+     \mexpr_1  \bigstepf{\adapt_1} \expr_1 \\
+     \mexpr_2  \bigstepf{\adapt_2} \expr_2 \\
+  }{
+   \mpair{\mexpr_1}{\mexpr_2} \bigstep
+   \pair{\expr_1}{\expr_2}
+ }~\textsf{FS-PROD}
 \end{mathpar}
   \caption{Big-step semantics, forcing rules.}
   \label{fig:semantics-forcing}
@@ -304,8 +320,35 @@
   \label{fig:simple-types-monadic}
 \end{figure}
 
-
-  
+\clearpage
+\section{Example}
+1. A mechnism with the simple input query : $\lambda x. \emonadic{
+  \eop(\mreturn(x)) } \eapp b \bigstep \emonadic{\eop(\mreturn(b))} $.\\
+2. A mechnism with a complex input query : $\lambda x. \emonadic{
+  \eop(\mreturn(x)) } \eapp \emonadic{\eop(\mreturn(b))} \bigstep
+\emonadic{\eop(\mreturn( \eop(\mreturn(b)) ))} $.\\
+3. A mechnism with more arguments : \\
+ $ \lambda x. \lambda y. \emonadic{ \mlet{z}{
+     \emonadic{\eop(\mreturn(x))}  }{   \eop( \mreturn{ (\eprojl{y} +
+       z) }  )   } }  \eapp b \eapp (b_1, b_2)$\\
+ 4.  A mechnism with impure arguments : \\
+ $ \lambda x. \lambda y. \emonadic{ \mlet{z}{
+     x }{   \eop( \mreturn{ (\eprojl{y} + z) }  )   } } \eapp
+ \emonadic{\eop(\mreturn(b))} \eapp \epair{b_1}{b_2} $.\\
+5.  A mechnism with impure pair : \\
+ $ \lambda x. \lambda y. \emonadic{ \mlet{z}{
+     x }{
+     \mlet{n}{y}{
+     \eop( \mreturn{ (\eprojl{n} + z) }  ) }   }
+ } \eapp$ \\
+ $\emonadic{\eop(\mreturn(b))} \eapp \emonadic{\mpair{ \mreturn( b_1)}{
+    \eop( \mreturn( b_2) ) } }$.\\
+6. two rounds\\
+$\efix \, f(j) \, \lambda \, k.  $\\
+$ \eif ( j < k , $\\
+$\emonadic{ \mlet{a}{ \emonadic{\eop (\mreturn(l+k) ) }
+  } { \mlet{t'}{f \eapp (j+1) \eapp k }{  \mreturn( (a, j) \econs t' )  } } } ,   $\\
+$ \emonadic{ \mreturn ( \enil )  } ) $\\
 \end{document}
 
 
