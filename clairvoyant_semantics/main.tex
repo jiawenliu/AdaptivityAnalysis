@@ -333,39 +333,35 @@
 \clearpage
 \section{Example}
 1. A mechnism with the simple input query : $\lambda x. \emonadic{
-  \eop(\mreturn(x)) } \eapp b \bigstep \emonadic{\eop(\mreturn(b))} $.\\
+  \eop(\mreturn(x)) } \eapp c \bigstep \emonadic{\eop(\mreturn(c))} $.\\
 2. A mechnism with a complex input query : $\lambda x. \emonadic{
-  \eop(\mreturn(x)) } \eapp \emonadic{\eop(\mreturn(b))} \bigstep
-\emonadic{\eop(\mreturn( \eop(\mreturn(b)) ))} $.\\
+  \eop(\mreturn(x)) } \eapp \emonadic{\eop(\mreturn(c))} \bigstep
+\emonadic{\eop(\mreturn( \eop(\mreturn(c)) ))} $.\\
 3. A mechnism with more arguments : \\
  $ \lambda x. \lambda y. \emonadic{ \mlet{z}{
      \emonadic{\eop(\mreturn(x))}  }{   \eop( \mreturn{ (\eprojl{y} +
-       z) }  )   } }  \eapp b \eapp (b_1, b_2)$\\
+       z) }  )   } }  \eapp c \eapp (c_1, c_2)$\\
  4.  A mechnism with impure arguments : \\
  $ \lambda x. \lambda y. \emonadic{ \mlet{z}{
      x }{   \eop( \mreturn{ (\eprojl{y} + z) }  )   } } \eapp
- \emonadic{\eop(\mreturn(b))} \eapp \epair{b_1}{b_2} $.\\
-5.  A mechnism with impure pair : \\
- $ \lambda x. \lambda y. \emonadic{ \mlet{z}{
-     x }{
-     \mlet{n}{y}{
-     \eop( \mreturn{ (\eprojl{n} + z) }  ) }   }
- } \eapp$ \\
- $\emonadic{\eop(\mreturn(b))} \eapp \emonadic{\mpair{ \mreturn( b_1)}{
-    \eop( \mreturn( b_2) ) } }$.\\
+ \emonadic{\eop(\mreturn(c))} \eapp \epair{c_1}{c_2} $.\\
+ 5.  store the mechnism results into a list, the adaptivity? \\
+ $ \mathsf{mlet} \, l =  $ \\
+ $ \big\{  \mlet{a}{ \emonadic{\eop (\mreturn(c) ) }
+  } { \mlet{b}{\emonadic{ \eop (\mreturn(c) ) } }{  \mreturn( a \, ::
+      \, b \, :: \, \enil )  } } \big\}$\\
+$\ein \, \eop( \ereturn( l[1] + l[2])  )$.\\
 6. two rounds\\
 $\elet g =
 \efix \, f(j) \, \lambda \, k.  $\\
 $ \eif ( j < k , $\\
-$\emonadic{ \mlet{a}{ \emonadic{\eop (\mreturn(l+k) ) }
-  } { \mlet{t'}{f \eapp (j+1) \eapp k }{  \mreturn( (a, j) \econs t' )  } } } ,   $\\
+$\emonadic{ \mlet{a}{ \emonadic{\eop (\mreturn(j+k) ) }
+  } { \mlet{t'}{f \eapp (j+1) \eapp k }{  \mreturn( a \econs t' )  } } } ,   $\\
 $ \emonadic{ \mreturn ( \enil )  } ) $\\
-$ \ein \, \elet \, l = g \eapp 0 \eapp K $\\
-$ \ein \, 
-\emonadic{\eop(
-\emonadic{\lambda \, x. \esign(\efoldl ~(\lambda \, acc. \lambda \, (a, i). (acc + (x \eapp i)* \elg(\frac{1 + a}{1 - a}) )) \eapp 0 \eapp l)}
-)}$
-
+$ \ein \, \emonadic{ \mlet{l}{ g \eapp 0 \eapp K} { \eop(
+ \esign(\efoldl ~(\lambda \, acc. \lambda \,
+  a. (acc +  \elg(\frac{1 + a}{1 - a}) )) \eapp 0
+  \eapp l)   )}} $\\
 \end{document}
 
 
