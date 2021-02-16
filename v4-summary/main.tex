@@ -5,21 +5,81 @@
 
 \input{ldefs}
 \input{prelude}
+\newcommand{\THESYSTEM}{\textsf{AdaptFun}}
 
+
+
+\begin{document}
 \title{Adaptivity Analysis}
 
 \author{}
 
 \date{}
 
-\begin{document}
-
 \maketitle
+
+\begin{abstract}
+  A data analysis is said to \emph{generalize} when it allows one to draw
+  conclusions from the data that are true of the population from which
+  the data are sampled. Statistician and data scientist have devised
+  several methods aimed to guarantee generalization in  data
+  analyses, and avoid in this way overfitting to the
+  data. Guaranteeing generalization is more difficult when data
+  analyses are \emph{adaptive}: when the result of an analysis depends
+  on the result of previous analyses. 
+
+  A recent line of work focuses on methods aimed at guaranteeing
+  generalization in adaptive data analysis through the addition of
+  carefully calibrated statistical noise to the empirical results of
+  the analysis on the sampled data. In these works, the confidence
+  intervals on the generalization error that one can achieve for a
+  given analysis usually depend on the \emph{level of adaptivity} of
+  the analysis: the number of adaptive steps that depend the one on
+  the other. 
+
+  In this work we introduce a programming framework, named \THESYSTEM,  aimed at
+  supporting the study of the generalization error for adaptive data
+  analysis. Through its analysis system, an upper bound on the adaptivity -- depth (the length of the longest chain of queries) of a program implementing an adaptive data analysis. We show how this language can help to analyze the generalization error of two data analyses with different adaptivity structures.
+\end{abstract}
+
+\tableofcontents
+
+
+% \section{Introduction}
+\section{System Overview}
+In adaptive data analysis, a data analysis can depend on the result of
+previous analysis on the same data. This dependency may affect the
+\emph{generalization properties of the data analysis}. To study this phenomenon
+in a formal way, we can consider the \emph{statistical query
+  model}. In this model, a dataset $X$ consisting of $d$ attributes (columns) and $n$
+individuals' data (rows) can be accessed only through an interface to
+which one can submit statistical queries. More precisely, suppose that
+the type of a row is $R$ (as an example, a row with $d$ binary
+attributes would have type $R=\{0,1\}^d$. Then, in the statistical
+query model one can access the dataset only by submitting a function
+$p:D\to [0,1] $ to it, and obtaining as an answer the average value of
+this function $p$ on the rows in the dataset, i.e. the result is the
+value $\frac{1}{n}\sum_{i=1}^n p(X_i)$ where
+$X_i$ is the row of index $i$ in $X$. While this model is rather
+simple, in fact it supports a large of statistics one may be
+interested in having over some data.
+
+To support this model, we start from a low level language where the queries are atomic -- $q$ -- given data base $D$, the result of the query from $D$ is fixed.
+We defined the adaptivity of the program under this model based on only the control flow.
+
+Then we extend the low level language to a high level language,
+where the queries are allow to be non-atomic -- $q(e)$ -- the result of the query from a specific $D$ can varies under different context.
+Correspondingly, we extend the definition of the adaptivity onto the high level language based on a rewrite procedure.
+Finally we extend the language to support the probabilistic program and extend the adaptivity definition accordingly.
+
+The key component of the system is an program analysis procedure, which provides an upper bound on the adaptivity of the program.
+
+\section{Low Level Control Flow Based Language}
 We first consider a low level language where the queries are atomic
 and the dependency relations are caused only by controal flow.
-
-
-\section{Low level control flow based language}
+%
+\subsection{Syntax and Semantics}
+%
 \paragraph{Syntax.}
 \[
 \begin{array}{llll}
@@ -63,9 +123,11 @@ and the dependency relations are caused only by controal flow.
 %
 \paragraph{Operational Semantics.}
 
-\[\boxed{ \config{m, \aexpr} \aarrow \aexpr' \, : \, Memory \times AExpr \Rightarrow AExpr }\]
-\newline
+% \[\]
+% \newline
 \begin{mathpar}
+\boxed{ \config{m, \aexpr} \aarrow \aexpr' \, : \, Memory \times AExpr \Rightarrow AExpr }
+\\
 \inferrule{
 }{
  \config{m, x} \aarrow m(x)
@@ -95,11 +157,12 @@ n_3 = n_1 *_a n_2
  \config{m, n_1 *_a n_2 } \aarrow n_3
 }
 \end{mathpar}
-\vfill \pagebreak
-
-\[\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }\]
-\newline
+% \vfill \pagebreak
+% \newline
+%
 \begin{mathpar}
+\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
+\\
 \inferrule{
 }{
  \config{m, \etrue} \barrow \etrue
@@ -168,14 +231,12 @@ b_3 = n_1 *_r n_2
  \config{m, \neg \bexpr } \barrow \neg \bexpr'
 }
 \end{mathpar}
-
-\[\boxed{ \config{m, c, D, t} \xrightarrow{} \config{m', c', D, t'} \; }
-\]
-\[
-{  Memory \times Com \times Db \times Trace \times WhileMap \Rightarrow^{} Memory \times Com \times Db \times Trace \times WhileMap}
-\]
-\newline
+%
 \begin{mathpar}
+\boxed{ \config{m, c, D, t} \xrightarrow{} \config{m', c', D, t'} \; }
+\and
+{  Memory \times Com \times Db \times Trace \times WhileMap \Rightarrow^{} Memory \times Com \times Db \times Trace \times WhileMap}
+\and
 \inferrule
 {
 q(D) = v
@@ -185,7 +246,6 @@ q(D) = v
 }
 ~\textbf{query}
 %
-\\
 %
 % \inferrule
 % {
@@ -398,12 +458,50 @@ w + l & = w[l \to 0] & l \not \in Keys(w) \\
 \]
 % \vfill \pagebreak
 %
+\subsection{Adaptivity of Programs in Low level language}
 %
-\subsection{Independence between two queries in Low level language}
+%
+\begin{defn}[Label Order]
+$<_w and =_w$.\\
+\[
+  \begin{array}{lll}
+     w_1 =_w w_2  &  \triangleq &  Keys(w_1) = Keys(w_2) \land \forall k \in Keys(w_1). w_1(k) = w_2(k) \\
+     \emptyset =_w \emptyset & &   \\
+  \end{array}
+\] 
+$mk(w_i) =MinKey(w_i) $ 
+\[
+\begin{array}{lllr}
+     w_1 <_w w_2 & \triangleq & & w_1 = \emptyset \\
+     & \triangleq  & mk(w_1) < mk(w_2) & w_1,w_2 != \emptyset  \\
+     & \triangleq & w_1(mk(w_1)) < w_2(mk(w_2))   & mk(w_1) = mk(w_2) \\
+     & \triangleq & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & Otherwise
+\end{array}
+\]
+\end{defn}
+%
+\begin{defn}[Query Direction]
+Direction between two queries.
+\\
+$\forall Q_1,Q_2, l_1, l_2, w_1, w_2 $.
+$(Q_1^{l_1, w_1}) \, \mathsf{TO} \, (Q_2^{l_2,w_2})$,
+denoted as $\mathsf{To}(Q_1^{l_1, w_1}, Q_2^{l_2,w_2})$ \\ iff $(Q_1^{l_1, w_1}) <_q (Q_2^{l_2, w_2})  $\\
+where \\
+$(Q_1^{l_1, w_1}) <_q (Q_2^{l_2, w_2})$ is defined:\\
+\[
+\begin{array}{ll}
+    l_1 < l_2  & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2   \\
+    w_1 <_w w_2    & \mathsf{Otherwise}
+\end{array}  
+\]
+\end{defn}
+%
+%
+\paragraph{Independence between two queries in Low level language}
 %
 When two queries $q_1,q_2$ are independent in a program $c$, suppose $q_1$ appears before $q_2$ in the program $c$, we think the choice of queries starting from $q_1$, ending with query $q_2$ should be fixed no matter the change of the result of $q_1$.\\
 %
-\begin{defn}
+\begin{defn}[Query Independence]
 Two queries $q_i$ and $q_j$ in a program $c$ are independent, $\mathsf{IND}(q^{l_1}_i, q^{l_2}_j, c)$.
 
 $\forall m, D. 
@@ -439,31 +537,10 @@ c_1 \triangleq
     \mathsf{else} \; \left[y \leftarrow q_2 \right]^7; \\
 \end{array}
 %
+%
 \hspace{20pt}
 %
 c_2 \triangleq
-\begin{array}{l}
-     \left[x \leftarrow q_1\right]^1 ; \\
-    \eif \; \left[x \right]^2\; \\
-    \mathsf{then} \; \left[y \leftarrow q_2\right]^3 \; \\
-    \mathsf{else} \; \left[y \leftarrow q_3\right]^4 ; \\
-    \left[z \leftarrow q_2 \right]^5; \\
-\end{array}
-%
-\hspace{20pt}
-%
-c_3 \triangleq
-\begin{array}{l}
-     \left[x \leftarrow q_1 \right]^1; \\
-    \eif \; \left[x \right]^2\; \\
-    \mathsf{then} \; \left[y \leftarrow q_3 \right]^3\; \\
-    \mathsf{else} \; \left[y \leftarrow q_4 \right]^4; \\
-    \left[z \leftarrow q_2 \right]^5; \\
-\end{array}
-%
-\hspace{20pt}
-%
-c_4 \triangleq
 \begin{array}{l}
    \left[ x \leftarrow q_1 \right]^1; \\
    \left[y \leftarrow q_2\right]^2 ; \\
@@ -472,39 +549,9 @@ c_4 \triangleq
     \mathsf{else} \;\left[ \eskip\right]^5 ; \\
    \left[ w \leftarrow q_4 \right]^6; \\
 \end{array}
-\]
-We have the dependency as:
-\\
-In program $c_1$:
-$\mathsf{IND}(q_2^3, q_2^7, c_1)$, 
-\\
-In program $c_2$:
-$\mathsf{IND}(q_1^1, q_2^5, c_2)$,
-$\mathsf{IND}(q_2^3, q_3^4, c_2)$,
-\\
-In program $c_3$:
-$\mathsf{IND}(q_1^1, q_2^5, c_3)$,
-$\mathsf{IND}(q_3^3, q_4^4, c_3)$,
-\\
-In program $c_4$:
-$\mathsf{IND}(q_1^1, q_2^2, c_4)$,
-$\mathsf{IND}(q_3^3, q_4^4, c_4)$,
-$\mathsf{IND}(q_1^1, q_4^4, c_4)$,
-$\mathsf{IND}(q_2^2, q_4^4, c_4)$,\\
-In following examples containing $\ewhile$ loop:
-\[
-c_1 \triangleq
-\begin{array}{l}
-     \left[x \leftarrow q_1 \right]^1 ; \\
-    \ewhile \Big( 
-    \left[x \leq 100 \right]^2 , \\
-    \left[x \leftarrow q_2 + x \right]^3
-    \Big) ;
-\end{array}
-%
 \hspace{20pt}
 %
-c_2 \triangleq
+c_3 \triangleq
 \begin{array}{l}
      \left[x \leftarrow q_1 \right]^1 ; \\
     \ewhile \Big( 
@@ -517,7 +564,7 @@ c_2 \triangleq
 %
 \hspace{20pt}
 %
-c_3 \triangleq
+c_4 \triangleq
 \begin{array}{l}
      \left[x \leftarrow q_1 \right]^1 ; \\
     \ewhile \Big( 
@@ -531,57 +578,27 @@ c_3 \triangleq
     \left[x \leftarrow y + x \right]^7
     \Big) ;
 \end{array}
-%
 \]
-we have the dependency as:
+We have the dependency as:
 \\
-In program $c_1$: No independent queries.
+In program $c_1$:
+$\mathsf{IND}(q_2^3, q_2^7, c_1)$, 
 \\
-In program $c_2$: $\mathsf{IND}(q_2^{(3, l)}, q_3^{(4, l)}, c_2)$ for all $l$.
+In program $c_2$:
+$\mathsf{IND}(q_1^1, q_2^2, c_4)$,
+$\mathsf{IND}(q_3^3, q_4^4, c_4)$,
+$\mathsf{IND}(q_1^1, q_4^4, c_4)$,
+$\mathsf{IND}(q_2^2, q_4^4, c_4)$,
 \\
-In program $c_3$: No independent queries.
-%
-\subsection{Adaptivity of Programs in Low level language}
-\begin{defn}
-$<_w and =_w$.\\
-\[
-  \begin{array}{lll}
-     w_1 =_w w_2  &  \triangleq &  Keys(w_1) = Keys(w_2) \land \forall k \in Keys(w_1). w_1(k) = w_2(k) \\
-     \emptyset =_w \emptyset & &   \\
-  \end{array}
-\] 
-$mk(w_i) =MinKey(w_i) $ 
-\[
-\begin{array}{lllr}
-     w_1 <_w w_2 & \triangleq & & w_1 = \emptyset \\
-     & \triangleq  & mk(w_1) < mk(w_2) & w_1,w_2 != \emptyset  \\
-     & \triangleq & w_1(mk(w_1)) < w_2(mk(w_2))   & mk(w_1) = mk(w_2) \\
-     & \triangleq & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & Otherwise
-\end{array}
-\]
-\end{defn}
-%
-\begin{defn}
-Direction between two queries.
+In program $c_3$: $\mathsf{IND}(q_2^{(3, l)}, q_3^{(4, l)}, c_2)$ for all $l$.
 \\
-$\forall Q_1,Q_2, l_1, l_2, w_1, w_2 $.
-$(Q_1^{l_1, w_1}) \, \mathsf{TO} \, (Q_2^{l_2,w_2})$,
-denoted as $\mathsf{To}(Q_1^{l_1, w_1}, Q_2^{l_2,w_2})$ \\ iff $(Q_1^{l_1, w_1}) <_q (Q_2^{l_2, w_2})  $\\
-where \\
-$(Q_1^{l_1, w_1}) <_q (Q_2^{l_2, w_2})$ is defined:\\
-\[
-\begin{array}{ll}
-    l_1 < l_2  & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2   \\
-    w_1 <_w w_2    & \mathsf{Otherwise}
-\end{array}  
-\]
-\end{defn}
+In program $c_4$: No independent queries.
 %
+
 %
-\subsection{Dependency between multiple queries }
+\paragraph{Dependency between multiple queries }
 %
-\begin{defn} Dependency Graph
-\\
+\begin{defn}[Dependency Graph]
 A dependency graph over a program $P$ is defined as $G(P) = (V, E, \vend )$, where $V$ is set of verticals and $E$ is the set of directed edges:
 \\
 %
@@ -596,74 +613,13 @@ E = $\{  (q_{i}, q_{j}) | \exists m. \mathsf{Dep}(q_i, q_{j}, P, m)  \} $ , in t
 $\vend = \{q_{e_1}, \cdots, q_{e_l}\}$ be the set of queries related to the return value.
 \end{defn}
 %
-\begin{defn}
-\todo{Reachable Query}.
-\\
+\begin{defn}[Reachable Query].
 A query $q$ in program $P$ is reachable iff $q$ may be executed.
 \end{defn}
 %
 %
-\begin{example}
-\textbf{Dependency graphs for programs containing 3 queries}
-\\
-Let $q_1$ = $\lambda D. D_i * D_j$, \\ 
-Let $q_2 = \lambda D. D_i * D_j + x_1  $.\\
-Let $q_3 = \lambda D. D_i * D_j + x_1 - x_2 $, 
-$q_3 = \lambda D. D_i * D_j + x_2 $, 
-and $q_3 = \lambda D. D_i * D_j + x_1$ .\\
-in program $P_1$, $P_2$ and $P_3$ respectively as following:
-\[
-\begin{array}{c}
-P_1 \triangleq\\
-      x_1 = \delta ( \lambda D. D_i * D_j) ; \\
-   x_2 = \delta(\lambda D. D_i * D_j + x_1  ) ; \\
-      \delta(\lambda D. D_i * D_j + x_1 + x_2)
-\end{array}
- ~~~
-\begin{array}{c}
-P_2 \triangleq\\
-x_1 = \delta ( \lambda D. D_i * D_j) ; \\
-   x_2 = \delta(\lambda D. D_i * D_j + x_1  ) ; \\
-      \delta(\lambda D. D_i * D_j  + x_2)
-\end{array}
-~~~
-\begin{array}{c}
-P_3 \triangleq\\
-      x_1 = \delta ( \lambda D. D_i * D_j) ; \\
-   x_2 = \delta(\lambda D. D_i * D_j + x_1  ) ; \\
-      \delta(\lambda D. D_i * D_j  + x_1)
-\end{array}
-\]
 %
-\begin{center}
-\begin{tikzpicture}
-\draw[very thick,->] (8, 0)node[anchor=north]{$q_3$} -- (6, 2) node[anchor=south]{$q_2$};
-\draw[very thick,->] (8, 0)  -- (10, 2) node[anchor=south]{$q_1$};
-\draw[very thick,->] (6.2, 2) -- (9.8, 2);
-%%%%%draw the longest path
-\draw[rounded corners=8mm, very thick, red, dashed, ->] (8, 0.2) -- (6.4, 1.8) -- (9.6, 1.8);
-\end{tikzpicture}
-%
-\begin{tikzpicture}
-\draw[very thick,->] (18, 0)node[anchor=north]{$q_3$} -- (16, 2) node[anchor=south]{$q_2$};
-\draw[very thick,->] (16.2, 2) -- (19.8, 2)node[anchor=south]{$q_1$};
-\draw[rounded corners=8mm, very thick, red, dashed, ->] (18, 0.2) -- (16.4, 1.8) -- (19.6, 1.8);
-\end{tikzpicture}
-%
-\begin{tikzpicture}
-\draw[very thick,->] (26, 2) node[anchor=south]{$q_2$} -- (29.9, 2);
-\draw[very thick,->] (28, 0)node[anchor=north]{$q_3$}  -- (30, 2) node[anchor=south]{$q_1$};
-% \draw[very thick, red, ->, dashed] (26.4, 1.8) -- (29.6, 1.8);
-\draw[very thick, red, ->, dashed] (28, 0.2) -- (29.6, 1.8);
-\end{tikzpicture}
-\end{center}
-%
-\end{example}
-%
-%
-\begin{defn}
-Adaptivity.
-\\
+\begin{defn}[Adaptivity]
 Given a program $P$ and its dependency graph $G(P) = (V, E, \vend)$, the adaptivity of the program is defined as $A(P)$, s.t.:
 for every $q_i \in \vend$, let $p_i$ be the longest path starting from $q_i$ with length $l_i$,
 %
@@ -673,53 +629,44 @@ $$A(P) = \max\limits_{q_i \in \vend}\{l_i ~|~ l_i = |p_i| \}$$
 %
 %
 \begin{example}
-\textbf{Dependency graphs for programs containing 3 queries}
+\textbf{Dependency graphs for programs containing 3 atomic queries}
 \\
 Let $q_1 \triangleq \lambda D. D_1 * D_j$, 
 $q_2  \triangleq \lambda D. D_3 * D_4  $ and $q_3 \triangleq \lambda D. D_3 * D_2 $. 
-in program $P_1$;\\
-%
-Let $q_1 \triangleq \lambda D. D_1 * D_j$, 
-$q_2  \triangleq \lambda D.
-\eif (x > 1) \ethen (D_3 * D_4); \eelse  (D_3 * D_2) $. 
-in program $P_2$ as follows:\\
+in program $P_1$ and $P_2$ as follows:\\
 %
 \[
+P_1 \triangleq
 \begin{array}{l}
-P_1 \triangleq\\
-      x = \delta ( \lambda D.  D_1 * D_j) ; \\
-   \eif( x > 1)\\
-   \ethen \delta(\lambda D. D_3 * D_4  ) ; \\
-     \eelse \delta(\lambda D. D_3 * D_2)
+      \left[\assign{w}{100} \right]^0 ; \\
+      \left[\assign{x}{q_1} \right]^1 ; \\
+   \eif( \left[w > 1 \right]^2)\\
+   \ethen \left[ \assign{y}{q_2} \right]^3 ; \\
+     \eelse \left[\assign{z}{q_3} \right]^4
 \end{array}
- ~~~
+\hspace{2cm}
+P_2 \triangleq
 \begin{array}{l}
-P_2 \triangleq\\
-      x = \delta ( \lambda D.  D_1 * D_j) ; \\
-   \delta
-   \left(
-   \begin{array}{l}
-   \eif( x > 1)\\
-   \ethen ( D_3 * D_4  ) ; \\
-     \eelse ( D_3 * D_2 ) )
-     \end{array}
-\right)
+      \left[\assign{x}{q_1} \right]^1 ; \\
+   \eif( \left[x > 1 \right]^2)\\
+   \ethen \left[ \assign{y}{q_2} \right]^3 ; \\
+     \eelse \left[\assign{z}{10} \right]^4
 \end{array}
 \]
 % \\
 \begin{center}
 %
 \begin{tikzpicture}
-\filldraw[black] (10, 2) circle (2pt) node[anchor=south]{$q_2$};
-\filldraw[black] (12, 2) circle (2pt) node[anchor=south]{$q_1$};
-\filldraw[black] (12, 0) circle (2pt) node[anchor=north]{$q_3$} ;
+\filldraw[black] (10, 2) circle (2pt) node[anchor=south]{$q_2^3$};
+\filldraw[black] (12, 2) circle (2pt) node[anchor=south]{$q_1^1$};
+\filldraw[black] (12, 0) circle (2pt) node[anchor=north]{$q_3^4$} ;
 \end{tikzpicture}
 %
-\hspace{20pt}
+\hspace{2cm}
 \begin{tikzpicture}
 \filldraw[black] (27, 0) circle (2pt);
 \filldraw[black] (30, 2) circle (2pt);
-\draw[very thick,->] (27, 0)node[anchor=north]{$q_2$}  -- (30, 2) node[anchor=south]{$q_1$};
+\draw[very thick,->] (27, 0)node[anchor=north]{$q_2^3$}  -- (30, 2) node[anchor=south]{$q_1^1$};
 \draw[very thick, red, ->, dashed] (27, 0.2) -- (29.8, 2);
 \end{tikzpicture}
 \end{center}
@@ -730,6 +677,9 @@ P_2 \triangleq\\
 %
 
 \section{High level Language}
+%
+\subsection{Syntax and Semantics}
+%
 \paragraph{Syntax.}
 \[
 \begin{array}{llll}
@@ -762,8 +712,66 @@ P_2 \triangleq\\
 \mbox{Trace} & t & ::= & [] ~|~ [(q, v)^{(l, w) }] ~|~ t ++ t
 \end{array}
 \]
-
-\subsection{Rewrite from High Level Program}
+%
+%
+\begin{example}
+\textbf{Dependency graphs for high level programs containing  non-atomic queries}
+\\
+Let $q_1 = \lambda D. D_i * D_j$, \\ 
+Let $q_2 (x_1) = \lambda D. D_i * D_j + x_1  $.\\
+Let $q_3 (x_1 - x_2) = \lambda D. D_i * D_j + x_1 - x_2 $, 
+$q_4 (x_2) = \lambda D. D_i * D_j + x_2 $, 
+and $q_5(x_1) = \lambda D. D_i * D_j + x_1$ .\\
+in program $P_1$, $P_2$ and $P_3$ as following:
+\[
+P_1 \triangleq
+\begin{array}{c}
+      \left[\assign{x_1}{q_1} \right]^1; \\
+   \left[\assign{x_2}{q_2} \right]^2 ; \\
+     \left[\assign{x_3}{q_3} \right]^3
+\end{array}
+\hspace{2cm}
+P_2 \triangleq
+\begin{array}{c}
+      \left[\assign{x_1}{q_1} \right]^1; \\
+   \left[\assign{x_2}{q_2} \right]^2 ; \\
+     \left[\assign{x_3}{q_4} \right]^3
+\end{array}
+\hspace{2cm}
+P_3 \triangleq
+\begin{array}{c}
+      \left[\assign{x_1}{q_1} \right]^1; \\
+   \left[\assign{x_2}{q_2} \right]^2 ; \\
+     \left[\assign{x_3}{q_5} \right]^3
+\end{array}
+\]
+%
+\begin{center}
+\begin{tikzpicture}
+\draw[very thick,->] (8, 0)node[anchor=north]{$q_3^3$} -- (6, 2) node[anchor=south]{$q_2^2$};
+\draw[very thick,->] (8, 0)  -- (10, 2) node[anchor=south]{$q_1^1$};
+\draw[very thick,->] (6.2, 2) -- (9.8, 2);
+%%%%%draw the longest path
+\draw[rounded corners=8mm, very thick, red, dashed, ->] (8, 0.2) -- (6.4, 1.8) -- (9.6, 1.8);
+\end{tikzpicture}
+%
+\begin{tikzpicture}
+\draw[very thick,->] (18, 0)node[anchor=north]{$q_4^3$} -- (16, 2) node[anchor=south]{$q_2^2$};
+\draw[very thick,->] (16.2, 2) -- (19.8, 2)node[anchor=south]{$q_1^1$};
+\draw[rounded corners=8mm, very thick, red, dashed, ->] (18, 0.2) -- (16.4, 1.8) -- (19.6, 1.8);
+\end{tikzpicture}
+%
+\begin{tikzpicture}
+\draw[very thick,->] (26, 2) node[anchor=south]{$q_2^2$} -- (29.9, 2);
+\draw[very thick,->] (28, 0)node[anchor=north]{$q_5^3$}  -- (30, 2) node[anchor=south]{$q_1^1$};
+% \draw[very thick, red, ->, dashed] (26.4, 1.8) -- (29.6, 1.8);
+\draw[very thick, red, ->, dashed] (28, 0.2) -- (29.6, 1.8);
+\end{tikzpicture}
+\end{center}
+%
+\end{example}
+%
+\subsection{Rewriting from High Level Program into Low Level Program}
 %
 The transformation $\ts{e^h} = e^l$ transfers the expression $e^h$ in the high level language to an expression $e_l$ in the low language. 
 Let us look at the special cases: the query.
@@ -1091,6 +1099,9 @@ $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution
 %
 \clearpage
 \section{Towards Probability}
+%
+\subsection{Syntax and Semantics}
+%
 \paragraph{Syntax.}
 \[
 \begin{array}{llll}
@@ -1133,10 +1144,6 @@ $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution
 	\\
 	%
 % \mbox{Binary Operation} & \bop & ::= & + ~|~ - ~|~ \times 
-% %
-% ~|~ \div ~|~ < ~|~ \leq ~|~ = \\
-% %
-% \mbox{Unary Operation} & \uop & ::= & \ln ~|~ - \\
 % %
 \mbox{Memory} & m & ::= & [] ~|~ m[x^{l} \to v] \\
 %
@@ -1210,36 +1217,6 @@ Distribution over A as $D(A)$. The \emph{distribution unit} unit : $A \to D(A)$.
     \caption{Semantics of programs}
     \label{fig:my_label}
 \end{figure}
-
-
-\begin{defn}
-Dependency Forest.
-\\
-Given a program $P$, a database $D$, 
-dependency forest $F(P, D) \triangleq \{ G_1, G_2, \cdots, G_m \}$,
-$G_k = (V_k, E_k)$ is defined as: 
-\\
-$V_k =\{q^{l,w} |\forall m, w. \config{\emptyset, P, D,[], \emptyset } \rightarrow \config{m, \eskip, D, T, \emptyset} \land q^{l,w} \in \pi_k (T)  \}$;
-\\
-$E_k = \left\{(q_i^{l,w},q_j^{l',w'}) 
-~ \left \vert ~ \neg \mathsf{IND}(q_i^{l,w},q_j^{l',w'}, P)
-\land \mathsf{To}(q_j^{l',w'}, q_i^{l,w}) \right.\right\}$,
-\\
-where $\pi_k (T) = t_k$ s.t. $T = t_1 \oplus_{\rho_1} t_2 \oplus_{\rho_2}
-\cdots \oplus_{m - 1} t_m $ and there is no $\oplus$ in $t_i$.
-\end{defn}
-
-\begin{defn}
-Dependency Graph.
-\\
-Given a program $P$, a database $D$, 
-dependency graph $G(P, D) \triangleq (V, E)$ is defined as: 
-\\
-$V =\bigcup \{V_k | G_k \in F(P, D)  \}$;
-\\
-$E_k = \left\{(q_i,q_j) 
-~ \left \vert ~ (q_i,q_j) \in E_k , G_k \in F(P, D) \right.\right\}$,
-\end{defn}
 %
 %
 \[
@@ -1286,64 +1263,51 @@ SSA \triangleq
     \Big) ;
 \end{array}
 \]
-
-% $G = (V, E)$
-% \begin{mathpar}
-% \inferrule
-% {\empty}
-% {\vdash_{G = (V, E)} \assign x \expr_{G' = 
-% \left(
-% \begin{array}{l}
-% V\cup \{x\},\\
-% E \cup \left\{(x, v) | v \in VAR(e)  \right\}
-% \end{array}\right)
-% } 
-% % : P \implies P \cup \{x : VAR(e) \} 
-% }
-% ~\textbf{asgn}
-% \and
-% \inferrule
-% {\empty}
-% {\vdash_{G= (V, E)} \assign x q_{
-% G' = \left(
-% \begin{array}{l}
-% V\cup \{x^*\},\\
-% E \cup \left\{(x, v) | v \in VAR(e)  \right\}
-% \end{array}\right)
-% } 
-% % : P \implies P \cup \{x : VAR(e) \} 
-% }
-% ~\textbf{asgn-q}
-% \and
-% \inferrule
-% {\vdash_{G} {c_1}_{G_1 = (V_1, E_1)} 
-% % : P \implies Q_1
-% \and 
-% \vdash_{G} {c_2}_{G_2 = (V_2, E_2)}  
-% % : P \implies Q_2
-% }
-% {\vdash_{G = (V, E)} {\eif_D(b, c_1, c_2)}_{
-% G' = \left(
-% \begin{array}{l}
-% V\cup V_1 \cup V_2,\\
-% E \cup E_1 \cup E_2 \\
-% \cup \left\{(x_1, v) | x_1 \in V_1 \setminus V, v \in VAR(b)\right\}\\
-% \cup \left\{(x_2, v) | x_2 \in V_2 \setminus V, v \in VAR(b)\right\} 
-% \end{array} \right)}
-% : P \implies P 
-% }
-% %
-% ~\textbf{if}
-% \and
-% \inferrule
-% { \vdash_G \phi;c_{G'} : P \land \bexpr = \etrue  \implies P  }
-% {\vdash_{G} \ewhile([\bexpr]^{l}, \phi, c)_{G' = ? } : P \implies P \land \bexpr = \efalse }~\textbf{while}
-% \andr r r r r r r r rd de
-
-% \end{mathpar}
 %
+%
+\subsection{Extending Adaptivity onto Probabilistic Program}
+%
+\begin{defn}
+Dependency Forest.
+\\
+Given a program $P$, a database $D$, 
+dependency forest $F(P, D) \triangleq \{ G_1, G_2, \cdots, G_m \}$,
+$G_k = (V_k, E_k)$ is defined as: 
+\\
+$V_k =\{q^{l,w} |\forall m, w. \config{\emptyset, P, D,[], \emptyset } \rightarrow \config{m, \eskip, D, T, \emptyset} \land q^{l,w} \in \pi_k (T)  \}$;
+\\
+$E_k = \left\{(q_i^{l,w},q_j^{l',w'}) 
+~ \left \vert ~ \neg \mathsf{IND}(q_i^{l,w},q_j^{l',w'}, P)
+\land \mathsf{To}(q_j^{l',w'}, q_i^{l,w}) \right.\right\}$,
+\\
+where $\pi_k (T) = t_k$ s.t. $T = t_1 \oplus_{\rho_1} t_2 \oplus_{\rho_2}
+\cdots \oplus_{m - 1} t_m $ and there is no $\oplus$ in $t_i$.
+\end{defn}
 
-\section{Logic}
+\begin{defn}
+Dependency Graph.
+\\
+Given a program $P$, a database $D$, 
+dependency graph $G(P, D) \triangleq (V, E)$ is defined as: 
+\\
+$V =\bigcup \{V_k | G_k \in F(P, D)  \}$;
+\\
+$E_k = \left\{(q_i,q_j) 
+~ \left \vert ~ (q_i,q_j) \in E_k , G_k \in F(P, D) \right.\right\}$,
+\end{defn}
+%
+%
+\begin{defn}
+Adaptivity.
+\\
+Given a program $P$ and for all the database $D$ in a set of $DBS$ of databases, the total dependency graph G is the combination of all the dependent graphs over every single database $G(P, D) = (V, E)$, the adaptivity of the program is defined as $A(P)$, s.t.:
+for every pair $(i,j)$ let $p_{(i,j)}$ be the longest path starting from $q_i^{l, w}$ to $q_j^{l',w'}$,
+%
+$$A(P) = \max\limits_{q_i^{l,w},q_j^{l',w'} \in V }\{l_i ~|~ l_i = |p_(i,j)| \}$$
+\end{defn}
+%
+%
+\section{Analysis of Program Adaptivity}
 We have the judgment of the form : $\vdash^{c_1, c_2}_{M,V} ~ P : \Phi \implies \Psi$.  Our grade is a combination of a matrix $M$, used to track the dependency of variables appeared in the statement $S$, and a vector $V$ indicating the variables associated with results from queries $q$. The size of the matrix $M$ is $L \times L$, and vector $V$ of size $N$, where $L$ is the total size of variables needed in the program, which is fixed per program. 
 The superscript $c_1,c_2$ is a counter specifying the range of "living" or "active" variables in the matrix and vector. $c_1$ is the starting line (and column) in the matrix where the new generated variables  in program $P$ starts to show up. Likewise, $c_2$ states the ending position of active range by $P$. The new generated variables will be treated carefully when we handle recursive statement, in our case, the loop statement. 
 
@@ -1370,7 +1334,7 @@ M =  \begin{matrix}
 $$
 
 
-\paragraph{Logic Rules.}
+\paragraph{Analysis Rules.}
 %
 %
 \framebox{$ {\Gamma} \vdash^{c_1, c_2}_{M,V} ~ P : \Phi \implies \Psi$}
@@ -1539,8 +1503,8 @@ $\cdots$ & &&&&&&&&&&&\\ [10pt]
 \end{tabular}
 \end{center}
 %
-
-
+%
+%
 \begin{defn}
 Dependency Graph.
 \\
@@ -1551,8 +1515,8 @@ $E = \left\{(q_i^{l,w},q_j^{l',w'})
 ~ \left \vert ~ \neg \mathsf{IND}(q_i^{l,w},q_j^{l',w'}, P)
 \land \mathsf{To}(q_j^{l',w'}, q_i^{l,w}) \right.\right\}$.
 \end{defn}
-
-
+%
+%
 %
 \begin{defn}
 Two queries $q_i$ and $q_j$ in a program $c$ are independent, $\mathsf{IND}(q^{l_1}_i, q^{l_2}_j, P)$.
@@ -1574,8 +1538,8 @@ $
 \right)
 \Big ) $.
 \end{defn}
-
-
+%
+%
 \begin{defn}
 Adaptivity.
 \\
@@ -1615,58 +1579,6 @@ Given two graphs $G_1 = (V_1, E_1)$, $G_2 = (V_2, E_2)$, $G_1 \subseteq G_2$ iff
 \end{defn}
 %
 %
-% \begin{thm}
-% [Soundness]
-% Given a program $P$ s.t. $\cdot \vdash_{M,V}^{0, R(P)} P: \Phi \implies \Psi$,
-% for all database $D$, s.t. 
-% $\lrr{ P }{} (\emptyset, \emptyset , \emptyset, \emptyset, D)  \triangleq  (\sigma, \mu , t, w , D)$,
-% then
-% \[
-% A(P) \leq Adapt(M, V)
-% \]
-% \end{thm}
-% \begin{proof}
-%  By induction on the judgment $\cdot \vdash_{M,V}^{0, R(P)} P: \Phi \implies \Psi$.
-% \\ 
-% \begin{itemize}
-% \caseL{Case
-% $\inferrule
-% {M = L(x) *  R(\emptyset) 
-% \\
-% V= L(x)
-% }
-% { \cdot \vdash^{(c, c+1)}_{M, V} \assign x q : 
-% \Phi \implies \Psi
-% }$ }
-% \end{itemize}
-% For arbitrary database $D$, we have the following semantic.
-% \[ 
-%   \lrr{ [\assign x q]^{l} }{} (\emptyset, \emptyset , \emptyset, \emptyset, D)   \triangleq  ([x \to v ], \emptyset ,  [(q, v)]^{(l, \emptyset)}, \emptyset , D) \qquad : v = q(D)
-% \]
-% There is only one node in the trace for all the possible database $D$. Follow the definition of $Adapt(M,V)$, we know that the claim holds.\\
-% \begin{itemize}
-% \caseL{ Case
-% $\inferrule
-% {
-%  R(e_b) \vdash^{(c_1, c_2)}_{M_1, V_1} P_1 : 
-% \Phi \implies \Psi
-% \and 
-%  R(e_b) \vdash^{(c_2, c_3)}_{M_2, V_2} P_2 :
-% \Phi \implies \Psi
-% }
-% {
-% \cdot \vdash^{(c_1, c_3)}_{M_1 \uplus M_2, V_1 \uplus V_2} 
-% \eif ~ e_b \ethen P_1 \eelse P_2 :\Phi \implies \Psi
-% } $ }
-% \end{itemize}
-% The semantics depends on the evaluated value of the conditional.
-% \[
-% \lrr{ \eif_D ([\bexpr]^{l}, c_1, c_2)  }{} (\emptyset, \emptyset , \emptyset, \emptyset , D)   \triangleq  \left \{  \begin{array}{l} 
-%          \lrr{c_1}{} (\emptyset, \emptyset , \emptyset, \emptyset , D) \qquad : \lrr{\bexpr}{}(\jl{\emptyset}) = \etrue \\ 
-%          \lrr{c_1}{} (\emptyset, \emptyset , \emptyset, \emptyset ,D) \qquad : \lrr{\bexpr}{}(\jl{\emptyset}) = \efalse \end{array} \right . \\  
-% \]
-% \end{proof}
-%
 \begin{thm}
 [Soundness]
 Given a program $P$, $\Gamma$, $\mu$, $c_1, c_2$ and $\sigma$ s.t. $
@@ -1680,267 +1592,6 @@ then
 A(P) \leq Adapt(M, V)
 \]
 \end{thm}
-\begin{proof}
- By induction on the judgment $\Gamma \vdash_{M,V}^{c_1, c_2} P: \Phi \implies \Psi$.
-\\ 
-\begin{itemize}
-    \caseL{Case: $\inferrule
-{M = L(x) * ( R(\expr) + \Gamma )
-}
-{\Gamma \vdash_{M, V_{\emptyset}}^{(c, c+1)} \assign x \expr :
-\Phi \implies \Psi
-}
-$}
-%
-%
-Given $\sigma$, $\mu$,
-$t$ and $w$,
-for arbitrary database $D$, by induction on $\expr$, we have the following semantic.
-\[ 
-  \lrr{ [\assign x \expr_d]^{l} }{} (\sigma, \mu , t, w, D)   
-  \triangleq  (\sigma[x \to \lrr{\expr_d}{} \sigma ], \mu ,  t, w , D) 
-\]
-%
-%
-\[
-\lrr{ [\assign {x_r} {\expr_r}]^{l}}{} (\sigma, \mu , t, w, D)  
-\triangleq 
-(\sigma, bind(\mu , m \to unit(m[x_r \to \lrr{\expr_r}{}(\sigma, m)]) ) , t, w , D ) 
-\]
-%
-In both of the 2 cases, no newly added node in the trace $t$. Then we can derive that $A(P) = 0$.
-\\
-We also know $V_{\emptyset} = \emptyset$, i.e., $Adapt(M, V_{\emptyset}) = 0$.
-\\
-Since $0 \leq 0$, this case is proved.
-%
-%
-\caseL{
-Case:
-$\inferrule
-{M = L(x) *  (  R(\emptyset) + \Gamma) 
-\\
-V= L(x)
-}
-{ \Gamma \vdash^{(c, c+1)}_{M, V} \assign x q : 
-\Phi \implies \Psi
-}
-$}
-Given $\sigma$, $\mu$,  $t$ and $w$, for arbitrary database $D$, we have the following semantic.
-\[ 
-  \lrr{ [\assign x q]^{l} }{} (\sigma, \mu , t, w, D)   
-  \triangleq  (\sigma[x \to v ], \mu ,  t ++ [(q, v)]^{(l, w)}, w , D) \qquad : v = q(D)
-\]
-There is only one newly added node in the trace for all the possible database $D$. 
-Follow the definition of $Adapt(M,V)$, we know that the claim holds.\\
-\caseL{
-Case: ~
-$\inferrule
-{
- \Gamma + R(e_b) \vdash^{(c_1, c_2)}_{M_1, V_1} P_1 : 
-\Phi \implies \Psi
-\and 
- \Gamma + R(e_b) \vdash^{(c_2, c_3)}_{M_2, V_2} P_2 :
-\Phi \implies \Psi
-}
-{
-\Gamma \vdash^{(c_1, c_3)}_{M_1 \uplus M_2, V_1 \uplus V_2} 
-\eif ~ e_b \ethen P_1 \eelse P_2 :\Phi \implies \Psi
-}
-$}
-The semantics depends on the evaluated value of the conditional.
-\[
-\lrr{ \eif_D ([\bexpr]^{l}, P_1, P_2)  }{} (\sigma, \mu , t, w , D)   \triangleq  \left \{  \begin{array}{l} 
-         \lrr{P_1}{} (\sigma, \mu , t, w , D) 
-         \qquad : \lrr{\bexpr}{}(\jl{\sigma}) = \etrue \\ 
-         \lrr{P_2}{} (\sigma, \mu , t, w ,D) 
-         \qquad : \lrr{\bexpr}{}(\jl{\sigma}) = \efalse 
-         \end{array} \right . \\  
-\]
-By induction hypothesis, we have:
-\\
-$A(P_1) \leq Adapt(M_1, V_1)$
-\\
-$A(P_2) \leq Adapt(M_2, V_2)$
-\\
-By definition of $A(P)$ and $Adapt(M, V)$, we have:
-\\
-$A(P) \leq \max(A(P_1), A(P_2))
-\leq \max(Adapt(M_1, V_1), Adapt(M_2, V_2)) 
-\leq Adapt(M_1 \uplus M_2, V_1 \uplus V_2)$.
-\\
-This case is proved.
-%
-%
-\caseL{
-Case: $\inferrule
-{
-\Gamma \vdash^{(c_1, c_2)}_{M_1, V_1} P_1 : \Phi \implies \Psi' \and 
-\Gamma \vdash^{(c_2, c_3)}_{M_2, V_2} P_2 : \Psi' \implies \Psi
-}
-{
-\Gamma \vdash^{(c_1, c_3)}_{M_1 \cdot M_2, V_1 \uplus V_2}
-P_1 ; P_2
-:\Phi \implies \Psi
-}
-$}
-%
-%
-Given $\sigma$, $\mu$, $t$ and $w$, for arbitrary database $D$, we have the following semantic.
-%
-\[
-\lrr{ P_1 ; P_2 }{} (\sigma, \mu , t, w , D) 
-\triangleq 
-\lrr{P_2}{} ( \lrr{P_1}{} (\sigma , \mu, t, w, D))
-\]
-%
-Let $\lrr{P_1}{} (\sigma , \mu, t, w, D) = (\sigma_1 , \mu_1, t_1, w_2, D)$, 
-$\lrr{P_2}{} ( \lrr{P_1}{} (\sigma , \mu, t, w, D)) = (\sigma_2 , \mu_2, t_2, w_2, D)$.
-%
-\\
-The goal is to show: $A(P_1; P_2) \leq Adapt(M_1 \cdot M_2, V_1 \uplus V_2)$
-%
-\\
-By induction hypothesis, we have:
-$A(P_1) \leq Adapt(M_1, V_1)$ and 
-$A(P_2) \leq Adapt(M_2, V_2)$.
-\\
-By definition of $V$ and $t$, we know the newly added queries in $t_2$ compared to the original trace $t$ must be the same as newly added queries marked in
-$V_1 \uplus V_2$, 
-i.e., the query nodes in the dependency graph must be contained in the Adapt graph generated by $M_1 \cdot M_2, V_1 \uplus V_2 $.
-%
-\\
-On the other hand, any dependency between newly added queries in $t_2 - t$ is tracked by $M_1 \cdot M_2$. It is shown in $3$ cases: (1) dependency between queries nodes in $P_1$ is recorded in $M_1$. (2) dependency between queries nodes in $P_2$ is recorded in $M_2$.(3) dependency between query nodes from $P_1$ and $P_2$ respectively is tracked by $M_2 \times M_1$. To sum up,   
-the dependency relation must be contained in $M_1 \cdot M_2$.
-\\
-Then we can conclude in this case, the longest path in the dependency graph of $P_1; P_2$ must be contained in the
-Adapt graph generated by $M_1 \cdot M_2, V_1 \uplus V_2 $, i.e., $A(P_1; P_2) \leq Adapt(M_1 \cdot M_2, V_1 \uplus V_2)$.
-\\
-This case is proved.
-%
-%
-\caseL{
-Case: $\inferrule
-{ \Gamma + R(\expr) \vdash^{(c_1, c_1+1)}_{M_i, V_i} \assign{ x_i}{q_i} 
-\\
-i \in \{1, \dots, N\}     }
-{\Gamma \vdash^{(c_1, c_1+N)}_{ \sum_{i=0}^{N} M_i, \sum_{i=0}^{N} V_i} \eswitch(\expr, x,(v_i \rightarrow q_i ) }$}
-%
-%
-Given $\sigma$, $\mu$, $t$ and $w$, for arbitrary database $D$, we have the following semantic.
-%
-%
-\[
-\lrr{ {[\eswitch( \expr, x, (v_i \to  q_i))]^{l}} }{} (\sigma, \mu , t, w , D)  
-\triangleq 
-\lrr{ [\assign x q_1]^{l} }{} ( \sigma, \mu , t, w, D ) 
-\qquad : v_1 = \lrr{\expr}{}{(\sigma)}
-\]
-%
-Let $\lrr{[\assign x q_1]^{l}}{} (\sigma , \mu, t, w, D) = (\sigma[x \to v_1'] , \mu, t++[(v_1, q_1)], w, D)$.
-\\
-We then have:
-$\lrr{ {[\eswitch( \expr, x, (v_i \to  q_i))]^{l}} }{} (\sigma, \mu , t, w , D)  
-=(\sigma[x \to v_1'] , \mu, t++[(v_1, q_1)], w, D)
-$
-\\
-The goal is to show:
-$A( {[\eswitch( \expr, x, (v_i \to  q_i))]^{l}}) \leq Adapt(\sum_{i = 0}^{N}M_i, \sum_{i = 0}^{N}V_i)$
-\\
-By induction hypothesis, we have:
-%
-$A([\assign x q_i]^{l})  \leq Adapt(M_i, V_i)$ for any $v_i = q_i$.
-%
-\\
-Then we have $A( {[\eswitch( \expr, x, (v_i \to  q_i))]^{l}}) \leq Adapt(M_i, V_i)$ for any $v_i = q_i$.
-\\
-%
-Since we also have: $ Adapt(M_i, V_i) \leq Adapt(\sum_{i = 0}^{N}M_i, \sum_{i = 0}^{N}V_i)$ for any $v_i = q_i$, this case is proved.
-%
-%
-\caseL{
-Case: $\inferrule
-{
-\Gamma \vdash^{(c, c+a)}_{M, V} f; P : 
-\{ \Phi \land \expr_N = z + 1 \} \implies
-\{ \Phi \land \expr_N = z \}
-}
-{\Gamma \vdash^{(c, c+ N*a)}_{M_{c,a}^N(f), V_{c, a}^N} 
-\eloop ~ \expr_N ~ (f) ~ \edo ~ P:
-\{\Phi \land \expr_N = N\} \implies \{
-\Phi \land \expr_N = 0\}
-}
-$}
-%
-Given $\sigma$, $\mu$, $t$ and $w$, for arbitrary database $D$, we have the following semantic.
-%
-%
-\[          
-\lrr{ {\eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ P } }{} (\sigma, \mu , t, w , D)
-\triangleq
-\left \{  \begin{array}{l} 
-\lrr{f;P; \eloop ~ [\expr_N-1]^{l} ~ (f) ~ \edo ~ P }{} (\sigma , \mu, t, w + l, D) 
-\qquad : \lrr{\expr_N}{}(\sigma) >0 \\ 
-\lrr{\eskip}{} (\sigma , \mu, t, w-l, D) 
-\qquad : \lrr{\expr_N}{}(\sigma) = 0 \end{array} 
-\right .
-\]
-%
-By induction on $\lrr{\expr_N}{}(\sigma)$, we have sub-cases of $\lrr{\expr_N}{}(\sigma) = 0$ and $\lrr{\expr_N}{}(\sigma) > 0$.
-\\
-Sub-case of $\lrr{\expr_N}{}(\sigma) = 0$ is obviously true.
-\\
-Sub-case of $\lrr{\expr_N}{}(\sigma) > 0$:
-\\
-The goal is to prove 
-$A(f;P; \eloop ~ [\expr_N-1]^{l} ~ (f) ~ \edo ~ P) \leq 
-Adapt(M_{c,a}^N(f), V_{c, a})$.
-\\
-By unfolding the semantics of sequence, we have:
-\\
-$\lrr{f;P; \eloop ~ [\expr_N-1]^{l} ~ (f) ~ \edo ~ P }{} (\sigma , \mu, t, w + l, D) 
-= \lrr{\eloop ~ [\expr_N-1]^{l} ~ (f) ~ \edo ~ P }{ }
-(\lrr{f;P}{} (\sigma , \mu, t, w + l, D))$.
-\\
-By induction hypothesis, we have:
-$A(f;P) \leq Adapt(M, V)$.
-%
-\\
-Let $\lrr{f;P}{} (\sigma , \mu, t, w + l, D) 
-= (\sigma_1 , \mu_1, t_1, w_1, D)$.  
-% by inversion on $A(P) \leq Adapt(M, V)$, 
-By Lemma 1(Subgraph),
-we know 
-\\
-(a). the newly added queries in $t_1$ must be contained in the queries nodes in $V$,
-\\
-(b). the dependency between newly added queries must be contained in $M$.
-\\
-Let $\lrr{\eloop ~ [\expr_N-1]^{l} ~ (f) ~ \edo ~ P }{} (\sigma_1 , \mu_1, t_1, w_1, D) 
-= (\sigma_N , \mu_N, t_N, w_{Nl}, D) $, by definition of $V^N_{(c, a)}$ and $M^N_{(c, a)}(f)$ and (a) and (b), we have:
-\\
-(1). All newly added queries in $t_N$ must be contained in the queries nodes in $V^N_{(c, a)}$, this is proved jointly by (a).
-\\
-(2). All the dependency between queries internally in $P$ for all the $N$ rounds are contained in $M^N_{(c, a)}(f)$ according to its definition case 1, this is proved jointly by (b).
-\\
-(3). For all the dependency between queries in different rounds(for example, one query in the second iteration depending on the result of another query in the first iteration), 
-they are recorded in $f$,
-which is also contained in $M^N_{(c, a)}(f)$ according to its definition case 3.
-\\
-(4) For all the dependency between queries in P and outside P, since the newly added queries are all comes from P, 
-we don't consider the adaptivity outside the scope of program.
-\\
-According to (1) - (4), we
-can conclude in this case, the longest path in the dependency graph of 
-$P; \eloop ~ [\expr_N-1]^{l} ~ (f) ~ \edo ~ P$ must be contained in the
-Adapt graph generated by 
-$M^N_{(c, a)}(f), V^N_{(c, a)} $, i.e., 
-$A(P; \eloop ~ [\expr_N-1]^{l} ~ (f) ~ \edo ~ P) \leq Adapt(M^N_{(c, a)}(f), V^N_{(c, a)} )$.
-\\
-This case is proved.
-%
-\end{itemize}
-\end{proof}
 %
 %
 \begin{lem}
