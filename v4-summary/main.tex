@@ -34,12 +34,14 @@
   the analysis on the sampled data. In these works, the confidence
   intervals on the generalization error that one can achieve for a
   given analysis usually depend on the \emph{level of adaptivity} of
-  the analysis: the number of adaptive steps that depend the one on
-  the other. 
+  the analysis: the number of adaptive steps that depend on
+  each other. 
 
   In this work we introduce a programming framework, named \THESYSTEM,  aimed at
   supporting the study of the generalization error for adaptive data
-  analysis. Through its analysis system, an upper bound on the adaptivity -- depth (the length of the longest chain of queries) of a program implementing an adaptive data analysis. We show how this language can help to analyze the generalization error of two data analyses with different adaptivity structures.
+  analysis. Through its analysis system, an upper bound on the
+  adaptivity -- depth (the length of the longest chain of queries) of
+  a program implementing an adaptive data analysis can be overestimated. We show how this language can help to analyze the generalization error between two data analyses with different adaptivity structures.
 \end{abstract}
 
 \tableofcontents
@@ -47,30 +49,66 @@
 
 % \section{Introduction}
 \section{System Overview}
-In adaptive data analysis, a data analysis can depend on the result of
-previous analysis on the same data. This dependency may affect the
+In adaptive data analysis, a data analysis can depend on the results of
+previous analysis over the same data. This dependency may affect the
 \emph{generalization properties of the data analysis}. To study this phenomenon
-in a formal way, we can consider the \emph{statistical query
+in a formal way, we consider the \emph{statistical query
   model}. In this model, a dataset $X$ consisting of $d$ attributes (columns) and $n$
 individuals' data (rows) can be accessed only through an interface to
 which one can submit statistical queries. More precisely, suppose that
 the type of a row is $R$ (as an example, a row with $d$ binary
 attributes would have type $R=\{0,1\}^d$. Then, in the statistical
-query model one can access the dataset only by submitting a function
-$p:D\to [0,1] $ to it, and obtaining as an answer the average value of
-this function $p$ on the rows in the dataset, i.e. the result is the
+query model one can access the dataset only by submitting a query to
+the interface, in
+the form of a function
+$p:D\to [0,1] $ where $D$ represents dataset. The collected answer of
+the asked query is the average result of $p$ on each row in the
+dataset $D$. For example, the result is the
 value $\frac{1}{n}\sum_{i=1}^n p(X_i)$ where
 $X_i$ is the row of index $i$ in $X$. While this model is rather
-simple, in fact it supports a large of statistics one may be
-interested in having over some data.
+simple, in fact it supports sufficient statistics one may be
+interested.
 
-To support this model, we start from a low level language where the queries are atomic -- $q$ -- given data base $D$, the result of the query from $D$ is fixed.
-We defined the adaptivity of the program under this model based on only the control flow.
+We support the model by providing a ``high'' level language, which is
+expressive to represent the adaptive mechnisms. In this language, the
+queries are allow to carry arguments, for example, the expression
+$q(e)$ simulates the process of submitting a query to the interface in
+the model while the argument $e$ is consumed to construct the
+query. For instance, one submitted query may use the average of
+answers of previous queries, can be expressed $q(x)$ where $x$ stores
+the expected average results in our language. In this sense,the result of the query from a specific $D$ can vary under different contexts.
 
-Then we extend the low level language to a high level language,
-where the queries are allow to be non-atomic -- $q(e)$ -- the result of the query from a specific $D$ can varies under different context.
-Correspondingly, we extend the definition of the adaptivity onto the high level language based on a rewrite procedure.
+Nevertheless, in \emph{statistical query
+  model}, the dependency between two submitted queries is vague, especially when
+we study in adaptive scenarios. Our definition of the dependency lies
+in the independence between two queries: one query
+$q_1$ does not
+depend on another query $q_2$ when the result of $q_1$ remains the
+same regardless of the modification of the result of $q_2$. Following such
+definition, the dependency between two queries comes from either the
+control flow or the argument of the function $q_2$, which brings us
+difficulty to distinguish them at the semantic level. \\
+{An example to show how do control flow and query argument may bring challenges}.
+
+
+To simplify the model, we start from a low level language where the
+queries are atomic -- $q$ -- given data base $D$, the result of the
+query from $D$ is deterministic. Hence, we define the adaptivity of
+the program under this model based on only the control flow. The
+arguments used in queries in the high level language are rearranged
+and the program expressed in the high level one can be
+transformed into its low level version.
+
+We give the definition of adaptivity of a low level program by
+graphs, called dependency graph. These graph is produced 
+using a
+trace of queries which is generated along with the semantics of the
+program. The queries in the trace consists of the nodes in the graph
+while the edge represent dependency. If there is no dependency between
+two node(queries), there will be no edge.
+
 Finally we extend the language to support the probabilistic program and extend the adaptivity definition accordingly.
+
 
 The key component of the system is an program analysis procedure, which provides an upper bound on the adaptivity of the program.
 
