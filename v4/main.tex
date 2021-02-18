@@ -20,7 +20,7 @@
 \newpage
 \section{Low Level Control Flow Based Language}
 We first consider a low level language where the queries are atomic
-and the dependency relations are caused only by controal flow.
+and the dependency relations are caused only by control flow.
 %
 \subsection{Syntax and Semantics}
 %
@@ -36,7 +36,7 @@ and the dependency relations are caused only by controal flow.
  \mbox{While Map} & w & \in & \mbox{Label} \times \mathbb{N} \\
 \mbox{AExpr} & \aexpr & ::= & 
   %
-  n ~|~ x ~|~ \aexpr *_a \aexpr ~|~ {[] ~|~ [\aexpr_0, \dots, \aexpr_i] ~|~ \uniform ~|~ \bernoulli ~|~ \aexpr \times \aexpr } \\
+  n ~|~ x ~|~ \aexpr *_a \aexpr ~|~ [] ~|~ [\aexpr_0, \dots, \aexpr_i] \\
     %
 \mbox{BExpr} & \bexpr & ::= & 
   %
@@ -50,7 +50,7 @@ and the dependency relations are caused only by controal flow.
 ~|~ \jl{[\eswitch( \expr, x, (v_i \to  q_i))]^{l} \sep \eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ c }  \\ 
   %
 & & & ~|~  c ; c ~|~ \eif([\bexpr]^{l}, c_1, c_2) 
-  ~|~ \ewhile([\bexpr]^{l}, c) ~|~ [\eskip]^{l} ~|~ \jl{\eunfold{[\bexpr]^{l}}{c} } 
+  ~|~ \ewhile([\bexpr]^{l}, c) ~|~ [\eskip]^{l} 
   \\
   %
 % \mbox{Binary Operation} & \bop & ::= & + ~|~ - ~|~ \times 
@@ -177,16 +177,16 @@ b_3 = n_1 *_r n_2
 \end{mathpar}
 %
 \begin{mathpar}
-\boxed{ \config{m, c, D, t} \xrightarrow{} \config{m', c', D, t'} \; }
+\boxed{ \config{m, c, t} \xrightarrow{} \config{m', c',  t'} \; }
 \and
-{  Memory \times Com \times Db \times Trace \times WhileMap \Rightarrow^{} Memory \times Com \times Db \times Trace \times WhileMap}
+{  Memory \times Com  \times Trace \times WhileMap \Rightarrow^{} Memory \times Com  \times Trace \times WhileMap}
 \and
 \inferrule
 {
-q(D) = v
+q(D) = v 
 }
 {
-\config{m, [\assign{x}{q}]^l, D, t, w} \xrightarrow{} \config{m[ v/ x], \eskip, D, t \mathrel{++} [(q,v)^{(l,w )}],w }
+\config{m, [\assign{x}{q}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [(q,v)^{(l,w )}],w }
 }
 ~\textbf{query}
 %
@@ -207,7 +207,7 @@ q(D) = v
 m, \expr \Rightarrow \expr'
 }
 {
-\config{m, [\assign{x}{ \expr}]^{l}, D, t,w} \xrightarrow{} \config{m, [\assign{x}{ \expr'}]^{l} , D, t,w}
+\config{m, [\assign{x}{ \expr}]^{l}, t,w} \xrightarrow{} \config{m, [\assign{x}{ \expr'}]^{l} , t,w}
 }
 ~\textbf{assn1}
 %
@@ -217,7 +217,7 @@ m, \expr \Rightarrow \expr'
 {
 }
 {
-\config{m, [\assign x v]^{l}, D, t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, D,t,w}
+\config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
 }
 ~\textbf{assn2}
 %
@@ -225,10 +225,10 @@ m, \expr \Rightarrow \expr'
 %
 \inferrule
 {
-\config{m, c_1, D, t,w} \xrightarrow{} \config{m', c_1', D, t',w}
+\config{m, c_1,  t,w} \xrightarrow{} \config{m', c_1',  t',w}
 }
 {
-\config{m, c_1; c_2, D, t,w} \xrightarrow{} \config{m', c_1'; c_2, D, t',w}
+\config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w}
 }
 ~\textbf{seq1}
 %
@@ -238,7 +238,7 @@ m, \expr \Rightarrow \expr'
 {
 }
 {
-\config{m, [\eskip]^{l} ; c_2, D , t,w} \xrightarrow{} \config{m, c_2, D, t,w}
+\config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
 }
 ~\textbf{seq2}
 %
@@ -249,8 +249,8 @@ m, \expr \Rightarrow \expr'
 \config{ m, \bexpr} \barrow \bexpr'
 }
 {
-\config{m, \eif([\bexpr]^l, c_1, c_2), D, t,w} 
-\xrightarrow{} \config{m,  \eif([\bexpr']^l, c_1, c_2), D, t,w}
+\config{m, \eif([\bexpr]^l, c_1, c_2),  t,w} 
+\xrightarrow{} \config{m,  \eif([\bexpr']^l, c_1, c_2),  t,w}
 }
 ~\textbf{if}
 %
@@ -260,8 +260,8 @@ m, \expr \Rightarrow \expr'
 {
 }
 {
-\config{m, \eif([\etrue]^l, c_1, c_2), D,t,w} 
-\xrightarrow{} \config{m, c_1, D, t,w}
+\config{m, \eif([\etrue]^l, c_1, c_2),t,w} 
+\xrightarrow{} \config{m, c_1,  t,w}
 }
 ~\textbf{if-t}
 %
@@ -271,55 +271,55 @@ m, \expr \Rightarrow \expr'
 {
 }
 {
-\config{m, \eif([\efalse]^l, c_1, c_2), D, t,w} 
-\xrightarrow{} \config{m, c_2, D, t,w}
+\config{m, \eif([\efalse]^l, c_1, c_2),  t,w} 
+\xrightarrow{} \config{m, c_2,  t,w}
 }
 ~\textbf{if-f}
+% %
+% \and
+% %
+% {\inferrule
+% {
+% }
+% {
+% \config{m, \ewhile([\bexpr]^l, c),  t,w} 
+% \xrightarrow{} \config{m,  \eunfold{[\bexpr^{l}] }{\ewhile([\bexpr]^l,   c)} ,  t,w}
+% }
+% ~\textbf{while} }
+% %
+% \and
+% %
+% {\inferrule
+% {
+% \config{m, \bexpr} \rightarrow \bexpr'
+% }
+% {
+% \config{m, \eunfold{[\bexpr]^l}{ c}, D, t,w} 
+% \xrightarrow{} \config{m, \eunfold{[\bexpr']^l}{ c}, D, t,  w  }
+% }
+% ~\textbf{unfold}}
+% %
+% \and
+% %
+% {\inferrule
+% {
+% }
+% {
+% \config{m, \eunfold{[\efalse]^l}{c}, D, t,w} 
+% \xrightarrow{} \config{m, [\eskip]^{l}, D, t,  (w \setminus l) }
+% }
+% ~\textbf{unfold-f}}
 %
-\and
-%
-{\inferrule
-{
-}
-{
-\config{m, \ewhile([\bexpr]^l, c), D, t,w} 
-\xrightarrow{} \config{m,  \eunfold{[\bexpr^{l}] }{\ewhile([\bexpr]^l,   c)} , D, t,w}
-}
-~\textbf{while} }
-%
-\and
-%
-{\inferrule
-{
-\config{m, \bexpr} \rightarrow \bexpr'
-}
-{
-\config{m, \eunfold{[\bexpr]^l}{ c}, D, t,w} 
-\xrightarrow{} \config{m, \eunfold{[\bexpr']^l}{ c}, D, t,  w  }
-}
-~\textbf{unfold}}
-%
-\and
-%
-{\inferrule
-{
-}
-{
-\config{m, \eunfold{[\efalse]^l}{c}, D, t,w} 
-\xrightarrow{} \config{m, [\eskip]^{l}, D, t,  (w \setminus l) }
-}
-~\textbf{unfold-f}}
-%
-\and
-%
-{\inferrule
-{
-}
-{
-\config{m, \eunfold{[\etrue]^l}{ c}, D, t,w} 
-\xrightarrow{} \config{m, c, D, t, (w+l) }
-}
-~\textbf{unfold-t} }
+% \and
+% %
+% {\inferrule
+% {
+% }
+% {
+% \config{m, \eunfold{[\etrue]^l}{ c}, D, t,w} 
+% \xrightarrow{} \config{m, c, D, t, (w+l) }
+% }
+% ~\textbf{unfold-t} }
 %
 \and
 %
@@ -329,8 +329,8 @@ m, \expr \Rightarrow \expr'
   \config{m, \expr } \xrightarrow{} \expr'
 }
 {
-\config{m, [\eswitch(\expr, x, (v_i \to q_i))]^{l}, D, t,w} 
-\xrightarrow{} \config{m, [ \eswitch(\expr',x, (v_i \to q_i))]^{l}, D, t, w }
+\config{m, [\eswitch(\expr, x, (v_i \to q_i))]^{l},  t,w} 
+\xrightarrow{} \config{m, [ \eswitch(\expr',x, (v_i \to q_i))]^{l},  t, w }
 }
 ~\textbf{switch}
 }
@@ -343,48 +343,48 @@ m, \expr \Rightarrow \expr'
 \empty
 }
 {
-\config{m, [ \eswitch(v_k,x, (v_i \to q_i))]^{l}, D, t,w} 
-\xrightarrow{} \config{m,  [\assign x q_k]^{l}, D, t, w }
+\config{m, [ \eswitch(v_k,x, (v_i \to q_i))]^{l},  t,w} 
+\xrightarrow{} \config{m,  [\assign x q_k]^{l},  t, w }
 }
 ~\textbf{switch-v}
 }
 %
 \and
 %
-\jl{\inferrule
+{\inferrule
 {
 \config{m, \expr_N \xrightarrow{} \expr_N'  }
 }
 {
-\config{m,  \eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ c , D, t, w }
-\xrightarrow{} \config{m, [ \eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ c]^{l} , D, t, w }
+\config{m,  \eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ c ,  t, w }
+\xrightarrow{} \config{m, [ \eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ c]^{l} ,  t, w }
 }
 ~\textbf{loop}
 }
 %
 \and
 %
-\jl{\inferrule
+{\inferrule
 {
  \valr_N > 0
 }
 {
-\config{m, \eloop ~ [\valr_N]^{l} ~ (f) ~ \edo ~ c , D, t, w }
-\xrightarrow{} \config{m, c;  \eloop ~ [(\valr_N-1)]^{l} ~ (f) ~ \edo ~ c , D, t, (w + l) }
+\config{m, \eloop ~ [\valr_N]^{l} ~ (f) ~ \edo ~ c ,  t, w }
+\xrightarrow{} \config{m, c;  \eloop ~ [(\valr_N-1)]^{l} ~ (f) ~ \edo ~ c ,  t, (w + l) }
 }
 ~\textbf{loop-t}
 }
 %
 \and
 %
-\jl{
+{
 \inferrule
 {
  \valr_N = 0
 }
 {
-\config{m,  \eloop ~ [\valr_N]^{l} ~ (f) ~ \edo ~ c , D, t, w }
-\xrightarrow{} \config{m, [\eskip]^{l} , D, t, (w \setminus l) }
+\config{m,  \eloop ~ [\valr_N]^{l} ~ (f) ~ \edo ~ c ,  t, w }
+\xrightarrow{} \config{m, [\eskip]^{l} ,  t, (w \setminus l) }
 }
 ~\textbf{loop-f}
 }
