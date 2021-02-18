@@ -1,3 +1,4 @@
+
 \documentclass[a4paper,11pt]{article}
 \usepackage[table]{xcolor}
 
@@ -59,9 +60,10 @@ and the dependency relations are caused only by control flow.
 % %
 % \mbox{Unary Operation} & \uop & ::= & \ln ~|~ - \\
 % %
+\mbox{Query} & q& ::= & q_{0} , q_{1} , \ldots , q_{n}\\  
 \mbox{Memory} & m & ::= & [] ~|~ m[x^{l} \to v] \\
 %
-\mbox{Trace} & t & ::= & [] ~|~ [(q, v)^{(l, w) }] ~|~ t ++ t
+\mbox{Trace} & t & ::= & [] ~|~ [(q ^{(l, w) }, v)] ~|~ t ++ t
 \end{array}
 \]
 %
@@ -186,7 +188,8 @@ b_3 = n_1 *_r n_2
 q(D) = v 
 }
 {
-\config{m, [\assign{x}{q}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [(q,v)^{(l,w )}],w }
+\config{m, [\assign{x}{q}]^l, t, w} \xrightarrow{} \config{m[ v/ x],
+  \eskip,  t \mathrel{++} [(q^{(l,w )},v) ] , w }
 }
 ~\textbf{query}
 %
@@ -427,15 +430,15 @@ $mk(w_i) =MinKey(w_i) $
 \begin{defn}[Query Direction]
 Direction between two queries.
 \\
-$\forall Q_1,Q_2, l_1, l_2, w_1, w_2 $.
-$(Q_1^{l_1, w_1}) \, \mathsf{TO} \, (Q_2^{l_2,w_2})$,
-denoted as $\mathsf{To}(Q_1^{l_1, w_1}, Q_2^{l_2,w_2})$ \\ iff $(Q_1^{l_1, w_1}) <_q (Q_2^{l_2, w_2})  $\\
+$\forall q_1,q_2, l_1, l_2, w_1, w_2 $.
+$(q_1^{l_1, w_1}) \, \mathsf{TO} \, (q_2^{l_2,w_2})$,
+denoted as $\mathsf{To}(q_1^{l_1, w_1}, q_2^{l_2,w_2})$ \\ iff $(q_1^{l_1, w_1}) <_q (q_2^{l_2, w_2})  $\\
 where \\
-$(Q_1^{l_1, w_1}) <_q (Q_2^{l_2, w_2})$ is defined:\\
+$(q_1^{l_1, w_1}) <_q (q_2^{l_2, w_2})$ is defined:\\
 \[
 \begin{array}{ll}
     l_1 < l_2  & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2   \\
-    w_1 <_w w_2    & \mathsf{Otherwise}
+    w_1 <_w w_2  & \mathsf{Otherwise}
 \end{array}  
 \]
 \end{defn}
@@ -446,25 +449,44 @@ $(Q_1^{l_1, w_1}) <_q (Q_2^{l_2, w_2})$ is defined:\\
 When two queries $q_1,q_2$ are independent in a program $c$, suppose $q_1$ appears before $q_2$ in the program $c$, we think the choice of queries starting from $q_1$, ending with query $q_2$ should be fixed no matter the change of the result of $q_1$.\\
 %
 \begin{defn}[Query Independence]
-Two queries $q_i$ and $q_j$ in a program $c$ are independent, $\mathsf{IND}(q^{l_1}_i, q^{l_2}_j, c)$.
-
-$\forall m, D. 
-\Big( 
-\config{m, c, D, []} \rightarrow \config{m', \eskip, D, t} 
+Two queries $q_i$ and $q_j$ in a program $c$ are independent,
+$\mathsf{IND}(q^{(l_1, w_1)}_i, q^{(l_2, w_2)}_j, c)=$.
+$ \forall m, D. \config{m, c,  []} \rightarrow^{*} \config{m_1, c_1,
+  t_1} \rightarrow \config{m_2, c_2,
+  t_1++[(q^{(l_1, w_1)}_i, v_i)]} \rightarrow^{*} \config{m_3, \eskip,
+  t_3} \land x  = FindVar(q^{(l_1,
+  w_1)}_i, c) \land $\\
+$w_1 = \emptyset \implies  \Big (
 $\\
-$\land 
-\left((q^{l_1}_i, v_i) \in t \land (q^{l_2}_j, v_j) \in t  \implies \forall v \in codomain(q^{l_1}_i). 
-\left( \config{m, c[v/q_i], D, []} \rightarrow \config{m', \eskip, D, t'} \land (q^{l_2}_j, v_j) \in t'
+$ 
+\left((q^{(l_1, w_1)}_i, v_i) \in t_3 \land (q^{(l_2, w_2)}_j, v_j) \in t_3  \implies \forall v \in codomain(q^{l_1}_i). 
+\left( \config{m, c[v/q_i],  []} \rightarrow^* \config{m', \eskip,  t'} \land (q^{l_2}_j, v_j) \in t'
 \right)
-\right)$
-\\
+\right)$ \\
+$ \land
+\left( (q^{l_1}_i, v_i) \in t_3 \land (q^{l_2}_j, v_j) \notin t_3  \implies \forall v\in codomain(q^{l_1}_i). 
+\left( \config{m, c[v/q_i],  []} \rightarrow^{*} \config{m', \eskip,  t'} \land (q^{l_2}_j, v_j) \notin t'
+\right)
+\right)
+\Big ) $ \\
+$\begin{array}{l}
+\land {w_1} \not = \emptyset \implies  \Big (  \\
+ ( (q^{(l_1, w_1)}_i, v_i) \in t_3 \land (q^{(l_2, w_2)}_j, v_j)
+  \in t_3  \implies \\
+\forall v \in codomain(q^{l_1}_i). 
+\left( \config{m_2[v/x], c_2, t_1++[(q^{(l_1, w_1)}_i, v_i)] } \rightarrow^{*} \config{m', \eskip,  t'}   \land (q^{l_2}_j, v_j) \in t'
+\right )
+ ) \\
+ \land
+( (q^{l_1}_i, v_i) \in t \land (q^{l_2}_j, v_j) \notin t
+  \implies  \\
+ \forall v\in codomain(q^{l_1}_i). 
+\left( \config{m_2[v/x], c_2, t_1++[(q^{(l_1, w_1)}_i, v_i)] } \rightarrow^{*} \config{m', \eskip,  t'} \land (q^{l_2}_j, v_j) \notin t'
+ )
+\right )
+\Big ).
+\end{array}
 $
-\land 
-\left( (q^{l_1}_i, v_i) \in t \land (q^{l_2}_j, v_j) \notin t  \implies \forall v\in codomain(q^{l_1}_i). 
-\left( \config{m, c[v/q_i], D, []} \rightarrow \config{m', \eskip, D, t'} \land (q^{l_2}_j, v_j) \notin t'
-\right)
-\right)
-\Big ) $.
 \end{defn}
 %
 \noindent
