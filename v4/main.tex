@@ -1326,14 +1326,14 @@ $$A(P) = \max\limits_{q_i^{l,w},q_j^{l',w'} \in V }\{l_i ~|~ l_i = |p_(i,j)| \}$
 %
 %
 \section{Analysis of Program Adaptivity}
-We have the anaylsis rules of the form : $\vdash^{c_1, c_2}_{M,V} ~ P$.  Our grade is a combination of a matrix $M$, used to track the dependency of variables appeared in the statement $S$, and a vector $V$ indicating the variables associated with results from queries $q$. The size of the matrix $M$ is $L \times L$, and vector $V$ of size $N$, where $L$ is the total size of variables needed in the program, which is fixed per program. 
-The superscript $c_1,c_2$ is a counter specifying the range of "living" or "active" variables in the matrix and vector. $c_1$ is the starting line (and column) in the matrix where the new generated variables  in program $P$ starts to show up. Likewise, $c_2$ states the ending position of active range by $P$. The new generated variables will be treated carefully when we handle recursive statement, in our case, the loop statement. 
+We have the anaylsis rules of the form : $\vdash^{i_1, i_2}_{M,V} ~ C$.  Our grade is a combination of a matrix $M$, used to track the dependency of variables appeared in the statement $S$, and a vector $V$ indicating the variables associated with results from queries $q$. The size of the matrix $M$ is $L \times L$, and vector $V$ of size $N$, where $L$ is the total size of variables needed in the program, which is fixed per program. 
+The superscript $i_1,i_2$ is a counter specifying the range of "living" or "active" variables in the matrix and vector. $i_1$ is the starting line (and column) in the matrix where the new generated variables  in program $P$ starts to show up. Likewise, $i_2$ states the ending position of active range by $C$. The new generated variables will be treated carefully when we handle recursive statement, in our case, the loop statement. 
 
-We assume the program $P$ is in the static single assignment form. That is to say, $x \leftarrow e_1; x \leftarrow e_2 $ will be rewritten as $ x_1 \leftarrow e_1; x_2 \leftarrow e_2$. And the if condition $ \eif ~ e_b \ethen x \leftarrow e_1 \eelse x \leftarrow e_2  $ will look like $ \eif ~ e_b \ethen x_1 \leftarrow e_1 \eelse x_2 \leftarrow e_2  $. As we have seen, ssa provides unique variables, and these newly generated variables will be recorded in the matrix $M$. Worth to mention, $c_1,c_2$ can be used to track the exact location of newly generated variables. For example, the assignment statement $x \leftarrow e$ or $x \leftarrow q $ holds $c_2 =c_1+1$, telling us the variable $x$ is at the $c_1$th line(column) of the matrix. As we can notice, the loop increases the matrix by $N \times a$ where $N$ is the number of rounds of the loop and $a$ is the size of the variables generated in the loop body $P$.
+We assume the program $C$ is in the static single assignment form. That is to say, $x \leftarrow e_1; x \leftarrow e_2 $ will be rewritten as $ x_1 \leftarrow e_1; x_2 \leftarrow e_2$. And the if condition $ \eif ~ e_b \ethen x \leftarrow e_1 \eelse x \leftarrow e_2  $ will look like $ \eif ~ e_b \ethen x_1 \leftarrow e_1 \eelse x_2 \leftarrow e_2  $. As we have seen, ssa provides unique variables, and these newly generated variables will be recorded in the matrix $M$. Worth to mention, $i_1,i_2$ can be used to track the exact location of newly generated variables. For example, the assignment statement $x \leftarrow e$ or $x \leftarrow q $ holds $i_2 =i_1+1$, telling us the variable $x$ is at the $i_1$th line(column) of the matrix. As we can notice, the loop increases the matrix by $N \times a$ where $N$ is the number of rounds of the loop and $a$ is the size of the variables generated in the loop body $C$.
 
 We will have a global map, which maps the variable name to the position in the vector. We call it $G: VAR \to \mathbb{N}$,
 
-We give an example of $M$ and $V$ of the program $P$. 
+We give an example of $M$ and $V$ of the program $C$. 
 $$
 P= \begin{array}{c}
 \assign {x_1} {q} ;        \\
@@ -1392,7 +1392,7 @@ $$
     \end{array}
 \]
     
-\paragraph{Analysis Rules.}
+\paragraph{Analysis Logic Rules.}
 %
 %
 \framebox{$ {\Gamma} \vdash^{c_1, c_2}_{M,V} ~ P : \Phi \implies \Psi$}
