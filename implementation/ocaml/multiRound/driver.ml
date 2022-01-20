@@ -26,7 +26,8 @@ let rec experiments_mr r errors  =
         let sc = Support.mr_initial n in
           let scc = Support.mr_initial c in
       let results = MultiRound.multiRound () !rounds 0.0 sc scc [] n c db dom in
-          let error = (List.map (fun (a, b) -> abs_float(a -. b)**2.0) results) in
+          (* let error = (List.map (fun (a, b) -> abs_float(a -. b)**2.0) results) in *)
+          let error = (List.map (fun (a, b) -> abs_float(a)**2.0) results) in
 
           (* let _ = write_list error stdout in *)
           experiments_mr (r+1) (Support.zip (+.) error errors)

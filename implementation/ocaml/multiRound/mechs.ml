@@ -4,7 +4,7 @@ open Printf
 open Support 
 
 
-(* let thresholdout_mech (q:query) db =
+let thresholdout_mech (q:query) db =
   let holdout_db = create_db (float_of_int (List.length (hd db))) (float_of_int(List.length db)) in
     let threshold = 1.0 in
       let noise_rate = 1.0 in
@@ -27,7 +27,7 @@ open Support
                     in 
                       (sm /.  float_of_int (List.length (hd db)))
 
- *)
+
 (*let rec read_rows ic i j acc =
         if i < j then
          read_line ic (i+1) j (float_of_string (input_line ic)) :: acc
@@ -78,6 +78,6 @@ let nonoise_mech (q:query) db =
     mean 
 
 
-let mech = gauss_mech
+let mech = nonoise_mech
 
 
