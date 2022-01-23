@@ -163,7 +163,7 @@ same regardless of the modification of the result of $q_2$. Hence, it becomes ha
 % difficulty to distinguish them at the semantic level. \\
 % {An example to show how do control flow and query argument may bring challenges}.
 
-To resolve the dilemma, shown in Fig~\ref{fig:structure}, we translate any program(mechanism) into its counterpart in a low level language, which mimics the high level one except its only allowing atomic queries, -- $q$ --. That is to say, given a data base $D$, the result of the
+To resolve the dilemma, we translate any program(mechanism) into its counterpart in a low level language, which mimics the high level one except its only allowing atomic queries, -- $q$ --. That is to say, given a data base $D$, the result of the
 query from $D$ becomes deterministic. We need to show the two programs $P$ and $P^*$ are observably equivalent over the translation. In this way, we can define the adaptivity of
 a program under this model only based on the control flow.
 To be specific, the adaptivity $A^*$ of a low level program $P^*$ is defined by
@@ -1048,10 +1048,9 @@ q(v_q) = v
 }
 ~\textbf{l-if-f}
 %
-% %
 %
 \end{mathpar}
-    \caption{Trace-based operational semantics of loop language. \jl{Updated Operational Semantics for query-based loop lanugage with the newly defined normal form value for query results}}
+    \caption{Trace-based operational semantics of loop language.}
     \label{fig:evaluation}
 \end{figure}
 }
@@ -1374,48 +1373,6 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i^{(l,w)},q_j^{(l',w')} \in V }\{ |p(q_i^{(l,
 
 \section{SSA-form language  }
 
-% \paragraph{Syntax for low level language.}
-% \[
-% \begin{array}{llll}
-%  \mbox{Arithmatic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
-% %
-% ~|~ \div \\  
-%   \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
-%   %
-%   \mbox{Relational Operators} & \sim & ::= & < ~|~ \leq ~|~ == \\  
-%  \mbox{Label} & l & := & \mathbb{N} \\ 
-%  \mbox{Loop Maps} & w & \in & \mbox{Label} \times \mathbb{N} \\
-% \mbox{Arithmetic Expressions} & \aexpr & ::= & 
-% 	%
-% 	n ~|~ x ~|~ \chi ~|~ \chi(\aexpr) ~|~\aexpr \oplus_a \aexpr  \\
-% % 	\sep \pi (l , \aexpr, \aexpr) \\
-%     %
-% \mbox{Boolean Expressions} & \bexpr & ::= & 
-% 	%
-% 	\etrue ~|~ \efalse  ~|~ \neg \bexpr
-% 	 ~|~ \bexpr \oplus_b \bexpr
-% 	%
-% 	~|~ \aexpr \sim \aexpr \\
-% \mbox{Expressions} & \expr & ::= & \aexpr \sep \bexpr ~|~ [] ~|~ [\expr, \dots, \expr] \\	
-% \mbox{Labelled commands} & c & ::= &   [\assign x \expr]^{l} ~|~  [\assign x q]^{l}
-% %
-% ~|~ [\eswitch( \expr, x, v_i \to  q_i)]^{l} ~|~ \\ 
-% &&& [\eloop ~ \aexpr ~ \edo ~ c ]^{l} ~|~ c;c  ~|~ [\eif(\bexpr, c, c)]^l 	 ~|~ [\eskip]^{l} 
-% 	\\
-% 	%
-% % \mbox{Binary Operation} & \bop & ::= & + ~|~ - ~|~ \times 
-% % %
-% % ~|~ \div ~|~ < ~|~ \leq ~|~ = \\
-% % %
-% % \mbox{Unary Operation} & \uop & ::= & \ln ~|~ - \\
-% % %
-% \mbox{Memory} & m & ::= & \emptyset ~|~ (x^{l} \to v) :: m \\
-% %
-% \mbox{Trace} & t & ::= & [] ~|~ ((q^{(l, w) }, v)) :: t \\
-% \mbox{Annotated Query} & \mathcal{AQ}  & ::= & \{ q^{(l,w)}  \} \\
-% \mbox{Variables} & \mathcal{VAR}  & ::= & \{ {x} \} \\
-% \end{array}
-% \]
 \paragraph{Syntax of the SSA-form}
 \[
 \begin{array}{llll}
@@ -1446,7 +1403,7 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i^{(l,w)},q_j^{(l',w')} \in V }\{ |p(q_i^{(l,
 \\
 \mbox{Expressions} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
 \\	
-\mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{q(e)}}]^{l}
+\mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\qexpr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{q(e)}}]^{l}
 %
 % ~|~ [\eswitch( \ssa{\expr}, \ssa{x}, \ssa{v_i} \to \ssa{ q_i})]^{l} 
 ~|~  {{ifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
@@ -1464,8 +1421,10 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i^{(l,w)},q_j^{(l',w')} \in V }\{ |p(q_i^{(l,
 ~|~ [\eskip]^{l} \\
 \mbox{Memory} & m & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } \\
 %
-\mbox{Trace} & t & ::= & [] ~|~ \ssa{{(q(v)^{(l, w)}  ) :: t}} \\
-\mbox{Annotated Query} & \mathcal{AQ}  & ::= & \{ q^{(l,w)}  \} \wq{q(v)? q(e)?} \\
+\mbox{Trace} & t & ::= & [] ~|~ \ssa{{(q(v_q)^{(l, w)}  ) :: t}} \\
+\mbox{Annotated Query} & \mathcal{AQ}  & 
+::= & \jl{\{ q(\qexpr)^{(l,w)}  \} 
+~|~ \{ q(v_q)^{(l,w)} \}}\wq{q(v)? q(e)?} \\
 \mbox{SSA Variables} & \mathcal{SV}  & ::= & \{ \ssa{x} \} \\
 \mbox{Labelled SSA Variables} & \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)}  \}
 \end{array}
@@ -1554,7 +1513,7 @@ We call a list of variables $\bar{x}$.
 %%
 \and
 %
-\todo{\inferrule{
+\todomath{\inferrule{
     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
     \and
     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
@@ -1698,8 +1657,8 @@ c_3 \triangleq
      \left[\ssa{x_1} \leftarrow \ssa{q_1} \right]^1 ; \\
      \left[\ssa{i_1} \leftarrow 0 \right]^2 ; \\
     \ewhile
+    ~ [\ssa{i_1} < 100]^3, 0,
     ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }~
-    [\ssa{i_1} < 100]^3
     \edo \\
     ~ \Big( 
     \left[\ssa{z_1} \leftarrow \ssa{q_3} \right]^4; \\
@@ -2692,7 +2651,7 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 %
 \and
 %
-\todo{
+\todomath{
 \inferrule
 {
  {\ssa{ \valr_N > 0} }\and 
@@ -3317,7 +3276,7 @@ We first generate a list of variables $G$ that will be assigned with values (via
 }
 ~\textbf{ag-seq}
 \and 
-\todo{ 
+\todomath{ 
 \inferrule
 {
 {G_0 = G \quad w_0 =w }
@@ -3434,7 +3393,7 @@ V= \mathsf{L}(i)
 %
 \and 
 %
-\todo{ 
+\todomath{ 
 \inferrule
 {
 B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
@@ -3468,20 +3427,19 @@ B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 {
 B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 \\
-\forall 0 \leq j < N. 
-{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ j*(B+A) }{M_{1j};V_{1j}; i+B+j*(B+A) }}
+{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{M_{1};V_{1}; i+B+(B+A) }}
 \\
 {
-\ad{\Gamma;\ssa{c} ; i+B+j*(B+A)  }{M_{2j}; V_{2j}; i+B+A+j*(B+A) }
+\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{M_{2}; V_{2}; i+B+A+(B+A) }
 }
 \\
 {
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+N*(B+A) }{M; V ;i+N*(B+A)+B}
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{M; V ;i+(B+A)+B}
 }
 \\
-{M' = M+ \sum_{0 \leq j <N}( M_{1j}+M_{2j})  }
+{M' = M+ \sum_{0 \leq j <N}( M_{1}+M_{2})  }
 \and
-{V' = V \uplus \sum_{0 \leq j <N}( V_{1j} \uplus V_{2j})  }
+{V' = V \uplus \sum_{0 \leq j <N}( V_{1} \uplus V_{2})  }
 }
 {
 \ad{\Gamma;
@@ -3498,7 +3456,7 @@ i }{ M';V' ;i+(B+A)+B }
  \begin{array}{lll}
     |[\eswitch(\ssa{\expr}, \ssa{x},(v_j \rightarrow q_j )]^{l} |_{low}  &=& [\eswitch(|\ssa{\expr}|_{low}, |x|_{low},(v_j \rightarrow q_j )]^{l} \\
     | 
-    \ewhile ~ [ \ssa{\bexpr} ]^{l} ~ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
+    \ewhile ~ [ \ssa{\bexpr} ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
     |_{low}  
     &=&  
     \jl{\ewhile ~ [|\ssa{\bexpr}|_{low}]^{l},  ~ \edo ~ |\ssa{c}|_{low} 
@@ -3515,7 +3473,7 @@ i }{ M';V' ;i+(B+A)+B }
  \end{array}
 \]
     \caption{The erasure of SSA}
-    \label{fig:ssa_erasure}
+    \label{fig:ssa_erasure-while}
 \end{figure}
 
 
@@ -3530,63 +3488,7 @@ V_1 \uplus V_2 & := & \left\{
 \\
 \end{array}
 \]
-%
-% \begin{center}
-% \begin{tabular}{p{15pt}|p{15pt}|p{15pt}||p{15pt}|p{15pt}
-% |p{15pt}||p{15pt}|p{15pt}|
-% p{15pt}|p{15pt}|p{15pt}|p{15pt}|p{15pt}| } 
-%  1 & $\cdots$ & i-1 & i & $\cdots$ & \tiny{i+a-1} & {\tiny i+a } 
-% & $\cdots$ & {\tiny{i+2a-1} }
-% & $\cdots$ & {\tiny i+N*a-1} & {\tiny i+N*a} & $\cdots$ \\
-% \hline
-% $\cdots$  & \cellcolor{green} & \cellcolor{green} & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 &  &  &  & \\[10pt]
-% \hline
-% i-1 & \cellcolor{green} & \cellcolor{green} & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 &\cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 &  &  &  &  \\ [10pt]
-% \hline
-% i & \cellcolor{periwinkle} & \cellcolor{periwinkle} & \cellcolor{pink} & \cellcolor{pink} &\cellcolor{pink} & \cellcolor{sandstorm} 0 &
-% \cellcolor{sandstorm} 0 &
-% \cellcolor{sandstorm} 0 &&&& \\ [10pt]
-% \hline
-% $\cdots$ & \cellcolor{periwinkle} & \cellcolor{periwinkle}
-% &\cellcolor{pink} &\cellcolor{pink}&\cellcolor{pink} &
-% \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 &
-% \cellcolor{sandstorm} 0 &&&& \\ [10pt]
-% \hline
-% i+a-1 &\cellcolor{periwinkle} &\cellcolor{periwinkle} & \cellcolor{pink} & \cellcolor{pink} & \cellcolor{pink} 
-% & \cellcolor{sandstorm} 0 & \cellcolor{sandstorm} 0 
-% & \cellcolor{sandstorm} 0 &&&& \\ [10pt]
-% \hline \hline
-% {\scriptsize i+a }  & \cellcolor{periwinkle} & \cellcolor{periwinkle} & \cellcolor{trueblue} &\cellcolor{trueblue}
-% & \cellcolor{trueblue}& \cellcolor{pink} 
-% &\cellcolor{pink} & \cellcolor{pink} & &&& \\ [10pt]
-% \hline
-% $\cdots$ &\cellcolor{periwinkle} &\cellcolor{periwinkle} & \cellcolor{trueblue}  & \cellcolor{trueblue} c & \cellcolor{trueblue} 
-% & \cellcolor{pink} & \cellcolor{pink} &\cellcolor{pink} 
-% &&&& \\ [10pt]
-% \hline
-% {\small i+2a-1 } &\cellcolor{periwinkle} & \cellcolor{periwinkle} & \cellcolor{trueblue} 
-% & \cellcolor{trueblue}  & \cellcolor{trueblue}
-% & \cellcolor{pink} & \cellcolor{pink} & \cellcolor{pink} 
-% &&&& \\ [10pt]
-% \hline
-% $\cdots$ & &&&&&&&&&&&  \\ [10pt]
-% \hline
-% {\tiny i+N*a-1 } & &&&&&&&&&&& \\ [10pt]
-% \hline
-% {\tiny i+N*a} & &&&&&&&&&&&\\ [10pt]
-% \hline
-% $\cdots$ & &&&&&&&&&&&\\ [10pt]
-% \hline
-% \end{tabular}
-% \end{center}
-%
-%
-%
-       
-% \begin{defn}
-% [Validity of hoare triple]
-% If $ c : \psi \Rightarrow \phi$, for any memory $m$ and database $D$ s.t., $\psi(m)$ holds, for any trace $t$, loop maps $w$ so that $ \config{m, c, t,w} \rightarrow^{*} \config{m', \eskip, t', w'}$, then $\phi(m')$ holds, written $\vDash c : \psi \Rightarrow \phi $.  
-% \end{defn}
+
 
 \begin{defn}[Valid matrix]
 For a global list $G$, $G \vDash (M,V)$ iff the cardinality of $G$ equals to the one of $V$, $|G| = |V|$ and the matrix $M$ is of size $|V| \times |V|$.
@@ -3600,61 +3502,58 @@ For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' =
 $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
 \end{defn}
 
-% \begin{defn}[New-generated Vars]
-% For a program $c$, $Vars(c)$ is defined as follows:
-% \[
-% \begin{array}{ll}
-%  \mathcal{NG}( \assign{x}{e})     & = [ x ]  \\
-%  \mathcal{NG}( \assign{x}{q})     & = [ x ] \\
-% \mathcal{NG}( c_1; c_2)     & =  \mathcal{NG}( c_1) ++  \mathcal{NG}(c_2) \\
-%  \mathcal{NG}( \eif ~ \bexpr \ethen c_1 \eelse c_2)     & =  Vars( c_1) \cup Vars(c_2) \\
-%   Vars( \eloop ~ \expr_N ~ (c_1) ~ \edo ~ c_2 )     & =  \sum_{i \in \{ 0,1, \dots, N \} } Vars(c_1;c_2)^{i} \\
-% \end{array}
-% \]
-% where $x^{1}$ represents variable x in the first iteration inside a loop. 
-% \end{defn}
 
-% \begin{defn}
-% [Adaptivity of closed program]
-% Given a closed program $\ssa{c}$, the global list $G$, s.t. $\cdot \vdash_{M,V}^{0, |G|} \ssa{c}$, there exists $1$ and only one Graph $G_{ssa}(M, V) = (Nodes, Edges, Weights)$ defined as:
-% \\
-% $Nodes = \{i | i \in V\}$
-% \\
-% $Edges = \{ (i, j) | M[i][j] \geq 1 \}$
-% \\
-% $ Weights = \{ 1 | i \in V \land V[i] = 1\}
-%         \cup \{ -1 | \in V \land V[i] = 0\}$
-% \\
-% Adaptivity of the program defined according to the logic is as:
-% \[
-% Adapt(M, V) := \max_{k, l \in Nodes}\{i | V[i] = 1 \land i \in p(k, l) \},
-% \]
-% where $p(k, l)$ is the longest weighted path in graph $G(M, V)$ starting from $k$ to $l$.
-% \end{defn}
-% %
+\begin{defn}
+[Approximated SSA-Based Graph]
+\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (Nodes, Edges, Weights)$ is. defined as:
+\\
+Nodes $V_{ssa} = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
+\\
+Edges $E_{ssa} = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+}
+ \end{defn}  
+     
+%
+\subsection{Weighting Algorithm}
+\jl{
+We use the algorithm from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for each node on the graph.
+}
+\\
+\begin{defn}
+[Approximated SSA-Based Weighted Graph]
+\jl{
+Given a program $\ssa{c}$ and its Approximated SSA-Based Graph $G_{ssa}$, we added weights on every vertice in this graph according to the reachibility bound algorithm $\rb$.
+Then we will have an updated graph Approximated SSA-Based Weighted Graph $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$ defined as:}
+\\
+$V_{aprox} = V_{ssa}$
+\\
+$E_{aprox} = E_{ssa}$
+\\
+$W_{aprox} = \{(v, w) | v \in V_{aprox}, w = \rb(v, c)\}$
+\end{defn}  
+%
 \begin{defn}
 [Adaptivity of piece of program]
-Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (Nodes, Edges, Weights)$ is. defined as:
+\jl{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (Nodes, Edges, Weights)$ is. defined as:
 \\
 Nodes $Vt = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
 \\
 Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
 \\
- Weights $Wt = \{ (  G(j), 1 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 1\}
-        \cup \{ (  G(j), 0 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 0 \} $.
-        
+ % Weights $Wt = \{ (  G(j), 1 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 1\}
+ %        \cup \{ (  G(j), 0 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 0 \} $.
+}
+
 Adaptivity of the program defined according to the logic is as:
 \[
 Adapt(M, V,i_1,i_2) := \max_{vt_1, vt_2 \in Vt}\{ \mathsf{Weight}( p(vt_1, vt_2), Wt) \},
 \]
 where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
-\end{defn}        
-%
-\subsection{Weighting Algorithm}
-We use the algorithm from paper  to estimate the reachability bound for each node on the graph.
+\end{defn}  
+
 %
 %
-\subsection{Soundness of the \THESYSTEM}
+\subsection{\todo{Soundness of the \THESYSTEM}}
 \begin{defn}
 [Subgraph]
 Given two graphs $G_{low} = (V_1, E_1)$, $G_{ssa} = (V_2, E_2)$, $G_{low} \subseteq G_{ssa}$ iff:\\
@@ -3666,7 +3565,7 @@ $\exists f, g$ so that \\
 %
 %
 \begin{defn}
-[Mapping of vertices from $G_s$ to $G_{ssa}$ graph]\label{lem:vertex}
+[Mapping of vertices from $G_s$ to $G_{ssa}$ graph]\label{lem:vertexmap}
 Let us define a map $f: \mathcal{AQ} -> \mathcal{LV} $ as follow:
 $f(q^{l,w}) = \ssa{x}^{l,w}$ 
 \end{defn}
@@ -3682,7 +3581,8 @@ $f(q^{l,w}) = \ssa{x}^{l,w}$
    Suppose $v_N =N$,so we have $N$ iteration. When $N = 0$, there is no new generated trace, it is trivially true. When $N > 0$,
   we have the following evaluation.
   {\[
- {\inferrule
+\todomath{
+ \inferrule
 {
  \valr_N > 0
 }
@@ -4813,108 +4713,9 @@ Unfold the definition of subgraph $\subseteq$, we need to show two cases.
 % \end{lem}
 %
 %
-\section{Examples}
-%
-% \subsection{Syntax and Semantics}
-% %
-% \paragraph{Syntax.}
-% \[
-% \begin{array}{llll}
-%  \mbox{Arithmatic Operators} & *_a & ::= & + ~|~ - ~|~ \times 
-% %
-% ~|~ \div \\  
-%   \mbox{Boolean Operators} & *_b & ::= & \lor ~|~ \land ~|~ \neg\\
-%   %
-%   \mbox{Relational Operators} & *_r & ::= & < ~|~ \leq ~|~ = \\  
-%  \mbox{Label} & l & := & \mathbb{N} \\ 
-%  \mbox{loop maps} & w & \in & \mbox{Label} \times \mathbb{N} \\
-% \mbox{AExpr} & \aexpr & ::= & 
-% 	%
-% 	n ~|~ x ~|~ \aexpr *_a \aexpr ~|~ {[] ~|~ [\aexpr_0, \dots, \aexpr_i]  } \sep f (l , \aexpr_1, \aexpr_2) \\
-%     %
-% \mbox{BExpr} & \bexpr & ::= & 
-% 	%
-% 	\etrue ~|~ \efalse  ~|~ \neg \bexpr
-% 	 ~|~ \bexpr *_b \bexpr
-% 	%
-% 	~|~ \aexpr *_r \aexpr \\
-% \mbox{Command} & c & ::= &   [\assign x \expr]^{l} ~|~  [\assign x q(\expr)]^{l}
-% %
-%  \\
-% 	%
-% & & & ~|~  c ; c ~|~ \eif([\bexpr]^{l}, c_1, c_2) 
-% 	 ~|~ [\eskip]^{l} \sep {\eloop ~ [\valr_N]^{l} ~ (c_1) ~ \edo ~ c_2 }
-% 	\\
-% \mbox{Memory} & m & ::= & [] ~|~ m[x^{l} \to v] \\
-% %
-% \mbox{Trace} & t & ::= & [] ~|~ [(q, v)^{(l, w) }] ~|~ t ++ t
-% \end{array}
-% \]
-% %
-% %
-% % \begin{example}
-% % \textbf{Dependency graphs for high level programs containing  non-atomic queries}
-% % \\
-% % Let $q_1 = \lambda D. D_i * D_j$, \\ 
-% % Let $q_2 (x_1) = \lambda D. D_i * D_j + x_1  $.\\
-% % Let $q_3 (x_1 - x_2) = \lambda D. D_i * D_j + x_1 - x_2 $, 
-% % $q_4 (x_2) = \lambda D. D_i * D_j + x_2 $, 
-% % and $q_5(x_1) = \lambda D. D_i * D_j + x_1$ .\\
-% % in program $c_1$, $c_2$ and $c_3$ as following:
-% % \[
-% % c_1 \triangleq
-% % \begin{array}{c}
-% %       \left[\assign{x_1}{q_1} \right]^1; \\
-% %   \left[\assign{x_2}{q_2} \right]^2 ; \\
-% %      \left[\assign{x_3}{q_3} \right]^3
-% % \end{array}
-% % \hspace{2cm}
-% % c_2 \triangleq
-% % \begin{array}{c}
-% %       \left[\assign{x_1}{q_1} \right]^1; \\
-% %   \left[\assign{x_2}{q_2} \right]^2 ; \\
-% %      \left[\assign{x_3}{q_4} \right]^3
-% % \end{array}
-% % \hspace{2cm}
-% % c_3 \triangleq
-% % \begin{array}{c}
-% %       \left[\assign{x_1}{q_1} \right]^1; \\
-% %   \left[\assign{x_2}{q_2} \right]^2 ; \\
-% %      \left[\assign{x_3}{q_5} \right]^3
-% % \end{array}
-% % \]
-% % %
-% % \begin{center}
-% % \begin{tikzpicture}
-% % \draw[very thick,->] (8, 0)node[anchor=north]{$q_3^3$} -- (6, 2) node[anchor=south]{$q_2^2$};
-% % \draw[very thick,->] (8, 0)  -- (10, 2) node[anchor=south]{$q_1^1$};
-% % \draw[very thick,->] (6.2, 2) -- (9.8, 2);
-% % %%%%%draw the longest path
-% % \draw[rounded corners=8mm, very thick, red, dashed, ->] (8, 0.2) -- (6.4, 1.8) -- (9.6, 1.8);
-% % \end{tikzpicture}
-% % %
-% % \begin{tikzpicture}
-% % \draw[very thick,->] (18, 0)node[anchor=north]{$q_4^3$} -- (16, 2) node[anchor=south]{$q_2^2$};
-% % \draw[very thick,->] (16.2, 2) -- (19.8, 2)node[anchor=south]{$q_1^1$};
-% % \draw[rounded corners=8mm, very thick, red, dashed, ->] (18, 0.2) -- (16.4, 1.8) -- (19.6, 1.8);
-% % \end{tikzpicture}
-% % %
-% % \begin{tikzpicture}
-% % \draw[very thick,->] (26, 2) node[anchor=south]{$q_2^2$} -- (29.9, 2);
-% % \draw[very thick,->] (28, 0)node[anchor=north]{$q_5^3$}  -- (30, 2) node[anchor=south]{$q_1^1$};
-% % % \draw[very thick, red, ->, dashed] (26.4, 1.8) -- (29.6, 1.8);
-% % \draw[very thick, red, ->, dashed] (28, 0.2) -- (29.6, 1.8);
-% % \end{tikzpicture}
-% % \end{center}
-% % %
-% % \end{example}
-% %
+\section{\todo{Examples}}
 
-%
-%
-
-
-\begin{example}[Two Round Algorithm]
+\begin{example}[TwoRound Algorithm]
 \[
 TR^H(k) \triangleq
 {
