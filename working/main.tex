@@ -220,224 +220,13 @@ The key component of the system is an program analysis procedure, which provides
 &&& \eloop ~ \aexpr  ~ \edo ~ c ~ \jl{\ewhile ~ b ~ \edo ~ c}  ~|~ c;c  ~|~ \eif(\bexpr, c, c) 	 ~|~ \eskip 
 	\\
 \mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
-%
-% \mbox{Trace} & t & ::= & [] ~|~ [(q, v)^{(l, w) }] ~|~ t ++ t
+\mbox{Trace} & t & ::= & [] ~|~ \jl{{(q(v_q)^l  ) :: t}} \\
+\mbox{Annotated Query} & \mathcal{AQ}  & 
+::= & \jl{\{ q(\qexpr)^l  \} }
 \end{array}
 \]
-\subsection{Rewriting from High Level Program into Low Level Program}
 %
-The transformation $\ts{e^h} = e^l$ transfers the expression $e^h$ in the high level language to an expression $e_l$ in the low language. 
-Let us look at the special cases: the query.
-\\
-In the first transition, if a query in high level language isn't atomic, i.e., 
-$q(e)$ depends on $e$ with free variables, then it will be rewrite into a switch command. 
-This rewriting will switch on the possible values $v_i$ of $e$ and convert the $q(e)$ into a series of atomic queries $q_i$.
-\\
-In the second transition, if a query in high level language is atomic, $q()$ only depends on data base $D$ and some constant values,
-then it will be rewrite into identity in our low level language.
-\\
-Another special case is the sampling command in high level language. To exclude the dependency caused by the randomness, we will rewrite the sampling into an assignment command in low level language. This will assign a constant value to the corresponding variable.
-\\
-The resting commands will be rewrote identically.
-%
-%
-\[
-\begin{array}{lll}
-\ts{ [\assign x q(e)]^{l}}
-        & \Rightarrow &
-        \left[
-        \begin{array}{l}
-             \eswitch ~ \Bigg(\expr, x, 
-            \left(\begin{array}{l}
-           v_1 \to q_1, \\
-            \cdots, \\
-            v_m \to q_m
-            \end{array}\right) 
-            \Bigg) \\
-        \end{array}
-        \right]^{l}\\
-    \ts{\assign{x}{q()}} & \Rightarrow & \assign{x}{q}\\
-%   \ts{[\assign{x}{\uniform} ]^{l}}   &   \Rightarrow & \left[
-% \assign x c_{u}
-% \right]^{l} \\
- \ts{[\assign{x}{\expr} ]^{l}}   &   \Rightarrow & \left[ \assign x \expr \right]^{l} \\
- \ts{ c_1 ; c_2 }     & \Rightarrow  & \ts{c_1} ; \ts{c_2} \\
-  \ts{\eif([\bexpr]^{l}, c_1, c_2)}  &  \Rightarrow & \eif([\bexpr]^{l}, \ts{c_1}, \ts{c_2}) \\
- \ts{  \eloop ~ [\valr_N]^{l} ~ (c_1) ~ \edo ~ c_2  } & \Rightarrow & \eloop ~ [\valr_N]^{l} ~ (\ts{c_1}) ~ \edo ~ \ts{c_2}  \\
-\end{array}
-\]
-% \begin{example}[Two Round Algorithm]
-% \[
-% TwoRound^H(k) \triangleq
-% {
-% \begin{array}{l}
-%     % \left[j \leftarrow 0 \right]^1 ; \\
-%     a_1 \leftarrow [] ; \\
-%     \eloop ~ [k] ~ \\
-%     ~ \edo ~ 
-%     \Big(
-%      x_1 \leftarrow q()  ; \\
-%     a_3 \leftarrow x_1 :: a_2      \Big);\\
-%     l \leftarrow q_{k + 1}(a_3)\\
-% \end{array}
-% }
-% \]
-% \end{example}
-
-% \begin{example}[Multi-Round Algorithm]
-% \[
-% MultiRound^H(k) \triangleq
-% \begin{array}{l}
-%     %  \left[j \leftarrow 0 \right]^1 ; \\
-%   I_2 \leftarrow [] ; \\
-%     \eloop ~ [k]  \\ 
-%     \ ~ \edo ~  \Big(
-%     p_1 \leftarrow c ; \\
-%     a_1 \leftarrow q(p_1, I_2) ; \\
-%     I_3 \leftarrow \eupdt( {I_2}, (a_1, p_1)) 
-%     \Big) 
-% \end{array}
-% \]
-% \end{example}
-% %
-
-
-%
-%
-% \begin{example}
-% \textbf{Dependency graphs for high level programs containing  non-atomic queries}
-% \\
-% Let $q_1 = \lambda D. D_i * D_j$, \\ 
-% Let $q_2 (x_1) = \lambda D. D_i * D_j + x_1  $.\\
-% Let $q_3 (x_1 - x_2) = \lambda D. D_i * D_j + x_1 - x_2 $, 
-% $q_4 (x_2) = \lambda D. D_i * D_j + x_2 $, 
-% and $q_5(x_1) = \lambda D. D_i * D_j + x_1$ .\\
-% in program $c_1$, $c_2$ and $c_3$ as following:
-% \[
-% c_1 \triangleq
-% \begin{array}{c}
-%       \left[\assign{x_1}{q_1} \right]^1; \\
-%   \left[\assign{x_2}{q_2} \right]^2 ; \\
-%      \left[\assign{x_3}{q_3} \right]^3
-% \end{array}
-% \hspace{2cm}
-% c_2 \triangleq
-% \begin{array}{c}
-%       \left[\assign{x_1}{q_1} \right]^1; \\
-%   \left[\assign{x_2}{q_2} \right]^2 ; \\
-%      \left[\assign{x_3}{q_4} \right]^3
-% \end{array}
-% \hspace{2cm}
-% c_3 \triangleq
-% \begin{array}{c}
-%       \left[\assign{x_1}{q_1} \right]^1; \\
-%   \left[\assign{x_2}{q_2} \right]^2 ; \\
-%      \left[\assign{x_3}{q_5} \right]^3
-% \end{array}
-% \]
-% %
-% \begin{center}
-% \begin{tikzpicture}
-% \draw[very thick,->] (8, 0)node[anchor=north]{$q_3^3$} -- (6, 2) node[anchor=south]{$q_2^2$};
-% \draw[very thick,->] (8, 0)  -- (10, 2) node[anchor=south]{$q_1^1$};
-% \draw[very thick,->] (6.2, 2) -- (9.8, 2);
-% %%%%%draw the longest path
-% \draw[rounded corners=8mm, very thick, red, dashed, ->] (8, 0.2) -- (6.4, 1.8) -- (9.6, 1.8);
-% \end{tikzpicture}
-% %
-% \begin{tikzpicture}
-% \draw[very thick,->] (18, 0)node[anchor=north]{$q_4^3$} -- (16, 2) node[anchor=south]{$q_2^2$};
-% \draw[very thick,->] (16.2, 2) -- (19.8, 2)node[anchor=south]{$q_1^1$};
-% \draw[rounded corners=8mm, very thick, red, dashed, ->] (18, 0.2) -- (16.4, 1.8) -- (19.6, 1.8);
-% \end{tikzpicture}
-% %
-% \begin{tikzpicture}
-% \draw[very thick,->] (26, 2) node[anchor=south]{$q_2^2$} -- (29.9, 2);
-% \draw[very thick,->] (28, 0)node[anchor=north]{$q_5^3$}  -- (30, 2) node[anchor=south]{$q_1^1$};
-% % \draw[very thick, red, ->, dashed] (26.4, 1.8) -- (29.6, 1.8);
-% \draw[very thick, red, ->, dashed] (28, 0.2) -- (29.6, 1.8);
-% \end{tikzpicture}
-% \end{center}
-% %
-% \end{example}
-%
-
-
-\section{Low Level Language Based on Control Flow}
-We first consider a low level language where the queries are atomic
-and the dependency relations are caused only by control flow.
-%
-\subsection{Syntax and Semantics}
-%
-\paragraph{Syntax.}
-\[
-\begin{array}{llll}
- \mbox{Arithmatic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
-%
-~|~ \div \\  
-  \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
-  %
-   \mbox{Relational Operators} & \sim & ::= & < ~|~ \leq ~|~ == \\  
- \mbox{Label} & l & := & \mathbb{N} \\ 
- \mbox{Loop Maps} & w & \in & \mbox{Label} \times \mathbb{N} \\
-\mbox{Arithmetic Expressions} & \aexpr & ::= & 
-	%
-	n ~|~ x ~|~\aexpr \oplus_a \aexpr  \\
-% 	\sep \pi (l , \aexpr, \aexpr) \\
-    %
-\mbox{Boolean Expressions} & \bexpr & ::= & 
-	%
-	\etrue ~|~ \efalse  ~|~ \neg \bexpr
-	 ~|~ \bexpr \oplus_b \bexpr
-	%
-	~|~ \aexpr \sim \aexpr \\
-\mbox{Expressions} & \expr & ::= & \aexpr \sep \bexpr ~|~ [] ~|~ [\expr, \dots, \expr] \\	
-% \mbox{Query expressions} & \qexpr & ::=
-% & \jl{\aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr}
-% \\
-% \mbox{Query Values} & v_q & ::= 
-% & \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ v_q \oplus_a  v_q }
-% \\
-\mbox{Labelled commands} & c & ::= &   [\assign x \expr]^{l} ~|~  [\assign x q]^{l}
-%
-~|~ [\eswitch( \expr, x, v_i \to  q_i)]^{l} ~|~ \\ 
-&&& [\eloop ~ \aexpr ~ \edo ~ c ]^{l} 
-~ \jl{\ewhile ~ [ b ]^{l} ~ \edo ~  c} ~|~ c;c  ~|~ [\eif(\bexpr, c, c)]^l 	 ~|~ [\eskip]^{l} 
-	\\
-	%
-% \mbox{Binary Operation} & \bop & ::= & + ~|~ - ~|~ \times 
-% %
-% ~|~ \div ~|~ < ~|~ \leq ~|~ = \\
-% %
-% \mbox{Unary Operation} & \uop & ::= & \ln ~|~ - \\
-% %
-\mbox{Memory} & m & ::= & \emptyset ~|~ (x^{l} \to v) :: t \\
-%
-\mbox{Trace} & t & ::= & [] ~|~ ((q^{(l, w) }, v)) :: t \\
-\mbox{Annotated Query} & \mathcal{AQ}  & ::= & \{ q^{(l,w)}  \}
-\end{array}
-\]
-Expressions can be either arithmetic expressions or boolean expressions. 
-An arithmetic expression can be a  constant $n$ denoting integer, a variable $x$ from some countable set $Var$, the empty list $[]$, a list $[a_1,\ldots,a_k]$ of arithmetic expressions, 
-% and a function $\pi(l,a_1,a_2)$ denoting a primitive selection function which depending on the value of $l$ select either $a_1$ or $a_2$, this is used to guarantee SSA-like properties for programs with loops. 
-%
-A boolean expression can be as usual {\tt true} or {\tt false}, the negation of
-a boolean expression, or a combination of boolean expressions by means of an operation $\oplus_b$ or the result of a comparison $\sim$ between arithmetic expressions. 
-% 
-
-%
-Commands in the low-level language are labelled  --- we assume that labels are unique and corresponds to the line of code where they appear, implicitly this gives us a control flow graph representation for the program. 
-A command can be either a labelled assignment $[\assign x \expr]^{l}$, or a labelled query request  $[\assign x q]^{l}$, a labelled skip $[\eskip]^{l}$, the composition of two labelled commands $[c_1;c_2]^l$, a labelled if statement $\eif([\bexpr, c_1, c_2)]^{l}$, a labelled loop statement  $[\eloop ~ (\aexpr,c_1 ~ \edo ~ c_2 ]^l$ or a labelled switch statement $[\eswitch( \expr, x, (v_i \to  q_i))]^{l}$.
-
-A memory is a partial map from the labelled variables to values.
-
-A trace is a list which only tracks the queries called and the results of the queries.   
-
-For memory and traces we will use notation: we will write $++$ for concatenation of lists in traces, and we will use the standard notation $m[x^l\to v ]$ for the update of the memory.
-
-
-%
-\paragraph{Operational Semantics.}
+\paragraph{Trace Based Operational Semantics.}
 Small step operational semantics of expressions are standard and omitted.
 % \[\]
 % \newline
@@ -449,111 +238,7 @@ Small step operational semantics of expressions are standard and omitted.
 }{
  \config{m,  \chi( \aexpr)} \aarrow \chi(\aexpr')
 }
-%
-% \and
-% %
-% \inferrule{
-%  w(l) >0
-% }{
-%  \config{m, w, f(l, \aexpr_1, \aexpr_2)} \aarrow \aexpr_2
-% }
-% %
-% \and
-% %
-% \inferrule{
-%   \config{m, \aexpr_1 } \aarrow \aexpr_1'
-% }{
-%  \config{m, \aexpr_1 *_a \aexpr_2 } \aarrow \expr_1' *_a \aexpr_2
-% }
-% %
-% \and
-% %
-% \inferrule{
-%   \config{m, \aexpr_2 } \aarrow \aexpr_2'
-% }{
-%  \config{m, n_1 *_a \aexpr_2 } \aarrow n_1 *_a \aexpr_2'
-% }
-% %
-% \and
-% %
-% \inferrule{
-% n_3 = n_1 *_a n_2
-% }{
-%  \config{m, n_1 *_a n_2 } \aarrow n_3
-% }
-% \end{mathpar}
-% % \vfill \pagebreak
-
-% %
-% \begin{mathpar}
 \boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
-% \inferrule{
-% }{
-%  \config{m, \etrue} \barrow \etrue
-% }
-% %
-% \and
-% %
-% \inferrule{
-% }{
-%  \config{m, \efalse} \barrow \efalse
-% }
-% %
-% \and
-% %
-% \inferrule{
-%   \config{m, \aexpr_1 } \aarrow \aexpr_1'
-% }{
-%  \config{m, \aexpr_1 *_r \aexpr_2 } \barrow \expr_1' *_r \aexpr_2
-% }
-% %
-% \and
-% %
-% \inferrule{
-%   \config{m, \aexpr_2 } \aarrow \aexpr_2'
-% }{
-%  \config{m, n_1 *_r \aexpr_2 } \barrow n_1 *_r \aexpr_2'
-% }
-% %
-% \and
-% %
-% \inferrule{
-% b_3 = n_1 *_r n_2
-% }{
-%  \config{m, n_1 *_r n_2 } \barrow b_3
-% }
-% %
-% \and
-% %
-% \inferrule{
-%  \config{m, \bexpr_1  } \barrow \bexpr_1' 
-% }{
-%  \config{m, \bexpr_1 *_b \bexpr_2 } \barrow \bexpr_1' *_b \bexpr_2
-% }
-% %
-% \and
-% %
-% \inferrule{
-%  \config{m, \bexpr_2  } \barrow \bexpr_2' 
-% }{
-%  \config{m, \etrue *_b \bexpr_2 } \barrow \etrue *_b \bexpr_2'
-% }
-% %
-% \and
-% %
-% \inferrule{
-%  \config{m, \bexpr_2  } \barrow \bexpr_2' 
-% }{
-%  \config{m, \efalse *_b \bexpr_2 } \barrow \efalse *_b \bexpr_2'
-% }
-% %
-% \and
-% %
-% \inferrule{
-%  \config{m, \bexpr  } \barrow \bexpr' 
-% }{
-%  \config{m, \neg \bexpr } \barrow \neg \bexpr'
-% }
 \end{mathpar}
 %
 \begin{mathpar}
@@ -568,29 +253,7 @@ q(D) = v
 {
 \config{m, [\assign{x}{q}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [q^{(l,w )}],w }
 }
-~\textbf{low-query}
-%
-%
-% \inferrule
-% {
-% q(D) = v \and v \neq v'
-% }
-% {
-% \config{m, \assign x q^*, D} \Rightarrow^{[(q, v')]} \config{m[x \to v'], \eskip, D}
-% }
-% ~\textbf{query}^*
-% %
-% \and
-% %
-% \inferrule
-% {
-% m, \expr \Rightarrow \expr'
-% }
-% {
-% \config{m, [\assign{x}{ \expr}]^{l}, t,w} \xrightarrow{} \config{m, [\assign{x}{ \expr'}]^{l} , t,w}
-% }
-% ~\textbf{assn1}
-%
+~\textbf{query}
 \and
 %
 \inferrule
@@ -599,7 +262,7 @@ q(D) = v
 {
 \config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
 }
-~\textbf{low-assn}
+~\textbf{assn}
 %
 \and
 %
@@ -610,7 +273,7 @@ q(D) = v
 {
 \config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w'}
 }
-~\textbf{low-seq1}
+~\textbf{seq1}
 %
 \and
 %
@@ -620,7 +283,7 @@ q(D) = v
 {
 \config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
 }
-~\textbf{low-seq2}
+~\textbf{seq2}
 %
 \and
 %
@@ -632,7 +295,7 @@ q(D) = v
 \config{m, [\eif(\bexpr, c_1, c_2)]^{l},  t,w} 
 \xrightarrow{} \config{m,  [\eif(\bexpr', c_1, c_2)]^{l},  t,w}
 }
-~\textbf{low-if}
+~\textbf{if}
 %
 \and
 %
@@ -643,7 +306,7 @@ q(D) = v
 \config{m, [\eif(\etrue, c_1, c_2)]^{l},t,w} 
 \xrightarrow{} \config{m, c_1,  t,w}
 }
-~\textbf{low-if-t}
+~\textbf{if-t}
 %
 ~~~~~~~~~~
 %
@@ -654,92 +317,7 @@ q(D) = v
 \config{m, [ \eif(\efalse, c_1, c_2)]^{l},  t,w} 
 \xrightarrow{} \config{m, c_2,  t,w}
 }
-~\textbf{low-if-f}
-% %
-% \and
-% %
-% {\inferrule
-% {
-% }
-% {
-% \config{m, \ewhile([\bexpr]^l, c),  t,w} 
-% \xrightarrow{} \config{m,  \eunfold{[\bexpr^{l}] }{\ewhile([\bexpr]^l,   c)} ,  t,w}
-% }
-% ~\textbf{while} }
-% %
-% \and
-% %
-% {\inferrule
-% {
-% \config{m, \bexpr} \rightarrow \bexpr'
-% }
-% {
-% \config{m, \eunfold{[\bexpr]^l}{ c}, D, t,w} 
-% \xrightarrow{} \config{m, \eunfold{[\bexpr']^l}{ c}, D, t,  w  }
-% }
-% ~\textbf{unfold}}
-% %
-% \and
-% %
-% {\inferrule
-% {
-% }
-% {
-% \config{m, \eunfold{[\efalse]^l}{c}, D, t,w} 
-% \xrightarrow{} \config{m, [\eskip]^{l}, D, t,  (w \setminus l) }
-% }
-% ~\textbf{unfold-f}}
-
-% \and
-% %
-% {\inferrule
-% {
-% }
-% {
-% \config{m, \eunfold{[\etrue]^l}{ c}, D, t,w} 
-% \xrightarrow{} \config{m, c, D, t, (w+l) }
-% }
-% ~\textbf{unfold-t} }
-% %
-% \and
-% %
-{
-\inferrule
-{
-  \config{m, \expr } \xrightarrow{} \expr'
-}
-{
-\config{m, [\eswitch(\expr, x, (v_i \to q_i))]^{l},  t,w} 
-\xrightarrow{} \config{m, [ \eswitch(\expr',x, (v_i \to q_i))]^{l},  t, w }
-}
-~\textbf{switch}
-}
-\and
-%
-{
-\inferrule
-{
-\empty
-}
-{
-\config{m, [ \eswitch(v_k,x, (v_i \to q_i))]^{l},  t,w} 
-\xrightarrow{} \config{m,  [\assign x q_k]^{l},  t, w }
-}
-~\textbf{low-switch-v}
-}
-% %
-% \and
-% %
-% {\inferrule
-% {
-% \config{m, \expr_N \xrightarrow{} \expr_N'  }
-% }
-% {
-% \config{m,  \eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ c ,  t, w }
-% \xrightarrow{} \config{m, [ \eloop ~ [\expr_N]^{l} ~ (f) ~ \edo ~ c]^{l} ,  t, w }
-% }
-% ~\textbf{loop}
-% }
+~\textbf{if-f}
 %
 \and
 %
@@ -781,7 +359,7 @@ q(D) = v
 \eif_w (b, c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
 t, (w + l) }
 }
-~\textbf{low-while-b}
+~\textbf{while-b}
 }
 }
 %
@@ -796,7 +374,7 @@ t, (w + l) }
 \xrightarrow{} \config{m, c ; 
  \eif_w (b', c,  \eskip), t, w }
 }
-~\textbf{low-ifw-b}
+~\textbf{ifw-b}
 }
 }
 %
@@ -813,7 +391,7 @@ t, (w + l) }
 c,
 t, (w + l) }
 }
-~\textbf{low-ifw-true}
+~\textbf{ifw-true}
 }
 }
 \and
@@ -828,11 +406,12 @@ t, (w + l) }
 \xrightarrow{} \config{m, 
  \eskip, t, (w \setminus l) }
 }
-~\textbf{low-ifw-false}
+~\textbf{ifw-false}
 }
 }
 \end{mathpar}
 %
+\todo{
 where $w_l$ refers to a map $w$ without the key $l$.
 \[
 \begin{array}{ccc}
@@ -842,6 +421,7 @@ w + l & = w[l \to 0] & l \not \in Keys(w) \\
      & w_l [l \to w(l)+1] & Otherwise
 \end{array}
 \]
+}
 %
 {
 \begin{figure}
@@ -855,7 +435,7 @@ w + l & = w[l \to 0] & l \not \in Keys(w) \\
 {
 \config{m, [\assign x \expr]^{l},  t,w} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t,w}
 }
-~\textbf{l-assn1}
+~\textbf{assn1}
 %
 ~~~~~~
 %
@@ -865,7 +445,7 @@ w + l & = w[l \to 0] & l \not \in Keys(w) \\
 {
 \config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
 }
-~\textbf{l-assn2}
+~\textbf{assn2}
 %
 \and
 {
@@ -877,7 +457,7 @@ w + l & = w[l \to 0] & l \not \in Keys(w) \\
 \config{m, \eloop ~ [\aexpr]^{l}  ~ \edo ~ c ,  t, w }
 \xrightarrow{} \config{m, \eloop ~ [\aexpr']^{l} ~ \edo ~ c ,  t, (w + l) }
 }
-~\textbf{l-loop-a}
+~\textbf{loop-a}
 }
 %
 \and
@@ -919,7 +499,7 @@ w + l & = w[l \to 0] & l \not \in Keys(w) \\
 \eif_w (b, c ; \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  \eskip),
 t, (w + l) }
 }
-~\textbf{low-while-b}
+~\textbf{while-b}
 }
 }
 %
@@ -934,7 +514,7 @@ t, (w + l) }
 \xrightarrow{} \config{m, 
  \eif_w (b', c,  \eskip), t, w }
 }
-~\textbf{low-ifw-b}
+~\textbf{ifw-b}
 }
 }
 %
@@ -950,7 +530,7 @@ t, (w + l) }
 \xrightarrow{} \config{m, c 
 t, (w + l) }
 }
-~\textbf{low-ifw-true}
+~\textbf{ifw-true}
 }
 }
 \and
@@ -965,7 +545,7 @@ t, (w + l) }
 \xrightarrow{} \config{m, 
  \eskip, t, (w \setminus l) }
 }
-~\textbf{low-ifw-false}
+~\textbf{ifw-false}
 }
 }
 %
@@ -979,7 +559,7 @@ t, (w + l) }
 {
 \config{m, [\assign{x}{q(\qexpr)}]^l, t, w} \xrightarrow{}  \config{m, [\assign{x}{q(\qexpr')}]^l, t, w}
 }
-~\textbf{l-query-e}
+~\textbf{query-e}
 }
 \and
 \jl{
@@ -988,9 +568,9 @@ t, (w + l) }
 q(v_q) = v
 }
 {
-\config{m, [\assign{x}{q(v_q)}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [q(v_q)^{(l,w )}],w }
+\config{m, [\assign{x}{q(v_q)}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [q(v_q)^{l}],w }
 }
-~\textbf{l-query-v}
+~\textbf{query-v}
 }
 %
 \and
@@ -1056,10 +636,11 @@ q(v_q) = v
 }
 % \vfill \pagebreak
 %
-\subsection{Adaptivity of Programs in Low level language}
+\subsection{Adaptivity of Programs}
 %
 %
 \begin{defn}[Label Order]
+\todo{
 $<_w and =_w$.\\
 \[
   \begin{array}{lll}
@@ -1076,20 +657,23 @@ $mk(w_i) =MinKey(w_i) $
      & \triangleq & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & Otherwise
 \end{array}
 \]
+}
 \end{defn}
 %
 \begin{defn}[Query Direction]
 Direction between two queries.
 \\
-$\forall q_1,q_2, l_1, l_2, w_1, w_2 $.
+$\forall q_1,q_2, l_1, l_2 $.
 the execution of query $q_1$ appears before query $q_2$, denoted as\\
-\[\mathsf{To}(q_1^{l_1, w_1}, q_2^{(l_2,w_2)})= (q_1^{(l_1, w_1)}) <_q (q_2^{(l_2, w_2)})  \]
+\[
+\jl{\mathsf{To}(q_1^{l_1}, q_2^{(l_2)})= (q_1^{(l_1)}) <_q (q_2^{(l_2)})  
+}\]
 where \\
 \[
-(q_1^{(l_1, w_1)}) <_q (q_2^{(l_2, w_2)}) \triangleq \begin{array}{ll}
-    l_1 < l_2  & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2   \\
-    w_1 <_w w_2    & \mathsf{Otherwise}
-\end{array}  
+\jl{
+(q_1^{(l_1)}) <_q (q_2^{(l_2, w_2)}) 
+\triangleq 
+l_1 < l_2 } 
 \]
 \end{defn}
 %
@@ -1403,7 +987,7 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i^{(l,w)},q_j^{(l',w')} \in V }\{ |p(q_i^{(l,
 \\
 \mbox{Expressions} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
 \\	
-\mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\qexpr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{q(e)}}]^{l}
+\mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{q(\qexpr)}}]^{l}
 %
 % ~|~ [\eswitch( \ssa{\expr}, \ssa{x}, \ssa{v_i} \to \ssa{ q_i})]^{l} 
 ~|~  {{ifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
@@ -1421,10 +1005,10 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i^{(l,w)},q_j^{(l',w')} \in V }\{ |p(q_i^{(l,
 ~|~ [\eskip]^{l} \\
 \mbox{Memory} & m & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } \\
 %
-\mbox{Trace} & t & ::= & [] ~|~ \ssa{{(q(v_q)^{(l, w)}  ) :: t}} \\
+\mbox{Trace} & t & ::= & [] ~|~ \ssa{{(q(v_q)^l  ) :: t}} \\
 \mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{ q(\qexpr)^{(l,w)}  \} 
-~|~ \{ q(v_q)^{(l,w)} \}}\wq{q(v)? q(e)?} \\
+::= & \jl{\{ q(\qexpr)^l  \} }
+ \\
 \mbox{SSA Variables} & \mathcal{SV}  & ::= & \{ \ssa{x} \} \\
 \mbox{Labelled SSA Variables} & \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)}  \}
 \end{array}
@@ -1760,7 +1344,9 @@ By induction hypothosis on the second and third premise, we know that : $\fvssa{
   \varssa{\ssa{\bexpr}} = \delta(\vars{\bexpr})
 \] 
 From the first premise, we know that $\vars{b} \subseteq \dom(\delta)$. This is goal is proved by the rule $\textbf{S-VAR}$ on all the variables in $\bexpr$.\\
-\caseL{Case $\inferrule{
+\caseL{Case 
+$\todomath{
+\inferrule{
     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
     \and
     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
@@ -1772,10 +1358,12 @@ From the first premise, we know that $\vars{b} \subseteq \dom(\delta)$. This is 
     \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
     \and 
     {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
-    % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
   }{ 
   \Sigma; \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta_1[\bar{x} \to \ssa{\bar{x}'}]; \Sigma \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-LOOP}}$}
+}~{\textbf{S-LOOP}}
+}
+$
+}
 Unfolding the definition, we need to show:
 \[\varssa{\ssa{\aexpr}} \cup \fvssa{\ssa{c'}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}] = \delta (\vars{\aexpr}) \cup \delta(\fv{c} ) \]
 We can similarly show that $\varssa{\ssa{\aexpr}} = \delta(\vars{a})$ as in the if case. We still need to show that: 
@@ -2027,7 +1615,9 @@ Unfold the definition, we want to show that $$\forall x  \in ( \dom(\delta) \cup
 \end{enumerate}
 
 
-\caseL{Case $\inferrule{
+\caseL{Case 
+$\todomath{
+\inferrule{
     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
     \and
     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
@@ -2042,7 +1632,8 @@ Unfold the definition, we want to show that $$\forall x  \in ( \dom(\delta) \cup
     % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
   }{ 
   \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta[\bar{x} \to \ssa{\bar{x}'}]; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-LOOP}} $ 
+}~{\textbf{S-LOOP}} 
+}$ 
 % $\inferrule{
 %     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
 %     \and
@@ -3518,7 +3109,7 @@ $V = V$
 %
 \subsection{Weighting Algorithm}
 \jl{
-We use the algorithm from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for each node on the graph.
+Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for the variable $v$ in the program. The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachibility bound of the variable in program $c$.
 }
 \\
 \begin{defn}
@@ -3533,7 +3124,8 @@ $V_{aprox} = V_{ssa}$
 \\
 $E_{aprox} = E_{ssa}$
 \\
-$W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\} \cup \{(v, \infty) | \forall ~ v \in V_{aprox} ~ s.t. ~V(v) = 0\}$
+$W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\} 
+\cup \{(v, 1) | \forall ~ v \in V_{aprox} ~ s.t. ~V(v) = 0\}$
 \end{defn}  
 %
 \begin{defn}
@@ -3543,7 +3135,7 @@ $W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\}
 Adaptivity of the program defined according to the logic is as:}
 \[
 \jl{
-Adapt(c) := \max_{v_1, v_2 \in \{v| v \in V_{aprox} \land W_{aprox}(v) < \infty\} }
+Adapt(c) := \max_{v_1, v_2 \in \{v| v \in V_{aprox} \land V(v) = 1 \} }
 \{\pathsearch(G_{aprox}, v_1, v_2)\}
 % \left\{ 
 % \begin{array}{c}
