@@ -3505,11 +3505,13 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 
 \begin{defn}
 [Approximated SSA-Based Graph]
-\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (Nodes, Edges, Weights)$ is. defined as:
+\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (V_{ssa}, E_{ssa}, V)$ is. defined as:
 \\
 Nodes $V_{ssa} = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
 \\
 Edges $E_{ssa} = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+\\
+$V = V$
 }
  \end{defn}  
      
@@ -3520,36 +3522,62 @@ We use the algorithm from paper \cite{10.1145/1806596.1806630} to estimate the r
 }
 \\
 \begin{defn}
-[Approximated SSA-Based Weighted Graph]
+[Approximated SSA-Based Weighted Graph].
+\\
 \jl{
-Given a program $\ssa{c}$ and its Approximated SSA-Based Graph $G_{ssa}$, we added weights on every vertice in this graph according to the reachibility bound algorithm $\rb$.
-Then we will have an updated graph Approximated SSA-Based Weighted Graph $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$ defined as:}
+Given a program $\ssa{c}$ and its Approximated SSA-Based Graph $G_{ssa} = \{V_{ssa}, E_{ssa}, V\}$, we added weights on every vertice in this graph according to the reachibility bound algorithm $\rb$.
+Then we will have an updated graph Approximated SSA-Based Weighted Graph 
+$G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$ defined as:}
 \\
 $V_{aprox} = V_{ssa}$
 \\
 $E_{aprox} = E_{ssa}$
 \\
-$W_{aprox} = \{(v, w) | v \in V_{aprox}, w = \rb(v, c)\}$
+$W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\} \cup \{(v, \infty) | \forall ~ v \in V_{aprox} ~ s.t. ~V(v) = 0\}$
 \end{defn}  
 %
 \begin{defn}
-[Adaptivity of piece of program]
-\jl{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (Nodes, Edges, Weights)$ is. defined as:
-\\
-Nodes $Vt = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
-\\
-Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
-\\
- % Weights $Wt = \{ (  G(j), 1 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 1\}
- %        \cup \{ (  G(j), 0 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 0 \} $.
-}
-
-Adaptivity of the program defined according to the logic is as:
+[Adaptivity of piece of program].
+\jl{Given a program $\ssa{c}$, and its approximated SSA-Based Weighted Graph $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
+%
+Adaptivity of the program defined according to the logic is as:}
 \[
-Adapt(M, V,i_1,i_2) := \max_{vt_1, vt_2 \in Vt}\{ \mathsf{Weight}( p(vt_1, vt_2), Wt) \},
+\jl{
+Adapt(c) := \max_{v_1, v_2 \in \{v| v \in V_{aprox} \land W_{aprox}(v) < \infty\} }
+\{\pathsearch(G_{aprox}, v_1, v_2)\}
+% \left\{ 
+% \begin{array}{c}
+% \mathsf{Weight}( p(vt_1, vt_2), Wt)\\
+% +
+% \end{array} 
+% \right\},
+}
 \]
-where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
+\jl{The algorithm of computing the adaptivity is dfined in the algorithm \ref{alg:adp_path}.}
+% where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
 \end{defn}  
+
+\begin{algorithm}
+\caption{
+\jl{Aptivity Path Search Algorithm ($\pathsearch$)}
+\label{alg:adp_path}
+}
+\begin{algorithmic}
+\REQUIRE Weighted Directed Graph $G = (V, E, W)$ with a start vertex $s$ and destination vertex $t$ .
+\STATE  {\bf $dfs(c, \text{curr\_min\_flow}, \text{nested\_max\_flows})$:}  
+\STATE \qquad {\bf if} $c == t$:
+\STATE \qquad \qquad {\bf return} $\text{curr\_min\_flow} * \prod\limits_{r\in \text{nested\_max\_flows}} \{r\} $.
+\STATE \qquad {\bf for} .
+\STATE \qquad {\bf let} $a_j=\mathcal{M}(q_j)$ 
+\STATE \qquad \COMMENT{In the line above, $\mathcal{M}$ computes approx. the exp. value  of $q_j$ over $X$. So, $a_j\in [-1,+1]$.}
+\STATE {\bf define} $q_{k+1}(x)=\mathrm{sign}\big (\sum_{i\in [k]} x(i)\times\ln\frac{1+a_i}{1-a_i} \big )$ where $x\in \{-1,+1\}^{k+1}$.
+\STATE\COMMENT{In the line above,  $\mathrm{sign}(y)=\left \{ \begin{array}{lr} +1 & \mathrm{if}\ y\geq 0\\ -1 &\mathrm{otherwise} \end{array} \right . $.}
+\STATE {\bf let} $a_{k+1}=\mathcal{M}(q_{k+1})$
+\STATE\COMMENT{In the line above,  $\mathcal{M}$ computes approx. the exp. value  of $q_{k+1}$ over $X$. So, $a_{k+1}\in [-1,+1]$.}
+\RETURN $a_{k+1}$.
+\ENSURE $a_{k+1}\in [-1,+1]$
+\end{algorithmic}
+\end{algorithm}
 
 %
 %
