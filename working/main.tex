@@ -20,7 +20,7 @@
     minimum height=2em]
 
 \begin{document}
-\title{Appendix for "Program analysis for Adaptivity Analysis"}
+\title{Appendix for "Program Analysis for Adaptivity Analysis"}
 
 \author{}
 
@@ -28,32 +28,7 @@
 
 \maketitle
 
-In this appendix, we present three languages: high level loop language, low level loop language, SSA language. In the paper, we choose to only use high level loop language and SSA language. The use of low level language helps us to divide control dependency and data dependency, which is useful in designing the framework. So we keep the low level language in the appendix. 
-% \begin{abstract}
-%   A data analysis is said to \emph{generalize} when it allows one to draw
-%   conclusions from the data that are true of the population from which
-%   the data are sampled. Statistician and data scientist have devised
-%   several methods aimed to guarantee generalization in  data
-%   analyses, and avoid in this way overfitting to the
-%   data. Guaranteeing generalization is more difficult when data
-%   analyses are \emph{adaptive}: when the result of an analysis depends
-%   on the result of previous analyses. 
-
-%   A recent line of work focuses on methods aimed at guaranteeing
-%   generalization in adaptive data analysis through the addition of
-%   carefully calibrated statistical noise to the empirical results of
-%   the analysis on the sampled data. In these works, the confidence
-%   intervals on the generalization error that one can achieve for a
-%   given analysis usually depend on the \emph{level of adaptivity} of
-%   the analysis: the number of adaptive steps that depend on
-%   each other. 
-
-%   In this work we introduce a programming framework, named \THESYSTEM,  aimed at
-%   supporting the study of the generalization error for adaptive data
-%   analysis. Through its analysis system, an upper bound on the
-%   adaptivity -- depth (the length of the longest chain of queries) of
-%   a program implementing an adaptive data analysis can be overestimated. We show how this language can help to analyze the generalization error between two data analyses with different adaptivity structures.
-% \end{abstract}
+In this appendix, we present the full details of the 2 languages: while language and the SSA language.
 
 \tableofcontents
 
@@ -81,49 +56,7 @@ value $\frac{1}{n}\sum_{i=1}^n p(X_i)$ where
 $X_i$ is the row of index $i$ in $X$. While this model is rather
 simple, in fact it supports sufficient statistics one may be
 interested.
-% \begin{figure}
-%     \centering    \begin{tikzpicture}{node distance = 2cm, auto}
-%   % nodes
-%   \node [block](high){High level Program P } ;
-%   \node [block, right of = high, node distance = 5cm](low){Low level Program $P^*$  } ;
-%   \node [block, right of = low, node distance = 8cm](ssa) {SSA form};
-%   \node [block, below of = ssa, node distance = 3cm] (bound) { Upper bound} ;
-%   \node [block, below of = low, node distance = 3cm](adaptlow){Low level adaptivity $A^*$};
-%   \node [block, below of = high, node distance = 3cm](adapthigh){High level adaptivity $A$};
-%   % edges
-%   \path [line] (high) -- node {translate} (low) ;
-%   \path [line] (low) -- node {transformation} (ssa);
-%   \path [line] (ssa) -- node {\THESYSTEM} (bound);
-%   \path [line] (bound) --  (adaptlow);
-%   \path [line] (low) -- node {trace-based graph}(adaptlow);
-%   \path [line] (adaptlow) -- (adapthigh) ;
-%   \path [line]  (high) -- (adapthigh);   
-%  \end{tikzpicture} 
-%     \caption{High level architecture}
-%     \label{fig:structure}
-% \end{figure}
 
-% \begin{tikzpicture}[node distance = 2cm, auto]
-%     % Place nodes
-%     \node [block] (init) {initialize model};
-%     \node [cloud, left of=init] (expert) {expert};
-%     \node [cloud, right of=init] (system) {system};
-%     \node [block, below of=init] (identify) {identify candidate models};
-%     \node [block, below of=identify] (evaluate) {evaluate candidate models};
-%     \node [block, left of=evaluate, node distance=3cm] (update) {update model};
-%     \node [decision, below of=evaluate] (decide) {is best candidate better?};
-%     \node [block, below =decide, node distance=3cm] (stop) {stop};
-%     % Draw edges
-%     \path [line] (init) -- (identify);
-%     \path [line] (identify) -- (evaluate);
-%     \path [line] (evaluate) -- (decide);
-%     \path [line] (decide) -| node [near start] {yes} (update);
-%     \path [line] (update) |- (identify);
-%     \path [line] (decide) -- node {no}(stop);
-%     \path [line,dashed] (expert) -- (init);
-%     \path [line,dashed] (system) -- (init);
-%     \path [line,dashed] (system) |- (evaluate);
-%   \end{tikzpicture}
  
 
 We are interested in the adaptivity of mechanisms in the model, which is straightforward supported by a high level language. In this language, queries are allowed to carry arguments to simulate the process of submitting a query to the interface in
@@ -137,10 +70,6 @@ the expected average results.This makes these mechanisms quite straightforward t
      x \leftarrow q_1() ; \\
     \eif \; (x_1 > 0 )\; \\
      y \leftarrow q_2(x) \; \\
-    % \mathsf{else} \; \left[y_2 \leftarrow 0 \right]^4; \\
-    % \eif \; \left[x_1 \right]^5\; \\
-    % \mathsf{then} \; \left[ y_3 \leftarrow 0 \right]^6\; \\
-    % \mathsf{else} \; \left[y_4 \leftarrow q_2 \right]^7; \\
 \end{array}
 \]
 
@@ -149,19 +78,6 @@ $q_1$ does not
 depend on another query $q_2$ when the result of $q_1$ remains the
 same regardless of the modification of the result of $q_2$. Hence, it becomes hard to distinguish whether the variance of result of $q_1$ comes from the control flow or the argument of queries. Since we know that the result of one query from a specific $D$ may vary under different contexts in the high level language.  
 
-
-
-
-% Nevertheless, in \emph{statistical query
-%   model},  Our definition of the dependency lies
-% in the independence between two queries: one query
-% $q_1$ does not
-% depend on another query $q_2$ when the result of $q_1$ remains the
-% same regardless of the modification of the result of $q_2$. Following such
-% definition, the dependency between two queries comes from either the
-% control flow or the argument of the function $q_2$, which brings us
-% difficulty to distinguish them at the semantic level. \\
-% {An example to show how do control flow and query argument may bring challenges}.
 
 To resolve the dilemma, we translate any program(mechanism) into its counterpart in a low level language, which mimics the high level one except its only allowing atomic queries, -- $q$ --. That is to say, given a data base $D$, the result of the
 query from $D$ becomes deterministic. We need to show the two programs $P$ and $P^*$ are observably equivalent over the translation. In this way, we can define the adaptivity of
@@ -192,8 +108,6 @@ The key component of the system is an program analysis procedure, which provides
   \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
   %
    \mbox{Relational Operators} & \sim & ::= & < ~|~ \leq ~|~ == \\  
-%  \mbox{Label} & l & := & \mathbb{N} \\ 
-%  \mbox{loop maps} & w & \in & \mbox{Label} \times \mathbb{N} \\
 \mbox{Arithmetic Expressions} & \aexpr & ::= & 
 	%
 	n ~|~ x ~|~ \aexpr \oplus_a \aexpr ~|~ \\
@@ -230,6 +144,180 @@ The key component of the system is an program analysis procedure, which provides
 Small step operational semantics of expressions are standard and omitted.
 % \[\]
 % \newline
+%
+% \begin{mathpar}
+% \boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
+% \and
+% {  Memory \times Com  \times Trace \times loop maps \Rightarrow^{} Memory \times Com  \times Trace \times loop maps}
+% \and
+% \inferrule
+% {
+% q(D) = v 
+% }
+% {
+% \config{m, [\assign{x}{q}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [q^{(l,w )}],w }
+% }
+% ~\textbf{query}
+% \and
+% %
+% \inferrule
+% {
+% }
+% {
+% \config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
+% }
+% ~\textbf{assn}
+% %
+% \and
+% %
+% \inferrule
+% {
+% \config{m, c_1,  t,w} \xrightarrow{} \config{m', c_1',  t',w'}
+% }
+% {
+% \config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w'}
+% }
+% ~\textbf{seq1}
+% %
+% \and
+% %
+% \inferrule
+% {
+% }
+% {
+% \config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
+% }
+% ~\textbf{seq2}
+% %
+% \and
+% %
+% \inferrule
+% {
+% \config{ m, \bexpr} \barrow \bexpr'
+% }
+% {
+% \config{m, [\eif(\bexpr, c_1, c_2)]^{l},  t,w} 
+% \xrightarrow{} \config{m,  [\eif(\bexpr', c_1, c_2)]^{l},  t,w}
+% }
+% ~\textbf{if}
+% %
+% \and
+% %
+% \inferrule
+% {
+% }
+% {
+% \config{m, [\eif(\etrue, c_1, c_2)]^{l},t,w} 
+% \xrightarrow{} \config{m, c_1,  t,w}
+% }
+% ~\textbf{if-t}
+% %
+% ~~~~~~~~~~
+% %
+% \inferrule
+% {
+% }
+% {
+% \config{m, [ \eif(\efalse, c_1, c_2)]^{l},  t,w} 
+% \xrightarrow{} \config{m, c_2,  t,w}
+% }
+% ~\textbf{if-f}
+% %
+% \and
+% %
+% {\inferrule
+% {
+%  \valr_N > 0
+% }
+% {
+% \config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
+% \xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
+% }
+% ~\textbf{loop}
+% }
+% %
+% \and
+% %
+% {
+% \inferrule
+% {
+%  \valr_N = 0
+% }
+% {
+% \config{m,  [\eloop ~ \valr_N ~ \edo ~ c ]^{l} ,  t, w }
+% \xrightarrow{} \config{m, [\eskip]^{l} ,  t, (w \setminus l) }
+% }
+% ~\textbf{loop-exit}
+% }
+% %
+% \and
+% %
+% \jl{
+% {\inferrule
+% {
+%  \empty
+% }
+% {
+% \config{m, \ewhile ~ [b]^{l} ~ \edo ~ c ,  t, w }
+% \xrightarrow{} \config{m, c ; 
+% \eif_w (b, c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
+% t, (w + l) }
+% }
+% ~\textbf{while-b}
+% }
+% }
+% %
+% \and
+% %
+% \jl{{\inferrule
+% {
+%  m, b \xrightarrow{} b'
+% }
+% {
+% \config{m, \eif_w (b, c,  \eskip) ,  t, w }
+% \xrightarrow{} \config{m, c ; 
+%  \eif_w (b', c,  \eskip), t, w }
+% }
+% ~\textbf{ifw-b}
+% }
+% }
+% %
+% \and
+% %
+% \jl{{
+% \inferrule
+% {
+%  \empty
+% }
+% {
+% \config{m, \eif_w (\etrue, c,  \eskip) ,  t, w }
+% \xrightarrow{} \config{m, 
+% c,
+% t, (w + l) }
+% }
+% ~\textbf{ifw-true}
+% }
+% }
+% \and
+% %
+% \jl{{
+% \inferrule
+% {
+%  \empty
+% }
+% {
+% \config{m, \eif_w (\efalse, c,  \eskip) ,  t, w }
+% \xrightarrow{} \config{m, 
+%  \eskip, t, (w \setminus l) }
+% }
+% ~\textbf{ifw-false}
+% }
+% }
+% \end{mathpar}
+%
+%
+{
+\begin{figure}
 \begin{mathpar}
 \boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
 \\
@@ -238,193 +326,9 @@ Small step operational semantics of expressions are standard and omitted.
 }{
  \config{m,  \chi( \aexpr)} \aarrow \chi(\aexpr')
 }
+\\
 \boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
 \end{mathpar}
-%
-\begin{mathpar}
-\boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
-\and
-{  Memory \times Com  \times Trace \times loop maps \Rightarrow^{} Memory \times Com  \times Trace \times loop maps}
-\and
-\inferrule
-{
-q(D) = v 
-}
-{
-\config{m, [\assign{x}{q}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [q^{(l,w )}],w }
-}
-~\textbf{query}
-\and
-%
-\inferrule
-{
-}
-{
-\config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
-}
-~\textbf{assn}
-%
-\and
-%
-\inferrule
-{
-\config{m, c_1,  t,w} \xrightarrow{} \config{m', c_1',  t',w'}
-}
-{
-\config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w'}
-}
-~\textbf{seq1}
-%
-\and
-%
-\inferrule
-{
-}
-{
-\config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
-}
-~\textbf{seq2}
-%
-\and
-%
-\inferrule
-{
-\config{ m, \bexpr} \barrow \bexpr'
-}
-{
-\config{m, [\eif(\bexpr, c_1, c_2)]^{l},  t,w} 
-\xrightarrow{} \config{m,  [\eif(\bexpr', c_1, c_2)]^{l},  t,w}
-}
-~\textbf{if}
-%
-\and
-%
-\inferrule
-{
-}
-{
-\config{m, [\eif(\etrue, c_1, c_2)]^{l},t,w} 
-\xrightarrow{} \config{m, c_1,  t,w}
-}
-~\textbf{if-t}
-%
-~~~~~~~~~~
-%
-\inferrule
-{
-}
-{
-\config{m, [ \eif(\efalse, c_1, c_2)]^{l},  t,w} 
-\xrightarrow{} \config{m, c_2,  t,w}
-}
-~\textbf{if-f}
-%
-\and
-%
-{\inferrule
-{
- \valr_N > 0
-}
-{
-\config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
-\xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
-}
-~\textbf{low-loop}
-}
-%
-\and
-%
-{
-\inferrule
-{
- \valr_N = 0
-}
-{
-\config{m,  [\eloop ~ \valr_N ~ \edo ~ c ]^{l} ,  t, w }
-\xrightarrow{} \config{m, [\eskip]^{l} ,  t, (w \setminus l) }
-}
-~\textbf{low-loop-exit}
-}
-%
-\and
-%
-\jl{
-{\inferrule
-{
- \empty
-}
-{
-\config{m, \ewhile ~ [b]^{l} ~ \edo ~ c ,  t, w }
-\xrightarrow{} \config{m, c ; 
-\eif_w (b, c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
-t, (w + l) }
-}
-~\textbf{while-b}
-}
-}
-%
-\and
-%
-\jl{{\inferrule
-{
- m, b \xrightarrow{} b'
-}
-{
-\config{m, \eif_w (b, c,  \eskip) ,  t, w }
-\xrightarrow{} \config{m, c ; 
- \eif_w (b', c,  \eskip), t, w }
-}
-~\textbf{ifw-b}
-}
-}
-%
-\and
-%
-\jl{{
-\inferrule
-{
- \empty
-}
-{
-\config{m, \eif_w (\etrue, c,  \eskip) ,  t, w }
-\xrightarrow{} \config{m, 
-c,
-t, (w + l) }
-}
-~\textbf{ifw-true}
-}
-}
-\and
-%
-\jl{{
-\inferrule
-{
- \empty
-}
-{
-\config{m, \eif_w (\efalse, c,  \eskip) ,  t, w }
-\xrightarrow{} \config{m, 
- \eskip, t, (w \setminus l) }
-}
-~\textbf{ifw-false}
-}
-}
-\end{mathpar}
-%
-\todo{
-where $w_l$ refers to a map $w$ without the key $l$.
-\[
-\begin{array}{ccc}
-w \setminus l     & = w  & l \not\in Keys(w)   \\
-     & = w_l & Otherwise \\
-w + l & = w[l \to 0] & l \not \in Keys(w) \\   
-     & w_l [l \to w(l)+1] & Otherwise
-\end{array}
-\]
-}
-%
-{
-\begin{figure}
 \begin{mathpar}
 \boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
 \\
@@ -447,45 +351,45 @@ w + l & = w[l \to 0] & l \not \in Keys(w) \\
 }
 ~\textbf{assn2}
 %
-\and
-{
-\inferrule
-{
- \config{m, \aexpr} \aarrow \config{m, \aexpr'}
-}
-{
-\config{m, \eloop ~ [\aexpr]^{l}  ~ \edo ~ c ,  t, w }
-\xrightarrow{} \config{m, \eloop ~ [\aexpr']^{l} ~ \edo ~ c ,  t, (w + l) }
-}
-~\textbf{loop-a}
-}
-%
-\and
-%
-{\inferrule
-{
- \valr_N > 0
-}
-{
-\config{m, \eloop ~ [\valr_N]^{l}  ~ \edo ~ c ,  t, w }
-\xrightarrow{} \config{m, c ;  \eloop ~ [(\valr_N-1)]^{l} ~ \edo ~ c ,  t, (w + l) }
-}
-~\textbf{l-loop}
-}
-%
-\and
-%
-{
-\inferrule
-{
- \valr_N = 0
-}
-{
-\config{m,  \eloop ~ [\valr_N]^{l} ~ \edo ~ c  ,  t, w }
-\xrightarrow{} \config{m, [\eskip]^{l} ,  t, (w \setminus l) }
-}
-~\textbf{l-loop-exit}
-}
+% \and
+% {
+% \inferrule
+% {
+%  \config{m, \aexpr} \aarrow \config{m, \aexpr'}
+% }
+% {
+% \config{m, \eloop ~ [\aexpr]^{l}  ~ \edo ~ c ,  t, w }
+% \xrightarrow{} \config{m, \eloop ~ [\aexpr']^{l} ~ \edo ~ c ,  t, (w + l) }
+% }
+% ~\textbf{loop-a}
+% }
+% %
+% \and
+% %
+% {\inferrule
+% {
+%  \valr_N > 0
+% }
+% {
+% \config{m, \eloop ~ [\valr_N]^{l}  ~ \edo ~ c ,  t, w }
+% \xrightarrow{} \config{m, c ;  \eloop ~ [(\valr_N-1)]^{l} ~ \edo ~ c ,  t, (w + l) }
+% }
+% ~\textbf{loop}
+% }
+% %
+% \and
+% %
+% {
+% \inferrule
+% {
+%  \valr_N = 0
+% }
+% {
+% \config{m,  \eloop ~ [\valr_N]^{l} ~ \edo ~ c  ,  t, w }
+% \xrightarrow{} \config{m, [\eskip]^{l} ,  t, (w \setminus l) }
+% }
+% ~\textbf{loop-exit}
+% }
 \and
 %
 \jl{
@@ -583,7 +487,7 @@ q(v_q) = v
 {
 \config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w'}
 }
-~\textbf{l-seq1}
+~\textbf{seq1}
 %
 \and
 %
@@ -593,7 +497,7 @@ q(v_q) = v
 {
 \config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
 }
-~\textbf{l-seq2}
+~\textbf{seq2}
 \and
 %
 \inferrule
@@ -604,7 +508,7 @@ q(v_q) = v
 \config{m, \eif([\bexpr]^{l}, c_1, c_2),  t,w} 
 \xrightarrow{} \config{m,  \eif([\bexpr']^{l}, c_1, c_2),  t,w}
 }
-~\textbf{l-if}
+~\textbf{if}
 %
 \and
 %
@@ -615,7 +519,7 @@ q(v_q) = v
 \config{m, \eif([\etrue]^{l}, c_1, c_2),t,w} 
 \xrightarrow{} \config{m, c_1,  t,w}
 }
-~\textbf{l-if-t}
+~\textbf{if-t}
 %
 ~~~~~~
 %
@@ -626,13 +530,24 @@ q(v_q) = v
 \config{m,  \eif([\efalse]^{l}, c_1, c_2),  t,w} 
 \xrightarrow{} \config{m, c_2,  t,w}
 }
-~\textbf{l-if-f}
+~\textbf{if-f}
 %
 %
 \end{mathpar}
-    \caption{Trace-based operational semantics of loop language.}
+    \caption{Trace-based operational semantics of while language.}
     \label{fig:evaluation}
 \end{figure}
+}
+\todo{
+where $w_l$ refers to a map $w$ without the key $l$.
+\[
+\begin{array}{ccc}
+w \setminus l     & = w  & l \not\in Keys(w)   \\
+     & = w_l & Otherwise \\
+w + l & = w[l \to 0] & l \not \in Keys(w) \\   
+     & w_l [l \to w(l)+1] & Otherwise
+\end{array}
+\]
 }
 % \vfill \pagebreak
 %
@@ -731,24 +646,23 @@ $\mathsf{DEP}(q({v_q}_1)^{(l_1, w_1)}, q({v_q}_2)^{(l_2, w_2)}, c,w, m, D)$ is d
 }
 \end{defn}
 
-\begin{defn}
-Dependency Graph.
-\\
-Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the dependency graph $G_{low}(c,D,m,w) = (V, E)$ is defined as: \\
-$V =\{q(v)^{l,w} \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land q(v)^{l,w} \in {(t'-t)}  \}$.
-\\
-$E = \left\{(q(v)^{(l,w)},q'(v')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
-~ \left \vert ~ \mathsf{DEP}(q(v)^{(l,w)},q'(v')^{(l',w')}, c,w,m,D)
-\land \mathsf{To}(q(v)^{(l,w)}, q(v')^{(l',w')} \right.\right\}$.
-\end{defn}
+% \begin{defn}
+% Dependency Graph.
+% \\
+% Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the dependency graph $G_{low}(c,D,m,w) = (V, E)$ is defined as: \\
+% $V =\{q(v)^{l,w} \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land q(v)^{l,w} \in {(t'-t)}  \}$.
+% \\
+% $E = \left\{(q(v)^{(l,w)},q'(v')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
+% ~ \left \vert ~ \mathsf{DEP}(q(v)^{(l,w)},q'(v')^{(l',w')}, c,w,m,D)
+% \land \mathsf{To}(q(v)^{(l,w)}, q(v')^{(l',w')} \right.\right\}$.
+% \end{defn}
 %
 %
 \begin{defn}
-Query-based Dependency Graph
+Trace-based Dependency Graph
 \\
- \jl{(Updated Definition).
- \\
-Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the query-based dependency graph $G(c,D,m,w) = (V, E)$ is defined as: \\
+ \jl{
+Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the trace-based dependency graph $G(c,D,m,w) = (V, E)$ is defined as: \\
 $V =\{q({v_q})^{l,w} \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land q({v_q})^{l,w} \in {(t'-t)}  \}$.
 \\
 $E = \left\{(q({v_q})^{(l,w)},q({v_q}')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
@@ -783,11 +697,13 @@ edge $(q({v_q})^{(l,w)}, q({v_q}')^{(l'.w')})$, from $q({v_q})^{(l,w)} $ to $q({
 %
 %
 \begin{defn}
-Adaptivity from a dependency graph.
+Adaptivity from a trace-based dependency graph.
 \\
+\jl{
 Given a program $c$, and a meory $m$, a database $D$, the adaptivity of the dependency graph $G_{low}(c, D,m,w) = (V, E)$ is the length of the longest path in the graph. We denote the path from $q_i^{(l,w)}$ to $q_j^{(l',w')}$ as $p(q_i^{(l,w)}, q_j^{(l',w')} )$. 
 %
-$$A^*(c, D, m ,w) = \max\limits_{q_i^{(l,w)},q_j^{(l',w')} \in V }\{ |p(q_i^{(l,w)},q_j^{(l',w')})| \}$$
+$$A^*(c, D, m ,w) = \max\limits_{q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')} \in V }\{ |p(q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')})| \}$$
+}
 \end{defn}
 
 
@@ -1253,24 +1169,32 @@ c_3 \triangleq
 \]
 }
 \begin{defn}[ Written variables in a program]
-We defined the assigned variables in a low-level program $c$ as $\avars{c}$,the assigned variables in the ssa-form program $\ssa{c}$ as $\avarssa{\ssa{c}}$ defined as follows.
+\jl{
+We defined the assigned variables in the while language program $c$ as $\avars{c}$,the assigned variables in the ssa-form program $\ssa{c}$ as $\avarssa{\ssa{c}}$ defined as follows.
+}
 \[
 \begin{array}{lll}
     \avars{\assign{x}{\expr}} & =& \{ x \} \\
     \avars{\assign{x}{q}} & =& \{ x \} \\
     \avars{ c_1; c_2  }  & = & \avars{c_1} \cup \avars{c_2} \\
-    \avars{  \eloop ~ \aexpr ~ \edo ~ c  } &= &  \avars{c} \\
+    % \avars{  \eloop ~ \aexpr ~ \edo ~ c  } &= &  \avars{c} \\
+    \jl{\avars{  \ewhile ~ \bexpr ~ \edo ~ c  }} &= &  \avars{c} \\
     \avars{\eif(\bexpr, c_1, c_2)} & =&  \avars{c_1} \cup \avars{c_2}\\
 \end{array} ~~~~~
 \begin{array}{lll}
     \avarssa{\ssa{\assign{x}{\expr}}} & =& \{ x \} \\
     \avarssa{\ssa{\assign{x}{q}}} & =& \{ x \} \\
     \avarssa{ \ssa{c_1; c_2 } }  & = & \avarssa{c_1} \cup \avarssa{c_2} \\
-    \avarssa{ \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c}  } &= &  \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} \\
+    % \avarssa{ \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c}  } &= &  \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} \\
+    \jl{\avarssa{ \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c}  } }
+    & = &  
+    \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} \\
     \avarssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =&  \{ \ssa{\bar{x}},\ssa{\bar{y}} , \ssa{\bar{z}} \} \\ && \cup \avarssa{\ssa{c_1}} \cup \avarssa{\ssa{c_2}}\\
 \end{array}
 \]
-The variables read in the low-level programs $c$ as $\vars{c}$, variables used in ssa-form program $\ssa{c}$ : 
+\jl{
+The variables read in the while language programs $c$ as $\vars{c}$, variables used in ssa-form program $\ssa{c}$ : 
+}
 \[
 \begin{array}{lll}
     \vars{\assign{x}{\expr}} & =& \vars{\expr}  \\
@@ -1285,16 +1209,21 @@ The variables read in the low-level programs $c$ as $\vars{c}$, variables used i
     \varssa{\ssa{\assign{x}{\expr}}} & =& \varssa{\ssa{\expr}}  \\
     \varssa{\ssa{\assign{x}{q}}} & =& \{  \} \\
     \varssa{ \ssa{c_1; c_2}  }  & = & \varssa{\ssa{c_1}} \cup \varssa{\ssa{c_2}} \\
-    \varssa{  \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } &= &\varssa{\ssa{\aexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
+    % \varssa{  \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } &= &\varssa{\ssa{\aexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
+    \jl{\varssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} }} 
+    &= &
+    \varssa{\ssa{\bexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
     \varssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}], [\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =& \varssa{\ssa{\bexpr}} \cup \varssa{\ssa{c_1}} \cup \varssa{\ssa{c_2}} \cup \{\ssa{\bar{x_1}, \bar{x_2},\bar{y_1}, \bar{y_2},\bar{z_1}, \bar{z_2} }\}  \\
 \end{array}
 \]
-We call the variables needed to be assigned before executing the program $c$ as necessary variables $\fv{c}$. Its ssa form is : $\fvssa{\ssa{c}}$.  
+\jl{
+We call the variables needed to be assigned before executing the program $c$ as necessary variables $\fv{c}$. Its ssa form is : $\fvssa{\ssa{c}}$.
+}  
  \[
  \begin{array}{lll}
      \fvars{\assign{x}{\expr} }  & = & \vars{\expr}  \\
      \fvars{\assign{x}{q} }  & = & \{ \}  \\
-     \fvars{  \eloop ~ \aexpr ~ \edo ~ c  } &= & \vars{\aexpr} \cup \fvars{c} \\
+     \jl{\fvars{  \ewhile ~ \bexpr ~ \edo ~ c  } }&= & \vars{\bexpr} \cup \fvars{c} \\
      \fvars{\eif(\bexpr, c_1, c_2)} & =& \vars{\bexpr} \cup \fvars{c_1} \cup \fvars{c_2}  \\
       \fvars{c_1 ; c_2} & = & \fvars{c_1} \cup ( \fvars{c_2} - \avars{c_1})
  \end{array}
@@ -1303,7 +1232,9 @@ We call the variables needed to be assigned before executing the program $c$ as 
  \begin{array}{lll}
      \fvssa{\ssa{\assign{x}{\expr}} }  & = & \varssa{\ssa{\expr}}  \\
      \fvssa{ \ssa{ \assign{x}{q}} }  & = & \{ \}  \\
-     \fvssa{  \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } &= & \varssa{\ssa{\aexpr}} \cup \fvssa{\ssa{c}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}]\\
+     \jl{\fvssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } }
+     &= & 
+     \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}]\\
      \fvssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =& \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c_1}} \cup \fvssa{\ssa{c_2}}  \\
       \fvssa{\ssa{c_1 ; c_2}} & = & \fvssa{\ssa{c_1}} \cup ( \fvssa{\ssa{c_2}} - \avarssa{\ssa{c_1}})
  \end{array}
@@ -1408,22 +1339,23 @@ To show:
 %   $\config{  {\ssa{m}}, \ssa{c}, t, w} \to^{*} \config{{  \ssa{m'}}, \eskip, t', w' } $.
 % \end{thm}
 
-\begin{lem}[value remains during transformation]
-Given $\delta; e \hookrightarrow \ssa{e}$, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, then $\config{m, e} \to v $ and $\config{
-\ssa{m}, \ssa{e}} \to \ssa{v}$ and $v = \ssa{v}$.  
-\end{lem}
+% \begin{lem}[value remains during transformation].
+% \\
+% Given $\delta; e \hookrightarrow \ssa{e}$, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, then $\config{m, e} \to v $ and $\config{
+% \ssa{m}, \ssa{e}} \to \ssa{v}$ and $v = \ssa{v}$.  
+% \end{lem}
 
-\begin{lem}[Value remains the same during transformation]
-\jl{Updated Definition
+\begin{lem}[Value remains the same during transformation].
 \\
 \label{same_value}
+\jl{
 Given $\delta; e \hookrightarrow \ssa{e}$,  $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, then $\config{m, e} \to v $ and $\config{
 \ssa{m}, \ssa{e}} \to {v}$.
 }
 \end{lem}
 
 \begin{thm}[Soundness of transformation]
-Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, if there exist an execution of $c$ in the loop language, starting with a trace $t$ and loop maps $w$, $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w' } $,  then there also exists a corresponding execution of $\ssa{c}$ in the ssa language so that 
+Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, if there exist an execution of $c$ in the while language, starting with a trace $t$ and loop maps $w$, $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w' } $,  then there also exists a corresponding execution of $\ssa{c}$ in the ssa language so that 
   $\config{  {\ssa{m}}, \ssa{c}, t, w} \to^{*} \config{{  \ssa{m'}}, \eskip, t', w' } $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
 \end{thm}
 
@@ -1481,7 +1413,7 @@ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $
  \Sigma;\delta ; [\assign x \expr]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ; \delta';\Sigma'
 }~{\textbf{S-ASSN}} $ }
 
- We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$, we know that the resulting trace is still $t$ from its evaluation rule $\textbf{low-assn}$ when we suppose $m, \expr \to v$.
+ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$, we know that the resulting trace is still $t$ from its evaluation rule $\textbf{assn}$ when we suppose $m, \expr \to v$.
  \[
  \inferrule
 {
@@ -1489,7 +1421,7 @@ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $
 {
 \config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
 }
-~\textbf{low-assn}
+~\textbf{assn}
  \]
  We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
  
@@ -1527,7 +1459,7 @@ q(v)(D) = v_q
 {
 \config{m, [\assign{x}{q(v)}]^l, t, w} \xrightarrow{} \config{m[ v_q/ x], \eskip,  t \mathrel{++} [q(v)^{(l,w )}],w }
 }
-~\textbf{low-query}
+~\textbf{query}
  \]
  We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
  
@@ -1568,7 +1500,7 @@ q(v)(D) = v_q
  \Sigma; \delta ; [\eif(\bexpr, c_1, c_2)]^l  \hookrightarrow [\ssa{ \eif(\bexpr, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ,[\bar{{y}}', \bar{{y_1}}, \bar{{y_2}}] ,[\bar{{z}}', \bar{{z_1}}, \bar{{z_2}}] , {c_1}, {c_2})}]^l; \delta';\Sigma'
 }~{\textbf{S-IF}}$}
 We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$.
-There are two possible evaluation rules depending on the the condition $b$, we choose the case when $b = \etrue$, we know there is an execution in ssa language so that $\ssa{\bexpr} = \etrue$, we use the rule $\textbf{low-if-t}$.  
+There are two possible evaluation rules depending on the the condition $b$, we choose the case when $b = \etrue$, we know there is an execution in ssa language so that $\ssa{\bexpr} = \etrue$, we use the rule $\textbf{if-t}$.  
  \[\inferrule
 {
 }
@@ -1651,7 +1583,7 @@ $\todomath{
 }
 We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$. Suppose $ \config{m ,a} \to v_N $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
 
- When the loop is still running ($v_N > 0$), we have the following low-level evaluation:
+ When the loop is still running ($v_N > 0$), we have the following level evaluation:
 \[
 {\inferrule
 {
@@ -1661,7 +1593,7 @@ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $
 \config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
 \xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
 }
-~\textbf{low-loop}
+~\textbf{loop}
 }
 \]
 We then have the following evaluation:
@@ -1703,7 +1635,7 @@ Hence we can conclude that:
 \]
  Then there are two cases, 
  \begin{enumerate}
-     \item  when $v_N -1 =0$ so that the loop exits. The low-level execution as follows by the evaluation rule $\textbf{low-loop-exit}$.
+     \item  when $v_N -1 =0$ so that the loop exits. The level execution as follows by the evaluation rule $\textbf{loop-exit}$.
      \[
 \inferrule
 {
@@ -1713,7 +1645,7 @@ Hence we can conclude that:
 \config{m',  [\eloop ~ \valr_N-1 ~ \edo ~ c ]^{l} ,  t_i', w' }
 \xrightarrow{} \config{m', [\eskip]^{l} ,  t_{1}', (w' \setminus l) }
 }
-~\textbf{low-loop-exit}
+~\textbf{loop-exit}
 \]
 The corresponding ssa-form evaluation as follows:
 \[
@@ -1739,7 +1671,7 @@ We can see that both traces are not changed during the exit of the loop. We need
      
      We then have the low level evauation:
      \[
-{\inferrule
+\jl{\inferrule
 {
  \valr_N-i > 0
 }
@@ -1747,7 +1679,7 @@ We can see that both traces are not changed during the exit of the loop. We need
 \config{m_i, [\eloop ~ \valr_N-i  ~ \edo ~ c]^{l} ,  t_{i}, w_i }
 \xrightarrow{} \config{m_i, c ;  [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i}, (w_{i} + l) }
 }
-~\textbf{low-loop}
+~\textbf{loop}
 }
 \]
 We then have the following evaluation:
@@ -1781,34 +1713,34 @@ This proof is similar when it comes to the exit as in case 1.
 \end{proof}
 
 
-\begin{defn}[Query may dependency in SSA ]
-One query ${q(v_2)}$ \emph{may depend} on another query ${q(v_1)}$ in a program $\ssa{c}$, with a starting loop maps $w$, denoted as
- $\mathsf{DEP_{ssa}}({q(v_1)}^{(l_1, w_1)}, {q(v_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
+% \begin{defn}[Query may dependency in SSA ]
+% One query ${q(v_2)}$ \emph{may depend} on another query ${q(v_1)}$ in a program $\ssa{c}$, with a starting loop maps $w$, denoted as
+%  $\mathsf{DEP_{ssa}}({q(v_1)}^{(l_1, w_1)}, {q(v_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
  
- is defined as below. 
-\[
-  \begin{array}{l}
-     \forall t. \exists \ssa{m_1,m_3},t_1,t_3. 
-\config{\ssa{m, c},  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{q(v_1)}]^{l_1} ; \ssa{c_2},
-  t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[q(v_1)(D)/\ssa{x}], \ssa{c_2},
-  t_1++[q(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
-  t_3,w_3} \\  
-  \land 
-\Big( q(v_1)^{(l_1,w_1)} \in (t_3-t) \land q(v_2)^{(l_2,w_2)} \in (t_3-t_1) \implies  \exists v \in \codom(q(v_1)),\ssa{m_3'}, t_3', w_3'. \\
- \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[(q(v_1)^{(l_1,w_1)})], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (q(v_2)^{(l_2,w_2)}) \not \in (t_3'-t_1)
-\Big)\\
-\land 
-\Big(q(v_1)^{(l_1,w_1)} \in (t_3-t) \land q(v_2)^{(l_2,w_2)} \not\in (t_3-t_1) \implies  \exists v \in \codom(q(v_1)),\ssa{m_3'}, t_3', w_3'. \\
- \config{\ssa{m_1}[v/\ssa{x}], {c_2}, t_1++[(q(v_1)^{(l_1,w_1)})], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (q(v_2)^{(l_2,w_2)})  \in (t_3'-t_1)
-\Big)\\
-\end{array}
-\]
-\end{defn}
+%  is defined as below. 
+% \[
+%   \begin{array}{l}
+%      \forall t. \exists \ssa{m_1,m_3},t_1,t_3. 
+% \config{\ssa{m, c},  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{q(v_1)}]^{l_1} ; \ssa{c_2},
+%   t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[q(v_1)(D)/\ssa{x}], \ssa{c_2},
+%   t_1++[q(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
+%   t_3,w_3} \\  
+%   \land 
+% \Big( q(v_1)^{(l_1,w_1)} \in (t_3-t) \land q(v_2)^{(l_2,w_2)} \in (t_3-t_1) \implies  \exists v \in \codom(q(v_1)),\ssa{m_3'}, t_3', w_3'. \\
+%  \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[(q(v_1)^{(l_1,w_1)})], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (q(v_2)^{(l_2,w_2)}) \not \in (t_3'-t_1)
+% \Big)\\
+% \land 
+% \Big(q(v_1)^{(l_1,w_1)} \in (t_3-t) \land q(v_2)^{(l_2,w_2)} \not\in (t_3-t_1) \implies  \exists v \in \codom(q(v_1)),\ssa{m_3'}, t_3', w_3'. \\
+%  \config{\ssa{m_1}[v/\ssa{x}], {c_2}, t_1++[(q(v_1)^{(l_1,w_1)})], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (q(v_2)^{(l_2,w_2)})  \in (t_3'-t_1)
+% \Big)\\
+% \end{array}
+% \]
+% \end{defn}
 
 \begin{defn}
-Query may dependency in SSA.
+Query may dependency in SSA language.
 \\
-\jl{Updated Definition
+\jl{
 One query ${q({v_q}_2)}$ \emph{may depend} on another query ${q({v_q}_1)}$ in a program $\ssa{c}$,  with a starting loop maps $w$, a starting memory $\ssa{m}$, hidden database $D$, denoted as \\
  $\mathsf{DEP_{ssa}}({q({v_q}_1)}^{(l_1, w_1)}, {q({v_q}_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
  \[
@@ -1833,21 +1765,21 @@ One query ${q({v_q}_2)}$ \emph{may depend} on another query ${q({v_q}_1)}$ in a 
 }
 \end{defn}
 
-\begin{defn}
-[Dependency Graph in SSA].
-\\
-Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$, an initial loop maps $w$, the dependency graph $G_{s}(\ssa{c},D,\ssa{m},w) = (V, E)$ is defined as: \\
-$V =\{q(v)^{l,w} \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land q(v)^{l,w} \in {(t'-t)}  \}$.
-\\
-$E = \left\{(q(v)^{(l,w)},q(v')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
-~ \left \vert ~ \begin{array}{l}
-  \mathsf{DEP_{ssa}}(q(v')^{(l',w')},q(v)^{(l,w)}, \ssa{c},w,\ssa{m},D)     
-\end{array} \right. 
-\right\}$.
-\end{defn}
+% \begin{defn}
+% [Dependency Graph in SSA].
+% \\
+% Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$, an initial loop maps $w$, the dependency graph $G_{s}(\ssa{c},D,\ssa{m},w) = (V, E)$ is defined as: \\
+% $V =\{q(v)^{l,w} \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land q(v)^{l,w} \in {(t'-t)}  \}$.
+% \\
+% $E = \left\{(q(v)^{(l,w)},q(v')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
+% ~ \left \vert ~ \begin{array}{l}
+%   \mathsf{DEP_{ssa}}(q(v')^{(l',w')},q(v)^{(l,w)}, \ssa{c},w,\ssa{m},D)     
+% \end{array} \right. 
+% \right\}$.
+% \end{defn}
 
 \begin{defn}
-Dependency Graph in SSA.
+SSA-based Dependency Graph.
 \\
 \jl{Updated Definition \\
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$, an initial loop maps $w$, the dependency graph $G_{s}(\ssa{c},D,\ssa{m},w) = (V, E)$ is defined as: \\
@@ -1863,17 +1795,17 @@ $E = \left\{(q({v_q})^{(l,w)},q({v_q}')^{(l',w')}) \in \mathcal{AQ} \times \math
 
 
 
-\begin{defn}[Adaptivity in SSA language]
-Given a program $\ssa{c}$, and a meory $\ssa{m}$, a database $D$, a starting loop maps $w$, the adaptivity of the dependency graph $G_s(\ssa{c}, D,\ssa{m},w) = (V, E)$ is the length of the longest path in this graph. We denote the path from $q(v)^{(l,w)}$ to $q(v')^{(l',w')}$ as $p(q(v)^{(l,w)}, q(v')^{(l',w')} )$. The adaptivity denoted as $A_s(\ssa{c}, D, \ssa{m}, w)$.
-%
-$$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{q(v)^{(l,w)},q(v')^{(l',w')} \in V }\{ |p(q(v)^{(l,w)}, q(v')^{(l',w')} )| \}$$
-\end{defn}
+% \begin{defn}[Adaptivity from SSA-based Dependency Graph.]
+% Given a program $\ssa{c}$, and a meory $\ssa{m}$, a database $D$, a starting loop maps $w$, the adaptivity of the dependency graph $G_s(\ssa{c}, D,\ssa{m},w) = (V, E)$ is the length of the longest path in this graph. We denote the path from $q(v)^{(l,w)}$ to $q(v')^{(l',w')}$ as $p(q(v)^{(l,w)}, q(v')^{(l',w')} )$. The adaptivity denoted as $A_s(\ssa{c}, D, \ssa{m}, w)$.
+% %
+% $$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{q(v)^{(l,w)},q(v')^{(l',w')} \in V }\{ |p(q(v)^{(l,w)}, q(v')^{(l',w')} )| \}$$
+% \end{defn}
 
 
 \begin{defn}
-Adaptivity in SSA.
+Adaptivity from SSA-based Dependency Graph.
 \\
-\jl{Updated Definition
+\jl{
 Given a program $\ssa{c}$, and a meory $\ssa{m}$, a database $D$, a starting loop maps $w$, the adaptivity of the dependency graph $G_s(\ssa{c}, D,\ssa{m},w) = (V, E)$ is the length of the longest path in this graph. We denote the path from $q({v_q})^{(l,w)}$ to $q({v_q}')^{(l',w')}$ as $p_s(q({v_q})^{(l,w)}, q({v_q}')^{(l',w')} )$. The adaptivity denoted as $A_s(\ssa{c}, D, \ssa{m}, w)$.
 %
 $$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{q({v_q})^{(l,w)},q({v_q}')^{(l',w')} \in V } |p_s(q({v_q})^{(l,w)}, q({v_q}')^{(l',w')} )| $$
@@ -1881,11 +1813,15 @@ $$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{q({v_q})^{(l,w)},q({v_q}')^{(l',w')
 \end{defn}
 
 
-\begin{thm}[Same graph]
+\begin{thm}[\jl{Graph Equivalence}].
+\\
+\jl{
 Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and loop maps $w$, then $G_{low}(c,D,m,w) = G_{ls}(\ssa{c},D,\ssa{m},w) $.
+}
 \end{thm}
+%
 \begin{proof}
- The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\mathsf{DEP}$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\mathsf{DEP_s}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the loop language execution, according to the transformation theorem.  
+ The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\mathsf{DEP}$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\mathsf{DEP_s}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the while language execution, according to the transformation theorem.  
 \end{proof}
 
 \begin{coro}
@@ -1905,7 +1841,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % }{
 %  \delta ; [\assign x \expr]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ; \delta'
 % }~{\textbf{S-ASSN}} $ }
-%  We assume the memory $m$ that provides the instantiation of all the free variables in the expression $\expr$, when we choose a trace $t$ and a loop maps $w$, we know that the resulting trace is still $t$ its evaluation rule $\textbf{low-assn}$. Similarly, starting from the transformed memory ${\ssa{m}} = \delta(m)$ with the same trace and loop maps, using the rule $\textbf{ssa-assn}$,we have the same trace $t$.
+%  We assume the memory $m$ that provides the instantiation of all the free variables in the expression $\expr$, when we choose a trace $t$ and a loop maps $w$, we know that the resulting trace is still $t$ its evaluation rule $\textbf{assn}$. Similarly, starting from the transformed memory ${\ssa{m}} = \delta(m)$ with the same trace and loop maps, using the rule $\textbf{ssa-assn}$,we have the same trace $t$.
 % \caseL{Case $\inferrule{
 %  {\delta ; q \hookrightarrow \ssa{q}}
 %  \and
@@ -1914,7 +1850,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % }{
 %  \delta ; [\assign x q]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{q}}]^{l} ; \delta'
 % }~{\textbf{S-QUERY}}$} 
-%  We assume $m$, $t,w$, by the rule $\textbf{low-query}$, we get $t ++ [(q^{l,w}, v)]$ where $v = q(D)$. Then, starting from the transformed memory ${\ssa{m}} = \delta(m)$, continues with the same trace $t$ and loop maps $w$, we can still get the same resulting trace $ t ++ [(q^{l,w}, v)] $ where $\ssa(q) (D) = v$.  
+%  We assume $m$, $t,w$, by the rule $\textbf{query}$, we get $t ++ [(q^{l,w}, v)]$ where $v = q(D)$. Then, starting from the transformed memory ${\ssa{m}} = \delta(m)$, continues with the same trace $t$ and loop maps $w$, we can still get the same resulting trace $ t ++ [(q^{l,w}, v)] $ where $\ssa(q) (D) = v$.  
 %   \caseL{Case $\inferrule{
 %   { \delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
 %   \and
@@ -1928,7 +1864,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % }{
 %  \delta ; [\eif(\bexpr, c_1, c_2)]^l  \hookrightarrow [\eif(\sbexpr, [\bar{\ssa{x'}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , \ssa{c_1}, \ssa{c_2})]^l; \delta'
 % }~{\textbf{S-IF}} $}
-%  There are two possible evaluation rules depending on the the condition $b$, we choose the case when $b = \etrue$, we use the rule $\textbf{low-if-t}$.  
+%  There are two possible evaluation rules depending on the the condition $b$, we choose the case when $b = \etrue$, we use the rule $\textbf{if-t}$.  
 %  \[\inferrule
 % {
 % }
@@ -1976,7 +1912,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % }~{\textbf{S-LOOP}}$}
 %  Suppose $ \config{m ,a} \to v_N $ and $ \config{\delta(m), \ssa{a}} \to \ssa{v_N} $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
 
-%  When the loop is still running ($v_N > 0$), we have the following low-level evaluation:
+%  When the loop is still running ($v_N > 0$), we have the following level evaluation:
 % \[
 % {\inferrule
 % {
@@ -1986,7 +1922,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % \config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
 % \xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
 % }
-% ~\textbf{low-loop}
+% ~\textbf{loop}
 % }
 % \]
 % We then have the following evaluation:
@@ -2030,7 +1966,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 
 %  we know that $t'_{i}$ is the same as $\ssa{t'_{i}}$. Similarly, for each iteration, for instance, the $k$-th, we can show that $t'_k$ is the same as $\ssa{t'_k}$.
 
-% Now, we will look at the exit of the loop, by the evaluation rule $\textbf{low-loop-exit}$.
+% Now, we will look at the exit of the loop, by the evaluation rule $\textbf{loop-exit}$.
 % \[
 % \inferrule
 % {
@@ -2040,7 +1976,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % \config{m,  [\eloop ~ \valr_N ~ \edo ~ c ]^{l} ,  t, w }
 % \xrightarrow{} \config{m, [\eskip]^{l} ,  t, (w \setminus l) }
 % }
-% ~\textbf{low-loop-exit}
+% ~\textbf{loop-exit}
 % \]
 % The corresponding ssa-form evaluation as follows:
 % \[
@@ -2056,18 +1992,19 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % ~\textbf{ssa-loop-exit}
 % }
 % \]
-% We can see that both traces are not changed during the exit of the loop, so we can show that the entire loop generates the same trace in the low-level language and the ssa-form languages
+% We can see that both traces are not changed during the exit of the loop, so we can show that the entire loop generates the same trace in the level language and the ssa-form languages
 %  \end{itemize}
  % \end{proof}
-\subsection{ssa form operational semantics}
+\subsection{Operational Semantics for SSA Language}
 the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time, which is a map from ssa variable $\ssa{x}$ to variable $\ssa{x_i}$. This map is designed for if condition, when the variable may comes from two branches and this command records which branch the variable comes from. 
 \begin{mathpar}
 \boxed{\config{\ssa{m, a}} \xrightarrow{} \config{\ssa{a}} \;} 
+\\
 \inferrule{
     \ssa{m}(\ssa{x}) = \ssa{v}
 }{ \config{\ssa{m, x }} \to \ssa{v} 
 }~{\textbf{SSA-VAR}}
-\and
+\\
 \boxed{ \config{\ssa{ m, c, t,w}} \xrightarrow{} \config{\ssa{ m', c',  t', w'}} \; }
 \and
 { Memory \times Com  \times Trace \times loop maps \Rightarrow^{}  Memory \times Com  \times Trace \times loop maps}
@@ -2090,27 +2027,6 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 \config{\ssa{ m, [\assign x v]^{l},  t,w} } \xrightarrow{} \config{\ssa{m[x \mapsto v], [\eskip]^{l}, t,w} }
 }
 ~\textbf{ssa-assn}
-% %
-% \and
-% %
-% \inferrule
-% {
-% \config{m, c_1,  t,w} \xrightarrow{} \config{m', c_1',  t',w}
-% }
-% {
-% \config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w}
-% }
-% ~\textbf{seq1}
-% %
-% \and
-% %
-% \inferrule
-% {
-% }
-% {
-% \config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
-% }
-% ~\textbf{seq2}
 %
 \and
 %
@@ -2145,20 +2061,6 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 \xrightarrow{} \config{m, c_2 ; { ifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); ifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});ifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}) },  t,w}
 }
 ~\textbf{ssa-if-f}
-% %
-% \and
-% %
-% {
-% \inferrule
-% {
-% \empty
-% }
-% {
-% \config{\ssa{m}, [ \eswitch(\ssa{v_k},\ssa{x}, (\ssa{v_i} \to q_i))]^{l},  t,w} 
-% \xrightarrow{} \config{\ssa{m},  [\assign {\ssa{x}}{ q_k}]^{l},  t, w }
-% }
-% ~\textbf{ssa-switch-v}
-% }
 %
 \and
 %
@@ -2167,63 +2069,21 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
  \config{ \ssa{m,} ifvar(\ssa{\bar{x}, \bar{x}'}),\ssa{ t,w }} \to \config{ \ssa{m [\bar{x} \to m(\bar{x}')], \eskip , t,w }  }
 }~\textbf{ssa-ifvar}
 % %
-% \and
-% %
-% {\inferrule
-% {
-% }
-% {
-% \config{m, \ewhile([\bexpr]^l, c),  t,w} 
-% \xrightarrow{} \config{m,  \eunfold{[\bexpr^{l}] }{\ewhile([\bexpr]^l,   c)} ,  t,w}
-% }
-% ~\textbf{while} }
-% %
-% \and
-% %
-% {\inferrule
-% {
-% \config{m, \bexpr} \rightarrow \bexpr'
-% }
-% {
-% \config{m, \eunfold{[\bexpr]^l}{ c}, D, t,w} 
-% \xrightarrow{} \config{m, \eunfold{[\bexpr']^l}{ c}, D, t,  w  }
-% }
-% ~\textbf{unfold}}
-% %
-% \and
-% %
-% {\inferrule
-% {
-% }
-% {
-% \config{m, \eunfold{[\efalse]^l}{c}, D, t,w} 
-% \xrightarrow{} \config{m, [\eskip]^{l}, D, t,  (w \setminus l) }
-% }
-% ~\textbf{unfold-f}}
-
-% \and
-% %
-% {\inferrule
-% {
-% }
-% {
-% \config{m, \eunfold{[\etrue]^l}{ c}, D, t,w} 
-% \xrightarrow{} \config{m, c, D, t, (w+l) }
-% }
-% ~\textbf{unfold-t} }
 %
 \and
-% %
-% {
+%
+% \todomath{
 % \inferrule
 % {
-%   \config{m, \expr } \xrightarrow{} \expr'
+%  {\ssa{ \valr_N > 0} }\and 
+%  { \ssa{n} = 0 \implies i =1 } \and
+%  { \ssa{n} > 0 \implies i =2 }
 % }
 % {
-% \config{m, [\eswitch(\expr, x, (v_i \to q_i))]^{l},  t,w} 
-% \xrightarrow{} \config{m, [ \eswitch(\expr',x, (v_i \to q_i))]^{l},  t, w }
+% \config{ \ssa{m,  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  ,  t, w} }
+% \xrightarrow{} \config{\ssa{ m, c[\bar{x_i} /  \bar{x}   ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ c]^{l} ,  t, (w + l) } }
 % }
-% ~\textbf{switch}
+% ~\textbf{ssa-loop}
 % }
 % %
 % \and
@@ -2231,48 +2091,18 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 % {
 % \inferrule
 % {
-% \empty
+%  \valr_N = 0 \and
+%  { \ssa{n} = 0 \implies i =1 } \and
+%  { \ssa{n} > 0 \implies i =2 }
 % }
 % {
-% \config{m, [ \eswitch(v_k,x, (v_i \to q_i))]^{l},  t,w} 
-% \xrightarrow{} \config{m,  [\assign x q_k]^{l},  t, w }
+% \config{\ssa{m,  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  ,  t, w} }
+% \xrightarrow{} \config{\ssa{ m[\bar{x} \mapsto m(\bar{x_i})], [\eskip]^{l} ,  t, (w \setminus l) } }
 % }
-% ~\textbf{switch-v}
+% ~\textbf{ssa-loop-exit}
 % }
-%
-\and
-%
-\todomath{
-\inferrule
-{
- {\ssa{ \valr_N > 0} }\and 
- { \ssa{n} = 0 \implies i =1 } \and
- { \ssa{n} > 0 \implies i =2 }
-}
-{
-\config{ \ssa{m,  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  ,  t, w} }
-\xrightarrow{} \config{\ssa{ m, c[\bar{x_i} /  \bar{x}   ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ c]^{l} ,  t, (w + l) } }
-}
-~\textbf{ssa-loop}
-}
-%
-\and
-%
-{
-\inferrule
-{
- \valr_N = 0 \and
- { \ssa{n} = 0 \implies i =1 } \and
- { \ssa{n} > 0 \implies i =2 }
-}
-{
-\config{\ssa{m,  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  ,  t, w} }
-\xrightarrow{} \config{\ssa{ m[\bar{x} \mapsto m(\bar{x_i})], [\eskip]^{l} ,  t, (w \setminus l) } }
-}
-~\textbf{ssa-loop-exit}
-}
-%
-\and
+% %
+% \and
 %
 \wq{
 {\inferrule
@@ -2341,7 +2171,7 @@ t, (w + l) }
 \end{mathpar}
 
 % \section{\THESYSTEM}
-% There are two steps for our algorithm to get the estimation of the adaptivity of a SSA program $\ssa{c}$ in the labeled loop language. 
+% There are two steps for our algorithm to get the estimation of the adaptivity of a SSA program $\ssa{c}$ in the labeled while language. 
 % \begin{enumerate}
 %     \item Collect the annotated variables assigned (via assignment) in a global list $G$. We have an algorithm of the form : $\ag{G;w; \ssa{c}}{ G';w'} $.
 %     \item We track the dependence between annotated variables in a matrix $M$, whose size is $|G| \times |G|$, and a vector $V$ with size $|G|$. We have another algorithm to fill $M,V$.  Of the form:  $ \func{\Gamma, i_1, c}{M, V, i_2} $. The input is $\Gamma, c, i_1$ and output of the algorithm $AD$ is $(M, V, i_2)$.    $\Gamma ;_{M,V}^{i_1,i_2} \ssa{c}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first assigned variable in ${c}$ in the global list $G$, and $i_2$ points to one position after the last assigned variable in ${c}$.
@@ -2616,7 +2446,7 @@ The function $\mathsf{Left}$ and $\mathsf{Right}$ is used to generate the corres
    (x_1) & (x_2) & (x_3) \\
 \end{matrix}  \right]
 \]
-Now let us think about the loop.
+Now let us think about the while loop.
 %
 \[
 \jl{\ssa{c_3} \triangleq
@@ -2638,23 +2468,27 @@ Now let us think about the loop.
 ,
 ~~~~~~
 M =  \left[ \begin{matrix}
- & (x_1) & (x_3) & (y_1) & (x_2) & (x_3^{f}) &  (z_1) \\
-(x_1) & 0 & 0 & 0 & 0 & 0 & 0  \\
-(x_3) & 1 & 0 & 0 & 0 & 0 & 0 \\
-(y_1) & 0 & 0 & 0 & 0 & 0 & 0 \\
-(x_2) & 0 & 1 & 1 & 0 & 0 & 0 \\
-(x_3) & 1 & 0 & 0  & 1& 0&0\\
-(z_1) & 0 & 0 & 0 & 0 & 1 &0 \\
+ & (x_1)  & (y_1) & (x_2) & (x_3) &  (z_1) & i_1 & i_2 & i_3\\
+(x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+(y_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1\\
+(x_2) & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1\\
+(x_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1\\
+(z_1) & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+(i_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+(i_2) & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1\\
+(i_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1\\
 \end{matrix} \right]
 ,
 ~~~~~~
 V = \left [ \begin{matrix}
-(x_1) &  1 \\
-(x_3) & 0 \\
+(x_1) & 1 \\
+(x_3) & 2 \\
 (y_1) & 1 \\
-(x_2) &  0 \\
-(x_3) &  0 \\
-(z_1) &  0 \\
+(x_2) & 2 \\
+(z_1) & 0 \\
+(i_1) & 0 \\
+(i_2) & 2 \\
+(i_3) & 1 
 \end{matrix} \right ]
 }
 \]
@@ -2689,11 +2523,11 @@ M =  \left[ \begin{matrix}
 (x_1) &  1 \\
 (x_3^{1}) & 0 \\
 (y_1^{1}) & 1 \\
-(x_2^{1}) &  0 \\
+(x_2^{1}) & 0 \\
 (x_3^{2}) & 0 \\
 (y_1^{2}) & 1 \\
-(x_2^{2}) &  0 \\
-(x_3^{f}) &  0 \\
+(x_2^{2}) & 0 \\
+(x_3^{f}) & 0 \\
 (z_1) &  0 \\
 \end{matrix} \right ]
 \]
@@ -2715,20 +2549,20 @@ M =  \left[ \begin{matrix}
 \end{array},
 ~~~~~~
 M =  \left[ \begin{matrix}
- & (x_1) & i_1 & (x_3^{f}) & (i_3^{f}) & (z_1)  \\
+ & (x_1) & i_1 & (x_3) & (i_3) & (z_1)  \\
 (x_1) & 0 & 0 & 0 & 0 & 0 \\
 (i_1) & 0 & 0 & 0 & 0 & 0 \\
-(x_3^{f}) & 1 & 0 & 0 & 0 & 0 \\
-(i_3^{f}) & 0 & 1 & 0 & 0 & 0 \\
-(z_1^{2}) & 0 & 0 & 1 & 0 & 0 \\
+(x_3) & 1 & 0 & 0 & 0 & 0 \\
+(i_3) & 0 & 1 & 0 & 0 & 0 \\
+(z_1) & 0 & 0 & 1 & 0 & 0 \\
 \end{matrix} \right],
 ~~~~~~
 V = \left [ \begin{matrix}
-(x_1)       &  1 \\
-(i_1)       & 0 \\
-(x_3^{f})   & 0 \\
-(i_3^{f})   & 0 \\
-(z_1)       &  0 \\
+(x_1)  & 1 \\
+(i_1)  & 0 \\
+(x_3)  & 2 \\
+(i_3)  & 2 \\
+(z_1)  & 0 \\
 \end{matrix} \right ]
 }
 \]
@@ -2804,37 +2638,24 @@ M_{c4} =  \left[ \begin{matrix}
 (z_1) &  0 \\
 \end{matrix} \right ]
 \]
-% We consider to have the superscript to denote the iteration number (or map if we have nested loop), as shown in the above matrix and vector. The global map $G$ is generated by analysing the program. We can estimate the variables needed in the loop by using the loop number $N$ and the loop body. In this example, the global map for $c_3$ : $ \{ x_1 \to 1, x_2^{1} \to 2, y_1^{1} \to 3 , x_3^{1} \to 4 , x_2^{2} \to 5 , y_1^{2} \to 6 , x_3^{2} \to 7  \} $.  
-% By default, $G(x_2)$ gives the location for the first appearance of the variable $x_2$. We can also allow $G(x_2 , 2)$ to get the location of the second iteration $x_2^{2}$. We also allow $G(x, i, i+n)$ to return a set of locations where $x$ appears in the vector in the certain range $[i, i+n]$, which helps to locate variables in the loop.
-
-
-
-
-% Also, to be able to track the relation between variables in varied iterations in the loop. we define a dependent map $\mathsf{DM}$ based on command $c$ to provide the dependency relation(syntactically) between variables. $\mathsf{VAR}(\expr)$ gives the set of variables appears in the expression $\expr$.
-% \[
-% \begin{array}{lll}
-% \mathsf{DM} (c_1; c_2) & \triangleq &  \mathsf{DM} (c_1) \uplus \mathsf{DM} (c_2)  \\
-% \mathsf{DM} (x_1 \leftarrow \expr ) & \triangleq & \{  x_1 \to \mathsf{VARS}(\expr)  \}
-% \end{array}
-% \]
 
 \subsection{The algorithm to estimate the matrix and vector}
 We first generate a list of variables $G$ that will be assigned with values (via the command $\assign{x}{e}$ or $\assign{x}{q}$). 
 
- \begin{mathpar}
+\begin{mathpar}
 \inferrule
 {
 }
 { \ag{G ;w; \ssa{[\assign {x}{\expr}]^{l}}}{G ++ [\ssa{x}^{(l,w)}];w}
 % G ;w; \ssa{[\assign {x}{\expr}]^{l}} \to G ++ [x^{(l,w)}];w 
 }
-~\textbf{ag-asgn}
+~\textbf{\varEst-asgn}
 \and
 \inferrule
 {
 }
 { \ag{G ;w;  [ \assign{\ssa{x}}{q(\ssa{\expr})}]^{l}}{  G ++ [\ssa{x}^{(l,w)}] ; w} 
-}~\textbf{ag-query}
+}~\textbf{\varEst-query}
 %
 \and 
 %
@@ -2849,7 +2670,7 @@ We first generate a list of variables $G$ that will be assigned with values (via
 {
 \ag{G; w;
 [\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{ G_3 ;w}
-}~\textbf{ag-if}
+}~\textbf{\varEst-if}
 %
 %
 %
@@ -2865,7 +2686,7 @@ We first generate a list of variables $G$ that will be assigned with values (via
 \ag{G; w;
 \ssa{(c_1 ; c_2)}}{  G_2 ; w_2}
 }
-~\textbf{ag-seq}
+~\textbf{\varEst-seq}
 \and 
 \todomath{ 
 \inferrule
@@ -2880,7 +2701,7 @@ We first generate a list of variables $G$ that will be assigned with values (via
 { \ssa{\aexpr} =  {N}  }
 }
 {\ag{G; w; [\eloop ~ \ssa{\aexpr}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l} }{ G_f; w_N\setminus l }
-}~\textbf{ag-loop}
+}~\textbf{\varEst-loop}
 }
 %
 \and 
@@ -2898,7 +2719,7 @@ We first generate a list of variables $G$ that will be assigned with values (via
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
 ~ \edo ~  c }{ G_f; w\setminus l }
 }
-~\textbf{ag-while}
+~\textbf{\varEst-while}
  }
 \end{mathpar}
 %
@@ -2924,20 +2745,22 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 {
  \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{M; V_{\emptyset}; i+1 }
 }
-~\textbf{ad-asgn}
+~\textbf{\graphGen-asgn}
 \and
+\jl{
 \inferrule
 {M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
 \\
-V= \mathsf{L}(i)
+V= \mathsf{L}(i) \and V(i) = 1
 }
 { 
 \ad{\Gamma;[ \assign{\ssa{x}}{q(\ssa{\expr})} ]^{l} ; i }{M;V;i+1}
 %  \vdash^{(i, i+1)}_{M, V} [ \assign{\ssa{x}}{q(\ssa{\expr})} ]^{l} 
-}~\textbf{ad-query}
+}~\textbf{\graphGen-query}}
 %
 \and 
 %
+\jl{
 \inferrule
 {
 {\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ M_1;V_1;i_2 }}
@@ -2946,7 +2769,7 @@ V= \mathsf{L}(i)
 \\
 {\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; V_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
 %
-\and
+\\
 %
 {\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ M_y; V_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
 %
@@ -2957,8 +2780,13 @@ V= \mathsf{L}(i)
 {M = (M_1+M_2)+ M_x+M_y +M_z }
 }
 {
-\ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)} ; i_1}{ M ;V_1 \uplus V_2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
-}~\textbf{ad-if}
+\ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
+\bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
+[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
+\ssa{ c_1, c_2)} ; i_1}{ M ;V_1 \uplus V_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
+}
+~\textbf{\graphGen-if}
+}
 %
 %
 %
@@ -2980,7 +2808,7 @@ V= \mathsf{L}(i)
 % \ssa{c_1 ; c_2} 
 % : \Phi \Rightarrow \Psi
 }
-~\textbf{ad-seq}
+~\textbf{\graphGen-seq}
 %
 \and 
 %
@@ -3008,7 +2836,7 @@ B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 }
 {
 \ad{\Gamma;\eloop ~ [\ssa{\aexpr}]^{l}, ~0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}, i }{ M';V' ;i+N*(B+A)+B }
-}~\textbf{ad-loop}
+}~\textbf{\graphGen-loop}
 }
 %
 \and 
@@ -3028,9 +2856,10 @@ B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 \ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{M; V ;i+(B+A)+B}
 }
 \\
-{M' = M+ \sum_{0 \leq j <N}( M_{1}+M_{2})  }
+{M' = M + ( M_{1}+M_{2})  }
 \and
-{V' = V \uplus \sum_{0 \leq j <N}( V_{1} \uplus V_{2})  }
+{
+V' = V \uplus (( V_{1} \uplus V_{2}) \uplus 2)  }
 }
 {
 \ad{\Gamma;
@@ -3038,7 +2867,7 @@ B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
 ~ \edo ~  c;
 i }{ M';V' ;i+(B+A)+B }
-}~\textbf{ad-while}
+}~\textbf{\graphGen-while}
 }
 \end{mathpar}
 %
@@ -3077,6 +2906,7 @@ V_1 \uplus V_2 & := & \left\{
 0 & o.w.
 \end{array}\right.
 \\
+\jl{V \uplus k} & := & V[i] = k , i = 1, \ldots, |V|    \\
 \end{array}
 \]
 
@@ -3095,7 +2925,8 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 
 
 \begin{defn}
-[Approximated SSA-Based Graph]
+[Approximated SSA-Based Graph].
+\\
 \todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (V_{ssa}, E_{ssa}, V)$ is. defined as:
 \\
 Nodes $V_{ssa} = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
@@ -3129,7 +2960,8 @@ $W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\}
 \end{defn}  
 %
 \begin{defn}
-[Adaptivity of piece of program].
+[\jl{Approximated Adaptivity from SSA-Based Weighted Graph}].
+\\
 \jl{Given a program $\ssa{c}$, and its approximated SSA-Based Weighted Graph $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
 %
 Adaptivity of the program defined according to the logic is as:}
@@ -3156,18 +2988,19 @@ Adapt(c) := \max_{v_1, v_2 \in \{v| v \in V_{aprox} \land V(v) = 1 \} }
 }
 \begin{algorithmic}
 \REQUIRE Weighted Directed Graph $G = (V, E, W)$ with a start vertex $s$ and destination vertex $t$ .
-\STATE  {\bf $dfs(c, \text{curr\_min\_flow}, \text{nested\_max\_flows})$:}  
-\STATE \qquad {\bf if} $c == t$:
-\STATE \qquad \qquad {\bf return} $\text{curr\_min\_flow} * \prod\limits_{r\in \text{nested\_max\_flows}} \{r\} $.
-\STATE \qquad {\bf for} .
-\STATE \qquad {\bf let} $a_j=\mathcal{M}(q_j)$ 
-\STATE \qquad \COMMENT{In the line above, $\mathcal{M}$ computes approx. the exp. value  of $q_j$ over $X$. So, $a_j\in [-1,+1]$.}
-\STATE {\bf define} $q_{k+1}(x)=\mathrm{sign}\big (\sum_{i\in [k]} x(i)\times\ln\frac{1+a_i}{1-a_i} \big )$ where $x\in \{-1,+1\}^{k+1}$.
-\STATE\COMMENT{In the line above,  $\mathrm{sign}(y)=\left \{ \begin{array}{lr} +1 & \mathrm{if}\ y\geq 0\\ -1 &\mathrm{otherwise} \end{array} \right . $.}
-\STATE {\bf let} $a_{k+1}=\mathcal{M}(q_{k+1})$
-\STATE\COMMENT{In the line above,  $\mathcal{M}$ computes approx. the exp. value  of $q_{k+1}$ over $X$. So, $a_{k+1}\in [-1,+1]$.}
-\RETURN $a_{k+1}$.
-\ENSURE $a_{k+1}\in [-1,+1]$
+\STATE  {\bf \jl{bfs $(G, s, t)$}:}  
+\STATE \qquad {\bf init} 
+current node: $c = s$, 
+queue: $q = [c]$, 
+vector recoding if the vertex is visited: visited$ = [0]*|V|$,
+result: $r$
+\STATE \qquad {\bf while} $q$ isn't empty:
+\STATE \qquad \qquad take the vertex from beginning $c= q.pop()$
+\STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$
+\STATE \qquad \qquad currMinFlow = min(W(c), currMinFlow).
+\STATE \qquad \qquad put all unvisited vertex $v$ having directed edge from c into $q$. 
+\STATE \qquad \qquad if $v$ is visited, then there is a circle in the graph, we update the result $r = r + $currMinFlow
+\RETURN $r$
 \end{algorithmic}
 \end{algorithm}
 
@@ -3210,7 +3043,7 @@ $f(q^{l,w}) = \ssa{x}^{l,w}$
 \config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
 \xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
 }
-~\textbf{low-loop}
+~\textbf{loop}
 }
  \]
  \[
@@ -3362,7 +3195,9 @@ By induction hypothesis on the second premise, we conclude that : every node $q^
 Now we can conclude that : every node $q^{(l,w)} \in \mathcal{AQ}$ in $t_2 -t$ has a unique mapping $\ssa{x}^{(l,w)}$ with the same label in $G[i_1, \ldots, (i_3-1) ]$
 
 
-\caseL{Case: $\inferrule
+\caseL{Case: 
+$\todomath{
+\inferrule
 {
 B= |\ssa{\bar{x}}| 
 \and
@@ -3388,7 +3223,9 @@ B= |\ssa{\bar{x}}|
 }
 {\Gamma \vdash^{(i, i+N*(B+A)+B   )}_{M', V'} 
 [\eloop ~ \ssa{\aexpr}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l}
-}~\textbf{loop}$}
+}~\textbf{loop}}
+$
+}
 
 We assume $G; w \vDash ([\eloop ~ \ssa{\aexpr}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l}, i, i+N*(B+A)+B)$ and denote $c = |\ssa{c}|_{low}$ and $a = |\ssa{a}|_{low}$.
 We choose the memory $m$, trace $t$ and hidden database $D$, we have the ssa evaluation supposing $\config{m, a} \to v_N$:
@@ -3401,7 +3238,7 @@ We choose the memory $m$, trace $t$ and hidden database $D$, we have the ssa eva
 \config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
 \xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
 }
-~\textbf{low-loop}
+~\textbf{loop}
 }
  \]
  \[
@@ -3500,7 +3337,7 @@ We assume $G'= G[0, \ldots, i-1]$, from our assumption, we have:
  
 %  When the query $q_1^{(l_1, w_1)}$ is in the loop $(w_1 \not =  \emptyset)$ or not $(w_1 = \emptyset)$, $\neg \mathsf{IND}(q_1^{(l_1, w_1)}, q_2^{(l_2, w_2)}, |\ssa{c_1;c_2}|_{low},w)$ both indicates that the change of $q_1^{(l_1,w_1)}(D)$ will change the appearance of $q_2 $ in the trace, that is to say, the execution of $[\assign{y}{q_2}]^{l_2} $. 
  
-%  From our transformation theorem, we know that the evaluation of the ssa form program $\ssa{c}$ has the same trace as the one in low-level language, when initialized with some transformation environment $\delta$ and ssa naming environment $\Sigma$ so that $\Sigma;\delta; c \hookrightarrow \ssa{c} ; \delta';\Sigma'$ . The corresponding memory $\ssa{m}$ such that $m = \delta^{-1}(\ssa{m} )$.
+%  From our transformation theorem, we know that the evaluation of the ssa form program $\ssa{c}$ has the same trace as the one in level language, when initialized with some transformation environment $\delta$ and ssa naming environment $\Sigma$ so that $\Sigma;\delta; c \hookrightarrow \ssa{c} ; \delta';\Sigma'$ . The corresponding memory $\ssa{m}$ such that $m = \delta^{-1}(\ssa{m} )$.
 %  \[
 %   \config{\ssa{m}, \ssa{c_1;c_2},  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{q_i}]^{l_1} ; \ssa{c_1'};\ssa{c_2},
 %   t_1,w_1} \rightarrow \config{\ssa{m_2}, \ssa{c_1'};\ssa{c_2},
@@ -3536,7 +3373,7 @@ We assume $G'= G[0, \ldots, i-1]$, from our assumption, we have:
 \begin{thm}
 [Soundness of {\THESYSTEM}]
 Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$,  for any global list $G$,  loop maps $w$ such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$, $\Gamma \vdash i_1$. $K$ is the number of queries inquired during the execution of the piece of program $\ssa{c}$ and |V| gives the number of non-zeros in $V$. 
-% $|.|_{low} $ is the annotation erasure, which turns a ssa form program $\ssa{c}$ to its low-level version.
+% $|.|_{low} $ is the annotation erasure, which turns a ssa form program $\ssa{c}$ to its level version.
 Then,
 \[
 K \leq |V| \land \forall D, \ssa{m}. G_{s}(\ssa{c},D,\ssa{m},w) \subseteq G_{ssa}(M, V,G,i_1, i_2)
@@ -4337,75 +4174,124 @@ Unfold the definition of subgraph $\subseteq$, we need to show two cases.
 
 \begin{example}[TwoRound Algorithm]
 \[
-TR^H(k) \triangleq
+\jl{
+TR(k) \triangleq
 {
 \begin{array}{l}
-    % \left[j \leftarrow 0 \right]^1 ; \\
-    \clabel{a \leftarrow [] }^1; \\
-    \eloop ~ [k]^{2} ~  \\
-    ~ \edo ~ \\
+    \left[i \leftarrow 1 \right]^1 ; \\
+    \left[a_1 \leftarrow [] \right]^2; \\
+   \ewhile ~ [i < k]^{3}, 0,     ~ \edo ~ \\
     \Big(
-     \clabel{x \leftarrow q() }^3 ; \\
-    \clabel{a \leftarrow x :: a }^4     \Big);\\
-    \clabel{l \leftarrow q_{k + 1}(a)}^{5}\\
+     \clabel{x \leftarrow q() }^4 ; \\
+    \clabel{a \leftarrow x :: a }^5  
+        \left[i_2 \leftarrow i_3 + 1 \right]^6 
+   \Big);\\
+    \clabel{l \leftarrow q_{k + 1}(a)}^{7}\\
 \end{array}
 }
 %
 ~~~~~~~~ \Rightarrow ~~~~~~~
 %
-TR^L \triangleq
-\begin{array}{l}
-    % \left[j \leftarrow 1 \right]^1 ; \\
-    \left[a \leftarrow [] \right]^1; \\
-   \eloop ~ [k]^{2} ~  \\
-    ~ \edo ~ \\
-   \Big( 
-     \left[x \leftarrow q \right]^3; \\
-    \left[a \leftarrow x :: a \right]^4 
-    \Big);\\
-    \clabel{
-\eswitch \Bigg(a, l, 
-    \left(\begin{array}{l}
-    \left[-n, -n, -n, \cdots, -n\right] \to q_{k + 1,1},\\
-    \cdots\\
-    \left[n, n, n, \cdots, n\right] \to q^{}_{k + 1, n^k}
-\end{array} \right) \Bigg)
-    }^5
-\end{array}
-\]
-\[
 TR^{ssa} \triangleq
 \begin{array}{l}
-    % \left[j \leftarrow 1 \right]^1 ; \\
-    \left[a_1 \leftarrow [] \right]^1; \\
-   \eloop ~ [k]^{2}, 0, [ a_3,a_1,a_2 ] ~  \\
+    \left[i \leftarrow 1 \right]^1 ; \\
+    \left[a_1 \leftarrow [] \right]^2; \\
+   \ewhile ~ [i < k]^{3}, 0, 
+   [ a_3,a_1,a_2 ] [ i_3,i_1,i_2 ] ~ 
     ~ \edo ~ \\
    \Big( 
-     \left[x_1 \leftarrow q \right]^3; \\
-    \left[a_2 \leftarrow x_1 :: a_3 \right]^4 
+     \left[x_1 \leftarrow q \right]^4; \\
+    \left[a_2 \leftarrow x_1 :: a_3 \right]^5 
+    \left[i_2 \leftarrow i_3 + 1 \right]^6 
     \Big);\\
-    \clabel{
-\eswitch \Bigg(a_3, l_1, 
-    \left(\begin{array}{l}
-    \left[-n, -n, -n, \cdots, -n\right] \to q_{k + 1,1},\\
-    \cdots\\
-    \left[n, n, n, \cdots, n\right] \to q^{}_{k + 1, n^k}
-\end{array} \right) \Bigg)
-    }^5
+    \clabel{l \leftarrow q_{k + 1}(a_3)}^{7}\\
 \end{array}
+}
+% TR^L \triangleq
+% \begin{array}{l}
+%     % \left[j \leftarrow 1 \right]^1 ; \\
+%     \left[a \leftarrow [] \right]^1; \\
+%    \eloop ~ [k]^{2} ~  \\
+%     ~ \edo ~ \\
+%    \Big( 
+%      \left[x \leftarrow q \right]^3; \\
+%     \left[a \leftarrow x :: a \right]^4 
+%     \Big);\\
+%     \clabel{
+% \eswitch \Bigg(a, l, 
+%     \left(\begin{array}{l}
+%     \left[-n, -n, -n, \cdots, -n\right] \to q_{k + 1,1},\\
+%     \cdots\\
+%     \left[n, n, n, \cdots, n\right] \to q^{}_{k + 1, n^k}
+% \end{array} \right) \Bigg)
+%     }^5
+% \end{array}
 \]
+% \[
+% TR^{ssa} \triangleq
+% \begin{array}{l}
+%     % \left[j \leftarrow 1 \right]^1 ; \\
+%     \left[a_1 \leftarrow [] \right]^1; \\
+%    \eloop ~ [k]^{2}, 0, [ a_3,a_1,a_2 ] ~  \\
+%     ~ \edo ~ \\
+%    \Big( 
+%      \left[x_1 \leftarrow q \right]^3; \\
+%     \left[a_2 \leftarrow x_1 :: a_3 \right]^4 
+%     \Big);\\
+%     \clabel{
+% \eswitch \Bigg(a_3, l_1, 
+%     \left(\begin{array}{l}
+%     \left[-n, -n, -n, \cdots, -n\right] \to q_{k + 1,1},\\
+%     \cdots\\
+%     \left[n, n, n, \cdots, n\right] \to q^{}_{k + 1, n^k}
+% \end{array} \right) \Bigg)
+%     }^5
+% \end{array}
+% \]
 % $\config{\emptyset, TR^L, D, [],\emptyset} \rightarrow \config{m, \eskip, D, t, w } $.
 % $$t = [ (q_1^{(4, \{3 \to 1\} )},v_1 ), (q_2^{(4, \{3 \to 2\} )},v_2 ), \ldots, (q_k^{(4, \{3 \to k\} )},v_k ) , (q_{k+1, i }^{(7, \emptyset )},v_1 )  ] $$
 % %
 
-Adapt($TR^L$) = 1
+Adapt($TR$) = 2
 
+\jl{
 Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ and empty whlemap $\emptyset$.
  \[[]; \emptyset; TR^{ssa} \to G; w  \land w = \emptyset\].
+ %
  \[G_{k=2} = \left[
-  {a_1}^{(1,\emptyset)} , {a_3}^{(2,[2:1])} , {x_1}^{(3,[2:1])} , {a_2}^{(4,[2:1])} ,  {a_3}^{(2,[2:2])} , {x_1}^{(3,[2:2])} , {a_2}^{(4,[2:2])} , {a_3}^{(2,\emptyset)} , {l_1}^{(5,\emptyset)}   \right] \]
-  We denote $a_1^{1}$ short for ${a_1}^{(1,\emptyset)}$ and ${a_3}^{(2,1)}$ short for ${a_3}^{(2,[2:1])}$, where the label $(2, 1)$ represents at line number $2$ and in the $1$ st iteration. 
+  {a_1}^2 , {a_3}^{(2,[2:1])} , x_1^{4} , a_2^{5} ,  i_3^{3} , 
+  i_2^{6}, i_1^{2} , l_1^{7} , {l_1}^{(5,\emptyset)}   \right] \]
+  %
+  We denote $a_1^{1}$ short for ${a_1}^{(1,\emptyset)}$ and ${a_3}^{(2,1)}$ short for ${a_3}^{(2,[2:1])}$, where the label $(2, 1)$ represents at line number $2$ and in the $1$ st iteration.
+  } 
 \[
+\jl{
+M =  \left[ \begin{matrix}
+ & a_1^{2} & a_3^{3} & x_1^{4} 
+ & a_2^{5}  & i_3^{3} & i_2^{6} & i_1^{2} & l_1^{7}\\
+a_1^{2} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0  \\
+a_3^{3} & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+x_1^{4} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+a_2^{5} & 0 & 1 & 1 & 0 & 0 & 0 & 0 & 0 \\
+i_3^{3} & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+i_2^{6} & 0 & 0 & 0 & 0 & 1 & 1 & 0 & 0 \\
+i_1^{2} & 1 & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+l_1^{7} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+ \end{matrix} \right] 
+~ , V = \left [ \begin{matrix}
+a_1^{2} & 2   \\
+a_3^{3} & 2  \\
+x_1^{4} & 1  \\
+a_2^{5} & 2  \\
+i_3^{3} & 2  \\
+i_2^{6} & 2  \\
+i_1^{2} & 2  \\
+l_1^{7} & 1 \\
+\end{matrix} \right ]
+}
+\]
+\[
+{
 M =  \left[ \begin{matrix}
  & a_1^{1} & a_3^{(2,1)} & x_1^{(3,1)} & a_2^{(4,1)}  & a_3^{(2,2)} & x_1^{(3,2)} & a_2^{(4,2)} & a_3^{2} & l_1^{5}\\
  a_1^{1} & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 \\
@@ -4429,10 +4315,12 @@ a_2^{(4,2)} &  0 \\
 a_3^{2} &  0 \\
 l_1^{5} &  1 \\
 \end{matrix} \right ]
+}
 \]
 \begin{center}
 
-\begin{tikzpicture}
+\todo{
+	\begin{tikzpicture}
 %%% The nodes represents the k query in the first round
 \filldraw[black] (0, 2) circle (2pt) node [anchor=south]{$q_1^{(4, \{3 \to 1\} )}$};
 \filldraw[black] (3, 2) circle (2pt) node [anchor=south]{$q_2^{(4, \{3 \to 2\} )}$};
@@ -4472,65 +4360,101 @@ l_1^{5} &  1 \\
 %%%% The longest path representing the adaptivity
 \draw[ultra thick, red, ->, dashed] (0.1, 0) -- (0.1, 1.9);
 \end{tikzpicture}
+}
 \end{center}
 \end{example}
 %
 %
 \begin{example}[Multi-Round Algorithm]
-\[
-MR^H \triangleq
-\begin{array}{l}
-    %  \left[j \leftarrow 0 \right]^1 ; \\
-    \left[I \leftarrow [] \right]^1; \\
-    \eloop ~ [k]^{2} ~  \\ 
-    \ ~ \edo ~ \\ \Big(
-    \left[p \leftarrow c \right]^3 ; \\
-    \left[a \leftarrow q(p, I) \right]^4; \\
-    \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^5
-    \Big) 
-\end{array}
-%
-~~~~ \Rightarrow ~~~
-%
-MR^L \triangleq
-\begin{array}{l}
-    %  \left[j \leftarrow 0 \right]^1 ; \\
-    \left[I \leftarrow [] \right]^1; \\
-    \eloop ~ [k]^{2}  \\ 
-    \ ~ \edo ~ \\ \Big(
-    \left[p \leftarrow c \right]^3 ; \\
-    \left[
-    \eswitch \Big( I, a
-    \left(\begin{array}{l}
-        [ ] \to q_{j,1},\\
-        \cdots\\
-    \clabel{1, 2, 3, \cdots, n} \to q_{j,n!}
-    \end{array}\right)
-    \Big)
-    \right]^4;\\
-    \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^5
-    \Big) 
-\end{array}
-%
+% \[
+% MR^H \triangleq
 % \begin{array}{l}
-%     \left[I \leftarrow [] \right]^2; \\
-%     \ewhile \Big( 
-%     \left[j \leq k \right]^3 , \\
-%     \left[p \leftarrow 0 \right]^4 ; \\
+%     %  \left[j \leftarrow 0 \right]^1 ; \\
+%     \left[I \leftarrow [] \right]^1; \\
+%     \eloop ~ [k]^{2} ~  \\ 
+%     \ ~ \edo ~ \\ \Big(
+%     \left[p \leftarrow c \right]^3 ; \\
+%     \left[a \leftarrow q(p, I) \right]^4; \\
+%     \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^5
+%     \Big) 
+% \end{array}
+% %
+% ~~~~ \Rightarrow ~~~
+% %
+% MR^L \triangleq
+% \begin{array}{l}
+%     %  \left[j \leftarrow 0 \right]^1 ; \\
+%     \left[I \leftarrow [] \right]^1; \\
+%     \eloop ~ [k]^{2}  \\ 
+%     \ ~ \edo ~ \\ \Big(
+%     \left[p \leftarrow c \right]^3 ; \\
 %     \left[
-%     \eswitch \Big( I, x
+%     \eswitch \Big( I, a
 %     \left(\begin{array}{l}
 %         [ ] \to q_{j,1},\\
 %         \cdots\\
 %     \clabel{1, 2, 3, \cdots, n} \to q_{j,n!}
 %     \end{array}\right)
 %     \Big)
-%     \right]^5\\
-%     \clabel{I \leftarrow \eupdt(I, (a, p))}^6;\\
-%     \clabel{j \leftarrow j + 1 }^7
-%     \Big) ;
+%     \right]^4;\\
+%     \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^5
+%     \Big) 
 % \end{array}
+% \]
+% Adapt($MR^L$) = 2 when $k=2$
+
+% \[
+% MR^{ssa} \triangleq
+% \begin{array}{l}
+%     %  \left[j \leftarrow 0 \right]^1 ; \\
+%     \left[I_1 \leftarrow [] \right]^1; \\
+%     \eloop ~ [k]^{2} , 0, [I_3,I_1,I_2] \\ 
+%     \ ~ \edo ~ \\ \Big(
+%     \left[p_1 \leftarrow c \right]^3 ; \\
+%     \left[
+%     \eswitch \Big( I_3, a_1
+%     \left(\begin{array}{l}
+%         [ ] \to q_{j,1},\\
+%         \cdots\\
+%     \clabel{1, 2, 3, \cdots, n} \to q_{j,n!}
+%     \end{array}\right)
+%     \Big)
+%     \right]^4;\\
+%     \left[I_2 \leftarrow \eupdt( {I_3}, (a_1, p_1))  \right]^5
+%     \Big) 
+% \end{array}
+% \]
+\jl{
+\[
+MR \triangleq
+\begin{array}{l}
+    \left[i \leftarrow 1 \right]^1 ; \\
+    \left[I \leftarrow [] \right]^2; \\
+   \ewhile ~ [i < k]^{3} 
+    \ ~ \edo ~ \\ \Big(
+    \left[p \leftarrow c \right]^4 ; \\
+    \left[a \leftarrow q(p, I) \right]^5; \\
+    \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^6 ; \\
+    \left[i \leftarrow i + 1 \right]^7 \\
+    \Big) 
+\end{array}
+%
+~~~~ \Rightarrow ~~~
+%
+MR^{ssa} \triangleq
+\begin{array}{l}
+    \left[i \leftarrow 1 \right]^1 ; \\
+   \left[I \leftarrow [] \right]^2; \\
+   \ewhile ~ [i < k]^{3} 0, [I_3,I_1,I_2] \\ 
+    \ ~ \edo ~ \\ \Big(
+    \left[p_1 \leftarrow c \right]^4 ; \\
+    \left[a \leftarrow q(p_1, I_2) \right]^5; \\
+    \left[I_2 \leftarrow \eupdt( {I_3}, (a_1, p_1))  \right]^6;\\
+    \left[i \leftarrow i + 1 \right]^7 \\
+    \Big) 
+\end{array}
 \]
+}
 %
 %
 % Let $k = 4$, given a specific database $D$, we have $\config{\emptyset, MR^L, [],\emptyset} \rightarrow \config{m, \eskip, t, w } $ and the trace as:
@@ -4541,29 +4465,9 @@ MR^L \triangleq
 % (q^{4, \{2 \to 4\}}_{4, 3}, v_4)
 % \right]$$
 % \\
-Adapt($MR^L$) = 2 when $k=2$
-
-\[
-MR^{ssa} \triangleq
-\begin{array}{l}
-    %  \left[j \leftarrow 0 \right]^1 ; \\
-    \left[I_1 \leftarrow [] \right]^1; \\
-    \eloop ~ [k]^{2} , 0, [I_3,I_1,I_2] \\ 
-    \ ~ \edo ~ \\ \Big(
-    \left[p_1 \leftarrow c \right]^3 ; \\
-    \left[
-    \eswitch \Big( I_3, a_1
-    \left(\begin{array}{l}
-        [ ] \to q_{j,1},\\
-        \cdots\\
-    \clabel{1, 2, 3, \cdots, n} \to q_{j,n!}
-    \end{array}\right)
-    \Big)
-    \right]^4;\\
-    \left[I_2 \leftarrow \eupdt( {I_3}, (a_1, p_1))  \right]^5
-    \Big) 
-\end{array}
-\]
+%
+Adapt($MR$) = k.
+\\
 Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ and empty whlemap $\emptyset$.
  \[[]; \emptyset; MR^{ssa} \to G; w  \land w = \emptyset\].
  \[G_{k=2} = \left[
@@ -4599,6 +4503,7 @@ I_3^{2} & 0 \\
 
 \begin{center}
 %
+\todo{
 \begin{tikzpicture}
 %%% The nodes represents the k query in the first round
 \filldraw[black] (0, 4) circle (2pt) node [anchor=south]{$(q^{5, \{3 \to 1\}}_{1, 1}$};
@@ -4660,16 +4565,17 @@ I_3^{2} & 0 \\
 % \draw[very thick,->] (12, 4)  -- (8.1, 4) ;
 %
 % \draw[very thick,->] (12, 2)  -- (8.1, 3.9) ;
-
 %%%% The longest path representing the adaptivity
 % \draw[ultra thick, red, ->, dashed] (3, 4.1)  -- (0.1, 4.1);
 % \draw[ultra thick, red, ->, dashed] (8, 4.1)  -- (3.1, 4.1);
 % \draw[ultra thick, red, ->, dashed] (12, 4.1)  -- (8.1, 4.1);
 \end{tikzpicture}
+}
 \end{center}
 %
 %
 $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution traces.
+\todo{
 \begin{center}
 %
 \begin{tikzpicture}
@@ -4737,6 +4643,7 @@ $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution
 \draw[ultra thick, red, ->, dashed] (12, 4.1)  -- (8.1, 4.1);
 \end{tikzpicture}
 \end{center}
+}
 \end{example}
 %
 %
