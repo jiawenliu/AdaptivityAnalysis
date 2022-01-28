@@ -136,7 +136,7 @@ The key component of the system is an program analysis procedure, which provides
 \mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
 \mbox{Trace} & t & ::= & [] ~|~ \jl{{(q(v_q)^l  ) :: t}} \\
 \mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{ q(\qexpr)^l  \} }
+::= & \jl{\{ q(v_q)^l  \} }
 \end{array}
 \]
 %
@@ -332,12 +332,16 @@ Small step operational semantics of expressions are standard and omitted.
 \begin{mathpar}
 \boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
 \\
+\jl{
+\boxed{ \config{m, c, t} \xrightarrow{} \config{m', c',  t'} \; }
+}
+\\
 \inferrule
 {
  \config{m, \expr } \xrightarrow{}  \config{m, \expr' }
 }
 {
-\config{m, [\assign x \expr]^{l},  t,w} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t,w}
+\config{m, [\assign x \expr]^{l},  t} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t}
 }
 ~\textbf{assn1}
 %
@@ -347,7 +351,7 @@ Small step operational semantics of expressions are standard and omitted.
 {
 }
 {
-\config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
+\config{m, [\assign x v]^{l},  t} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t}
 }
 ~\textbf{assn2}
 %
@@ -593,27 +597,27 @@ l_1 < l_2 }
 \end{defn}
 %
 
-\begin{defn}[Query may dependency ]
-One query $q_1(v_1)$ may depend on another query $q_2(v_2)$ in a program $c$, with a starting loop maps $w$, denoted as
-$\mathsf{DEP}(q_1(v_1)^{(l_1, w_1)}, q_2(v_2)^{(l_2, w_2)}, c,w)$ is defined as below. 
-\[
-  \begin{array}{l}
-     \forall  t. \exists m_1,m_3,t_1,t_3.
-\config{m, c,  t,w} \rightarrow^{*} \config{m_1, [\assign{x}{q_1(v_1)}]^{l_1} ; c_2,
-  t_1,w_1} \rightarrow \\ \config{m_1[q_1(v_1)(D)/x], c_2,
-  t_1++[q_1(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{m_3, \eskip,
-  t_3,w_3} \\  
-  \land 
-\Big( q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \in (t_3-t_1) \implies  \exists v \in \codom(q_1(v_1)), m_3', t_3', w_3'.  \\
- \config{m_1[v/x], {c_2}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \land (q_2(v_2)^{(l_2,w_2)}) \not \in (t_3'-t_1)
-\Big)\\
-\land 
-\Big(q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \not\in (t_3-t_1) \implies  \exists v \in \codom(q_1(v_1)),  m_3', t_3', w_3'. \\
- \config{m_1[v/x], {c_2}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \land (q_2(v_2)^{(l_2,w_2)})  \in (t_3'-t_1)
-\Big)\\
-\end{array}
-\]
-\end{defn}
+% \begin{defn}[Query may dependency ]
+% One query $q_1(v_1)$ may depend on another query $q_2(v_2)$ in a program $c$, with a starting loop maps $w$, denoted as
+% $\mathsf{DEP}(q_1(v_1)^{(l_1, w_1)}, q_2(v_2)^{(l_2, w_2)}, c,w)$ is defined as below. 
+% \[
+%   \begin{array}{l}
+%      \forall  t. \exists m_1,m_3,t_1,t_3.
+% \config{m, c,  t,w} \rightarrow^{*} \config{m_1, [\assign{x}{q_1(v_1)}]^{l_1} ; c_2,
+%   t_1,w_1} \rightarrow \\ \config{m_1[q_1(v_1)(D)/x], c_2,
+%   t_1++[q_1(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{m_3, \eskip,
+%   t_3,w_3} \\  
+%   \land 
+% \Big( q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \in (t_3-t_1) \implies  \exists v \in \codom(q_1(v_1)), m_3', t_3', w_3'.  \\
+%  \config{m_1[v/x], {c_2}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \land (q_2(v_2)^{(l_2,w_2)}) \not \in (t_3'-t_1)
+% \Big)\\
+% \land 
+% \Big(q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \not\in (t_3-t_1) \implies  \exists v \in \codom(q_1(v_1)),  m_3', t_3', w_3'. \\
+%  \config{m_1[v/x], {c_2}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \land (q_2(v_2)^{(l_2,w_2)})  \in (t_3'-t_1)
+% \Big)\\
+% \end{array}
+% \]
+% \end{defn}
 
 \begin{defn}
 Query may dependency.
@@ -705,11 +709,6 @@ Given a program $c$, and a meory $m$, a database $D$, the adaptivity of the depe
 $$A^*(c, D, m ,w) = \max\limits_{q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')} \in V }\{ |p(q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')})| \}$$
 }
 \end{defn}
-
-
-
-
-
 % \noindent
 % In following examples:
 % \[
@@ -923,7 +922,7 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')} \in V
 %
 \mbox{Trace} & t & ::= & [] ~|~ \ssa{{(q(v_q)^l  ) :: t}} \\
 \mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{ q(\qexpr)^l  \} }
+::= & \jl{\{ q(v_q)^l  \} }
  \\
 \mbox{SSA Variables} & \mathcal{SV}  & ::= & \{ \ssa{x} \} \\
 \mbox{Labelled SSA Variables} & \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)}  \}
@@ -997,7 +996,7 @@ We call a list of variables $\bar{x}$.
 %
 \and
 %
-\inferrule{
+\todomath{\inferrule{
  {\delta ; q_i \hookrightarrow \ssa{q_i}}
  \and
  { \delta ; v_k \hookrightarrow \ssa{v_k} }
@@ -1009,7 +1008,7 @@ We call a list of variables $\bar{x}$.
   \and { \Sigma' = \Sigma \cup \{ \ssa{x} \} }
 }{
  \Sigma;\delta ; [ \eswitch({v_k},{x}, ({v_i} \to q_i)) ]^{l} \hookrightarrow [\eswitch(\ssa{v_k},\ssa{x}, (\ssa{v_i} \to \ssa{q_i}))]^{l} ; \delta';\Sigma'
-}~{\textbf{S-SWITCH}}
+}~{\textbf{S-SWITCH}}}
 %%
 \and
 %
@@ -1055,7 +1054,7 @@ We call a list of variables $\bar{x}$.
 %
 \and
 %
-\wq{\inferrule{
+\inferrule{
     % {\delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
     % \and
     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
@@ -1069,13 +1068,13 @@ We call a list of variables $\bar{x}$.
     \and 
      {\delta' ; \bexpr \hookrightarrow \ssa{\bexpr} }
      \and
-    {\ssa{c= c_1[\bar{x}'/ \bar{x_1}]   } }
+    {\ssa{c' = c_1[\bar{x}'/ \bar{x_1}]   } }
     % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
   }{ 
   \Sigma; \delta ;  \ewhile ~ [\bexpr]^{l} ~ \edo ~ c 
   \hookrightarrow 
   \ssa{\ewhile ~ [\bexpr]^{l}, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ; \delta'; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-WHILE}}
+}~{\textbf{S-WHILE}
 }
 \and
 %
@@ -1275,6 +1274,35 @@ By induction hypothosis on the second and third premise, we know that : $\fvssa{
   \varssa{\ssa{\bexpr}} = \delta(\vars{\bexpr})
 \] 
 From the first premise, we know that $\vars{b} \subseteq \dom(\delta)$. This is goal is proved by the rule $\textbf{S-VAR}$ on all the variables in $\bexpr$.\\
+\jl{\caseL{Case
+$\inferrule{
+    { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
+     \and
+    { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
+    \\
+     {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
+    \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
+    \and 
+     {\delta' ; \bexpr \hookrightarrow \ssa{\bexpr} }
+     \and
+    {\ssa{c' = c_1[\bar{x}'/ \bar{x_1}]   } }
+    % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
+  }{ 
+  \Sigma; \delta ;  \ewhile ~ [\bexpr]^{l} ~ \edo ~ c 
+  \hookrightarrow 
+  \ssa{\ewhile ~ [\bexpr]^{l}, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ; \delta'; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
+}~{\textbf{S-WHILE}}
+$}
+}
+\jl{
+Unfolding the definition, we need to show:
+\[\varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c'}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}] = \delta (\vars{\bexpr}) \cup \delta(\fv{c} ) \]
+We can similarly show that $\varssa{\ssa{\bexpr}} = \delta(\vars{b})$ as in the if case. We still need to show that: 
+\[
+ \fvssa{\ssa{c_1[\bar{x}' / \bar{x_1}]}}[ \ssa{ \bar{x_1} } / \ssa{\bar{x}'}] =  \delta(\fv{c} )
+\]
+It is proved by induction hypothesis on $  { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$.\\
+}
 \caseL{Case 
 $\todomath{
 \inferrule{
@@ -1546,7 +1574,212 @@ Unfold the definition, we want to show that $$\forall x  \in ( \dom(\delta) \cup
     \item For variable $k \in \dom(\delta)- \bar{x} - \bar{y}-\bar{z}$. From our assumption $ m = \delta^{-1}(\ssa{m})$, we can show $(\delta(k), m(k) ) \in \ssa{m}$. We know that $k$ is not written in either branch from our definition, so $(\delta(k), m'(k) ) \in \ssa{m_1} $ .
 \end{enumerate}
 
-
+\jl{
+\caseL{
+	Case
+	$
+	\inferrule{
+    { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
+     \and
+    { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
+    \\
+     {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
+    \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
+    \and 
+     {\delta' ; \bexpr \hookrightarrow \ssa{\bexpr} }
+     \and
+    {\ssa{c' = c_1[\bar{x}'/ \bar{x_1}]   } }
+    % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
+  }{ 
+  \Sigma; \delta ;  \ewhile ~ [\bexpr]^{l} ~ \edo ~ c 
+  \hookrightarrow 
+  \ssa{\ewhile ~ [\bexpr]^{l}, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ; \delta'; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
+}~{\textbf{S-WHILE}}
+$
+}
+}
+\\
+\jl{
+We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$. Suppose $ \config{m ,a} \to v_N $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
+%
+When the while loop is still running ($v_N > 0$), we have the following evaluation in the while language:
+\[
+\inferrule
+{
+ \empty
+}
+{
+\config{m, \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1} ,  t, w }
+\xrightarrow{} \config{m, c ; 
+\eif_w (b, c ; \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  \eskip),
+t, (w + l) }
+}
+~\textbf{while-b}
+\]
+which follows by the following evaluation:
+\[
+	\inferrule
+{
+ m, b \xrightarrow{} b'
+}
+{
+\config{m, \eif_w (b, c,  \eskip) ,  t, w }
+\xrightarrow{} \config{m, 
+ \eif_w (b', c,  \eskip), t, w }
+}
+~\textbf{ifw-b}
+\]
+In the corresponding ssa-form language, we have the corresponding evaluation in the same way by assuming 
+$m = \delta^{-1}(\ssa{m})$.
+%
+\[
+	\inferrule
+{
+ {n = 0 \rightarrow i = 1 }
+ \and
+ {n > 0 \rightarrow i = 2 }
+}
+{
+\config{\ssa{m},  \ssa{\ewhile ~ [\bexpr]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ,  t, w }
+\xrightarrow{} \\ \config{\ssa{m},
+\eif_w (\ssa{b[\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c[\bar{x_i}/\bar{x'}] }; \ssa{\ewhile ~ [b]^{l}, n+1, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c} ,  \eskip),
+t, (w + l) }
+}
+~\textbf{ssa-while-b}
+\]
+This evaluation is followed by the following evaluation:
+\[
+	\inferrule
+{
+ \ssa{m, b \xrightarrow{} b'}
+}
+{
+\config{\ssa{m, \eif_w (b, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n,  c_1,  c_2)} ,  t, w }
+\xrightarrow{} \config{\ssa{ m, 
+ \eif_w (b', [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n , c_1 , c_2 )}, t, w }
+}
+~\textbf{ssa-ifw-b}
+\]
+%
+Depending on if the counter $n$ is equal to $0$ or not, there are two possible execution paths (the variables $\ssa{\bar{x}}$ is replaced by the $\ssa{\bar{x_1}}$ or $\ssa{\bar{x_2}}$). We start from the first iteration (when $n =0$) when $v_N >0$. 
+}
+\jl{
+By induction hypothsis on the premise $ { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$, we know that 
+\[ \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l)  } \to^{*} \config{\ssa{{m'}, \eskip}, t'_{i}, w'  } \land m' = \delta_1^{-1}(\ssa{m'})   \]
+Hence we can conclude that:
+\[
+  \inferrule{
+   \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l) }  \to^{*} \config{\ssa{{m'}, \eskip}, t'_{1}, w'  }
+  }{
+  \config{\ssa{ {m}, c'[ \bar{x_1}/\bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t, (w + l)  }  \to^{*} \\ \config{ \ssa{{m'}, [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t'_{1}, w'  } 
+  }
+\]
+%
+Then there are two cases, 
+%
+\begin{enumerate}
+     \item  when guard in the $\eif_w$ expression evaluates to $\efalse$, the while loop terminates and exits.
+     The execution in the while language is defined in the evaluation rule $\textbf{ifw-false}$ as follows.
+     \[
+		\inferrule
+		{
+		 \empty
+		}
+		{
+		\config{m, \eif_w (\efalse, c,  \eskip) ,  t, w }
+		\xrightarrow{} \config{m, 
+		 \eskip, t, (w \setminus l) }
+		}
+		~\textbf{ifw-false}
+	\]
+%
+	The corresponding ssa-form evaluation as follows:
+	\[
+	{
+	\inferrule
+	{
+	 \ssa{\valr_N -1} = 0
+	}
+	{
+	\config{\ssa{m',  [\eloop ~ \valr_N-1, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  },  t_{1}', w' }
+	\xrightarrow{} \config{\ssa{ m'[ \bar{x} \mapsto m'(\bar{x_2}) ], [\eskip]^{l} },  t_{1}', (w' \setminus l)  }
+	}
+	~\textbf{ssa-loop-exit}
+	}
+	\]
+	We can see that both traces are not changed during the exit of the loop. We need to show that $ m' = \delta^{-1} (\ssa{m'[\bar{x} \mapsto m'(\bar{x_2})]}) $. We know that $[ \bar{x} \mapsto \bar{x_2}]$ in $\delta_1$ from the definition, so we can show that for any variable $\ssa{x_2} \in \bar{x_2}$, $( \ssa{x_2}, m'(x) ) \in \ssa{m'}$. For variables $x \in {\dom(\delta) - \bar{x} } $, the variable is not modified during the execution of $c$ so that we know $m(x) = m'(x)$, and then we can show that $(\delta(x), m'(x)) \in \ssa{m'} $ because $\delta(x)$ is not written in $\ssa{c'[\bar{x_1}/ \bar{x}']}$ .
+%
+  	\item 
+		when guard in the $\eif_w$ expression evaluates to $\etrue$, the while loop terminates and exits.
+     The execution in the while language is defined in the evaluation rule $\textbf{ifw-true}$.
+          %
+     We want to show that : assuming in the $i-th$ $(i < v_N)$ iteration, starting with $t_i$ and $w_i$ and $m_i = \delta_1^{-1}(\ssa{m_i})$ so that the low level evaluation as follows 
+     	$
+		\inferrule
+		{
+		 \empty
+		}
+		{
+		\config{m, \eif_w (\etrue, c,  \eskip) ,  t, w }
+		\xrightarrow{} \config{m, c 
+		t, (w + l) }
+		}
+		~\textbf{ifw-true}
+ 		$.
+     %
+     Then the corresponding ssa form evaluation as follows : 
+     %
+     \[ 
+     \inferrule{}{\config{\ssa{ {m_i},  [\eloop ~ (\valr_N-i), n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } } 
+     \]  
+     and $m_i = \delta^{-1}(\ssa{m_i}) $.
+     We then have the evaluation in the while language:
+     \[
+		\inferrule
+		{
+		 \empty
+		}
+		{
+		\config{m, \eif_w (\etrue, c,  \eskip) ,  t, w }
+		\xrightarrow{} \config{m, c 
+		t, (w + l) }
+		}
+		~\textbf{ifw-true}
+	\]
+	We then have the following evaluation:
+	\[
+	\inferrule
+	{
+	 \empty
+	}
+	{
+	\config{\ssa{m, \eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c_1,  c_2)} ,  t, w }
+	\xrightarrow{} \config{\ssa{m, c_1 }
+	t, (w + l) }
+	}
+	~\textbf{ssa-ifw-true}
+	\]
+%
+By induction hypothsis on the premise $  { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }$, we know that
+%
+\[
+\config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l)  } \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  } \land m_{i+1} = \delta_1^{-1}(\ssa{m_{i+1}})
+\]
+%
+Hence we can conclude that:
+\[
+  \inferrule{
+   \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l) }  \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  }
+  }{
+  \config{\ssa{ {m_i}, c'[ \bar{x_2}/\bar{x}'  ];  [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } 
+  }
+\]
+So we can show that before the exit of the loop after ($v_N= n $) iterations, we have $t_{n} = t_{n}$ and $m_{n} = \delta_1^{-1}(\ssa{m_{n}})$.
+ \end{enumerate}
+%
+This proof is similar when it comes to the exit as in case 1. 
+}
+%
 \caseL{Case 
 $\todomath{
 \inferrule{
@@ -1705,9 +1938,6 @@ Hence we can conclude that:
 So we can show that before the exit of the loop after ($v_N= n $) iterations, we have $t_{n} = t_{n}$ and $m_{n} = \delta_1^{-1}(\ssa{m_{n}})$.
 This proof is similar when it comes to the exit as in case 1. 
  \end{enumerate}
-
-
-
  \end{itemize}
  
 \end{proof}
@@ -4317,6 +4547,8 @@ l_1^{5} &  1 \\
 \end{matrix} \right ]
 }
 \]
+\newpage
+
 \begin{center}
 
 \todo{
@@ -4364,6 +4596,8 @@ l_1^{5} &  1 \\
 \end{center}
 \end{example}
 %
+\newpage
+
 %
 \begin{example}[Multi-Round Algorithm]
 % \[
@@ -4540,6 +4774,7 @@ i_2^7 & 2
 \]
 }
 
+\newpage
 \begin{center}
 %
 \todo{
@@ -4612,6 +4847,7 @@ i_2^7 & 2
 }
 \end{center}
 %
+\newpage
 %
 $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution traces.
 \todo{
