@@ -136,7 +136,7 @@ The key component of the system is an program analysis procedure, which provides
 \mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
 \mbox{Trace} & t & ::= & [] ~|~ \jl{{(q(v_q)^l  ) :: t}} \\
 \mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{ q(v_q)^l  \} }
+::= & \jl{\{( {\tt query}(v_q), l, w) \} }
 \end{array}
 \]
 %
@@ -623,25 +623,25 @@ l_1 < l_2 }
 Query may dependency.
 \\
 \jl{(Updated Definition)
-One query $q({v_q}_1)$ may depend on another query $q({v_q}_2)$ in a program $c$, with a starting loop maps $w$, a starting memory $m$, hidden database $D$, denoted as 
+One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $c$, with a starting memory $m$ and  hidden database $D$, denoted as 
 \\
-$\mathsf{DEP}(q({v_q}_1)^{(l_1, w_1)}, q({v_q}_2)^{(l_2, w_2)}, c,w, m, D)$ is defined below. 
+$\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defined below. 
 }
 \jl{
 \[
 \begin{array}{l}
-\forall  t. \exists m_1,m_3,t_1,t_3,c_2.\\
+\exists m_1,m_3,t_1,t_3,c_2,v_1.\\
   \left (\begin{array}{l}   
-\config{m, c,  t,w} \rightarrow^{*} \config{m_1, [\assign{x}{q({v_q}_1)}]^{l_1} ; c_2,
-  t_1,w_1} \rightarrow \\ \config{m_1[q({v_q}_1)(D)/x], c_2,
-  t_1++[q({v_q}_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{m_3, \eskip,
+\config{m, c, \emptyset ,\emptyset} \rightarrow^{*} \config{m_1, [\assign{x}{{\tt query}({\alpha}_1)}]^{l_1} ; c_2,
+  t_1, w_1} \rightarrow^{queryR} \\ \config{m_1[v_1/x], c_2,
+  t_1++[({\alpha}_1,l_1, w_1)], w_1} \rightarrow^{*} \config{m_3, \eskip,
   t_3,w_3} \\  
-  \land \\
-\Big( q({v_q}_1)^{(l_1,w_1)} \in_{q} (t_3-t) \land q({v_q}_2)^{(l_2,w_2)} \in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(q({v_q}_1)), m_3', t_3', w_3'.  \\
- \config{m_1[v/x], {c_2}, t_1++[q({v_q}_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land (q({v_q}_2)^{(l_2,w_2)}) \not \in_{q} (t_3'-t_1)
+ \land\\
+  \Big( ({\alpha}_2,l_2,w_2) \in_{q} (t_3-t_1) \\ \implies  \exists v \in C, v \neq v_1, m_3', t_3', w_3'.  \\
+ \config{m_1[v/x], {c_2}, t_1++[({\alpha}_1,l_1,w_1)], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land ({\alpha}_2,l_2,w_2) \not \in_{q} (t_3'-t_1)
 \Big)\\
 \land \\
-\Big(q({v_q}_1)^{(l_1,w_1)} \in_{q} (t_3-t) \land q({v_q}_2)^{(l_2,w_2)} \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(q({v_q}_1)),  m_3', t_3', w_3'. \\
+\Big( q({v_q}_2)^{(l_2,w_2)} \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(q({v_q}_1)),  m_3', t_3', w_3'. \\
  \config{m_1[v/x], {c_2}, t_1++[q({v_q}_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land (q({v_q}_2)^{(l_2,w_2)})  \in_{q} (t_3'-t_1)
 \Big)
 \end{array} \right )
