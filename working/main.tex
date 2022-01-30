@@ -102,7 +102,7 @@ The key component of the system is an program analysis procedure, which provides
 %
 \[
 \begin{array}{llll}
- \mbox{Arithmatic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
+ \mbox{Arithmetic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
 %
 ~|~ \div \\  
   \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
@@ -697,164 +697,57 @@ A(c, D, m) =
 $$
 }
 \end{defn}
-% \noindent
-% In following examples:
-% \[
-% c_1 \triangleq
-% \begin{array}{l}
-%      \left[x \leftarrow q_1 \right]^1; \\
-%      \eif \; (x ==0)^{2} \; \\
-%     \mathsf{then} \; \left[y \leftarrow q_2 \right]^3\; \\
-%     \mathsf{else} \; \left[y \leftarrow 0 \right]^4 ; \\
-%     \eif \; (x == 1 )^5\; \\
-%     \mathsf{then} \; \left[ y \leftarrow 0 \right]^6\; \\
-%     \mathsf{else} \; \left[y \leftarrow q_2 \right]^7\\
-% \end{array}
-% %
-% %
-% \hspace{20pt}
-% %
-% c_2 \triangleq
-% \begin{array}{l}
-%   \left[ x \leftarrow q_1 \right]^1; \\
-%   \left[y \leftarrow q_2\right]^2 ; \\
-%     \eif \;( x + y == 5 )^3\; \\
-%     \mathsf{then} \;\left[ z \leftarrow q_3\right]^4 \; \\
-%     \mathsf{else} \;\left[ \eskip\right]^5 ; \\
-%   \left[ w \leftarrow q_4 \right]^6; \\
-% \end{array}
-% \hspace{20pt}
-% %
-% c_3 \triangleq
-% \begin{array}{l}
-%      \left[x \leftarrow q_1 \right]^1 ; \\
-%     \eloop ~ [100]^{2} ~ \edo
-%     \\
-%     ~ \Big( 
-%     \left[y \leftarrow q_2 \right]^3; \\
-%     \left[z \leftarrow q_3 \right]^4; \\
-%     \left[x \leftarrow y_1 + z_1 + x_2 \right]^5
-%     \Big) ;
-% \end{array}
-% %
-% \hspace{20pt}
-% %
-% \]
-% % \[
-% % c_4 \triangleq
-% % \begin{array}{l}
-% %      \left[x_1 \leftarrow q_1 \right]^1 ; \\
-% %   \eloop ~ [100]^{2} ~\\
-% %     ( ) ~ \edo
-% %     \\
-% %     \left[y_1 \leftarrow q_2 + x_1 \right]^3; \\
-% %     \eloop ~ [50]^{4} ~\\
-% %     ( x_2 = f(x_1,x_3) ; y_2 = f(y_1, y_3) ) ~ \edo  \bigg( 
-% %       \\
-% %     \left[z_1 \leftarrow q_3 \right]^5; \\
-% %     \left[y_3 \leftarrow y_2 + z_1 \right]^6;
-% %     \\
-% %     \left[x_3 \leftarrow y_3 + x_2 \right]^7
-% %     \Big ) 
-% % \end{array}
-% % \]
-% We have the dependency as:
-% \\
-% In program $c_1$:
-% $\mathsf{IND}(q_2^3, q_2^7, c_1)$, 
-% \\
-% In program $c_2$:
-% $\mathsf{IND}(q_1^1, q_2^2, c_2)$,
-% $\mathsf{IND}(q_3^3, q_4^4, c_2)$,
-% $\mathsf{IND}(q_1^1, q_4^4, c_2)$,
-% $\mathsf{IND}(q_2^2, q_4^4, c_2)$,
-% \\
-% In program $c_3$: $ \mathsf{IND}(q_1^{(1,\emptyset)}), q_2^{(3, l)} , c_3 ),  
-% \mathsf{IND}(q_1^{(1,\emptyset)}), q_3^{(4, l)} , c_3 ), 
-% \mathsf{IND}(q_2^{(3, l)}, q_3^{(4, l)}, c_3)$ for all $l$.
-% \\
-% In program $c_4$: No independent queries.
 %
-
+We proved some useful properties for our language.
+\begin{lem}
+[Trace Monotonicity].
+\\
+\jl{
+for any program $c$ with a tarting memory $m$, trace $t$ and while label $w$, if 
+$  
+\config{m, c, t, w} 
+\rightarrow^{*} 
+\config{m, c', t', w'} 
+$ by the operational semantics, then we have
+\[
+	t' \geq t
+\]
+}
+\end{lem}
 %
-% \paragraph{Dependency between multiple queries }
-% %
-% \begin{defn}[Dependency Graph]
-% A dependency graph over a program $P$ is defined as $G(P) = (V, E, \vend )$, where $V$ is set of verticals and $E$ is the set of directed edges:
-% \\
-% %
-%     $V = \{q_1, q_2, \cdots, q_n \}$, where $q_1, q_2, \cdots, q_n$ are reachable queries in the program $P$.
-%     %
-% \\
-% %
-% E = $\{  (q_{i}, q_{j}) | \exists m. \mathsf{Dep}(q_i, q_{j}, P, m)  \} $ , in the program $P$.
-% %
-% \\
-% %
-% $\vend = \{q_{e_1}, \cdots, q_{e_l}\}$ be the set of queries related to the return value.
-% \end{defn}
-% %
-% \begin{defn}[Reachable Query].
-% A query $q$ in program $P$ is reachable iff $q$ may be executed.
-% \end{defn}
-% %
-% %
-% %
-% \begin{defn}[Adaptivity]
-% Given a program $P$ and its dependency graph $G(P) = (V, E, \vend)$, the adaptivity of the program is defined as $A(P)$, s.t.:
-% for every $q_i \in \vend$, let $p_i$ be the longest path starting from $q_i$ with length $l_i$,
-% %
-% $$A(P) = \max\limits_{q_i \in \vend}\{l_i ~|~ l_i = |p_i| \}$$
-% \end{defn}
+\begin{proof}
+\jl{
+Proof is obvious by induction on the operational semantics rules.
+}
+\end{proof}
 %
+\begin{lem}
+[Semi-Determination].
+\\
+\jl{
+for any program $c$ with a tarting memory $m$, trace $t$ and while label $w$, 
+if program $c$ contains neither  
+$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ of any $\qexpr$ and $\qval$, then
 %
+$$
+\config{m, c, t, w} 
+\rightarrow^{*} 
+\config{m_1, \eskip, t_1, w_1} 
+\land 
+\config{m, c, t, w} 
+\rightarrow^{*} 
+\config{m_2, \eskip, t_2, w_2} 
+\implies
+(m_1 = m_2 \land t_1 = t_2 \land w_1 = w_2)
+ $$ 
+}
+\end{lem}
 %
-% \begin{example}
-% \textbf{Dependency graphs for programs containing 3 atomic queries}
-% \\
-% Let $q_1 \triangleq \lambda D. D_1 * D_j$, 
-% $q_2  \triangleq \lambda D. D_3 * D_4  $ and $q_3 \triangleq \lambda D. D_3 * D_2 $. 
-% in program $c_1$ and $c_2$ as follows:\\
-% %
-% \[
-% c_1 \triangleq
-% \begin{array}{l}
-%       \left[\assign{w}{100} \right]^0 ; \\
-%       \left[\assign{x}{q_1} \right]^1 ; \\
-%   \eif( \left[w > 1 \right]^2)\\
-%   \ethen \left[ \assign{y}{q_2} \right]^3 ; \\
-%      \eelse \left[\assign{z}{q_3} \right]^4
-% \end{array}
-% \hspace{2cm}
-% c_2 \triangleq
-% \begin{array}{l}
-%       \left[\assign{x}{q_1} \right]^1 ; \\
-%   \eif( \left[x > 1 \right]^2)\\
-%   \ethen \left[ \assign{y}{q_2} \right]^3 ; \\
-%      \eelse \left[\assign{z}{10} \right]^4
-% \end{array}
-% \]
-% % \\
-% \begin{center}
-% %
-% \begin{tikzpicture}
-% \filldraw[black] (10, 2) circle (2pt) node[anchor=south]{$q_2^3$};
-% \filldraw[black] (12, 2) circle (2pt) node[anchor=south]{$q_1^1$};
-% \filldraw[black] (12, 0) circle (2pt) node[anchor=north]{$q_3^4$} ;
-% \end{tikzpicture}
-% %
-% \hspace{2cm}
-% \begin{tikzpicture}
-% \filldraw[black] (27, 0) circle (2pt);
-% \filldraw[black] (30, 2) circle (2pt);
-% \draw[very thick,->] (27, 0)node[anchor=north]{$q_2^3$}  -- (30, 2) node[anchor=south]{$q_1^1$};
-% \draw[very thick, red, ->, dashed] (27, 0.2) -- (29.8, 2);
-% \end{tikzpicture}
-% \end{center}
-% %
-% \end{example}
-%
-%
+\begin{proof}
+\jl{
+Proof is obvious by induction on the operational semantics rules.
+}
+\end{proof}
 %
 \clearpage
 
@@ -863,7 +756,7 @@ $$
 \paragraph{Syntax of the SSA-form}
 \[
 \begin{array}{llll}
- \mbox{Arithmatic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
+ \mbox{Arithmetic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
 %
 ~|~ \div \\  
   \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
@@ -4980,7 +4873,7 @@ $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution
 % \paragraph{Syntax.}
 % \[
 % \begin{array}{llll}
-%  \mbox{Arithmatic Operators} & *_a & ::= & + ~|~ - ~|~ \times 
+%  \mbox{Arithmetic Operators} & *_a & ::= & + ~|~ - ~|~ \times 
 % %
 % ~|~ \div \\  
 %   \mbox{Boolean Operators} & *_b & ::= & \lor \sep \land \\
