@@ -143,6 +143,10 @@ The key component of the system is an program analysis procedure, which provides
 %
 \mbox{\jl{While Label}}
 & w & ::= & \jl{[] |  w[\mathbb{N} \to \mathbb{N}]}
+\\
+%
+\mbox{\jl{Query Domain}}
+& \qdom & ::= & \jl{[-1,1]}
 \end{array}
 \]
 %
@@ -592,34 +596,13 @@ where \\
 }
 \end{defn}
 %
-% \begin{defn}[Query may dependency ]
-% One query $q_1(v_1)$ may depend on another query $q_2(v_2)$ in a program $c$, with a starting loop maps $w$, denoted as
-% $\mathsf{DEP}(q_1(v_1)^{(l_1, w_1)}, q_2(v_2)^{(l_2, w_2)}, c,w)$ is defined as below. 
-% \[
-%   \begin{array}{l}
-%      \forall  t. \exists m_1,m_3,t_1,t_3.
-% \config{m, c,  t,w} \rightarrow^{*} \config{m_1, [\assign{x}{q_1(v_1)}]^{l_1} ; c_2,
-%   t_1,w_1} \rightarrow \\ \config{m_1[q_1(v_1)(D)/x], c_2,
-%   t_1++[q_1(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{m_3, \eskip,
-%   t_3,w_3} \\  
-%   \land 
-% \Big( q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \in (t_3-t_1) \implies  \exists v \in \codom(q_1(v_1)), m_3', t_3', w_3'.  \\
-%  \config{m_1[v/x], {c_2}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \land (q_2(v_2)^{(l_2,w_2)}) \not \in (t_3'-t_1)
-% \Big)\\
-% \land 
-% \Big(q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \not\in (t_3-t_1) \implies  \exists v \in \codom(q_1(v_1)),  m_3', t_3', w_3'. \\
-%  \config{m_1[v/x], {c_2}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \land (q_2(v_2)^{(l_2,w_2)})  \in (t_3'-t_1)
-% \Big)\\
-% \end{array}
-% \]
-% \end{defn}
-
+%
 \begin{defn}
 Query may dependency.
 \\
-\jl{(Updated Definition)
+\jl{
 One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $c$, with a starting memory $m$ and  hidden database $D$, denoted as 
-\\
+%
 $\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defined below. 
 }
 \jl{
@@ -627,45 +610,70 @@ $\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defin
 \begin{array}{l}
 \exists m_1,m_3,t_1,t_3,c_2,v_1.\\
   \left (\begin{array}{l}   
-\config{m, c, \emptyset ,\emptyset} \rightarrow^{*} \config{m_1, [\assign{x}{{\tt query}({\alpha}_1)}]^{l_1} ; c_2,
-  t_1, w_1} \rightarrow^{queryR} \\ \config{m_1[v_1/x], c_2,
-  t_1++[({\alpha}_1,l_1, w_1)], w_1} \rightarrow^{*} \config{m_3, \eskip,
-  t_3,w_3} \\  
- \land\\
-  \Big( ({\alpha}_2,l_2,w_2) \in_{q} (t_3-t_1) \\ \implies  \exists v \in C, v \neq v_1, m_3', t_3', w_3'.  \\
- \config{m_1[v/x], {c_2}, t_1++[({\alpha}_1,l_1,w_1)], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land ({\alpha}_2,l_2,w_2) \not \in_{q} (t_3'-t_1)
-\Big)\\
-\land \\
-\Big( \query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)),  m_3', t_3', w_3'. \\
- \config{m_1[v/x], {c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1)
-\Big)
+\config{m, c, \emptyset ,\emptyset} \rightarrow^{*} 
+\config{m_1, [\assign{x}{\query({\alpha}_1)}]^{l_1} ; c_2,
+  t_1, w_1} 
+\rightarrow^{\textbf{query-v}} 
+\\ 
+\config{m_1[v_1/x], c_2,
+(\query({\alpha}_1),l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{m_3, \eskip,
+t_3,w_3}
+  % 
+ \\ \land
+  \left( 
+  \begin{array}{l}
+  ({\alpha}_2,l_2,w_2) \in_{q} (t_3-t_1) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
+  \config{m_1[v/x], {c_2}, (\query({\alpha}_1),l_1, w_1)::t_1, w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{m_3', \eskip, t_3', w_3'} 
+  \land 
+  ({\alpha}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
+\end{array} \right )
+\\\land
+\left( 
+  \begin{array}{l}
+	\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
+	\config{m_1[v/x], {c_2}, (\query({\qval}_1),l_1,w_1)::t_1, w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{m_3', \eskip, t_3', w_3'} 
+	\land 
+	(\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1))
+\end{array} \right )
 \end{array} \right )
 \end{array}
 \]
 }
 \end{defn}
-
-% \begin{defn}
-% Dependency Graph.
-% \\
-% Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the dependency graph $G_{low}(c,D,m,w) = (V, E)$ is defined as: \\
-% $V =\{\query(v), l,w \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land \query(v), l,w \in {(t'-t)}  \}$.
-% \\
-% $E = \left\{(\query(v),l,w),q'(v'), (l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
-% ~ \left \vert ~ \mathsf{DEP}(\query(v),l,w),q'(v'), (l',w')}, c,w,m,D)
-% \land \mathsf{To}(\query(v),l,w), \query(v'),l',w') \right.\right\}$.
-% \end{defn}
 %
 %
 \begin{defn}
 Trace-based Dependency Graph
 \\
  \jl{
-Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the trace-based dependency graph $G(c,D,m,w) = (V, E)$ is defined as: \\
-$V =\{\query({\qval}), l,w \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land \query({\qval}), l,w \in {(t'-t)}  \}$.
+Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (V, E)$ is defined as: 
 \\
-$E = \left\{(\query({\qval}),l,w),\query({\qval}'),l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
-~ \left \vert ~ \mathsf{DEP}(\query({\qval}'),l',w'),\query({\qval}),l,w), c,w,m,D)
+$V =\{({\qval}, l,w) \in \mathcal{AQ} \mid 
+\exists m',  w', t'.  
+\config{m ,c, \emptyset, \emptyset}  
+\to^{*}  
+\config{m' , \eskip, t', w' }  
+\land (\query({\qval}), l, w) \in t'  \}$.
+\\
+$E = \left\{(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
+~ \left \vert ~ 
+\mathsf{DEP}((({\qval}'),l',w'),(({\qval}),l,w)),c,m,D)
  \right.\right\}$.
  }
 \end{defn}
@@ -678,9 +686,15 @@ from $(\query(\qval),l,w) $ to $(\query({\qval}'),l'.w')$.
 Adaptivity from a trace-based dependency graph.
 \\
 \jl{
-Given a program $c$, and a meory $m$, a database $D$, the adaptivity of the dependency graph $G_{low}(c, D,m,w) = (V, E)$ is the length of the longest path in the graph. We denote the path from $q_i^{(l,w)}$ to $q_j^{(l',w')}$ as $p(q_i^{(l,w)}, q_j^{(l',w')} )$. 
+Given a program $c$, and a memory $m$, a database $D$, 
+the adaptivity of the trace-based dependency graph $G(c,D,m) = (V, E)$ is the length of the longest path in the graph. 
+We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p(({\qval},l,w),({\qval}',l',w'))$. 
 %
-$$A^*(c, D, m ,w) = \max\limits_{q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')} \in V }\{ |p(q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')})| \}$$
+$$
+A(c, D, m) = 
+\max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
+\{ |p(({\qval},l,w),({\qval}',l',w'))| \}
+$$
 }
 \end{defn}
 % \noindent
@@ -879,7 +893,7 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')} \in V
 \mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
 %
 % ~|~ [\eswitch( \ssa{\expr}, \ssa{x}, \ssa{v_i} \to \ssa{ q_i})]^{l} 
-~|~  {{ifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
+~|~  {\jl{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
 &&& 
 [\eloop ~ \saexpr, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} 
 ~~~
@@ -1522,7 +1536,7 @@ We use the corresponding rule $\textbf{SSA-IF-T}$.
 }
 {
 \config{\ssa{ { m} , [\eif(\etrue, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , [\bar{\ssa{y}}', \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}}', \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{c_1, c_2})]^{l}},t,w} 
-\xrightarrow{} \\ \config{\ssa{ m, c_1}; ifvar(\ssa{\bar{x}', \bar{x_1}});ifvar(\ssa{\bar{y}', \bar{y_2}});ifvar(\ssa{\bar{z}', \bar{z_1}}),  t,w } 
+\xrightarrow{} \\ \config{\ssa{ m, c_1}; \eifvar(\ssa{\bar{x}', \bar{x_1}});\eifvar(\ssa{\bar{y}', \bar{y_2}});\eifvar(\ssa{\bar{z}', \bar{z_1}}),  t,w } 
 }~\textbf{ssa-if-t}
 \]
 By induction hypothesis on $ \Sigma;\delta ; c_1 \hookrightarrow  \ssa{c_1}; \delta_1;\Sigma_1$, and we know that $\config{m, c_1,  t,w} \to^{*} \config{m', \eskip, t', w'} $, from our assumption that $ m =\delta^{-1}(\ssa{m})$, we know that 
@@ -1534,7 +1548,7 @@ and we then have:
   \config{\ssa{ { m}, c_1},  t,w} \to^{*} \config{ \ssa{ { m_1 }, \eskip,} t', w' }
 }
 {
- \config{\ssa{  m, c_1;} ifvar(\ssa{\bar{x}', \bar{x_1})};ifvar(\ssa{\bar{y}', \bar{y_1})};ifvar(\ssa{\bar{z}', \bar{z_1})},  t,w  }  \to^{*}
+ \config{\ssa{  m, c_1;} \eifvar(\ssa{\bar{x}', \bar{x_1})};\eifvar(\ssa{\bar{y}', \bar{y_1})};\eifvar(\ssa{\bar{z}', \bar{z_1})},  t,w  }  \to^{*}
  \config{\ssa{ { m_1 [ \bar{x}' \mapsto {m_1}(\bar{x_1}),\bar{y}' \mapsto {m_1}(\bar{y_2}),\bar{z}' \mapsto {m_1}(\bar{z_1}) ] }, \eskip}, t', w'  }
 }
 \]
@@ -1913,86 +1927,116 @@ So we can show that before the exit of the loop after ($v_N= n $) iterations, we
 This proof is similar when it comes to the exit as in case 1. 
  \end{enumerate}
  \end{itemize}
- 
+%
+%
 \end{proof}
-
-
-% \begin{defn}[Query may dependency in SSA ]
-% One query ${\query(v_2)}$ \emph{may depend} on another query ${\query(v_1)}$ in a program $\ssa{c}$, with a starting loop maps $w$, denoted as
-%  $\mathsf{DEP_{ssa}}({\query(v_1)}^{(l_1, w_1)}, {\query(v_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
- 
-%  is defined as below. 
-% \[
-%   \begin{array}{l}
-%      \forall t. \exists \ssa{m_1,m_3},t_1,t_3. 
-% \config{\ssa{m, c},  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{\query(v_1)}]^{l_1} ; \ssa{c_2},
-%   t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[\query(v_1)(D)/\ssa{x}], \ssa{c_2},
-%   t_1++[\query(v_1),l_1, w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
-%   t_3,w_3} \\  
-%   \land 
-% \Big( \query(v_1),l_1,w_1) \in (t_3-t) \land \query(v_2),l_2,w_2) \in (t_3-t_1) \implies  \exists v \in \codom(\query(v_1)),\ssa{m_3'}, t_3', w_3'. \\
-%  \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[(\query(v_1),l_1,w_1))], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (\query(v_2),l_2,w_2)) \not \in (t_3'-t_1)
-% \Big)\\
-% \land 
-% \Big(\query(v_1),l_1,w_1) \in (t_3-t) \land \query(v_2),l_2,w_2) \not\in (t_3-t_1) \implies  \exists v \in \codom(\query(v_1)),\ssa{m_3'}, t_3', w_3'. \\
-%  \config{\ssa{m_1}[v/\ssa{x}], {c_2}, t_1++[(\query(v_1),l_1,w_1))], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (\query(v_2),l_2,w_2))  \in (t_3'-t_1)
-% \Big)\\
-% \end{array}
-% \]
-% \end{defn}
-
+%
+%
 \begin{defn}
 Query may dependency in SSA language.
 \\
 \jl{
-One query ${\query({\qval}_2)}$ \emph{may depend} on another query ${\query({\qval}_1)}$ in a program $\ssa{c}$,  with a starting loop maps $w$, a starting memory $\ssa{m}$, hidden database $D$, denoted as \\
- $\mathsf{DEP_{ssa}}({\query({\qval}_1)}^{(l_1, w_1)}, {\query({\qval}_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
- \[
+One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
+%
+$\mathsf{DEP}_{ssa}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), \ssa{c}, \ssa{m}, D)$ is defined below. 
+%
+%
+\[
 \begin{array}{l}
-\forall  t. \exists \ssa{m_1},\ssa{m_3},t_1,t_3,c_2.\\
+\exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
   \left (\begin{array}{l}   
-\config{\ssa{m}, c,  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{\query({\qval}_1)}]^{l_1} ; \ssa{c_2},
-  t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[\query({\qval}_1)(D)/\ssa{x}], \ssa{c_2},
-  t_1++[\query({\qval}_1),l_1, w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
-  t_3,w_3} \\  
-  \land \\
-\Big( \query({\qval}_1),l_1,w_1) \in_{q} (t_3-t) \land \query({\qval}_2),l_2,w_2) \in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)), \ssa{m_3'}, t_3', w_3'.  \\
- \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2)) \not \in_{q} (t_3'-t_1)
-\Big)\\
-\land \\
-\Big(\query({\qval}_1),l_1,w_1) \in_{q} (t_3-t) \land \query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)),  \ssa{m_3'}, t_3', w_3'. \\
- \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1)
-\Big)
+\config{\ssa{m}, \ssa{c}, \emptyset ,\emptyset} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{x}{\query({\alpha}_1)}]^{l_1} ; c_2,
+  t_1, w_1} 
+\\ 
+\rightarrow^{\textbf{{ssa-query-v}}} 
+\config{\ssa{m}_1[v_1/x], c_2,
+(\query({\alpha}_1),l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
+t_3,w_3}
+  % 
+ \\ \land
+  \left( 
+  \begin{array}{l}
+  ({\alpha}_2,l_2,w_2) \in_{q} (t_3-t_1) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. ~  
+  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\alpha}_1),l_1, w_1)::t_1, w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
+  \land 
+  ({\alpha}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
+\end{array} \right )
+\\\land
+\left( 
+  \begin{array}{l}
+	\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
+	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\qval}_1),l_1,w_1)::t_1, w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
+	\land 
+	(\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1))
+\end{array} \right )
 \end{array} \right )
 \end{array}
 \]
 }
+% \jl{
+% One query ${\query({\qval}_2)}$ \emph{may depend} on another query ${\query({\qval}_1)}$ in a program $\ssa{c}$,  with a starting loop maps $w$, a starting memory $\ssa{m}$, hidden database $D$, denoted as \\
+%  $\mathsf{DEP_{ssa}}({\query({\qval}_1)}^{(l_1, w_1)}, {\query({\qval}_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
+%  \[
+% \begin{array}{l}
+% \forall  t. \exists \ssa{m_1},\ssa{m_3},t_1,t_3,c_2.\\
+%   \left (\begin{array}{l}   
+% \config{\ssa{m}, c,  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{\query({\qval}_1)}]^{l_1} ; \ssa{c_2},
+%   t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[\query({\qval}_1)(D)/\ssa{x}], \ssa{c_2},
+%   t_1++[\query({\qval}_1),l_1, w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
+%   t_3,w_3} \\  
+%   \land \\
+% \Big( \query({\qval}_1),l_1,w_1) \in_{q} (t_3-t) \land \query({\qval}_2),l_2,w_2) \in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)), \ssa{m_3'}, t_3', w_3'.  \\
+%  \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2)) \not \in_{q} (t_3'-t_1)
+% \Big)\\
+% \land \\
+% \Big(\query({\qval}_1),l_1,w_1) \in_{q} (t_3-t) \land \query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)),  \ssa{m_3'}, t_3', w_3'. \\
+%  \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1)
+% \Big)
+% \end{array} \right )
+% \end{array}
+% \]
+% }
 \end{defn}
 
-% \begin{defn}
-% [Dependency Graph in SSA].
-% \\
-% Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$, an initial loop maps $w$, the dependency graph $G_{s}(\ssa{c},D,\ssa{m},w) = (V, E)$ is defined as: \\
-% $V =\{\query(v), l,w \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land \query(v), l,w \in {(t'-t)}  \}$.
-% \\
-% $E = \left\{(\query(v),l,w),\query(v'),l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
-% ~ \left \vert ~ \begin{array}{l}
-%   \mathsf{DEP_{ssa}}(\query(v'),l',w'),\query(v),l,w), \ssa{c},w,\ssa{m},D)     
-% \end{array} \right. 
-% \right\}$.
-% \end{defn}
 
 \begin{defn}
 SSA-based Dependency Graph.
 \\
-\jl{Updated Definition \\
-Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$, an initial loop maps $w$, the dependency graph $G_{s}(\ssa{c},D,\ssa{m},w) = (V, E)$ is defined as: \\
-$V =\{\query({\qval}), l,w \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land \query({\qval}), l,w \in {(t'-t)}  \}$.
+\jl{
+Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
+the dependency graph $G_{s}(\ssa{c},D,\ssa{m}) = (V, E)$ is defined as: \\
+$V =\{(({\qval}), l, w) \in \mathcal{AQ} 
+\mid 
+\exists \ssa{m'},  w', t'.  
+\config{\ssa{m} ,\ssa{c}, \emptyset, \emptyset}  
+\to^{*}  
+\config{\ssa{m'} , \eskip, t', w' }  
+\land \query({\qval}), l, w \in {t'}  \}$.
 \\
-$E = \left\{(\query({\qval}),l,w),\query({\qval}'),l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
-~ \left \vert ~ \begin{array}{l}
-  \mathsf{DEP_{ssa}}(\query({\qval}'),l',w'),\query({\qval}),l,w), \ssa{c},w,\ssa{m},D)     
-\end{array} \right. 
+$E = \left\{
+(({\qval},l, w), ({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
+% ~ \left \vert ~ 
+% \begin{array}{l}
+  \mathsf{DEP_{ssa}}(({\qval}',l',w'),({\qval},l,w)), \ssa{c},w,\ssa{m},D)     
+% \end{array} \right. 
 \right\}$.
 }
 \end{defn}
@@ -2004,12 +2048,16 @@ $E = \left\{(\query({\qval}),l,w),\query({\qval}'),l',w')) \in \mathcal{AQ} \tim
 Adaptivity from SSA-based Dependency Graph.
 \\
 \jl{
-Given a program $\ssa{c}$, and a meory $\ssa{m}$, a database $D$, a starting loop maps $w$, 
-the adaptivity of the dependency graph $G_s(\ssa{c}, D,\ssa{m},w) = (V, E)$ is the length of the longest path in this graph. We denote the path from 
-$(\query({\qval}),l,w)$ to $(\query({\qval}'),l',w')$ as $p_s(\query({\qval}),l,w), \query({\qval}'),l',w') )$. 
-The adaptivity denoted as $A_s(\ssa{c}, D, \ssa{m}, w)$.
+Given a program $\ssa{c}$, and a memory $\ssa{m}$, a database $D$, 
+the adaptivity of the SSA-based dependency graph 
+$G_s(\ssa{c}, D,\ssa{m}) = (V, E)$ is the length of the longest path in the graph. 
+We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p_s(({\qval},l,w),({\qval}',l',w'))$. 
 %
-$$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{\query({\qval}),l,w),\query({\qval}'),l',w') \in V } |p_s(\query({\qval}),l,w), \query({\qval}'),l',w') )| $$
+$$
+A_s(\ssa{c}, D, \ssa{m}) = 
+\max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
+\{ |p_s(({\qval},l,w),({\qval}',l',w'))| \}
+$$
 }
 \end{defn}
 
@@ -2082,7 +2130,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % }
 % {
 % \config{\ssa{ { m} , [\eif(\etrue, [\bar{\ssa{x'}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , c_1, c_2)]^{l},t,w}} 
-% \xrightarrow{} \config{\ssa{ m, c_1}; ifvar(\ssa{\bar{x'}, \bar{x_1}}), \ssa{ t,w} } 
+% \xrightarrow{} \config{\ssa{ m, c_1}; \eifvar(\ssa{\bar{x'}, \bar{x_1}}), \ssa{ t,w} } 
 % }~\textbf{ssa-if-t}
 % \]
 % and we then have:
@@ -2092,7 +2140,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 %   \config{\ssa{ { m}, c_1,  t,w}} \to^{*} \config{ \ssa{ { m' }, \eskip, t', w' }}
 % }
 % {
-%  \config{\ssa{ { m}, c_1;} ifvar(\ssa{\bar{x'}, \bar{x_1}),  t,w } }  \to^{*}
+%  \config{\ssa{ { m}, c_1;} \eifvar(\ssa{\bar{x'}, \bar{x_1}),  t,w } }  \to^{*}
 %  \config{\ssa{ { m' [  {m'}(\bar{x_1}) / \bar{x'}] }, \eskip, t', w' } }
 % }
 % \]
@@ -2197,7 +2245,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 %  \end{itemize}
  % \end{proof}
 \subsection{Operational Semantics for SSA Language}
-the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time, which is a map from ssa variable $\ssa{x}$ to variable $\ssa{x_i}$. This map is designed for if condition, when the variable may comes from two branches and this command records which branch the variable comes from. 
+the command $\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time, which is a map from ssa variable $\ssa{x}$ to variable $\ssa{x_i}$. This map is designed for if condition, when the variable may comes from two branches and this command records which branch the variable comes from. 
 \begin{mathpar}
 \boxed{\config{\ssa{m, a}} \xrightarrow{} \config{\ssa{a}} \;} 
 \\
@@ -2209,15 +2257,25 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 \boxed{ \config{\ssa{ m, c, t,w}} \xrightarrow{} \config{\ssa{ m', c',  t', w'}} \; }
 \and
 { Memory \times Com  \times Trace \times loop maps \Rightarrow^{}  Memory \times Com  \times Trace \times loop maps}
+\\
+\todomath{~\textbf{ssa-query-e}}
+%
 \and
 \inferrule
 {
-\ssa{\query(v)(D) = \qval} 
+\jl{
+\ssa{\query(\qval)(D) = v}}
 }
 {
-\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{\query(v)}}]^l, t, w}} \xrightarrow{} \config{\ssa{  m[  x \mapsto \qval], \eskip,  t \mathrel{++} [\query(v),l,w )],w } }
+\config{\ssa{
+m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
+}} 
+\xrightarrow{} 
+\config{\ssa{  m[  x \mapsto v], \eskip,  
+\jl{\query(\qval),l,w )::t,w }}
 }
-~\textbf{ssa-query}
+}
+~\textbf{ssa-query-v}
 %
 \and
 %
@@ -2248,7 +2306,7 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 }
 {
 \config{\ssa{m, [\eif(\etrue, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l},t,w}} 
-\xrightarrow{} \config{m, c_1; { \ ifvar(\bar{\ssa{x}},\bar{\ssa{x_1}}); ifvar(\bar{\ssa{y}},\bar{\ssa{y_2}});ifvar(\bar{\ssa{z}},\bar{\ssa{z_1}}) }  ,  t,w}
+\xrightarrow{} \config{m, c_1; { \ \eifvar(\bar{\ssa{x}},\bar{\ssa{x_1}}); \eifvar(\bar{\ssa{y}},\bar{\ssa{y_2}});\eifvar(\bar{\ssa{z}},\bar{\ssa{z_1}}) }  ,  t,w}
 }
 ~\textbf{ssa-if-t}
 %
@@ -2259,7 +2317,7 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 }
 {
 \config{\ssa{m, [\eif(\efalse, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l},t,w}} 
-\xrightarrow{} \config{m, c_2 ; { ifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); ifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});ifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}) },  t,w}
+\xrightarrow{} \config{m, c_2 ; { \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});\eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}) },  t,w}
 }
 ~\textbf{ssa-if-f}
 %
@@ -2267,8 +2325,8 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 %
 \inferrule{
 }{
- \config{ \ssa{m,} ifvar(\ssa{\bar{x}, \bar{x}'}),\ssa{ t,w }} \to \config{ \ssa{m [\bar{x} \to m(\bar{x}')], \eskip , t,w }  }
-}~\textbf{ssa-ifvar}
+ \config{ \ssa{m,} \eifvar(\ssa{\bar{x}, \bar{x}'}),\ssa{ t,w }} \to \config{ \ssa{m [\bar{x} \to m(\bar{x}')], \eskip , t,w }  }
+}~\textbf{ssa-\eifvar}
 % %
 %
 \and
@@ -2363,7 +2421,7 @@ t, (w + l) }
 {
 \config{\ssa{m, \eif_w (\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, c_1,  c_2)} ,  t, w }
 \xrightarrow{} \config{\ssa{m, 
- c_2; ifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
+ c_2; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
 }
 ~\textbf{ssa-ifw-false}
 }
