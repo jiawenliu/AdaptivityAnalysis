@@ -60,9 +60,9 @@ interested.
  
 
 We are interested in the adaptivity of mechanisms in the model, which is straightforward supported by a high level language. In this language, queries are allowed to carry arguments to simulate the process of submitting a query to the interface in
-the model, for example, the expression $q(e)$ tells us the argument $e$ is consumed to construct the
+the model, for example, the expression $\query(e)$ tells us the argument $e$ is consumed to construct the
 query. To be precise, one submitted query who needs the average of
-answers of previous queries is expressed as $q(x)$, where the variable $x$ stores
+answers of previous queries is expressed as $\query(x)$, where the variable $x$ stores
 the expected average results.This makes these mechanisms quite straightforward to express in the high level language. However, this convenience pays at the price that the adaptivity $A$ of a mechanism $P$ becomes quite tricky to estimate because the definition of dependency between two queries becomes vague in the high level language. 
 
 \[
@@ -125,18 +125,24 @@ The key component of the system is an program analysis procedure, which provides
 \mbox{Query expressions} & \qexpr & ::= 
 & \jl{ \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
 \\
-\mbox{Query Values} & v_q & ::= 
-& \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ v_q \oplus_a  v_q }
+\mbox{Query Values} & \qval & ::= 
+& \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
 \\
-\mbox{commands} & c & ::= &   \assign x \expr ~|~  \assign{x}{ q(\qexpr)}
+\mbox{commands} & c & ::= &   \assign x \expr ~|~  \assign{x}{ \query(\qexpr)}
 %
 ~|~ \\ 
 &&& \eloop ~ \aexpr  ~ \edo ~ c ~ \jl{\ewhile ~ b ~ \edo ~ c}  ~|~ c;c  ~|~ \eif(\bexpr, c, c) 	 ~|~ \eskip 
 	\\
 \mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
-\mbox{Trace} & t & ::= & [] ~|~ \jl{{(q(v_q)^l  ) :: t}} \\
+\mbox{Trace} & t & ::= & [] 
+~|~ \jl{{( \query(\qval), l, w) :: t}} \\
+%
 \mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{( {\tt query}(v_q), l, w) \} }
+::= & \jl{\{( \query(\qval), l, w) \} } 
+\\
+%
+\mbox{\jl{While Label}}
+& w & ::= & \jl{[] |  w[\mathbb{N} \to \mathbb{N}]}
 \end{array}
 \]
 %
@@ -152,7 +158,7 @@ Small step operational semantics of expressions are standard and omitted.
 % \and
 % \inferrule
 % {
-% q(D) = v 
+% \query(D) = v 
 % }
 % {
 % \config{m, [\assign{x}{q}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [q^{(l,w )}],w }
@@ -332,16 +338,12 @@ Small step operational semantics of expressions are standard and omitted.
 \begin{mathpar}
 \boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
 \\
-\jl{
-\boxed{ \config{m, c, t} \xrightarrow{} \config{m', c',  t'} \; }
-}
-\\
 \inferrule
 {
  \config{m, \expr } \xrightarrow{}  \config{m, \expr' }
 }
 {
-\config{m, [\assign x \expr]^{l},  t} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t}
+\config{m, [\assign x \expr]^{l},  t, w} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t, w}
 }
 ~\textbf{assn1}
 %
@@ -351,49 +353,10 @@ Small step operational semantics of expressions are standard and omitted.
 {
 }
 {
-\config{m, [\assign x v]^{l},  t} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t}
+\config{m, [\assign x v]^{l},  t, w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t, w}
 }
 ~\textbf{assn2}
 %
-% \and
-% {
-% \inferrule
-% {
-%  \config{m, \aexpr} \aarrow \config{m, \aexpr'}
-% }
-% {
-% \config{m, \eloop ~ [\aexpr]^{l}  ~ \edo ~ c ,  t, w }
-% \xrightarrow{} \config{m, \eloop ~ [\aexpr']^{l} ~ \edo ~ c ,  t, (w + l) }
-% }
-% ~\textbf{loop-a}
-% }
-% %
-% \and
-% %
-% {\inferrule
-% {
-%  \valr_N > 0
-% }
-% {
-% \config{m, \eloop ~ [\valr_N]^{l}  ~ \edo ~ c ,  t, w }
-% \xrightarrow{} \config{m, c ;  \eloop ~ [(\valr_N-1)]^{l} ~ \edo ~ c ,  t, (w + l) }
-% }
-% ~\textbf{loop}
-% }
-% %
-% \and
-% %
-% {
-% \inferrule
-% {
-%  \valr_N = 0
-% }
-% {
-% \config{m,  \eloop ~ [\valr_N]^{l} ~ \edo ~ c  ,  t, w }
-% \xrightarrow{} \config{m, [\eskip]^{l} ,  t, (w \setminus l) }
-% }
-% ~\textbf{loop-exit}
-% }
 \and
 %
 \jl{
@@ -402,10 +365,14 @@ Small step operational semantics of expressions are standard and omitted.
  \empty
 }
 {
-\config{m, \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1} ,  t, w }
-\xrightarrow{} \config{m, c ; 
-\eif_w (b, c ; \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  \eskip),
-t, (w + l) }
+\config{m, \ewhile ~ [b]^{l} ~ \edo ~ c, t, w }
+\xrightarrow{} 
+\config{
+m, c ; 
+\eif_w (b, c ; 
+\ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
+t, (w + l)
+}
 }
 ~\textbf{while-b}
 }
@@ -418,7 +385,9 @@ t, (w + l) }
  m, b \xrightarrow{} b'
 }
 {
-\config{m, \eif_w (b, c,  \eskip) ,  t, w }
+\config{m, 
+\eif_w (b, c, \eskip) ,  
+t, w }
 \xrightarrow{} \config{m, 
  \eif_w (b', c,  \eskip), t, w }
 }
@@ -434,9 +403,15 @@ t, (w + l) }
  \empty
 }
 {
-\config{m, \eif_w (\etrue, c,  \eskip) ,  t, w }
-\xrightarrow{} \config{m, c 
-t, (w + l) }
+\config{m, 
+\eif_w (b, 
+c ; \ewhile ~ [b]^{l} ~ \edo ~ c, 
+\eskip),
+t, w }
+\xrightarrow{} 
+\config{m, 
+c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
+t, \todomath{(w + l)} }
 }
 ~\textbf{ifw-true}
 }
@@ -449,7 +424,11 @@ t, (w + l) }
  \empty
 }
 {
-\config{m, \eif_w (\efalse, c,  \eskip) ,  t, w }
+\config{
+m, 
+\eif_w (\efalse, c; \ewhile ~ [b]^{l} ~ \edo ~ c,\eskip), 
+t, w 
+}
 \xrightarrow{} \config{m, 
  \eskip, t, (w \setminus l) }
 }
@@ -465,7 +444,8 @@ t, (w + l) }
 \config{m,\qexpr} \qarrow \config{m,\qexpr'}
 }
 {
-\config{m, [\assign{x}{q(\qexpr)}]^l, t, w} \xrightarrow{}  \config{m, [\assign{x}{q(\qexpr')}]^l, t, w}
+\config{m, [\assign{x}{\query(\qexpr)}]^l, t, w} \xrightarrow{}  
+\config{m, [\assign{x}{\query(\qexpr')}]^l, t, w}
 }
 ~\textbf{query-e}
 }
@@ -473,10 +453,12 @@ t, (w + l) }
 \jl{
 \inferrule
 {
-q(v_q) = v
+\query(\qval) = v
 }
 {
-\config{m, [\assign{x}{q(v_q)}]^l, t, w} \xrightarrow{} \config{m[ v/ x], \eskip,  t \mathrel{++} [q(v_q)^{l}],w }
+\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
+\xrightarrow{} 
+\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
 }
 ~\textbf{query-v}
 }
@@ -582,21 +564,34 @@ $mk(w_i) =MinKey(w_i) $
 \begin{defn}[Query Direction]
 Direction between two queries.
 \\
-$\forall q_1,q_2, l_1, l_2 $.
-the execution of query $q_1$ appears before query $q_2$, denoted as\\
+\jl{
+$\forall \query(\qval_1), \query(\qval_2), l_1, l_2, w_1, w_2 $.
+the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before annotated query $( \query(\qval_2), l_2, w_2)$, denoted as
+%
 \[
-\jl{\mathsf{To}(q_1^{l_1}, q_2^{(l_2)})= (q_1^{(l_1)}) <_q (q_2^{(l_2)})  
-}\]
+\mathsf{To}((\query(\qval_1), l_1, w_1), ( \query(\qval_2), l_2, w_2))
+= 
+(\query(\qval_1), l_1, w_1) 
+<_q ( \query(\qval_2), l_2, w_2)
+\]
 where \\
 \[
-\jl{
-(q_1^{(l_1)}) <_q (q_2^{(l_2, w_2)}) 
-\triangleq 
-l_1 < l_2 } 
+(\query(\qval_1), l_1, w_1) 
+<_q ( \query(\qval_2), l_2, w_2)
+ \triangleq 
+ \left\{
+ \begin{array}{ll}
+    l_1 < l_2  
+    & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2
+    \\
+    w_1 <_w w_2
+    & \mathsf{Otherwise}
+\end{array}  
+\right.
 \]
+}
 \end{defn}
 %
-
 % \begin{defn}[Query may dependency ]
 % One query $q_1(v_1)$ may depend on another query $q_2(v_2)$ in a program $c$, with a starting loop maps $w$, denoted as
 % $\mathsf{DEP}(q_1(v_1)^{(l_1, w_1)}, q_2(v_2)^{(l_2, w_2)}, c,w)$ is defined as below. 
@@ -641,8 +636,8 @@ $\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defin
  \config{m_1[v/x], {c_2}, t_1++[({\alpha}_1,l_1,w_1)], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land ({\alpha}_2,l_2,w_2) \not \in_{q} (t_3'-t_1)
 \Big)\\
 \land \\
-\Big( q({v_q}_2)^{(l_2,w_2)} \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(q({v_q}_1)),  m_3', t_3', w_3'. \\
- \config{m_1[v/x], {c_2}, t_1++[q({v_q}_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land (q({v_q}_2)^{(l_2,w_2)})  \in_{q} (t_3'-t_1)
+\Big( \query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)),  m_3', t_3', w_3'. \\
+ \config{m_1[v/x], {c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{m_3', \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1)
 \Big)
 \end{array} \right )
 \end{array}
@@ -654,11 +649,11 @@ $\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defin
 % Dependency Graph.
 % \\
 % Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the dependency graph $G_{low}(c,D,m,w) = (V, E)$ is defined as: \\
-% $V =\{q(v)^{l,w} \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land q(v)^{l,w} \in {(t'-t)}  \}$.
+% $V =\{\query(v), l,w \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land \query(v), l,w \in {(t'-t)}  \}$.
 % \\
-% $E = \left\{(q(v)^{(l,w)},q'(v')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
-% ~ \left \vert ~ \mathsf{DEP}(q(v)^{(l,w)},q'(v')^{(l',w')}, c,w,m,D)
-% \land \mathsf{To}(q(v)^{(l,w)}, q(v')^{(l',w')} \right.\right\}$.
+% $E = \left\{(\query(v),l,w),q'(v'), (l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
+% ~ \left \vert ~ \mathsf{DEP}(\query(v),l,w),q'(v'), (l',w')}, c,w,m,D)
+% \land \mathsf{To}(\query(v),l,w), \query(v'),l',w') \right.\right\}$.
 % \end{defn}
 %
 %
@@ -667,37 +662,16 @@ Trace-based Dependency Graph
 \\
  \jl{
 Given a program $c$, a database $D$, a starting memory $m$, an initial loop map $w$, the trace-based dependency graph $G(c,D,m,w) = (V, E)$ is defined as: \\
-$V =\{q({v_q})^{l,w} \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land q({v_q})^{l,w} \in {(t'-t)}  \}$.
+$V =\{\query({\qval}), l,w \in \mathcal{AQ} \mid \forall t. \exists m',  w', t'.  \config{m ,c, t, w}  \to^{*}  \config{m' , \eskip, t', w' }  \land \query({\qval}), l,w \in {(t'-t)}  \}$.
 \\
-$E = \left\{(q({v_q})^{(l,w)},q({v_q}')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
-~ \left \vert ~ \mathsf{DEP}(q({v_q}')^{(l',w')},q({v_q})^{(l,w)}, c,w,m,D)
+$E = \left\{(\query({\qval}),l,w),\query({\qval}'),l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
+~ \left \vert ~ \mathsf{DEP}(\query({\qval}'),l',w'),\query({\qval}),l,w), c,w,m,D)
  \right.\right\}$.
  }
 \end{defn}
-The edge is directed, when an annotated query $q({v_q})^{(l,w)}$ may depend on its previous query $q({v_q}')^{(l',w')}$, we have the directed
-edge $(q({v_q})^{(l,w)}, q({v_q}')^{(l'.w')})$, from $q({v_q})^{(l,w)} $ to $q({v_q}')^{(l'.w')}$.
-
-%
-% \begin{defn}
-% Two queries $q_i$ and $q_j$ in a program $c$ are independent, $\mathsf{IND}(q^{l_1}_i, q^{l_2}_j, P)$.
-
-% $\forall m, D. \Big( 
-% \lrr{ P }{} (\sigma, \mu , \jl{t, w} , D)  \triangleq  (\sigma' , \mu' , t', w' , D) 
-% $\\
-% $\land 
-% \left((q^{l_1}_i, v_i) \in t' \land (q^{l_2}_j, v_j) \in t'  \implies \forall v \in \textsf{Codom}(q^{l_1}_i). 
-% \left( \lrr{ P[v/q_i] }{} (\sigma, \mu , \jl{t, w }, D)  \triangleq  (\sigma' , \mu' , t'', w' , D)  \land (q^{l_2}_j, v_j) \in t''
-% \right)
-% \right)$
-% \\
-% $
-% \land 
-% \left( (q^{l_1}_i, v_i) \in t \land (q^{l_2}_j, v_j) \notin t  \implies \forall v \in \textsf{Codom}(q^{l_1}_i). 
-% \left( \lrr{ P[v/q_i] }{} (\sigma, \mu , \jl{t,w },  D)  \triangleq  (\sigma' , \mu' , t'', w' , D)  \land (q^{l_2}_j, v_j) \notin t''
-% \right)
-% \right)
-% \Big ) $.
-% \end{defn}
+The edge is directed, when an annotated query $(\query({\qval}),l,w)$ may depend on its previous query $(\query({\qval}'),l',w')$, we have the directed
+edge $(\query({\qval}),l,w), \query({\qval}'),l'.w'))$, 
+from $(\query(\qval),l,w) $ to $(\query({\qval}'),l'.w')$.
 %
 %
 \begin{defn}
@@ -897,12 +871,12 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')} \in V
 \mbox{Query expressions} & \qexpr & ::= 
 & \jl{ \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
 \\
-\mbox{Query Values} & v_q & ::= 
-& \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ v_q \oplus_a  v_q }
+\mbox{Query Values} & \qval & ::= 
+& \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
 \\
 \mbox{Expressions} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
 \\	
-\mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{q(\qexpr)}}]^{l}
+\mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
 %
 % ~|~ [\eswitch( \ssa{\expr}, \ssa{x}, \ssa{v_i} \to \ssa{ q_i})]^{l} 
 ~|~  {{ifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
@@ -920,9 +894,9 @@ $$A^*(c, D, m ,w) = \max\limits_{q_i(v_{qi})^{(l,w)},q_j(v_{qj})^{(l',w')} \in V
 ~|~ [\eskip]^{l} \\
 \mbox{Memory} & m & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } \\
 %
-\mbox{Trace} & t & ::= & [] ~|~ \ssa{{(q(v_q)^l  ) :: t}} \\
+\mbox{Trace} & t & ::= & [] ~|~ \ssa{{(\query(\qval), l , w ) :: t}} \\
 \mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{ q(v_q)^l  \} }
+::= & \jl{\{ (\query(\qval), l , w )  \} }
  \\
 \mbox{SSA Variables} & \mathcal{SV}  & ::= & \{ \ssa{x} \} \\
 \mbox{Labelled SSA Variables} & \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)}  \}
@@ -991,7 +965,7 @@ We call a list of variables $\bar{x}$.
  \and{ \ssa{x} \ fresh(\Sigma) }
   \and { \Sigma' = \Sigma \cup \{ \ssa{x} \} }
 }{
- \Sigma;\delta ; [\assign{x}{q(e)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{q(\expr)}}]^{l} ; \delta';\Sigma'
+ \Sigma;\delta ; [\assign{x}{\query(e)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\query(\expr)}}]^{l} ; \delta';\Sigma'
 }~{\textbf{S-QUERY}}
 %
 \and
@@ -1476,31 +1450,31 @@ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $
  \and{ \ssa{x} \ fresh(\Sigma) }
  \and{ \Sigma' = \Sigma \cup \{x\} }
 }{
- \Sigma;\delta ; [\assign{x}{q(\expr)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{q(\expr)}}]^{l} ; \delta'
+ \Sigma;\delta ; [\assign{x}{\query(\expr)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\query(\expr)}}]^{l} ; \delta'
 }~{\textbf{S-QUERY}}$} 
 We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$, we know that when we suppose $\config{m, \expr} \to v$.
  \[
 \inferrule
 {
-q(v)(D) = v_q 
+\query(v)(D) = \qval 
 }
 {
-\config{m, [\assign{x}{q(v)}]^l, t, w} \xrightarrow{} \config{m[ v_q/ x], \eskip,  t \mathrel{++} [q(v)^{(l,w )}],w }
+\config{m, [\assign{x}{\query(v)}]^l, t, w} \xrightarrow{} \config{m[ \qval/ x], \eskip,  t \mathrel{++} [\query(v),l,w )],w }
 }
 ~\textbf{query}
  \]
  We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
  
- To show: $\config{\ssa{m}, [\assign {\ssa{x}}{ \ssa{q(\expr)}}]^{l} , t, w} \to^{*} \config{\ssa{m'}, \eskip, t, w} $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
+ To show: $\config{\ssa{m}, [\assign {\ssa{x}}{ \ssa{\query(\expr)}}]^{l} , t, w} \to^{*} \config{\ssa{m'}, \eskip, t, w} $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
  
  From the rule \textbf{ssa-query}, we know that 
  \[
  \inferrule
 {
-\ssa{q(v)(D) = v_q} 
+\ssa{\query(v)(D) = \qval} 
 }
 {
-\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{q(\expr)}}]^l}, t, w} \xrightarrow{} \config{\ssa{  m[  x \mapsto v], \eskip,}  t \mathrel{++} [(q^{(l,w )},v)],w }
+\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{\query(\expr)}}]^l}, t, w} \xrightarrow{} \config{\ssa{  m[  x \mapsto v], \eskip,}  t \mathrel{++} [(q^{(l,w )},v)],w }
 }
 ~\textbf{ssa-query}
  \]
@@ -1944,24 +1918,24 @@ This proof is similar when it comes to the exit as in case 1.
 
 
 % \begin{defn}[Query may dependency in SSA ]
-% One query ${q(v_2)}$ \emph{may depend} on another query ${q(v_1)}$ in a program $\ssa{c}$, with a starting loop maps $w$, denoted as
-%  $\mathsf{DEP_{ssa}}({q(v_1)}^{(l_1, w_1)}, {q(v_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
+% One query ${\query(v_2)}$ \emph{may depend} on another query ${\query(v_1)}$ in a program $\ssa{c}$, with a starting loop maps $w$, denoted as
+%  $\mathsf{DEP_{ssa}}({\query(v_1)}^{(l_1, w_1)}, {\query(v_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
  
 %  is defined as below. 
 % \[
 %   \begin{array}{l}
 %      \forall t. \exists \ssa{m_1,m_3},t_1,t_3. 
-% \config{\ssa{m, c},  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{q(v_1)}]^{l_1} ; \ssa{c_2},
-%   t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[q(v_1)(D)/\ssa{x}], \ssa{c_2},
-%   t_1++[q(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
+% \config{\ssa{m, c},  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{\query(v_1)}]^{l_1} ; \ssa{c_2},
+%   t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[\query(v_1)(D)/\ssa{x}], \ssa{c_2},
+%   t_1++[\query(v_1),l_1, w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
 %   t_3,w_3} \\  
 %   \land 
-% \Big( q(v_1)^{(l_1,w_1)} \in (t_3-t) \land q(v_2)^{(l_2,w_2)} \in (t_3-t_1) \implies  \exists v \in \codom(q(v_1)),\ssa{m_3'}, t_3', w_3'. \\
-%  \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[(q(v_1)^{(l_1,w_1)})], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (q(v_2)^{(l_2,w_2)}) \not \in (t_3'-t_1)
+% \Big( \query(v_1),l_1,w_1) \in (t_3-t) \land \query(v_2),l_2,w_2) \in (t_3-t_1) \implies  \exists v \in \codom(\query(v_1)),\ssa{m_3'}, t_3', w_3'. \\
+%  \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[(\query(v_1),l_1,w_1))], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (\query(v_2),l_2,w_2)) \not \in (t_3'-t_1)
 % \Big)\\
 % \land 
-% \Big(q(v_1)^{(l_1,w_1)} \in (t_3-t) \land q(v_2)^{(l_2,w_2)} \not\in (t_3-t_1) \implies  \exists v \in \codom(q(v_1)),\ssa{m_3'}, t_3', w_3'. \\
-%  \config{\ssa{m_1}[v/\ssa{x}], {c_2}, t_1++[(q(v_1)^{(l_1,w_1)})], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (q(v_2)^{(l_2,w_2)})  \in (t_3'-t_1)
+% \Big(\query(v_1),l_1,w_1) \in (t_3-t) \land \query(v_2),l_2,w_2) \not\in (t_3-t_1) \implies  \exists v \in \codom(\query(v_1)),\ssa{m_3'}, t_3', w_3'. \\
+%  \config{\ssa{m_1}[v/\ssa{x}], {c_2}, t_1++[(\query(v_1),l_1,w_1))], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (\query(v_2),l_2,w_2))  \in (t_3'-t_1)
 % \Big)\\
 % \end{array}
 % \]
@@ -1971,23 +1945,23 @@ This proof is similar when it comes to the exit as in case 1.
 Query may dependency in SSA language.
 \\
 \jl{
-One query ${q({v_q}_2)}$ \emph{may depend} on another query ${q({v_q}_1)}$ in a program $\ssa{c}$,  with a starting loop maps $w$, a starting memory $\ssa{m}$, hidden database $D$, denoted as \\
- $\mathsf{DEP_{ssa}}({q({v_q}_1)}^{(l_1, w_1)}, {q({v_q}_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
+One query ${\query({\qval}_2)}$ \emph{may depend} on another query ${\query({\qval}_1)}$ in a program $\ssa{c}$,  with a starting loop maps $w$, a starting memory $\ssa{m}$, hidden database $D$, denoted as \\
+ $\mathsf{DEP_{ssa}}({\query({\qval}_1)}^{(l_1, w_1)}, {\query({\qval}_2)}^{(l_2, w_2)}, \ssa{c},w, \ssa{m},D)$.
  \[
 \begin{array}{l}
 \forall  t. \exists \ssa{m_1},\ssa{m_3},t_1,t_3,c_2.\\
   \left (\begin{array}{l}   
-\config{\ssa{m}, c,  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{q({v_q}_1)}]^{l_1} ; \ssa{c_2},
-  t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[q({v_q}_1)(D)/\ssa{x}], \ssa{c_2},
-  t_1++[q({v_q}_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
+\config{\ssa{m}, c,  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{\query({\qval}_1)}]^{l_1} ; \ssa{c_2},
+  t_1,w_1} \rightarrow \\ \config{\ssa{m_1}[\query({\qval}_1)(D)/\ssa{x}], \ssa{c_2},
+  t_1++[\query({\qval}_1),l_1, w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
   t_3,w_3} \\  
   \land \\
-\Big( q({v_q}_1)^{(l_1,w_1)} \in_{q} (t_3-t) \land q({v_q}_2)^{(l_2,w_2)} \in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(q({v_q}_1)), \ssa{m_3'}, t_3', w_3'.  \\
- \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[q({v_q}_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (q({v_q}_2)^{(l_2,w_2)}) \not \in_{q} (t_3'-t_1)
+\Big( \query({\qval}_1),l_1,w_1) \in_{q} (t_3-t) \land \query({\qval}_2),l_2,w_2) \in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)), \ssa{m_3'}, t_3', w_3'.  \\
+ \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2)) \not \in_{q} (t_3'-t_1)
 \Big)\\
 \land \\
-\Big(q({v_q}_1)^{(l_1,w_1)} \in_{q} (t_3-t) \land q({v_q}_2)^{(l_2,w_2)} \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(q({v_q}_1)),  \ssa{m_3'}, t_3', w_3'. \\
- \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[q({v_q}_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (q({v_q}_2)^{(l_2,w_2)})  \in_{q} (t_3'-t_1)
+\Big(\query({\qval}_1),l_1,w_1) \in_{q} (t_3-t) \land \query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1) \\ \implies  \exists v \in \codom(\query({\qval}_1)),  \ssa{m_3'}, t_3', w_3'. \\
+ \config{\ssa{m_1}[v/\ssa{x}], \ssa{c_2}, t_1++[\query({\qval}_1),l_1,w_1)], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \\ \land (\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1)
 \Big)
 \end{array} \right )
 \end{array}
@@ -1999,11 +1973,11 @@ One query ${q({v_q}_2)}$ \emph{may depend} on another query ${q({v_q}_1)}$ in a 
 % [Dependency Graph in SSA].
 % \\
 % Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$, an initial loop maps $w$, the dependency graph $G_{s}(\ssa{c},D,\ssa{m},w) = (V, E)$ is defined as: \\
-% $V =\{q(v)^{l,w} \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land q(v)^{l,w} \in {(t'-t)}  \}$.
+% $V =\{\query(v), l,w \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land \query(v), l,w \in {(t'-t)}  \}$.
 % \\
-% $E = \left\{(q(v)^{(l,w)},q(v')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
+% $E = \left\{(\query(v),l,w),\query(v'),l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
 % ~ \left \vert ~ \begin{array}{l}
-%   \mathsf{DEP_{ssa}}(q(v')^{(l',w')},q(v)^{(l,w)}, \ssa{c},w,\ssa{m},D)     
+%   \mathsf{DEP_{ssa}}(\query(v'),l',w'),\query(v),l,w), \ssa{c},w,\ssa{m},D)     
 % \end{array} \right. 
 % \right\}$.
 % \end{defn}
@@ -2013,11 +1987,11 @@ SSA-based Dependency Graph.
 \\
 \jl{Updated Definition \\
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$, an initial loop maps $w$, the dependency graph $G_{s}(\ssa{c},D,\ssa{m},w) = (V, E)$ is defined as: \\
-$V =\{q({v_q})^{l,w} \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land q({v_q})^{l,w} \in {(t'-t)}  \}$.
+$V =\{\query({\qval}), l,w \in \mathcal{AQ} \mid \forall t. \exists \ssa{m'},  w', t'.  \config{\ssa{m} ,\ssa{c}, t, w}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }  \land \query({\qval}), l,w \in {(t'-t)}  \}$.
 \\
-$E = \left\{(q({v_q})^{(l,w)},q({v_q}')^{(l',w')}) \in \mathcal{AQ} \times \mathcal{AQ} 
+$E = \left\{(\query({\qval}),l,w),\query({\qval}'),l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
 ~ \left \vert ~ \begin{array}{l}
-  \mathsf{DEP_{ssa}}(q({v_q}')^{(l',w')},q({v_q})^{(l,w)}, \ssa{c},w,\ssa{m},D)     
+  \mathsf{DEP_{ssa}}(\query({\qval}'),l',w'),\query({\qval}),l,w), \ssa{c},w,\ssa{m},D)     
 \end{array} \right. 
 \right\}$.
 }
@@ -2025,20 +1999,17 @@ $E = \left\{(q({v_q})^{(l,w)},q({v_q}')^{(l',w')}) \in \mathcal{AQ} \times \math
 
 
 
-% \begin{defn}[Adaptivity from SSA-based Dependency Graph.]
-% Given a program $\ssa{c}$, and a meory $\ssa{m}$, a database $D$, a starting loop maps $w$, the adaptivity of the dependency graph $G_s(\ssa{c}, D,\ssa{m},w) = (V, E)$ is the length of the longest path in this graph. We denote the path from $q(v)^{(l,w)}$ to $q(v')^{(l',w')}$ as $p(q(v)^{(l,w)}, q(v')^{(l',w')} )$. The adaptivity denoted as $A_s(\ssa{c}, D, \ssa{m}, w)$.
-% %
-% $$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{q(v)^{(l,w)},q(v')^{(l',w')} \in V }\{ |p(q(v)^{(l,w)}, q(v')^{(l',w')} )| \}$$
-% \end{defn}
-
 
 \begin{defn}
 Adaptivity from SSA-based Dependency Graph.
 \\
 \jl{
-Given a program $\ssa{c}$, and a meory $\ssa{m}$, a database $D$, a starting loop maps $w$, the adaptivity of the dependency graph $G_s(\ssa{c}, D,\ssa{m},w) = (V, E)$ is the length of the longest path in this graph. We denote the path from $q({v_q})^{(l,w)}$ to $q({v_q}')^{(l',w')}$ as $p_s(q({v_q})^{(l,w)}, q({v_q}')^{(l',w')} )$. The adaptivity denoted as $A_s(\ssa{c}, D, \ssa{m}, w)$.
+Given a program $\ssa{c}$, and a meory $\ssa{m}$, a database $D$, a starting loop maps $w$, 
+the adaptivity of the dependency graph $G_s(\ssa{c}, D,\ssa{m},w) = (V, E)$ is the length of the longest path in this graph. We denote the path from 
+$(\query({\qval}),l,w)$ to $(\query({\qval}'),l',w')$ as $p_s(\query({\qval}),l,w), \query({\qval}'),l',w') )$. 
+The adaptivity denoted as $A_s(\ssa{c}, D, \ssa{m}, w)$.
 %
-$$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{q({v_q})^{(l,w)},q({v_q}')^{(l',w')} \in V } |p_s(q({v_q})^{(l,w)}, q({v_q}')^{(l',w')} )| $$
+$$A_s(\ssa{c}, D, \ssa{m}, w) = \max\limits_{\query({\qval}),l,w),\query({\qval}'),l',w') \in V } |p_s(\query({\qval}),l,w), \query({\qval}'),l',w') )| $$
 }
 \end{defn}
 
@@ -2080,7 +2051,7 @@ Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall 
 % }{
 %  \delta ; [\assign x q]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{q}}]^{l} ; \delta'
 % }~{\textbf{S-QUERY}}$} 
-%  We assume $m$, $t,w$, by the rule $\textbf{query}$, we get $t ++ [(q^{l,w}, v)]$ where $v = q(D)$. Then, starting from the transformed memory ${\ssa{m}} = \delta(m)$, continues with the same trace $t$ and loop maps $w$, we can still get the same resulting trace $ t ++ [(q^{l,w}, v)] $ where $\ssa(q) (D) = v$.  
+%  We assume $m$, $t,w$, by the rule $\textbf{query}$, we get $t ++ [(q^{l,w}, v)]$ where $v = \query(D)$. Then, starting from the transformed memory ${\ssa{m}} = \delta(m)$, continues with the same trace $t$ and loop maps $w$, we can still get the same resulting trace $ t ++ [(q^{l,w}, v)] $ where $\ssa(q) (D) = v$.  
 %   \caseL{Case $\inferrule{
 %   { \delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
 %   \and
@@ -2241,10 +2212,10 @@ the command $\mathsf{ifvar}(\bar{x},\bar{x}')$ stores the variable map during th
 \and
 \inferrule
 {
-\ssa{q(v)(D) = v_q} 
+\ssa{\query(v)(D) = \qval} 
 }
 {
-\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{q(v)}}]^l, t, w}} \xrightarrow{} \config{\ssa{  m[  x \mapsto v_q], \eskip,  t \mathrel{++} [q(v)^{(l,w )}],w } }
+\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{\query(v)}}]^l, t, w}} \xrightarrow{} \config{\ssa{  m[  x \mapsto \qval], \eskip,  t \mathrel{++} [\query(v),l,w )],w } }
 }
 ~\textbf{ssa-query}
 %
@@ -2418,7 +2389,7 @@ t, (w + l) }
 % \inferrule
 % {
 % }
-% { G ;w; { [ \assign{x}{q(\expr)}]^{l}} \to  G ++ [x^{(l,w)}] ; w 
+% { G ;w; { [ \assign{x}{\query(\expr)}]^{l}} \to  G ++ [x^{(l,w)}] ; w 
 % }~\textbf{query}
 % %
 % \and 
@@ -2504,8 +2475,8 @@ t, (w + l) }
 % V= \mathsf{L}(i)
 % }
 % {
-% \func{ \Gamma , i,[\assign{{x}}{q(\expr)} ]^{l}  }{ M, V, i+1} 
-% % \Gamma \vdash^{(i, i+1)}_{M, V} [ \assign{{x}}{q(\expr)} ]^{l} 
+% \func{ \Gamma , i,[\assign{{x}}{\query(\expr)} ]^{l}  }{ M, V, i+1} 
+% % \Gamma \vdash^{(i, i+1)}_{M, V} [ \assign{{x}}{\query(\expr)} ]^{l} 
 %  }~\textbf{query}
 % %
 % \and 
@@ -2884,7 +2855,7 @@ We first generate a list of variables $G$ that will be assigned with values (via
 \inferrule
 {
 }
-{ \ag{G ;w;  [ \assign{\ssa{x}}{q(\ssa{\expr})}]^{l}}{  G ++ [\ssa{x}^{(l,w)}] ; w} 
+{ \ag{G ;w;  [ \assign{\ssa{x}}{\query(\ssa{\expr})}]^{l}}{  G ++ [\ssa{x}^{(l,w)}] ; w} 
 }~\textbf{\varEst-query}
 %
 \and 
@@ -2984,8 +2955,8 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 V= \mathsf{L}(i) \and V(i) = 1
 }
 { 
-\ad{\Gamma;[ \assign{\ssa{x}}{q(\ssa{\expr})} ]^{l} ; i }{M;V;i+1}
-%  \vdash^{(i, i+1)}_{M, V} [ \assign{\ssa{x}}{q(\ssa{\expr})} ]^{l} 
+\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }{M;V;i+1}
+%  \vdash^{(i, i+1)}_{M, V} [ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} 
 }~\textbf{\graphGen-query}}
 %
 \and 
@@ -3362,12 +3333,12 @@ V= \mathsf{L}(i)
   from the definition of $(V_1,E_1)= G_{low}( [\assign{x}{q}]^{l} , D,m,w)$, we know $v_1$ comes from the trace $t' -t$ generated in the following ssa evaluation.
    \[ 
     \inferrule{
-     q(v)(D) = v_q
+     \query(v)(D) = \qval
     }{
-   \config{\ssa{m, [\assign{x}{q(v)}]^{l}}}, t, w  \to^{*} \config{\ssa{m[v_q/x]},\eskip, t++[q(v)^{(l,w)}], w} } \]
+   \config{\ssa{m, [\assign{x}{\query(v)}]^{l}}}, t, w  \to^{*} \config{\ssa{m[\qval/x]},\eskip, t++[\query(v),l,w)], w} } \]
  
-   We unfold $G; w \vDash ( [\assign{\ssa{x}}{q(e)}]^{l}, i, i+1) $ so we know that 
-   $G' = G[0, \ldots, (i-1)] \land G';w; [\assign{\ssa{x}}{q(e)}]^{l} \to G' ++ [\ssa{x}^{(l,w)}]; w$
+   We unfold $G; w \vDash ( [\assign{\ssa{x}}{\query(e)}]^{l}, i, i+1) $ so we know that 
+   $G' = G[0, \ldots, (i-1)] \land G';w; [\assign{\ssa{x}}{\query(e)}]^{l} \to G' ++ [\ssa{x}^{(l,w)}]; w$
   
    Considering every node in $V_2$ has unique label. we know that there is a unique labelled variable $\ssa{x}^{(l,w)}$ in $V_2$ with the same label as the one $q^{(l,w)}$ in $V_1$. 
 %  From the definition of $G_{low}(|\ssa{c}|_{low}, D,m)$, the node in $V_1$ is the query $q^{(l,w)}$ coming from the statement $[\assign{x}{q} ]^{l}$ in $|\ssa{c}|_{low}$ for certain variable $x$ and some loop maps $w$. From the definition of $||_{low}$, we know that there exist the statement $[\assign{\ssa{x}}{q}]^{l} $ so that $x = |\ssa{x}|_{low}$. By the definition of $G;w \vDash (\ssa{c}, i_1, i_2 )$, we know that there are two cases: (1) the statement $ [\assign{x}{q}]^{l} $ in the low level one $c$ and $[\assign{\ssa{x}}{q}]^{l}$ in $\ssa{c}$ are both in a loop, so that depending on the loop iterations($N$), there will be $q^{(l,w_1)}, q^{(l,w_2)}, \ldots, q^{(l,w_N)}$. Correspondingly, in $G$, there will be $ \ssa{x}^{(l,w_1)}, \ssa{x}^{(l,w_2)}, \ldots, \ssa{x}^{(l,w_N)}$. (2) When the statement is not in the loop, $w$ will remain the same. Because there is only one statement with line number $l$ in both $c$ and $\ssa{c}$, and $w$ is the same on two runs, there is only one mapping from the node in $V_1$ to the node in $V_2$, defined by $f$.  \caseL{Case: $\inferrule
@@ -3639,29 +3610,29 @@ The second goal is proved because $K =0$.\\
 \\
 V= \mathsf{L}(i)
 }
-{ \Gamma \vdash^{(i, i+1)}_{M, V} \assign{\ssa{x}}{\ssa{q(\expr)}} 
+{ \Gamma \vdash^{(i, i+1)}_{M, V} \assign{\ssa{x}}{\ssa{\query(\expr)}} 
 }~\textbf{query}$}
 Given a memory $m$, database $D$, trace $t$, loop maps $w$, then from the following operational semantics:
 \[
 \inferrule
 {
-q(v)(D) = v_q 
+\query(v)(D) = \qval 
 }
 {
-\config{\ssa{m}, [\assign{\ssa{x}}{\ssa{q(\expr)}}]^l, t, w} \xrightarrow{} \config{\ssa{m[ v_q/ x]}, \eskip,  t \mathrel{++} [(q(v)^{(l,w )})],w }
+\config{\ssa{m}, [\assign{\ssa{x}}{\ssa{\query(\expr)}}]^l, t, w} \xrightarrow{} \config{\ssa{m[ \qval/ x]}, \eskip,  t \mathrel{++} [(\query(v),l,w ))],w }
 }
 \]
 We need to show:
 \begin{enumerate}
-    \item $ G_{s}([\assign{\ssa{x}}{\ssa{q(e)} }]^{l},D,m,w) \subseteq G_{ssa}(M, V,i, i+1)$.
+    \item $ G_{s}([\assign{\ssa{x}}{\ssa{\query(e)} }]^{l},D,m,w) \subseteq G_{ssa}(M, V,i, i+1)$.
     \item $K \leq |V| $.
 \end{enumerate}
-The first goal is shown as follows: because the new generated trace $t'= [q(v)^{(l,w)}]$ only has one element. By the definition of $G_{s} = (V_s,E_s)$, we know there is only one vertex $vx$ in $V$ and no edge in $E$, 
-i.e., $V_s = \{q(v)^{(l,w)} \}$ and $E_s = \{\}$.
+The first goal is shown as follows: because the new generated trace $t'= [\query(v),l,w)]$ only has one element. By the definition of $G_{s} = (V_s,E_s)$, we know there is only one vertex $vx$ in $V$ and no edge in $E$, 
+i.e., $V_s = \{\query(v),l,w) \}$ and $E_s = \{\}$.
 \\
-From Lemma~\ref{lem:vertex},we know that there exists a function $f$ so that $f(vx)$ (equivalent to $q(v)^{(l,w)}$ in $G_s$) exists in the vertices $V_{ssa}$ of $G_{ssa}(M,v,i,i+1) = (V_{ssa}, E_{ssa})$.
+From Lemma~\ref{lem:vertex},we know that there exists a function $f$ so that $f(vx)$ (equivalent to $(\query(v),l,w)$ in $G_s$) exists in the vertices $V_{ssa}$ of $G_{ssa}(M,v,i,i+1) = (V_{ssa}, E_{ssa})$.
 Since $V_s \subseteq V_{ssa}$ and $E_s \subseteq E_{ssa}$,
-it is proved that $ G_{s}([\assign{\ssa{x}}{\ssa{q(e)} }]^{l},D,m,w) \subseteq G_{ssa}(M, V,i, i+1)$. So we have the first goal proved.
+it is proved that $ G_{s}([\assign{\ssa{x}}{\ssa{\query(e)} }]^{l},D,m,w) \subseteq G_{ssa}(M, V,i, i+1)$. So we have the first goal proved.
 
 The second goal is proved because $V= \mathsf{L}(i)$ is not empty so that $|V|\geq 1 $, and $K=1$. \\
 
@@ -3836,7 +3807,7 @@ Unfold the definition of subgraph $\subseteq$, we need to show two cases.
  \begin{array}{l}
      \forall \ssa{m_1,m_3}, D,t,t_1,t_3. 
 \config{\ssa{m, c},  t,w} \rightarrow^{*} \config{\ssa{m_1, [\assign{x}{q_1(v_1)}]^{l_1} ; c_2},
-  t_1,w_1} \rightarrow \\ \config{\ssa{m_1[v_q/x], c_2},
+  t_1,w_1} \rightarrow \\ \config{\ssa{m_1[\qval/x], c_2},
   t_1++[q_1(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
   t_3,w_3} \\  
   \land 
@@ -3885,8 +3856,8 @@ We already know that $q_1(v_1)^{(l_1,w_1)} \in (t_1-t), q_2(v_2)^{(l_2,w_2)} \in
      There are three possible situations:
         \begin{enumerate}
             \item The assignment statement $ [\assign{\ssa{y}}{\ssa{\expr}}] $, and $\ssa{x}$ appears in $\ssa{\expr}$.
-            \item The assignment of $\ssa{y}$ (either $[\assign{\ssa{y}}{\ssa{\expr}}]^{l}$ or $[\assign{\ssa{y}}{q(e)}]^{l}$) appears in either branch of an if statement. $\ssa{x}$ is used in $b$.
-            \item $ [\assign{\ssa{y}}{\ssa{q(e)}}]^{l}$ and the variable $\ssa{x}$ is used in $\ssa{\expr}$.  
+            \item The assignment of $\ssa{y}$ (either $[\assign{\ssa{y}}{\ssa{\expr}}]^{l}$ or $[\assign{\ssa{y}}{\query(e)}]^{l}$) appears in either branch of an if statement. $\ssa{x}$ is used in $b$.
+            \item $ [\assign{\ssa{y}}{\ssa{\query(e)}}]^{l}$ and the variable $\ssa{x}$ is used in $\ssa{\expr}$.  
         \end{enumerate}
         In the above three situations, our algorithm shows that $M[\ssa{y}^{(l,w)}][\ssa{x}^{(l',w')}] =1$ so that there is an edge from $\ssa{z}^{(l,w)}$ to $\ssa{x}^{(l', w')}$.  
         
@@ -3898,18 +3869,9 @@ We already know that $q_1(v_1)^{(l_1,w_1)} \in (t_1-t), q_2(v_2)^{(l_2,w_2)} \in
    So we can show that there is path from the labelled variable in $\ssa{c_2'}$ to $\ssa{x}^{(l_1, w_1)}$ when $\ssa{c_2'}$ indirectly depends on $\ssa{x}^{(l_1,w_1)}$.
     \end{enumerate}
 \end{enumerate}
-
-% By definition of $V$ and $t$, we know the newly added queries in $t'$ compared to the original trace $t$, $Q(t'-t)$ must be the same as newly added queries marked in
-% $V_1$, similarly, $Q(t''-t')$ is the same as those in $V_2$. That is to say, $Q(t''- t)$ is contained in $V_1 \uplus V_2$, hence the query nodes in the dependency graph must be contained in the Adapt graph generated by $M_1 ; M_2, V_1 \uplus V_2 $.\\
-
-% On the other hand, any dependency between newly added queries in $t'' - t$ is tracked by $M_1; M_2$. It is shown in $3$ cases: (1) dependency between queries nodes in $c_1$ is recorded in $M_1$. (2) dependency between queries nodes in $c_2$ is recorded in $M_2$.\green{(3) dependency between query nodes from $c_1$ and $c_2$ respectively is tracked by $M_2 \cdot M_1$}. To sum up,   
-% the dependency relation must be contained in $M_1 ; M_2$.
-% \\
-% Then we can conclude in this case, the longest path in the dependency graph of $c_1; c_2$ must be contained in the
-% Adapt graph generated by $M_1 ; M_2, V_1 \uplus V_2 $, i.e., $A^{*}(c_1; c_2) \leq Adapt(M_1 ; M_2, V_1 \uplus V_2)$.
-% \\
-% By the definiton of $K_{c_1; c_2}$, we can show that $K_{c_1;c_2}= K_{c_1}+K_{c_2} \leq |V_1| + |V_2|$.Because $V_1$ and $V_2$ are disjoint in its working range ($(i_1,i_2)$ for $V_1$) and ($(i_2,i_3)$ for $V_2$), we know that $ |V_1 \uplus V_2| = |V_1| + |V_2|  $.\\
-
+%
+%
+%
 \caseL{
 \todo{ 
 Case: $\inferrule
@@ -4024,7 +3986,7 @@ Then we need to show:\[G_{s}( [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_
 Unfold the definition of subgraph $\subseteq$, we need to show two cases.
 \begin{enumerate}
     \item The vertices in $G_{s}( [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} ,D,\ssa{m},w)$ can be mapped to the vertices in $G_{ssa}(M', V' ,i, i+N*(B+A)+B)$ by $f_{D,m}$. We know that there exists function $f_{D, m_j,c}$ for $G_{s}( \ssa{c} ,D,\ssa{m_j},w_j)$ when $ 0 \leq j <N $. We can have \[f_{D,m}(vx) = \begin{array}{ll}
-        f_{D, m_j,c}(vx) &  vx = q(v)^{(l,w_j)}  
+        f_{D, m_j,c}(vx) &  vx = \query(v),l,w_j)  
     \end{array}  \] 
     \item Every edge in $G_{s}( [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} ,D,\ssa{m},w)$ can be mapped to a corresponding path in $G_{ssa}(M', V' ,i, i+N*(B+A)+B)$. The edges $(vx_1,vx_2)$ can be divided into two categories.
     \begin{enumerate}
@@ -4171,7 +4133,7 @@ Unfold the definition of subgraph $\subseteq$, we need to show two cases.
 % Given $\sigma$, $\mu$,  $t$ and $w$, for arbitrary database $D$, we have the following semantic.
 % \[ 
 %   \lrr{ [\assign x q]^{l} }{} (\sigma, \mu , t, w, D)   
-%   \triangleq  (\sigma[x \to v ], \mu ,  t ++ [(q, v)]^{(l, w)}, w , D) \qquad : v = q(D)
+%   \triangleq  (\sigma[x \to v ], \mu ,  t ++ [(q, v)]^{(l, w)}, w , D) \qquad : v = \query(D)
 % \]
 % There is only one newly added node in the trace for all the possible database $D$. 
 % Follow the definition of $Adapt(M,V)$, we know that the claim holds.\\
@@ -4412,7 +4374,7 @@ TR(k) \triangleq
     \left[a_1 \leftarrow [] \right]^2; \\
    \ewhile ~ [i < k]^{3}, 0,     ~ \edo ~ \\
     \Big(
-     \clabel{x \leftarrow q() }^4 ; \\
+     \clabel{x \leftarrow \query() }^4 ; \\
     \clabel{a \leftarrow x :: a }^5  
         \left[i_2 \leftarrow i_3 + 1 \right]^6 
    \Big);\\
@@ -4608,7 +4570,7 @@ l_1^{5} &  1 \\
 %     \eloop ~ [k]^{2} ~  \\ 
 %     \ ~ \edo ~ \\ \Big(
 %     \left[p \leftarrow c \right]^3 ; \\
-%     \left[a \leftarrow q(p, I) \right]^4; \\
+%     \left[a \leftarrow \query(p, I) \right]^4; \\
 %     \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^5
 %     \Big) 
 % \end{array}
@@ -4667,7 +4629,7 @@ MR \triangleq
    \ewhile ~ [i < k]^{3} 
     \ ~ \edo ~ \\ \Big(
     \left[p \leftarrow c \right]^4 ; \\
-    \left[a \leftarrow q(p, I) \right]^5; \\
+    \left[a \leftarrow \query(p, I) \right]^5; \\
     \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^6 ; \\
     \left[i \leftarrow i + 1 \right]^7 \\
     \Big) 
@@ -4682,7 +4644,7 @@ MR^{ssa} \triangleq
    \ewhile ~ [i < k]^{3} 0, [I_3,I_1,I_2] \\ 
     \ ~ \edo ~ \\ \Big(
     \left[p_1 \leftarrow c \right]^4 ; \\
-    \left[a \leftarrow q(p_1, I_2) \right]^5; \\
+    \left[a \leftarrow \query(p_1, I_2) \right]^5; \\
     \left[I_2 \leftarrow \eupdt( {I_3}, (a_1, p_1))  \right]^6;\\
     \left[i \leftarrow i + 1 \right]^7 \\
     \Big) 
@@ -5047,7 +5009,7 @@ $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution
 %         \lrr{ [\eskip]^{l} }{} (\sigma, \mu , t, w, D) & \triangleq & (\sigma, \mu , t, w , D)  \\
 %         \lrr{ [\assign x {\expr_d}]^{l} }{} (\sigma, \mu , t, w, D)  & \triangleq & (\sigma[x \to \lrr{\expr_d}{}(\sigma)], \mu , t, w, D) \\
 %         \lrr{ [\assign {x_r} {\expr_r}]^{l}}{} (\sigma, \mu , t, w, D)  & \triangleq & (\sigma, bind(\mu , m \to unit(m[x_r \to \lrr{\expr_r}{}(\sigma, m)]) ) , t, w , D ) \\
-%         \lrr{ [\assign x q]^{l} }{} (\sigma, \mu , t, w, D)  & \triangleq & (\sigma[x \to v ], \mu , t ++ [(q, v)]^{(l, w)}, w , D) \qquad : v = q(D)\\
+%         \lrr{ [\assign x q]^{l} }{} (\sigma, \mu , t, w, D)  & \triangleq & (\sigma[x \to v ], \mu , t ++ [(q, v)]^{(l, w)}, w , D) \qquad : v = \query(D)\\
 %         \lrr{ [\assign {x_r} \uniform ]^{l} }{} (\sigma, \mu , t, w, D)  & \triangleq & (\sigma,  bind(\mu , m \to bind(\uniform , u \to m[x_r \to u] ) )  , t, w, D) \\
 %         \lrr{ [\assign {x_r} \bernoulli ]^{l} }{} (\sigma, \mu , t, w , D)  & \triangleq & (\sigma , bind(\mu , m \to bind(\bernoulli , u \to m[x_r \to u] ) ) , t, w,D) \\
 %             \lrr{ \command ; \command' }{} (\sigma, \mu , t, w , D)  & \triangleq & \lrr{\command'}{} ( \lrr{\command}{} \sigma , \mu, t, w) \\
@@ -5174,7 +5136,7 @@ TR^H(k) \triangleq
     \eloop ~ [k]^{2} ~ (a_2 \leftarrow f(1, a_1, a_3)) \\
     ~ \edo ~ \\
     \Big(
-     \clabel{x_1 \leftarrow q() }^3 ; \\
+     \clabel{x_1 \leftarrow \query() }^3 ; \\
     \clabel{a_3 \leftarrow x_1 :: a_2 }^4     \Big);\\
     \clabel{l \leftarrow q_{k + 1}(a_3)}^{5}\\
 \end{array}
@@ -5191,7 +5153,7 @@ MR^H \triangleq
     \eloop ~ [k]^{2} ~ (I_2 \leftarrow f(2, I_1, I_3)) \\ 
     \ ~ \edo ~ \\ \Big(
     \left[p_1 \leftarrow c \right]^3 ; \\
-    \left[a_1 \leftarrow \delta(q(p, I_2)) \right]^4; \\
+    \left[a_1 \leftarrow \delta(\query(p, I_2)) \right]^4; \\
     \left[I_3 \leftarrow \eupdt( {I_2}, (a_1, p))  \right]^5
     \Big) 
 \end{array}
@@ -5199,7 +5161,7 @@ MR^H \triangleq
 \end{example}
 %
 %
-By applying different mechanisms $\delta()$ over the queries $q(\cdot)$, we have different error bounds.
+By applying different mechanisms $\delta()$ over the queries $\query(\cdot)$, we have different error bounds.
 \\
 \textbf{Gaussian Mechanism:} $N(0, \sigma)$ \cite{dwork2015preserving}:
 \\
