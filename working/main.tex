@@ -2265,8 +2265,11 @@ m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 }
 {
 \config{\ssa{m},  \ssa{\ewhile ~ [\bexpr]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ,  t, w }
-\xrightarrow{} \\ \config{\ssa{m},
-\eif_w (\ssa{b[\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c[\bar{x_i}/\bar{x'}] }; \ssa{\ewhile ~ [b]^{l}, n+1, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c} ,  \eskip),
+\xrightarrow{} 
+\\ 
+\config{\ssa{m},
+\eif_w (\ssa{b[\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n, 
+c[\bar{x_i}/\bar{x'}] }; \ssa{\ewhile ~ [b]^{l}, n+1, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c} ,  \eskip),
 t, (w + l) }
 }
 ~\textbf{ssa-while-b}
@@ -2296,8 +2299,25 @@ t, (w + l) }
  \empty
 }
 {
-\config{\ssa{m, \eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c_1,  c_2)} ,  t, w }
-\xrightarrow{} \config{\ssa{m, c_1 }
+\config{
+\ssa{
+m, 
+\jl{
+\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
+c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+\eskip)
+} 
+},  t, w 
+}
+\\
+\xrightarrow{} 
+\config{
+\ssa{m, 
+\jl{
+\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
+c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+}
+}
 t, (w + l) }
 }
 ~\textbf{ssa-ifw-true}
@@ -2312,9 +2332,18 @@ t, (w + l) }
  {n > 0 \rightarrow i =2}
 }
 {
-\config{\ssa{m, \eif_w (\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, c_1,  c_2)} ,  t, w }
-\xrightarrow{} \config{\ssa{m, 
- c_2; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
+\config{\ssa{
+m, \eif_w (
+\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, 
+\jl{  
+c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+\eskip)
+} 
+)} ,  t, w }
+\\
+\xrightarrow{} 
+\config{\ssa{m, 
+\jl{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
 }
 ~\textbf{ssa-ifw-false}
 }
