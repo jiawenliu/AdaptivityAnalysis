@@ -1567,51 +1567,83 @@ Then there are two cases,
 		 \empty
 		}
 		{
-		\config{m, \eif_w (\efalse, c,  \eskip) ,  t, w }
-		\xrightarrow{} \config{m, 
-		 \eskip, t, (w \setminus l) }
+		\config{\ssa{
+		m, \eif_w (
+		\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, 
+		c; {\ewhile ~ [b]^{l} ~ \edo ~ c},
+		\eskip)
+		)} ,  t, w }
+		\\
+		\xrightarrow{} 
+		\config{\ssa{m, 
+		{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
 		}
 		~\textbf{ifw-false}
 	\]
 %
 	The corresponding ssa-form evaluation as follows:
 	\[
-	{
-	\inferrule
-	{
-	 \ssa{\valr_N -1} = 0
-	}
-	{
-	\config{\ssa{m',  [\eloop ~ \valr_N-1, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  },  t_{1}', w' }
-	\xrightarrow{} \config{\ssa{ m'[ \bar{x} \mapsto m'(\bar{x_2}) ], [\eskip]^{l} },  t_{1}', (w' \setminus l)  }
-	}
-	~\textbf{ssa-loop-exit}
-	}
-	\]
-	We can see that both traces are not changed during the exit of the loop. We need to show that $ m' = \delta^{-1} (\ssa{m'[\bar{x} \mapsto m'(\bar{x_2})]}) $. We know that $[ \bar{x} \mapsto \bar{x_2}]$ in $\delta_1$ from the definition, so we can show that for any variable $\ssa{x_2} \in \bar{x_2}$, $( \ssa{x_2}, m'(x) ) \in \ssa{m'}$. For variables $x \in {\dom(\delta) - \bar{x} } $, the variable is not modified during the execution of $c$ so that we know $m(x) = m'(x)$, and then we can show that $(\delta(x), m'(x)) \in \ssa{m'} $ because $\delta(x)$ is not written in $\ssa{c'[\bar{x_1}/ \bar{x}']}$ .
-%
-  	\item 
-		when guard in the $\eif_w$ expression evaluates to $\etrue$, the while loop terminates and exits.
-     The execution in the while language is defined in the evaluation rule $\textbf{ifw-true}$.
-          %
-     We want to show that : assuming in the $i-th$ $(i < v_N)$ iteration, starting with $t_i$ and $w_i$ and $m_i = \delta_1^{-1}(\ssa{m_i})$ so that the low level evaluation as follows 
-     	$
 		\inferrule
 		{
-		 \empty
+		 { n = 0 \rightarrow i = 1 }
+		 \and
+		 {n > 0 \rightarrow i =2}
 		}
 		{
-		\config{m, \eif_w (\etrue, c,  \eskip) ,  t, w }
-		\xrightarrow{} \config{m, c 
-		t, (w + l) }
+		\config{\ssa{
+		m, \eif_w (
+		\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, 
+		{  
+		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+		\eskip)
+		} 
+		)} ,  t, w }
+		\\
+		\xrightarrow{} 
+		\config{\ssa{m, 
+		{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
 		}
-		~\textbf{ifw-true}
+		~\textbf{ssa-ifw-false}
+	\]
+	We can see that both traces are not changed during the exit of the while. We need to show that $ m' = \delta^{-1} (\ssa{m'[\bar{x} \mapsto m'(\bar{x_2})]}) $. We know that $[ \bar{x} \mapsto \bar{x_2}]$ in $\delta_1$ from the definition, so we can show that for any variable $\ssa{x_2} \in \bar{x_2}$, $( \ssa{x_2}, m'(x) ) \in \ssa{m'}$. For variables $x \in {\dom(\delta) - \bar{x} } $, the variable is not modified during the execution of $c$ so that we know $m(x) = m'(x)$, and then we can show that $(\delta(x), m'(x)) \in \ssa{m'} $ because $\delta(x)$ is not written in $\ssa{c'[\bar{x_1}/ \bar{x}']}$ .
+%
+  	\item 
+		when guard in the $\eif_w$ expression evaluates to $\etrue$, the while terminates and exits.
+     The execution in the while language is defined in the evaluation rule $\textbf{ifw-true}$.
+          %
+     We want to show that : assuming in the $i-th$ $(i < \ssa{n})$ iteration, starting with $t_i$ and $w_i$ and $m_i = \delta_1^{-1}(\ssa{m_i})$,
+     this command is evaluated according to the while language operation semantics as
+     	$
+		\config{m, \eif_w (\etrue, c ; \ewhile ~ [b]^{l} ~ \edo ~ c, ,  \eskip) ,  t, w }
+		\xrightarrow{}^* \config{m, c 
+		t, (w + l) }
  		$.
      %
      Then the corresponding ssa form evaluation as follows : 
      %
      \[ 
-     \inferrule{}{\config{\ssa{ {m_i},  [\eloop ~ (\valr_N-i), n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } } 
+     \inferrule{}{
+     	\config{
+		\ssa{
+			m, 
+			{
+			\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
+			c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+			\eskip)
+			} 
+		},  t, w 
+		}
+		\\
+		\xrightarrow{} 
+		\config{
+		\ssa{m, 
+		{
+		\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
+		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+		}
+		}
+		t, (w + l) }
+		} 
      \]  
      and $m_i = \delta^{-1}(\ssa{m_i}) $.
      We then have the evaluation in the while language:
@@ -1621,24 +1653,47 @@ Then there are two cases,
 		 \empty
 		}
 		{
-		\config{m, \eif_w (\etrue, c,  \eskip) ,  t, w }
-		\xrightarrow{} \config{m, c 
-		t, (w + l) }
+		\config{m, 
+		\eif_w (b, 
+		c ; \ewhile ~ [b]^{l} ~ \edo ~ c, 
+		\eskip),
+		t, w }
+		\xrightarrow{} 
+		\config{m, 
+		c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
+		t, \todomath{(w + l)} }
 		}
 		~\textbf{ifw-true}
 	\]
 	We then have the following evaluation:
 	\[
-	\inferrule
-	{
-	 \empty
-	}
-	{
-	\config{\ssa{m, \eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c_1,  c_2)} ,  t, w }
-	\xrightarrow{} \config{\ssa{m, c_1 }
-	t, (w + l) }
-	}
-	~\textbf{ssa-ifw-true}
+		\inferrule
+		{
+		 \empty
+		}
+		{
+		\config{
+		\ssa{
+		m, 
+		{
+		\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
+		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+		\eskip)
+		} 
+		},  t, w 
+		}
+		\\
+		\xrightarrow{} 
+		\config{
+		\ssa{m, 
+		{
+		\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
+		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
+		}
+		}
+		t, (w + l) }
+		}
+		~\textbf{ssa-ifw-true}
 	\]
 %
 By induction hypothsis on the premise $  { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }$, we know that
@@ -2350,237 +2405,6 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
 }
 
 \end{mathpar}
-
-% \section{\THESYSTEM}
-% There are two steps for our algorithm to get the estimation of the adaptivity of a SSA program $\ssa{c}$ in the labeled while language. 
-% \begin{enumerate}
-%     \item Collect the annotated variables assigned (via assignment) in a global list $G$. We have an algorithm of the form : $\ag{G;w; \ssa{c}}{ G';w'} $.
-%     \item We track the dependence between annotated variables in a matrix $M$, whose size is $|G| \times |G|$, and a vector $V$ with size $|G|$. We have another algorithm to fill $M,V$.  Of the form:  $ \func{\Gamma, i_1, c}{M, V, i_2} $. The input is $\Gamma, c, i_1$ and output of the algorithm $AD$ is $(M, V, i_2)$.    $\Gamma ;_{M,V}^{i_1,i_2} \ssa{c}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first assigned variable in ${c}$ in the global list $G$, and $i_2$ points to one position after the last assigned variable in ${c}$.
-% \end{enumerate}
-% \subsection{step 1, generating G}
-%  \begin{mathpar}
-% \inferrule
-% {
-% }
-% { G ;w; {[\assign {x}{\expr}]^{l}} \to G ++ [x^{(l,w)}];w 
-% }
-% ~\textbf{asgn}
-% \and
-% \inferrule
-% {
-% }
-% { G ;w; { [ \assign{x}{\query(\expr)}]^{l}} \to  G ++ [x^{(l,w)}] ; w 
-% }~\textbf{query}
-% %
-% \and 
-% %
-% \inferrule
-% {
-% G; w; {c_1} \to G_1;w
-% \and 
-%  G_1;w ; {c_2} \to G_2; w
-% %  \and G_3 = G_2 ++ \ssa{[\bar{x}^{(l,w)}]++ \ssa{[\bar{y}^{(l,w)}]}++ \ssa{[\bar{z}^{(l,w)}]} }
-% }
-% {
-% G; w; [
-% \eif(\bexpr, { c_1, c_2)}]^{l} \to G_2 ;w
-% }~\textbf{if}
-% %
-% %
-% %
-% \and 
-% %
-% \inferrule
-% {
-% G; w; {c_1} \to G_1; w
-% \and 
-% G_1;w; {c_2} \to G_2; w
-% }
-% {
-% G; w;
-% {c_1 ; c_2} \to G_2 ; w
-% }
-% ~\textbf{seq}
-% \and 
-% \inferrule
-% {
-% {G_0 = G \quad w_0 =w }
-% \and
-% \forall 0 \leq z < N. 
-% { G_z ; (w_z+l); {c} \to G_{z+1} ; w_{z+1}  }
-% % \and
-% % {G_f = G_N ++ \ssa{[\bar{x}^{(l, w_N \setminus l)}]} }
-% \and
-% { {e =  {N} } }
-% }
-% {G; w; [\eloop ~ {e}~ \edo ~ {c}]^{l} \to G_N; w_N\setminus l
-% }~\textbf{loop}
-% % \and 
-% % \inferrule
-% % {
-% % \Gamma \vdash^{(i,i+a )}_{M, V} c 
-% % }
-% % {\Gamma \vdash^{(i, i+ N*a)}_{M_{i,a}^N(f), V_{i, a}^N} 
-% % \ewhile([\bexpr]^l,   c) : \phi \Rightarrow \psi
-% % }~\textbf{while}
-% %
-% % \and
-% % %
-% % \inferrule
-% % {
-% % }
-% % {G;w; [ \eswitch(\ssa{\expr}, \ssa{x},(\ssa{v_j} \rightarrow \ssa{q_j} ) )]^{l}\to G ++ [\ssa{x}^{(l, w)}] ; w }
-% % ~\textbf{switch}
-% \end{mathpar}
-
-% \begin{lem}[$w$ remain the same]
-% Given a program $c$, a global list $G$, a starting loop maps $w$,  then $G; w; c \to G'; w$.
-% \end{lem}
-
-% \subsection{step 2, fill matrix and vector}
-
-% \begin{mathpar}
-% \inferrule
-% {M = \mathsf{L}(i) * ( \mathsf{R}(\expr,i) + \Gamma )
-% }
-% {
-% \func{ \Gamma , i,[\assign {{x}}{{\expr}} ]^{l} }{ M, V_{\emptyset}, i+1} 
-% % \vdash_{M, V_{\emptyset}}^{(i, i+1)} [\assign {{x}}{{\expr}} ]^{l}
-% }
-% ~\textbf{asgn}
-% \and
-% \inferrule
-% {M = \mathsf{L}(i) * (\mathsf{R}(\expr,i) + \Gamma)
-% \\
-% V= \mathsf{L}(i)
-% }
-% {
-% \func{ \Gamma , i,[\assign{{x}}{\query(\expr)} ]^{l}  }{ M, V, i+1} 
-% % \Gamma \vdash^{(i, i+1)}_{M, V} [ \assign{{x}}{\query(\expr)} ]^{l} 
-%  }~\textbf{query}
-% %
-% \and 
-% %
-% \inferrule
-% {
-% {\func{\Gamma + \mathsf{R}(\bexpr, i_1), i_1, c_1  }{M_1, V_1, i_2} }
-% % \Gamma + \mathsf{R}(\bexpr, i_1) \vdash^{(i_1, i_2)}_{M_1, V_1} \ssa{c_1} 
-% % : \Phi \land \bexpr \Rightarrow \Psi
-% \and 
-% {
-%  \func{ \Gamma + \mathsf{R}(\bexpr, i_1), i_2, }{. }
-% \Gamma + \mathsf{R}(\bexpr, i_1) \vdash^{(i_2, i_3)}_{M_2, V_2} \ssa{c_2} }
-% % : \Phi \land \neg \bexpr \Rightarrow \Psi
-% \\
-% { \forall 0 \leq j < |\bar{x}|. \bar{x}(j) = x_j, \bar{x_1}(j) = x_{1j}, \bar{x_2}(j) = x_{2j}  }
-% \\
-% { \forall 0 \leq j < |\bar{x}|.  \Gamma \vdash_{M_{x_j}, V_{\emptyset}}^{i_3+j, i_3+j+1 } x_j \leftarrow x_{1j} + x_{2j} }
-% \and
-% { \forall 0 \leq j < |\bar{y}|.  \Gamma \vdash_{M_{y_j}, V_{\emptyset}}^{i_3+|\bar{x}|+j, i_3+|\bar{x}|+j+1 } y_j \leftarrow y_{1j} + y_{2j} }
-% \\
-% { \forall 0 \leq j < |\bar{z}|.  \Gamma \vdash_{M_{z_j}, V_{\emptyset}}^{i_3+|\bar{x}|+|\bar{y}|+j, i_3+|\bar{x}|+|\bar{y}|+j+1 } z_j \leftarrow z_{1j} + z_{2j} }
-% \and
-% {M = (M_1+M_2)+ \sum_{j\in [|\bar{x}|] }M_{x_j} + \sum_{j\in [|\bar{y}|] }M_{y_j} + \sum_{j\in [|\bar{z}|] }M_{z_j} }
-% }
-% {
-% \func{\Gamma, i_1, [\eif(\bexpr, { c_1, c_2)}]^{l} }{M, V_1 \uplus V_2, i_3}
-% % \Gamma \vdash^{(i_1, i_3)}_{M, V_1 \uplus V_2 } 
-% }~\textbf{if}
-% %
-% %
-% %
-% \and 
-% %
-% \inferrule
-% {
-% \Gamma \vdash^{(i_1, i_2)}_{M_1, V_1} \ssa{c_1} 
-% % : \Phi \Rightarrow \Phi_1
-% \and 
-% \Gamma \vdash^{(i_2, i_3)}_{M_2, V_2} \ssa{c_2} 
-% % : \Phi_1 \Rightarrow \Psi 
-% }
-% {
-% \Gamma \vdash^{(i_1, i_3)}_{M_1 \green{;} M_2, V_1 \uplus V_2}
-% \ssa{c_1 ; c_2} 
-% % : \Phi \Rightarrow \Psi
-% }
-% ~\textbf{seq}
-% \and 
-% \inferrule
-% {
-% B= |\ssa{\bar{x}}| 
-% \and
-% {\Gamma \vdash^{(i, i+B)}_{M_{10}, V_{10}} [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] }
-% \and
-% {\Gamma \vdash^{(i+B,i+B+A )}_{M_{20}, V_{20}} \ssa{c} 
-% }
-% \\
-% \forall 1 \leq j < N. 
-% {\Gamma \vdash^{(i+j*(B+A), i+B+j*(B+A))}_{M_{1j}, V_{1j}}  } [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]
-% \and
-% {\Gamma \vdash^{(i+B+j*(B+A),i+B+A+j*(B+A) )}_{M_{2j}, V_{2j}} \ssa{c} 
-% % : \Phi \land e_n = \lceil{z+1}\rceil \Rightarrow \Psi 
-% }
-% \\
-% {\Gamma \vdash^{(i+N*(B+A) ,i+N*(B+A)+B )}_{M, V} [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]
-% % : \Psi \Rightarrow \Phi \land e_N = \lceil{z}\rceil 
-% }
-% \and
-% { \ssa{a} = \lceil {N} \rceil }
-% \and
-% {M' = M+ \sum_{0 \leq j <N} M_{1j}+M_{2j}  }
-% \and
-% {V' = V \uplus \sum_{0 \leq j <N} V_{1j} \uplus V_{2j}  }
-% }
-% {\Gamma \vdash^{(i, i+N*(B+A)+B   )}_{M', V'} 
-% [\eloop ~ \ssa{\aexpr}, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l}
-% % : \Phi \land \expr_N = \lceil { N} \rceil \Rightarrow \Phi \land \expr_N = \lceil{0}\rceil
-% }~\textbf{loop}
-% % \and 
-% % \inferrule
-% % {
-% % \Gamma \vdash^{(i,i+a )}_{M, V} c 
-% % }
-% % {\Gamma \vdash^{(i, i+ N*a)}_{M_{i,a}^N(f), V_{i, a}^N} 
-% % \ewhile([\bexpr]^l,   c) : \phi \Rightarrow \psi
-% % }~\textbf{while}
-% % %
-% % \and
-% % %
-% % \inferrule
-% % { \Gamma + \mathsf{R}(\expr,i) \vdash^{(i, i+1)}_{M, V} \assign{ x}{q_j} 
-% % % : \Phi \Rightarrow \Psi
-% % \\
-% % j \in \{1, \dots, N\}     }
-% % {\Gamma \vdash^{(i, i+1)}_{ M,V } 
-% % [\eswitch(\ssa{\expr}, \ssa{x},(v_j \rightarrow q_j ) ]^{l}
-% % % : \Phi \Rightarrow \Psi 
-% % }
-% % ~\textbf{switch}
-% % %
-% % \and
-% % %
-% % \inferrule
-% % { 
-% % \vDash 
-% % \Phi \Rightarrow \Phi'  
-% % \and
-% % \Gamma \vdash^{(i_1, i_2)}_{(M',V')} c : \Phi' \Rightarrow \Psi'
-% % \and
-% % \vDash \Psi' \Rightarrow \Psi
-% % \and 
-% % \Phi \vDash M' \leq M
-% % \and 
-% % \Phi \vDash V' \leq V
-% % }
-% % {\Gamma \vdash^{(i_1, i_2)}_{(M,V)} c 
-% % : \Phi \Rightarrow \Psi
-% % }
-% % ~\textbf{conseq}
-% \end{mathpar}
-
-
-% \clearpage
 
 \section{\THESYSTEM}
 \subsection{Analysis Rules/Algorithms of \THESYSTEM}
