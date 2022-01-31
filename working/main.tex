@@ -150,227 +150,315 @@ The key component of the system is an program analysis procedure, which provides
 \end{array}
 \]
 %
-\paragraph{Trace Based Operational Semantics.}
-Small step operational semantics of expressions are standard and omitted.
+%
+\subsection{ Trace-based Operational Semantics}
+\jl{
+We evaluate programs in our {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as follow:
+%
+\[
+\begin{array}{llll}
+     \mbox{Labeled commands} & c & ::= &   [\assign x \expr]^{l} ~|~  [\assign x q(e)]^{l}
+ ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 ~|~ [\eskip]^{l} \\
+\end{array}
+\]
+%
+Each command is now labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the loop counter $\aexpr$ in the loop statement. We will also use  Loop Maps $w$ as defined below.  
+%
+\[
+	\begin{array}{llll}
+	\mbox{While Maps} & w & \in & \mbox{Label} \to \mathbb{N} \\
+	 %
+	\mbox{Annotated Query} & \mathcal{AQ}  & ::= 
+		& \{ (\query(\qval), l, w)   \} \\
+	\end{array}
+	\begin{array}{llll}
+	\mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
+	\mbox{Trace} & t & ::= 
+		& [] ~|~ ( \query(\qval), l, w) :: t \\
+	\end{array}
+\]
+%
+  	While maps are map from labels $l$ to iteration number $n$.
+%
+  	A mapping $[k \to n]$ gives accurate information on which loop a statement is in by its key $k$ (label at loop counter), and which iteration $n$ the statement belongs to. For example, the loop maps $w=[3:1, 4:2]$ indicates that the statement is currently in a nested loop, the outer loop starting from label $3$ and in its first iteration, the statement is now in the inner loop starting from label $4$ and in the second iteration. We use $\emptyset$ to represent an empty map, indicating the statement is not in any loop. We define operations on $w$ as follows.
+  	%
+  	\todo{
+	\[
+	\begin{array}{ccc}
+	w \setminus l     & = w  & l \not\in Keys(w)   \\
+	     & = w_l & Otherwise \\
+	w + l & = w[l \to 0] & l \not \in Keys(w) \\   
+	     & w_l [l \to w(l)+1] & Otherwise
+	\end{array}
+	\]
+	}
+%
+  	We use $w \setminus l$ to remove the mapping of the key $l$ from the loop maps $w$. This is used when exiting the loop at line $l$. The special loop maps $w_l$ expresses a map identical to $w$, but without the mapping of label $l$. We record in $w$ the first iteration of a loop marked by label $l$ by assigning $l$ with the iteration $1$. The mapped number increase when going into another iteration of the same loop. We use $Keys(w)$ to return all the keys of the while maps $w$.
+}
 
+\jl{
+	%%% trace, queries
+	A memory is standard, a map from variables to values. Queries can be uniquely annotated as $\mathcal{AQ}$, and the annotation $(l,w)$ considers the location of the query by line number $l$ and which iteration the query is at when it appears in a loop statement, specified by $w$. A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
+	}
+
+\jl{	 
+	 %% trace
+	A trace can be regarded as the program history, where this history consists of the queries asked by the analyst during the execution of the program. We collect the trace with a trace-based small-step operational semantics based on transitions of the form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. It states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and loop maps updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  A configuration contains four elements: a memory $m$, the command $c$ to be evaluated, a starting trace $t$, a starting loop maps $w$. Most of the time, the loop maps remains empty until the evaluation goes into loops.  We also have the evaluation of arithmetic expressions of the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmetic expression $\aexpr$ in the memory $m$, and similar for the boolean expressions $\config{m, \bexpr} \barrow \bexpr'$.  
+  }
 
 {
 \begin{figure}
 \begin{mathpar}
-\boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
-\\
-\inferrule{ 
-  \config{m, \aexpr} \aarrow \aexpr'
-}{
- \config{m,  \chi( \aexpr)} \aarrow \chi(\aexpr')
-}
-\\
-\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
-\end{mathpar}
-\begin{mathpar}
-\boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
-\\
-\inferrule
-{
- \config{m, \expr } \xrightarrow{}  \config{m, \expr' }
-}
-{
-\config{m, [\assign x \expr]^{l},  t, w} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t, w}
-}
-~\textbf{assn1}
-%
-~~~~~~
-%
-\inferrule
-{
-}
-{
-\config{m, [\assign x v]^{l},  t, w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t, w}
-}
-~\textbf{assn2}
-%
-\and
+	\boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
+	\\
+	\inferrule{ 
+	  \config{m, \aexpr} \aarrow \aexpr'
+	}{
+	 \config{m,  \chi( \aexpr)} \aarrow \chi(\aexpr')
+	}
+	\\
+	\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
+	\end{mathpar}
+	\begin{mathpar}
+	\boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
+	\\
+	\inferrule
+	{
+	 \config{m, \expr } \xrightarrow{}  \config{m, \expr' }
+	}
+	{
+	\config{m, [\assign x \expr]^{l},  t, w} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t, w}
+	}
+	~\textbf{assn1}
+	%
+	~~~~~~
+	%
+	\inferrule
+	{
+	}
+	{
+	\config{m, [\assign x v]^{l},  t, w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t, w}
+	}
+	~\textbf{assn2}
+	%
+	\and
+	%
+	\jl{
+	{\inferrule
+	{
+	 \empty
+	}
+	{
+	\config{m, \ewhile ~ [b]^{l} ~ \edo ~ c, t, w }
+	\xrightarrow{} 
+	\config{
+	m, c ; 
+	\eif_w (b, c ; 
+	\ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
+	t, (w + l)
+	}
+	}
+	~\textbf{while-b}
+	}
+	}
+	%
+	\and
+	%
+	\jl{{\inferrule
+	{
+	 m, b \xrightarrow{} b'
+	}
+	{
+	\config{m, 
+	\eif_w (b, c, \eskip) ,  
+	t, w }
+	\xrightarrow{} \config{m, 
+	 \eif_w (b', c,  \eskip), t, w }
+	}
+	~\textbf{ifw-b}
+	}
+	}
+	%
+	\and
+	%
+	\jl{{
+	\inferrule
+	{
+	 \empty
+	}
+	{
+	\config{m, 
+	\eif_w (b, 
+	c ; \ewhile ~ [b]^{l} ~ \edo ~ c, 
+	\eskip),
+	t, w }
+	\xrightarrow{} 
+	\config{m, 
+	c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
+	t, \todomath{(w + l)} }
+	}
+	~\textbf{ifw-true}
+	}
+	}
+	\and
+	%
+	\jl{{
+	\inferrule
+	{
+	 \empty
+	}
+	{
+	\config{
+	m, 
+	\eif_w (\efalse, c; \ewhile ~ [b]^{l} ~ \edo ~ c,\eskip), 
+	t, w 
+	}
+	\xrightarrow{} \config{m, 
+	 \eskip, t, (w \setminus l) }
+	}
+	~\textbf{ifw-false}
+	}
+	}
+	%
+	\and
+	%
+	\jl{
+	\inferrule
+	{
+	\config{m,\qexpr} \qarrow \config{m,\qexpr'}
+	}
+	{
+	\config{m, [\assign{x}{\query(\qexpr)}]^l, t, w} \xrightarrow{}  
+	\config{m, [\assign{x}{\query(\qexpr')}]^l, t, w}
+	}
+	~\textbf{query-e}
+	}
+	\and
+	\jl{
+	\inferrule
+	{
+	\query(\qval) = v
+	}
+	{
+	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
+	\xrightarrow{} 
+	\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
+	}
+	~\textbf{query-v}
+	}
+	%
+	\and
+	%
+	%
+	\inferrule
+	{
+	\config{m, c_1,  t,w} \xrightarrow{} \config{m', c_1',  t',w'}
+	}
+	{
+	\config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w'}
+	}
+	~\textbf{seq1}
+	%
+	\and
+	%
+	\inferrule
+	{
+	}
+	{
+	\config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
+	}
+	~\textbf{seq2}
+	\and
+	%
+	\inferrule
+	{
+	\config{ m, \bexpr} \barrow \bexpr'
+	}
+	{
+	\config{m, \eif([\bexpr]^{l}, c_1, c_2),  t,w} 
+	\xrightarrow{} \config{m,  \eif([\bexpr']^{l}, c_1, c_2),  t,w}
+	}
+	~\textbf{if}
+	%
+	\and
+	%
+	\inferrule
+	{
+	}
+	{
+	\config{m, \eif([\etrue]^{l}, c_1, c_2),t,w} 
+	\xrightarrow{} \config{m, c_1,  t,w}
+	}
+	~\textbf{if-t}
+	%
+	~~~~~~
+	%
+	\inferrule
+	{
+	}
+	{
+	\config{m,  \eif([\efalse]^{l}, c_1, c_2),  t,w} 
+	\xrightarrow{} \config{m, c_2,  t,w}
+	}
+	~\textbf{if-f}
+	%
+	%
+	\end{mathpar}
+	    \caption{Trace-based operational semantics of while language.}
+    	\label{fig:evaluation}
+	\end{figure}
+	}
+	%
 %
 \jl{
-{\inferrule
-{
- \empty
-}
-{
-\config{m, \ewhile ~ [b]^{l} ~ \edo ~ c, t, w }
-\xrightarrow{} 
-\config{
-m, c ; 
-\eif_w (b, c ; 
-\ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
-t, (w + l)
-}
-}
-~\textbf{while-b}
-}
-}
+We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
+The rule $\textbf{query-e}$ evaluates the argument of a query request. When the argument is in normal form, this query will be answered.
 %
-\and
+The rule $\textbf{query-v}$ modifies the starting memory $m$ to $m[v_q/x]$ using the answer $v_q$ of the query $q(v)$ from the mechanism, with the trace expanded by appending the query $q(v)$ with the current annotation $(l,w)$. 
 %
-\jl{{\inferrule
-{
- m, b \xrightarrow{} b'
-}
-{
-\config{m, 
-\eif_w (b, c, \eskip) ,  
-t, w }
-\xrightarrow{} \config{m, 
- \eif_w (b', c,  \eskip), t, w }
-}
-~\textbf{ifw-b}
-}
-}
+The rule for assignment is standard and the trace remains unchanged.%
+The sequence rule keeps tracking the modification of the trace, and the evaluation rule for if conditional goes into one branch based on the result of the conditional predicate $\bexpr$. 
 %
-\and
+The rules for while modify the while maps $w$. 
+In the rule $\textbf{ifw-true}$, the while maps $w$ is updated by $w + l$ because the execution goes into another iteration when the condition $n >0$ is satisfied. 
 %
-\jl{{
-\inferrule
-{
- \empty
-}
-{
-\config{m, 
-\eif_w (b, 
-c ; \ewhile ~ [b]^{l} ~ \edo ~ c, 
-\eskip),
-t, w }
-\xrightarrow{} 
-\config{m, 
-c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
-t, \todomath{(w + l)} }
-}
-~\textbf{ifw-true}
-}
-}
-\and
-%
-\jl{{
-\inferrule
-{
- \empty
-}
-{
-\config{
-m, 
-\eif_w (\efalse, c; \ewhile ~ [b]^{l} ~ \edo ~ c,\eskip), 
-t, w 
-}
-\xrightarrow{} \config{m, 
- \eskip, t, (w \setminus l) }
-}
-~\textbf{ifw-false}
-}
-}
-%
-\and
+When $n$ reaches $0$, the loop exits and the while maps $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
+}   
 %
 \jl{
-\inferrule
-{
-\config{m,\qexpr} \qarrow \config{m,\qexpr'}
+\subsection{ Query-based Dependency Graph}
+%
+We define adaptivity through a query-based dependency graph. In our model, an \emph{analyst} asks a sequence of queries to the mechanism, and the analyst receives the answers to these queries from the mechanism. A query is adaptively chosen by the analyst when the choice of this query is affected by answers from previous queries. In this model, the adaptivity we are interested in is the length of the longest sequence of such adaptively chosen queries, among all the queries the data analyst asks to the mechanism.  Also, when the analyst asks a query, the only information the analyst will have will be the answers to previous queries and the state of the program. It means that when we want to know if this query is adaptively chosen, we only need to check whether the choice of this query will be affected by changes of answers to previous queries. There are two possible situations that can  affect the choice of a query,  
+either the query argument directly uses the results of previous queries (data dependency), or the control flow of the program with respect to a query (whether to ask this query or not) depends on the results of previous queries (control flow dependency).
 }
-{
-\config{m, [\assign{x}{\query(\qexpr)}]^l, t, w} \xrightarrow{}  
-\config{m, [\assign{x}{\query(\qexpr')}]^l, t, w}
-}
-~\textbf{query-e}
-}
-\and
+
 \jl{
-\inferrule
-{
-\query(\qval) = v
+As a first step, we give a definition of when one query may depend on a previous query, which is supposed to consider both control dependency and data dependency. We first look at two possible candidates:
+\begin{enumerate}
+    \item One query may depend on a previous query if and only if a change of the answer to the previous query may also change the result of the query.
+    \item One query may depend on a previous query if and only if a change of the answer to the previous query may also change the appearance of the query.
+\end{enumerate}
 }
-{
-\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
-\xrightarrow{} 
-\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
-}
-~\textbf{query-v}
-}
+
+\jl{
+   The first candidate works well by witnessing the result of one query according to the change of the answer of another query. We can easily find that the two queries have nothing to do with each other in a simple example   
 %
-\and
-%
-%
-\inferrule
-{
-\config{m, c_1,  t,w} \xrightarrow{} \config{m', c_1',  t',w'}
+    $ p = \assign{x}{q(\chi(1))} ; \assign{y}{q(\chi(2))}$. This candidate definition works well with respect to data dependency. However, if fails to handle control dependency since it just monitors the changes to the answer of a query when the answer of previous queries returned change. The key point is that this query may also not be asked because of an analyst decision which depend on the answers of previous queries. An example of this situation is shown in program $p_1$ as follows.
+    \[
+      p_1 = \assign{x}{q(\chi(1))} ; \eif( x > 2 ,\assign{y}{q(\chi(2))}, \eskip )
+   	\]
+	%   
+   	We choose the second candidate, which performs well by witnessing the appearance of one query $q(\chi(2))$ upon the change of the result of one previous query $q(\chi(1))$ in $p_1$. It considers the control dependency, and at the same, does not miss the data dependency. In particular, the arguments of a query characterizes it. In this sense, if the data used in the arguments changes due to a different answer to a certain previous query, the appearance of the query may change as well. This situation is also captured by our definition. Let us look at another variant of program $p$, $p_2$, in which the queries equipped with functions using previously assigned variables storing answer of its previous query.
+    \[
+      p_2 = \assign{x}{q(\chi(2))} ; \assign{y}{q(x+\chi(3))}
+   	\]
+    As a reminder, in the {\tt Loop} language, the query request is composed by two components: a symbol $q$ representing a linear query type and the argument $\expr$, which represents the function specifying what the query asks. So we do think $q(\chi(1))$ is different from $q(\chi(2))$. Informally, we think $q(x+\chi(3))$ may depend on the query $q(\chi(2))$, because equipped function of the former $x+\chi(3)$ depend on the data assigned with $q(\chi(2))$. We can see the appearance definition catches data dependency in such a way, since $q(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
 }
-{
-\config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w'}
-}
-~\textbf{seq1}
-%
-\and
-%
-\inferrule
-{
-}
-{
-\config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
-}
-~\textbf{seq2}
-\and
-%
-\inferrule
-{
-\config{ m, \bexpr} \barrow \bexpr'
-}
-{
-\config{m, \eif([\bexpr]^{l}, c_1, c_2),  t,w} 
-\xrightarrow{} \config{m,  \eif([\bexpr']^{l}, c_1, c_2),  t,w}
-}
-~\textbf{if}
-%
-\and
-%
-\inferrule
-{
-}
-{
-\config{m, \eif([\etrue]^{l}, c_1, c_2),t,w} 
-\xrightarrow{} \config{m, c_1,  t,w}
-}
-~\textbf{if-t}
-%
-~~~~~~
-%
-\inferrule
-{
-}
-{
-\config{m,  \eif([\efalse]^{l}, c_1, c_2),  t,w} 
-\xrightarrow{} \config{m, c_2,  t,w}
-}
-~\textbf{if-f}
-%
-%
-\end{mathpar}
-    \caption{Trace-based operational semantics of while language.}
-    \label{fig:evaluation}
-\end{figure}
-}
-\todo{
-where $w_l$ refers to a map $w$ without the key $l$.
-\[
-\begin{array}{ccc}
-w \setminus l     & = w  & l \not\in Keys(w)   \\
-     & = w_l & Otherwise \\
-w + l & = w[l \to 0] & l \not \in Keys(w) \\   
-     & w_l [l \to w(l)+1] & Otherwise
-\end{array}
-\]
-}
-% \vfill \pagebreak
-%
-\subsection{Adaptivity of Programs}
-%
+
+\jl{
+   We give a formal definition of query may dependency based on the trace-based operational semantics as follows.
+   }
+   %
 %
 \begin{defn}[Label Order]
 \todo{
