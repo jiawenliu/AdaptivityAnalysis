@@ -96,7 +96,7 @@ Finally we extend the language to support the probabilistic program and extend t
 
 The key component of the system is an program analysis procedure, which provides an upper bound on the adaptivity of the program.
 
-\section{While Language}
+\section{Label While Language}
 \label{sec:while_language}
 %
 \subsection{Syntax and Semantics}
@@ -109,6 +109,7 @@ The key component of the system is an program analysis procedure, which provides
   \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
   %
    \mbox{Relational Operators} & \sim & ::= & < ~|~ \leq ~|~ == \\  
+   \mbox{Label} & l & \in &  \mathbb{N}  \\  
 \mbox{Arithmetic Expressions} & \aexpr & ::= & 
 	%
 	n ~|~ x ~|~ \aexpr \oplus_a \aexpr ~|~ \\
@@ -132,7 +133,7 @@ The key component of the system is an program analysis procedure, which provides
 \mbox{commands} & c & ::= &   \assign x \expr ~|~  \assign{x}{ \query(\qexpr)}
 %
 ~|~ \\ 
-&&& \eloop ~ \aexpr  ~ \edo ~ c ~ \jl{\ewhile ~ b ~ \edo ~ c}  ~|~ c;c  ~|~ \eif(\bexpr, c, c) 	 ~|~ \eskip 
+&&&  \jl{\ewhile ~ b ~ \edo ~ c}  ~|~ c;c  ~|~ \eif(\bexpr, c, c) 	 ~|~ \eskip 
 	\\
 \mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
 \mbox{Trace} & t & ::= & [] 
@@ -143,7 +144,7 @@ The key component of the system is an program analysis procedure, which provides
 \\
 %
 \mbox{\jl{While Maps}}
-& w & ::= & \jl{[] |  w[\mbox{Label} \to \mathbb{N}]}
+& w & ::= & \jl{[] |  w[l \to n]}
 \\
 %
 \mbox{\jl{Query Domain}}
@@ -181,15 +182,15 @@ Each command is now labeled with a label $l$, a natural number standing for the 
 %
   	While maps are map from labels $l$ to iteration number $n$.
 %
-  	A mapping $[k \to n]$ gives accurate information on which loop a statement is in by its key $k$ (label at loop counter), and which iteration $n$ the statement belongs to. For example, the loop maps $w=[3:1, 4:2]$ indicates that the statement is currently in a nested loop, the outer loop starting from label $3$ and in its first iteration, the statement is now in the inner loop starting from label $4$ and in the second iteration. We use $\emptyset$ to represent an empty map, indicating the statement is not in any loop. We define operations on $w$ as follows.
+  	A mapping $[k \to n]$ gives accurate information on which while loop the statement is in by finding its corresponding label $k$, (also the key in the map). The label $k$ specifies the line number of the conditional of the while loop the current statement lives. And the mapped result $n$ indicates the iteration number the current statement belongs to. For example, the loop maps $w=[3:1, 4:2]$ indicates that the statement is currently in a nested loop, the outer while loop starting from label $3$ (where the outside conditional is) and in its first iteration, the statement is now in the inner loop starting from label $4$ and in the second iteration. We use $\emptyset$ to represent an empty map, indicating the statement is not in any loop. We define operations on $w$ as follows.
   	%
-  	\todo{
+  	\jl{
 	\[
-	\begin{array}{ccc}
+	\begin{array}{lll}
 	w \setminus l     & = w  & l \not\in Keys(w)   \\
-	     & = w_l & Otherwise \\
+	     & = w' & w = w' [l \to \_] \\
 	w + l & = w[l \to 0] & l \not \in Keys(w) \\   
-	     & w_l [l \to w(l)+1] & Otherwise
+	     & = w'[l \to n+1] &  w = w'[l \to n]
 	\end{array}
 	\]
 	}
@@ -642,7 +643,7 @@ Proof is obvious by induction on the operational semantics rules.
 \end{proof}
 %
 \begin{lem}
-[Semi-Determination].
+[Semi-Determinism].
 \\
 \jl{
 for any program $c$ with a tarting memory $m$, trace $t$ and while label $w$, 
@@ -668,6 +669,7 @@ $$
 Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
+%
 %
 \clearpage
 
