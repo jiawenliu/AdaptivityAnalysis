@@ -260,7 +260,7 @@ Each command is now labeled with a label $l$, a natural number standing for the 
 	m, c ; 
 	\eif_w (b, c ; 
 	\ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
-	t, (w + l)
+	t, \todomath{(w + l)}
 	}
 	}
 	~\textbf{while-b}
@@ -466,7 +466,6 @@ As a first step, we give a definition of when one query may depend on a previous
    %
 %
 \begin{defn}[Label Order]
-\todo{
 $<_w and =_w$.\\
 \[
   \begin{array}{lll}
@@ -483,7 +482,6 @@ $mk(w_i) =MinKey(w_i) $
      & \triangleq & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & Otherwise
 \end{array}
 \]
-}
 \end{defn}
 %
 \begin{defn}[Query Direction]
@@ -648,19 +646,84 @@ Proof is obvious by induction on the operational semantics rules.
 \jl{
 for any program $c$ with a tarting memory $m$, trace $t$ and while label $w$, 
 if program $c$ contains neither  
-$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ of any $\qexpr$ and $\qval$, then
+$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then
 %
 $$
+\bigwedge
+\left\{\begin{array}{l}
 \config{m, c, t, w} 
 \rightarrow^{*} 
 \config{m_1, \eskip, t_1, w_1} 
-\land 
+\\ 
 \config{m, c, t, w} 
 \rightarrow^{*} 
 \config{m_2, \eskip, t_2, w_2} 
+\end{array}
+\right\}
 \implies
 (m_1 = m_2 \land t_1 = t_2 \land w_1 = w_2)
  $$ 
+}
+\end{lem}
+%
+\begin{proof}
+\jl{
+Proof is obvious by induction on the operational semantics rules.
+}
+\end{proof}
+%
+%
+The evaluation of the query expression is deterministic while the evaluation of the query itself can be non-deterministic. Below the Lemma Query Non-Determinism formally described this property. 
+%
+\begin{lem}
+[Query Semi-Determinism].
+\\
+\jl{
+Given a program $c; \assign{x}{\query(\qexpr)}; c'$ with a starting memory $m$, trace $t$ and while label $w$, 
+s.t. $c$ contains neither  
+$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, 
+we have the Semi-Determinism property as follows:
+%
+\[
+\bigwedge
+\left\{
+\begin{array}{l}
+\config{m, c; \assign{x}{\query(\qexpr)}; c', t, w} 
+\rightarrow^{*} 
+\config{m_1, \assign{x}{\query(\qval_1)}; c', t_1, w_1} 
+\\
+\config{m, c; \assign{x}{\query(\qexpr)}; c', t, w} 
+\rightarrow^{*} 
+\config{m_2, \assign{x}{\query(\qval_2)}; c', t_2, w_2} 
+\end{array}
+\right\}
+\implies
+(\qval_1 = \qval_2 \land m_1 = m_2 \land t_1 = t_2 \land w_1 = w_2)
+\]
+}
+\end{lem}
+%
+\begin{proof}
+\jl{
+Proof is obvious by induction on the operational semantics rules.
+}
+\end{proof}
+%
+%
+\begin{lem}
+[Adaptivity Toplimit].
+\\
+\jl{
+Given a program $c$ with a database $D$ and a tarting memory $m$,
+the top limitation for $A(c, D, m)$ as follows:
+%
+\[
+\config{m, c, \emptyset, \emptyset} 
+\rightarrow^{*} 
+\config{m', \eskip, t', w'} 
+\implies
+A(c, D, m) \leq |t'|
+\]
 }
 \end{lem}
 %
@@ -943,13 +1006,29 @@ m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
  {n > 0 \rightarrow i = 2 }
 }
 {
-\config{\ssa{m},  \ssa{\ewhile ~ [\bexpr]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ,  t, w }
+\config{
+\ssa{m},  
+\ssa{
+\ewhile ~ 
+[\bexpr]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] 
+~ \edo ~ {c} 
+}, t, w 
+}
 \xrightarrow{} 
 \\ 
 \config{\ssa{m},
-\eif_w (\ssa{b[\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n, 
-c[\bar{x_i}/\bar{x'}] }; \ssa{\ewhile ~ [b]^{l}, n+1, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c} ,  \eskip),
-t, (w + l) }
+\eif_w (\ssa{
+b[\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n, 
+c[\bar{x_i}/\bar{x'}] 
+}; 
+\ssa{
+\ewhile ~ 
+[b]^{l}, n+1, 
+[\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  
+~ \edo ~ c} ,  
+\eskip),
+t, \todomath{(w + l)} 
+}
 }
 ~\textbf{ssa-while-b}
 }
@@ -1851,10 +1930,13 @@ When the while loop is still running ($v_N > 0$), we have the following evaluati
  \empty
 }
 {
-\config{m, \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1} ,  t, w }
+\config{
+m, \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  t, w 
+}
 \xrightarrow{} \config{m, c ; 
-\eif_w (b, c ; \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  \eskip),
-t, (w + l) }
+\eif_w (b, c ; 
+\ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  \eskip),
+t, \todomath{(w + l)} }
 }
 ~\textbf{while-b}
 \]
@@ -1882,10 +1964,24 @@ $m = \delta^{-1}(\ssa{m})$.
  {n > 0 \rightarrow i = 2 }
 }
 {
-\config{\ssa{m},  \ssa{\ewhile ~ [\bexpr]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ,  t, w }
-\xrightarrow{} \\ \config{\ssa{m},
-\eif_w (\ssa{b[\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c[\bar{x_i}/\bar{x'}] }; \ssa{\ewhile ~ [b]^{l}, n+1, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c} ,  \eskip),
-t, (w + l) }
+\config{
+\ssa{m},  
+\ssa{\ewhile ~ [\bexpr]^{l}, n, 
+[\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] 
+~ \edo ~ {c} 
+},  t, w 
+}
+\xrightarrow{} \\ 
+\config{
+\ssa{m},
+\eif_w 
+(\ssa{b[\bar{x_i}/\bar{x'}], [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c[\bar{x_i}/\bar{x'}] }; 
+\ssa{
+\ewhile ~ [b]^{l}, n+1, 
+[\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  
+~ \edo ~ c} ,  \eskip),
+t, \todomath{(w + l)}
+}
 }
 ~\textbf{ssa-while-b}
 \]
