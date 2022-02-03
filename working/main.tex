@@ -260,7 +260,7 @@ Each command is now labeled with a label $l$, a natural number standing for the 
 	m, c ; 
 	\eif_w (b, c ; 
 	\ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
-	t, \todomath{(w + l)}
+	t, w
 	}
 	}
 	~\textbf{while-b}
@@ -300,7 +300,7 @@ Each command is now labeled with a label $l$, a natural number standing for the 
 	\xrightarrow{} 
 	\config{m, 
 	c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
-	t, \todomath{(w + l)} }
+	t, {(w + l)} }
 	}
 	~\textbf{ifw-true}
 	}
@@ -541,7 +541,7 @@ t_3,w_3}
  \\ \land
   \left( 
   \begin{array}{l}
-  ({\alpha}_2,l_2,w_2) \in_{q} (t_3-t_1) 
+  (\query({\alpha}_2),l_2,w_2) \in_{q} (t_3-t_1) 
   % 
   \\
   \implies 
@@ -552,12 +552,12 @@ t_3,w_3}
   \rightarrow^{*}
   (\config{m_3', \eskip, t_3', w_3'} 
   \land 
-  ({\alpha}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
+  (\query({\alpha}_2),l_2,w_2) \not \in_{q} (t_3'-t_1))
 \end{array} \right )
 \\\land
 \left( 
   \begin{array}{l}
-	\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
+	(\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
   	% 
   	\\
   	\implies 
@@ -592,13 +592,13 @@ $V =\{({\qval}, l,w) \in \mathcal{AQ} \mid
 \\
 $E = \left\{(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
 ~ \left \vert ~ 
-\mathsf{DEP}((({\qval}'),l',w'),(({\qval}),l,w)),c,m,D)
+\mathsf{DEP}((({\qval}'),l',w'),({\qval},l,w)),c,m,D)
  \right.\right\}$.
  }
 \end{defn}
 The edge is directed, when an annotated query $(\query({\qval}),l,w)$ may depend on its previous query $(\query({\qval}'),l',w')$, we have the directed
-edge $(\query({\qval}),l,w), \query({\qval}'),l'.w'))$, 
-from $(\query(\qval),l,w) $ to $(\query({\qval}'),l'.w')$.
+edge $(({\qval},l,w), ({\qval}',l'.w'))$, 
+from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 %
 \begin{defn}
@@ -837,8 +837,6 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 % ~|~ [\eswitch( \ssa{\expr}, \ssa{x}, \ssa{v_i} \to \ssa{ q_i})]^{l} 
 ~|~  {\jl{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
 &&& 
-[\eloop ~ \saexpr, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} 
-~~~
 \jl{\ewhile ~ [ b ]^{l} , n,
 ~ 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
@@ -914,17 +912,30 @@ $\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time
 \begin{figure}
 \begin{mathpar}
 \boxed{\config{\ssa{m, a}} \xrightarrow{} \config{\ssa{a}} \;} 
-\\
+\and
 \inferrule{
     \ssa{m}(\ssa{x}) = \ssa{v}
 }{ \config{\ssa{m, x }} \to \ssa{v} 
-}~{\textbf{SSA-VAR}}
+}~{\textbf{ssa-var}}
 \\
 \boxed{ \config{\ssa{ m, c, t,w}} \xrightarrow{} \config{\ssa{ m', c',  t', w'}} \; }
 \and
 { Memory \times Com  \times Trace \times loop maps \Rightarrow^{}  Memory \times Com  \times Trace \times loop maps}
 \\
-\todomath{~\textbf{ssa-query-e}}
+\jl{
+	\inferrule
+	{
+		\ssa{\config{m,\qexpr} \qarrow \config{m,\qexpr'}}
+	}
+	{
+	\config{\ssa{
+		m, [\assign{x}{\query(\qexpr)}]^l, t, w} }
+	\xrightarrow{} 
+	\config{\ssa{
+		m, [\assign{x}{\query(\qexpr')}]^l, t, w
+	}}
+	}
+	~\textbf{ssa-query-e}}
 %
 \and
 \inferrule
@@ -998,7 +1009,7 @@ m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 \and
 %
 %
-\wq{
+{
 {\inferrule
 {
  {n = 0 \rightarrow i = 1 }
@@ -1027,7 +1038,7 @@ c[\bar{x_i}/\bar{x'}]
 [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  
 ~ \edo ~ c} ,  
 \eskip),
-t, \todomath{(w + l)} 
+t, w 
 }
 }
 ~\textbf{ssa-while-b}
@@ -1036,7 +1047,7 @@ t, \todomath{(w + l)}
 %
 \and
 %
-\wq{{\inferrule
+{{\inferrule
 {
  \ssa{m, b \xrightarrow{} b'}
 }
@@ -1051,7 +1062,7 @@ t, \todomath{(w + l)}
 %
 \and
 %
-\wq{
+{
 \inferrule
 {
  \empty
@@ -1082,7 +1093,7 @@ t, (w + l) }
 }
 \and
 %
-\wq{{
+{{
 \inferrule
 {
  { n = 0 \rightarrow i = 1 }
@@ -1136,7 +1147,7 @@ t_3,w_3}
  \\ \land
   \left( 
   \begin{array}{l}
-  ({\alpha}_2,l_2,w_2) \in_{q} (t_3-t_1) 
+  (\query({\alpha}_2),l_2,w_2) \in_{q} (t_3-t_1) 
   % 
   \\
   \implies 
@@ -1147,12 +1158,12 @@ t_3,w_3}
   \rightarrow^{*}
   (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
   \land 
-  ({\alpha}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
+  (\query({\alpha}_2),l_2,w_2) \not \in_{q} (t_3'-t_1))
 \end{array} \right )
 \\\land
 \left( 
   \begin{array}{l}
-	\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
+	(\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
   	% 
   	\\
   	\implies 
@@ -1184,7 +1195,7 @@ $V =\{({\qval}, l, w) \in \mathcal{AQ}
 \config{\ssa{m} ,\ssa{c}, \emptyset, \emptyset}  
 \to^{*}  
 \config{\ssa{m'} , \eskip, t', w' }  
-\land \query({\qval}), l, w \in {t'}  \}$.
+\land (\query({\qval}), l, w) \in {t'}  \}$.
 \\
 $E = 
 \left\{
@@ -1936,7 +1947,7 @@ m, \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  t, w
 \xrightarrow{} \config{m, c ; 
 \eif_w (b, c ; 
 \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  \eskip),
-t, \todomath{(w + l)} }
+t, w }
 }
 ~\textbf{while-b}
 \]
@@ -1980,7 +1991,7 @@ $m = \delta^{-1}(\ssa{m})$.
 \ewhile ~ [b]^{l}, n+1, 
 [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  
 ~ \edo ~ c} ,  \eskip),
-t, \todomath{(w + l)}
+t, w
 }
 }
 ~\textbf{ssa-while-b}
@@ -2118,7 +2129,7 @@ Then there are two cases,
 		\xrightarrow{} 
 		\config{m, 
 		c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
-		t, \todomath{(w + l)} }
+		t, (w + l) }
 		}
 		~\textbf{ifw-true}
 	\]
