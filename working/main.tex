@@ -130,11 +130,16 @@ The key component of the system is an program analysis procedure, which provides
 \mbox{Query Values} & \qval & ::= 
 & \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
 \\
-\mbox{commands} & c & ::= &   \assign x \expr ~|~  \assign{x}{ \query(\qexpr)}
-%
-~|~ \\ 
-&&&  \jl{\ewhile ~ b ~ \edo ~ c}  ~|~ c;c  ~|~ \eif(\bexpr, c, c) 	 ~|~ \eskip 
+% \mbox{commands} & c & ::= &   \assign x \expr ~|~  \assign{x}{ \query(\qexpr)}
+% %
+% ~|~ \\ 
+% &&&  \jl{\ewhile ~ b ~ \edo ~ c}  ~|~ c;c  ~|~ \eif(\bexpr, c, c) 	 ~|~ \eskip 
+% 	\\
+\mbox{\jl{Labeled Commands}} & c & ::= 
+	&   [\assign x \expr]^{l} ~|~  [\assign x q(\qexpr)]^{l}
 	\\
+ 	& & & ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 ~|~ [\eskip]^{l} 
+ \\
 \mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
 \mbox{Trace} & t & ::= & [] 
 ~|~ \jl{{( \query(\qval), l, w) :: t}} \\
@@ -155,16 +160,9 @@ The key component of the system is an program analysis procedure, which provides
 %
 \subsection{ Trace-based Operational Semantics}
 \jl{
-We evaluate programs in our {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as follow:
+We evaluate programs in our {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as defined in the syntax.
 %
-\[
-\begin{array}{llll}
-     \mbox{Labeled commands} & c & ::= &   [\assign x \expr]^{l} ~|~  [\assign x q(\qexpr)]^{l}
- ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 ~|~ [\eskip]^{l} \\
-\end{array}
-\]
-%
-Each command is now labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the loop counter $\aexpr$ in the loop statement. We will also use  Loop Maps $w$ as defined below.  
+Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the loop counter $\aexpr$ in the loop statement. We will also use  Loop Maps $w$ as defined below.  
 %
 \[
 	\begin{array}{llll}
@@ -184,7 +182,7 @@ Each command is now labeled with a label $l$, a natural number standing for the 
 %
   	A mapping $[k \to n]$ gives accurate information on which while loop the statement is in by finding its corresponding label $k$, (also the key in the map). The label $k$ specifies the line number of the conditional of the while loop the current statement lives. And the mapped result $n$ indicates the iteration number the current statement belongs to. For example, the loop maps $w=[3:1, 4:2]$ indicates that the statement is currently in a nested loop, the outer while loop starting from label $3$ (where the outside conditional is) and in its first iteration, the statement is now in the inner loop starting from label $4$ and in the second iteration. We use $\emptyset$ to represent an empty map, indicating the statement is not in any loop. We define operations on $w$ as follows.
   	%
-  	\jl{
+  	\todo{
 	\[
 	\begin{array}{lll}
 	w \setminus l     & = w  & l \not\in Keys(w)   \\
@@ -672,6 +670,9 @@ Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
+\todo{In the \textbf{query-v} rule, we evaluate the query given database $D$ based on the assumption of an underlying mechanism.}
+%
+\\
 %
 The evaluation of the query expression is deterministic while the evaluation of the query itself can be non-deterministic. Below the Lemma Query Non-Determinism formally described this property. 
 %
@@ -709,6 +710,32 @@ Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
+\begin{lem}
+\label{lem:onewayedge}
+\todo{[One Way Directed Edges in Trace-based Dependency Graph]}.
+\\
+%
+\jl{
+The edges in the trace-based dependency graph can only directed from nodes representing queries with small label to queries with lager label.}
+\end{lem}
+%
+\jl{
+Proof is obvious based on the definition of edges in the traced-based dependency graph.
+}
+%
+\begin{lem}
+\label{lem:DAG}
+\todo{[Trace-based Dependency Graph is Directed Acyclic].}
+\\
+%
+\jl{
+The trace-based dependency graph is acycled.
+}
+\end{lem}
+%
+\jl{
+Proof is obvious based on the Lemma \ref{lem:onewayedge}.
+}
 %
 \begin{lem}
 [Adaptivity Toplimit].
@@ -729,7 +756,7 @@ A(c, D, m) \leq |t'|
 %
 \begin{proof}
 \jl{
-Proof is obvious by induction on the operational semantics rules.
+Proof is obvious based on the Lemma \ref{lem:DAG}
 }
 \end{proof}
 %
