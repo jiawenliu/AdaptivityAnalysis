@@ -483,6 +483,7 @@ $mk(w_i) =MinKey(w_i) $
 \end{defn}
 %
 \begin{defn}[Query Direction]
+\label{def:query_dir}
 Direction between two queries.
 \\
 \jl{
@@ -576,6 +577,7 @@ t_3,w_3}
 %
 %
 \begin{defn}
+\label{def:trace-based_graph}
 Trace-based Dependency Graph
 \\
  \jl{
@@ -589,8 +591,9 @@ $V =\{({\qval}, l,w) \in \mathcal{AQ} \mid
 \land (\query({\qval}), l, w) \in t'  \}$.
 \\
 $E = \left\{(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
-~ \left \vert ~ 
-\mathsf{DEP}((({\qval}'),l',w'),({\qval},l,w)),c,m,D)
+~ \left \vert ~  
+\mathsf{DEP}(({\qval}',l',w'),({\qval},l,w)),c,m,D)
+\land \mathsf{To}(({\qval}',l',w'),({\qval},l,w)),c,m,D)
  \right.\right\}$.
  }
 \end{defn}
@@ -600,6 +603,7 @@ from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 %
 \begin{defn}
+\label{def:trace-based_adapt}
 Adaptivity from a trace-based dependency graph.
 \\
 \jl{
@@ -636,9 +640,27 @@ Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
+\paragraph{Non-Determinism of queries.}
+\todo{
+The evaluation of the query expression $\qexpr$ is deterministic while the evaluation of the query itself can be non-deterministic. 
+}
+\\
+\todo{
+When we are evaluating a query $\query(\qval)$ on a given database $D$, in addition to obtain the result $v$ from database $v = \query(\qval)(D)$, we assume there is an underlying mechanism that will perform extra actions on $v$. For example, adding noise sampled from certain probabilistic distribution to the result.
+Because of the randomness of the mechanism, the evaluation of the query is non-deterministic. 
+}
+\\
+\todo{
+In our \textbf{query-v} rule, we evaluate the query given database $D$ based on the assumption that the underlying mechanism is empty, which means the mechanism will not perform any extra action on the query result. 
+}
+%
+\\
+%
+Below the Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this property. 
+%
 \begin{lem}
 [Semi-Determinism].
-\\
+\label{lem:semidetrm}\\
 \jl{
 for any program $c$ with a starting memory $m$, trace $t$ and while label $w$, 
 if program $c$ contains neither  
@@ -668,20 +690,15 @@ Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
-\todo{In the \textbf{query-v} rule, we evaluate the query given database $D$ based on the assumption of an underlying mechanism.}
-%
-\\
-%
-The evaluation of the query expression is deterministic while the evaluation of the query itself can be non-deterministic. Below the Lemma Query Non-Determinism formally described this property. 
 %
 \begin{lem}
 [Query Semi-Determinism].
+\label{lem:querysemidetrm}
 \\
 \jl{
 Given a program $c; \assign{x}{\query(\qexpr)}; c'$ with a starting memory $m$, trace $t$ and while label $w$, 
 s.t. $c$ contains neither  
-$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, 
-we have the Semi-Determinism property as follows:
+$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then:
 %
 \[
 \bigwedge
@@ -709,16 +726,31 @@ Proof is obvious by induction on the operational semantics rules.
 \end{proof}
 %
 \begin{lem}
-\label{lem:onewayedge}
-\todo{[One Way Directed Edges in Trace-based Dependency Graph]}.
+\label{lem:edgeforwarding}
+\todo{[Forwarding Edges Only]}.
 \\
 %
 \jl{
-The edges in the trace-based dependency graph can only directed from nodes representing queries with small label to queries with lager label.}
+Given a trace-based dependency graph $G = (V, E)$, 
+for any directed edge $(({\qval}',l',w'),({\qval},l,w)) \in E$, 
+this is not the case that:
+%
+$$({\qval}',l',w') \geq_{q} ({\qval},l,w)$$
+%
+This means the directed edges in the trace-based dependency graph can only be constructed from nodes representing queries of smaller label to queries of greater label.
+There doesn't exist backward edges with direction from queries of greater label to smaller label.
+}
 \end{lem}
 %
 \jl{
-Proof is obvious based on the definition of edges in the traced-based dependency graph.
+\begin{proof}
+Proof is obvious based on the definition \ref{def:trace-based_graph}, 
+where any edge $(({\qval}',l',w'),({\qval},l,w)) \in E$ defined in the traced-based dependency graph $G = (V,E)$ restricted by
+the constraint
+$To(({\qval}',l',w'),({\qval},l,w))$.
+According to the Definition $\ref{def:query_dir}$, we have $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ 
+s.t. either $l' < l$ or $w' <_{w} w$
+\end{proof}
 }
 %
 \begin{lem}
@@ -727,12 +759,14 @@ Proof is obvious based on the definition of edges in the traced-based dependency
 \\
 %
 \jl{
-The trace-based dependency graph is acycled.
+Every trace-based dependency graph is a directed acyclic graph.
 }
 \end{lem}
 %
 \jl{
-Proof is obvious based on the Lemma \ref{lem:onewayedge}.
+\begin{proof}
+Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
+\end{proof}
 }
 %
 \begin{lem}
@@ -754,7 +788,7 @@ A(c, D, m) \leq |t'|
 %
 \begin{proof}
 \jl{
-Proof is obvious based on the Lemma \ref{lem:DAG}
+Proof is obvious based on the Lemma \ref{lem:DAG}.
 }
 \end{proof}
 %
