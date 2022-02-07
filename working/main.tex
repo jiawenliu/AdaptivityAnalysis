@@ -627,7 +627,7 @@ We proved some useful properties for our language.
 [Trace Non-Decreasing].
 \\
 \jl{
-for any program $c$ with a tarting memory $m$, trace $t$ and while label $w$, if 
+for any program $c$ with a starting memory $m$, trace $t$ and while label $w$, if 
 $  
 \config{m, c, t, w} 
 \rightarrow^{*} 
@@ -649,12 +649,19 @@ The evaluation of the query expression $\qexpr$ is deterministic while the evalu
 }
 \\
 \todo{
-When we are evaluating a query $\query(\qval)$ on a given database $D$, in addition to obtain the result $v$ from database $v = \query(\qval)(D)$, we assume there is an underlying mechanism that will perform extra actions on $v$. For example, adding noise sampled from certain probabilistic distribution to the result.
-Because of the randomness of the mechanism, the evaluation of the query is non-deterministic. 
+When evaluating a query $\query(\qval)$ on a given database $D$, 
+in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
+we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
+The mechanism is considered as primitive operations in our language, behaving as black box to programmers.
+There are different kinds of mechanisms, 
+such as adding noise sampled from certain probabilistic distribution to the result \cite{dwork2015preserving}.
+Because of the randomness of the underlying mechanism, the evaluation of a query $\query(\qval)$ is non-deterministic. 
 }
 \\
 \todo{
-In our \textbf{query-v} rule, we evaluate the query given database $D$ based on the assumption that the underlying mechanism is empty, which means the mechanism will not perform any extra action on the query result. 
+In the operational semantics rule \textbf{query-v} for evaluating the $\query(\qval)$,
+we evaluate the query given database $D$ based on an assumption that the underlying mechanism is empty, 
+which means the mechanism will not perform any extra action on the query result $v$ returned from the database, i.e., $v = \query(\qval)(D)$. 
 }
 %
 \\
@@ -730,7 +737,7 @@ Proof is obvious by induction on the operational semantics rules.
 %
 \begin{lem}
 \label{lem:edgeforwarding}
-\todo{[Forwarding Edges Only]}.
+\todo{[Edges are Forwarding Only]}.
 \\
 %
 \jl{
@@ -745,16 +752,26 @@ There doesn't exist backward edges with direction from queries of greater label 
 }
 \end{lem}
 %
-\jl{
 \begin{proof}
-Proof is obvious based on the definition \ref{def:trace-based_graph}, 
-where any edge $(({\qval}',l',w'),({\qval},l,w)) \in E$ defined in the traced-based dependency graph $G = (V,E)$ restricted by
-the constraint
-$To(({\qval}',l',w'),({\qval},l,w))$.
-According to the Definition $\ref{def:query_dir}$, we have $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ 
-s.t. either $l' < l$ or $w' <_{w} w$
-\end{proof}
+\jl{
+Proof is obvious based on the definition \ref{def:trace-based_graph}.
 }
+\\
+\jl{
+In definition \ref{def:trace-based_graph},
+any edge $(({\qval}',l',w'),({\qval},l,w)) \in E$ defined in the traced-based dependency graph $G = (V,E)$ is restricted by
+a constraint
+$To(({\qval}',l',w'),({\qval},l,w))$.
+According to the Definition $\ref{def:query_dir}$, 
+we have $({\qval}',l',w') <_{q} ({\qval},l,w)$ 
+i.e., either $l' < l$ or $w' <_{w} w$.
+}
+\\
+\jl{
+This implies that a edge $(({\qval}',l',w'),({\qval},l,w))$ 
+with $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ can never be constructed in the traced-based dependency graph $G = (V,E)$.
+}
+\end{proof}
 %
 \begin{lem}
 \label{lem:DAG}
@@ -776,7 +793,7 @@ Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
 [Adaptivity Toplimit].
 \\
 \jl{
-Given a program $c$ with a database $D$ and a tarting memory $m$,
+Given a program $c$ with a database $D$ and a starting memory $m$,
 the top limitation for $A(c, D, m)$ as follows:
 %
 \[
@@ -2941,11 +2958,11 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 \begin{defn}
 [Approximated SSA-Based Graph].
 \\
-\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{ssa}(M, V,G,i_1,i_2) = (V_{ssa}, E_{ssa}, V)$ is. defined as:
+\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{assa}(M, V,G,i_1,i_2) = (V_{assa}, E_{assa}, V)$ is. defined as:
 \\
-Nodes $V_{ssa} = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
+Nodes $V_{assa} = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
 \\
-Edges $E_{ssa} = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+Edges $E_{assa} = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
 \\
 $V = V$
 }
@@ -2965,9 +2982,9 @@ Given a program $\ssa{c}$ and its Approximated SSA-Based Graph $G_{ssa} = \{V_{s
 Then we will have an updated graph Approximated SSA-Based Weighted Graph 
 $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$ defined as:}
 \\
-$V_{aprox} = V_{ssa}$
+$V_{aprox} = V_{assa}$
 \\
-$E_{aprox} = E_{ssa}$
+$E_{aprox} = E_{assa}$
 \\
 $W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\} 
 \cup \{(v, 1) | \forall ~ v \in V_{aprox} ~ s.t. ~V(v) = 0\}$
@@ -2978,20 +2995,43 @@ $W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\}
 \\
 \jl{Given a program $\ssa{c}$, and its approximated SSA-Based Weighted Graph $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
 %
-Adaptivity of the program defined according to the logic is as:}
+Adaptivity of the program defined according to the logic is as:
 \[
-\jl{
-Adapt(c) := \max_{v_1, v_2 \in \{v| v \in V_{aprox} \land V(v) = 1 \} }
-\{\pathsearch(G_{aprox}, v_1, v_2)\}
-% \left\{ 
-% \begin{array}{c}
-% \mathsf{Weight}( p(vt_1, vt_2), Wt)\\
-% +
-% \end{array} 
-% \right\},
-}
+Adapt(c) := \max_{s, t \in V_{aprox} }
+\{\pathsearch(G_{aprox}, s, t)\},
 \]
-\jl{The algorithm of computing the adaptivity is dfined in the algorithm \ref{alg:adp_path}.}
+where 
+\[
+\pathsearch(G_{aprox}, s, t) := 
+\max_{p \in \path(s, t) }
+\left\{
+\begin{array}{c}
+\sum\limits_{ c \in \mathcal{C}(p)}
+\{|q|*\text{maxflow}(c) 
+~ | ~ q \in \text{query nodes on c}\}
+\\
++
+\sum\limits_{v \in p}
+\left\{
+w 
+\left|
+\begin{array}{c}
+(v, w) \in W_{aprox} \land v \in p 
+\\
+\land v \text{ is a query node} 
+\\
+\land v \text{ isn't on any circle}
+\end{array}
+\right .
+\right\}
+\end{array}
+ \right\}.
+\]
+%
+The $\path(s, t)$ represents the set containing all the paths from vertex $s$ to vertex $t$ and
+$\mathcal{C}(p)$ is the set containing all the circles in the path p
+%
+The pseudo-code of $\pathsearch(G_{aprox}, s, t)$ algorithm is defined in the Algorithm \ref{alg:adp_path}.}
 % where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
 \end{defn}  
 
