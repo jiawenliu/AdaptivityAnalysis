@@ -198,6 +198,23 @@ Each command is now labeled with a label $l$, a natural number standing for the 
   	We use $w \setminus l$ to remove the mapping of the key $l$ from the loop maps $w$. This is used when exiting the loop at line $l$. The special loop maps $w_l$ expresses a map identical to $w$, but without the mapping of label $l$. We record in $w$ the first iteration of a loop marked by label $l$ by assigning $l$ with the iteration $1$. The mapped number increase when going into another iteration of the same loop. We use $Keys(w)$ to return all the keys of the while maps $w$.
 }
 
+\begin{ocaml}{}
+type wm = | empty 
+            | Cons of (int * int) & wm
+
+let rec  minus (w:wm) (l:int) : wm = 
+    match w with 
+       | [] => []
+       | (k, v) :: tl => 
+        if k = l then tl else (k,v) :: minus tl l.   
+
+let rec plus (w:wm) (l:int) : wm = 
+    match w with 
+       | [] => [(l,0)]
+       | (k, v) :: tl => 
+        if k = l then (k,v+1):: tl else (k,v) :: plus tl l.         
+\end{ocaml}
+
 \jl{
 	%%% trace, queries
 	A memory is standard, a map from variables to values. Queries can be uniquely annotated as $\mathcal{AQ}$, and the annotation $(l,w)$ considers the location of the query by line number $l$ and which iteration the query is at when it appears in a loop statement, specified by $w$. A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
