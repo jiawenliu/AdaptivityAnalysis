@@ -3023,6 +3023,7 @@ $W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\}
 \end{defn}  
 %
 \begin{defn}
+\label{def:aprox_adapt}
 [\jl{Approximated Adaptivity from SSA-Based Weighted Graph}].
 \\
 \jl{Given a program $\ssa{c}$, and its approximated SSA-Based Weighted Graph $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
@@ -3098,10 +3099,114 @@ result: $r$
 	Given a program $c$ with a starting memory $m$ and an underlying database $D$, we have:
 	%
 	\[
-	Adapt_{\text{aprox}}(c) \geq A(c, D, m)
+	Adapt_{\text{aprox}}(c) \geq A(c, D, m).
 	\]
 	\end{thm}
 }
+\jl{
+\begin{proof}
+Given a program $c$ with a starting memory $m$ and an underlying database $D$, 
+we generate a $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
+by the graph generation algorithm $\graphGen$ togehter with the weighting algorithm
+$\rb$.
+According to the Definition \ref{def:aprox_adapt}, we have:
+%
+\[
+	Adapt_{\text{aprox}}(c) 
+	:= \max_{s, t \in V_{aprox} }
+\{\pathsearch(G_{aprox}, s, t)\},
+\]
+%
+where 
+%
+\[
+\pathsearch(G_{aprox}, s, t) := 
+\max_{p \in \path(s, t) }
+\left\{
+\begin{array}{c}
+\sum\limits_{ c \in \mathcal{C}(p)}
+\{|q|*\text{maxflow}(c) 
+~ | ~ q \in \text{query nodes on c}\}
+\\
++
+\sum\limits_{v \in p}
+\left\{
+w 
+\left|
+\begin{array}{c}
+(v, w) \in W_{aprox} \land v \in p 
+\\
+\land v \text{ is a query node} 
+\\
+\land v \text{ isn't on any circle}
+\end{array}
+\right .
+\right\}
+\end{array}
+ \right\}.
+\]
+%
+We also construct a trace-based graph $G = (V, E)$ by the definition \ref{def:trace-based_graph}.
+According to the Definition \ref{def:trace-based_adapt}, we have
+$$
+A(c, D, m) := 
+\max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
+\{ |p(({\qval},l,w),({\qval}',l',w'))| \}.
+$$
+%
+Then, we need to show:
+%
+\[
+\max_{s, t \in V_{aprox} }
+\max_{p \in \path(s, t) }
+\left\{
+\begin{array}{c}
+\sum\limits_{ c \in \mathcal{C}(p)}
+\{|q|*\text{maxflow}(c) 
+~ | ~ q \in \text{query nodes on c}\}
+\\
++
+\sum\limits_{v \in p}
+\left\{
+w 
+\left|
+\begin{array}{c}
+(v, w) \in W_{aprox} \land v \in p 
+\\
+\land v \text{ is a query node} 
+\\
+\land v \text{ isn't on any circle}
+\end{array}
+\right .
+\right\}
+\end{array}
+ \right\}
+ \geq 
+ \max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
+\{ |p(({\qval},l,w),({\qval}',l',w'))| \}.
+\]
+%
+The proof is developed by the case whether there is circle in the approximated graph $G_{aprox}$ or not.
+\begin{mainitem}
+	\item
+	\textbf{circle doesn't exist in $G_{aprox}$}
+	%
+	There doesn't exist any circle in $G_{aprox}$.
+	Trace-based graph is equivalent to the approximated graph.
+%
+	\item
+	\textbf{circle exists in $G_{aprox}$}
+	\begin{enumsub}
+		\item
+		The circles in $G_{aprox}$ corresponding to the subgraph in $G$ representing while loops 
+		%
+		\item
+		The non-circle part in $G_{aprox}$ is the same as the first case.
+	\end{enumsub}
+\end{mainitem}
+\end{proof}
+}
+
 \begin{defn}
 [Subgraph]
 Given two graphs $G_{low} = (V_1, E_1)$, $G_{ssa} = (V_2, E_2)$, $G_{low} \subseteq G_{ssa}$ iff:\\
