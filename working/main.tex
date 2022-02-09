@@ -531,12 +531,51 @@ where \\
 }
 \end{defn}
 %
+\paragraph{Non-Determinism of queries.}
+% \todo{
+% The evaluation of the query expression $\qexpr$ is deterministic while the evaluation of the query itself can be non-deterministic. 
+% }
+% \\
+\todo{
+When evaluating a query $\query(\qval)$ on a given database $D$, 
+in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
+we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
+The mechanism is considered as primitive operations in our language, behaving as black box to programmers.
+There are different kinds of mechanisms, 
+such as adding noise sampled from certain probabilistic distribution to the result \cite{dwork2015preserving}.
+Because of the randomness of the underlying mechanism, the evaluation of a query $\query(\qval)$ is non-deterministic. 
+That's the reason, in the Definition \ref{def:query_dep}, given a fixed database $D$, there will be a query domain $\qdom$ where $\query(\qval)(D) $ can be evaluated to different values $v \in \qdom$.
+}
+\\
+\todo{
+On the other hand, in the operational semantics rule \textbf{query-v}:
+\[
+		\inferrule
+	{
+	\query(\qval) = v
+	}
+	{
+	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
+	\xrightarrow{} 
+	\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
+	}
+	~\textbf{query-v}
+	\]
+, we evaluate the query given database $D$ based on an assumption that the underlying mechanism is fixed.
+This fixed mechanism only adds constant $0$ to the original result $v$ returned from the database, i.e., $v = \query(\qval)(D)$. 
+}
+%
+\\
+%
+The Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this property. 
 %
 \begin{defn}
 Query may dependency.
+\label{def:query_dep}
 \\
 \jl{
-One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $c$, with a starting memory $m$ and  hidden database $D$, denoted as 
+One annotated query $({\alpha}_2,l_2, w_2)$ may depend on another query $({\alpha}_1, l_1, w_1)$ in a program $c$,
+with a starting memory $m$ and a hidden database $D$, denoted as 
 %
 $\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defined below. 
 }
@@ -660,30 +699,6 @@ Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
-\paragraph{Non-Determinism of queries.}
-\todo{
-The evaluation of the query expression $\qexpr$ is deterministic while the evaluation of the query itself can be non-deterministic. 
-}
-\\
-\todo{
-When evaluating a query $\query(\qval)$ on a given database $D$, 
-in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
-we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
-The mechanism is considered as primitive operations in our language, behaving as black box to programmers.
-There are different kinds of mechanisms, 
-such as adding noise sampled from certain probabilistic distribution to the result \cite{dwork2015preserving}.
-Because of the randomness of the underlying mechanism, the evaluation of a query $\query(\qval)$ is non-deterministic. 
-}
-\\
-\todo{
-In the operational semantics rule \textbf{query-v} for evaluating the $\query(\qval)$,
-we evaluate the query given database $D$ based on an assumption that the underlying mechanism is empty, 
-which means the mechanism will not perform any extra action on the query result $v$ returned from the database, i.e., $v = \query(\qval)(D)$. 
-}
-%
-\\
-%
-Below the Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this property. 
 %
 \begin{lem}
 [Semi-Determinism].
