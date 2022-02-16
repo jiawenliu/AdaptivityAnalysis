@@ -2777,16 +2777,22 @@ The output of the algorithm is the updated global list $G'$, along with the upda
 \subsection{Matrix and Vector based algorithm}
 %
 %
-$\Gamma$ is a matrix of one row and $N$ columns, $N = |G|=|V|$.\\ 
+$\Gamma$ is a matrix of one row and $N$ columns, 
+$N = |G|=|\flag|$.
 
-$\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$.\\
+\jl{
+$\flag$ is a vector of flags for each variable, representing whether a variable $x$ is assigned by a query $F[x] = 1$, 
+showing up inside a while loop or if-else branches $F[x] = 2$
+and otherwise $F[x] = 0$.
+}
 
-$\mathsf{R(e, i)}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $G$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $G$.\\ 
+$\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$.
 
+$\mathsf{R(e, i)}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $G$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $G$.
 
 {$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
 
-$ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} \triangleq { \forall 0 \leq z < |\bar{x}|.  \Gamma \vdash_{M_{x_z}, V_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ where $M = \sum_{z\in [|\bar{x}|] }M_{x_z} $\\
+$ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} \triangleq { \forall 0 \leq z < |\bar{x}|.  \Gamma \vdash_{M_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ where $M = \sum_{z\in [|\bar{x}|] }M_{x_z} $\\
 
 \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{M,V} ~ c $}
 \begin{mathpar}
@@ -2794,7 +2800,7 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 {M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
 }
 {
- \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{M; V_{\emptyset}; i+1 }
+ \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{M; \flag_{\emptyset}; i+1 }
 }
 ~\textbf{\graphGen-asgn}
 \and
@@ -2802,10 +2808,11 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 \inferrule
 {M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
 \\
-V= \mathsf{L}(i) \and V(i) = 1
+\flag = \mathsf{L}(i) \and \flag(i) = 1
 }
 { 
-\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }{M;V;i+1}
+\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
+{M;\flag;i+1}
 %  \vdash^{(i, i+1)}_{M, V} [ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} 
 }~\textbf{\graphGen-query}}
 %
@@ -2814,19 +2821,19 @@ V= \mathsf{L}(i) \and V(i) = 1
 \jl{
 \inferrule
 {
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ M_1;V_1;i_2 }}
+{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ M_1;\flag_1;i_2 }}
 \and 
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1);\ssa{c_2} ; i_2 }{ M_2; V_2 ;i_3}}
+{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1);\ssa{c_2} ; i_2 }{ M_2; \flag_2 ;i_3}}
 \\
-{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; V_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
-%
-\\
-%
-{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ M_y; V_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
+{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
 %
 \\
 %
-{\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ M_y; V_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
+{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
+%
+\\
+%
+{\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
 \\
 {M = (M_1+M_2)+ M_x+M_y +M_z }
 }
@@ -2834,7 +2841,7 @@ V= \mathsf{L}(i) \and V(i) = 1
 \ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
 \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
 [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
-\ssa{ c_1, c_2)} ; i_1}{ M ;V_1 \uplus V_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
+\ssa{ c_1, c_2)} ; i_1}{ M ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
 }
 ~\textbf{\graphGen-if}
 }
@@ -2845,16 +2852,16 @@ V= \mathsf{L}(i) \and V(i) = 1
 %
 \inferrule
 {
-{\ad{\Gamma; \ssa{c_1} ; i_1 }{ M_1 ; V_1; i_2 }  }
+{\ad{\Gamma; \ssa{c_1} ; i_1 }{ M_1 ; \flag_1; i_2 }  }
 % \Gamma \vdash^{(i_1, i_2)}_{M_1, V_1} \ssa{c_1} 
 % : \Phi \Rightarrow \Phi_1
 \and 
-{\ad{\Gamma;\ssa{c_2}; i_2}{M_2; V_2 ;i_3 }}
+{\ad{\Gamma;\ssa{c_2}; i_2}{M_2; \flag_2 ;i_3 }}
 % \Gamma \vdash^{(i_2, i_3)}_{M_2, V_2} \ssa{c_2} 
 % : \Phi_1 \Rightarrow \Psi 
 }
 {
-\ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{(M_1 {;} M_2) ; V_1 \uplus V_2 ; i_3  }
+\ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{(M_1 {;} M_2) ; \flag_1 \uplus V_2 ; i_3  }
 % \Gamma \vdash^{(i_1, i_3)}_{M_1 {;} M_2, V_1 \uplus V_2}
 % \ssa{c_1 ; c_2} 
 % : \Phi \Rightarrow \Psi
@@ -2900,17 +2907,17 @@ B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 {\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{M_{1};V_{1}; i+B+(B+A) }}
 \\
 {
-\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{M_{2}; V_{2}; i+B+A+(B+A) }
+\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{M_{2}; \flag_{2}; i+B+A+(B+A) }
 }
 \\
 {
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{M; V ;i+(B+A)+B}
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{M; \flag ;i+(B+A)+B}
 }
 \\
 {M' = M + ( M_{1}+M_{2})  }
 \and
 {
-V' = V \uplus (( V_{1} \uplus V_{2}) \uplus 2)  }
+\flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
 }
 {
 \ad{\Gamma;
@@ -2951,19 +2958,20 @@ i }{ M';V' ;i+(B+A)+B }
 \[
 \begin{array}{lll}
 M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
-V_1 \uplus V_2 & := & \left\{
+\flag_1 \uplus \flag_2 & := & \left\{
 \begin{array}{ll}
-1 & (V_1[i] = 1 \lor V_2[i] = 1) \land i = 1, \cdots, N \land |V_1| = |V_2|\\
+1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
 0 & o.w.
 \end{array}\right.
 \\
-\jl{V \uplus k} & := & V[i] = k , i = 1, \ldots, |V|    \\
+\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
 \end{array}
 \]
 
 
 \begin{defn}[Valid matrix]
-For a global list $G$, $G \vDash (M,V)$ iff the cardinality of $G$ equals to the one of $V$, $|G| = |V|$ and the matrix $M$ is of size $|V| \times |V|$.
+For a global list $G$, $G \vDash (M,\flag)$ iff the cardinality of $G$ equals to the one of $\flag$, $|G| = |\flag|$ 
+and the matrix $M$ is of size $|\flag| \times |\flag|$.
 \end{defn}
 
 \begin{defn}[Valid index]
@@ -2976,57 +2984,64 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 
 
 \begin{defn}
-[Program-Based Simple Graph].
+[Program-Based Graph with Flags].
 \\
-\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the graph $G_{assa}(M, V, G, i_1,i_2) = (V_{assa}, E_{assa}, V)$ is. defined as:
+\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
+the graph $G(M, \flag, G, i_1,i_2) = (V, E, \flag)$ is. defined as:
 \\
-Nodes $V_{assa} = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
+Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
 \\
-Edges $E_{assa} = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
 \\
-$V = V$
+Flags $\flag = \flag$
 }
  \end{defn}  
      
 %
-\subsection{Bounding Algorithm}
+\subsection{Variable Reachability Bounding Algorithm}
 \jl{
-Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for the variable $v$ in the program. The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachibility bound of the variable in program $c$.
+Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for the variable $v$ in the program. The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachability bound of the variable in program $c$.
 }
 \\
 \begin{defn}
 [Program-Based Graph in SSA Language].
 \\
 \jl{
-Given a SSA program $\ssa{c}$ and its trace-based graph $G_{ssa} = \{V_{assa}, E_{assa}, V\}$, we added weights on every vertexes in this graph according to the reachability bound algorithm $\rb$.
+Given a SSA program $\ssa{c}$ and its program-based graph with flags 
+$G(M, \flag, G, i_1,i_2) = \{V', E', \flag'\}$, 
+we add reachability bounds on each vertex $v$ in this graph 
+according to the reachability bound algorithm $\rb$ for its corresponding variable.
 Then we will have an updated graph Program-Based Graph 
-$\progG = \{V_{aprox}, E_{aprox}, W_{aprox} \}$ defined as:}
+$\progG = \{V, E, W, \flag \}$ defined as:}
 \\
-$V_{aprox} = V_{assa}$
+$V = V'$
 \\
-$E_{aprox} = E_{assa}$
+$E = E'$
 \\
-$W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\} 
-\cup \{(v, 1) | \forall ~ v \in V_{aprox} ~ s.t. ~V(v) = 0\}$
+$W = \{(v, w) | \forall ~ s \in V ~ s.t. ~\flag(s) > 0, w = \rb(v, c)\} 
+\cup \{(v, 1) | \forall ~ s \in V ~ s.t. ~\flag(s) = 0\}$
+\\
+\flag = \flag'
 \end{defn}  
 %
-\subsection{Adaptivity Approximation from \THESYSTEM}
+\subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
 \begin{defn}
 \label{def:aprox_adapt}
 [\jl{Approximated Adaptivity from Program-Based Graph}].
 \\
-\jl{Given a program $\ssa{c}$, and its program-based graph $\progG = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
+\jl{Given a program $\ssa{c}$, we generate its program-based graph 
+$\progG = \big\{ V, E, W, \flag \big\}$.
 %
-Adaptivity of the program is defined as the number of query vertexes on a finite walk in $\progG$, this finite walk satisfies:
+The the analyzed adaptivity for $c$ in our $\THESYSTEM$ is defined as the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
 \begin{itemize}
-\item the number of query vertexes on it is the maximum
-\item the visiting times of each vertex is bound by its reachibility bound $W$.
+\item the number of query vertexes on this walk is maximum
+\item the visiting times of each vertex $s$ on this walk is bound by its reachability bound $W(s)$.
 \end{itemize}
 Formally as:
 %
 \[
 Adapt_{\bf{prog}}(c) 
-:= \max_{s, t \in V_{aprox} }
+:= \max_{s, t \in V }
 \left\{\pathsearch(\progG, s, t) \right\}.
 \]
 By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
