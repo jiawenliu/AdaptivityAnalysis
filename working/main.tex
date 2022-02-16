@@ -663,15 +663,17 @@ from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 \begin{defn}
 \label{def:trace-based_adapt}
-Adaptivity from a trace-based dependency graph.
+Adaptivity of A Program in While Language.
 \\
 \jl{
-Given a program $c$, and a memory $m$, a database $D$, 
-the adaptivity of the trace-based dependency graph $G(c,D,m) = (V, E)$ is the length of the longest path in the graph. 
+Given a program $c$, 
+its adaptivity is defined as the length of the longest path in its
+trace-based dependency graph $G(c,D,m) = (V, E)$, 
+for all possible starting memory $m$ and database $D$.
 We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
-A(c, D, m) = 
+A(c) = 
 \max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
 \{ |p(({\qval},l,w),({\qval}',l',w'))| \}
 $$
@@ -1229,11 +1231,11 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
 }
 }
 \end{mathpar}
-    \caption{Operational semantics for the ssa while language}
+    \caption{Operational semantics for the ssa language}
     \label{fig:ssa_evaluation}
 \end{figure}
 \begin{defn}
-Query may dependency in SSA language.
+Query May Dependency in SSA Language.
 \\
 \jl{
 One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $\ssa{c}$,
@@ -1295,11 +1297,11 @@ t_3,w_3}
 %
 %
 \begin{defn}
-SSA-based Dependency Graph.
+Trace-Based Dependency Graph in SSA Language.
 \\
 \jl{
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
-the dependency graph $G_{s}(\ssa{c},D,\ssa{m}) = (V, E)$ is defined as: \\
+the dependency graph $\traceG(\ssa{c},D,\ssa{m}) = (V, E)$ is defined as: \\
 $V =\{({\qval}, l, w) \in \mathcal{AQ} 
 \mid 
 \exists \ssa{m'},  w', t'.  
@@ -1356,16 +1358,17 @@ Correspondingly, we need to have three ifvar commands.
 }
 %
 \begin{defn}
-Adaptivity from SSA-based Dependency Graph.
+Adaptivity of A Program in SSA Language.
 \\
 \jl{
-Given a program $\ssa{c}$, and a memory $\ssa{m}$, a database $D$, 
-the adaptivity of the SSA-based dependency graph 
-$G_s(\ssa{c}, D,\ssa{m}) = (V, E)$ is the length of the longest path in the graph. 
+Given a program $\ssa{c}$ in SSA language, 
+its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
+$\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and database $D$.
+%
 We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p_s(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
-A_s(\ssa{c}, D, \ssa{m}) = 
+A(\ssa{c}) = 
 \max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
 \{ |p_s(({\qval},l,w),({\qval}',l',w'))| \}
 $$
@@ -2973,9 +2976,9 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 
 
 \begin{defn}
-[Approximated SSA-Based Graph].
+[Program-Based Simple Graph].
 \\
-\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the Graph $G_{assa}(M, V,G,i_1,i_2) = (V_{assa}, E_{assa}, V)$ is. defined as:
+\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M,V}^{i_1,i_2} \ssa{c}$, the graph $G_{assa}(M, V, G, i_1,i_2) = (V_{assa}, E_{assa}, V)$ is. defined as:
 \\
 Nodes $V_{assa} = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
 \\
@@ -2986,18 +2989,18 @@ $V = V$
  \end{defn}  
      
 %
-\subsection{Weighting Algorithm}
+\subsection{Bounding Algorithm}
 \jl{
 Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for the variable $v$ in the program. The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachibility bound of the variable in program $c$.
 }
 \\
 \begin{defn}
-[Approximated SSA-Based Weighted Graph].
+[Program-Based Graph in SSA Language].
 \\
 \jl{
-Given a program $\ssa{c}$ and its Approximated SSA-Based Graph $G_{ssa} = \{V_{assa}, E_{assa}, V\}$, we added weights on every vertexes in this graph according to the reachability bound algorithm $\rb$.
-Then we will have an updated graph Approximated SSA-Based Weighted Graph 
-$G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$ defined as:}
+Given a SSA program $\ssa{c}$ and its trace-based graph $G_{ssa} = \{V_{assa}, E_{assa}, V\}$, we added weights on every vertexes in this graph according to the reachability bound algorithm $\rb$.
+Then we will have an updated graph Program-Based Graph 
+$\progG = \{V_{aprox}, E_{aprox}, W_{aprox} \}$ defined as:}
 \\
 $V_{aprox} = V_{assa}$
 \\
@@ -3007,56 +3010,66 @@ $W_{aprox} = \{(v, w) | \forall ~ v \in V_{aprox} s.t. V(v) > 0, w = \rb(v, c)\}
 \cup \{(v, 1) | \forall ~ v \in V_{aprox} ~ s.t. ~V(v) = 0\}$
 \end{defn}  
 %
+\subsection{Adaptivity Approximation from \THESYSTEM}
 \begin{defn}
 \label{def:aprox_adapt}
-[\jl{Approximated Adaptivity from SSA-Based Weighted Graph}].
+[\jl{Approximated Adaptivity from Program-Based Graph}].
 \\
-\jl{Given a program $\ssa{c}$, and its approximated SSA-Based Weighted Graph $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
+\jl{Given a program $\ssa{c}$, and its program-based graph $\progG = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
 %
-Adaptivity of the program defined according to the logic is as:
+Adaptivity of the program is defined as the number of query vertexes on a finite walk in $\progG$, this finite walk satisfies:
+\begin{itemize}
+\item the number of query vertexes on it is the maximum
+\item the visiting times of each vertex is bound by its reachibility bound $W$.
+\end{itemize}
+Formally as:
+%
 \[
-Adapt_{\text{aprox}}(c) := \max_{s, t \in V_{aprox} }
-\{\pathsearch(G_{aprox}, s, t)\},
+Adapt_{\bf{prog}}(c) 
+:= \max_{s, t \in V_{aprox} }
+\left\{\pathsearch(\progG, s, t) \right\}.
 \]
-where 
-\[
-\pathsearch(G_{aprox}, s, t) := 
-\max_{p \in \path(s, t) }
-\left\{
-\begin{array}{c}
-\sum\limits_{ c \in \mathcal{C}(p)}
-\{|q|*\text{maxflow}(c) 
-~ | ~ q \in \text{query nodes on c}\}
-\\
-+
-\sum\limits_{v \in p}
-\left\{
-w 
-\left|
-\begin{array}{c}
-(v, w) \in W_{aprox} \land v \in p 
-\\
-\land v \text{ is a query node} 
-\\
-\land v \text{ isn't on any circle}
-\end{array}
-\right .
-\right\}
-\end{array}
- \right\}.
-\]
+By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
+give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
 %
-The $\path(s, t)$ represents the set containing all the paths from vertex $s$ to vertex $t$ and
-$\mathcal{C}(p)$ is the set containing all the circles in the path p
+% \[
+% \pathsearch(\progG, s, t) := 
+% \max_{p \in \path(s, t) }
+% \left\{
+% \begin{array}{c}
+% \sum\limits_{ c \in \mathcal{C}(p)}
+% \{|q|*\text{maxflow}(c) 
+% ~ | ~ q \in \text{query nodes on c}\}
+% \\
+% +
+% \sum\limits_{v \in p}
+% \left\{
+% w 
+% \left|
+% \begin{array}{c}
+% (v, w) \in W_{aprox} \land v \in p 
+% \\
+% \land v \text{ is a query node} 
+% \\
+% \land v \text{ isn't on any circle}
+% \end{array}
+% \right .
+% \right\}
+% \end{array}
+%  \right\}.
+% \]
 %
-The pseudo-code of $\pathsearch(G_{aprox}, s, t)$ algorithm is defined in the Algorithm \ref{alg:adp_path}.}
+% The $\path(s, t)$ represents the set containing all the paths from vertex $s$ to vertex $t$ and
+% $\mathcal{C}(p)$ is the set containing all the circles in the path p
+%
+The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_walk}.}
 % where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
 \end{defn}  
 
 \begin{algorithm}
 \caption{
-\jl{Aptivity Path Search Algorithm ($\pathsearch$)}
-\label{alg:adp_path}
+\jl{Walk Search Algorithm ($\pathsearch$)}
+\label{alg:adpt_walk}
 }
 \begin{algorithmic}
 \REQUIRE Weighted Directed Graph $G = (V, E, W)$ with a start vertex $s$ and destination vertex $t$ .
@@ -3091,7 +3104,7 @@ result: $r$
 \jl{
 \begin{proof}
 Given a program $c$ with a starting memory $m$ and an underlying database $D$, 
-we generate a $G_{aprox} = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
+we generate a $\progG = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
 by the graph generation algorithm $\graphGen$ togehter with the weighting algorithm
 $\rb$.
 According to the Definition \ref{def:aprox_adapt}, we have:
@@ -3099,13 +3112,13 @@ According to the Definition \ref{def:aprox_adapt}, we have:
 \[
 	Adapt_{\text{aprox}}(c) 
 	:= \max_{s, t \in V_{aprox} }
-\{\pathsearch(G_{aprox}, s, t)\},
+\{\pathsearch(\progG, s, t)\},
 \]
 %
 where 
 %
 \[
-\pathsearch(G_{aprox}, s, t) := 
+\pathsearch(\progG, s, t) := 
 \max_{p \in \path(s, t) }
 \left\{
 \begin{array}{c}
@@ -3171,22 +3184,22 @@ w
 \{ |p(({\qval},l,w),({\qval}',l',w'))| \}.
 \]
 %
-The proof is developed by the case whether there is circle in the approximated graph $G_{aprox}$ or not.
+The proof is developed by the case whether there is circle in the approximated graph $\progG$ or not.
 \begin{mainitem}
 	\item
-	\textbf{circle doesn't exist in $G_{aprox}$}
+	\textbf{circle doesn't exist in $\progG$}
 	%
-	There doesn't exist any circle in $G_{aprox}$.
+	There doesn't exist any circle in $\progG$.
 	Trace-based graph is equivalent to the approximated graph.
 %
 	\item
-	\textbf{circle exists in $G_{aprox}$}
+	\textbf{circle exists in $\progG$}
 	\begin{enumsub}
 		\item
-		The circles in $G_{aprox}$ corresponding to the subgraph in $G$ representing while loops 
+		The circles in $\progG$ corresponding to the subgraph in $G$ representing while loops 
 		%
 		\item
-		The non-circle part in $G_{aprox}$ is the same as the first case.
+		The non-circle part in $\progG$ is the same as the first case.
 	\end{enumsub}
 \end{mainitem}
 \end{proof}
