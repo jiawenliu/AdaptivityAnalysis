@@ -530,44 +530,7 @@ where \\
 \]
 }
 \end{defn}
-%
-\paragraph{Non-Determinism of queries.}
-% \todo{
-% The evaluation of the query expression $\qexpr$ is deterministic while the evaluation of the query itself can be non-deterministic. 
-% }
-% \\
-\todo{
-When evaluating a query $\query(\qval)$ on a given database $D$, 
-in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
-we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
-The mechanism is considered as primitive operations in our language, behaving as black box to programmers.
-There are different kinds of mechanisms, 
-such as adding noise sampled from certain probabilistic distribution to the result \cite{dwork2015preserving}.
-Because of the randomness of the underlying mechanism, the evaluation of a query $\query(\qval)$ is non-deterministic. 
-That's the reason, in the Definition \ref{def:query_dep}, given a fixed database $D$, there will be a query domain $\qdom$ where $\query(\qval)(D) $ can be evaluated to different values $v \in \qdom$.
-}
-\\
-\todo{
-On the other hand, in the operational semantics rule \textbf{query-v}:
-\[
-		\inferrule
-	{
-	\query(\qval) = v
-	}
-	{
-	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
-	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
-	}
-	~\textbf{query-v}
-	\]
-, we evaluate the query given database $D$ based on an assumption that the underlying mechanism is fixed.
-This fixed mechanism only adds constant $0$ to the original result $v$ returned from the database, i.e., $v = \query(\qval)(D)$. 
-}
-%
-\\
-%
-The Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this property. 
+% 
 %
 \begin{defn}
 Query may dependency.
@@ -663,9 +626,9 @@ from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 \begin{defn}
 \label{def:trace-based_adapt}
-Adaptivity of A Program in While Language.
+\todo{Adaptivity of A Program in While Language.}
 \\
-\jl{
+\todo{
 Given a program $c$, 
 its adaptivity is defined as the length of the longest path in its
 trace-based dependency graph $G(c,D,m) = (V, E)$, 
@@ -701,6 +664,43 @@ Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
+\paragraph{Non-Determinism of queries.}
+% \todo{
+% The evaluation of the query expression $\qexpr$ is deterministic while the evaluation of the query itself can be non-deterministic. 
+% }
+% \\
+\jl{
+When evaluating a query $\query(\qval)$ on a given database $D$, 
+in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
+we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
+The mechanism is considered as primitive operations in our language, behaving as black box to programmers.
+There are different kinds of mechanisms, 
+such as adding noise sampled from certain probabilistic distribution to the result \cite{dwork2015preserving}.
+Because of the randomness of the underlying mechanism, the evaluation of a query $\query(\qval)$ is non-deterministic. 
+That's the reason, in the Definition \ref{def:query_dep}, given a fixed database $D$, there will be a query domain $\qdom$ where $\query(\qval)(D) $ can be evaluated to different values $v \in \qdom$.
+}
+\\
+\jl{
+On the other hand, in the operational semantics rule \textbf{query-v}:
+\[
+		\inferrule
+	{
+	\query(\qval) = v
+	}
+	{
+	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
+	\xrightarrow{} 
+	\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
+	}
+	~\textbf{query-v}
+	\]
+, we evaluate the query given database $D$ based on an assumption that the underlying mechanism is fixed.
+This fixed mechanism only adds constant $0$ to the original result $v$ returned from the database, i.e., $v = \query(\qval)(D)$. 
+}
+%
+\\
+%
+The Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this property.
 %
 \begin{lem}
 [Semi-Determinism].
@@ -1358,9 +1358,9 @@ Correspondingly, we need to have three ifvar commands.
 }
 %
 \begin{defn}
-Adaptivity of A Program in SSA Language.
+\todo{Adaptivity of A Program in SSA Language.}
 \\
-\jl{
+\todo{
 Given a program $\ssa{c}$ in SSA language, 
 its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
 $\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and database $D$.
@@ -1743,33 +1743,33 @@ We can similarly show that $\varssa{\ssa{\bexpr}} = \delta(\vars{b})$ as in the 
 \]
 It is proved by induction hypothesis on $  { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$.\\
 }
-\caseL{Case 
-$\todomath{
-\inferrule{
-    {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
-    \and
-    { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-    \and 
-     { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
-     \\
-    { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-    \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-    \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-    \and 
-    {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
-  }{ 
-  \Sigma; \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta_1[\bar{x} \to \ssa{\bar{x}'}]; \Sigma \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-LOOP}}
-}
-$
-}
-Unfolding the definition, we need to show:
-\[\varssa{\ssa{\aexpr}} \cup \fvssa{\ssa{c'}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}] = \delta (\vars{\aexpr}) \cup \delta(\fv{c} ) \]
-We can similarly show that $\varssa{\ssa{\aexpr}} = \delta(\vars{a})$ as in the if case. We still need to show that: 
-\[
- \fvssa{\ssa{c_1[\bar{x}' / \bar{x_1}]}}[ \ssa{ \bar{x_1} } / \ssa{\bar{x}'}] =  \delta(\fv{c} )
-\]
-It is proved by induction hypothesis on $  { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$.\\
+% \caseL{Case 
+% $\todomath{
+% \inferrule{
+%     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
+%     \and
+%     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
+%     \and 
+%      { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
+%      \\
+%     { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
+%     \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
+%     \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
+%     \and 
+%     {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
+%   }{ 
+%   \Sigma; \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta_1[\bar{x} \to \ssa{\bar{x}'}]; \Sigma \cup \{\ssa{\bar{x}'}  \}
+% }~{\textbf{S-LOOP}}
+% }
+% $
+% }
+% Unfolding the definition, we need to show:
+% \[\varssa{\ssa{\aexpr}} \cup \fvssa{\ssa{c'}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}] = \delta (\vars{\aexpr}) \cup \delta(\fv{c} ) \]
+% We can similarly show that $\varssa{\ssa{\aexpr}} = \delta(\vars{a})$ as in the if case. We still need to show that: 
+% \[
+%  \fvssa{\ssa{c_1[\bar{x}' / \bar{x_1}]}}[ \ssa{ \bar{x_1} } / \ssa{\bar{x}'}] =  \delta(\fv{c} )
+% \]
+% It is proved by induction hypothesis on $  { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$.\\
 \caseL{Case $\inferrule{
  {\Sigma;\delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1} 
  \and
@@ -2285,151 +2285,151 @@ So we can show that before the exit of the loop after ($v_N= n $) iterations, we
 This proof is similar when it comes to the exit as in case 1. 
 }
 %
-\caseL{Case 
-$\todomath{
-\inferrule{
-    {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
-    \and
-    { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-    \and 
-     { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
-     \\
-    { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-    \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-    \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-    \and 
-    {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
-    % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
-  }{ 
-  \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta[\bar{x} \to \ssa{\bar{x}'}]; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-LOOP}} 
-}$ 
-% 
-}
-We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$. Suppose $ \config{m ,a} \to v_N $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
+% \caseL{Case 
+% $\todomath{
+% \inferrule{
+%     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
+%     \and
+%     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
+%     \and 
+%      { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
+%      \\
+%     { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
+%     \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
+%     \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
+%     \and 
+%     {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
+%     % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
+%   }{ 
+%   \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta[\bar{x} \to \ssa{\bar{x}'}]; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
+% }~{\textbf{S-LOOP}} 
+% }$ 
+% % 
+% }
+% We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$. Suppose $ \config{m ,a} \to v_N $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
 
- When the loop is still running ($v_N > 0$), we have the following level evaluation:
-\[
-{\inferrule
-{
- \valr_N > 0
-}
-{
-\config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
-\xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
-}
-~\textbf{loop}
-}
-\]
-We then have the following evaluation:
-\[
- \inferrule{
- \config{m, c , t, (w + l)  } \to^{*} \config{m', \eskip , t'_{1}, w'   }
- }{
- \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) } 
- \to^{*} \config{m',   [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t'_{1}, w'  } 
-  }
-\]
- We can have the following evaluation of the ssa-form using the rule $\textbf{ssa-loop}$, when we assume  $ ,m = \delta^{-1}(\ssa{m})$.
+%  When the loop is still running ($v_N > 0$), we have the following level evaluation:
+% \[
+% {\inferrule
+% {
+%  \valr_N > 0
+% }
+% {
+% \config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
+% \xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
+% }
+% ~\textbf{loop}
+% }
+% \]
+% We then have the following evaluation:
+% \[
+%  \inferrule{
+%  \config{m, c , t, (w + l)  } \to^{*} \config{m', \eskip , t'_{1}, w'   }
+%  }{
+%  \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) } 
+%  \to^{*} \config{m',   [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t'_{1}, w'  } 
+%   }
+% \]
+%  We can have the following evaluation of the ssa-form using the rule $\textbf{ssa-loop}$, when we assume  $ ,m = \delta^{-1}(\ssa{m})$.
 
-\[
-{\inferrule
-{
- {\ssa{ \valr_N > 0} }\and 
- { \ssa{n} = 0 \implies i =1 } \and
- { \ssa{n} > 0 \implies i =2 }
-}
-{
-\config{ \ssa{{m},  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c'} ]^{l}  ,  t, w} }
-\xrightarrow{} \config{\ssa{{m}, c'[\bar{x_i}/ \bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ,  t, (w + l) } }
-}
-~\textbf{ssa-loop}
-}
-\]
-Depending on if the counter $n$ is equal to $0$ or not, there are two possible execution paths (the variables $\ssa{\bar{x}}$ is replaced by the $\ssa{\bar{x_1}}$ or $\ssa{\bar{x_2}}$). We start from the first iteration (when $n =0$) when $v_N >0$. 
+% \[
+% {\inferrule
+% {
+%  {\ssa{ \valr_N > 0} }\and 
+%  { \ssa{n} = 0 \implies i =1 } \and
+%  { \ssa{n} > 0 \implies i =2 }
+% }
+% {
+% \config{ \ssa{{m},  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c'} ]^{l}  ,  t, w} }
+% \xrightarrow{} \config{\ssa{{m}, c'[\bar{x_i}/ \bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ,  t, (w + l) } }
+% }
+% ~\textbf{ssa-loop}
+% }
+% \]
+% Depending on if the counter $n$ is equal to $0$ or not, there are two possible execution paths (the variables $\ssa{\bar{x}}$ is replaced by the $\ssa{\bar{x_1}}$ or $\ssa{\bar{x_2}}$). We start from the first iteration (when $n =0$) when $v_N >0$. 
 
-By induction hypothsis on the premise $ { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$, we know that 
-\[ \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l)  } \to^{*} \config{\ssa{{m'}, \eskip}, t'_{i}, w'  } \land m' = \delta_1^{-1}(\ssa{m'})   \]
-Hence we can conclude that:
-\[
-  \inferrule{
-   \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l) }  \to^{*} \config{\ssa{{m'}, \eskip}, t'_{1}, w'  }
-  }{
-  \config{\ssa{ {m}, c'[ \bar{x_1}/\bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t, (w + l)  }  \to^{*} \\ \config{ \ssa{{m'}, [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t'_{1}, w'  } 
-  }
-\]
- Then there are two cases, 
- \begin{enumerate}
-     \item  when $v_N -1 =0$ so that the loop exits. The level execution as follows by the evaluation rule $\textbf{loop-exit}$.
-     \[
-\inferrule
-{
- \valr_N -1 = 0
-}
-{
-\config{m',  [\eloop ~ \valr_N-1 ~ \edo ~ c ]^{l} ,  t_i', w' }
-\xrightarrow{} \config{m', [\eskip]^{l} ,  t_{1}', (w' \setminus l) }
-}
-~\textbf{loop-exit}
-\]
-The corresponding ssa-form evaluation as follows:
-\[
-{
-\inferrule
-{
- \ssa{\valr_N -1} = 0
-}
-{
-\config{\ssa{m',  [\eloop ~ \valr_N-1, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  },  t_{1}', w' }
-\xrightarrow{} \config{\ssa{ m'[ \bar{x} \mapsto m'(\bar{x_2}) ], [\eskip]^{l} },  t_{1}', (w' \setminus l)  }
-}
-~\textbf{ssa-loop-exit}
-}
-\]
-We can see that both traces are not changed during the exit of the loop. We need to show that $ m' = \delta^{-1} (\ssa{m'[\bar{x} \mapsto m'(\bar{x_2})]}) $. We know that $[ \bar{x} \mapsto \bar{x_2}]$ in $\delta_1$ from the definition, so we can show that for any variable $\ssa{x_2} \in \bar{x_2}$, $( \ssa{x_2}, m'(x) ) \in \ssa{m'}$. For variables $x \in {\dom(\delta) - \bar{x} } $, the variable is not modified during the execution of $c$ so that we know $m(x) = m'(x)$, and then we can show that $(\delta(x), m'(x)) \in \ssa{m'} $ because $\delta(x)$ is not written in $\ssa{c'[\bar{x_1}/ \bar{x}']}$ .
+% By induction hypothsis on the premise $ { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$, we know that 
+% \[ \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l)  } \to^{*} \config{\ssa{{m'}, \eskip}, t'_{i}, w'  } \land m' = \delta_1^{-1}(\ssa{m'})   \]
+% Hence we can conclude that:
+% \[
+%   \inferrule{
+%    \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l) }  \to^{*} \config{\ssa{{m'}, \eskip}, t'_{1}, w'  }
+%   }{
+%   \config{\ssa{ {m}, c'[ \bar{x_1}/\bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t, (w + l)  }  \to^{*} \\ \config{ \ssa{{m'}, [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t'_{1}, w'  } 
+%   }
+% \]
+%  Then there are two cases, 
+%  \begin{enumerate}
+%      \item  when $v_N -1 =0$ so that the loop exits. The level execution as follows by the evaluation rule $\textbf{loop-exit}$.
+%      \[
+% \inferrule
+% {
+%  \valr_N -1 = 0
+% }
+% {
+% \config{m',  [\eloop ~ \valr_N-1 ~ \edo ~ c ]^{l} ,  t_i', w' }
+% \xrightarrow{} \config{m', [\eskip]^{l} ,  t_{1}', (w' \setminus l) }
+% }
+% ~\textbf{loop-exit}
+% \]
+% The corresponding ssa-form evaluation as follows:
+% \[
+% {
+% \inferrule
+% {
+%  \ssa{\valr_N -1} = 0
+% }
+% {
+% \config{\ssa{m',  [\eloop ~ \valr_N-1, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  },  t_{1}', w' }
+% \xrightarrow{} \config{\ssa{ m'[ \bar{x} \mapsto m'(\bar{x_2}) ], [\eskip]^{l} },  t_{1}', (w' \setminus l)  }
+% }
+% ~\textbf{ssa-loop-exit}
+% }
+% \]
+% We can see that both traces are not changed during the exit of the loop. We need to show that $ m' = \delta^{-1} (\ssa{m'[\bar{x} \mapsto m'(\bar{x_2})]}) $. We know that $[ \bar{x} \mapsto \bar{x_2}]$ in $\delta_1$ from the definition, so we can show that for any variable $\ssa{x_2} \in \bar{x_2}$, $( \ssa{x_2}, m'(x) ) \in \ssa{m'}$. For variables $x \in {\dom(\delta) - \bar{x} } $, the variable is not modified during the execution of $c$ so that we know $m(x) = m'(x)$, and then we can show that $(\delta(x), m'(x)) \in \ssa{m'} $ because $\delta(x)$ is not written in $\ssa{c'[\bar{x_1}/ \bar{x}']}$ .
 
-     \item when $v_n -1 > 0$ so that the loop is still running. \\
-     We want to show that : assuming in the $i-th$ $(i < v_N)$ iteration, starting with $t_i$ and $w_i$ and $m_i = \delta_1^{-1}(\ssa{m_i})$ so that the low level evaluation as follows $\config{m_i, [\eloop ~ \valr_N-i  ~ \edo ~ c]^{l} ,  t_{i}, w_i } \xrightarrow{}^{*} \config{m_{i+1},   [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i+1}, w_{i+1}  } $.
-     Then the corresponding ssa form evaluation as follows : \[ 
-     \inferrule{}{\config{\ssa{ {m_i},  [\eloop ~ (\valr_N-i), n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } } \]  
-     and $m_i = \delta^{-1}(\ssa{m_i}) $.
+%      \item when $v_n -1 > 0$ so that the loop is still running. \\
+%      We want to show that : assuming in the $i-th$ $(i < v_N)$ iteration, starting with $t_i$ and $w_i$ and $m_i = \delta_1^{-1}(\ssa{m_i})$ so that the low level evaluation as follows $\config{m_i, [\eloop ~ \valr_N-i  ~ \edo ~ c]^{l} ,  t_{i}, w_i } \xrightarrow{}^{*} \config{m_{i+1},   [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i+1}, w_{i+1}  } $.
+%      Then the corresponding ssa form evaluation as follows : \[ 
+%      \inferrule{}{\config{\ssa{ {m_i},  [\eloop ~ (\valr_N-i), n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } } \]  
+%      and $m_i = \delta^{-1}(\ssa{m_i}) $.
      
-     We then have the low level evauation:
-     \[
-\jl{\inferrule
-{
- \valr_N-i > 0
-}
-{
-\config{m_i, [\eloop ~ \valr_N-i  ~ \edo ~ c]^{l} ,  t_{i}, w_i }
-\xrightarrow{} \config{m_i, c ;  [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i}, (w_{i} + l) }
-}
-~\textbf{loop}
-}
-\]
-We then have the following evaluation:
-\[
- \inferrule{
- \config{m_i, c , t_i, (w_i + l)  } \to^{*} \config{m_{i+1}, \eskip , t_{i+1}, w_{i+1}   }
- }{
- \config{m_i, c ;  [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_i, (w_i + l) } 
- \to^{*} \config{m_{i+1},   [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i+1}, w_{i+1}  } 
-  }
-\]
+%      We then have the low level evauation:
+%      \[
+% \jl{\inferrule
+% {
+%  \valr_N-i > 0
+% }
+% {
+% \config{m_i, [\eloop ~ \valr_N-i  ~ \edo ~ c]^{l} ,  t_{i}, w_i }
+% \xrightarrow{} \config{m_i, c ;  [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i}, (w_{i} + l) }
+% }
+% ~\textbf{loop}
+% }
+% \]
+% We then have the following evaluation:
+% \[
+%  \inferrule{
+%  \config{m_i, c , t_i, (w_i + l)  } \to^{*} \config{m_{i+1}, \eskip , t_{i+1}, w_{i+1}   }
+%  }{
+%  \config{m_i, c ;  [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_i, (w_i + l) } 
+%  \to^{*} \config{m_{i+1},   [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i+1}, w_{i+1}  } 
+%   }
+% \]
 
-By induction hypothsis on the premise $  { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }$, we know that 
-\[ \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l)  } \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  } \land m_{i+1} = \delta_1^{-1}(\ssa{m_{i+1}})   \]
-Hence we can conclude that:
-\[
-  \inferrule{
-   \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l) }  \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  }
-  }{
-  \config{\ssa{ {m_i}, c'[ \bar{x_2}/\bar{x}'  ];  [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } 
-  }
-\]
-So we can show that before the exit of the loop after ($v_N= n $) iterations, we have $t_{n} = t_{n}$ and $m_{n} = \delta_1^{-1}(\ssa{m_{n}})$.
-This proof is similar when it comes to the exit as in case 1. 
- \end{enumerate}
+% By induction hypothsis on the premise $  { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }$, we know that 
+% \[ \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l)  } \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  } \land m_{i+1} = \delta_1^{-1}(\ssa{m_{i+1}})   \]
+% Hence we can conclude that:
+% \[
+%   \inferrule{
+%    \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l) }  \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  }
+%   }{
+%   \config{\ssa{ {m_i}, c'[ \bar{x_2}/\bar{x}'  ];  [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } 
+%   }
+% \]
+% So we can show that before the exit of the loop after ($v_N= n $) iterations, we have $t_{n} = t_{n}$ and $m_{n} = \delta_1^{-1}(\ssa{m_{n}})$.
+% This proof is similar when it comes to the exit as in case 1. 
+%  \end{enumerate}
  \end{itemize}
 %
 \end{proof}
@@ -2780,7 +2780,7 @@ The output of the algorithm is the updated global list $G'$, along with the upda
 $\Gamma$ is a matrix of one row and $N$ columns, 
 $N = |G|=|\flag|$.
 
-\jl{
+\todo{
 $\flag$ is a vector of flags for each variable, representing whether a variable $x$ is assigned by a query $F[x] = 1$, 
 showing up inside a while loop or if-else branches $F[x] = 2$
 and otherwise $F[x] = 0$.
@@ -3006,7 +3006,7 @@ Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1
 \begin{defn}
 [Program-Based Graph in SSA Language].
 \\
-\jl{
+\todo{
 Given a SSA program $\ssa{c}$ and its program-based graph with flags 
 $G(M, \flag, G, i_1,i_2) = \{V', E', \flag'\}$, 
 we add reachability bounds on each vertex $v$ in this graph 
@@ -3026,13 +3026,13 @@ $W = \{(v, w) | \forall ~ s \in V ~ s.t. ~\flag(s) > 0, w = \rb(v, c)\}
 %
 \subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
 \begin{defn}
-\label{def:aprox_adapt}
+\label{def:prog_adapt}
 [\jl{Approximated Adaptivity from Program-Based Graph}].
 \\
-\jl{Given a program $\ssa{c}$, we generate its program-based graph 
+\todo{Given a program $\ssa{c}$, we generate its program-based graph 
 $\progG = \big\{ V, E, W, \flag \big\}$.
 %
-The the analyzed adaptivity for $c$ in our $\THESYSTEM$ is defined as the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
+The the program-based adaptivity for $c$ in our $\THESYSTEM$ is defined as the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
 \begin{itemize}
 \item the number of query vertexes on this walk is maximum
 \item the visiting times of each vertex $s$ on this walk is bound by its reachability bound $W(s)$.
@@ -3107,97 +3107,97 @@ result: $r$
 %
 %
 \subsection{\todo{Soundness of the \THESYSTEM}}
-\jl{
+\todo{
 	\begin{thm}[Soundness of the \THESYSTEM].
-	Given a program $c$ with a starting memory $m$ and an underlying database $D$, we have:
+	Given a program $c$, we have:
 	%
 	\[
-	Adapt_{\text{aprox}}(c) \geq A(c, D, m).
+	Adapt_{\bf{prog}}(c) \geq A(c).
 	\]
 	\end{thm}
 }
-\jl{
+\todo{
 \begin{proof}
 Given a program $c$ with a starting memory $m$ and an underlying database $D$, 
-we generate a $\progG = \{V_{aprox}, E_{aprox}, W_{aprox} \}$
+we generate a $\progG = \{V, E, W, \flag \}$
 by the graph generation algorithm $\graphGen$ togehter with the weighting algorithm
 $\rb$.
-According to the Definition \ref{def:aprox_adapt}, we have:
+According to the Definition \ref{def:prog_adapt}, we have:
 %
 \[
 	Adapt_{\text{aprox}}(c) 
-	:= \max_{s, t \in V_{aprox} }
+	:= \max_{s, t \in V }
 \{\pathsearch(\progG, s, t)\},
 \]
 %
-where 
-%
-\[
-\pathsearch(\progG, s, t) := 
-\max_{p \in \path(s, t) }
-\left\{
-\begin{array}{c}
-\sum\limits_{ c \in \mathcal{C}(p)}
-\{|q|*\text{maxflow}(c) 
-~ | ~ q \in \text{query nodes on c}\}
-\\
-+
-\sum\limits_{v \in p}
-\left\{
-w 
-\left|
-\begin{array}{c}
-(v, w) \in W_{aprox} \land v \in p 
-\\
-\land v \text{ is a query node} 
-\\
-\land v \text{ isn't on any circle}
-\end{array}
-\right .
-\right\}
-\end{array}
- \right\}.
-\]
+% where 
+% %
+% \[
+% \pathsearch(\progG, s, t) := 
+% \max_{p \in \path(s, t) }
+% \left\{
+% \begin{array}{c}
+% \sum\limits_{ c \in \mathcal{C}(p)}
+% \{|q|*\text{maxflow}(c) 
+% ~ | ~ q \in \text{query nodes on c}\}
+% \\
+% +
+% \sum\limits_{v \in p}
+% \left\{
+% w 
+% \left|
+% \begin{array}{c}
+% (v, w) \in W_{aprox} \land v \in p 
+% \\
+% \land v \text{ is a query node} 
+% \\
+% \land v \text{ isn't on any circle}
+% \end{array}
+% \right .
+% \right\}
+% \end{array}
+%  \right\}.
+% \]
 %
 We also construct a trace-based graph $G = (V, E)$ by the definition \ref{def:trace-based_graph}.
-According to the Definition \ref{def:trace-based_adapt}, we have
+According to the Definition \ref{def:trace-based_adapt}, we have for all possible starting memory $m$ and database $D$,
 $$
-A(c, D, m) := 
+A(c) := 
 \max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
 \{ |p(({\qval},l,w),({\qval}',l',w'))| \}.
 $$
 %
 Then, we need to show:
 %
-\[
-\max_{s, t \in V_{aprox} }
-\max_{p \in \path(s, t) }
-\left\{
-\begin{array}{c}
-\sum\limits_{ c \in \mathcal{C}(p)}
-\{|q|*\text{maxflow}(c) 
-~ | ~ q \in \text{query nodes on c}\}
-\\
-+
-\sum\limits_{v \in p}
-\left\{
-w 
-\left|
-\begin{array}{c}
-(v, w) \in W_{aprox} \land v \in p 
-\\
-\land v \text{ is a query node} 
-\\
-\land v \text{ isn't on any circle}
-\end{array}
-\right .
-\right\}
-\end{array}
- \right\}
- \geq 
- \max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
-\{ |p(({\qval},l,w),({\qval}',l',w'))| \}.
-\]
+% \[
+% \max_{s, t \in V_{aprox} }
+% \max_{p \in \path(s, t) }
+% \left\{
+% \begin{array}{c}
+% \sum\limits_{ c \in \mathcal{C}(p)}
+% \{|q|*\text{maxflow}(c) 
+% ~ | ~ q \in \text{query nodes on c}\}
+% \\
+% +
+% \sum\limits_{v \in p}
+% \left\{
+% w 
+% \left|
+% \begin{array}{c}
+% (v, w) \in W_{aprox} \land v \in p 
+% \\
+% \land v \text{ is a query node} 
+% \\
+% \land v \text{ isn't on any circle}
+% \end{array}
+% \right .
+% \right\}
+% \end{array}
+%  \right\}
+%  \geq 
+%  \max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
+% \{ |p(({\qval},l,w),({\qval}',l',w'))| \}.
+% \]
 %
 The proof is developed by the case whether there is circle in the approximated graph $\progG$ or not.
 \begin{mainitem}
