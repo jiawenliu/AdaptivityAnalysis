@@ -532,6 +532,14 @@ where \\
 \end{defn}
 % 
 %
+
+\begin{defn}
+ The equality between two query expressions $\qexpr_1$ and $\qexpr_2$ in certain memory $m$ is denoted  $ \qexpr_1 =_{q}^{m} \qexpr_2$.\\
+$\qexpr_1 =_{q}^{m} \qexpr_2$ iff $ \exists \qval. \config{m,  \qexpr_1} \qarrow \config{m, \qval} \land \config{m,  \qexpr_2 } \qarrow \config{m, \qval} $. \\
+We use $=_{q}$ as the shorthand for $=_{q}^{[]}$.\\
+$\qval \in_q t $ iff $\exists \qval' \in t. \qval =_q \qval'$.
+\end{defn}
+
 \begin{defn}
 Query may dependency.
 \label{def:query_dep}
@@ -636,9 +644,9 @@ for all possible starting memory $m$ and database $D$.
 We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
-A(c) = 
-\max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
-\{ |p(({\qval},l,w),({\qval}',l',w'))| \}
+A(c) = \forall m, D. \max\limits_{ (V,E) \in G(c, D, m) } \big(
+\max\limits_{({\qval},l,w),({\qval}',l',w') \in V }(
+\{ |p(({\qval},l,w),({\qval}',l',w'))| \}) \big )
 $$
 }
 \end{defn}
@@ -802,7 +810,7 @@ i.e., either $l' < l$ or $w' <_{w} w$.
 }
 \\
 \jl{
-This implies that a edge $(({\qval}',l',w'),({\qval},l,w))$ 
+This implies that an edge $(({\qval}',l',w'),({\qval},l,w))$ 
 with $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ can never be constructed in the traced-based dependency graph $G = (V,E)$.
 }
 \end{proof}
@@ -1368,7 +1376,7 @@ $\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and
 We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p_s(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
-A(\ssa{c}) = 
+A_s(\ssa{c}) = 
 \max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
 \{ |p_s(({\qval},l,w),({\qval}',l',w'))| \}
 $$
@@ -1392,7 +1400,7 @@ then $G_{low}(c,D,m) = G_{ls}(\ssa{c},D,\ssa{m}) $.
 \begin{coro}
 \jl{Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, 
 $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and loop maps $w$, then 
-$A(c,D,m) = A_s(\ssa{c},D,\ssa{m}) $.
+$A(c) = A_s(\ssa{c}) $.
 }
 \end{coro}
 
@@ -2784,7 +2792,7 @@ $N = |G|=|\flag|$.
 $\flag$ is a vector of flags for each variable, representing whether a variable $x$ is assigned by a query $F[x] = 1$, 
 showing up inside a while loop or if-else branches $F[x] = 2$
 and otherwise $F[x] = 0$.
-}
+} \wq{What about the variable inside a loop and also a query related one? 1 or 2?}
 
 $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$.
 
