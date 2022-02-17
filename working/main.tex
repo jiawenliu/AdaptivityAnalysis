@@ -632,6 +632,11 @@ edge $(({\qval},l,w), ({\qval}',l'.w'))$,
 from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 %
+
+\mg{Add a definition for this.}
+We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p(({\qval},l,w),({\qval}',l',w'))$. 
+
+
 \begin{defn}
 \label{def:trace-based_adapt}
 \todo{Adaptivity of A Program in While Language.}
@@ -641,12 +646,9 @@ Given a program $c$,
 its adaptivity is defined as the length of the longest path in its
 trace-based dependency graph $G(c,D,m) = (V, E)$, 
 for all possible starting memory $m$ and database $D$.
-We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
-A(c) = \forall m, D. \max\limits_{ (V,E) \in G(c, D, m) } \big(
-\max\limits_{({\qval},l,w),({\qval}',l',w') \in V }(
-\{ |p(({\qval},l,w),({\qval}',l',w'))| \}) \big )
+A(c) = \max \big \{ {\tt len}(p) \ | \ m\in {\tt Mem},D\in {\tt DB},p \in \path(G(c, D, m)) \big \} 
 $$
 }
 \end{defn}
@@ -3033,25 +3035,40 @@ $W = \{(v, w) | \forall ~ s \in V ~ s.t. ~\flag(s) > 0, w = \rb(v, c)\}
 \end{defn}  
 %
 \subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
-\begin{defn}
-\label{def:prog_adapt}
-[\jl{Approximated Adaptivity from Program-Based Graph}].
-\\
-\todo{Given a program $\ssa{c}$, we generate its program-based graph 
-$\progG = \big\{ V, E, W, \flag \big\}$.
+Given a program $\ssa{c}$, we generate its program-based graph 
+$\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$.
 %
-The the program-based adaptivity for $c$ in our $\THESYSTEM$ is defined as the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
+Then the program-based adaptivity for $c$ in our $\THESYSTEM$ is defined as the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
 \begin{itemize}
 \item the number of query vertexes on this walk is maximum
 \item the visiting times of each vertex $s$ on this walk is bound by its reachability bound $W(s)$.
 \end{itemize}
+
+\begin{defn}
+Given a labeled weighted graph $G=(V,E,W,\flag )$, a \emph{walk} $k$ in $G$ is a sequence of edges $e_1\ldots e_n$ such that:
+\begin{itemize}
+    \item for every $1\leq i< n$ there exists $v_{i-1},v_{i},v_{i+1}$ such that  $e_i=(v_{i-1},v_{i})$ and $e_i+1=(v_{i-1},v_{i})$.
+    \item every vertex $v\in V$ appears in $k$ at most $W(v)$ times.  
+\end{itemize}
+\end{defn}
+
+\begin{defn}
+\label{def:prog_adapt}
+[\jl{Approximated Adaptivity from Program-Based Graph}].
+\\
+\todo{
 Formally as:
 %
 \[
 Adapt_{\bf{prog}}(c) 
-:= \max_{s, t \in V }
-\left\{\pathsearch(\progG, s, t) \right\}.
+:= \max
+\left\{ \#_{\tt q}(k)\ |\  k\in {\tt walk}(\progG(\ssa{c}))\right \}.
 \]
+% \[
+% Adapt_{\bf{prog}}(c) 
+% := \max
+% \left\{\pathsearch(\progG(\ssa{c}), s, t)\ |\ \progG(\ssa{c}) = \big( V, E, W, \flag \big) \land s, t \in V \right\}.
+% \]
 By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
 give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
 %
