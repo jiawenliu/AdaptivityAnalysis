@@ -144,16 +144,24 @@ The key component of the system is an program analysis procedure, which provides
 \mbox{Trace} & t & ::= & [] 
 ~|~ \jl{{( \query(\qval), l, w) :: t}} \\
 %
-\mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{( \query(\qval), l, w) \} } 
-\\
-%
 \mbox{\jl{While Maps}}
 & w & ::= & \jl{[] |  w[l \to n]}
 \\
 %
+\mbox{Annotated Queries} & \mathcal{AQ}  & 
+::= & \jl{\{( \query(\qval), l, w) \} } 
+\\
+%
 \mbox{\jl{Query Domain}}
 & \qdom & ::= & \jl{[-1,1]}
+\\
+%
+\mbox{\jl{Memory Domain}}
+& \memdom & ::= & \jl{\{m\}}
+\\
+%
+\mbox{\jl{Database Domain}}
+& \dbdom & ::= & \jl{\{D\}}
 \end{array}
 \]
 %
@@ -632,11 +640,19 @@ edge $(({\qval},l,w), ({\qval}',l'.w'))$,
 from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 %
+\begin{defn}[path ($p$)].
+\\
+Given a graph $G=(V,E)$, a path $p$ in $G$ is a sequence of edges $e_1\ldots e_{n - 1}$ for which there is a sequence of vertices $v_1, \ldots, v_n$ 
+such that for every $1 \leq i < n$, $e_i=(v_{i-1},v_{i})$  and all edges and vertexes are distinct.
+\end{defn}
+%
+\begin{defn}[path set ($\path$)].
+\\
+Given a graph $G$, the path set of $G$ $\path(G)$ is defined as a set containing all paths $p$ in $G$.
+\end{defn}
 
-\mg{Add a definition for this.}
-We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p(({\qval},l,w),({\qval}',l',w'))$. 
-
-
+%
+%
 \begin{defn}
 \label{def:trace-based_adapt}
 \todo{Adaptivity of A Program in While Language.}
@@ -1375,12 +1391,10 @@ Given a program $\ssa{c}$ in SSA language,
 its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
 $\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and database $D$.
 %
-We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p_s(({\qval},l,w),({\qval}',l',w'))$. 
+% We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p_s(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
-A_s(\ssa{c}) = 
-\max\limits_{({\qval},l,w),({\qval}',l',w') \in V }
-\{ |p_s(({\qval},l,w),({\qval}',l',w'))| \}
+A(\ssa{c}) = \max \big \{ {\tt len}(p) \ | \ m\in {\tt Mem},D\in {\tt DB},p \in \path(G(c, D, m)) \big \} 
 $$
 }
 \end{defn}
@@ -2787,14 +2801,43 @@ The output of the algorithm is the updated global list $G'$, along with the upda
 \subsection{Matrix and Vector based algorithm}
 %
 %
+
+\begin{defn}[Valid matrix]
+For a global list $G$, $G \vDash (M,\flag)$ iff the cardinality of $G$ equals to the one of $\flag$, $|G| = |\flag|$ 
+and the matrix $M$ is of size $|\flag| \times |\flag|$.
+\end{defn}
+
+\begin{defn}[Valid index]
+For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' = G[0,\ldots, i_1-1], G';w; \ssa{c} \to G'' ; w' \land G'' = G[0, \ldots, i_2-1] $.  
+\end{defn}
+
+\begin{defn}[Valid gamma]
+$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
+\end{defn}
+
+
+\begin{defn}
+[Program-Based Graph with Labels].
+\\
+\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
+the graph $G(M, \flag, G, i_1,i_2) = (V, E, \flag)$ is. defined as:
+\\
+Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
+\\
+Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+\\
+Flags $\flag = \flag$
+}
+ \end{defn} 
+
 $\Gamma$ is a matrix of one row and $N$ columns, 
 $N = |G|=|\flag|$.
 
 \todo{
 $\flag$ is a vector of flags for each variable, representing whether a variable $x$ is assigned by a query $F[x] = 1$, 
-showing up inside a while loop or if-else branches $F[x] = 2$
-and otherwise $F[x] = 0$.
-} \wq{What about the variable inside a loop and also a query related one? 1 or 2?}
+or showing up inside a while loop or if-else branches $F[x] = 2$,
+or otherwise $F[x] = 0$.
+} 
 
 $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$.
 
@@ -2880,33 +2923,6 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 %
 \and 
 %
-% \todomath{ 
-% \inferrule
-% {
-% B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
-% \\
-% \forall 0 \leq j < N. 
-% {\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ j*(B+A) }{M_{1j};V_{1j}; i+B+j*(B+A) }}
-% \\
-% {
-% \ad{\Gamma;\ssa{c} ; i+B+j*(B+A)  }{M_{2j}; V_{2j}; i+B+A+j*(B+A) }
-% }
-% \\
-% {
-% \ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+N*(B+A) }{M; V ;i+N*(B+A)+B}
-% }
-% \\
-% { \ssa{\aexpr} =  {N}  }
-% \and
-% {M' = M+ \sum_{0 \leq j <N}( M_{1j}+M_{2j})  }
-% \and
-% {V' = V \uplus \sum_{0 \leq j <N}( V_{1j} \uplus V_{2j})  }
-% }
-% {
-% \ad{\Gamma;\eloop ~ [\ssa{\aexpr}]^{l}, ~0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}, i }{ M';V' ;i+N*(B+A)+B }
-% }~\textbf{\graphGen-loop}
-% }
-%
 \and 
 %
 \jl{ 
@@ -2942,7 +2958,6 @@ i }{ M';V' ;i+(B+A)+B }
 \begin{figure}
    \[
  \begin{array}{lll}
-    |[\eswitch(\ssa{\expr}, \ssa{x},(v_j \rightarrow q_j )]^{l} |_{low}  &=& [\eswitch(|\ssa{\expr}|_{low}, |x|_{low},(v_j \rightarrow q_j )]^{l} \\
     | 
     \ewhile ~ [ \ssa{\bexpr} ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
     |_{low}  
@@ -2978,34 +2993,7 @@ M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
 \end{array}
 \]
 
-
-\begin{defn}[Valid matrix]
-For a global list $G$, $G \vDash (M,\flag)$ iff the cardinality of $G$ equals to the one of $\flag$, $|G| = |\flag|$ 
-and the matrix $M$ is of size $|\flag| \times |\flag|$.
-\end{defn}
-
-\begin{defn}[Valid index]
-For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' = G[0,\ldots, i_1-1], G';w; \ssa{c} \to G'' ; w' \land G'' = G[0, \ldots, i_2-1] $.  
-\end{defn}
-
-\begin{defn}[Valid gamma]
-$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
-\end{defn}
-
-
-\begin{defn}
-[Program-Based Graph with Flags].
-\\
-\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
-the graph $G(M, \flag, G, i_1,i_2) = (V, E, \flag)$ is. defined as:
-\\
-Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
-\\
-Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
-\\
-Flags $\flag = \flag$
-}
- \end{defn}  
+ 
      
 %
 \subsection{Variable Reachability Bounding Algorithm}
@@ -3014,7 +3002,7 @@ Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1
 }
 \\
 \begin{defn}
-[Program-Based Graph in SSA Language].
+[Program-Based Graph].
 \\
 \todo{
 Given a SSA program $\ssa{c}$ and its program-based graph with flags 
@@ -3038,39 +3026,58 @@ $W = \{(v, w) | \forall ~ s \in V ~ s.t. ~\flag(s) > 0, w = \rb(v, c)\}
 Given a program $\ssa{c}$, we generate its program-based graph 
 $\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$.
 %
-Then the program-based adaptivity for $c$ in our $\THESYSTEM$ is defined as the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
+Then the program-based adaptivity for $c$ in our $\THESYSTEM$ is the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
 \begin{itemize}
 \item the number of query vertexes on this walk is maximum
 \item the visiting times of each vertex $s$ on this walk is bound by its reachability bound $W(s)$.
 \end{itemize}
 
-\begin{defn}
-Given a labeled weighted graph $G=(V,E,W,\flag )$, a \emph{walk} $k$ in $G$ is a sequence of edges $e_1\ldots e_n$ such that:
+\begin{defn}[Finite Walk ($k$)].
+\\
+Given a labeled weighted graph $G=(V,E,W,\flag )$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
+for which there is a sequence of vertexes $(v_1, \ldots, v_{n})$ such that:
 \begin{itemize}
-    \item for every $1\leq i< n$ there exists $v_{i-1},v_{i},v_{i+1}$ such that  $e_i=(v_{i-1},v_{i})$ and $e_i+1=(v_{i-1},v_{i})$.
-    \item every vertex $v\in V$ appears in $k$ at most $W(v)$ times.  
+    \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
+    \item every vertex $v \in V$ appears in this vertices sequence $v_1, \ldots, v_{n}$ of $k$ at most $W(v)$ times.  
 \end{itemize}
+$(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
 \end{defn}
 
-\begin{defn}
-\label{def:prog_adapt}
-[\jl{Approximated Adaptivity from Program-Based Graph}].
+\begin{defn}[walk set ($\walk$)].
 \\
-\todo{
-Formally as:
+Given a graph $G$, the walk set of $G$ $\walk(G)$ is defined as a set containing all finite walks $k$ in $G$.
+\end{defn}
 %
+%
+\begin{defn}[Length of Finite Walk w.r.t Query ($\len_{\tt q}$)].
+\\
+Given a labeled weighted graph $G=(V,E,W,\flag )$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
 \[
-Adapt_{\bf{prog}}(c) 
-:= \max
-\left\{ \#_{\tt q}(k)\ |\  k\in {\tt walk}(\progG(\ssa{c}))\right \}.
+	\len_{\tt q}(k) = \len\{ v | v \in (v_1, \ldots, v_{n}) \land F(v) = 1 \}
 \]
+\end{defn}
+
+
+\begin{defn}
+[\jl{Program-Based Adaptivity}].
+\label{def:prog_adapt}
+\\
+\jl{
+Given a program $\ssa{c}$ and its program-based graph 
+$\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$,
+%
+the program-based adaptivity for $c$ is defined as%
+\[
+A_{\bf{prog}}(c) 
+:= \max
+\left\{ \len_{\tt q}(k)\ |\  k\in {\tt walk}(\progG(\ssa{c}))\right \}.
+\]
+}
 % \[
 % Adapt_{\bf{prog}}(c) 
 % := \max
 % \left\{\pathsearch(\progG(\ssa{c}), s, t)\ |\ \progG(\ssa{c}) = \big( V, E, W, \flag \big) \land s, t \in V \right\}.
 % \]
-By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
-give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
 %
 % \[
 % \pathsearch(\progG, s, t) := 
@@ -3102,9 +3109,12 @@ give the number of query vertexes on a finite walk from $s$ to $t$, which contai
 % The $\path(s, t)$ represents the set containing all the paths from vertex $s$ to vertex $t$ and
 % $\mathcal{C}(p)$ is the set containing all the circles in the path p
 %
-The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_walk}.}
 % where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
 \end{defn}  
+
+By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
+give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
+The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_walk}.
 
 \begin{algorithm}
 \caption{
@@ -3112,7 +3122,7 @@ The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algor
 \label{alg:adpt_walk}
 }
 \begin{algorithmic}
-\REQUIRE Weighted Directed Graph $G = (V, E, W)$ with a start vertex $s$ and destination vertex $t$ .
+\REQUIRE Weighted Directed Graph $G = (V, E, W, F)$ with a start vertex $s$ and destination vertex $t$ .
 \STATE  {\bf \jl{bfs $(G, s, t)$}:}  
 \STATE \qquad {\bf init} 
 current node: $c = s$, 
