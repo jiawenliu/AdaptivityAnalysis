@@ -2806,6 +2806,11 @@ The output of the algorithm is the updated global list $G'$, along with the upda
 For a global list $G$, $G \vDash (M,\flag)$ iff the cardinality of $G$ equals to the one of $\flag$, $|G| = |\flag|$ 
 and the matrix $M$ is of size $|\flag| \times |\flag|$.
 \end{defn}
+Operations on Matrix are defined as follows:
+\begin{equation}
+M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2 
+\end{equation}
+
 
 \begin{defn}[Valid index]
 For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' = G[0,\ldots, i_1-1], G';w; \ssa{c} \to G'' ; w' \land G'' = G[0, \ldots, i_2-1] $.  
@@ -2816,28 +2821,36 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 \end{defn}
 
 
-\begin{defn}
-[Program-Based Graph with Labels].
-\\
-\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
-the graph $G(M, \flag, G, i_1,i_2) = (V, E, \flag)$ is. defined as:
-\\
-Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
-\\
-Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
-\\
-Flags $\flag = \flag$
-}
- \end{defn} 
+
 
 $\Gamma$ is a matrix of one row and $N$ columns, 
 $N = |G|=|\flag|$.
 
-\todo{
-$\flag$ is a vector of flags for each variable, representing whether a variable $x$ is assigned by a query $F[x] = 1$, 
-or showing up inside a while loop or if-else branches $F[x] = 2$,
-or otherwise $F[x] = 0$.
+\begin{defn}[Variable Flags ($\flag$)].
+\\
+{
+$\flag$ is a vector of flags $f \in {0, 1, 2}$ for each variable v, s.t.:
+\begin{itemize}
+\item $F[v] = 1$, if $v$ is assigned by a query; 
+\item $F[v] = 2$ if $v$ is showing up inside a while loop or if-else branches;
+\item $F[v] = 0$ otherwise.
+\end{itemize}
 } 
+\end{defn}
+%
+Operations on $\flag$ are defined as follows:
+\[
+\begin{array}{lll}
+\jl{\flag_1 \uplus \flag_2} & := &
+\left\{
+\begin{array}{ll}
+1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
+0 & o.w.
+\end{array}\right.
+\\
+\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
+\end{array}
+\]
 
 $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$.
 
@@ -2906,18 +2919,12 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 \inferrule
 {
 {\ad{\Gamma; \ssa{c_1} ; i_1 }{ M_1 ; \flag_1; i_2 }  }
-% \Gamma \vdash^{(i_1, i_2)}_{M_1, V_1} \ssa{c_1} 
-% : \Phi \Rightarrow \Phi_1
 \and 
-{\ad{\Gamma;\ssa{c_2}; i_2}{M_2; \flag_2 ;i_3 }}
-% \Gamma \vdash^{(i_2, i_3)}_{M_2, V_2} \ssa{c_2} 
-% : \Phi_1 \Rightarrow \Psi 
+{
+\ad{\Gamma;\ssa{c_2}; i_2}{M_2; \flag_2 ;i_3 }}
 }
 {
 \ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{(M_1 {;} M_2) ; \flag_1 \uplus V_2 ; i_3  }
-% \Gamma \vdash^{(i_1, i_3)}_{M_1 {;} M_2, V_1 \uplus V_2}
-% \ssa{c_1 ; c_2} 
-% : \Phi \Rightarrow \Psi
 }
 ~\textbf{\graphGen-seq}
 %
@@ -2992,8 +2999,20 @@ M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
 \jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
 \end{array}
 \]
-
- 
+%
+ \begin{defn}
+[Program-Based Graph with Labels].
+\\
+\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
+the graph $G(M, \flag, G, i_1,i_2) = (V, E, \flag)$ is. defined as:
+\\
+Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
+\\
+Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+\\
+Flags $\flag = \flag$
+}
+ \end{defn} 
      
 %
 \subsection{Variable Reachability Bounding Algorithm}
