@@ -155,18 +155,18 @@ The key component of the system is an program analysis procedure, which provides
 \\
 %
 \mbox{Variables} 
-& \mathcal{Var}  & ::= & \{ x \}
+& \mathcal{VR}  & ::= & \{ x \}
 \\ 
 %
 \mbox{Values} 
-& \mathcal{Val}  & ::= & \{ v \}
+& \mathcal{VL}  & ::= & \{ v \}
 \\ 
 %
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
 ::= & {\{( \query(\qval), l, w) \} } 
 \\
 %
-\mbox{{Query Domain}}
+\mbox{{Query Results Domain}}
 & \qdom & ::= & {[-1,1]}
 \\
 %
@@ -1023,11 +1023,11 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\
 %
 \mbox{SSA Variables} 
-& \mathcal{SV}  & ::= & \{ \ssa{x} \} 
-\\
+& \mathcal{SVR}  & ::= & \{ \ssa{x}^{(l,w)} \}
 %
-\mbox{Labeled SSA Variables} 
-& \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)} \}
+\\
+\mbox{Values} 
+& \mathcal{VL}  & ::= & \{ v \}
 %
 \\
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
@@ -2347,8 +2347,12 @@ There are two steps for our algorithm to get the estimation of the adaptivity of
 \begin{enumerate}
     % \item Estimate the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
     % \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
-    \item Collecting the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
-    \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
+    \item We first collect the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable list $\avar$. 
+    %
+    \item Then, we track the data flow relations between all these assigned variables. These relation informations is stored in a matrix $M$, whose size is $|\avar| \times |\avar|$. 
+    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\avar$. 
+    %
+    \item With all these informations from previous steps, we generate a program-based dependency graph $\progG$ and compute its adaptivity.
 \end{enumerate}
 
 In the following subsections, 
@@ -2405,13 +2409,13 @@ Operations on $\flag$ are defined as follows:
 \end{array}
 \]
 
-\begin{defn}[Data Flow ($\flowsto$)]
-A variable x flows to another variable y in a program c denoted as $\flowsto(x,y,c)$ = ...
+\begin{defn}[Data Flow Direction ($\flowsto$)]
+A variable $x$ flows to another variable y in a program c denoted as $\flowsto(x,y,c)$ = ...
 \end{defn}
 %
 %
 \begin{defn}[Data Flow Matrix ($M$)]
-A data flow matrix $M$ is the of matrix of size $N \times N$ s.t.
+A data flow matrix $M$ is a matrix of size $N \times N$ s.t.
 
 $M((V,E)) =\{ \{0,1\}^{n,n}   | \forall x, y , (x, y) \in E \implies M(x, y) = 1  \land \forall x, y. M(x,y) = 0 \implies (x,y) \not \in E  \} $
 \\
@@ -2450,7 +2454,7 @@ The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, s.t.,
 \]
 \end{defn}
 %
-$\mathsf{R(e, i)}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $G$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $G$.
+$\mathsf{R(e, i)}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $\avar$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $\avar$.
 \begin{defn}[Right Matrix ($\mathsf{R_{e, i}}$)].
 \\
 $\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
@@ -2458,16 +2462,18 @@ $\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
 	\mathsf{R_{e, i}(j)} : = 
 	\left\{
 	\begin{array}{ll}
-	1 & j \in Var(e) \\
+	1 & j \in FV(e) \\
 	0 & o.w.
 	\end{array}
-	\right., j = 1, \ldots, N
+	\right., j = 1, \ldots, N,
 \]
+where $FV(e)$ is the set of free variables in expression $e$.
+
 \end{defn}
 %
 Some useful definition on the notations:
 \begin{defn}[Valid matrix]
-For a global list $G$, $G \vDash (M,\flag)$ iff the cardinality of $G$ equals to the one of $\flag$, $|G| = |\flag|$ 
+For a global list $\avar$, $\avar \vDash (M,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
 and the matrix $M$ is of size $|\flag| \times |\flag|$.
 \end{defn}
 Operations on Matrix are defined as follows:
@@ -2477,7 +2483,8 @@ M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2
 %
 %
 \begin{defn}[Valid index]
-For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' = G[0,\ldots, i_1-1], G';w; \ssa{c} \to G'' ; w' \land G'' = G[0, \ldots, i_2-1] $.  
+Given an assigned variable list $\avar$, a loop maps $w$, $\avar;w \vDash (\ssa{c},i_1,i_2)$ iff 
+$\avar' = \avar[0,\ldots, i_1-1], \avar';w; \ssa{c} \to \avar'' ; w' \land \avar'' = \avar[0, \ldots, i_2-1] $.  
 \end{defn}
 %
 We give an example of the data flow matrix $M$ and $V$ of the program $c$, to better understanding these notations.
@@ -2502,39 +2509,41 @@ $$
 \subsection{Algorithmic Analysis Rules}
 %
 \paragraph{Variable Collection Algorithm}
-We first show how $G$ will be collected (via the command $\assign{x}{\expr}$ or $\assign{x}{\query}$). , through a variable estimating algorithm $\varEst$ of the form $\ag{G; w; \ssa{c}}{ G'; w'} $ in Figure~\ref{fig:var_estimate}. 
-The input of $\varEst$ is a list of estimated annotated variables $G$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
-The output of the algorithm is the updated global list $G'$, along with the updated while map $w$ for later estimation.   
+We first show how the assigned variables $\avar$ will be collected (via the command $\assign{x}{\expr}$ or $\assign{x}{\query}$). , through a variable estimating algorithm $\varCol$ of the form $\ag{\avar; w; \ssa{c}}{ \avar'; w'} $ in Figure~\ref{fig:var_col}. 
+The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
+The output of the algorithm is the updated global list $\avar'$, along with the updated while map $w$ for later estimation.   
+%
+We have the algorithm of the form : $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in Figure \ref{fig:var_col}. 
 %
 \begin{figure}
 \begin{mathpar}
 \inferrule
 {
 }
-{ \ag{G ;w; \ssa{[\assign {x}{\expr}]^{l}}}{G ++ [\ssa{x}^{(l,w)}];w}
+{ \ag{\avar ;w; \ssa{[\assign {x}{\expr}]^{l}}}{\avar ++ [\ssa{x}^{(l,w)}];w}
 }
-~\textbf{\varEst-asgn}
+~\textbf{\varCol-asgn}
 \and
 \inferrule
 {
 }
-{ \ag{G ;w;  [ \assign{\ssa{x}}{\query(\ssa{\expr})}]^{l}}{  G ++ [\ssa{x}^{(l,w)}] ; w} 
-}~\textbf{\varEst-query}
+{ \ag{\avar ;w;  [ \assign{\ssa{x}}{\query(\ssa{\expr})}]^{l}}{\avar ++ [\ssa{x}^{(l,w)}] ; w} 
+}~\textbf{\varCol-query}
 %
 \and 
 %
 \inferrule
 {
-\ag{G; w; \ssa{c_1}}{  G_1;w_1}
+\ag{\avar; w; \ssa{c_1}}{  \avar_1;w_1}
 \and 
- \ag{G_1;w ; \ssa{c_2}}{  G_2; w_2}
+ \ag{\avar_1;w ; \ssa{c_2}}{ \avar_2; w_2}
  \\
- {G_3 = G_2 ++ \ssa{[\bar{x}^{(l,w)}]++ \ssa{[\bar{y}^{(l,w)}]}++ \ssa{[\bar{z}^{(l,w)}]} }}
+ {\avar_3 = \avar_2 ++ \ssa{[\bar{x}^{(l,w)}]++ \ssa{[\bar{y}^{(l,w)}]}++ \ssa{[\bar{z}^{(l,w)}]} }}
 }
 {
-\ag{G; w;
-[\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{ G_3 ;w}
-}~\textbf{\varEst-if}
+\ag{\avar; w;
+[\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{\avar_3 ;w}
+}~\textbf{\varCol-if}
 %
 %
 %
@@ -2542,15 +2551,15 @@ The output of the algorithm is the updated global list $G'$, along with the upda
 %
 \inferrule
 {
-\ag{G; w; \ssa{c_1}}{ G_1; w_1}
+\ag{\avar; w; \ssa{c_1}}{\avar_1; w_1}
 \and 
-\ag{G_1;w_1; \ssa{c_2}}{ G_2; w_2}
+\ag{\avar_1;w_1; \ssa{c_2}}{\avar_2; w_2}
 }
 {
-\ag{G; w;
-\ssa{(c_1 ; c_2)}}{  G_2 ; w_2}
+\ag{\avar; w;
+\ssa{(c_1 ; c_2)}}{\avar_2 ; w_2}
 }
-~\textbf{\varEst-seq}
+~\textbf{\varCol-seq}
 \and 
 %
 \and 
@@ -2558,35 +2567,41 @@ The output of the algorithm is the updated global list $G'$, along with the upda
 {
 \inferrule
 {
-{ \ag{ G ++ \ssa{[\bar{x}^{(l, w + l)}]} ; (w + l); \ssa{c}}{ G' ; w'}  }
+{ \ag{\avar ++ \ssa{[\bar{x}^{(l, w + l)}]} ; (w + l); \ssa{c}}{\avar' ; w'}  }
 \and
-{G_f = G' ++ \ssa{[\bar{x}^{(l, w' \setminus l)}]} }
+{\avar_f = \avar' ++ \ssa{[\bar{x}^{(l, w' \setminus l)}]} }
 }
 {
-\ag{G; w; 
+\ag{\avar; w; 
 \ewhile ~ [ b ]^{l} ~ \ssa{n} ~ 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c }{ G_f; w\setminus l }
+~ \edo ~  c }{\avar_f; w\setminus l }
 }
-~\textbf{\varEst-while}
+~\textbf{\varCol-while}
  }
 \end{mathpar}
- \caption{The algorithm $\varEst$ }
-    \label{fig:var_estimate}
+ \caption{The Algorithmic Rules of $\varCol$ }
+    \label{fig:var_col}
 \end{figure}
 %
-The assignment is the source of variables $\varEst$ estimates, 
-	in the case $\textbf{\varEst-asgn}$ and $\textbf{\varEst-query}$, 
+The assignment is the source of variables $\varCol$ estimates, 
+	in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
 	the output global list is extended by $\ssa{x}^{(l,w)}$. 
 	When it comes to the if command in the rule $\textbf{ag-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$. 
 	The sequence is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ in a sequence $\ssa{c_1;c_2}$. 
-	The while considers the while iterations as well by assuming the while iteration counter $\ssa{\aexpr}$ to be certain natural number $N$ in the rule $\textbf{\varEst-while}$. 
+	The while considers the while iterations as well by assuming the while iteration counter $\ssa{\aexpr}$ to be certain natural number $N$ in the rule $\textbf{\varCol-while}$. 
 	The algorithm counts the assigned variables in every iteration, including those new assigned variables in $\bar{\ssa{x}}$, those variables assigned in the body $\ssa{c}$, with the appropriate annotation showing the iteration number of the variables.     
 %
-\paragraph{Data Flow Analysis Algorithm}
+\paragraph{Data Flow Matrix Generating Algorithm}
 %
-$\Gamma$ is a matrix of one row and $N$ columns, 
-$N = |G|=|\flag|$.
+In this data flow matrix generating algorithm, we analyze the data flow information among all assigned variables $\avar$ collected via the the $\varCol$ algorithm.
+%
+We track the data flow relations between all these assigned variables. These relation informations is stored in a matrix $M$, whose size is $|\avar| \times |\avar|$. 
+We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\avar|$. 
+%
+The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. 
+$\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $\avar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
+It is a matrix of one row and $N$ columns such that $N = |\avar|=|\flag|$.
 %
 %
 \begin{defn}[Valid gamma]
@@ -2617,7 +2632,6 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 { 
 \ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
 {M;\flag;i+1}
-%  \vdash^{(i, i+1)}_{M, V} [ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} 
 }~\textbf{\graphGen-query}}
 %
 \and 
@@ -2700,7 +2714,7 @@ i }{ M';V' ;i+(B+A)+B }
 }
 \end{mathpar}
 %
-Still use the program $c$ as the example, the global list $G$ is now : $ [ x_1 , x_2 , x_3] $. 
+Still use the program $c$ as the example, the global list $\avar$ is now : $ [ x_1 , x_2 , x_3] $. 
 The function $\mathsf{Left}$ and $\mathsf{Right}$ is used to generate the corresponding vector of the left side and right side of an assignment. Take $\assign {x_2} {x_1+1} $ as an example, the result is shown as follows.
 \[
 \sf{L}(1) = \left[ \begin{matrix}
@@ -2914,7 +2928,7 @@ M_{c4} =  \left[ \begin{matrix}
  \begin{defn}
 [Program-Based Graph with Labels].
 \\
-\todo{Given a program $\ssa{c}$, the global list $G$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
+\todo{Given a program $\ssa{c}$, the global list $\avar$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
 the graph $G(M, \flag, G, i_1,i_2) = (V, E, \flag)$ is. defined as:
 \\
 Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
