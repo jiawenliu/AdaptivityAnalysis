@@ -2343,14 +2343,16 @@ This proof is similar when it comes to the exit as in case 1.
 %
 %
 \section{\THESYSTEM}
-There are three steps for our algorithm to get the adaptivity of a program $\ssa{c}$ based on analyzing the program. 
+There are four steps to get the adaptivity of a program $\ssa{c}$ based on analyzing the program. 
 \begin{enumerate}
     % \item Estimate the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
     % \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
-    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable list $\avar$. 
+    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable vector $\avar$. 
     %
     \item Tracking the data flow relations between all these assigned variables. These relation informations is stored in a matrix $M$, whose size is $|\avar| \times |\avar|$. 
-    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\avar$. 
+    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\avar$.
+    %
+    \item Estimating the reachability bound of each variable in $\avar$.
     %
     \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute its adaptivity.
 \end{enumerate}
@@ -2431,11 +2433,11 @@ expression $\expr$ and query expression $\qexpr$ respectively.
 %
 \begin{defn}[Data Flow Matrix ($\Mtrix$)]
 Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
-its data flow matrix $\Mtrix$ is a matrix of size $N \times N$ s.t.
+its data flow matrix $\Mtrix_{(\ssa{c}, \avar)}$ is a matrix of size $N \times N$ s.t.
 $\forall x, y \in \avar, x = \avar(i), y = \avar(j)$:
 %
 \[
-\Mtrix(\ssa{c}, \avar)(i, j) :=
+\Mtrix_{(\ssa{c}, \avar)}(i, j) :=
 \left\{
 \begin{array}{ll}
 1	&	\flowsto(\ssa{x, y, c}) \\
@@ -2550,10 +2552,6 @@ Some useful definition on the notations:
 For a global list $\avar$, $\avar \vDash (\Mtrix,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
-Operations on Matrix are defined as follows:
-\begin{equation}
-\Mtrix_1 ; \Mtrix_2  :=  \Mtrix_2 \cdot \Mtrix_1 + \Mtrix_1 + \Mtrix_2 
-\end{equation}
 %
 %
 \begin{defn}[Valid index]
@@ -2775,6 +2773,11 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 }
 \end{mathpar}
 %
+\paragraph{Reachability Bounds}
+Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for each variable $v$. 
+The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachability bound of the variable in program $c$.
+
+
 The following example program $\ssa{c_3}$ while loop illustrates how the algorithm works and generates the corresponding 
 data flow matrix for $\ssa{c_3}$.
 %
@@ -2972,47 +2975,30 @@ We can now look at the if statement.
 \end{matrix} \right ]
 \]
 %
-%   
+%
 %
 %
 \subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
 {
  \begin{defn}
-[Program-Based Graph with Labels].
-\\
-\todo{Given a program $\ssa{c}$, the global list $\avar$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
-the graph $G(M, \flag, G, i_1,i_2) = (V, E, \flag)$ is. defined as:
-\\
-Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
-\\
-Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
-\\
-Flags $\flag = \flag$
-}
- \end{defn} 
-Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for the variable $v$ in the program. The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachability bound of the variable in program $c$.
-}
-\\
-\begin{defn}
 [Program-Based Graph].
 \\
 \todo{
-Given a SSA program $\ssa{c}$ and its program-based graph with flags 
-$G(M, \flag, G, i_1,i_2) = \{V', E', \flag'\}$, 
-we add reachability bounds on each vertex $v$ in this graph 
-according to the reachability bound algorithm $\rb$ for its corresponding variable.
-Then we will have an updated graph Program-Based Graph 
-$\progG = \{V, E, W, \flag \}$ defined as:}
+Given a program $\ssa{c}$ with its $\avar$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
+its program-based graph $G(\ssa{c}) = (V, E, W, \flag)$ is. defined as:
 \\
-$V = V'$
+Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
 \\
-$E = E'$
+Edges $E = \{ 
+(G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+\\
+Flags $\flag = \flag$
 \\
 $W = \{(v, w) | \forall ~ s \in V ~ s.t. ~\flag(s) > 0, w = \rb(v, c)\} 
 \cup \{(v, 1) | \forall ~ s \in V ~ s.t. ~\flag(s) = 0\}$
-\\
-\flag = \flag'
-\end{defn}  
+}
+\end{defn} 
+}
 %
 Given a program $\ssa{c}$, we generate its program-based graph 
 $\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$.
