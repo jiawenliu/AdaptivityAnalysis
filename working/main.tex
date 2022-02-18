@@ -2351,7 +2351,7 @@ There are two steps for our algorithm to get the estimation of the adaptivity of
 \end{enumerate}
 
 In the following subsections, 
-we first define the notations and symbols being used in \THESYSTEM. 
+we first define the notations and symbols being used in \THESYSTEM with a simple example for understanding these definitions. 
 Then we present the algorithmic analysis rules with
 3 examples illustrating how \THESYSTEM works.
 In the following subsections, we present the adaptivity analysis based on the programs' analyze results from \THESYSTEM, and its soundness w.r.t. the trace-based analysis.
@@ -2469,24 +2469,31 @@ Operations on Matrix are defined as follows:
 \begin{equation}
 M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2 
 \end{equation}
-
-
+%
+%
 \begin{defn}[Valid index]
 For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' = G[0,\ldots, i_1-1], G';w; \ssa{c} \to G'' ; w' \land G'' = G[0, \ldots, i_2-1] $.  
 \end{defn}
-
-\begin{defn}[Valid gamma]
-$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
-\end{defn}
-
-
-
-
-$\Gamma$ is a matrix of one row and $N$ columns, 
-$N = |G|=|\flag|$.
-
 %
-{$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
+We give an example of the data flow matrix $M$ and $V$ of the program $c$, to better understanding these notations.
+$$
+c= \begin{array}{c}
+\ssa{\assign {x_1} {q}} ;        \\
+\ssa{\assign {x_2} {x_1+1}} ;\\
+\ssa{\assign {x_3} {x_2+2} }
+\end{array}~~~~~~~~~~~~
+M =  \left[ \begin{matrix}
+ & (x_1) & (x_2) & (x_3) \\
+(x_1) & 0 & 0 & 0 \\
+(x_2) & 1 & 0 & 0 \\
+(x_3) & 1 & 1 & 0 \\
+\end{matrix} \right] ~ , V = \left [ \begin{matrix}
+(x_1) &  1 \\
+(x_2) & 0 \\
+(x_3) & 0 \\
+\end{matrix} \right ]
+$$
+%
 \subsection{Algorithmic Analysis Rules}
 %
 \paragraph{Variable Collection Algorithm}
@@ -2573,9 +2580,20 @@ The assignment is the source of variables $\varEst$ estimates,
 %
 \paragraph{Data Flow Analysis Algorithm}
 %
+$\Gamma$ is a matrix of one row and $N$ columns, 
+$N = |G|=|\flag|$.
 %
-$ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} \triangleq { \forall 0 \leq z < |\bar{x}|.  \Gamma \vdash_{M_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ where $M = \sum_{z\in [|\bar{x}|] }M_{x_z} $\\
-
+%
+%
+\begin{defn}[Valid gamma]
+$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
+\end{defn}
+%
+{$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
+%
+$ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} \triangleq { \forall 0 \leq z < |\bar{x}|.  \Gamma \vdash_{M_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ where $M = \sum_{z\in [|\bar{x}|] }M_{x_z} $
+%%
+%
 \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{M,V} ~ c $}
 \begin{mathpar}
 \inferrule
@@ -2678,24 +2696,6 @@ i }{ M';V' ;i+(B+A)+B }
 }
 \end{mathpar}
 %
-We give an example of $M$ and $V$ of the program $c$.   
-$$
-c= \begin{array}{c}
-\ssa{\assign {x_1} {q}} ;        \\
-\ssa{\assign {x_2} {x_1+1}} ;\\
-\ssa{\assign {x_3} {x_2+2} }
-\end{array}~~~~~~~~~~~~
-M =  \left[ \begin{matrix}
- & (x_1) & (x_2) & (x_3) \\
-(x_1) & 0 & 0 & 0 \\
-(x_2) & 1 & 0 & 0 \\
-(x_3) & 1 & 1 & 0 \\
-\end{matrix} \right] ~ , V = \left [ \begin{matrix}
-(x_1) &  1 \\
-(x_2) & 0 \\
-(x_3) & 0 \\
-\end{matrix} \right ]
-$$
 Still use the program $c$ as the example, the global list $G$ is now : $ [ x_1 , x_2 , x_3] $. 
 The function $\mathsf{Left}$ and $\mathsf{Right}$ is used to generate the corresponding vector of the left side and right side of an assignment. Take $\assign {x_2} {x_1+1} $ as an example, the result is shown as follows.
 \[
