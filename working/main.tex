@@ -121,53 +121,48 @@ The key component of the system is an program analysis procedure, which provides
 	 ~|~ \bexpr \oplus_b \bexpr
 	%
 	~|~ \aexpr \sim \aexpr \\
-\mbox{Expressions } & \expr & ::= & \jl{\aexpr \sep \bexpr ~|~ [] ~|~ [\expr, \dots, \expr]} \\
-\mbox{Values } & v & ::= & \jl{ n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
+\mbox{Expressions } & \expr & ::= & {\aexpr \sep \bexpr ~|~ [] ~|~ [\expr, \dots, \expr]} \\
+\mbox{Values } & v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
 \\
 \mbox{Query expressions} & \qexpr & ::= 
-& \jl{ \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
+& { \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
 \\
 \mbox{Query Values} & \qval & ::= 
-& \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
+& { n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
 \\
-% \mbox{commands} & c & ::= &   \assign x \expr ~|~  \assign{x}{ \query(\qexpr)}
-% %
-% ~|~ \\ 
-% &&&  \jl{\ewhile ~ b ~ \edo ~ c}  ~|~ c;c  ~|~ \eif(\bexpr, c, c) 	 ~|~ \eskip 
-% 	\\
-\mbox{\jl{Labeled Commands}} & c & ::= 
+\mbox{{Labeled Commands}} & c & ::= 
 	&   [\assign x \expr]^{l} ~|~  [\assign x q(\qexpr)]^{l}
 	\\
  	& & & ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 ~|~ [\eskip]^{l} 
  \\
 \mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
 \mbox{Trace} & t & ::= & [] 
-~|~ \jl{{( \query(\qval), l, w) :: t}} \\
+~|~ {{( \query(\qval), l, w) :: t}} \\
 %
-\mbox{\jl{While Maps}}
-& w & ::= & \jl{[] |  w[l \to n]}
+\mbox{{While Maps}}
+& w & ::= & {[] |  w[l \to n]}
 \\
 %
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
-::= & \jl{\{( \query(\qval), l, w) \} } 
+::= & {\{( \query(\qval), l, w) \} } 
 \\
 %
-\mbox{\jl{Query Domain}}
-& \qdom & ::= & \jl{[-1,1]}
+\mbox{{Query Domain}}
+& \qdom & ::= & {[-1,1]}
 \\
 %
-\mbox{\jl{Memory Domain}}
-& \memdom & ::= & \jl{\{m\}}
+\mbox{{Memory Domain}}
+& \memdom & ::= & {\{m\}}
 \\
 %
-\mbox{\jl{Database Domain}}
-& \dbdom & ::= & \jl{\{D\}}
+\mbox{{Database Domain}}
+& \dbdom & ::= & {\{D\}}
 \end{array}
 \]
 %
 %
 \subsection{ Trace-based Operational Semantics}
-\jl{
+{
 We evaluate programs in our {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as defined in the syntax.
 %
 Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the loop counter $\aexpr$ in the loop statement. We will also use  Loop Maps $w$ as defined below.  
@@ -221,12 +216,12 @@ let rec plus (w:wm) (l:int) : wm =
         if k = l then (k,v+1):: tl else (k,v) :: plus tl l.         
 \end{ocaml}
 
-\jl{
+{
 	%%% trace, queries
 	A memory is standard, a map from variables to values. Queries can be uniquely annotated as $\mathcal{AQ}$, and the annotation $(l,w)$ considers the location of the query by line number $l$ and which iteration the query is at when it appears in a loop statement, specified by $w$. A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
 	}
 
-\jl{	 
+{	 
 	 %% trace
 	A trace can be regarded as the program history, where this history consists of the queries asked by the analyst during the execution of the program. We collect the trace with a trace-based small-step operational semantics based on transitions of the form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
 	It states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and loop maps updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
@@ -271,7 +266,7 @@ let rec plus (w:wm) (l:int) : wm =
 	%
 	\and
 	%
-	\jl{
+	{
 	{\inferrule
 	{
 	 \empty
@@ -292,7 +287,7 @@ let rec plus (w:wm) (l:int) : wm =
 	%
 	\and
 	%
-	\jl{{\inferrule
+	{{\inferrule
 	{
 	 m, b \xrightarrow{} b'
 	}
@@ -309,7 +304,7 @@ let rec plus (w:wm) (l:int) : wm =
 	%
 	\and
 	%
-	\jl{{
+	{{
 	\inferrule
 	{
 	 \empty
@@ -330,7 +325,7 @@ let rec plus (w:wm) (l:int) : wm =
 	}
 	\and
 	%
-	\jl{{
+	{{
 	\inferrule
 	{
 	 \empty
@@ -350,7 +345,7 @@ let rec plus (w:wm) (l:int) : wm =
 	%
 	\and
 	%
-	\jl{
+	{
 	\inferrule
 	{
 	\config{m,\qexpr} \qarrow \config{m,\qexpr'}
@@ -362,7 +357,7 @@ let rec plus (w:wm) (l:int) : wm =
 	~\textbf{query-e}
 	}
 	\and
-	\jl{
+	{
 	\inferrule
 	{
 	\query(\qval) = v
@@ -438,7 +433,7 @@ let rec plus (w:wm) (l:int) : wm =
 	}
 	%
 %
-\jl{
+{
 We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
 The rule $\textbf{query-e}$ evaluates the argument of a query request. When the argument is in normal form, this query will be answered.
 %
@@ -453,14 +448,14 @@ In the rule $\textbf{ifw-true}$, the while maps $w$ is updated by $w + l$ becaus
 When $n$ reaches $0$, the loop exits and the while maps $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
 }   
 %
-\jl{
+{
 \subsection{ Query-based Dependency Graph}
 %
 We define adaptivity through a query-based dependency graph. In our model, an \emph{analyst} asks a sequence of queries to the mechanism, and the analyst receives the answers to these queries from the mechanism. A query is adaptively chosen by the analyst when the choice of this query is affected by answers from previous queries. In this model, the adaptivity we are interested in is the length of the longest sequence of such adaptively chosen queries, among all the queries the data analyst asks to the mechanism.  Also, when the analyst asks a query, the only information the analyst will have will be the answers to previous queries and the state of the program. It means that when we want to know if this query is adaptively chosen, we only need to check whether the choice of this query will be affected by changes of answers to previous queries. There are two possible situations that can  affect the choice of a query,  
 either the query argument directly uses the results of previous queries (data dependency), or the control flow of the program with respect to a query (whether to ask this query or not) depends on the results of previous queries (control flow dependency).
 }
 
-\jl{
+{
 As a first step, we give a definition of when one query may depend on a previous query, which is supposed to consider both control dependency and data dependency. We first look at two possible candidates:
 \begin{enumerate}
     \item One query may depend on a previous query if and only if a change of the answer to the previous query may also change the result of the query.
@@ -468,7 +463,7 @@ As a first step, we give a definition of when one query may depend on a previous
 \end{enumerate}
 }
 
-\jl{
+{
    The first candidate works well by witnessing the result of one query according to the change of the answer of another query. We can easily find that the two queries have nothing to do with each other in a simple example   
 %
     $ p = \assign{x}{q(\chi(1))} ; \assign{y}{q(\chi(2))}$. This candidate definition works well with respect to data dependency. However, if fails to handle control dependency since it just monitors the changes to the answer of a query when the answer of previous queries returned change. The key point is that this query may also not be asked because of an analyst decision which depend on the answers of previous queries. An example of this situation is shown in program $p_1$ as follows.
@@ -483,7 +478,7 @@ As a first step, we give a definition of when one query may depend on a previous
     As a reminder, in the {\tt Loop} language, the query request is composed by two components: a symbol $q$ representing a linear query type and the argument $\expr$, which represents the function specifying what the query asks. So we do think $q(\chi(1))$ is different from $q(\chi(2))$. Informally, we think $q(x+\chi(3))$ may depend on the query $q(\chi(2))$, because equipped function of the former $x+\chi(3)$ depend on the data assigned with $q(\chi(2))$. We can see the appearance definition catches data dependency in such a way, since $q(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
 }
 
-\jl{
+{
    We give a formal definition of query may dependency based on the trace-based operational semantics as follows.
    }
    %
@@ -511,7 +506,7 @@ $mk(w_i) =MinKey(w_i) $
 \label{def:query_dir}
 Direction between two queries.
 \\
-\jl{
+{
 $\forall \query(\qval_1), \query(\qval_2), l_1, l_2, w_1, w_2 $.
 the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before annotated query $( \query(\qval_2), l_2, w_2)$, denoted as
 %
@@ -540,7 +535,6 @@ where \\
 \end{defn}
 % 
 %
-
 \begin{defn}
  The equality between two query expressions $\qexpr_1$ and $\qexpr_2$ in certain memory $m$ is denoted  $ \qexpr_1 =_{q}^{m} \qexpr_2$.\\
 $\qexpr_1 =_{q}^{m} \qexpr_2$ iff $ \exists \qval. \config{m,  \qexpr_1} \qarrow \config{m, \qval} \land \config{m,  \qexpr_2 } \qarrow \config{m, \qval} $. \\
@@ -552,13 +546,13 @@ $\qval \in_q t $ iff $\exists \qval' \in t. \qval =_q \qval'$.
 Query may dependency.
 \label{def:query_dep}
 \\
-\jl{
+{
 One annotated query $({\alpha}_2,l_2, w_2)$ may depend on another query $({\alpha}_1, l_1, w_1)$ in a program $c$,
 with a starting memory $m$ and a hidden database $D$, denoted as 
 %
 $\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defined below. 
 }
-\jl{
+{
 \[
 \begin{array}{l}
 \exists m_1,m_3,t_1,t_3,c_2,v_1.\\
@@ -617,7 +611,7 @@ t_3,w_3}
 \label{def:trace-based_graph}
 Trace-based Dependency Graph
 \\
- \jl{
+ {
 Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (V, E)$ is defined as: 
 \\
 $V =\{({\qval}, l,w) \in \mathcal{AQ} \mid 
@@ -650,7 +644,6 @@ such that for every $1 \leq i < n$, $e_i=(v_{i-1},v_{i})$  and all edges and ver
 \\
 Given a graph $G$, the path set of $G$ $\path(G)$ is defined as a set containing all paths $p$ in $G$.
 \end{defn}
-
 %
 %
 \begin{defn}
@@ -673,7 +666,7 @@ We proved some useful properties for our language.
 \begin{lem}
 [Trace Non-Decreasing].
 \\
-\jl{
+{
 for any program $c$ with a starting memory $m$, trace $t$ and while label $w$, if 
 $  
 \config{m, c, t, w} 
@@ -685,17 +678,14 @@ s.t. $t'' ++ t = t'$
 \end{lem}
 %
 \begin{proof}
-\jl{
+{
 Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
 \paragraph{Non-Determinism of queries.}
-% \todo{
-% The evaluation of the query expression $\qexpr$ is deterministic while the evaluation of the query itself can be non-deterministic. 
-% }
-% \\
-\jl{
+% 
+{
 When evaluating a query $\query(\qval)$ on a given database $D$, 
 in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
 we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
@@ -706,7 +696,7 @@ Because of the randomness of the underlying mechanism, the evaluation of a query
 That's the reason, in the Definition \ref{def:query_dep}, given a fixed database $D$, there will be a query domain $\qdom$ where $\query(\qval)(D) $ can be evaluated to different values $v \in \qdom$.
 }
 \\
-\jl{
+{
 On the other hand, in the operational semantics rule \textbf{query-v}:
 \[
 		\inferrule
@@ -731,7 +721,7 @@ The Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this proper
 \begin{lem}
 [Semi-Determinism].
 \label{lem:semidetrm}\\
-\jl{
+{
 for any program $c$ with a starting memory $m$, trace $t$ and while label $w$, 
 if program $c$ contains neither  
 $[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then
@@ -755,7 +745,7 @@ $$
 \end{lem}
 %
 \begin{proof}
-\jl{
+{
 Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
@@ -765,7 +755,7 @@ Proof is obvious by induction on the operational semantics rules.
 [Query Semi-Determinism].
 \label{lem:querysemidetrm}
 \\
-\jl{
+{
 Given a program $c; \assign{x}{\query(\qexpr)}; c'$ with a starting memory $m$, trace $t$ and while label $w$, 
 s.t. $c$ contains neither  
 $[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then:
@@ -790,7 +780,7 @@ $[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\q
 \end{lem}
 %
 \begin{proof}
-\jl{
+{
 Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
@@ -800,7 +790,7 @@ Proof is obvious by induction on the operational semantics rules.
 \todo{[Edges are Forwarding Only]}.
 \\
 %
-\jl{
+{
 Given a trace-based dependency graph $G = (V, E)$, 
 for any directed edge $(({\qval}',l',w'),({\qval},l,w)) \in E$, 
 this is not the case that:
@@ -813,11 +803,11 @@ There doesn't exist backward edges with direction from queries of greater label 
 \end{lem}
 %
 \begin{proof}
-\jl{
+{
 Proof is obvious based on the definition \ref{def:trace-based_graph}.
 }
 \\
-\jl{
+{
 In definition \ref{def:trace-based_graph},
 any edge $(({\qval}',l',w'),({\qval},l,w)) \in E$ defined in the traced-based dependency graph $G = (V,E)$ is restricted by
 a constraint
@@ -827,7 +817,7 @@ we have $({\qval}',l',w') <_{q} ({\qval},l,w)$
 i.e., either $l' < l$ or $w' <_{w} w$.
 }
 \\
-\jl{
+{
 This implies that an edge $(({\qval}',l',w'),({\qval},l,w))$ 
 with $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ can never be constructed in the traced-based dependency graph $G = (V,E)$.
 }
@@ -838,12 +828,12 @@ with $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ can never be constructed in the t
 \todo{[Trace-based Dependency Graph is Directed Acyclic].}
 \\
 %
-\jl{
+{
 Every trace-based dependency graph is a directed acyclic graph.
 }
 \end{lem}
 %
-\jl{
+{
 \begin{proof}
 Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
 \end{proof}
@@ -852,7 +842,7 @@ Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
 \begin{lem}
 [Adaptivity Toplimit].
 \\
-\jl{
+{
 Given a program $c$ with a database $D$ and a starting memory $m$,
 the top limitation for $A(c, D, m)$ as follows:
 %
@@ -867,7 +857,7 @@ A(c, D, m) \leq |t'|
 \end{lem}
 %
 \begin{proof}
-\jl{
+{
 Proof is obvious based on the Lemma \ref{lem:DAG}.
 }
 \end{proof}
@@ -877,7 +867,7 @@ Proof is obvious based on the Lemma \ref{lem:DAG}.
 
 \section{SSA-form language  }
 %
-\jl{
+{
 \subsection{The limit of loop language for analysis}
 we see the power of the labelled loop language to achieve the adaptivity semantically, from its being capable to express many adaptive data analysis algorithm,  allowing the construction of the query-based dependency graph using traces from the execution, and so on.
 However, it is not powerful enough to reach the adaptivity syntactically. The main difficulty is its implicit control flow which raises extra complexity to figure out where some variables used come from. We use three simple but relevant examples to show why the loop language suffers. We use $\query(0),\query(1)$ to represent linear queries.
@@ -964,19 +954,19 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 	~|~ \saexpr \sim \saexpr 
 	\\
 \mbox{Query expressions} & \qexpr & ::= 
-& \jl{ \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
+& { \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
 \\
 \mbox{Query Values} & \qval & ::= 
-& \jl{ n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
+& { n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
 \\
 \mbox{Expressions} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
 \\	
 \mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
 %
 % ~|~ [\eswitch( \ssa{\expr}, \ssa{x}, \ssa{v_i} \to \ssa{ q_i})]^{l} 
-~|~  {\jl{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
+~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
 &&& 
-\jl{\ewhile ~ [ b ]^{l} , n,
+{\ewhile ~ [ b ]^{l} , n,
 ~ 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
 ~ \edo ~  c }
@@ -989,15 +979,15 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 \mbox{Trace} & t & ::= & [] ~|~ \ssa{{(\query(\qval), l , w ) :: t}} \\
 \mbox{Annotated Query} & \mathcal{AQ}  & 
-::= & \jl{\{ (\query(\qval), l , w )  \} }
+::= & {\{ (\query(\qval), l , w )  \} }
  \\
 \mbox{SSA Variables} & \mathcal{SV}  & ::= & \{ \ssa{x} \} \\
 \mbox{Labelled SSA Variables} & \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)}  \}
 \end{array}
 \]
 %
-
-\jl{
+%
+{
 We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SV}$, 
 and the boolean expression as $\ssa{\bexpr}$. 
 %
@@ -1009,7 +999,7 @@ The labelled commands $\ssa{c}$ are now in the ssa form.
 In the assignment $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$,  query request $[\assign {{\ssa{x}} } {q({\ssa{e}})}]^{l}$ , the expression ${\ssa{\expr}}$ is now in the ssa form, similar for the $\ssa{\aexpr}$ in the loop and conditional $\ssa{\bexpr}$ in the if command. 
 }
 
-\jl{
+{
 % if
 The if command now contains the extra part 
 $([\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , 
@@ -1031,15 +1021,14 @@ In this sense, we can also regard every tuple $(\ssa{y,y_1,y_2 })$ from $[\bar{\
 The rest part $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$ focus on the else branch and can be understood similarly. 
 }
 
-\jl{
-% while
+{
 Also, the while command also has similar part $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$, focusing on the while body. 
 The new command ${{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}}$ does not have explicit label because it is only used for evaluation internally, we will discuss more about it when used in the operational semantics for the ssa loop language. 
 The ssa memory $\ssa{m}$ is a map from ssa variable $\ssa{x}$ to values.
 }
 %
 %
-\jl{
+{
 \subsection{Trace-based Operational Semantics of SSA Loop Language}
 When switching to the SSA loop language, we show that we are still able to achieve what we can get in Section~\ref{sec:while_language}. The operational semantics of the SSA loop language mimics its counterpart, of the form $\config{\ssa{m}, \ssa{c}, t, w} \to \config{\ssa{m'}, \eskip, t', w'}$. The SSA memory $\ssa{m}$ is a map from SSA variable $\ssa{x}$ to values. It still uses a trace to track the query requests during the execution, starting from an SSA configuration with SSA memory $\ssa{m}$ and program in its SSA form $\ssa{c}$, which allows a similar construction of the query-based dependency graph in the SSA language as in the {\tt Loop} language.
 We show the evaluation rules in Figure~\ref{fig:ssa_evaluation}.
@@ -1061,7 +1050,7 @@ $\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time
 \and
 { Memory \times Com  \times Trace \times loop maps \Rightarrow^{}  Memory \times Com  \times Trace \times loop maps}
 \\
-\jl{
+{
 	\inferrule
 	{
 		\ssa{\config{m,\qexpr} \qarrow \config{m,\qexpr'}}
@@ -1079,7 +1068,7 @@ $\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time
 \and
 \inferrule
 {
-\jl{
+{
 \ssa{\query(\qval)(D) = v}}
 }
 {
@@ -1088,7 +1077,7 @@ m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 }} 
 \xrightarrow{} 
 \config{\ssa{  m[  x \mapsto v], \eskip,  
-\jl{\query(\qval),l,w )::t,w }}
+{\query(\qval),l,w )::t,w }}
 }
 }
 ~\textbf{ssa-query-v}
@@ -1210,7 +1199,7 @@ t, w
 \config{
 \ssa{
 m, 
-\jl{
+{
 \eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
 c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
 \eskip)
@@ -1221,7 +1210,7 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
 \xrightarrow{} 
 \config{
 \ssa{m, 
-\jl{
+{
 \eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
 c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
 }
@@ -1243,7 +1232,7 @@ t, (w + l) }
 \config{\ssa{
 m, \eif_w (
 \efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, 
-\jl{  
+{  
 c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
 \eskip)
 } 
@@ -1251,7 +1240,7 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
 \\
 \xrightarrow{} 
 \config{\ssa{m, 
-\jl{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
+{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w \setminus l) }
 }
 ~\textbf{ssa-ifw-false}
 }
@@ -1263,7 +1252,7 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
 \begin{defn}
 Query May Dependency in SSA Language.
 \\
-\jl{
+{
 One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
 %
@@ -1325,7 +1314,7 @@ t_3,w_3}
 \begin{defn}
 Trace-Based Dependency Graph in SSA Language.
 \\
-\jl{
+{
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
 the dependency graph $\traceG(\ssa{c},D,\ssa{m}) = (V, E)$ is defined as: \\
 $V =\{({\qval}, l, w) \in \mathcal{AQ} 
@@ -1348,7 +1337,7 @@ $E =
 \end{defn}
 %
 %
-\jl{
+{
 The key idea underneath the operational semantics is to have the trace and the execution path being constructed in a similar way as in the loop language.
 Take the query request as an example, the argument $\ssa{e}$ which contains ssa variables will be evaluated to a value $v$ first before the request is sent to the database in rule $\textbf{ssa-query-arg}$. 
 The trace expands in the rule $\textbf{ssa-query}$ likewise in the loop language. 
@@ -1370,7 +1359,7 @@ $\bar{\ssa{y}}$ whose values from then branch or assignment before the if comman
 Correspondingly, we need to have three ifvar commands.   
 }
 
-\jl{
+{
 	The evaluation of while depends on the while iteration counter $\ssa{n}$ and the guard $\ssa{\bexpr}$. 
 	When $\ssa{\bexpr}$ is evaluated to $\etrue$, the while is still executing, and all the variables $\ssa{x}$ in $\bar{\ssa{x}}$ of the loop body $\ssa{c}$ are replaced as the corresponding variables in $\bar{\ssa{x_1}}$ in the first iteration($n=0$), or $\bar{\ssa{x_2}}$ in other iterations($n > 0$). 
 	The while turns to an exit when $\ssa{n} > 0$, 
@@ -1379,7 +1368,7 @@ Correspondingly, we need to have three ifvar commands.
 	When the while enters the exit after executing the body a few times($n$), the variables in $\bar{\ssa{x}}$ is instantiated with the value from the body $\ssa{m}(\bar{\ssa{x_2}})$. 
 }
 
-\jl{
+{
 	With the trace-based operational semantics of the ssa language at hand, we are able to provide our query-based dependency graph in the ssa language.
 }
 %
@@ -1391,7 +1380,6 @@ Given a program $\ssa{c}$ in SSA language,
 its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
 $\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and database $D$.
 %
-% We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p_s(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
 A(\ssa{c}) = \max \big 
@@ -1399,11 +1387,11 @@ A(\ssa{c}) = \max \big
 $$
 }
 \end{defn}
-
-
-\begin{thm}[\jl{Graph Equivalence}].
+%
+%
+\begin{thm}[{Graph Equivalence}].
 \\
-\jl{
+{
 Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $,
 $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, 
 then $G_{low}(c,D,m) = G_{ls}(\ssa{c},D,\ssa{m}) $.
@@ -1413,14 +1401,14 @@ then $G_{low}(c,D,m) = G_{ls}(\ssa{c},D,\ssa{m}) $.
 \begin{proof}
  The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\mathsf{DEP}$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\mathsf{DEP_s}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the while language execution, according to the transformation theorem.  
 \end{proof}
-
+%
 \begin{coro}
-\jl{Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, 
+{Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, 
 $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and loop maps $w$, then 
 $A(c) = A_s(\ssa{c}) $.
 }
 \end{coro}
-
+%
 \subsection{SSA Transformation}
 We use a translation environment $\delta$, to map variables $x$ in the low level language to those $\ssa{x}$ in ssa-form language. We use a name environment denoted as $\Sigma$, a set of ssa variables so we can get a fresh variable by $fresh(\Sigma)$. We define $\delta_1 \bowtie \delta_2 $ in a similar way as
 \cite{vekris2016refinement}.
@@ -1489,45 +1477,21 @@ We call a list of variables $\bar{x}$.
 %%
 \and
 %
-% \todomath{\inferrule{
-%     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
-%     \and
-%     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-%     \and 
-%      { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
-%      \\
-%     { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-%     \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-%     \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-%     \and 
-%     {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
-%     % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
-%   }{ 
-%   \Sigma; \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta_1[\bar{x} \to \ssa{\bar{x}'}]; \Sigma \cup \{\ssa{\bar{x}'}  \}
-% }~{\textbf{S-LOOP}}
-% }
-% %
-% \and
-%
 %
 \and
 %
 \inferrule{
-    % {\delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
-    % \and
     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-    % \and 
-    %  { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
      \and
     { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
     \\
-     {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
+     {
+     \ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
     \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
     \and 
      {\delta' ; \bexpr \hookrightarrow \ssa{\bexpr} }
      \and
     {\ssa{c' = c_1[\bar{x}'/ \bar{x_1}]   } }
-    % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
   }{ 
   \Sigma; \delta ;  \ewhile ~ [\bexpr]^{l} ~ \edo ~ c 
   \hookrightarrow 
@@ -1593,7 +1557,7 @@ c_2 \triangleq
 \end{array}
 \]
 
-\jl{
+{
 \[
 c_3 \triangleq
 \begin{array}{l}
@@ -1633,7 +1597,7 @@ c_3 \triangleq
     \ewhile ~ [ \ssa{\bexpr} ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
     |_{low}  
     &=&  
-    \jl{\ewhile ~ [|\ssa{\bexpr}|_{low}]^{l},  ~ \edo ~ |\ssa{c}|_{low} 
+    {\ewhile ~ [|\ssa{\bexpr}|_{low}]^{l},  ~ \edo ~ |\ssa{c}|_{low} 
     }\\
       |\ssa{c_1 ; c_2}|_{low}  &=& |\ssa{c_1}|_{low} ; |\ssa{c_2}|_{low} \\
        |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|_{low}  &=&
@@ -1651,14 +1615,14 @@ c_3 \triangleq
 \end{figure}
 %
 %
-\jl{
+{
 \subsection{The soundness of the transformation}
 In this subsection, we show our transformation from the loop language to its ssa form is sound with respect to adaptivity. To be specific, a transformed program $\ssa{c}$ starting with appropriate configuration, generates the same trace as the program before the transformation $c$, in its corresponding configuration.
 }
 %
 %
 \begin{defn}[ Written variables in a program]
-\jl{
+{
 We defined the assigned variables in the while language program $c$ as $\avars{c}$,the assigned variables in the ssa-form program $\ssa{c}$ as $\avarssa{\ssa{c}}$ defined as follows.
 }
 \[
@@ -1667,21 +1631,20 @@ We defined the assigned variables in the while language program $c$ as $\avars{c
     \avars{\assign{x}{q}} & =& \{ x \} \\
     \avars{ c_1; c_2  }  & = & \avars{c_1} \cup \avars{c_2} \\
     % \avars{  \eloop ~ \aexpr ~ \edo ~ c  } &= &  \avars{c} \\
-    \jl{\avars{  \ewhile ~ \bexpr ~ \edo ~ c  }} &= &  \avars{c} \\
+    {\avars{  \ewhile ~ \bexpr ~ \edo ~ c  }} &= &  \avars{c} \\
     \avars{\eif(\bexpr, c_1, c_2)} & =&  \avars{c_1} \cup \avars{c_2}\\
 \end{array} ~~~~~
 \begin{array}{lll}
     \avarssa{\ssa{\assign{x}{\expr}}} & =& \{ x \} \\
     \avarssa{\ssa{\assign{x}{q}}} & =& \{ x \} \\
     \avarssa{ \ssa{c_1; c_2 } }  & = & \avarssa{c_1} \cup \avarssa{c_2} \\
-    % \avarssa{ \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c}  } &= &  \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} \\
-    \jl{\avarssa{ \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c}  } }
+    {\avarssa{ \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c}  } }
     & = &  
     \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} \\
     \avarssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =&  \{ \ssa{\bar{x}},\ssa{\bar{y}} , \ssa{\bar{z}} \} \\ && \cup \avarssa{\ssa{c_1}} \cup \avarssa{\ssa{c_2}}\\
 \end{array}
 \]
-\jl{
+{
 The variables read in the while language programs $c$ as $\vars{c}$, variables used in ssa-form program $\ssa{c}$ : 
 }
 \[
@@ -1699,20 +1662,20 @@ The variables read in the while language programs $c$ as $\vars{c}$, variables u
     \varssa{\ssa{\assign{x}{q}}} & =& \{  \} \\
     \varssa{ \ssa{c_1; c_2}  }  & = & \varssa{\ssa{c_1}} \cup \varssa{\ssa{c_2}} \\
     % \varssa{  \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } &= &\varssa{\ssa{\aexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
-    \jl{\varssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} }} 
+    {\varssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} }} 
     &= &
     \varssa{\ssa{\bexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
     \varssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}], [\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =& \varssa{\ssa{\bexpr}} \cup \varssa{\ssa{c_1}} \cup \varssa{\ssa{c_2}} \cup \{\ssa{\bar{x_1}, \bar{x_2},\bar{y_1}, \bar{y_2},\bar{z_1}, \bar{z_2} }\}  \\
 \end{array}
 \]
-\jl{
+{
 We call the variables needed to be assigned before executing the program $c$ as necessary variables $\fv{c}$. Its ssa form is : $\fvssa{\ssa{c}}$.
 }  
  \[
  \begin{array}{lll}
      \fvars{\assign{x}{\expr} }  & = & \vars{\expr}  \\
      \fvars{\assign{x}{q} }  & = & \{ \}  \\
-     \jl{\fvars{  \ewhile ~ \bexpr ~ \edo ~ c  } }&= & \vars{\bexpr} \cup \fvars{c} \\
+     {\fvars{  \ewhile ~ \bexpr ~ \edo ~ c  } }&= & \vars{\bexpr} \cup \fvars{c} \\
      \fvars{\eif(\bexpr, c_1, c_2)} & =& \vars{\bexpr} \cup \fvars{c_1} \cup \fvars{c_2}  \\
       \fvars{c_1 ; c_2} & = & \fvars{c_1} \cup ( \fvars{c_2} - \avars{c_1})
  \end{array}
@@ -1721,17 +1684,17 @@ We call the variables needed to be assigned before executing the program $c$ as 
  \begin{array}{lll}
      \fvssa{\ssa{\assign{x}{\expr}} }  & = & \varssa{\ssa{\expr}}  \\
      \fvssa{ \ssa{ \assign{x}{q}} }  & = & \{ \}  \\
-     \jl{\fvssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } }
+     {\fvssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } }
      &= & 
      \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}]\\
      \fvssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =& \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c_1}} \cup \fvssa{\ssa{c_2}}  \\
       \fvssa{\ssa{c_1 ; c_2}} & = & \fvssa{\ssa{c_1}} \cup ( \fvssa{\ssa{c_2}} - \avarssa{\ssa{c_1}})
  \end{array}
  \]
- 
- 
+%
 \end{defn}
-
+%
+%
 \begin{lem}
 \label{lem:fv}
 If $\Sigma;\delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\fvssa{\ssa{c}} = \delta(\fvars{c})$. 
@@ -1764,7 +1727,7 @@ By induction hypothosis on the second and third premise, we know that : $\fvssa{
   \varssa{\ssa{\bexpr}} = \delta(\vars{\bexpr})
 \] 
 From the first premise, we know that $\vars{b} \subseteq \dom(\delta)$. This is goal is proved by the rule $\textbf{S-VAR}$ on all the variables in $\bexpr$.\\
-\jl{\caseL{Case
+{\caseL{Case
 $\inferrule{
     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
      \and
@@ -1784,7 +1747,7 @@ $\inferrule{
 }~{\textbf{S-WHILE}}
 $}
 }
-\jl{
+{
 Unfolding the definition, we need to show:
 \[\varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c'}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}] = \delta (\vars{\bexpr}) \cup \delta(\fv{c} ) \]
 We can similarly show that $\varssa{\ssa{\bexpr}} = \delta(\vars{b})$ as in the if case. We still need to show that: 
@@ -1793,33 +1756,7 @@ We can similarly show that $\varssa{\ssa{\bexpr}} = \delta(\vars{b})$ as in the 
 \]
 It is proved by induction hypothesis on $  { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$.\\
 }
-% \caseL{Case 
-% $\todomath{
-% \inferrule{
-%     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
-%     \and
-%     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-%     \and 
-%      { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
-%      \\
-%     { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-%     \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-%     \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-%     \and 
-%     {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
-%   }{ 
-%   \Sigma; \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta_1[\bar{x} \to \ssa{\bar{x}'}]; \Sigma \cup \{\ssa{\bar{x}'}  \}
-% }~{\textbf{S-LOOP}}
-% }
-% $
-% }
-% Unfolding the definition, we need to show:
-% \[\varssa{\ssa{\aexpr}} \cup \fvssa{\ssa{c'}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}] = \delta (\vars{\aexpr}) \cup \delta(\fv{c} ) \]
-% We can similarly show that $\varssa{\ssa{\aexpr}} = \delta(\vars{a})$ as in the if case. We still need to show that: 
-% \[
-%  \fvssa{\ssa{c_1[\bar{x}' / \bar{x_1}]}}[ \ssa{ \bar{x_1} } / \ssa{\bar{x}'}] =  \delta(\fv{c} )
-% \]
-% It is proved by induction hypothesis on $  { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$.\\
+%
 \caseL{Case $\inferrule{
  {\Sigma;\delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1} 
  \and
@@ -1839,7 +1776,7 @@ To show:
  
 \end{proof}
 
-\jl{
+{
 	We first define a good memory in the loop language $m$ or in the ssa language $\ssa{m}$ with respect to a translation environment $\delta$, denoted as $m \vDash \delta$ and $\ssa{m} \vDash \delta$ respectively. 
 \begin{defn}[Well defined memory] 
 \begin{enumerate}
@@ -1859,7 +1796,7 @@ The part declared in the translation environment $\delta$ in a ssa memory $\ssa{
 %
 \begin{lem}[Value remains the same during transformation].
 \label{same_value}
-\jl{
+{
 Given $\delta; e \hookrightarrow \ssa{e}$,  $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, then $\config{m, e} \to v $ and $\config{
 \ssa{m}, \ssa{e}} \to {v}$.
 }
@@ -2057,7 +1994,7 @@ Unfold the definition, we want to show that $$\forall x  \in ( \dom(\delta) \cup
     \item For variable $k \in \dom(\delta)- \bar{x} - \bar{y}-\bar{z}$. From our assumption $ m = \delta^{-1}(\ssa{m})$, we can show $(\delta(k), m(k) ) \in \ssa{m}$. We know that $k$ is not written in either branch from our definition, so $(\delta(k), m'(k) ) \in \ssa{m_1} $ .
 \end{enumerate}
 
-\jl{
+{
 \caseL{
 	Case
 	$
@@ -2082,7 +2019,7 @@ $
 }
 }
 \\
-\jl{
+{
 We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$. Suppose $ \config{m ,a} \to v_N $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
 %
 When the while loop is still running ($v_N > 0$), we have the following evaluation in the while language:
@@ -2163,7 +2100,7 @@ This evaluation is followed by the following evaluation:
 %
 Depending on if the counter $n$ is equal to $0$ or not, there are two possible execution paths (the variables $\ssa{\bar{x}}$ is replaced by the $\ssa{\bar{x_1}}$ or $\ssa{\bar{x_2}}$). We start from the first iteration (when $n =0$) when $v_N >0$. 
 }
-\jl{
+{
 By induction hypothsis on the premise $ { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$, we know that 
 \[ \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l)  } \to^{*} \config{\ssa{{m'}, \eskip}, t'_{i}, w'  } \land m' = \delta_1^{-1}(\ssa{m'})   \]
 Hence we can conclude that:
@@ -2397,7 +2334,7 @@ M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
 0 & o.w.
 \end{array}\right.
 \\
-\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
+{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
 \end{array}
 \end{equation}
 \begin{defn}[Flag Vector ($\flag$)].
@@ -2420,14 +2357,14 @@ $\flag$ is a vector of length $N$, s.t.:
 Operations on $\flag$ are defined as follows:
 \[
 \begin{array}{lll}
-\jl{\flag_1 \uplus \flag_2} & := &
+{\flag_1 \uplus \flag_2} & := &
 \left\{
 \begin{array}{ll}
 1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
 0 & o.w.
 \end{array}\right.
 \\
-\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
+{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
 \end{array}
 \]
 The left matrix $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
@@ -2550,7 +2487,7 @@ The output of the algorithm is the updated global list $G'$, along with the upda
 %
 \and 
 %
-\jl{
+{
 \inferrule
 {
 { \ag{ G ++ \ssa{[\bar{x}^{(l, w + l)}]} ; (w + l); \ssa{c}}{ G' ; w'}  }
@@ -2604,7 +2541,7 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 }
 ~\textbf{\graphGen-asgn}
 \and
-\jl{
+{
 \inferrule
 {M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
 \\
@@ -2618,7 +2555,7 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 %
 \and 
 %
-\jl{
+{
 \inferrule
 {
 {\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ M_1;\flag_1;i_2 }}
@@ -2666,7 +2603,7 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 %
 \and 
 %
-\jl{ 
+{ 
 \inferrule
 {
 B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
@@ -2712,7 +2649,7 @@ The function $\mathsf{Left}$ and $\mathsf{Right}$ is used to generate the corres
 Now let us think about the while loop.
 %
 \[
-\jl{\ssa{c_3} \triangleq
+{\ssa{c_3} \triangleq
 \begin{array}{l}
      \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ; \\
      \left[\ssa{i_1} \leftarrow 0 \right]^2 ; \\
@@ -2796,7 +2733,7 @@ M =  \left[ \begin{matrix}
 \]
 %
 \[
-\jl{\ssa{c_3'} \triangleq
+{\ssa{c_3'} \triangleq
 \begin{array}{l}
      \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ; \\
      \left[\ssa{i_1} \leftarrow 1 \right]^2 ; \\
@@ -2980,10 +2917,10 @@ Given a labeled weighted graph $G=(V,E,W,\flag )$ and a \emph{finite walk} $k$ i
 
 
 \begin{defn}
-[\jl{Program-Based Adaptivity}].
+[{Program-Based Adaptivity}].
 \label{def:prog_adapt}
 \\
-\jl{
+{
 Given a program $\ssa{c}$ and its program-based graph 
 $\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$,
 %
@@ -3026,25 +2963,20 @@ A_{\bf{prog}}(c)
 % \end{array}
 %  \right\}.
 % \]
-%
-% The $\path(s, t)$ represents the set containing all the paths from vertex $s$ to vertex $t$ and
-% $\mathcal{C}(p)$ is the set containing all the circles in the path p
-%
-% where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
 \end{defn}  
-
+%
 By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
 give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
 The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_walk}.
-
+%
 \begin{algorithm}
 \caption{
-\jl{Walk Search Algorithm ($\pathsearch$)}
+{Walk Search Algorithm ($\pathsearch$)}
 \label{alg:adpt_walk}
 }
 \begin{algorithmic}
 \REQUIRE Weighted Directed Graph $G = (V, E, W, F)$ with a start vertex $s$ and destination vertex $t$ .
-\STATE  {\bf \jl{bfs $(G, s, t)$}:}  
+\STATE  {\bf {bfs $(G, s, t)$}:}  
 \STATE \qquad {\bf init} 
 current node: $c = s$, 
 queue: $q = [c]$, 
@@ -3444,60 +3376,6 @@ We assume $G'= G[0, \ldots, i-1]$, from our assumption, we have:
 }$. 
 \end{proof}
 %
-% \begin{lem}[edge in low level corresponds to a path in ssa ]\label{lem:edge}
-% If $ \Gamma \vdash_{M,V}^{(i_1,i_3)} \ssa{c_1; c_2}$. then for any global list $G$ and a loop maps $w$, that $G ;w \vDash (\ssa{c_1;c_2}, i_1, i_3) \land G \vDash (M,V)$, $\Gamma \vdash i_1$. For arbitrary database $D$ and memory $m$, the low level graph $(V_1, E_1) = G_{low}(|\ssa{c}|_{low}, D, m,w)$, and the ssa graph $(V_2,E_2) = G_{ssa}(M,V,i_1,i_2)$. Then for every edge $e= (q_1^{(l_1,w_1)}, q_2^{(l_2,w_2)})$ in $E_1$ where $q_1$ appears in $c_1$ and $q_2$ in $c_2$, $f$ is a mapping from $v_1 \in V_1$ to the unique $v_2 \in V_2$, there exist a path $p $ from $f(q_1^{(l_1,w_1)})$ to $f(q_2^{(l_2,w_2)})$ in $G_{ssa}$.
-% \end{lem}
-% \begin{proof}
-%  From the definition of $G_{low}(|\ssa{c_1;c_2}|_{low}, D,m, w )$ , we choose a initial state $t$, we know that $ \config{m, |\ssa{c_1;c_2}|_{low}, t, w} \xrightarrow{}^{*} \config{m', \eskip, t ++ t', w'}$. Then all the node in $V_1$ comes from the generated trace $t'$.
- 
-%  From our assumption that $e = (q_1^{(l_1,w_1)}, q_2^{(l_2,w_2)}) \in E_1$, we know that : $ \neg \mathsf{IND}(q_1^{(l_1,w_1)}, q_2^{(l_2,w_2)}, |\ssa{c}|_{low},w) \land \mathsf{TO}( q_1^{(l_1,w_1)}, q_2^{(l_2,w_2)})$.
- 
-%  We assume $\ssa{x}^{(l_1,w_1)} =f(q_1^{(l_1,w_1)})$ and $\ssa{y}^{(l_2,w_2)} =f(q_2^{(l_2,w_2)})$, so that $\ssa{c_1}$ contains statements $ [\assign{\ssa{x}}{q_1}]^{l_1}$ (or a corresponding switch statement) and $\ssa{c_2}$ contains $ [\assign{\ssa{y}}{q_2}]^{l_2} $ (or switch). 
- 
-%  Unfold $\mathsf{IND}(q_1^{(l_1,w_1)}, q_2^{(l_2,w_2)}, |\ssa{c_1;c_2}|_{low}, w)$, we assume that 
-%  \[
-%  \config{m, |\ssa{c_1;c_2}|_{low},  t,w} \rightarrow^{*} \config{m_1, [\assign{x}{q_i}]^{l_1}; c_1' ; c_2,
-%   t_1,w_1} \rightarrow \config{m_2, c_1';c_2,
-%   t_1++[(q^{(l_1, w_1)}_i, v_i)], w_2} \rightarrow^{*} \config{m_3, \eskip,
-%   t_3,w_3}
-%  \]
-%  and $c_2$ contains $[\assign{y}{q_2}]^{l_2}$.
- 
-%  When the query $q_1^{(l_1, w_1)}$ is in the loop $(w_1 \not =  \emptyset)$ or not $(w_1 = \emptyset)$, $\neg \mathsf{IND}(q_1^{(l_1, w_1)}, q_2^{(l_2, w_2)}, |\ssa{c_1;c_2}|_{low},w)$ both indicates that the change of $q_1^{(l_1,w_1)}(D)$ will change the appearance of $q_2 $ in the trace, that is to say, the execution of $[\assign{y}{q_2}]^{l_2} $. 
- 
-%  From our transformation theorem, we know that the evaluation of the ssa form program $\ssa{c}$ has the same trace as the one in level language, when initialized with some transformation environment $\delta$ and ssa naming environment $\Sigma$ so that $\Sigma;\delta; c \hookrightarrow \ssa{c} ; \delta';\Sigma'$ . The corresponding memory $\ssa{m}$ such that $m = \delta^{-1}(\ssa{m} )$.
-%  \[
-%   \config{\ssa{m}, \ssa{c_1;c_2},  t,w} \rightarrow^{*} \config{\ssa{m_1}, [\assign{\ssa{x}}{q_i}]^{l_1} ; \ssa{c_1'};\ssa{c_2},
-%   t_1,w_1} \rightarrow \config{\ssa{m_2}, \ssa{c_1'};\ssa{c_2},
-%   t_1++[(q^{(l_1, w_1)}_i, v_i)], w_2} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
-%   t_3, w_3}
-%  \]
-%  Now we can also conclude that the change of the value of $q_1$ which is assigned to ssa variable $\ssa{x}$, will also change the appearance of the $q_2$, in another word, the execution of statement $[\assign{\ssa{y}}{q_2}]^{l_2}$. 
- 
-%  In our ssa form language, there are two possible ways that the change of one variable $\ssa{x}$ will affect another afterwards query assignment statement $[\assign{\ssa{y}}{q_2}]^{l_2}$. 
-%  \begin{enumerate}
-%      \item the statement directly depends on the variable $\ssa{x}$. In this case, there are only two possible situations: 
-%      \begin{enumerate}
-%          \item the query assignment statement appears in either branch of one if conditional statement such as $ [\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l} $. And the previous variable $\ssa{x}$ is used in the conditional $\ssa{b}$. 
-%          \item there is a switch statement $[\eswitch(\ssa{\expr}, \ssa{y},(v_j \rightarrow q_j )]^{l}$ and variable $\ssa{x}$ is used in $\ssa{\expr}$.
-%      \end{enumerate}
-%      In both situations, we know that there is a direct edge in $E_2$ from our algorithm, in another word, $M[\ssa{y}^{(l_2,w_2)}][\ssa{x}^{(l_1,w_1)}] = 1$.
-%     \item The query assignment indirectly depends on the variable $\ssa{x}$. Then there exist some variable $\ssa{z}^{(l',w')}$ for some $l_1<l' < l_2$ and some $w'$ so that the change of value of $\ssa{z}$(appears at before the statement connected by ";") will change the execution of the statement.  Like the direct dependence, there is a direct edge from $\ssa{z}^{(l',w')}$ to $\ssa{y}^{(l_2,w_2)}$. Then we can show that the change of value of $\ssa{x}$ will lead to the change of the value of variable $\ssa{z}$.  There is still two possible cases for dependence between variables.
-%     \begin{enumerate}
-%         \item The value of variable $\ssa{z}$ directly depends on $\ssa{x}$. Then there are three possible situations:
-%         \begin{enumerate}
-%             \item There is an assignment statement $ [\assign{\ssa{z}}{\ssa{\expr}}] $, and the variable $\ssa{x}$ appears in $\ssa{\expr}$.
-%             \item The assignment of $\ssa{z}$ (either $[\assign{\ssa{z}}{\ssa{\expr}}]^{l}$ or $[\assign{\ssa{z}}{q}]^{l}$) appears in the branch of an if statement. and variable $\ssa{x}$ is used in $b$.
-%             \item There is a switch statement assigns variable $\ssa{z}$ such as $[\eswitch(\ssa{\expr}, \ssa{z},(v_j \rightarrow q_j )]^{l}$ and the variable $\ssa{x}$ is used in $\ssa{\expr}$.  
-%         \end{enumerate}
-%         In the above three situations, our algorithm shows that there is a edge from $\ssa{x}^{(l_1, w_1)}$ to $\ssa{z}^{(l',w')}$ so that $M[\ssa{z}^{(l',w')}][\ssa{x}^{(l_1,w_1)}] =1$. We know that statements are connected by ";" and our algorithm treat \textbf{seq} by combining these matrix generated by every statement. 
-%         \item The value of variable $\ssa{z}$ indirectly depends on the variable $\ssa{x}$. Then we need to find those intermediate variables $\ssa{z_1^{(l_1',w_1')} ,z_2^{(l_2',w_2')}, \ldots,z_n^{(l_n',w_n')} }$ between $\ssa{x}^{(l_1,w_1)}$ and $\ssa{z}^{(w',l')}$. We can show in the ssa graph generated by $M,V$,  $(\ssa{x}^{(l_1,w_1)},\ssa{z_1}^{(l_1',w_1')}),((\ssa{z_1}^{(l_1',w_1')},\ssa{z_2}^{(l_2',w_2')})), \ldots, (\ssa{z_n}^{(l_n',w_n')}, \ssa{z}^{(w',l')} ) \in V_2$ by similar way as we show variable $\ssa{z}$ directly depends on $\ssa{x}$.   
-%     \end{enumerate}
-%  \end{enumerate}
- 
- 
-% \end{proof}
-
 \begin{thm}
 [Soundness of {\THESYSTEM}]
 Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$,  for any global list $G$,  loop maps $w$ such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$, $\Gamma \vdash i_1$. 
@@ -3962,7 +3840,7 @@ Unfold the definition of subgraph $\subseteq$, we need to show two cases.
 
 \begin{example}[TwoRound Algorithm]
 \[
-\jl{
+{
 TR(k) \triangleq
 {
 \begin{array}{l}
@@ -3996,34 +3874,10 @@ TR^{ssa} \triangleq
 \end{array}
 }
 \]
-% \[
-% TR^{ssa} \triangleq
-% \begin{array}{l}
-%     % \left[j \leftarrow 1 \right]^1 ; \\
-%     \left[a_1 \leftarrow [] \right]^1; \\
-%    \eloop ~ [k]^{2}, 0, [ a_3,a_1,a_2 ] ~  \\
-%     ~ \edo ~ \\
-%    \Big( 
-%      \left[x_1 \leftarrow q \right]^3; \\
-%     \left[a_2 \leftarrow x_1 :: a_3 \right]^4 
-%     \Big);\\
-%     \clabel{
-% \eswitch \Bigg(a_3, l_1, 
-%     \left(\begin{array}{l}
-%     \left[-n, -n, -n, \cdots, -n\right] \to q_{k + 1,1},\\
-%     \cdots\\
-%     \left[n, n, n, \cdots, n\right] \to q^{}_{k + 1, n^k}
-% \end{array} \right) \Bigg)
-%     }^5
-% \end{array}
-% \]
-% $\config{\emptyset, TR^L, D, [],\emptyset} \rightarrow \config{m, \eskip, D, t, w } $.
-% $$t = [ (q_1^{(4, \{3 \to 1\} )},v_1 ), (q_2^{(4, \{3 \to 2\} )},v_2 ), \ldots, (q_k^{(4, \{3 \to k\} )},v_k ) , (q_{k+1, i }^{(7, \emptyset )},v_1 )  ] $$
 % %
-
 Adapt($TR$) = 2
 
-\jl{
+{
 Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ and empty whlemap $\emptyset$.
  \[[]; \emptyset; TR^{ssa} \to G; w  \land w = \emptyset\].
  %
@@ -4034,7 +3888,7 @@ Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ an
   We denote $a_1^{1}$ short for ${a_1}^{(1,\emptyset)}$ and ${a_3}^{(2,1)}$ short for ${a_3}^{(2,[2:1])}$, where the label $(2, 1)$ represents at line number $2$ and in the $1$ st iteration.
   } 
 \[
-\jl{
+{
 M =  \left[ \begin{matrix}
  & a_1^{2} & a_3^{3} & x_1^{4} 
  & a_2^{5}  & i_3^{3} & i_2^{6} & i_1^{2} & l_1^{7}\\
@@ -4139,65 +3993,7 @@ l_1^{5} &  1 \\
 
 %
 \begin{example}[Multi-Round Algorithm]
-% \[
-% MR^H \triangleq
-% \begin{array}{l}
-%     %  \left[j \leftarrow 0 \right]^1 ; \\
-%     \left[I \leftarrow [] \right]^1; \\
-%     \eloop ~ [k]^{2} ~  \\ 
-%     \ ~ \edo ~ \\ \Big(
-%     \left[p \leftarrow c \right]^3 ; \\
-%     \left[a \leftarrow \query(p, I) \right]^4; \\
-%     \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^5
-%     \Big) 
-% \end{array}
-% %
-% ~~~~ \Rightarrow ~~~
-% %
-% MR^L \triangleq
-% \begin{array}{l}
-%     %  \left[j \leftarrow 0 \right]^1 ; \\
-%     \left[I \leftarrow [] \right]^1; \\
-%     \eloop ~ [k]^{2}  \\ 
-%     \ ~ \edo ~ \\ \Big(
-%     \left[p \leftarrow c \right]^3 ; \\
-%     \left[
-%     \eswitch \Big( I, a
-%     \left(\begin{array}{l}
-%         [ ] \to q_{j,1},\\
-%         \cdots\\
-%     \clabel{1, 2, 3, \cdots, n} \to q_{j,n!}
-%     \end{array}\right)
-%     \Big)
-%     \right]^4;\\
-%     \left[I \leftarrow \eupdt( {I}, (a, p))  \right]^5
-%     \Big) 
-% \end{array}
-% \]
-% Adapt($MR^L$) = 2 when $k=2$
-
-% \[
-% MR^{ssa} \triangleq
-% \begin{array}{l}
-%     %  \left[j \leftarrow 0 \right]^1 ; \\
-%     \left[I_1 \leftarrow [] \right]^1; \\
-%     \eloop ~ [k]^{2} , 0, [I_3,I_1,I_2] \\ 
-%     \ ~ \edo ~ \\ \Big(
-%     \left[p_1 \leftarrow c \right]^3 ; \\
-%     \left[
-%     \eswitch \Big( I_3, a_1
-%     \left(\begin{array}{l}
-%         [ ] \to q_{j,1},\\
-%         \cdots\\
-%     \clabel{1, 2, 3, \cdots, n} \to q_{j,n!}
-%     \end{array}\right)
-%     \Big)
-%     \right]^4;\\
-%     \left[I_2 \leftarrow \eupdt( {I_3}, (a_1, p_1))  \right]^5
-%     \Big) 
-% \end{array}
-% \]
-\jl{
+{
 \[
 MR \triangleq
 \begin{array}{l}
@@ -4234,7 +4030,7 @@ MR^{ssa} \triangleq
 Adapt($MR$) = k.
 \\
 %
-\jl{
+{
 Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ and empty whlemap $\emptyset$.
  \[[]; \emptyset; MR^{ssa} \to G; w  \land w = \emptyset\].
  %
@@ -4246,7 +4042,7 @@ Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ an
 \]
   We denote $I_1^{1}$ short for ${I_1}^{(1,\emptyset)}$ and ${I_3}^{(2,1)}$ short for ${I_3}^{(2,[2:1])}$, where the label $(2, 1)$ represents at line number $2$ and in the $1$ st iteration.
   }
-\jl{
+{
 	\[
 M =  \left[ \begin{matrix}
    i_1^{1} & I_1^2 & i_3^3 & I_3^3 & p_1^4 & a_1^5 & I_2^6 & i_2^7\\
@@ -4391,109 +4187,6 @@ $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution
 \end{center}
 }
 \end{example}
-%
-%
-% \begin{thm}
-% [Observable Equivalent]
-% Given a program $P$ in high level language, the corresponding low level language $P^l$ rewrote from $P$ via the rewriting rules is observably equivalent to $P$.
-% \end{thm}
-% %
-% %
-% \subsection{Adaptivity of the High Level Language}
-% \begin{defn}
-% [Adaptivity]
-% Given a program $P$ in high level language, let $P^L$ be the set of all possible program in low level language observable equivalent to $P$, the adaptivity of $P$ is defined as:
-% \\
-% \[A(P) \triangleq \min\limits_{P^* \in P^L}A^*(P^*) \]
-% %
-% \end{defn}
-% %
-% %
-% \subsection{Soundness of \THESYSTEM ~ in High Level Language}
-% %
-% \begin{thm}
-% [Soundness]
-% Given a program $P$ in high level language, let $P^l$ be the corresponding program in low level rewrote from $P$ via the rewriting rules, 
-% then given $\Gamma$, $c_1$ and $c_2$ s.t. $\Gamma \subseteq FreeVar(P^l)$, 
-% $ \Gamma \vdash^{c_1, c_2}_{M,V} P^l $, then we have:
-% \\
-% \[Adaptivity(P) \leq Adapt(M,V) \]
-% \end{thm}
-% %
-% %
-% %
-% %
-% \clearpage
-% \section{Towards Probability}
-% %
-% \subsection{Syntax and Semantics}
-% %
-% \paragraph{Syntax.}
-% \[
-% \begin{array}{llll}
-%  \mbox{Arithmetic Operators} & *_a & ::= & + ~|~ - ~|~ \times 
-% %
-% ~|~ \div \\  
-%   \mbox{Boolean Operators} & *_b & ::= & \lor \sep \land \\
-%   \mbox{Relational Operators} & *_r & ::= & < ~|~ \leq ~|~ = \\  
-%  \mbox{Label} & l & & \\ 
-%  \mbox{loop maps} & w & \in & \mbox{Label} \times \mathbb{N} \triangleq w +l \sep w \setminus l \sep w \oplus_\rho w \\
-% \mbox{AExpr} & \aexpr & ::= & 
-% ckk991``	%
-% 	n ~|~ x ~|~ \aexpr *_a \aexpr ~|~ {[] ~|~ [\aexpr_0, \dots, \aexpr_i] \sep \aexpr \times \aexpr } \\
-%     %
-% \mbox{BExpr} & \bexpr & ::= & 
-% 	%
-% 	\etrue ~|~ \efalse  ~|~ \neg \bexpr
-% 	 ~|~ \bexpr *_b \bexpr
-% 	%
-% 	~|~ \aexpr *_r \aexpr \\
-% \mbox{Deterministic Expr} & \expr_d & ::=	& \aexpr \sep \bexpr \\
-% \mbox{Randomized AExpr} & \aexpr_r & ::= & 
-% 	%
-% 	 x_r \sep n \sep  \aexpr_r *_a \aexpr_r \\
-%     %
-% \mbox{Randomized BExpr} & \bexpr_r & ::= & 
-% 	%
-% \neg \bexpr_r
-% 	 ~|~ \bexpr_r *_b \bexpr_r
-% 	%
-% 	~|~ \aexpr_r *_r \aexpr_r \\
-% \mbox{Randomized Expr} & \expr_r & ::=	& \expr_d \sep \aexpr_r \sep \bexpr_r \\
-% \mbox{Command} & \command & ::= &   [\assign x {\expr_d}]^{l} \sep [\assign {x_r} {\expr_r}]^{l} \sep  [\assign x q]^{l} \sep  [\assign {x_r} \uniform ]^{l} \sep   [\assign {x_r} \bernoulli]^{l} 
-%  %
-% \\
-% 	%
-% & & & ~|~  \command ; \command  ~|~ \eif_D ([\bexpr]^{l}, \command_1, \command_2) \sep  \eif_R ([\bexpr_r]^{l}, \command_1, \command_2) 
-%  ~|~ [\eskip]^{l} \\
-% & & & { \sep [\eswitch( \expr, x, (v_i \to  q_i))]^{l}} \sep {\eloop ~ [\valr_N]^{l} ~ (f) ~ \edo ~ \command }
-% 	\\
-% 	%
-% % \mbox{Binary Operation} & \bop & ::= & + ~|~ - ~|~ \times 
-% % %
-% \mbox{Memory} & m & ::= & [] ~|~ m[x^{l} \to v] \\
-% %
-% \mbox{Trace} & t & ::= & [] ~|~ [(q, v)^{(l, w) }] ~|~ t ++ t 
-% ~|~ t \oplus_{\rho} t
-% \end{array}
-% \]
-% %
-% \[
-% \begin{array}{ccl}
-% w \setminus l     & = &\left \{  
-%     \begin{array}{lr} w  & l \not\in Keys(w)   \\
-%       w_l & Otherwise \\
-%      \end{array} \right.\\
-% w + l & = &
-%  \left \{  
-%     \begin{array}{lr}
-%     w[l \to 0] & l \not \in Keys(w) \\   
-%     w_l [l \to w(l)+1] & Otherwise
-%           \end{array} \right.\\
-% \end{array}
-% \]
-% %
-% %
 % %
 \section{Analysis of Generalization Error}
 
@@ -4580,105 +4273,6 @@ $\tau = \max\limits\left\{
 $,
 for $\zeta = \min\limits_{\lambda \in [0, 1)}
 \left( \frac{2B \ (\sigma^2 h) - \ln(1 - \lambda)}{\lambda} \right)$
-
-
-% \begin{mathpar}
-% \inferrule
-% {M = \mathsf{L}(i) * ( \mathsf{R}(\expr,i) + \Gamma )
-% }
-% {\Gamma \vdash_{M, V_{\emptyset}}^{(i, i+1)} \assign {x}{\expr} 
-% }
-% ~\textbf{asgn}
-% \and
-% \inferrule
-% {M = \mathsf{L}(i) * ( \Gamma)
-% \\
-% V= \mathsf{L}(i)
-% }
-% { \Gamma \vdash^{(i, i+1)}_{M, V} \assign{x}{q} : 
-% }~\textbf{query}
-% %
-% \and 
-% %
-% \inferrule
-% {
-% \Gamma + \mathsf{R}(\bexpr) \vdash^{(i_1, i_2)}_{M, V} c_1 
-% : \Phi \land \bexpr \Rightarrow \Psi
-% \and 
-% \Gamma + \mathsf{R}(\bexpr) \vdash^{(i_2, i_3)}_{M, V} c_2 
-% : \Phi \land \neg \bexpr \Rightarrow \Psi
-% }
-% {
-% \Gamma \vdash^{(i_1, i_3)}_{M, V} 
-% \eif ~ \bexpr \ethen c_1 \eelse c_2 : \Phi \Rightarrow \Psi
-% }~\textbf{if}
-% %
-% %
-% %
-% \and 
-% %
-% \inferrule
-% {
-% \Gamma \vdash^{(i_1, i_2)}_{M_1, V_1} c_1 : \Phi \Rightarrow \Phi_1
-% \and 
-% \Gamma \vdash^{(i_2, i_3)}_{M_2, V_2} c_2 : \Phi_1 \Rightarrow \Psi 
-% }
-% {
-% \Gamma \vdash^{(i_1, i_3)}_{M_1 ; M_2, V_1 \uplus V_2}
-% c_1 ; c_2 : \Phi \Rightarrow \Psi
-% }
-% ~\textbf{seq}
-% \and 
-% \inferrule
-% {
-% \forall 0 \leq z < N. 
-% {\Gamma \vdash^{(i,i+a )}_{M_1, V_1} c_1 : \Phi \land e_n = \lceil{z+1}\rceil \Rightarrow \Psi }
-% \and
-% {\Gamma \vdash^{(i+a,i+b )}_{M, V} c_2 : \Psi \Rightarrow \Phi \land e_N = \lceil{z}\rceil }
-% \and
-% { e_N = \lceil {N} \rceil }
-% }
-% {\Gamma \vdash^{(i, i+ N*b)}_{M_{i,b}^N(c_1), V_{i, b}^N} 
-% \eloop ~ \expr_N ~ (c_1) ~ \edo ~ c_2 : \Phi \land \expr_N = \lceil { N} \rceil \Rightarrow \Phi \land \expr_N = \lceil{0}\rceil
-% }~\textbf{loop}
-% % \and 
-% % \inferrule
-% % {
-% % \Gamma \vdash^{(i,i+a )}_{M, V} c 
-% % }
-% % {\Gamma \vdash^{(i, i+ N*a)}_{M_{i,a}^N(f), V_{i, a}^N} 
-% % \ewhile([\bexpr]^l,   c) : \phi \Rightarrow \psi
-% % }~\textbf{while}
-% %
-% \and
-% %
-% \inferrule
-% { \Gamma + \mathsf{R}(\expr) \vdash^{(i_1+j-1, i_1+j)}_{M_j, V_j} \assign{ x_j}{q_j} : \Phi \Rightarrow \Psi
-% \\
-% j \in \{1, \dots, N\}     }
-% {\Gamma \vdash^{(i_1, i_1+N)}_{ \sum_{j=0}^{N} M_j, \sum_{j=0}^{N} V_j} \eswitch(\expr, x,(v_j \rightarrow q_j ) : \Phi \Rightarrow \Psi }
-% ~\textbf{switch}
-% %
-% \and
-% %
-% \inferrule
-% { 
-% \vDash 
-% \Phi \Rightarrow \Phi'  
-% \and
-% \Gamma \vdash^{(i_1, i_2)}_{(M',V')} c : \Phi' \Rightarrow \Psi'
-% \and
-% \vDash \Psi' \Rightarrow \Psi
-% \and 
-% \Phi \vDash M' \leq M
-% \and 
-% \Phi \vDash V' \leq V
-% }
-% {\Gamma \vdash^{(i_1, i_2)}_{(M,V)} c 
-% : \Phi \Rightarrow \Psi
-% }
-% ~\textbf{conseq}
-% \end{mathpar}
 
 \clearpage
 
