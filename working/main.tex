@@ -2446,7 +2446,7 @@ $\forall x, y \in \avar, x = \avar(i), y = \avar(j)$:
 %
 \end{defn}
 %
-Operations on the data flow matrices $\Mtrix_1$ and $\Mtrix_2$ are defined as follows:
+Operations on the data flow matrices are defined as follows:
 %
 \begin{equation}
 \Mtrix_1 ; \Mtrix_2 
@@ -2479,37 +2479,50 @@ $$
 \end{matrix} \right ]
 $$
 %
-There are two special matrices used for generating the data flow matrix $M$ in the analysis algorithm. They are the left matrix $\mathsf{L_i}$ and right matrix $\mathsf{R_{(e, i)}}$.
+There are two special matrices used for generating the data flow matrix $M$ in the analysis algorithm. They are the left matrix $\lMtrix_i$ and right matrix $\mathsf{R_{(e, i)}}$.
 
-The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
-\begin{defn}[Left Matrix ($\mathsf{L_i}$)].
+Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
+the left matrix $\lMtrix_i$ generates a matrix of $1$ column, $N$ rows, 
+where the $i$-th row is $1$ and all the other rows are $0$.
+%
+\begin{defn}[Left Matrix ($\lMtrix_i$)].
 \\
-The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, s.t.,:
+Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$, 
+the left matrix $\lMtrix_i$ is defined as follows:
 \[
-	\mathsf{L_i(j)} : = 
-	\left\{
-	\begin{array}{ll}
+	\lMtrix_i(j) : = 
+	\left
+	\{
+	\begin{array}{lr}
 	1 & j = i \\
 	0 & o.w.
 	\end{array}
-	\right., j = 1, \ldots, N
+	\right.,
+	j = 1, \ldots, N
 \]
 \end{defn}
 %
-The right matrix $\mathsf{R_{(e, i)}}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $\avar$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $\avar$.
-\begin{defn}[Right Matrix ($\mathsf{R_{e, i}}$)].
+Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
+the right matrix $\rMtrix_{\expr, i}$ generates a matrix of one row and $N$ columns, 
+where the locations of free variables in $\expr$ is marked as $1$. 
+%
+%
+\begin{defn}[Right Matrix ($\rMtrix_{\expr, i}$)].
 \\
-$\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
+Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$, 
+the right matrix $\rMtrix_{\expr, i}$ is defined as follows:
 \[
-	\mathsf{R_{e, i}(j)} : = 
+	\rMtrix_{\expr, i}(j) : = 
 	\left\{
-	\begin{array}{ll}
-	1 & j \in FV(e) \\
+	\begin{array}{lr}
+	1 & \ssa{x} \in FV(\expr) 
+	\\
 	0 & o.w.
 	\end{array}
-	\right., j = 1, \ldots, N,
+	\right., 
+	j = 1, \ldots, N ~ \text{s.t.} ~ \ssa{x} = \avar(j),
 \]
-where $FV(e)$ is the set of free variables in expression $e$.
+where $FV(e)$ is the set of free variables in expression $\expr$.
 %
 %
 \end{defn}
@@ -2519,13 +2532,13 @@ the left and right matrices are as follows w.r.t. its $2$-nd command
 $\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;$ 
 is as follows
 \[
-\sf{L}_1 = \left[ \begin{matrix}
+\lMtrix_1 = \left[ \begin{matrix}
  0   \\
  1 	 \\
  0  \\
 \end{matrix}   \right ] 
 ~~~~~~~~~~~~~~
-\sf{R}_{\ssa{x_1 + 1}, 1}
+\rMtrix_{\ssa{x_1 + 1}, 1}
 = \left[ \begin{matrix} 
    1 & 0 & 0 \\
    % (x_1) & (x_2) & (x_3) \\
@@ -2664,7 +2677,7 @@ where $\Mtrix = \sum_{z\in [|\bar{x}|] } \Mtrix_{x_z} $
 \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
 \begin{mathpar}
 \inferrule
-{\Mtrix = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
+{\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
 }
 {
  \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{\Mtrix; \flag_{\emptyset}; i+1 }
@@ -2673,9 +2686,9 @@ where $\Mtrix = \sum_{z\in [|\bar{x}|] } \Mtrix_{x_z} $
 \and
 {
 \inferrule
-{\Mtrix = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
+{\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
 \\
-\flag = \mathsf{L}(i) \and \flag(i) = 1
+\flag = \lMtrix_i \and \flag(i) = 1
 }
 { 
 \ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
@@ -2687,9 +2700,9 @@ where $\Mtrix = \sum_{z\in [|\bar{x}|] } \Mtrix_{x_z} $
 {
 \inferrule
 {
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ \Mtrix_1;\flag_1;i_2 }}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}, i_1}; \ssa{c_1} ; i_1 }{ \Mtrix_1;\flag_1;i_2 }}
 \and 
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1);\ssa{c_2} ; i_2 }{ \Mtrix_2; \flag_2 ;i_3}}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}, i_1};\ssa{c_2} ; i_2 }{ \Mtrix_2; \flag_2 ;i_3}}
 \\
 {\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
 %
@@ -3247,61 +3260,6 @@ $f(q^{l,w}) = \ssa{x}^{l,w}$
 \begin{lem}
  $\forall t,m,w,c, \config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, every node in $t'-t$ has unique label.
 \end{lem}
-\begin{proof}
-  By induction on the evaluation of program $c$.
- \caseL{case: $\config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
-\xrightarrow{}^{*} \config{m_N,  \eskip,  t_N, w_N } $ }
-  We want to show every node in $t_N -t$ has unique label.
-   Suppose $v_N =N$,so we have $N$ iteration. When $N = 0$, there is no new generated trace, it is trivially true. When $N > 0$,
-  we have the following evaluation.
-  {\[
-\todomath{
- \inferrule
-{
- \valr_N > 0
-}
-{
-\config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
-\xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
-}
-~\textbf{loop}
-}
- \]
- \[
- \inferrule{
- \config{m, c , t, (w + l)  } \to^{*} \config{m_1, \eskip , t_1, w_1   }
- }{
- \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) } 
- \to^{*} \config{m_1,   [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t_{1}, w_1  } 
-  }
-\]
- }
- By induction hypothesis on $ \config{m, c , t, (w + l)  } \to^{*} \config{m_1, \eskip , t_1, w_1   }$, we know that for every node in $ t_1 -t$ has unique label. 
-
- Unfold the loop, for the $2nd$, $3rd$, until the $N-th$ iteration, we can also conclude that every node in $t_2-t_1$, $t_3-t_2$, until $t_N -t_{N-1}$ has unique label.
- 
- Because $w \not= w + l \not= w_1 + l \not= w_2 + l \not = \ldots, \not = w_{N-1} +l $, we know that node from different iteration ($i \not = j $) $t_i - t_{i-1}$ and $t_j -t_{j-1}$ has different loop maps.
- 
- \caseL{case: $\config{m, c_1; c_2,  t, w }
-\xrightarrow{}^{*} \config{m'',  \eskip,  t'', w'' } $  }
-  \[
-   \inferrule{
-  {  \config{m, c_1,  t, w }
-\xrightarrow{}^{*} \config{m',  \eskip,  t', w' }
-  }
-   \and
-   {
-   \config{m', c_2,  t', w' }
-\xrightarrow{}^{*} \config{m'',  \eskip,  t'', w'' }
-   }
-   }{
-   \config{m, c_1; c_2,  t, w }
-\xrightarrow{}^{*} \config{m',  \eskip,  t', w' }
-   }
-  \]
-  By induction on premises, we know that :
-  every node in $t'-t$ and $t''-t'$ has unique label. Also, all the program lines $[l_1,l_2, \ldots, l_n]$ in $c_1$ is smaller than the minimal program line in $c_2$, so every node in $t'-t$ has different line number with node in $t''-t'$.  
-\end{proof}
 
 \begin{lem}[Label consistency in low level graph ]
 Given a low level program $c$, for a database $D$, a memory $m$, a loop maps $w$, every node $q^{(l,w)}$ in the low level graph $(V_1, E_1) = G_{low}(c, D, m,w)$ has unique label $(l,w)$. 
@@ -3325,27 +3283,20 @@ Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$, for any global list $G$ and a 
 
 $f_{D,m}(q^{l,w}) = \ssa{x}^{(l,w)}$ where $q^{(l,w)} \in V_1 $ and $\ssa{x}^{(l,w)} \in V_2$ is injective.
 \end{lem}
-
-
-% \begin{lem}[Mapping of vertices from low level graph to ssa graph]\label{lem:vertex}
-% If $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$,then for any global list $G$ and a loop maps $w$, that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$, $\Gamma \vdash i_1$. For arbitrary database $D$ and memory $m$, the low level graph $(V_1, E_1) = G_{low}(|\ssa{c}|_{low}, D, m,w)$, and the ssa graph $(V_2,E_2) = G_{ssa}(M,V,i_1,i_2)$. Then there exist a mapping $f$ so that for any node $q^{(l,w)} \in V_1$, $f(q^{(l,w)}) \in V_2$.\\
-% The mapping $f(q^{l,w}) = x^{l,w}$ where $x^{(l,w)} \in V_2$. 
-% \end{lem}
+%
 \begin{proof}
  To show $f_{D,m}$ is injective.
  
  We want to show that:
  
  for every node $q^{(l,w)}$ in $V_1$(in the new generated trace by executing $c$), there exist only one corresponding labelled variable $\ssa{x}^{(l,w)} \in \mathcal{LV}$ in $V_2$(also know as $G[i_1,\ldots, (i_2-1)]$) with the same label $(l, w)$. 
- 
-%  We can first show that every node in $V_1$ has an unique label $(l,w)$ :
-%   \[\forall  q^{(l,w)}, q'^{(l',w')}  \in V_1.  q^{(l,w)} \not= q'^{(l',w')} \implies (l,w) \not= (l',w')  .\]
-  
-  By induction on $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$.
+
+By induction on $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$.
   \caseL{Case: $\inferrule
-{M = \mathsf{L}(i) * \Gamma
+{
+\Mtrix = \mathsf{L}(i) * \Gamma
 \\
-V= \mathsf{L}(i)
+\flag = \mathsf{L}(i)
 }
 { \Gamma \vdash^{(i, i+1)}_{M, V} \assign{\ssa{x}}{q} 
 }~\textbf{query}$}
@@ -3414,88 +3365,9 @@ By induction hypothesis on the first premise, we know : every node $q^{(l,w)} \i
 By induction hypothesis on the second premise, we conclude that : every node $q^{(l,w)} \in \mathcal{AQ}$ in $t_2 -t_1$ has a unique mapping $\ssa{x}^{(l,w)}$ with the same label in $G[i_2, \ldots, (i_3-1) ]$.
 
 Now we can conclude that : every node $q^{(l,w)} \in \mathcal{AQ}$ in $t_2 -t$ has a unique mapping $\ssa{x}^{(l,w)}$ with the same label in $G[i_1, \ldots, (i_3-1) ]$
-
-
-\caseL{Case: 
-$\todomath{
-\inferrule
-{
-B= |\ssa{\bar{x}}| 
-\and
-{\Gamma \vdash^{(i, i+B)}_{M_{10}, V_{10}}  }
-\and
-{\Gamma \vdash^{(i+B,i+B+A )}_{M_{20}, V_{20}} \ssa{c} 
-}
-\\
-\forall 1 \leq j < N. 
-{\Gamma \vdash^{(i+j*(B+A), i+B+j*(B+A))}_{M_{1j}, V_{1j}}  } [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]
-\and
-{\Gamma \vdash^{(i+B+j*(B+A),i+B+A+j*(B+A) )}_{M_{2j}, V_{2j}} \ssa{c} 
-}
-\\
-{\Gamma \vdash^{(i+N*(B+A) ,i+N*(B+A)+B )}_{M, V} [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]
-}
-\and
-{ \ssa{a} = \lceil {N} \rceil }
-\\
-{M' = M+ \sum_{0 \leq j <N} M_{1j}+M_{2j}  }
-\and
-{V' = V \uplus \sum_{0 \leq j <N} V_{1j} \uplus V_{2j}  }
-}
-{\Gamma \vdash^{(i, i+N*(B+A)+B   )}_{M', V'} 
-[\eloop ~ \ssa{\aexpr}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l}
-}~\textbf{loop}}
-$
-}
-
-We assume $G; w \vDash ([\eloop ~ \ssa{\aexpr}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l}, i, i+N*(B+A)+B)$ and denote $c = |\ssa{c}|_{low}$ and $a = |\ssa{a}|_{low}$.
-We choose the memory $m$, trace $t$ and hidden database $D$, we have the ssa evaluation supposing $\config{m, a} \to v_N$:
- {\[
- {\inferrule
-{
- \valr_N > 0
-}
-{
-\config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
-\xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
-}
-~\textbf{loop}
-}
- \]
- \[
- \inferrule{
- \config{m, c , t, (w + l)  } \to^{*} \config{m_1, \eskip , t_1, w_1   }
- }{
- \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) } 
- \to^{*} \config{m_1,   [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t_{1}, w_1  } 
-  }
-\]
-We assume $G'= G[0, \ldots, i-1]$, from our assumption, we have:
-\[
-\inferrule
-{
-{G_0 = G' \quad w_0 =w }
-\and
-\forall 0 \leq z < N. 
-{ G_z ++ \ssa{[\bar{x}^{(l, {w_z}+l)}]} ; (w_z+l); \ssa{c} \to G_{z+1} ; w_{z+1}  }
-\and
-{G_f = G_N ++ \ssa{[\bar{x}^{(l, w_N \setminus l)}]} }
-\and
-{ \ssa{e = \lceil {N} \rceil} }
-}
-{G'; w; [\eloop ~ (e), n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l} \to G_f; w_N\setminus l
-}~\textbf{loop}
-\]
- }
- By induction hypothesis on ${\Gamma \vdash^{(i+B,i+B+A )}_{M_{20}, V_{20}} \ssa{c}}$ using the conclusion $ \config{m, c , t, (w + l)  } \to^{*} \config{m_1, \eskip , t_1, w_1   } $ and $ { G_z ++ \ssa{[\bar{x}^{(l, {w_z}+l)}]} ; (w_z+l); \ssa{c} \to G_{z+1} ; w_{z+1}  }$ where $z=0$. We can conclude the following about the first iteration.
- 
- Every node $q^{(l,w)}$ in $t_1-t$, there is a unique labelled variable $\ssa{x}^{(l,w)}$ with the same label in. $G[i+B,\ldots,i+B+A-1]$. 
- 
- For other iteration $ 1 \leq j < N$, we can show similarly by induction hypothesis
- on ${\Gamma \vdash^{(i+B+j*(B+A),i+B+A+j*(B+A) )}_{M_{2j}, V_{2j}} \ssa{c} 
-}$. 
 \end{proof}
 %
+\todo{
 \begin{thm}
 [Soundness of {\THESYSTEM}]
 Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$,  for any global list $G$,  loop maps $w$ such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$, $\Gamma \vdash i_1$. 
@@ -3506,455 +3378,7 @@ Then,
 K \leq |V| \land \forall D, \ssa{m}. G_{s}(\ssa{c},D,\ssa{m},w) \subseteq G_{ssa}(M, V,G,i_1, i_2)
 \]      
 \end{thm}
-\begin{proof}
- By induction on the judgment $\Gamma \vdash_{M,V}^{i_1, i_2} \ssa{c}$.
-\\ 
-\begin{itemize}
-    \caseL{Case: $\inferrule
-{M = \mathsf{L}(i) * ( \mathsf{R}(\expr,i) + \Gamma )
-}
-{\Gamma \vdash_{M, V_{\emptyset}}^{(i, i+1)} \assign {\ssa{x}}{\ssa{\expr}} 
-}
-~\textbf{asgn}$}
-Given a memory $m$, database $D$, trace $t$, loop maps $w$, then from the following operational semantics:
-\[\inferrule
-{
-}
-{\config{\ssa{m}, [\assign{\ssa{x}}{\ssa{e}}]^{l},  t,w} \xrightarrow{}^{*}
-\config{\ssa{m}, [\assign{\ssa{x}}{ v}]^{l},  t,w} \xrightarrow{} \config{\ssa{m[x \mapsto v]}, [\eskip]^{l}, t,w}
-}\]
-We need to show:
-\begin{enumerate}
-    \item $ G_{s}(\assign{\ssa{x}}{\ssa{\expr}},D,m,w) \subseteq G_{ssa}(M, V_{\emptyset},i, i+1)$.
-    \item $K \leq |V_{\emptyset}| $.
-\end{enumerate}
-The first goal is shown because the new generated trace $t'$ is empty, based on the definition of $G_{s}$, we know that $G_{s}$ has no vertices. \\
-The second goal is proved because $K =0$.\\
-
-\caseL{Case: $\inferrule
-{M = \mathsf{L}(i) * (\Gamma + \mathsf{R}(e,i) )
-\\
-V= \mathsf{L}(i)
-}
-{ \Gamma \vdash^{(i, i+1)}_{M, V} \assign{\ssa{x}}{\ssa{\query(\expr)}} 
-}~\textbf{query}$}
-Given a memory $m$, database $D$, trace $t$, loop maps $w$, then from the following operational semantics:
-\[
-\inferrule
-{
-\query(v)(D) = \qval 
-}
-{
-\config{\ssa{m}, [\assign{\ssa{x}}{\ssa{\query(\expr)}}]^l, t, w} \xrightarrow{} \config{\ssa{m[ \qval/ x]}, \eskip,  t \mathrel{++} [(\query(v),l,w ))],w }
-}
-\]
-We need to show:
-\begin{enumerate}
-    \item $ G_{s}([\assign{\ssa{x}}{\ssa{\query(e)} }]^{l},D,m,w) \subseteq G_{ssa}(M, V,i, i+1)$.
-    \item $K \leq |V| $.
-\end{enumerate}
-The first goal is shown as follows: because the new generated trace $t'= [\query(v),l,w)]$ only has one element. By the definition of $G_{s} = (V_s,E_s)$, we know there is only one vertex $vx$ in $V$ and no edge in $E$, 
-i.e., $V_s = \{\query(v),l,w) \}$ and $E_s = \{\}$.
-\\
-From Lemma~\ref{lem:vertex},we know that there exists a function $f$ so that $f(vx)$ (equivalent to $(\query(v),l,w)$ in $G_s$) exists in the vertices $V_{ssa}$ of $G_{ssa}(M,v,i,i+1) = (V_{ssa}, E_{ssa})$.
-Since $V_s \subseteq V_{ssa}$ and $E_s \subseteq E_{ssa}$,
-it is proved that $ G_{s}([\assign{\ssa{x}}{\ssa{\query(e)} }]^{l},D,m,w) \subseteq G_{ssa}(M, V,i, i+1)$. So we have the first goal proved.
-
-The second goal is proved because $V= \mathsf{L}(i)$ is not empty so that $|V|\geq 1 $, and $K=1$. \\
-
-\caseL{Case: $\inferrule
-{
-\Gamma + \mathsf{R}(\bexpr, i_1) \vdash^{(i_1, i_2)}_{M_1, V_1} \ssa{c_1} 
-% : \Phi \land \bexpr \Rightarrow \Psi
-\and 
-\Gamma + \mathsf{R}(\bexpr, i_1) \vdash^{(i_2, i_3)}_{M_2, V_2} \ssa{c_2} 
-% : \Phi \land \neg \bexpr \Rightarrow \Psi
-\\
-{ \forall 0 \leq j < |\bar{x}|. \bar{x}(j) = x_j, \bar{x_1}(j) = x_{1j}, \bar{x_2}(j) = x_{2j}  }
-\\
-{ \forall 0 \leq j < |\bar{x}|.  \Gamma \vdash_{M_{x_j}, V_{\emptyset}}^{i_3+j, i_3+j+1 } x_j \leftarrow x_{1j} + x_{2j} }
-\and
-{ \forall 0 \leq j < |\bar{y}|.  \Gamma \vdash_{M_{y_j}, V_{\emptyset}}^{i_3+|\bar{x}|+j, i_3+|\bar{x}|+j+1 } y_j \leftarrow y_{1j} + y_{2j} }
-\\
-{ \forall 0 \leq j < |\bar{z}|.  \Gamma \vdash_{M_{z_j}, V_{\emptyset}}^{i_3+|\bar{x}|+|\bar{y}|+j, i_3+|\bar{x}|+|\bar{y}|+j+1 } z_j \leftarrow z_{1j} + z_{2j} }
-\\
-{M = (M_1+M_2)+ \sum_{j\in [|\bar{x}|] }M_{x_j} + \sum_{j\in [|\bar{y}|] }M_{y_j} + \sum_{j\in [|\bar{z}|] }M_{z_j} }
-}
-{
-\Gamma \vdash^{(i_1, i_3+|\bar{x}|+|\bar{y}|+|\bar{z}|)}_{M, V_1 \uplus V_2 } 
-[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}
-}~\textbf{if}
-$}
-Given a memory $\ssa{m}$, database $D$, trace $t$, loop maps $w$ and a global list $G$. We assume that $G \vDash M, V_1 \uplus V_2$, $G;w \vDash (\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)},i_1, i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| ) $.  There are two possible executions. We choose one branch and the other will be similar. 
-% 
-%
-%
-From the assumption, denote $G' = G[0,\ldots, (i_1-1)]$ we know that 
-\[\inferrule
-{
-G'; w; \ssa{c_1} \to G_1;w_1
-\and 
- G_1;w ; \ssa{c_2} \to G_2; w_2
- \and G_3 = G_2 ++ \ssa{[\bar{x}^{(l,w)}]++ \ssa{[\bar{y}^{(l,w)}]}++ \ssa{[\bar{z}^{(l,w)}]} }
-}
-{
-G'; w;
-\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} \to G_3 ;w
-}~\textbf{if}\]
-$\ssa{c_1}$ is the sub term of $\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)} $.  so we have: $ G \vDash M_1, V_1$ and $G ;w \vDash (\ssa{c_1},i_{1},i_{2})$,  and $\Gamma + \mathsf{R}(\bexpr, i_1) \vDash i_1$.
-
-By induction hypothesis on the first premise $ \Gamma + \mathsf{R}(\bexpr, i_1) \vdash^{(i_1, i_2)}_{M, V} \ssa{c_1} 
- $,  we can conclude that :
-\[
- K_{\ssa{c_1}} \leq |V_1| \land G_{s}(\ssa{c_1},D,m,w) \subseteq G_{ssa}(M_1, V_1 ,i_1, i_2 ).
-\]
-
-By the definition of K, we have $ K_{\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2})}= K_{\ssa{c_1}}$ when $\bexpr = \etrue $.
-
-Next, we want to show : 
-\[
-  G_{s}(\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2}),D,\ssa{m},w) \subseteq G_{ssa}(M, V_1 \uplus V_2 ,i_1, i_3+|\bar{x}|+|\bar{y}|+|\bar{z} ).
-\]
- By the definition of $G_{s}$, we know that  $ G_{s}(\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2}),D,\ssa{m},w)$ is the same graph as $ G_{s}( \ssa{c_1},D,\ssa{m},w)$. We can also show that $G_{ssa}(M_1, V_1 ,G,i_1, i_2 )$ is a subgraph of $G_{ssa}(M, V_1 \uplus V_2 ,i_1, i_3+|\bar{x}|+|\bar{y}|+|\bar{z} )$ because all the vertices in the former also appears in the later($[i_1, i_2]$ is a smaller range of $ [i_1, i_3+i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| ]$) and same for the edges( $M$ contains $M_1$). \\ 
-
-
-\caseL{Case: $\inferrule
-{
-\Gamma \vdash^{(i_1, i_2)}_{M_1, V_1} \ssa{c_1} 
-% : \Phi \Rightarrow \Phi_1
-\and 
-\Gamma \vdash^{(i_2, i_3)}_{M_2, V_2} \ssa{c_2} 
-% : \Phi_1 \Rightarrow \Psi 
-}
-{
-\Gamma \vdash^{(i_1, i_3)}_{M_1 \green{;} M_2, V_1 \uplus V_2}
-\ssa{c_1 ; c_2} 
-% : \Phi \Rightarrow \Psi
-}
-~\textbf{seq}$}
-
-Given a memory $\ssa{m}$, database $D$, trace $t$, loop maps $w$ ,a global list $G$. We assume $ G;w \vDash (\ssa{c_1};\ssa{c_2}, i_1,i_3)$, $G \vDash M_1;M_2 , V_1 \uplus V_2$. From the following ssa operational semantics:
-
-\[
-\inferrule
-{
-{\config{\ssa{m, c_1},  t,w} \xrightarrow{}^{*} \config{\ssa{m_1}, \eskip,  t_1,w_1} }
-\and
-{
- \config{\ssa{m_1, c_2},  t_1,w_1} \xrightarrow{}^{*} \config{\ssa{m_2}, \eskip,  t_2,w_2}
-}
-}
-{
-\config{\ssa{m, c_1; c_2},  t,w} \xrightarrow{} \config{\ssa{m_2}, \eskip, t_2,w_2}
-}
-\]
-
-%
- We need to show:
-\begin{enumerate}
-    \item $ G_{s}(\ssa{c_1 ; c_2},D,\ssa{m},w) \subseteq G_{ssa}(M_1;M_2, V_1\uplus V_2 ,i_1, i_3)$.
-    \item $K_{\ssa{c_1 ; c_2}} \leq |V_1 \uplus V_2 | $.
-\end{enumerate}
-
-From our assumption,  we denote $G' = G[0, \ldots, (i_1-1)] $. 
- We have the following :
-\[
-\inferrule
-{
-G'; w; \ssa{c_1} \to G_1; w_1'
-\and 
-G_1;w_1'; \ssa{c_2} \to G_2; w_2'
-}
-{
-G'; w;
-\ssa{c_1 ; c_2} \to G_2 ; w_2'
-}
-\]
-Because $\ssa{c_1}, \ssa{c_2}$ are subterms of $\ssa{c_1;c_2}$, we know that there exists an index $i_1 \leq i_2 \leq i_3$ so that $G,w \vDash (\ssa{c_1}, i_1, i_2) $ and $G,w_1' \vDash (\ssa{c_2}, i_2, i_3)$.
-
-By induction hypothesis, we have:
-\[K_{\ssa{c_1}} \leq |V_1| \land G_{s}(\ssa{c_1} ,D,\ssa{m},w) \subseteq G_{ssa}(M_1, V_1 ,G,i_1, i_2)\] 
-\[K_{\ssa{c_2}} \leq |V_2| \land G_{s}(\ssa{c_2} ,D,\ssa{m_1},w_1') \subseteq G_{ssa}(M_2,  V_2 ,G, i_2, i_3)\]
-
-We can easily show that $K_{\ssa{c_1 ; c_2}} \leq |V_1 \uplus V_2 | $ by the definition of $K_{\ssa{c_1;c_2}} = K_{\ssa{c_1}} + K_{\ssa{c_2}}$, and $ |V_1 \uplus V_2| = |V_1| + |V_2|$ because the non-zeros range in $V_1$($[i_1, i_2)$) is disjoint with that in $V_2$($[i_2, i_3)$).
-
-% We use $G_{s}(\ssa{c_1})$ short for $G_{s}(\ssa{c_1} ,D,\ssa{m},w)$. 
-By the definition of $G_{s}$, we know that vertices of $ (VX_1, E_1) = G_{s}(\ssa{c_1}, D, \ssa{m}, w) $ come from the trace $ t_1 - t$  and $ (VX_2, E_2) = G_{low}(c_2) $ from $t_2 - t_1$.
-
-Unfold the definition of subgraph $\subseteq$, we need to show two cases.
-\begin{enumerate}
-    \item The vertices in $G_{s}(c_1;c_2)$ can be mapped to the vertices in $G_{ssa}(M_1;M_2, V_1 \uplus  V_2 ,i_1, i_3)$ by $f_{D,m}$. 
-    \\
-    By induction hypothesis, we know that there exist 
-    functions $f_{D, m,c_1}$ for $G_{s}(\ssa{c_1}, D, \ssa{m}, w)$ and $f_{D,m_1,c_2}$ for $G_{s}(\ssa{c_2}, D, \ssa{m}, w_1')$. Then, we construct the mapping function
-    \[f_{D,m,\ssa{c_1;c_2}}(vx) = 
-    \left\{
-    \begin{array}{ll}
-        f_{D, m,c_1}(vx) & (vx) \in (t_1-t)  \\
-        f_{D,m_1,c_2}(vx) & (vx) \in (t_2-t_1)  
-    \end{array} ,
-    \right . \] 
-    which maps the vertices in $G_{s}(c_1;c_2)$ to the vertices in $G_{ssa}(M_1;M_2, V_1 \uplus  V_2 ,i_1, i_3)$.
-    %
-    %
-    \item Every edge in $G_{s}(\ssa{c_1;c_2}, D, \ssa{m}, w)$ can be mapped to a corresponding path in $G_{ssa}(M_1; M_2,G, V_1 \uplus V_2, i_1, i_3)$. The edges in $G_{s}(\ssa{c_1;c_2}, D, \ssa{m}, w)$ comes from three sources:
-    \begin{enumerate}
-        \item Edges in $G_{s}(\ssa{c_1}, D, \ssa{m}, w)$. We can find a path in $G_{ssa}(M_1;M_2, V_1 \uplus V_2,i_1,i_3)$ for edge of this kind because we can find one path in a smaller graph $G_{ssa}(M_1 V_1,i_1,i_2) $ 
-        \item Edges in $G_{s}(\ssa{c_2}, D, \ssa{m_1}, w_1')$. This can be proved in a similar way as in previous case.
-        \item Edges $(vx_1,vx_2)$ where $vx_1= q_1(v_1)^{(l_1,w_1)}$ comes from $G_{s}(\ssa{c_1}, D, \ssa{m}, w)$ and $vx_2 = q_2^{(l_2,w_2)}$ comes from $G_{s}(\ssa{c_2}, D, \ssa{m_1}, w_1')$. 
-        We unfold the definition of one edge so that we have:
-        \[ \mathsf{DEP}(vx_1,vx_2, \ssa{c_1;c_2},w,\ssa{m}) \land \mathsf{To}(vx_1,vx_2) \]
-        Since we know that $q_1(v_1)^{(l_1,w_1)}$ comes from $t_1-t$, so we can assume that $\ssa{c_1= c_1'' ; c_1'} $. The last command of $c_1''$ is $[\ssa{\assign{x}{q_1(e)}}]^{l_1}$.  We have the following ssa evaluation:
-        \[
-\inferrule
-{
-{\config{\ssa{m, c_1},  t,w} \xrightarrow{}^{*} \config{\ssa{m_1'}, [\ssa{\assign{x}{q_1(e)}}]^{l_1}; \ssa{c_1'}, t_1', w_1'} \to  \config{\ssa{m_1}, \eskip,  t_1,w_1} }
-\\
-{
- \config{\ssa{m_1, c_2},  t_1,w_1} \xrightarrow{}^{*} \config{\ssa{m_2}, \eskip,  t_2,w_2}
-}
-}
-{
-\config{\ssa{m, c_1; c_2},  t,w} \xrightarrow{} \config{\ssa{m_2}, \eskip, t_2,w_2}
-}
-\]
- Then unfold the $\mathsf{DEP}$:
-     \[
- \begin{array}{l}
-     \forall \ssa{m_1,m_3}, D,t,t_1,t_3. 
-\config{\ssa{m, c},  t,w} \rightarrow^{*} \config{\ssa{m_1, [\assign{x}{q_1(v_1)}]^{l_1} ; c_2},
-  t_1,w_1} \rightarrow \\ \config{\ssa{m_1[\qval/x], c_2},
-  t_1++[q_1(v_1)^{(l_1, w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3}, \eskip,
-  t_3,w_3} \\  
-  \land 
-\Big( q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \in (t_3-t_1) \implies  \exists v \in \codom(\ssa{q_1(v_1)}(D)). \\
- \config{\ssa{m_1[v/x], {c_2}}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land (q_2(v_2)^{(l_2,w_2)}) \not \in (t_3'-t_1)
-\Big)\\
-\land 
-\Big(q_1(v_1)^{(l_1,w_1)} \in (t_3-t) \land q_2(v_2)^{(l_2,w_2)} \not\in (t_3-t_1) \implies  \exists v \in \codom(\ssa{q_1(v_1)}(D)). \\
- \config{\ssa{m_1[v/x], {c_2}}, t_1++[q_1(v_1)^{(l_1,w_1)}], w_1} \rightarrow^{*} \config{\ssa{m_3'}, \eskip, t_3', w_3'} \land q_2(v_2)^{(l_2,w_2)}  \in (t_3'-t_1)
-\Big)\\
-\end{array}
-\]   
-
-We already know that $q_1(v_1)^{(l_1,w_1)} \in (t_1-t), q_2(v_2)^{(l_2,w_2)} \in (t_2-t_1)$. So from $ \mathsf{DEP}$, we know that: $\exists v \in \codom(q_1(v_1)(D)).\config{\ssa{m_1'[v/x], {c_1';c_2}}, t_1'++[(q_1(v_1)^{(l_1,w_1)})], w_1'} \rightarrow^{*} \config{\ssa{m_2'}, \eskip, t_2', w_2'} \land (q_2(v_2)^{(l_2,w_2)}) \not\in (t_2'-t) $.
-
-%  
- We have:
- \[
- \inferrule{
-  { \config{\ssa{m}, \ssa{c_1;c_2},  t,w} \rightarrow^{*} \config{\ssa{m_1'}, [\assign{\ssa{x}}{\ssa{q_1(v_1)}}]^{l_1} ; \ssa{c_1'};\ssa{c_2},
-  t_1',w_1'}  \rightarrow^{*} \config{\ssa{m_1}, \eskip,
-  t_1, w_1}}
-  \\
-  {
-\config{\ssa{m_1}, \ssa{ c_2},  t_1,w_1} \rightarrow^{*} \config{\ssa{m_2}, \eskip, t_2,w_2}
-}}
-  {\config{\ssa{m}, \ssa{c_1;c_2},  t,w} \rightarrow^{*} \config{\ssa{m_2}, \eskip,
-  t_2, w_2} }
- \]
- We know there exists a value $v$ of $q_1(D)$, assigned to variable $\ssa{x}^{(l_1,w_1')}$, such that $ q_2(v_2)^{(l_2,w_2)} \not\in t_2-t_1$.
- 
- Since $q_2(v_2)^{(l_2,w_2)}$  comes from some certain query request $c_2' =[\assign{\ssa{y}}{\ssa{q_2(e_2)}}]^{l_2}$. We know that the execution of $\ssa{c_2'}$ depends on $\ssa{x}^{(l_1,w_1')}$. We want to show there is a path from $ y^{(l_2,w_2)}$ to $x^{(l_1,w_1)}$ in $G_{ssa}$. 
- 
- There are two situations that $\ssa{c_2'}$ depends on $\ssa{x}^{(l_1,w_1)}$.
- \begin{enumerate}
-     \item $\ssa{c_2'}$ directly depends on the variable $\ssa{x}$. In this case, there are two possible cases: 
-     \begin{enumerate}
-         \item $\ssa{c_2'}$ in either branch $c_a,c_b$ of $ [\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_a, c_b)}]^{l} $. And  $\ssa{x}$ is used in the conditional $\ssa{b}$. 
-         \item $c_2' =[\assign{\ssa{y}}{\ssa{q_2(e_2)}}]^{l_2}$ and variable $\ssa{x}$ is used in $\ssa{\expr_2}$.
-     \end{enumerate}
-     In both situations,  $M[\ssa{y}^{(l_2,w_2)}][\ssa{x}^{(l_1,w_1)}] = 1$ so we know  there is a direct edge in $G_{ssa}$.
-    \item $\ssa{c_2'}$ indirectly depends on $\ssa{x}^{(l_1,w_1)}$. Then there exists a sequence of labelled variables $\ssa{z_1}^{(l^1,w^1)},\ssa{z_2}^{(l^2,w^2)}, \ldots, \ssa{z_n}^{(l^n,w^n)} $ for some $l_1<l^1 , l^2 \ldots, l^n < l_2$ and some $w^1, w^2, \ldots, w^n$ such that :1. $\ssa{z_1}^{(l^1,w^1)}$ directly depends on $\ssa{x}$. 2. $\ssa{z_i}^{(l^i,w^i)}$ directly depends on $\ssa{z_j}^{(l^j,w^j)}$ when $i = j+1 \land 1 <i < n $. 3. $\ssa{c_2'}$ directly depends on $\ssa{z_n}^{(l^n,w^n)}$. 
-    
-    We now show that direct dependence between labelled variables $\ssa{y}^{(l,w)}$ and $\ssa{x}^{(l',w')}$ in ssa language is tracked by our algorithm.
-    
-     There are three possible situations:
-        \begin{enumerate}
-            \item The assignment statement $ [\assign{\ssa{y}}{\ssa{\expr}}] $, and $\ssa{x}$ appears in $\ssa{\expr}$.
-            \item The assignment of $\ssa{y}$ (either $[\assign{\ssa{y}}{\ssa{\expr}}]^{l}$ or $[\assign{\ssa{y}}{\query(e)}]^{l}$) appears in either branch of an if statement. $\ssa{x}$ is used in $b$.
-            \item $ [\assign{\ssa{y}}{\ssa{\query(e)}}]^{l}$ and the variable $\ssa{x}$ is used in $\ssa{\expr}$.  
-        \end{enumerate}
-        In the above three situations, our algorithm shows that $M[\ssa{y}^{(l,w)}][\ssa{x}^{(l',w')}] =1$ so that there is an edge from $\ssa{z}^{(l,w)}$ to $\ssa{x}^{(l', w')}$.  
-           
- \end{enumerate}
-   So we can show that there is path from the labelled variable in $\ssa{c_2'}$ to $\ssa{x}^{(l_1, w_1)}$ when $\ssa{c_2'}$ indirectly depends on $\ssa{x}^{(l_1,w_1)}$.
-    \end{enumerate}
-\end{enumerate}
-%
-%
-%
-\caseL{
-\todo{ 
-Case: $\inferrule
-{
-B= |\ssa{\bar{x}}| 
-\and
-{\Gamma \vdash^{(i, i+B)}_{M_{10}, V_{10}} [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] }
-\and
-{\Gamma \vdash^{(i+B,i+B+A )}_{M_{20}, V_{20}} \ssa{c} 
-}
-\\
-\forall 1 \leq j < N. 
-{\Gamma \vdash^{(i+j*(B+A), i+B+j*(B+A))}_{M_{1j}, V_{1j}}  } [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]
-\and
-{\Gamma \vdash^{(i+B+j*(B+A),i+B+A+j*(B+A) )}_{M_{2j}, V_{2j}} \ssa{c} 
-}
-\\
-{\Gamma \vdash^{(i+N*(B+A) ,i+N*(B+A)+B )}_{M, V} [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]
-% : \Psi \Rightarrow \Phi \land e_N = \lceil{z}\rceil 
-}
-\and
-{ \ssa{a} = \lceil {N} \rceil }
-\and
-{M' = M+ \sum_{0 \leq j <N} M_{1j}+M_{2j}  }
-\\
-{V' = V \uplus \sum_{0 \leq j <N} V_{1j} \uplus V_{2j}  }
-}
-{\Gamma \vdash^{(i, i+N*(B+A)+B   )}_{M', V'} 
-[\eloop ~ \ssa{\aexpr}, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l}
-% : \Phi \land \expr_N = \lceil { N} \rceil \Rightarrow \Phi \land \expr_N = \lceil{0}\rceil
-}~\textbf{loop}$
-}
-}
-Given a memory $\ssa{m}$, database $D$, trace $t$, loop maps $w$, a global list $G$. Suppose we have $ G \vDash M',V'$ and $G;w \vDash (\eloop ~ \ssa{\aexpr}, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}),i, i+ N*(B+A)+B $ , suppose $\config{\ssa{m,a}} \to v_N$, then from the following ssa operational semantics:
-\[
-{\inferrule
-{
- {\ssa{ \valr_N > 0} }\and 
- { \ssa{n} = 0 \implies i =1 } \and
- { \ssa{n} > 0 \implies i =2 }
-}
-{
-\config{ \ssa{m,  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} } ,  t, w }
-\xrightarrow{} \config{\ssa{ m, c[\bar{x_i} /  \bar{x}   ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ c]^{l} },  t, (w + l)  }
-}
-~\textbf{ssa-loop}
-}
-\]
-\[
-{
-\inferrule
-{
- \valr_N = 0 \and
- { \ssa{n} = 0 \implies i =1 } \and
- { \ssa{n} > 0 \implies i =2 }
-}
-{
-\config{\ssa{m,  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} } ,  t, w }
-\xrightarrow{} \config{\ssa{ m[\bar{x} \mapsto m(\bar{x_i})], [\eskip]^{l} },  t, (w \setminus l)  }
-}
-~\textbf{ssa-loop-exit}
-}
-\]
-
-When $v_N= 0$, the body is not executed and the new generated trace is empty, this case is trivially proved. 
-
-When $e_N = N$ for a positive integer $N$, there will be $N$ iterations. The execution as follows :
-\[
-\begin{array}{l}
-\config{\ssa{m,  [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  ,  t, w} } \xrightarrow{} \config{\ssa{ m, c[\bar{x_1} /  \bar{x}   ];  [\eloop ~ (\valr_N-1), 1, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ c]^{l} ,  t, (w + l) } } \xrightarrow{} \\
-\config{\ssa{m_1},  [\eloop ~ \valr_N-1, 1, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l},  t_1 , w_1    } \dots \config{\ssa{m_N}, [\eskip]^{l} ,  t_N, (w_N \setminus l) }
-\end{array}
-\]
-
-We need to show:
-\begin{enumerate}
-    \item $ G_{s}( [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} ,D,\ssa{m},w) \subseteq G_{ssa}(M', V' ,i, i+N*(B+A)+B)$.
-    \item $K_{  [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} } \leq |V' | $.
-\end{enumerate}
-
-From our assumption $G;w \vDash (\eloop ~ \ssa{\aexpr}, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}),i, i+ N*(B+A)+B$, we denote $G' = G[0, \ldots, (i-1)]$, so we have:
-\[
-\inferrule
-{
-{G_0 = G' \quad w_0 =w }
-\and
-\forall 0 \leq z < N. 
-{ G_z ++ \ssa{[\bar{x}^{(l, {w_z}+l)}]} ; (w_z+l); \ssa{c} \to G_{z+1} ; w_{z+1}  }
-\\
-{G_f = G_N ++ \ssa{[\bar{x}^{(l, w_N \setminus l)}]} }
-\and
-{ \ssa{a = \lceil {N} \rceil} }
-}
-{G'; w; [\eloop ~ \ssa{a}, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l} \to G_f; w_N\setminus l
-}~\textbf{loop}
-\]
-We can show that $G[0, \ldots, (i+B-1)] = G_0 ++ \ssa{[\bar{x}^{(l, {w_z}+l)}]}  $ because $B= |\bar{x}|$, and $G[0,\ldots, (i+B+A)] = G_1$ because $A$ is the number of variables assigned in $\ssa{c}$. So we have $G ; w \vDash (\ssa{c}, i+B, i+B+A)$, $G; w_1 \vDash (\ssa{c}, i+B+1*(B+A), i+B+A+1*(B+A))$, until $G, w_{N-1} \vDash (\ssa{c}, i+B+(N-1)*(B+A), i+B+A+(N-1)*(B+A)) $ .
-
-By induction hypothesis on premise ${\Gamma \vdash^{(i+B,i+B+A )}_{M_{20}, V_{20}} \ssa{c} }$, we conclude about the first iteration.
-
-\[ G_{s}( \ssa{c[\bar{x_1} / \bar{x}]} ,D,\ssa{m},w) \subseteq G_{ssa}(M_{20}, V_{20} ,i+B, i+B+A) \land K_{   c} \leq |V_{20} |  \]
-
-By induction hypothesis on premise ${\Gamma \vdash^{(i+B+j*(B+A),i+B+A+j*(B+A) )}_{M_{2j}, V_{2j}} \ssa{c} 
-}$ for $ 0 <j <N$, we have:
-
-\[ G_{s}( \ssa{c[\bar{x_2} / \bar{x}] },D,\ssa{m_j},w_j) \subseteq G_{ssa}(M_{2j}, V_{2j} ,i+B+j*(B+A), i+B+A+j*(B+A)) \land K_{c} \leq |V_{2j} |  \]
-
-We can show the first goal: $K_{ [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}} = N* K_{c} \leq \sum_{0\leq j <N}(|V_{2j}|)$. Because the non-zeros of any two $V_{2j}$,$V_{2i}$ ($i \not = j$) are disjoint.
-
-Then we need to show:\[G_{s}( [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} ,D,\ssa{m},w) \subseteq G_{ssa}(M', V' ,i, i+N*(B+A)+B)\]
-
-Unfold the definition of subgraph $\subseteq$, we need to show two cases.
-\begin{enumerate}
-    \item The vertices in $G_{s}( [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} ,D,\ssa{m},w)$ can be mapped to the vertices in $G_{ssa}(M', V' ,i, i+N*(B+A)+B)$ by $f_{D,m}$. We know that there exists function $f_{D, m_j,c}$ for $G_{s}( \ssa{c} ,D,\ssa{m_j},w_j)$ when $ 0 \leq j <N $. We can have \[f_{D,m}(vx) = \begin{array}{ll}
-        f_{D, m_j,c}(vx) &  vx = \query(v),l,w_j)  
-    \end{array}  \] 
-    \item Every edge in $G_{s}( [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l} ,D,\ssa{m},w)$ can be mapped to a corresponding path in $G_{ssa}(M', V' ,i, i+N*(B+A)+B)$. The edges $(vx_1,vx_2)$ can be divided into two categories.
-    \begin{enumerate}
-        \item $vx_1, vx_2$ appear in the same iteration ($t_{j+1} - t_{j} $) when $0 \leq j < N$ and $t_0 = t$.   We know that $(vx_1,vx_2) \in G_{s}(\ssa{c}, D, \ssa{m_j}, w_j)$ so we can find a path $p(f_{D,M}(vx_1), f_{D,m}(vx_2))$  in $G_{ssa}(M_{2j}, V_{2j} ,i+B+j*(B+A), i+B+A+j*(B+A) )$. We can easily show that $G_{ssa}(M_{2j}, V_{2j} ,i+B+j*(B+A), i+B+A+j*(B+A) ) $ is a subgraph of $G_{ssa}(M', V' ,i, i+N*(B+A)+B)$.
-        \item $vx_1,vx_2$ comes from different iterations $j_1(t_{j_1+1}-t_{j_1})$,$j_2 (t_{j_2+1} - t_{j_2})$ where $0 \leq j_1 < j_2 <N$. We assume $vx_1 = q_1(v_1)^{(l_{1}',w_{j_1}')}$ and $vx_2 = q_2(v_2)^{(l_{2}',w_{j_2}')}$.
-         We unfold the definition of one edge so that we have:
-        \[  \mathsf{DEP}(vx_1,vx_2, [\eloop ~ \valr_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l},w) \land \mathsf{To}(vx_1,vx_2) \]
-        We know that $q_1(v_1)^{(l_1',w_{j_1}')}$ in the trace $t_{j_1+1} - t_{j_1} $ comes from a command $\ssa{c_1}=[ \ssa{\assign{x}{q_1(e_1)}}]^{l_1'} $  We assume the loop body $\ssa{c} = \ssa{c_0;c_1 ;c_2 }$ then we have:
- \[
- \inferrule{
-  { \config{\ssa{m}, [\eloop ~ v_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l},  t,w} \rightarrow^{*} }
-  \\
-  {\config{\ssa{m_{j_1}'}, [\assign{\ssa{x}}{q_1(v_1)}]^{l_1'} ;\ssa{c_2}; [\eloop ~ (v_N - j_1), j_1, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l},
-  t_{j_1}',w_{j_1}'}  \rightarrow^{*}}
-  \\
-  {\config{\ssa{m_{j_1}}, [\eloop ~ (v_N - j_1), j_1, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l},
-  t_{j_1}, w_{j_1}} \rightarrow^{*} }
-  \\
-  {
-\config{\ssa{m_N}, [\eskip]^{l}, (t_N,w_N/l)}
-}}
-  {\config{\ssa{m}, [\eloop ~ v_N, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l},  t,w} \rightarrow^{*} \config{\ssa{m_N}, [\eskip]^{l}, (t_N,w_N/l)} }
- \]
- From the definition of $\mathsf{DEP}$, we conclude that there exists a value $v$ of $q_1(D)$, assigned to variable $\ssa{x}^{(l_1',w_{j_1}')}$, such that $ q_2(v_2)^{(l_2',w_{j_2}')} \not\in t_{j_2+1}-t_{j_2}$. 
- 
- Similarly, we know that $q_2^{(l_2',w_{j_2}')}$ in the trace comes from a command $\ssa{c_2'} = [\assign{\ssa{y}}{q_2(e_2)}]^{l_2'}$. We know that the execution of $\ssa{c_2'}(\ssa{y}^{(l_2', w_{j_2}')})$ depends on $\ssa{x}^{(l_1',w_{j_1}')}$. 
-   
- Similar as we show in sequence case, we now need to show there exists a path in $G_{ssa}$ from  $\ssa{y}^{(l_2', w_{j_2}')} $ to $\ssa{x}^{(l_1',w_{j_1}')} $ if the former affect the appearance of the later. 
- 
-   
- We first show that $\ssa{y}^{(l_2', w_{j_2}')}$ will not directly depend on $\ssa{x}^{(l_1',w_{j_1}')}$  based on the position of $\ssa{c_2'}$ in $\ssa{c}$, there are three situations:
- \begin{enumerate}
-     \item $l_2' < l_1'$ so that $\ssa{c_2'} \in \ssa{c_0}$. $\ssa{y}^{(l_2', w_{j_2}')}$ will not directly depend on $\ssa{x}^{(l_1',w_{j_1}')}$ because $c_2$ appears before the assignment of $\ssa{x}$ at line $l_1'$.  
-     \item $l_2' = l_1'$ so that $q_1= q_2$ and $\ssa{x}=\ssa{y}$. It is the same reason as previous case that $\ssa{x}^{(l_1',w_{j_2}')}$ does not directly depend on $\ssa{x}^{(l_1',w_{j_1}')}$.
-     \item $l_2' > l_1'$ so that $\ssa{c_2'} \in \ssa{c_2}$. In this case, $\ssa{y}^{(l_2',w_{j_2}')}$ still does not directly depend on $\ssa{x}^{(l_1',w_{j_1}')}$ because there is only a direct edge between variables in the same iteration, while according to our assumption, it is not true.
- \end{enumerate}
- 
-   Then, we show $\ssa{y}^{(l_2', w_{j_2}')}$ indirectly depends on $\ssa{x}^{(l_1', w_{j_1}')}$.  
-    There exists a sequence of labelled variables $lv_1,lv_2, \ldots, lv_n $ for such that :1. $lv_1$ directly depends on $\ssa{x}^{(l_{1}',w_{j_1}')}$. 2. $lv_i$ directly depends on $lv_j$ when $i = j+1 \land 1 <i < n $. 3. $\ssa{y}^{(l_2', w_{j_2}')}$ directly depends on $lv_n$. 
-    
-    We now show that direct dependence between any two labelled variables $\ssa{y}^{(l,w)}$ and $\ssa{x}^{(l',w')}$ in ssa language is tracked by our algorithm.
-    
-     There are three possible situations:
-        \begin{enumerate}
-            \item The assignment statement $ [\assign{\ssa{y}}{\ssa{\expr}}] $, and $\ssa{x}$ appears in $\ssa{\expr}$. This case also covers the variables in $\bar{\ssa{x}}$ of our loop statement, because we treat $[\bar{x}, \bar{x_1}, \bar{x_2}]$ as assignment $\ssa{x} = \ssa{x_1} + \ssa{x_2} $ to allow the values of variables passed to next iteration.
-            \item The assignment of $\ssa{y}$ (either $[\assign{\ssa{y}}{\ssa{\expr}}]^{l}$ or $[\assign{\ssa{y}}{q}]^{l}$) appears in either branch of an if statement. $\ssa{x}$ is used in $b$.
-            \item A switch statement assigns variable $\ssa{y}$ such as $[\eswitch(\ssa{\expr}, \ssa{y},(v_j \rightarrow q_j )]^{l}$ and the variable $\ssa{x}$ is used in $\ssa{\expr}$.  
-        \end{enumerate}
-        In the above three situations, our algorithm shows that $M[\ssa{y}^{(l,w)}][\ssa{x}^{(l',w')}] =1$ so that there is an edge from $\ssa{z}^{(l,w)}$ to $\ssa{x}^{(l', w')}$.
-
-        So we can show that there is path from the labelled variable in $\ssa{y}^{(l_2',w_{j_2}')}$ to $\ssa{x}^{(l_1', w_{j_1}')}$ when $\ssa{y}^{(l_2',w_{j_2}')}$ indirectly depends on $\ssa{x}^{(l_1', w_{j_1}')}$.
-    \end{enumerate}
-\end{enumerate}  
-\end{itemize}
-\end{proof}
-%
+}%
 %
 \section{\todo{Examples}}
 
