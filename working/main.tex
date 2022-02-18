@@ -2453,9 +2453,35 @@ Operations on the data flow matrices $\Mtrix_1$ and $\Mtrix_2$ are defined as fo
 := \Mtrix_2 \cdot \Mtrix_1 + \Mtrix_1 + \Mtrix_2
 \end{equation}
 %
-There are 2 special matrices used for generating the data flow matrix $M$ in the analysis algorithm. They are the left matrix $\mathsf{L_i}$ and right matrix $\mathsf{R_{(e, i)}}$.
+Below is an example of the data flow matrix $\Mtrix$ and $\flag$ for the program $c$.
+$$
+\ssa{c} = 
+\begin{array}{l}
+\left[\ssa{\assign {x_1} {q}}		\right]^1;
+\\
+\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;
+\\
+\left[\ssa{\assign {x_3} {x_2 + 2}}	\right]^3
+\end{array}
+~~~~~~~~~~~~
+\Mtrix
+=  \left[ 
+\begin{matrix}
+ & (x_1) & (x_2) & (x_3) \\
+(x_1) & 0 & 0 & 0 \\
+(x_2) & 1 & 0 & 0 \\
+(x_3) & 1 & 1 & 0 \\
+\end{matrix} \right] ~ , 
+\flag = \left [ \begin{matrix}
+(x_1) &  1 \\
+(x_2) & 0 \\
+(x_3) & 0 \\
+\end{matrix} \right ]
+$$
+%
+There are two special matrices used for generating the data flow matrix $M$ in the analysis algorithm. They are the left matrix $\mathsf{L_i}$ and right matrix $\mathsf{R_{(e, i)}}$.
 
-The left matrix $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
+The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
 \begin{defn}[Left Matrix ($\mathsf{L_i}$)].
 \\
 The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, s.t.,:
@@ -2485,16 +2511,35 @@ $\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
 \]
 where $FV(e)$ is the set of free variables in expression $e$.
 %
+%
 \end{defn}
+%
+Using the same program $c$ as above with assigned variables $\avar = [ \ssa{x_1 , x_2 , x_3} ] $,
+the left and right matrices are as follows w.r.t. its $2$-nd command 
+$\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;$ 
+is as follows
+\[
+\sf{L}_1 = \left[ \begin{matrix}
+ 0   \\
+ 1 	 \\
+ 0  \\
+\end{matrix}   \right ] 
+~~~~~~~~~~~~~~
+\sf{R}_{\ssa{x_1 + 1}, 1}
+= \left[ \begin{matrix} 
+   1 & 0 & 0 \\
+   % (x_1) & (x_2) & (x_3) \\
+\end{matrix}  \right]
+\]
 %
 Some useful definition on the notations:
 \begin{defn}[Valid matrix]
-For a global list $\avar$, $\avar \vDash (M,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
-and the matrix $M$ is of size $|\flag| \times |\flag|$.
+For a global list $\avar$, $\avar \vDash (\Mtrix,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
+and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
 Operations on Matrix are defined as follows:
 \begin{equation}
-M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2 
+\Mtrix_1 ; \Mtrix_2  :=  \Mtrix_2 \cdot \Mtrix_1 + \Mtrix_1 + \Mtrix_2 
 \end{equation}
 %
 %
@@ -2503,24 +2548,6 @@ Given an assigned variable list $\avar$, a loop maps $w$, $\avar;w \vDash (\ssa{
 $\avar' = \avar[0,\ldots, i_1-1], \avar';w; \ssa{c} \to \avar'' ; w' \land \avar'' = \avar[0, \ldots, i_2-1] $.  
 \end{defn}
 %
-We give an example of the data flow matrix $M$ and $V$ of the program $c$, to better understanding these notations.
-$$
-c= \begin{array}{c}
-\ssa{\assign {x_1} {q}} ;        \\
-\ssa{\assign {x_2} {x_1+1}} ;\\
-\ssa{\assign {x_3} {x_2+2} }
-\end{array}~~~~~~~~~~~~
-M =  \left[ \begin{matrix}
- & (x_1) & (x_2) & (x_3) \\
-(x_1) & 0 & 0 & 0 \\
-(x_2) & 1 & 0 & 0 \\
-(x_3) & 1 & 1 & 0 \\
-\end{matrix} \right] ~ , V = \left [ \begin{matrix}
-(x_1) &  1 \\
-(x_2) & 0 \\
-(x_3) & 0 \\
-\end{matrix} \right ]
-$$
 %
 \subsection{Algorithmic Analysis Rules}
 %
@@ -2615,8 +2642,8 @@ In this data flow matrix generating algorithm, we analyze the data flow informat
 We track the data flow relations between all these assigned variables. These relation informations is stored in a matrix $M$, whose size is $|\avar| \times |\avar|$. 
 We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\avar|$. 
 %
-The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. 
-$\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $\avar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
+The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{\Mtrix; \flag; {i_2}}$. 
+$\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\avar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 It is a matrix of one row and $N$ columns such that $N = |\avar|=|\flag|$.
 %
 %
@@ -2626,28 +2653,33 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 %
 {$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
 %
-$ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} \triangleq { \forall 0 \leq z < |\bar{x}|.  \Gamma \vdash_{M_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ where $M = \sum_{z\in [|\bar{x}|] }M_{x_z} $
+$ \Gamma \vdash_{
+\Mtrix, v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} 
+\ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} 
+\triangleq { \forall 0 \leq z < |\bar{x}|.  
+\Gamma \vdash_{\Mtrix_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ 
+where $\Mtrix = \sum_{z\in [|\bar{x}|] } \Mtrix_{x_z} $
 %%
 %
-\framebox{$ {\Gamma} \vdash^{i_1, i_2}_{M,V} ~ c $}
+\framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
 \begin{mathpar}
 \inferrule
-{M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
+{\Mtrix = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
 }
 {
- \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{M; \flag_{\emptyset}; i+1 }
+ \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{\Mtrix; \flag_{\emptyset}; i+1 }
 }
 ~\textbf{\graphGen-asgn}
 \and
 {
 \inferrule
-{M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
+{\Mtrix = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
 \\
 \flag = \mathsf{L}(i) \and \flag(i) = 1
 }
 { 
 \ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
-{M;\flag;i+1}
+{\Mtrix;\flag;i+1}
 }~\textbf{\graphGen-query}}
 %
 \and 
@@ -2655,27 +2687,27 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 {
 \inferrule
 {
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ M_1;\flag_1;i_2 }}
+{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ \Mtrix_1;\flag_1;i_2 }}
 \and 
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1);\ssa{c_2} ; i_2 }{ M_2; \flag_2 ;i_3}}
+{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1);\ssa{c_2} ; i_2 }{ \Mtrix_2; \flag_2 ;i_3}}
 \\
 {\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
 %
 \\
 %
-{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
+{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
 %
 \\
 %
-{\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
+{\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
 \\
-{M = (M_1+M_2)+ M_x+M_y +M_z }
+{\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
 }
 {
 \ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
 \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
 [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
-\ssa{ c_1, c_2)} ; i_1}{ M ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
+\ssa{ c_1, c_2)} ; i_1}{ \Mtrix ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
 }
 ~\textbf{\graphGen-if}
 }
@@ -2686,13 +2718,13 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 %
 \inferrule
 {
-{\ad{\Gamma; \ssa{c_1} ; i_1 }{ M_1 ; \flag_1; i_2 }  }
+{\ad{\Gamma; \ssa{c_1} ; i_1 }{ \Mtrix_1 ; \flag_1; i_2 }  }
 \and 
 {
-\ad{\Gamma;\ssa{c_2}; i_2}{M_2; \flag_2 ;i_3 }}
+\ad{\Gamma;\ssa{c_2}; i_2}{ \Mtrix_2; \flag_2 ;i_3 }}
 }
 {
-\ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{(M_1 {;} M_2) ; \flag_1 \uplus V_2 ; i_3  }
+\ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{( \Mtrix_1 {;} \Mtrix_2) ; \flag_1 \uplus V_2 ; i_3  }
 }
 ~\textbf{\graphGen-seq}
 %
@@ -2705,17 +2737,17 @@ $ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_
 {
 B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 \\
-{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{M_{1};V_{1}; i+B+(B+A) }}
+{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{ \Mtrix_{1};V_{1}; i+B+(B+A) }}
 \\
 {
-\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{M_{2}; \flag_{2}; i+B+A+(B+A) }
+\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{ \Mtrix_{2}; \flag_{2}; i+B+A+(B+A) }
 }
 \\
 {
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{M; \flag ;i+(B+A)+B}
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{ \Mtrix; \flag ;i+(B+A)+B}
 }
 \\
-{M' = M + ( M_{1}+M_{2})  }
+{ \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
 \and
 {
 \flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
@@ -2725,25 +2757,13 @@ B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 \ewhile ~ [ b ]^{l} ~ \ssa{n} ~
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
 ~ \edo ~  c;
-i }{ M';V' ;i+(B+A)+B }
+i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 }~\textbf{\graphGen-while}
 }
 \end{mathpar}
 %
-Still use the program $c$ as the example, the global list $\avar$ is now : $ [ x_1 , x_2 , x_3] $. 
-The function $\mathsf{Left}$ and $\mathsf{Right}$ is used to generate the corresponding vector of the left side and right side of an assignment. Take $\assign {x_2} {x_1+1} $ as an example, the result is shown as follows.
-\[
-\sf{L}(1) = \left[ \begin{matrix}
- 0  & ~~~(x_1) \\
- 1 & ~~~(x_2) \\
- 0 & ~~~(x_3) \\
-\end{matrix}   \right ] ~~~~~~~~~~~~~~
-\sf{R} (x_1+1, 1) = \left[ \begin{matrix} 
-   1 & 0 & 0 \\
-   (x_1) & (x_2) & (x_3) \\
-\end{matrix}  \right]
-\]
-Now let us think about the while loop.
+The following example program $\ssa{c_3}$ while loop illustrates how the algorithm works and generates the corresponding 
+data flow matrix for $\ssa{c_3}$.
 %
 \[
 {\ssa{c_3} \triangleq
@@ -2764,7 +2784,7 @@ Now let us think about the while loop.
 \end{array}
 ,
 ~~~~~~
-M =  \left[ \begin{matrix}
+\Mtrix =  \left[ \begin{matrix}
  & (x_1)  & (y_1) & (x_2) & (x_3) &  (z_1) & i_1 & i_2 & i_3\\
 (x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 (y_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1\\
@@ -2777,7 +2797,7 @@ M =  \left[ \begin{matrix}
 \end{matrix} \right]
 ,
 ~~~~~~
-V = \left [ \begin{matrix}
+\flag = \left [ \begin{matrix}
 (x_1) & 1 \\
 (x_3) & 2 \\
 (y_1) & 1 \\
@@ -2805,7 +2825,7 @@ V = \left [ \begin{matrix}
      \left[ \assign{z_1}{x_3 + 2}  \right]^{7}
 \end{array}
 ~~~~~~~~~~~~
-M =  \left[ \begin{matrix}
+\Mtrix =  \left[ \begin{matrix}
  & (x_1) & (x_3^{1}) & (y_1^{1}) & (x_3^{1})  & (x_3^{2}) & (y_1^{2}) & (x_2^{2}) & (x_3^{f}) &  (z_1) \\
 (x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 \\
 (x_3^{1}) & 1 & 0 & 0 & 0 & 0 & 0 & 0&0&0\\
@@ -2816,7 +2836,8 @@ M =  \left[ \begin{matrix}
 (x_2^{2}) & 0 & 0 & 0 & 0 & 1 & 1 & 0& 0&0\\
 (x_3^{f}) & 1 & 0 & 0 & 0 & 0 & 0 & 1& 0&0\\
 (z_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 &0 \\
-\end{matrix} \right] ~ , V = \left [ \begin{matrix}
+\end{matrix} \right] ~ , 
+\flag = \left [ \begin{matrix}
 (x_1) &  1 \\
 (x_3^{1}) & 0 \\
 (y_1^{1}) & 1 \\
@@ -2845,7 +2866,7 @@ M =  \left[ \begin{matrix}
     \left[ \assign{z_1}{x_3 + 2}  \right]^{6}
 \end{array},
 ~~~~~~
-M =  \left[ \begin{matrix}
+\Mtrix =  \left[ \begin{matrix}
  & (x_1) & i_1 & (x_3) & (i_3) & (z_1)  \\
 (x_1) & 0 & 0 & 0 & 0 & 0 \\
 (i_1) & 0 & 0 & 0 & 0 & 0 \\
@@ -2854,7 +2875,7 @@ M =  \left[ \begin{matrix}
 (z_1) & 0 & 0 & 1 & 0 & 0 \\
 \end{matrix} \right],
 ~~~~~~
-V = \left [ \begin{matrix}
+\flag = \left [ \begin{matrix}
 (x_1)  & 1 \\
 (i_1)  & 0 \\
 (x_3)  & 2 \\
@@ -2878,12 +2899,13 @@ V = \left [ \begin{matrix}
     \left[ \assign{z_1}{x_3 + 2}  \right]^{6}
 \end{array}
 ~~~~~~~~~~~~
-M =  \left[ \begin{matrix}
+\Mtrix =  \left[ \begin{matrix}
  & (x_1) & (x_3^{f}) & (z_1)  \\
 (x_1) & 0 & 0 & 0 \\
 (x_3^{f}) & 1 & 0 & 0 \\
 (z_1^{2}) & 0 & 1 & 0 \\
-\end{matrix} \right] ~ , V = \left [ \begin{matrix}
+\end{matrix} \right] ~ , 
+\flag = \left [ \begin{matrix}
 (x_1) &  1 \\
 (x_3^{f}) & 0 \\
 (z_1) &  0 \\
@@ -2914,7 +2936,7 @@ We can now look at the if statement.
 \end{array}
 \]
 \[
-M_{c4} =  \left[ \begin{matrix}
+\Mtrix_{c4} =  \left[ \begin{matrix}
  & (x_1) & (y_1) & (x_2) & (x_3)  & (y_2) & (x_4) & (y_3) & (z_1)  \\
 (x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0  \\
 (y_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0&0\\
@@ -2924,7 +2946,8 @@ M_{c4} =  \left[ \begin{matrix}
 (x_4) & 0 & 0 & 1 & 1 & 0 & 0 & 0 &0\\
 (y_3) & 0 & 1 & 0 & 0 & 1 & 0 & 0 &0\\
 (z_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0  \\
-\end{matrix} \right] ~ , V_{c4} = \left [ \begin{matrix}
+\end{matrix} \right] ~ , 
+\flag_{c4} = \left [ \begin{matrix}
 (x_1) &  1 \\
 (y_1) & 1 \\
 (x_2) & 1 \\
