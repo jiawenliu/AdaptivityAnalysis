@@ -2343,60 +2343,64 @@ This proof is similar when it comes to the exit as in case 1.
 %
 %
 \section{\THESYSTEM}
-There are two steps for our algorithm to get the estimation of the adaptivity of a program $\ssa{c}$ in the ssa form. 
+There are three steps for our algorithm to get the adaptivity of a program $\ssa{c}$ based on analyzing the program. 
 \begin{enumerate}
     % \item Estimate the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
     % \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
-    \item We first collect the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable list $\avar$. 
+    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable list $\avar$. 
     %
-    \item Then, we track the data flow relations between all these assigned variables. These relation informations is stored in a matrix $M$, whose size is $|\avar| \times |\avar|$. 
+    \item Tracking the data flow relations between all these assigned variables. These relation informations is stored in a matrix $M$, whose size is $|\avar| \times |\avar|$. 
     We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\avar$. 
     %
-    \item With all these informations from previous steps, we generate a program-based dependency graph $\progG$ and compute its adaptivity.
+    \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute its adaptivity.
 \end{enumerate}
 
 In the following subsections, 
-we first define the notations and symbols being used in \THESYSTEM with a simple example for understanding these definitions. 
-Then we present the algorithmic analysis rules with
-3 examples illustrating how \THESYSTEM works.
-In the following subsections, we present the adaptivity analysis based on the programs' analyze results from \THESYSTEM, and its soundness w.r.t. the trace-based analysis.
+we first define the notations and symbols being used in \THESYSTEM  with a simple example for understanding these definitions. 
+Then we present the algorithmic analysis rules, which is the core of the \THESYSTEM, with
+3 examples illustrating how \THESYSTEM  works.
+In the following subsections, we present the adaptivity analysis based on the \THESYSTEM's analyzing results, and the soundness w.r.t. the trace-based analyzing results in previous sections.
 
 \subsection{Notations}
 %
 \label{subsec:alg_notation}
 %
 \begin{defn}[Assigned Variables ($\avar$)]
-The assigned variables of commands is defined below:
+Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. It is defined as follows:
 $$
 \begin{array}{lll}
-   \avar(c) & = x & c = x = e \\
-     &  = x & x = q(\qexpr) \\
-     & = \avar(c_1) \cup \avar (c_2) & c = c_1;c_2\\
-     & = \avar(c_1) \cup \avar (c_2) & c = if (b , c_1, c_2) \\
-     & = \avar (c) & c = while (b,c)
+   \avar(\ssa{c}) 	
+   		& = [x] 									& \ssa{c} 	= \ssa{\assign x e} \\
+     	& = [x] 									& \ssa{c} 	= \ssa{\assign x q(\qexpr)} \\
+     	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	& \ssa{c} 	= \ssa{c_1};\ssa{c_2}\\
+     	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	& \ssa{c} 	= \ssa{\eif (b , c_1, c_2}) \\
+     	& = \avar(\ssa{c}) 							& \ssa{c} 	= \ssa{\ewhile (b,\ssa{c})}
 \end{array}
 $$
 \end{defn}
 %
 \begin{defn}[Variable Flags ($\flag$)].
 \\
-$\flag$ is a vector of length $N$, s.t.:
+Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $v$ showing up as the $i$-th element in $\avar$, i.e., $v = \avar(i)$:
 %
 %
 \[
 	F(i) := 
 	\left\{
 	\begin{array}{ll}
-	1 & \text{the i-th variable is assigned by a query} \\
-	2 & \text{the i-th variable is showing up inside a while loop or if-else branches} \\
-	0 & o.w.
+	1 & \text{the i-th variable $v = \avar(i)$ is assigned by a query in $\ssa{c}$}
+	\\
+	2 & \text{the i-th variable $v = \avar(i)$ is showing up inside a while loop or $\eif$ branches} 
+	\\
+	0 & \text{o.w.}
 	\end{array}
-	\right., i = 1, \ldots, N
+	\right., 
+	i = 1, \ldots, |\avar|.
 \] 
 \end{defn}
 %
 Operations on $\flag$ are defined as follows:
-\[
+\begin{equation}
 \begin{array}{lll}
 {\flag_1 \uplus \flag_2} & := &
 \left\{
@@ -2407,37 +2411,49 @@ Operations on $\flag$ are defined as follows:
 \\
 {\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
 \end{array}
-\]
+\end{equation}
 
-\begin{defn}[Data Flow Direction ($\flowsto$)]
-A variable $x$ flows to another variable y in a program c denoted as $\flowsto(x,y,c)$ = ...
-\end{defn}
-%
-%
-\begin{defn}[Data Flow Matrix ($M$)]
-A data flow matrix $M$ is a matrix of size $N \times N$ s.t.
-
-$M((V,E)) =\{ \{0,1\}^{n,n}   | \forall x, y , (x, y) \in E \implies M(x, y) = 1  \land \forall x, y. M(x,y) = 0 \implies (x,y) \not \in E  \} $
+\begin{defn}[Data Flow Direction ($\flowsto$)].
 \\
-\todo{add M(x,y) definition}
+Given a program  $\ssa{c}$ with its assigned variables $\avar$,
+and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\avar$ 
+(i.e., $\ssa{x} = \avar(i)$ and $\ssa{y} = \avar(j)$),
+$\ssa{y}$ is defined as flows to $\ssa{x}$ in $\ssa{c}$, $\flowsto(\ssa{x, y, c})$ if and only if 
+there exists
+a command $\assign{\ssa{x}}{\expr}$ or $\assign{\ssa{x}}{\query(\qexpr)}$ in $\ssa{c}$ s.t.,
+\[
+	y \in FV(\expr) \cup FV(\qexpr) \land j < i,
+\]
+where $FV(\expr)$ and $FV(\qexpr)$ is the set of free variables in 
+expression $\expr$ and query expression $\qexpr$ respectively.
 \end{defn}
 %
-Operations on matrices are defined as follows.
+%
+\begin{defn}[Data Flow Matrix ($\Mtrix$)]
+Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
+its data flow matrix $\Mtrix$ is a matrix of size $N \times N$ s.t.
+$\forall x, y \in \avar, x = \avar(i), y = \avar(j)$:
+%
+\[
+\Mtrix(\ssa{c}, \avar)(i, j) :=
+\left\{
+\begin{array}{ll}
+1	&	\flowsto(\ssa{x, y, c}) \\
+0	& o.w.
+\end{array}
+\right.
+\]
+%
+\end{defn}
+%
+Operations on the data flow matrices $\Mtrix_1$ and $\Mtrix_2$ are defined as follows:
 %
 \begin{equation}
-\begin{array}{lll}
-M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
-\flag_1 \uplus \flag_2 & := & \left\{
-\begin{array}{ll}
-1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
-0 & o.w.
-\end{array}\right.
-\\
-{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
-\end{array}
+\Mtrix_1 ; \Mtrix_2 
+:= \Mtrix_2 \cdot \Mtrix_1 + \Mtrix_1 + \Mtrix_2
 \end{equation}
 %
-There are 2 special matrices used for generating the data flow matrix $M$ in the analysis algorithm. They are the left matrix $\mathsf{L_i}$ and right matrix $\mathsf{R_(e, i)}$.
+There are 2 special matrices used for generating the data flow matrix $M$ in the analysis algorithm. They are the left matrix $\mathsf{L_i}$ and right matrix $\mathsf{R_{(e, i)}}$.
 
 The left matrix $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
 \begin{defn}[Left Matrix ($\mathsf{L_i}$)].
@@ -2454,7 +2470,7 @@ The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, s.t.,
 \]
 \end{defn}
 %
-$\mathsf{R(e, i)}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $\avar$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $\avar$.
+The right matrix $\mathsf{R_{(e, i)}}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $\avar$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $\avar$.
 \begin{defn}[Right Matrix ($\mathsf{R_{e, i}}$)].
 \\
 $\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
@@ -2468,7 +2484,7 @@ $\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
 	\right., j = 1, \ldots, N,
 \]
 where $FV(e)$ is the set of free variables in expression $e$.
-
+%
 \end{defn}
 %
 Some useful definition on the notations:
