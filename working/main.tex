@@ -1394,7 +1394,8 @@ $\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and
 % We denote the path from vertex $({\qval},l,w)$ to vertex $({\qval}',l',w')$ as $p_s(({\qval},l,w),({\qval}',l',w'))$. 
 %
 $$
-A(\ssa{c}) = \max \big \{ {\tt len}(p) \ | \ m\in {\tt Mem},D\in {\tt DB},p \in \path(G(c, D, m)) \big \} 
+A(\ssa{c}) = \max \big 
+\{ {\tt len}(p) \ \mid \ m\in \memdom,D\in \dbdom ,p \in \path(G(c, D, m)) \big \} 
 $$
 }
 \end{defn}
@@ -1624,6 +1625,31 @@ c_3 \triangleq
 \end{array}
 \]
 }
+%
+\begin{figure}
+   \[
+ \begin{array}{lll}
+    | 
+    \ewhile ~ [ \ssa{\bexpr} ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
+    |_{low}  
+    &=&  
+    \jl{\ewhile ~ [|\ssa{\bexpr}|_{low}]^{l},  ~ \edo ~ |\ssa{c}|_{low} 
+    }\\
+      |\ssa{c_1 ; c_2}|_{low}  &=& |\ssa{c_1}|_{low} ; |\ssa{c_2}|_{low} \\
+       |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|_{low}  &=&
+       [\eif(|\sbexpr|_{low}, |\ssa{ c_1}|_{low}, |\ssa{c_2}|_{low})]^{l}\\
+       | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}|_{low} & = & [\assign {|\ssa{x}|_{low}}{|\ssa{\expr}|_{low}} ]^{l}  \\
+       | [\assign {\ssa{x}}{q} ]^{l} |_{low} & = & [\assign {|\ssa{x}|_{low}}{q}]^{l} \\
+       |x_i|_{low} & = & x \\
+       |n |_{low} & = & n \\
+      | \ssa{\aexpr_1} \oplus_{a} \ssa{\aexpr_2} |_{low} & = &  |\ssa{\aexpr_1}|_{low} \oplus_a |\ssa{\aexpr_2}|_{low} \\
+      | \ssa{\bexpr_1} \oplus_{b} \ssa{\bexpr_2} |_{low} & = &  |\ssa{\bexpr_1}|_{low} \oplus_b |\ssa{\bexpr_2}|_{low}
+ \end{array}
+\]
+    \caption{The erasure of SSA}
+    \label{fig:ssa_erasure-while}
+\end{figure}
+%
 %
 \jl{
 \subsection{The soundness of the transformation}
@@ -2308,153 +2334,7 @@ So we can show that before the exit of the loop after ($v_N= n $) iterations, we
 %
 This proof is similar when it comes to the exit as in case 1. 
 }
-%
-% \caseL{Case 
-% $\todomath{
-% \inferrule{
-%     {\delta ; \aexpr \hookrightarrow \ssa{\aexpr} }
-%     \and
-%     { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-%     \and 
-%      { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }
-%      \\
-%     { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-%     \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-%     \and {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-%     \and 
-%     {\ssa{c'= c_1[\bar{x}'/ \bar{x_1}] = c_2[\bar{x}'/ \bar{x_2}]  } }
-%     % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
-%   }{ 
-%   \delta ;  [\eloop ~ \aexpr ~ \edo ~ c ]^{l} \hookrightarrow [\ssa{\eloop ~ \aexpr, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c'} }]^{l} ; \delta[\bar{x} \to \ssa{\bar{x}'}]; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
-% }~{\textbf{S-LOOP}} 
-% }$ 
-% % 
-% }
-% We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$. Suppose $ \config{m ,a} \to v_N $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
-
-%  When the loop is still running ($v_N > 0$), we have the following level evaluation:
-% \[
-% {\inferrule
-% {
-%  \valr_N > 0
-% }
-% {
-% \config{m, [\eloop ~ \valr_N  ~ \edo ~ c]^{l} ,  t, w }
-% \xrightarrow{} \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) }
-% }
-% ~\textbf{loop}
-% }
-% \]
-% We then have the following evaluation:
-% \[
-%  \inferrule{
-%  \config{m, c , t, (w + l)  } \to^{*} \config{m', \eskip , t'_{1}, w'   }
-%  }{
-%  \config{m, c ;  [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t, (w + l) } 
-%  \to^{*} \config{m',   [\eloop ~ (\valr_N-1) ~ \edo ~ c ]^{l},  t'_{1}, w'  } 
-%   }
-% \]
-%  We can have the following evaluation of the ssa-form using the rule $\textbf{ssa-loop}$, when we assume  $ ,m = \delta^{-1}(\ssa{m})$.
-
-% \[
-% {\inferrule
-% {
-%  {\ssa{ \valr_N > 0} }\and 
-%  { \ssa{n} = 0 \implies i =1 } \and
-%  { \ssa{n} > 0 \implies i =2 }
-% }
-% {
-% \config{ \ssa{{m},  [\eloop ~ \valr_N, n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c'} ]^{l}  ,  t, w} }
-% \xrightarrow{} \config{\ssa{{m}, c'[\bar{x_i}/ \bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ,  t, (w + l) } }
-% }
-% ~\textbf{ssa-loop}
-% }
-% \]
-% Depending on if the counter $n$ is equal to $0$ or not, there are two possible execution paths (the variables $\ssa{\bar{x}}$ is replaced by the $\ssa{\bar{x_1}}$ or $\ssa{\bar{x_2}}$). We start from the first iteration (when $n =0$) when $v_N >0$. 
-
-% By induction hypothsis on the premise $ { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$, we know that 
-% \[ \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l)  } \to^{*} \config{\ssa{{m'}, \eskip}, t'_{i}, w'  } \land m' = \delta_1^{-1}(\ssa{m'})   \]
-% Hence we can conclude that:
-% \[
-%   \inferrule{
-%    \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l) }  \to^{*} \config{\ssa{{m'}, \eskip}, t'_{1}, w'  }
-%   }{
-%   \config{\ssa{ {m}, c'[ \bar{x_1}/\bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t, (w + l)  }  \to^{*} \\ \config{ \ssa{{m'}, [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t'_{1}, w'  } 
-%   }
-% \]
-%  Then there are two cases, 
-%  \begin{enumerate}
-%      \item  when $v_N -1 =0$ so that the loop exits. The level execution as follows by the evaluation rule $\textbf{loop-exit}$.
-%      \[
-% \inferrule
-% {
-%  \valr_N -1 = 0
-% }
-% {
-% \config{m',  [\eloop ~ \valr_N-1 ~ \edo ~ c ]^{l} ,  t_i', w' }
-% \xrightarrow{} \config{m', [\eskip]^{l} ,  t_{1}', (w' \setminus l) }
-% }
-% ~\textbf{loop-exit}
-% \]
-% The corresponding ssa-form evaluation as follows:
-% \[
-% {
-% \inferrule
-% {
-%  \ssa{\valr_N -1} = 0
-% }
-% {
-% \config{\ssa{m',  [\eloop ~ \valr_N-1, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c} ]^{l}  },  t_{1}', w' }
-% \xrightarrow{} \config{\ssa{ m'[ \bar{x} \mapsto m'(\bar{x_2}) ], [\eskip]^{l} },  t_{1}', (w' \setminus l)  }
-% }
-% ~\textbf{ssa-loop-exit}
-% }
-% \]
-% We can see that both traces are not changed during the exit of the loop. We need to show that $ m' = \delta^{-1} (\ssa{m'[\bar{x} \mapsto m'(\bar{x_2})]}) $. We know that $[ \bar{x} \mapsto \bar{x_2}]$ in $\delta_1$ from the definition, so we can show that for any variable $\ssa{x_2} \in \bar{x_2}$, $( \ssa{x_2}, m'(x) ) \in \ssa{m'}$. For variables $x \in {\dom(\delta) - \bar{x} } $, the variable is not modified during the execution of $c$ so that we know $m(x) = m'(x)$, and then we can show that $(\delta(x), m'(x)) \in \ssa{m'} $ because $\delta(x)$ is not written in $\ssa{c'[\bar{x_1}/ \bar{x}']}$ .
-
-%      \item when $v_n -1 > 0$ so that the loop is still running. \\
-%      We want to show that : assuming in the $i-th$ $(i < v_N)$ iteration, starting with $t_i$ and $w_i$ and $m_i = \delta_1^{-1}(\ssa{m_i})$ so that the low level evaluation as follows $\config{m_i, [\eloop ~ \valr_N-i  ~ \edo ~ c]^{l} ,  t_{i}, w_i } \xrightarrow{}^{*} \config{m_{i+1},   [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i+1}, w_{i+1}  } $.
-%      Then the corresponding ssa form evaluation as follows : \[ 
-%      \inferrule{}{\config{\ssa{ {m_i},  [\eloop ~ (\valr_N-i), n, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } } \]  
-%      and $m_i = \delta^{-1}(\ssa{m_i}) $.
-     
-%      We then have the low level evauation:
-%      \[
-% \jl{\inferrule
-% {
-%  \valr_N-i > 0
-% }
-% {
-% \config{m_i, [\eloop ~ \valr_N-i  ~ \edo ~ c]^{l} ,  t_{i}, w_i }
-% \xrightarrow{} \config{m_i, c ;  [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i}, (w_{i} + l) }
-% }
-% ~\textbf{loop}
-% }
-% \]
-% We then have the following evaluation:
-% \[
-%  \inferrule{
-%  \config{m_i, c , t_i, (w_i + l)  } \to^{*} \config{m_{i+1}, \eskip , t_{i+1}, w_{i+1}   }
-%  }{
-%  \config{m_i, c ;  [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_i, (w_i + l) } 
-%  \to^{*} \config{m_{i+1},   [\eloop ~ (\valr_N-i-1) ~ \edo ~ c ]^{l},  t_{i+1}, w_{i+1}  } 
-%   }
-% \]
-
-% By induction hypothsis on the premise $  { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }$, we know that 
-% \[ \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l)  } \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  } \land m_{i+1} = \delta_1^{-1}(\ssa{m_{i+1}})   \]
-% Hence we can conclude that:
-% \[
-%   \inferrule{
-%    \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l) }  \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  }
-%   }{
-%   \config{\ssa{ {m_i}, c'[ \bar{x_2}/\bar{x}'  ];  [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } 
-%   }
-% \]
-% So we can show that before the exit of the loop after ($v_N= n $) iterations, we have $t_{n} = t_{n}$ and $m_{n} = \delta_1^{-1}(\ssa{m_{n}})$.
-% This proof is similar when it comes to the exit as in case 1. 
-%  \end{enumerate}
- \end{itemize}
+\end{itemize}
 %
 \end{proof}
 %
@@ -2464,14 +2344,340 @@ This proof is similar when it comes to the exit as in case 1.
 %
 %
 \section{\THESYSTEM}
-\subsection{Analysis Rules/Algorithms of \THESYSTEM}
-%
 There are two steps for our algorithm to get the estimation of the adaptivity of a program $\ssa{c}$ in the ssa form. 
 \begin{enumerate}
     \item Estimate the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
     \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 \end{enumerate}
 
+In the following subsections, 
+we first define the notations and symbols being used in \THESYSTEM. 
+Then we present the algorithmic analysis rules with
+3 examples illustrating how \THESYSTEM works.
+In the following subsections, we present the adaptivity analysis based on the programs' analyze results from \THESYSTEM, and its soundness w.r.t. the trace-based analysis.
+
+\subsection{Notations}
+%
+\label{subsec:alg_notation}
+%
+\begin{defn}[Assigned Variables]
+The assigned variables of commands is defined below:
+$$
+\begin{array}{lll}
+   AVAR(c) & = x & c = x = e \\
+     &  = x & x = q(\qexpr) \\
+     & = AVAR(c_1) \cup AVAR (c_2) & c = c_1;c_2\\
+     & = AVAR(c_1) \cup AVAR (c_2) & c = if (b , c_1, c_2) \\
+     & = AVAR (c) & c = while (b,c)
+\end{array}
+$$
+\end{defn}
+
+\begin{defn}[FlowsTo]
+A variable x flows to another variable y in a program c denoted as $FlowsTo(x,y,c)$ = ...
+\end{defn}
+%
+%
+\begin{defn}[Data Flow Matrix ($M$)]
+An adjacency matrix M is the matrix representation of $G_{pa}(c) = (V,E)$.\\
+
+$M((V,E)) =\{ \{0,1\}^{n,n}   | \forall x, y , (x, y) \in E \implies M(x, y) = 1  \land \forall x, y. M(x,y) = 0 \implies (x,y) \not \in E  \} $
+\\
+\todo{add M(x,y) definition}
+\end{defn}
+%
+Operations on matrices are defined as follows.
+%
+\begin{equation}
+\begin{array}{lll}
+M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
+\flag_1 \uplus \flag_2 & := & \left\{
+\begin{array}{ll}
+1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
+0 & o.w.
+\end{array}\right.
+\\
+\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
+\end{array}
+\end{equation}
+\begin{defn}[Flag Vector ($\flag$)].
+\\
+$\flag$ is a vector of length $N$, s.t.:
+%
+%
+\[
+	F(i) := 
+	\left\{
+	\begin{array}{ll}
+	1 & \text{the i-th variable is assigned by a query} \\
+	2 & \text{the i-th variable is showing up inside a while loop or if-else branches} \\
+	0 & o.w.
+	\end{array}
+	\right., i = 1, \ldots, N
+\] 
+\end{defn}
+%
+Operations on $\flag$ are defined as follows:
+\[
+\begin{array}{lll}
+\jl{\flag_1 \uplus \flag_2} & := &
+\left\{
+\begin{array}{ll}
+1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
+0 & o.w.
+\end{array}\right.
+\\
+\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
+\end{array}
+\]
+The left matrix $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
+\begin{defn}[Left Matrix ($\mathsf{L_i}$)].
+\\
+The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, s.t.,:
+\[
+	\mathsf{L_i(j)} : = 
+	\left\{
+	\begin{array}{ll}
+	1 & j = i \\
+	0 & o.w.
+	\end{array}
+	\right., j = 1, \ldots, N
+\]
+\end{defn}
+%
+$\mathsf{R(e, i)}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $G$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $G$.
+\begin{defn}[Right Matrix ($\mathsf{R_{e, i}}$)].
+\\
+$\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
+\[
+	\mathsf{R_{e, i}(j)} : = 
+	\left\{
+	\begin{array}{ll}
+	1 & j \in Var(e) \\
+	0 & o.w.
+	\end{array}
+	\right., j = 1, \ldots, N
+\]
+\end{defn}
+%
+Some useful definition on the notations:
+\begin{defn}[Valid matrix]
+For a global list $G$, $G \vDash (M,\flag)$ iff the cardinality of $G$ equals to the one of $\flag$, $|G| = |\flag|$ 
+and the matrix $M$ is of size $|\flag| \times |\flag|$.
+\end{defn}
+Operations on Matrix are defined as follows:
+\begin{equation}
+M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2 
+\end{equation}
+
+
+\begin{defn}[Valid index]
+For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' = G[0,\ldots, i_1-1], G';w; \ssa{c} \to G'' ; w' \land G'' = G[0, \ldots, i_2-1] $.  
+\end{defn}
+
+\begin{defn}[Valid gamma]
+$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
+\end{defn}
+
+
+
+
+$\Gamma$ is a matrix of one row and $N$ columns, 
+$N = |G|=|\flag|$.
+
+%
+{$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
+\subsection{Algorithmic Analysis Rules}
+%
+\paragraph{Variable Collection Algorithm}
+We first show how $G$ will be collected (via the command $\assign{x}{\expr}$ or $\assign{x}{\query}$). , through a variable estimating algorithm $\varEst$ of the form $\ag{G; w; \ssa{c}}{ G'; w'} $ in Figure~\ref{fig:var_estimate}. 
+The input of $\varEst$ is a list of estimated annotated variables $G$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
+The output of the algorithm is the updated global list $G'$, along with the updated while map $w$ for later estimation.   
+%
+\begin{figure}
+\begin{mathpar}
+\inferrule
+{
+}
+{ \ag{G ;w; \ssa{[\assign {x}{\expr}]^{l}}}{G ++ [\ssa{x}^{(l,w)}];w}
+}
+~\textbf{\varEst-asgn}
+\and
+\inferrule
+{
+}
+{ \ag{G ;w;  [ \assign{\ssa{x}}{\query(\ssa{\expr})}]^{l}}{  G ++ [\ssa{x}^{(l,w)}] ; w} 
+}~\textbf{\varEst-query}
+%
+\and 
+%
+\inferrule
+{
+\ag{G; w; \ssa{c_1}}{  G_1;w_1}
+\and 
+ \ag{G_1;w ; \ssa{c_2}}{  G_2; w_2}
+ \\
+ {G_3 = G_2 ++ \ssa{[\bar{x}^{(l,w)}]++ \ssa{[\bar{y}^{(l,w)}]}++ \ssa{[\bar{z}^{(l,w)}]} }}
+}
+{
+\ag{G; w;
+[\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{ G_3 ;w}
+}~\textbf{\varEst-if}
+%
+%
+%
+\and 
+%
+\inferrule
+{
+\ag{G; w; \ssa{c_1}}{ G_1; w_1}
+\and 
+\ag{G_1;w_1; \ssa{c_2}}{ G_2; w_2}
+}
+{
+\ag{G; w;
+\ssa{(c_1 ; c_2)}}{  G_2 ; w_2}
+}
+~\textbf{\varEst-seq}
+\and 
+%
+\and 
+%
+\jl{
+\inferrule
+{
+{ \ag{ G ++ \ssa{[\bar{x}^{(l, w + l)}]} ; (w + l); \ssa{c}}{ G' ; w'}  }
+\and
+{G_f = G' ++ \ssa{[\bar{x}^{(l, w' \setminus l)}]} }
+}
+{
+\ag{G; w; 
+\ewhile ~ [ b ]^{l} ~ \ssa{n} ~ 
+[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
+~ \edo ~  c }{ G_f; w\setminus l }
+}
+~\textbf{\varEst-while}
+ }
+\end{mathpar}
+ \caption{The algorithm $\varEst$ }
+    \label{fig:var_estimate}
+\end{figure}
+%
+The assignment is the source of variables $\varEst$ estimates, 
+	in the case $\textbf{\varEst-asgn}$ and $\textbf{\varEst-query}$, 
+	the output global list is extended by $\ssa{x}^{(l,w)}$. 
+	When it comes to the if command in the rule $\textbf{ag-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$. 
+	The sequence is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ in a sequence $\ssa{c_1;c_2}$. 
+	The while considers the while iterations as well by assuming the while iteration counter $\ssa{\aexpr}$ to be certain natural number $N$ in the rule $\textbf{\varEst-while}$. 
+	The algorithm counts the assigned variables in every iteration, including those new assigned variables in $\bar{\ssa{x}}$, those variables assigned in the body $\ssa{c}$, with the appropriate annotation showing the iteration number of the variables.     
+%
+\paragraph{Data Flow Analysis Algorithm}
+%
+%
+$ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} \triangleq { \forall 0 \leq z < |\bar{x}|.  \Gamma \vdash_{M_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ where $M = \sum_{z\in [|\bar{x}|] }M_{x_z} $\\
+
+\framebox{$ {\Gamma} \vdash^{i_1, i_2}_{M,V} ~ c $}
+\begin{mathpar}
+\inferrule
+{M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
+}
+{
+ \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{M; \flag_{\emptyset}; i+1 }
+}
+~\textbf{\graphGen-asgn}
+\and
+\jl{
+\inferrule
+{M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
+\\
+\flag = \mathsf{L}(i) \and \flag(i) = 1
+}
+{ 
+\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
+{M;\flag;i+1}
+%  \vdash^{(i, i+1)}_{M, V} [ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} 
+}~\textbf{\graphGen-query}}
+%
+\and 
+%
+\jl{
+\inferrule
+{
+{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ M_1;\flag_1;i_2 }}
+\and 
+{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1);\ssa{c_2} ; i_2 }{ M_2; \flag_2 ;i_3}}
+\\
+{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
+%
+\\
+%
+{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
+%
+\\
+%
+{\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
+\\
+{M = (M_1+M_2)+ M_x+M_y +M_z }
+}
+{
+\ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
+\bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
+[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
+\ssa{ c_1, c_2)} ; i_1}{ M ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
+}
+~\textbf{\graphGen-if}
+}
+%
+%
+%
+\and 
+%
+\inferrule
+{
+{\ad{\Gamma; \ssa{c_1} ; i_1 }{ M_1 ; \flag_1; i_2 }  }
+\and 
+{
+\ad{\Gamma;\ssa{c_2}; i_2}{M_2; \flag_2 ;i_3 }}
+}
+{
+\ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{(M_1 {;} M_2) ; \flag_1 \uplus V_2 ; i_3  }
+}
+~\textbf{\graphGen-seq}
+%
+\and 
+%
+\and 
+%
+\jl{ 
+\inferrule
+{
+B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
+\\
+{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{M_{1};V_{1}; i+B+(B+A) }}
+\\
+{
+\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{M_{2}; \flag_{2}; i+B+A+(B+A) }
+}
+\\
+{
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{M; \flag ;i+(B+A)+B}
+}
+\\
+{M' = M + ( M_{1}+M_{2})  }
+\and
+{
+\flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
+}
+{
+\ad{\Gamma;
+\ewhile ~ [ b ]^{l} ~ \ssa{n} ~
+[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
+~ \edo ~  c;
+i }{ M';V' ;i+(B+A)+B }
+}~\textbf{\graphGen-while}
+}
+\end{mathpar}
+%
 We give an example of $M$ and $V$ of the program $c$.   
 $$
 c= \begin{array}{c}
@@ -2696,375 +2902,11 @@ M_{c4} =  \left[ \begin{matrix}
 \end{matrix} \right ]
 \]
 %
-\jl{
-\subsection{Variable Estimation algorithm}
-We first show how $G$ will be collected (via the command $\assign{x}{\expr}$ or $\assign{x}{\query}$). , through a variable estimating algorithm $\varEst$ of the form $\ag{G; w; \ssa{c}}{ G'; w'} $ in Figure~\ref{fig:var_estimate}. 
-The input of $\varEst$ is a list of estimated annotated variables $G$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
-The output of the algorithm is the updated global list $G'$, along with the updated while map $w$ for later estimation.   
-}
+%   
 %
-\begin{figure}
-\begin{mathpar}
-\inferrule
+%
+\subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
 {
-}
-{ \ag{G ;w; \ssa{[\assign {x}{\expr}]^{l}}}{G ++ [\ssa{x}^{(l,w)}];w}
-% G ;w; \ssa{[\assign {x}{\expr}]^{l}} \to G ++ [x^{(l,w)}];w 
-}
-~\textbf{\varEst-asgn}
-\and
-\inferrule
-{
-}
-{ \ag{G ;w;  [ \assign{\ssa{x}}{\query(\ssa{\expr})}]^{l}}{  G ++ [\ssa{x}^{(l,w)}] ; w} 
-}~\textbf{\varEst-query}
-%
-\and 
-%
-\inferrule
-{
-\ag{G; w; \ssa{c_1}}{  G_1;w_1}
-\and 
- \ag{G_1;w ; \ssa{c_2}}{  G_2; w_2}
- \\
- {G_3 = G_2 ++ \ssa{[\bar{x}^{(l,w)}]++ \ssa{[\bar{y}^{(l,w)}]}++ \ssa{[\bar{z}^{(l,w)}]} }}
-}
-{
-\ag{G; w;
-[\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{ G_3 ;w}
-}~\textbf{\varEst-if}
-%
-%
-%
-\and 
-%
-\inferrule
-{
-\ag{G; w; \ssa{c_1}}{ G_1; w_1}
-\and 
-\ag{G_1;w_1; \ssa{c_2}}{ G_2; w_2}
-}
-{
-\ag{G; w;
-\ssa{(c_1 ; c_2)}}{  G_2 ; w_2}
-}
-~\textbf{\varEst-seq}
-\and 
-% \todomath{ 
-% \inferrule
-% {
-% {G_0 = G \quad w_0 =w }
-% \and
-% \forall 0 \leq z < N. 
-% { \ag{ G_z ++ \ssa{[\bar{x}^{(l, {w_z}+l)}]} ; (w_z+l); \ssa{c}}{ G_{z+1} ; w_{z+1}}  }
-% \\
-% {G_f = G_N ++ \ssa{[\bar{x}^{(l, w_N \setminus l)}]} }
-% \and
-% { \ssa{\aexpr} =  {N}  }
-% }
-% {\ag{G; w; [\eloop ~ \ssa{\aexpr}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l} }{ G_f; w_N\setminus l }
-% }~\textbf{\varEst-loop}
-% }
-%
-\and 
-%
-\jl{
-\inferrule
-{
-{ \ag{ G ++ \ssa{[\bar{x}^{(l, w + l)}]} ; (w + l); \ssa{c}}{ G' ; w'}  }
-\and
-{G_f = G' ++ \ssa{[\bar{x}^{(l, w' \setminus l)}]} }
-}
-{
-\ag{G; w; 
-\ewhile ~ [ b ]^{l} ~ \ssa{n} ~ 
-[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c }{ G_f; w\setminus l }
-}
-~\textbf{\varEst-while}
- }
-\end{mathpar}
- \caption{The algorithm $\varEst$ }
-    \label{fig:var_estimate}
-\end{figure}
-%
-\jl{
-	The assignment is the source of variables $\varEst$ estimates, 
-	in the case $\textbf{\varEst-asgn}$ and $\textbf{\varEst-query}$, 
-	the output global list is extended by $\ssa{x}^{(l,w)}$. 
-	When it comes to the if command in the rule $\textbf{ag-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$. 
-	The sequence is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ in a sequence $\ssa{c_1;c_2}$. 
-	The while considers the while iterations as well by assuming the while iteration counter $\ssa{\aexpr}$ to be certain natural number $N$ in the rule $\textbf{\varEst-while}$. 
-	The algorithm counts the assigned variables in every iteration, including those new assigned variables in $\bar{\ssa{x}}$, those variables assigned in the body $\ssa{c}$, with the appropriate annotation showing the iteration number of the variables.
-}      
-%
-\subsection{Matrix and Vector based algorithm}
-%
-%
-
-\begin{defn}[Assigned variables (labelled?)]
-The assigned variables of commands is defined below:
-$$
-\begin{array}{lll}
-   AVAR(c) & = x & c = x = e \\
-     &  = x & x = q(\qexpr) \\
-     & = AVAR(c_1) \cup AVAR (c_2) & c = c_1;c_2\\
-     & = AVAR(c_1) \cup AVAR (c_2) & c = if (b , c_1, c_2) \\
-     & = AVAR (c) & c = while (b,c)
-\end{array}
-$$
-\end{defn}
-
-\begin{defn}[FlowsTo]
-A variable x flows to another variable y in a program c denoted as $FlowsTo(x,y,c)$ = ...
-\end{defn}
-
-\begin{defn}[Estimated Dependency graph over assigned variables of a program]
-program analysis short for pa, the estimated graph with respect to a program c is defined as below:\\
-$
-G_{pa}(c) = (V,E) where V = AVAR(c) \\
-E = \{(x, y) | x, y \in V \land  FlowsTo(x, y, c)\}
-$
-\end{defn}
-
-\begin{defn}[matrix representation of $G_{pa}(c)$]
-An adjacency matrix M is the matrix representation of $G_{pa}(c) = (V,E)$.\\
-
-$M((V,E)) =\{ \{0,1\}^{n,n}   | \forall x, y , (x, y) \in E \implies M(x, y) = 1  \land \forall x, y. M(x,y) = 0 \implies (x,y) \not \in E  \} $
-\\
-\todo{add M(x,y) definition}
-\end{defn}
-
-\begin{defn}[Flag vectors]
-$F = \{ \{0,1,2\}^{n} |  ...   \}$
-\end{defn}
-
-
-
-\begin{defn}[Valid matrix]
-For a global list $G$, $G \vDash (M,\flag)$ iff the cardinality of $G$ equals to the one of $\flag$, $|G| = |\flag|$ 
-and the matrix $M$ is of size $|\flag| \times |\flag|$.
-\end{defn}
-Operations on Matrix are defined as follows:
-\begin{equation}
-M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2 
-\end{equation}
-
-
-\begin{defn}[Valid index]
-For a global list $G$, a loop maps $w$, $G;w \vDash (\ssa{c},i_1,i_2)$ iff $G' = G[0,\ldots, i_1-1], G';w; \ssa{c} \to G'' ; w' \land G'' = G[0, \ldots, i_2-1] $.  
-\end{defn}
-
-\begin{defn}[Valid gamma]
-$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
-\end{defn}
-
-
-
-
-$\Gamma$ is a matrix of one row and $N$ columns, 
-$N = |G|=|\flag|$.
-
-\begin{defn}[Variable Flags ($\flag$)].
-\\
-{
-$\flag$ is a vector of flags $f \in {0, 1, 2}$ for each variable v, s.t.:
-\begin{itemize}
-\item $F[v] = 1$, if $v$ is assigned by a query; 
-\item $F[v] = 2$ if $v$ is showing up inside a while loop or if-else branches;
-\item $F[v] = 0$ otherwise.
-\end{itemize}
-} 
-\end{defn}
-%
-Operations on $\flag$ are defined as follows:
-\[
-\begin{array}{lll}
-\jl{\flag_1 \uplus \flag_2} & := &
-\left\{
-\begin{array}{ll}
-1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
-0 & o.w.
-\end{array}\right.
-\\
-\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
-\end{array}
-\]
-The left matrix $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
-\begin{defn}[Left Matrix ($\mathsf{L_i}$)].
-\\
-The left matrix $\mathsf{L_i}$ generates a matrix of one column, $N$ rows, s.t.,:
-\[
-	\mathsf{L_i(j)} : = 
-	\left\{
-	\begin{array}{ll}
-	1 & j = i \\
-	0 & o.w.
-	\end{array}
-	\right., j = 1, \ldots, N
-\]
-\end{defn}
-
-$\mathsf{R(e, i)}$ generates a matrix of one row and $N$ columns, where the locations of variables in $e$ is marked as $1$. To handle loop, for instance, the variable $y$ appears many times in $G$, the argument $i$ helps to find the location of the current living variable $y$ in the expression $e$, which is the latest $y$ with the largest location $i_y< i$ in our global variable list $G$.
-\begin{defn}[Right Matrix ($\mathsf{R_{e, i}}$)].
-\\
-$\mathsf{R_{e, i}}$ generates a matrix of one row and $N$ columns, s.t.,:
-\[
-	\mathsf{R_{e, i}(j)} : = 
-	\left\{
-	\begin{array}{ll}
-	1 & j \in Var(e) \\
-	0 & o.w.
-	\end{array}
-	\right., j = 1, \ldots, N
-\]
-\end{defn}
-
-
-{$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
-
-$ \Gamma \vdash_{M,v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} \triangleq { \forall 0 \leq z < |\bar{x}|.  \Gamma \vdash_{M_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ where $M = \sum_{z\in [|\bar{x}|] }M_{x_z} $\\
-
-\framebox{$ {\Gamma} \vdash^{i_1, i_2}_{M,V} ~ c $}
-\begin{mathpar}
-\inferrule
-{M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
-}
-{
- \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{M; \flag_{\emptyset}; i+1 }
-}
-~\textbf{\graphGen-asgn}
-\and
-\jl{
-\inferrule
-{M = \mathsf{L}(i) * ( \mathsf{R}(\ssa{\expr},i) + \Gamma )
-\\
-\flag = \mathsf{L}(i) \and \flag(i) = 1
-}
-{ 
-\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
-{M;\flag;i+1}
-%  \vdash^{(i, i+1)}_{M, V} [ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} 
-}~\textbf{\graphGen-query}}
-%
-\and 
-%
-\jl{
-\inferrule
-{
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1); \ssa{c_1} ; i_1 }{ M_1;\flag_1;i_2 }}
-\and 
-{\ad{\Gamma + \mathsf{R}(\ssa{\bexpr}, i_1);\ssa{c_2} ; i_2 }{ M_2; \flag_2 ;i_3}}
-\\
-{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
-%
-\\
-%
-{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
-%
-\\
-%
-{\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ M_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
-\\
-{M = (M_1+M_2)+ M_x+M_y +M_z }
-}
-{
-\ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
-\bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
-[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
-\ssa{ c_1, c_2)} ; i_1}{ M ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
-}
-~\textbf{\graphGen-if}
-}
-%
-%
-%
-\and 
-%
-\inferrule
-{
-{\ad{\Gamma; \ssa{c_1} ; i_1 }{ M_1 ; \flag_1; i_2 }  }
-\and 
-{
-\ad{\Gamma;\ssa{c_2}; i_2}{M_2; \flag_2 ;i_3 }}
-}
-{
-\ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{(M_1 {;} M_2) ; \flag_1 \uplus V_2 ; i_3  }
-}
-~\textbf{\graphGen-seq}
-%
-\and 
-%
-\and 
-%
-\jl{ 
-\inferrule
-{
-B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
-\\
-{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{M_{1};V_{1}; i+B+(B+A) }}
-\\
-{
-\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{M_{2}; \flag_{2}; i+B+A+(B+A) }
-}
-\\
-{
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{M; \flag ;i+(B+A)+B}
-}
-\\
-{M' = M + ( M_{1}+M_{2})  }
-\and
-{
-\flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
-}
-{
-\ad{\Gamma;
-\ewhile ~ [ b ]^{l} ~ \ssa{n} ~
-[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c;
-i }{ M';V' ;i+(B+A)+B }
-}~\textbf{\graphGen-while}
-}
-\end{mathpar}
-%
-\begin{figure}
-   \[
- \begin{array}{lll}
-    | 
-    \ewhile ~ [ \ssa{\bexpr} ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
-    |_{low}  
-    &=&  
-    \jl{\ewhile ~ [|\ssa{\bexpr}|_{low}]^{l},  ~ \edo ~ |\ssa{c}|_{low} 
-    }\\
-      |\ssa{c_1 ; c_2}|_{low}  &=& |\ssa{c_1}|_{low} ; |\ssa{c_2}|_{low} \\
-       |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|_{low}  &=&
-       [\eif(|\sbexpr|_{low}, |\ssa{ c_1}|_{low}, |\ssa{c_2}|_{low})]^{l}\\
-       | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}|_{low} & = & [\assign {|\ssa{x}|_{low}}{|\ssa{\expr}|_{low}} ]^{l}  \\
-       | [\assign {\ssa{x}}{q} ]^{l} |_{low} & = & [\assign {|\ssa{x}|_{low}}{q}]^{l} \\
-       |x_i|_{low} & = & x \\
-       |n |_{low} & = & n \\
-      | \ssa{\aexpr_1} \oplus_{a} \ssa{\aexpr_2} |_{low} & = &  |\ssa{\aexpr_1}|_{low} \oplus_a |\ssa{\aexpr_2}|_{low} \\
-      | \ssa{\bexpr_1} \oplus_{b} \ssa{\bexpr_2} |_{low} & = &  |\ssa{\bexpr_1}|_{low} \oplus_b |\ssa{\bexpr_2}|_{low}
- \end{array}
-\]
-    \caption{The erasure of SSA}
-    \label{fig:ssa_erasure-while}
-\end{figure}
-
-
-\[
-\begin{array}{lll}
-M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
-\flag_1 \uplus \flag_2 & := & \left\{
-\begin{array}{ll}
-1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
-0 & o.w.
-\end{array}\right.
-\\
-\jl{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
-\end{array}
-\]
-%
  \begin{defn}
 [Program-Based Graph with Labels].
 \\
@@ -3078,10 +2920,6 @@ Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][
 Flags $\flag = \flag$
 }
  \end{defn} 
-     
-%
-\subsection{Variable Reachability Bounding Algorithm}
-\jl{
 Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for the variable $v$ in the program. The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachability bound of the variable in program $c$.
 }
 \\
@@ -3106,7 +2944,6 @@ $W = \{(v, w) | \forall ~ s \in V ~ s.t. ~\flag(s) > 0, w = \rb(v, c)\}
 \flag = \flag'
 \end{defn}  
 %
-\subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
 Given a program $\ssa{c}$, we generate its program-based graph 
 $\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$.
 %
