@@ -113,7 +113,6 @@ The key component of the system is an program analysis procedure, which provides
 \mbox{Arithmetic Expressions} & \aexpr & ::= & 
 	%
 	n ~|~ x ~|~ \aexpr \oplus_a \aexpr ~|~ \\
-% \sep \pi (l , \aexpr, \aexpr) \\
     %
 \mbox{Boolean Expressions} & \bexpr & ::= & 
 	%
@@ -121,27 +120,47 @@ The key component of the system is an program analysis procedure, which provides
 	 ~|~ \bexpr \oplus_b \bexpr
 	%
 	~|~ \aexpr \sim \aexpr \\
-\mbox{Expressions } & \expr & ::= & {\aexpr \sep \bexpr ~|~ [] ~|~ [\expr, \dots, \expr]} \\
-\mbox{Values } & v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
+%
+\mbox{Value} 
+& v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
 \\
-\mbox{Query expressions} & \qexpr & ::= 
+%
+\mbox{Expression} 
+& \expr & ::= & {\aexpr \sep \bexpr ~|~ [] ~|~ [\expr, \dots, \expr]} 
+\\
+%
+\mbox{Query Expression} 
+& \qexpr & ::= 
 & { \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
 \\
-\mbox{Query Values} & \qval & ::= 
+%
+\mbox{Query Value} & \qval & ::= 
 & { n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
 \\
-\mbox{{Labeled Commands}} & c & ::= 
+\mbox{{Labeled Command}} & c & ::= 
 	&   [\assign x \expr]^{l} ~|~  [\assign x q(\qexpr)]^{l}
 	\\
  	& & & ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 ~|~ [\eskip]^{l} 
  \\
-\mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
-\mbox{Trace} & t & ::= & [] 
-~|~ {{( \query(\qval), l, w) :: t}} \\
+\mbox{Memory} 
+& m & ::= & \emptyset ~|~ (x^{l} \to v) :: m 
+\\
 %
-\mbox{{While Maps}}
+\mbox{Trace} 
+& t & ::= & [] ~|~ {{( \query(\qval), l, w) :: t}} 
+\\
+%
+\mbox{While Map}
 & w & ::= & {[] |  w[l \to n]}
 \\
+%
+\mbox{Variables} 
+& \mathcal{Var}  & ::= & \{ x \}
+\\ 
+%
+\mbox{Values} 
+& \mathcal{Val}  & ::= & \{ v \}
+\\ 
 %
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
 ::= & {\{( \query(\qval), l, w) \} } 
@@ -934,37 +953,55 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \subsection{SSA-form While Language}
 \[
 \begin{array}{llll}
- \mbox{Arithmetic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
+ \mbox{Arithmetic Operators} 
+& \oplus_a & ::= & + ~|~ - ~|~ \times 
 %
 ~|~ \div \\  
-  \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
+\mbox{Boolean Operators} 
+& \oplus_b & ::= & \lor ~|~ \land ~|~ \neg
+\\
   %
-   \mbox{Relational Operators} & \sim & ::= & < ~|~ \leq ~|~ == \\  
- \mbox{Label} & l & := & \mathbb{N} \\ 
- \mbox{Loop Maps} & w & \in & \mbox{Label} \times \mathbb{N} \\
-\mbox{Arithmetic Expressions} & \saexpr & ::= & 
-	%
-	\textrm{n} ~|~ \textrm{x} ~|~ \saexpr \oplus_a \saexpr  \\
-    %
-\mbox{Boolean Expressions} & \bexpr & ::= & 
+\mbox{Relational Operators} 
+& \sim & ::= & < ~|~ \leq ~|~ == 
+\\  
+%
+\mbox{Label} 
+& l & := & \mathbb{N} 
+\\ 
+%
+\mbox{While Map} 
+& w & \in & \mbox{Label} \times \mathbb{N} 
+\\
+%
+\mbox{Arithmetic Expression} 
+& \saexpr & ::= & 
+\textrm{n} ~|~ \textrm{x} ~|~ \saexpr \oplus_a \saexpr  
+\\
+%
+\mbox{Boolean Expression} & \bexpr & ::= & 
 	%
 	\textrm{true} ~|~ \textrm{false}  ~|~ \neg \sbexpr
 	 ~|~ \sbexpr \oplus_b \sbexpr
 	%
 	~|~ \saexpr \sim \saexpr 
 	\\
-\mbox{Query expressions} & \qexpr & ::= 
+%
+\mbox{Query Expression} & \qexpr & ::= 
 & { \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
 \\
+%
 \mbox{Query Values} & \qval & ::= 
 & { n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
 \\
-\mbox{Expressions} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
-\\	
-\mbox{Labelled commands} & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
 %
-% ~|~ [\eswitch( \ssa{\expr}, \ssa{x}, \ssa{v_i} \to \ssa{ q_i})]^{l} 
-~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} \\ 
+\mbox{Expression} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
+\\	
+%
+\mbox{Labeled Command} 
+& \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
+%
+~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} 
+\\ 
 &&& 
 {\ewhile ~ [ b ]^{l} , n,
 ~ 
@@ -974,15 +1011,40 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 &&&
 ~|~ \ssa{c};\ssa{c}  
 ~|~ [\eif(\sbexpr, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , \ssa{c}, \ssa{c})]^l 
-~|~ [\eskip]^{l} \\
-\mbox{Memory} & m & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } \\
+~|~ [\eskip]^{l} 
+\\
 %
-\mbox{Trace} & t & ::= & [] ~|~ \ssa{{(\query(\qval), l , w ) :: t}} \\
-\mbox{Annotated Query} & \mathcal{AQ}  & 
+\mbox{Memory} 
+& m & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } 
+\\
+%
+\mbox{Trace} & t 
+& ::= & [] ~|~ \ssa{{(\query(\qval), l , w ) :: t}}
+\\
+%
+\mbox{SSA Variables} 
+& \mathcal{SV}  & ::= & \{ \ssa{x} \} 
+\\
+%
+\mbox{Labeled SSA Variables} 
+& \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)} \}
+%
+\\
+\mbox{Annotated Queries} & \mathcal{AQ}  & 
 ::= & {\{ (\query(\qval), l , w )  \} }
- \\
-\mbox{SSA Variables} & \mathcal{SV}  & ::= & \{ \ssa{x} \} \\
-\mbox{Labelled SSA Variables} & \mathcal{LV}  & ::= & \{ \ssa{x}^{(l,w)}  \}
+\\
+%
+\mbox{{Query Domain}}
+& \qdom & ::= & {[-1,1]}
+\\
+%
+\mbox{{Memory Domain}}
+& \memdom & ::= & {\{m\}}
+\\
+%
+\mbox{{Database Domain}}
+& \dbdom & ::= & {\{D\}}
+%
 \end{array}
 \]
 %
@@ -2283,7 +2345,9 @@ This proof is similar when it comes to the exit as in case 1.
 \section{\THESYSTEM}
 There are two steps for our algorithm to get the estimation of the adaptivity of a program $\ssa{c}$ in the ssa form. 
 \begin{enumerate}
-    \item Estimate the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
+    % \item Estimate the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
+    % \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
+    \item Collecting the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
     \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 \end{enumerate}
 
@@ -2297,47 +2361,20 @@ In the following subsections, we present the adaptivity analysis based on the pr
 %
 \label{subsec:alg_notation}
 %
-\begin{defn}[Assigned Variables]
+\begin{defn}[Assigned Variables ($\avar$)]
 The assigned variables of commands is defined below:
 $$
 \begin{array}{lll}
-   AVAR(c) & = x & c = x = e \\
+   \avar(c) & = x & c = x = e \\
      &  = x & x = q(\qexpr) \\
-     & = AVAR(c_1) \cup AVAR (c_2) & c = c_1;c_2\\
-     & = AVAR(c_1) \cup AVAR (c_2) & c = if (b , c_1, c_2) \\
-     & = AVAR (c) & c = while (b,c)
+     & = \avar(c_1) \cup \avar (c_2) & c = c_1;c_2\\
+     & = \avar(c_1) \cup \avar (c_2) & c = if (b , c_1, c_2) \\
+     & = \avar (c) & c = while (b,c)
 \end{array}
 $$
 \end{defn}
-
-\begin{defn}[FlowsTo]
-A variable x flows to another variable y in a program c denoted as $FlowsTo(x,y,c)$ = ...
-\end{defn}
 %
-%
-\begin{defn}[Data Flow Matrix ($M$)]
-An adjacency matrix M is the matrix representation of $G_{pa}(c) = (V,E)$.\\
-
-$M((V,E)) =\{ \{0,1\}^{n,n}   | \forall x, y , (x, y) \in E \implies M(x, y) = 1  \land \forall x, y. M(x,y) = 0 \implies (x,y) \not \in E  \} $
-\\
-\todo{add M(x,y) definition}
-\end{defn}
-%
-Operations on matrices are defined as follows.
-%
-\begin{equation}
-\begin{array}{lll}
-M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
-\flag_1 \uplus \flag_2 & := & \left\{
-\begin{array}{ll}
-1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
-0 & o.w.
-\end{array}\right.
-\\
-{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
-\end{array}
-\end{equation}
-\begin{defn}[Flag Vector ($\flag$)].
+\begin{defn}[Variable Flags ($\flag$)].
 \\
 $\flag$ is a vector of length $N$, s.t.:
 %
@@ -2367,6 +2404,37 @@ Operations on $\flag$ are defined as follows:
 {\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
 \end{array}
 \]
+
+\begin{defn}[Data Flow ($\flowsto$)]
+A variable x flows to another variable y in a program c denoted as $\flowsto(x,y,c)$ = ...
+\end{defn}
+%
+%
+\begin{defn}[Data Flow Matrix ($M$)]
+A data flow matrix $M$ is the of matrix of size $N \times N$ s.t.
+
+$M((V,E)) =\{ \{0,1\}^{n,n}   | \forall x, y , (x, y) \in E \implies M(x, y) = 1  \land \forall x, y. M(x,y) = 0 \implies (x,y) \not \in E  \} $
+\\
+\todo{add M(x,y) definition}
+\end{defn}
+%
+Operations on matrices are defined as follows.
+%
+\begin{equation}
+\begin{array}{lll}
+M_1 ; M_2 & := & M_2 \cdot M_1 + M_1 + M_2      \\
+\flag_1 \uplus \flag_2 & := & \left\{
+\begin{array}{ll}
+1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
+0 & o.w.
+\end{array}\right.
+\\
+{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
+\end{array}
+\end{equation}
+%
+There are 2 special matrices used for generating the data flow matrix $M$ in the analysis algorithm. They are the left matrix $\mathsf{L_i}$ and right matrix $\mathsf{R_(e, i)}$.
+
 The left matrix $\mathsf{L(i)}$ generates a matrix of one column, $N$ rows, where the $i-th$ row is $1$, all the other rows are $0$,
 \begin{defn}[Left Matrix ($\mathsf{L_i}$)].
 \\
@@ -2519,7 +2587,6 @@ The assignment is the source of variables $\varEst$ estimates,
 %
 $\Gamma$ is a matrix of one row and $N$ columns, 
 $N = |G|=|\flag|$.
-%
 %
 %
 \begin{defn}[Valid gamma]
