@@ -159,7 +159,7 @@ The key component of the system is an program analysis procedure, which provides
 \\ 
 %
 \mbox{Values} 
-& \mathcal{VL}  & ::= & \{ v \}
+& \mathcal{VAL}  & ::= & \{ v \}
 \\ 
 %
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
@@ -1028,7 +1028,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 \\
 \mbox{Values} 
-& \mathcal{VL}  & ::= & \{ v \}
+& \mathcal{VAL}  & ::= & \{ v \}
 %
 \\
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
@@ -1055,7 +1055,7 @@ We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa v
 and the boolean expression as $\ssa{\bexpr}$. 
 %
 The ssa expression can be either $\ssa{a}$ and $\ssa{b}$. 
-We also have the ssa variables annotated in a similar way as the annotated queries in the loop language, denoted as $\mathcal{LV}$. 
+We also have the ssa variables annotated in a similar way as the annotated queries in the while language.
 %
 The labelled commands $\ssa{c}$ are now in the ssa form. 
 % assignment
@@ -2993,39 +2993,73 @@ We can now look at the if statement.
 %
 %
 \subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
-{
+%
  \begin{defn}
 [Program-Based Graph].
 \\
-\todo{
-Given a program $\ssa{c}$ with its $\avar$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
-its program-based graph $G(\ssa{c}) = (V, E, W, \flag)$ is. defined as:
+Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
+its program-based graph 
+$G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \\
-Nodes $V = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
+\[
+\begin{array}{rlcl}
+\text{Vertexes} &
+\vertxs & := & \left\{ 
+\ssa{x^l} \middle\vert
+\ssa{x^l} = \avar(i), i = 1, \ldots, N 
+\right\}
 \\
-Edges $E = \{ 
-(G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
+\text{Directed Edges} &
+\edges & := & 
+\left\{ 
+(\ssa{x_1^{l_1}}, \ssa{x_2^{l_2}}) 
+\in \avar \times \avar 
+\middle\vert
+\begin{array}{l}
+\forall ~ i,j = 1, \ldots, N ~ s.t., ~\\
+\ssa{x_1^{l_1}} = \avar(i),  \ssa{x_2^{l_2}} = \avar(j) \land
+\Mtrix(i)(j) \geq 1
+\end{array} 
+\right\}
 \\
-Flags $\flag = \flag$
+\text{Flags} &
+\flag & := & 
+\left\{(\ssa{x^l}, f)  \in \vertxs \times \{0, 1, 2\} 
+\middle\vert 
+\forall i = 1, \ldots, N ~  s.t.
+\ssa{x^l} = \avar(i) \land f = \flag(i)
+\right\}
 \\
-$W = \{(v, w) | \forall ~ s \in V ~ s.t. ~\flag(s) > 0, w = \rb(v, c)\} 
-\cup \{(v, 1) | \forall ~ s \in V ~ s.t. ~\flag(s) = 0\}$
-}
+\text{Weights} &
+\weights & := &
+\bigcup
+\begin{array}{l}
+\left\{ (v, w) \in \vertxs \times (\mathbb{N} \cup \expr)
+\middle\vert
+\forall v \in \vertxs ~  s.t. ~ \flag(v) > 0 \land w = \rb(v, c)
+\right\} 
+\\
+\left\{(v, 1)  \in \vertxs \times \{1\} 
+\middle\vert 
+\forall v \in \vertxs ~  s.t. ~ \flag(v) = 0
+\right\}
+\end{array} 
+\end{array}
+\]
 \end{defn} 
-}
 %
 Given a program $\ssa{c}$, we generate its program-based graph 
-$\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$.
+$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$.
 %
 Then the program-based adaptivity for $c$ in our $\THESYSTEM$ is the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
 \begin{itemize}
 \item the number of query vertexes on this walk is maximum
-\item the visiting times of each vertex $s$ on this walk is bound by its reachability bound $W(s)$.
+\item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
 \end{itemize}
 
 \begin{defn}[Finite Walk ($k$)].
 \\
-Given a labeled weighted graph $G=(V,E,W,\flag )$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
 for which there is a sequence of vertexes $(v_1, \ldots, v_{n})$ such that:
 \begin{itemize}
     \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
@@ -3036,15 +3070,15 @@ $(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
 
 \begin{defn}[walk set ($\walk$)].
 \\
-Given a labeled weighted graph $G=(V,E,W,\flag )$, the walk set of $G$ ($\walk(G)$) is defined as a set containing all finite walks $k$ in $G$.
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, the walk set of $G$, ($\walk(G)$) is defined as a set containing all finite walks $k$ in $G$.
 \end{defn}
 %
 %
-\begin{defn}[Length of Finite Walk w.r.t Query ($\len_{\tt q}$)].
+\begin{defn}[Length of Finite Walk w.r.t Query ($\qlen$)].
 \\
-Given a labeled weighted graph $G=(V,E,W,\flag )$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
 \[
-	\len_{\tt q}(k) = \len\{ v \mid v \in \{v_1, \ldots, v_{n}\} \land F(v) = 1 \}
+	\qlen(k) = \len\{ v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \}
 \]
 \end{defn}
 
@@ -3055,13 +3089,13 @@ Given a labeled weighted graph $G=(V,E,W,\flag )$ and a \emph{finite walk} $k$ i
 \\
 {
 Given a program $\ssa{c}$ and its program-based graph 
-$\progG(\ssa{c}) = \big\{ V, E, W, \flag \big\}$,
+$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$,
 %
 the program-based adaptivity for $c$ is defined as%
 \[
-A_{\bf{prog}}(c) 
+A_{\bf{prog}}(\ssa{c}) 
 := \max
-\left\{ \len_{\tt q}(k)\ \mid \  k\in {\tt walk}(\progG(\ssa{c}))\right \}.
+\left\{ \qlen(k)\ \mid \  k\in \walk(\progG(\ssa{c}))\right \}.
 \]
 }
 % \[
@@ -3108,7 +3142,7 @@ The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algor
 \label{alg:adpt_walk}
 }
 \begin{algorithmic}
-\REQUIRE Weighted Directed Graph $G = (V, E, W, F)$ with a start vertex $s$ and destination vertex $t$ .
+\REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
 \STATE  {\bf {bfs $(G, s, t)$}:}  
 \STATE \qquad {\bf init} 
 current node: $c = s$, 
