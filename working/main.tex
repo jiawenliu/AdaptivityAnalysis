@@ -2399,26 +2399,45 @@ Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing
 $$
 \begin{array}{lll}
    \avar(\ssa{c}) 	
-   		& = [\ssa{x^{l}}] 									
+   		& = [\ssa{x}] 									
    		& \ssa{c} 	= 
    			[\ssa{\assign x e}]^{(l, w)} \\
-     	& = [\ssa{x^{l}}] 									
+     	& = [\ssa{x}] 									
      	& \ssa{c} 	= 
      		[\ssa{\assign x q(\qexpr)}]^{(l, w)} \\
      	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	
      	& \ssa{c} 	= \ssa{c_1};\ssa{c_2}\\
      	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 
-     	++ \ssa{[\bar{x}^{l}, \bar{y}^{l}, \bar{z}^{l}]} 
+     	++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
      	& \ssa{c} 	= \ssa{
      	[\eif (b ,[\bar{x}], [\bar{y}], [\bar{z}], c_1, c_2]^{(l, w)}}) \\
-     	& = \avar(\ssa{c}) ++ [\ssa{\bar{x}^{l}}]
+     	& = \avar(\ssa{c}) ++ [\ssa{\bar{x}}]
      	& \ssa{c} 	= \ssa{\ewhile ([b]^{(l, w)}, [x_1,x_2,x_3], {c})}
 \end{array}
 $$
 \end{defn}
 %
+Consider the program $c$ below in the left hand side as an example, it's assigned variables $\avar$ is as in the right hand side is shown as follows:
+$$
+\ssa{c} = 
+\begin{array}{l}
+\left[\ssa{\assign {x_1} {q}}		\right]^1;
+\\
+\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;
+\\
+\left[\ssa{\assign {x_3} {x_2 + 2}}	\right]^3
+\end{array}
+~~~~~~~~~~~~
+\avar = \left [ 
+\begin{matrix}
+\ssa{x_1} \\
+\ssa{x_2} \\
+\ssa{x_3} \\
+\end{matrix} \right ]
+$$
+%
 \begin{lem}
-For any program $\ssa{c}$, every variable in $\avar(c)$ is distinct
+For any program $\ssa{c}$, every variable in $\avar(\ssa{c})$ is distinct
 \end{lem}
 
 \begin{defn}[Variable Flags ($\flag$)].
@@ -2443,15 +2462,17 @@ Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a
 %
 Operations on $\flag$ are defined as follows:
 \begin{equation}
-\begin{array}{lll}
-{\flag_1 \uplus \flag_2} & := &
+\begin{array}{lllr}
+{\flag_1 \uplus \flag_2}(i) & := &
 \left\{
 \begin{array}{ll}
-1 & (\flag_1[i] = 1 \lor \flag_2[i] = 1) \land i = 1, \cdots, N \land |\flag_1| = |\flag_2|\\
+1 & (\flag_1(i) = 1 \lor \flag_2(i) = 1) \land |\flag_1| = |\flag_2|\\
 0 & o.w.
 \end{array}\right.
+& i = 1, \cdots, |\flag|  
 \\
-{\flag \uplus k} & := & \flag[i] = k , i = 1, \ldots, |\flag|    \\
+{\flag \uplus k}(i) & := & k 
+& i = 1, \ldots, |\flag|    \\
 \end{array}
 \end{equation}
 
@@ -2464,7 +2485,7 @@ $\ssa{y}$ is defined as flows to $\ssa{x}$ in $\ssa{c}$, $\flowsto(\ssa{x, y, c}
 there exists
 a command $\assign{\ssa{x}}{\expr}$ or $\assign{\ssa{x}}{\query(\qexpr)}$ in $\ssa{c}$ s.t.,
 \[
-	y \in FV(\expr) \cup FV(\qexpr) \land j < i,
+	\ssa{y} \in (FV(\expr) \cup FV(\qexpr)) \land j < i,
 \]
 where $FV(\expr)$ and $FV(\qexpr)$ is the set of free variables in 
 expression $\expr$ and query expression $\qexpr$ respectively.
@@ -2495,7 +2516,7 @@ Operations on the data flow matrices are defined as follows:
 := \Mtrix_2 \cdot \Mtrix_1 + \Mtrix_1 + \Mtrix_2
 \end{equation}
 %
-Below is an example of the data flow matrix $\Mtrix$ and $\flag$ for the program $c$.
+Consider the same program $c$ as above, its data flow matrix $\Mtrix$ and $\flag$ for the program $c$ is as follows:
 $$
 \ssa{c} = 
 \begin{array}{l}
@@ -2509,15 +2530,21 @@ $$
 \Mtrix
 =  \left[ 
 \begin{matrix}
- & (x_1) & (x_2) & (x_3) \\
-(x_1) & 0 & 0 & 0 \\
-(x_2) & 1 & 0 & 0 \\
-(x_3) & 1 & 1 & 0 \\
+ % & (x_1) & (x_2) & (x_3) \\
+% (x_1) & 0 & 0 & 0 \\
+% (x_2) & 1 & 0 & 0 \\
+% (x_3) & 1 & 1 & 0 \\
+ 0 & 0 & 0 \\
+ 1 & 0 & 0 \\
+ 1 & 1 & 0 \\
 \end{matrix} \right] ~ , 
 \flag = \left [ \begin{matrix}
-(x_1) &  1 \\
-(x_2) & 0 \\
-(x_3) & 0 \\
+% (x_1) & 1 \\
+% (x_2) & 0 \\
+% (x_3) & 0 \\
+1 \\
+0 \\
+0 \\
 \end{matrix} \right ]
 $$
 %
@@ -2818,11 +2845,15 @@ Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1
 The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachability bound of the variable in program $c$.
 
 
-The following example program $\ssa{c_3}$ while loop illustrates how the algorithm works and generates the corresponding 
-data flow matrix for $\ssa{c_3}$.
+The following example programs $\ssa{c}2$ and $\ssa{c}3$ with while loop illustrates how the algorithm works.
+The generated assigned variables, $\avar_{\ssa{c}2}$ and $\avar_{\ssa{c}3}$,
+data flow matrix $\Mtrix_{\ssa{c}2}$ and  $\Mtrix_{\ssa{c}3}$
+and variable flags $\flag_{\ssa{c}2}$ and $\flag_{\ssa{c}3}$
+for program $\ssa{c}2$ and $\ssa{c}3$
+are presented in the right hand side.
 %
 \[
-{\ssa{c_3} \triangleq
+{\ssa{c}2 \triangleq
 \begin{array}{l}
     \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ; 
     \\
@@ -2845,36 +2876,58 @@ data flow matrix for $\ssa{c_3}$.
     \left[ \ssa{\assign{z_1}{x_3 + 2}}  \right]^{7}
 \end{array}
 ,
-~~~~~~
-\Mtrix =  \left[ \begin{matrix}
- & (x_1)  & (y_1) & (x_2) & (x_3) &  (z_1) & i_1 & i_2 & i_3\\
-(x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(y_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
-(x_2) & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1 \\
-(x_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
-(z_1) & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-(i_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(i_2) & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 \\
-(i_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
-\end{matrix} \right]
+~~~~
+\avar_{\ssa{c}2} = \left [ \begin{matrix}
+\ssa{x}_1 \\
+\ssa{x}_3 \\
+\ssa{y}_1 \\
+\ssa{x}_2 \\
+\ssa{z}_1 \\
+\ssa{i}_1 \\
+\ssa{i}_2 \\
+\ssa{i}_3 
+\end{matrix} \right ]
+% \Mtrix =  \left[ \begin{matrix}
+%  & (x_1)  & (y_1) & (x_2) & (x_3) &  (z_1) & i_1 & i_2 & i_3\\
+% (x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+% (y_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+% (x_2) & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1 \\
+% (x_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
+% (z_1) & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+% (i_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+% (i_2) & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 \\
+% (i_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
+% \end{matrix} \right]
 ,
 ~~~~~~
-\flag = \left [ \begin{matrix}
-(x_1) & 1 \\
-(x_3) & 2 \\
-(y_1) & 1 \\
-(x_2) & 2 \\
-(z_1) & 0 \\
-(i_1) & 0 \\
-(i_2) & 2 \\
-(i_3) & 1 
+\Mtrix_{\ssa{c}2} =  \left[ \begin{matrix}
+ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+ 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1 \\
+ 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
+ 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+ 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 \\
+ 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
+\end{matrix} \right]
+,
+~~~~
+\flag_{\ssa{c}2} = \left [ \begin{matrix}
+ 1 \\
+ 2 \\
+ 1 \\
+ 2 \\
+ 0 \\
+ 0 \\
+ 2 \\
+ 1 
 \end{matrix} \right ]
 }
 \]
 %
 %
 \[
-{\ssa{c_3'} \triangleq
+{{\ssa{c}3}  \triangleq
 \begin{array}{l}
     \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ;
     \\
@@ -2892,48 +2945,73 @@ data flow matrix for $\ssa{c_3}$.
     \left[ \ssa{\assign{z_1}{x_3 + 2}}  \right]^{6}
 \end{array},
 ~~~~~~
-\Mtrix =  \left[ \begin{matrix}
- & (x_1) & i_1 & (x_3) & (i_3) & (z_1)  \\
-(x_1) & 0 & 0 & 0 & 0 & 0 \\
-(i_1) & 0 & 0 & 0 & 0 & 0 \\
-(x_3) & 1 & 0 & 0 & 0 & 0 \\
-(i_3) & 0 & 1 & 0 & 0 & 0 \\
-(z_1) & 0 & 0 & 1 & 0 & 0 \\
-\end{matrix} \right],
-~~~~~~
-\flag = \left [ \begin{matrix}
-(x_1)  & 1 \\
-(i_1)  & 0 \\
-(x_3)  & 2 \\
-(i_3)  & 2 \\
-(z_1)  & 0 \\
+\avar_{\ssa{c}3} = \left [ \begin{matrix}
+\ssa{x}_1 \\
+\ssa{i}_1 \\
+\ssa{x}_3 \\
+\ssa{i}_3 \\
+\ssa{z}_1 \\
+\end{matrix} \right ]
+% ,~~~~~~
+% \Mtrix =  \left[ \begin{matrix}
+%  & (x_1) & i_1 & (x_3) & (i_3) & (z_1)  \\
+% (x_1) & 0 & 0 & 0 & 0 & 0 \\
+% (i_1) & 0 & 0 & 0 & 0 & 0 \\
+% (x_3) & 1 & 0 & 0 & 0 & 0 \\
+% (i_3) & 0 & 1 & 0 & 0 & 0 \\
+% (z_1) & 0 & 0 & 1 & 0 & 0 \\
+% \end{matrix} \right]
+% ,~~~~~~
+% \flag = \left [ \begin{matrix}
+% (x_1)  & 1 \\
+% (i_1)  & 0 \\
+% (x_3)  & 2 \\
+% (i_3)  & 2 \\
+% (z_1)  & 0 \\
+% \end{matrix} \right ]
+,~~~~~~
+\Mtrix_{\ssa{c}3}  =  \left[ \begin{matrix}
+ 0 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 \\
+ 1 & 0 & 0 & 0 & 0 \\
+ 0 & 1 & 0 & 0 & 0 \\
+ 0 & 0 & 1 & 0 & 0 \\
+\end{matrix} \right]
+,~~~~~~
+\flag_{\ssa{c}3} = \left [ \begin{matrix}
+ 1 \\
+ 0 \\
+ 2 \\
+ 2 \\
+ 0 \\
 \end{matrix} \right ]
 }
 \]
 %
 We can now look at the if statement.
-\[ c_4 \triangleq
-\begin{array}{l}
-   \left[ x \leftarrow q_1 \right]^1; 
-   \\
-   \left[y \leftarrow q_2\right]^2 ; 
-   \\
-    \eif \;( x + y == 5 )^3
-    \\
-    \mathsf{then} ~ \left[ x \leftarrow q_3 \right]^4 \; \\
-    \mathsf{else} ~ \left[ x \leftarrow q_4 \right]^5 ; \\
-    y \leftarrow 2 ) ;\\
-   \left[ z \leftarrow x +y \right]^6; \\
-\end{array}
-\hspace{20pt} \hookrightarrow \hspace{20pt}
+\[ 
+% c_4 \triangleq
+% \begin{array}{l}
+%    \left[ x \leftarrow q_1 \right]^1; 
+%    \\
+%    \left[y \leftarrow q_2\right]^2 ; 
+%    \\
+%     \eif \;( x + y == 5 )^3
+%     \\
+%     \mathsf{then} ~ \left[ x \leftarrow q_3 \right]^4 \; \\
+%     \mathsf{else} ~ \left[ x \leftarrow q_4 \right]^5 ; \\
+%     y \leftarrow 2 ) ;\\
+%    \left[ z \leftarrow x +y \right]^6; \\
+% \end{array}
+% \hspace{20pt} \hookrightarrow \hspace{20pt}
 %
- \ssa{c_4} \triangleq
+ \ssa{c}4 \triangleq
 \begin{array}{l}
    	\left[ \ssa{ x_1 \leftarrow q_1} \right]^1; 
    	\\
    	\left[\ssa{ y_1 \leftarrow q_2} \right]^2 ; 
    	\\
-    \eif \;( \ssa{ x_1 + y_1 == 5} )^3, 
+    \eif \;( \ssa{ x_1 + y_1 == 5} )^3,  \\
     \ssa{[ x_4,x_2,x_3 ],[] ,[y_3,y_1,y_2 ]} 
     \\
     \mathsf{then} ~ \left[ \ssa{x_2 \leftarrow q_3}\right]^4 
@@ -2941,31 +3019,64 @@ We can now look at the if statement.
     \mathsf{else} ~ \left[ \ssa{x_3 \leftarrow q_4} \right]^5 ; 
     \\
     \ssa{y_2 \leftarrow 2} ) \\
-   \left[ \ssa{ z_1 \leftarrow x_4 +y_3 }\right]^6; \\
-\end{array}
-\]
-\[
-\Mtrix_{c4} =  \left[ \begin{matrix}
- & (x_1) & (y_1) & (x_2) & (x_3)  & (y_2) & (x_4) & (y_3) & (z_1)  \\
-(x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(y_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(x_2) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(x_3) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(y_2) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(x_4) & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
-(y_3) & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
-(z_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 \\
-\end{matrix} \right] ~ , 
-\flag_{c4} = \left [ \begin{matrix}
-(x_1) &  1 \\
-(y_1) & 1 \\
-(x_2) & 1 \\
-(x_3) &  1 \\
-(y_2) & 0 \\
-(x_4) & 0 \\
-(y_3) &  0 \\
-(z_1) &  0 \\
+   \left[ \ssa{ z_1 \leftarrow x_4 +y_3 }\right]^6
+\end{array},
+% \]
+% \[
+~~~~~~
+\avar_{\ssa{c}4} =  \left[ \begin{matrix}
+\ssa{x}_1 \\
+\ssa{y}_1 \\
+\ssa{x}_2 \\
+\ssa{x}_3 \\
+\ssa{y}_2 \\
+\ssa{x}_4 \\
+\ssa{y}_3 \\
+\ssa{z}_1 \\
+\end{matrix} \right], 
+~~~~~ 
+\Mtrix_{\ssa{c}4} =  \left[ \begin{matrix}
+ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+ 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+ 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
+ 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 \\
+\end{matrix} \right], 
+~~~~~ 
+\flag_{\ssa{c}4} = \left [ \begin{matrix}
+ 1 \\
+ 1 \\
+ 1 \\
+ 1 \\
+ 0 \\
+ 0 \\
+ 0 \\
+ 0 \\
 \end{matrix} \right ]
+% \Mtrix_{c4} =  \left[ \begin{matrix}
+%  & (x_1) & (y_1) & (x_2) & (x_3)  & (y_2) & (x_4) & (y_3) & (z_1)  \\
+% (x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+% (y_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+% (x_2) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+% (x_3) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+% (y_2) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+% (x_4) & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+% (y_3) & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
+% (z_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 \\
+% \end{matrix} \right] ~ , 
+% \flag_{c4} = \left [ \begin{matrix}
+% (x_1) &  1 \\
+% (y_1) & 1 \\
+% (x_2) & 1 \\
+% (x_3) &  1 \\
+% (y_2) & 0 \\
+% (x_4) & 0 \\
+% (y_3) &  0 \\
+% (z_1) &  0 \\
+% \end{matrix} \right ]
 \]
 %
 %
