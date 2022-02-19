@@ -631,23 +631,35 @@ t_3,w_3}
 \label{def:trace-based_graph}
 Trace-based Dependency Graph
 \\
- {
-Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (V, E)$ is defined as: 
+Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$ is defined as: 
 \\
-$V =\{({\qval}, l,w) \in \mathcal{AQ} \mid 
-\exists m',  w', t'.  
-\config{m ,c, \emptyset, \emptyset}  
-\to^{*}  
-\config{m' , \eskip, t', w' }  
-\land (\query({\qval}), l, w) \in t'  \}$.
-\\
-$E = \left\{(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
-~ \left \vert ~  
-\mathsf{DEP}(({\qval},l,w), ({\qval}',l',w')),c,m,D)
-\land 
-\mathsf{To}(({\qval},l,w), ({\qval}',l',w'))
- \right.\right\}$.
- }
+\[
+\begin{array}{rlcl}
+	\text{Vertexes} &
+	\vertxs & := & \left\{ 
+	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
+	\exists m',  w', t' ~ s.t., ~  
+	\begin{array}{l}
+	\config{m ,c, \emptyset, \emptyset}  
+	\to^{*}  
+	\config{m' , \eskip, t', w' } \\ 
+	\land (\query({\qval}), l, w) \in t'
+	\end{array}
+	\right\}
+	\\
+	\text{Directed Edges} &
+	\edges & := & 
+	\left\{ 
+	(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
+	\middle\vert
+	\begin{array}{l}
+		\mathsf{DEP}(({\qval},l,w), ({\qval}',l',w')),c,m,D) \\
+		\land 
+		\mathsf{To}(({\qval},l,w), ({\qval}',l',w'))
+	\end{array}
+	\right\}
+\end{array}
+\]
 \end{defn}
 The edge is directed, when an annotated query $(\query({\qval}),l,w)$ may depend on its previous query $(\query({\qval}'),l',w')$, we have the directed
 edge $(({\qval},l,w), ({\qval}',l'.w'))$, 
@@ -656,13 +668,14 @@ from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 \begin{defn}[path ($p$)].
 \\
-Given a graph $G=(V,E)$, a path $p$ in $G$ is defined as a sequence of edges $e_1\ldots e_{n - 1}$ for which there is a sequence of vertices $v_1, \ldots, v_n \in V$ 
+Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ is defined as a sequence of edges $e_1\ldots e_{n - 1}$ for which there is a sequence of vertexes $v_1, \ldots, v_n \in V$ 
 such that for every $1 \leq i < n$, $e_i=(v_{i-1},v_{i}) \land e_i \in E$  and all edges and vertexes are distinct. $len(p)$ returns the number of vertexes in $p$.
 \end{defn}
 %
 \begin{defn}[path set ($\path$)].
 \\
-Given a directed acyclic graph $G = (V,E)$, the path set of $G$ ($\path(G)$) is defined as a finite set containing all paths $p$ in $G$.
+Given a directed acyclic graph $G = (\vertxs, \edges)$, 
+the path set of $G$ ($\path(G)$) is defined as a finite set containing all paths $p$ in $G$.
 \end{defn}
 %
 %
@@ -677,7 +690,7 @@ trace-based dependency graph $G(c,D,m)$,
 for all possible starting memory $m$ and database $D$.
 %
 $$
-A(c) = \max \big \{ {\tt len}(p) \ | \ m\in \memdom,D\in \dbdom,p \in \path(G(c, D, m)) \big \} 
+A(c) = \max \big \{ \len(p) \ | \ m\in \memdom,D\in \dbdom,p \in \path(G(c, D, m)) \big \} 
 $$
 }
 \end{defn}
@@ -1379,23 +1392,36 @@ Trace-Based Dependency Graph in SSA Language.
 \\
 {
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
-the dependency graph $\traceG(\ssa{c},D,\ssa{m}) = (V, E)$ is defined as: \\
-$V =\{({\qval}, l, w) \in \mathcal{AQ} 
-\mid 
-\exists \ssa{m'},  w', t'.  
-\config{\ssa{m} ,\ssa{c}, \emptyset, \emptyset}  
-\to^{*}  
-\config{\ssa{m'} , \eskip, t', w' }  
-\land (\query({\qval}), l, w) \in {t'}  \}$.
-\\
-$E = 
-\left\{
-	(({\qval},l, w), ({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ}
-	\mid 
-	\mathsf{DEP_{ssa}}(({\qval}',l',w'),({\qval},l,w)), \ssa{c},w,\ssa{m},D)     
-	\land 
-	\mathsf{To}(({\qval}',l',w'),({\qval},l,w))
-\right\}$.
+the dependency graph $\traceG(\ssa{c},D,\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
+\[
+\begin{array}{rlcl}
+	\text{Vertexes} &
+	\vertxs & := & \left\{ 
+	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
+	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
+	\begin{array}{l}
+	\config{\ssa{m} ,\ssa{c}, \emptyset, \emptyset}  
+	\to^{*}  
+	\config{\ssa{m'} , \eskip, t', w' }
+	\\ 
+	\land (\query({\qval}), l, w) \in t'
+	\end{array}
+	\right\}
+	\\
+	\text{Directed Edges} &
+	\edges & := & 
+	\left\{ 
+	(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
+	\middle\vert
+	\begin{array}{l}
+		\mathsf{DEP_{ssa}}(({\qval},l,w), ({\qval}',l',w'),
+		\ssa{c},w,\ssa{m},D) 
+		\\ \land 
+		\mathsf{To}(({\qval},l,w), ({\qval}',l',w'))
+	\end{array}
+	\right\}
+\end{array}
+\]
 }
 \end{defn}
 %
@@ -2798,32 +2824,38 @@ data flow matrix for $\ssa{c_3}$.
 \[
 {\ssa{c_3} \triangleq
 \begin{array}{l}
-     \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ; \\
-     \left[\ssa{i_1} \leftarrow 0 \right]^2 ; \\
+    \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ; 
+    \\
+    \left[\ssa{i_1} \leftarrow 0 \right]^2 ; 
+    \\
     \ewhile
-     ~ [\ssa{i_1} < 2]^3
-  \\
-     ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }
-     ~ \edo \\
+    ~ [\ssa{i_1} < 2]^3
+  	\\
+    ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }
+    ~ \edo 
+    \\
     ~ \Big( 
-    \left[\ssa{ y_1 \leftarrow q_2} \right]^4; \\
-    \left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5;\\
+    \left[\ssa{ y_1 \leftarrow q_2} \right]^4;
+    \\
+    \left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5;
+    \\
     \left[\ssa{i_2 \leftarrow 1  + i_3 } \right]^6
-    \Big) ; \\
-     \left[ \assign{z_1}{x_3 + 2}  \right]^{7}
+    \Big) ; 
+    \\
+    \left[ \ssa{\assign{z_1}{x_3 + 2}}  \right]^{7}
 \end{array}
 ,
 ~~~~~~
 \Mtrix =  \left[ \begin{matrix}
  & (x_1)  & (y_1) & (x_2) & (x_3) &  (z_1) & i_1 & i_2 & i_3\\
 (x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(y_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1\\
-(x_2) & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1\\
-(x_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1\\
+(y_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+(x_2) & 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1 \\
+(x_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
 (z_1) & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
-(i_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
-(i_2) & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1\\
-(i_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1\\
+(i_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+(i_2) & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 \\
+(i_3) & 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
 \end{matrix} \right]
 ,
 ~~~~~~
@@ -2844,17 +2876,20 @@ data flow matrix for $\ssa{c_3}$.
 \[
 {\ssa{c_3'} \triangleq
 \begin{array}{l}
-     \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ; \\
-     \left[\ssa{i_1} \leftarrow 1 \right]^2 ; \\
-    \ewhile ~ [i < 0]^{3} ,\\
-  \ssa{[x_3 , x_1 , x_2]} 
-     ~ \edo
+    \left[\ssa{ x_1 \leftarrow q_1}  \right]^1 ;
+    \\
+    \left[\ssa{i_1} \leftarrow 1 \right]^2 ; 
+    \\
+    \ewhile ~ [i < 0]^{3} ,
+    \\
+    ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }
+    ~ \edo
     \\
     ~ \Big( 
     \left[\ssa{ y_1 \leftarrow q_2} \right]^3; \\
     \left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5
     \Big) ; \\
-    \left[ \assign{z_1}{x_3 + 2}  \right]^{6}
+    \left[ \ssa{\assign{z_1}{x_3 + 2}}  \right]^{6}
 \end{array},
 ~~~~~~
 \Mtrix =  \left[ \begin{matrix}
@@ -2879,11 +2914,14 @@ data flow matrix for $\ssa{c_3}$.
 We can now look at the if statement.
 \[ c_4 \triangleq
 \begin{array}{l}
-   \left[ x \leftarrow q_1 \right]^1; \\
-   \left[y \leftarrow q_2\right]^2 ; \\
-    \eif \;( x + y == 5 )^3\; \\
-    \mathsf{then} \;\left[ x \leftarrow q_3 \right]^4 \; \\
-    \mathsf{else} (\;\left[ x \leftarrow q_4 \right]^5 ; \\
+   \left[ x \leftarrow q_1 \right]^1; 
+   \\
+   \left[y \leftarrow q_2\right]^2 ; 
+   \\
+    \eif \;( x + y == 5 )^3
+    \\
+    \mathsf{then} ~ \left[ x \leftarrow q_3 \right]^4 \; \\
+    \mathsf{else} ~ \left[ x \leftarrow q_4 \right]^5 ; \\
     y \leftarrow 2 ) ;\\
    \left[ z \leftarrow x +y \right]^6; \\
 \end{array}
@@ -2891,26 +2929,32 @@ We can now look at the if statement.
 %
  \ssa{c_4} \triangleq
 \begin{array}{l}
-   \left[ \ssa{ x_1 \leftarrow q_1} \right]^1; \\
-   \left[\ssa{ y_1 \leftarrow q_2} \right]^2 ; \\
-    \eif \;( \ssa{ x_1 + y_1 == 5} )^3, [ x_4,x_2,x_3 ],[] ,[y_3,y_1,y_2 ]\; \\
-    \mathsf{then} \;\left[ \ssa{ x_2 \leftarrow q_3}\right]^4 \; \\
-    \mathsf{else} (\;\left[ \ssa{x_3 \leftarrow q_4} \right]^5 ; \\
-     \ssa{y_2 \leftarrow 2} ) \\
+   	\left[ \ssa{ x_1 \leftarrow q_1} \right]^1; 
+   	\\
+   	\left[\ssa{ y_1 \leftarrow q_2} \right]^2 ; 
+   	\\
+    \eif \;( \ssa{ x_1 + y_1 == 5} )^3, 
+    \ssa{[ x_4,x_2,x_3 ],[] ,[y_3,y_1,y_2 ]} 
+    \\
+    \mathsf{then} ~ \left[ \ssa{x_2 \leftarrow q_3}\right]^4 
+    \\
+    \mathsf{else} ~ \left[ \ssa{x_3 \leftarrow q_4} \right]^5 ; 
+    \\
+    \ssa{y_2 \leftarrow 2} ) \\
    \left[ \ssa{ z_1 \leftarrow x_4 +y_3 }\right]^6; \\
 \end{array}
 \]
 \[
 \Mtrix_{c4} =  \left[ \begin{matrix}
  & (x_1) & (y_1) & (x_2) & (x_3)  & (y_2) & (x_4) & (y_3) & (z_1)  \\
-(x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0  \\
-(y_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0&0\\
-(x_2) & 0 & 0 & 0 & 0 & 0 & 0& 0& 0 \\
-(x_3) & 0 & 0 & 0 & 0 & 0 & 0 & 0& 0\\
+(x_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+(y_1) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+(x_2) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+(x_3) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 (y_2) & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
-(x_4) & 0 & 0 & 1 & 1 & 0 & 0 & 0 &0\\
-(y_3) & 0 & 1 & 0 & 0 & 1 & 0 & 0 &0\\
-(z_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0  \\
+(x_4) & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+(y_3) & 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
+(z_1) & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 \\
 \end{matrix} \right] ~ , 
 \flag_{c4} = \left [ \begin{matrix}
 (x_1) &  1 \\
@@ -2938,47 +2982,47 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \\
 \[
 \begin{array}{rlcl}
-\text{Vertexes} &
-\vertxs & := & \left\{ 
-\ssa{x^l} \middle\vert
-\ssa{x^l} = \avar(i), i = 1, \ldots, N 
-\right\}
-\\
-\text{Directed Edges} &
-\edges & := & 
-\left\{ 
-(\ssa{x_1^{l_1}}, \ssa{x_2^{l_2}}) 
-\in \avar \times \avar 
-\middle\vert
-\begin{array}{l}
-\forall ~ i,j = 1, \ldots, N ~ s.t., ~\\
-\ssa{x_1^{l_1}} = \avar(i),  \ssa{x_2^{l_2}} = \avar(j) \land
-\Mtrix(i)(j) \geq 1
-\end{array} 
-\right\}
-\\
-\text{Flags} &
-\flag & := & 
-\left\{(\ssa{x^l}, f)  \in \vertxs \times \{0, 1, 2\} 
-\middle\vert 
-\forall i = 1, \ldots, N ~  s.t.
-\ssa{x^l} = \avar(i) \land f = \flag(i)
-\right\}
-\\
-\text{Weights} &
-\weights & := &
-\bigcup
-\begin{array}{l}
-\left\{ (v, w) \in \vertxs \times (\mathbb{N} \cup \expr)
-\middle\vert
-\forall v \in \vertxs ~  s.t. ~ \flag(v) > 0 \land w = \rb(v, c)
-\right\} 
-\\
-\left\{(v, 1)  \in \vertxs \times \{1\} 
-\middle\vert 
-\forall v \in \vertxs ~  s.t. ~ \flag(v) = 0
-\right\}
-\end{array} 
+	\text{Vertexes} &
+	\vertxs & := & \left\{ 
+	\ssa{x^l} \middle\vert
+	\ssa{x^l} = \avar(i), i = 1, \ldots, N 
+	\right\}
+	\\
+	\text{Directed Edges} &
+	\edges & := & 
+	\left\{ 
+	(\ssa{x_1^{l_1}}, \ssa{x_2^{l_2}}) 
+	\in \avar \times \avar 
+	\middle\vert
+	\begin{array}{l}
+		\forall ~ i,j = 1, \ldots, N ~ s.t., ~\\
+		\ssa{x_1^{l_1}} = \avar(i),  \ssa{x_2^{l_2}} = \avar(j) \land
+		\Mtrix(i)(j) \geq 1
+	\end{array} 
+	\right\}
+	\\
+	\text{Flags} &
+	\flag & := & 
+	\left\{(\ssa{x^l}, f)  \in \vertxs \times \{0, 1, 2\} 
+	\middle\vert 
+	\forall i = 1, \ldots, N ~  s.t.
+	\ssa{x^l} = \avar(i) \land f = \flag(i)
+	\right\}
+	\\
+	\text{Weights} &
+	\weights & := &
+	\bigcup
+	\begin{array}{l}
+		\left\{ (v, w) \in \vertxs \times (\mathbb{N} \cup \expr)
+		\middle\vert
+		\forall v \in \vertxs ~  s.t. ~ \flag(v) > 0 \land w = \rb(v, c)
+		\right\} 
+		\\
+		\left\{(v, 1)  \in \vertxs \times \{1\} 
+		\middle\vert 
+		\forall v \in \vertxs ~  s.t. ~ \flag(v) = 0
+		\right\}
+	\end{array} 
 \end{array}
 \]
 \end{defn} 
