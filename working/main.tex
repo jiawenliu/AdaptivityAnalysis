@@ -627,12 +627,11 @@ t_3,w_3}
 \end{defn}
 %
 %
-\begin{defn}
+\begin{defn}[Trace-based Dependency Graph].
 \label{def:trace-based_graph}
-Trace-based Dependency Graph
 \\
 Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$ is defined as: 
-\\
+%
 \[
 \begin{array}{rlcl}
 	\text{Vertexes} &
@@ -679,20 +678,19 @@ the path set of $G$ ($\path(G)$) is defined as a finite set containing all paths
 \end{defn}
 %
 %
-\begin{defn}
+\begin{defn}[Adaptivity of A Program in While Language].
 \label{def:trace-based_adapt}
-\todo{Adaptivity of A Program in While Language.}
 \\
-\todo{
 Given a program $c$, 
 its adaptivity is defined as the length of the longest path in its
 trace-based dependency graph $G(c,D,m)$, 
 for all possible starting memory $m$ and database $D$.
 %
 $$
-A(c) = \max \big \{ \len(p) \ | \ m\in \memdom,D\in \dbdom,p \in \path(G(c, D, m)) \big \} 
+A(c) = \max \big \{ 
+\len(p) \vert m \in \memdom, D \in \dbdom,p \in \path(G(c, D, m)) 
+\big \} 
 $$
-}
 \end{defn}
 %
 We proved some useful properties for our language.
@@ -906,7 +904,7 @@ we see the power of the labelled loop language to achieve the adaptivity semanti
 However, it is not powerful enough to reach the adaptivity syntactically. The main difficulty is its implicit control flow which raises extra complexity to figure out where some variables used come from. We use three simple but relevant examples to show why the loop language suffers. We use $\query(0),\query(1)$ to represent linear queries.
 %
 \[
- s_1 = \begin{array}{l}
+ c_1 = \begin{array}{l}
       \clabel{ \assign{x}{\query(0)}}^{1} ; \\
       \eif  [(x < 0 )]^{2} \\
       \ethen \clabel{\assign{x}{\query(1)}}^{3}\\
@@ -914,7 +912,7 @@ However, it is not powerful enough to reach the adaptivity syntactically. The ma
       \clabel{\assign{y}{\query(x+\chi(3))}}^{5}
  \end{array}
  ~~~~~
-  s_2 = \begin{array}{l}
+ c_2 = \begin{array}{l}
       \clabel{ \assign{x}{\query(0)}}^{1} ; \\
       \eif  [(x < 0 )]^{2} \\
       \ethen \clabel{\assign{x}{\query(1)}}^{3}\\
@@ -922,7 +920,7 @@ However, it is not powerful enough to reach the adaptivity syntactically. The ma
       \clabel{\assign{y}{\query(x+\chi(3))}}^{5}
  \end{array}
  ~~~~~~~~
-  s_3 = \begin{array}{l}
+  c_3 = \begin{array}{l}
       \clabel{ \assign{x}{\query(0)}}^{1} ; \\
       \eif  [(x < 0 )]^{2} \\
       \ethen \clabel{\assign{z}{\query(1)}}^{3}\\
@@ -930,11 +928,11 @@ However, it is not powerful enough to reach the adaptivity syntactically. The ma
       \clabel{\assign{y}{\query(x+\chi(3)}}^{5}
  \end{array}
 \]
-In these three examples, the variable $x$ at line $5$ is implicit. In program $s_1$, it refers to the either $x$ at line $1$, or $x$ at line $3$, which means the result of query request $q(x+\chi(3))$ assigned to the variable $y$ may depend on $\query(0)$(bound to $x$ at line $1$) or $\query(1)$($x$ at line $3$). When we have a look at the other two programs $s_2$ and $s_3$, it is another talk. We think $\query(x+\chi(3))$ may depend on either $\query(1)$($x$ at line $3$) or $\query(x+\chi(3))$($x$ at line $4$) in $s_2$,     
-while $\query(x+\chi(3))$ only depends on $\query(0)$ at line $1$ in program $s_3$. 
+In these three examples, the variable $x$ at line $5$ is implicit. In program $c_1$, it refers to the either $x$ at line $1$, or $x$ at line $3$, which means the result of query request $\query(x+\chi(3))$ assigned to the variable $y$ may depend on $\query(0)$(bound to $x$ at line $1$) or $\query(1)$($x$ at line $3$). When we have a look at the other two programs $c_2$ and $c_3$, it is another talk. We think $\query(x+\chi(3))$ may depend on either $\query(1)$($x$ at line $3$) or $\query(x+\chi(3))$($x$ at line $4$) in $c_2$,     
+while $\query(x+\chi(3))$ only depends on $\query(0)$ at line $1$ in program $c_3$. 
 These three examples are structural similar in loop language, however, the dependency between variables are quite dissimilar. We consider variables here because query request is also bound to variables. To solve this dilemma, we move to single static assignment as follows.   
 \[
- s_1^{s} = \begin{array}{l}
+ c_1^{s} = \begin{array}{l}
       \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
       \eif  [({\ssa{x_1} }< 0 )]^{2}\\
       ([], [{ \ssa{x_3, x_1,x_2} }], []) \\
@@ -943,7 +941,7 @@ These three examples are structural similar in loop language, however, the depen
       \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_3} + \chi(3)})}}^{5}
  \end{array}
  ~~~~~
-  s_2^{s} = \begin{array}{l}
+  c_2^{s} = \begin{array}{l}
       \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
       \eif  [({\ssa{x_1}} < 0 )]^{2}, \\
       ( [{\ssa{x_4, x_2,x_3}}], [], [] ) \\
@@ -952,7 +950,7 @@ These three examples are structural similar in loop language, however, the depen
       \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_4}}+\chi(3))}}^{5}
  \end{array}
  ~~~~~~~~
-  s_3^{s} = \begin{array}{l}
+  c_3^{s} = \begin{array}{l}
       \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
       \eif  [({\ssa{x_1}} < 0 )]^{2} \\
        ( [], [], [] ) \\
@@ -1028,8 +1026,8 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 ~|~ [\eskip]^{l} 
 \\
 %
-\mbox{Memory} 
-& m & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } 
+\mbox{SSA Memory} 
+& \ssa{m} & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } 
 \\
 %
 \mbox{Trace} & t 
@@ -1052,8 +1050,8 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 & \qdom & ::= & {[-1,1]}
 \\
 %
-\mbox{{Memory Domain}}
-& \memdom & ::= & {\{m\}}
+\mbox{{SSA Memory Domain}}
+& {\mathcal{SM}} & ::= & {\{m\}}
 \\
 %
 \mbox{{Database Domain}}
@@ -1064,7 +1062,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 %
 {
-We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SV}$, 
+We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SVR}$, 
 and the boolean expression as $\ssa{\bexpr}$. 
 %
 The ssa expression can be either $\ssa{a}$ and $\ssa{b}$. 
@@ -1072,7 +1070,7 @@ We also have the ssa variables annotated in a similar way as the annotated queri
 %
 The labelled commands $\ssa{c}$ are now in the ssa form. 
 % assignment
-In the assignment $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$,  query request $[\assign {{\ssa{x}} } {q({\ssa{e}})}]^{l}$ , the expression ${\ssa{\expr}}$ is now in the ssa form, similar for the $\ssa{\aexpr}$ in the loop and conditional $\ssa{\bexpr}$ in the if command. 
+In the assignment $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$,  query request $[\assign {{\ssa{x}} } {\query({\ssa{e}})}]^{l}$ , the expression ${\ssa{\expr}}$ is now in the ssa form, similar for the $\ssa{\aexpr}$ in the loop and conditional $\ssa{\bexpr}$ in the if command. 
 }
 
 {
@@ -1089,10 +1087,10 @@ The $\bar{\ssa{x}}$ is a list of ssa variables, in which every element $\ssa{x}$
 Every tuple $(\ssa{x,x_1,x_2 })$ from $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$ can be understood as $\ssa{x} = \phi(\ssa{x_1,x_2})$ in the normal ssa form. 
 The previous example $s_2^{s}$ can be used for reference. 
 The second part $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$ focuses on the then branch. 
-The list of ssa variables $y_1$ stores the assigned ssa variables before the if command, whose non-ssa version (variables in the loo language) will be modified only in the then branch. 
-We can look at program $s_1$ as a reference,in which $x$ at line $1$ may be modified only in the then branch at line $3$. 
+The list of ssa variables $y_1$ stores the assigned ssa variables before the if command, whose non-ssa version (variables in the while language) will be modified only in the then branch. 
+We can look at program $c_1$ as a reference,in which $x$ at line $1$ may be modified only in the then branch at line $3$. 
 The list $\bar{\ssa{y_2}}$ tracks the ssa variables assigned only in the then branch. 
-If the variables are assigned in both branches such as in the program $s_2$, they goes into $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$. Then we think every ssa variable in $\bar{\ssa{y}}$ may come from the corresponding variable $\ssa{y_1}$ in $\bar{\ssa{y_1}}$ before the if command or $\ssa{y_2}$ in $\bar{\ssa{y_2}}$ in the then branch. 
+If the variables are assigned in both branches such as in the program $c_2$, they goes into $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$. Then we think every ssa variable in $\bar{\ssa{y}}$ may come from the corresponding variable $\ssa{y_1}$ in $\bar{\ssa{y_1}}$ before the if command or $\ssa{y_2}$ in $\bar{\ssa{y_2}}$ in the then branch. 
 In this sense, we can also regard every tuple $(\ssa{y,y_1,y_2 })$ from $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$ as $\ssa{y} = \phi(\ssa{y_1,y_2})$. 
 The rest part $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$ focus on the else branch and can be understood similarly. 
 }
@@ -1462,19 +1460,18 @@ Correspondingly, we need to have three ifvar commands.
 }
 %
 \begin{defn}
-\todo{Adaptivity of A Program in SSA Language.}
+[Adaptivity of A Program in SSA Language].
 \\
-\todo{
 Given a program $\ssa{c}$ in SSA language, 
 its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
-$\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and database $D$.
+$\traceG(\ssa{c},D,\ssa{m}) = (\vertxs, \edges)$, 
+for all possible starting SSA memory $\ssa{m}$ and database $D$.
 %
 %
 $$
 A(\ssa{c}) = \max \big 
-\{ {\tt len}(p) \ \mid \ m\in \memdom,D\in \dbdom ,p \in \path(\traceG(\ssa{c}, D,\ssa{m}) \big \} 
+\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \path(\traceG(\ssa{c}, D, \ssa{m}) \big \} 
 $$
-}
 \end{defn}
 %
 %
