@@ -520,6 +520,7 @@ $mk(w_i) =MinKey(w_i) $
 \end{array}
 \]
 \end{defn}
+$keys(w)$ returns the set of keys in $w$. $MinKey(w)$ returns the mininal element in $Key(w)$.
 %
 \begin{defn}[Query Direction]
 \label{def:query_dir}
@@ -655,13 +656,13 @@ from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 \begin{defn}[path ($p$)].
 \\
-Given a graph $G=(V,E)$, a path $p$ in $G$ is a sequence of edges $e_1\ldots e_{n - 1}$ for which there is a sequence of vertices $v_1, \ldots, v_n$ 
-such that for every $1 \leq i < n$, $e_i=(v_{i-1},v_{i})$  and all edges and vertexes are distinct.
+Given a graph $G=(V,E)$, a path $p$ in $G$ is defined as a sequence of edges $e_1\ldots e_{n - 1}$ for which there is a sequence of vertices $v_1, \ldots, v_n \in V$ 
+such that for every $1 \leq i < n$, $e_i=(v_{i-1},v_{i}) \land e_i \in E$  and all edges and vertexes are distinct. $len(p)$ returns the number of vertexes in $p$.
 \end{defn}
 %
 \begin{defn}[path set ($\path$)].
 \\
-Given a graph $G$, the path set of $G$ $\path(G)$ is defined as a set containing all paths $p$ in $G$.
+Given a \wq{DAG?} graph $G$, the path set of $G$ $\path(G)$ is defined as a \wq{finite?} set containing all paths $p$ in $G$.
 \end{defn}
 %
 %
@@ -1445,7 +1446,7 @@ $\traceG(\ssa{c}, D,\ssa{m}) = (V, E)$, for all possible starting memory $m$ and
 %
 $$
 A(\ssa{c}) = \max \big 
-\{ {\tt len}(p) \ \mid \ m\in \memdom,D\in \dbdom ,p \in \path(G(c, D, m)) \big \} 
+\{ {\tt len}(p) \ \mid \ m\in \memdom,D\in \dbdom ,p \in \path(\traceG(\ssa{c}, D,\ssa{m}) \big \} 
 $$
 }
 \end{defn}
@@ -1456,7 +1457,7 @@ $$
 {
 Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $,
 $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, 
-then $G_{low}(c,D,m) = G_{ls}(\ssa{c},D,\ssa{m}) $.
+then $G(c,D,m) = \traceG(\ssa{c}, D,\ssa{m}) $.
 }
 \end{thm}
 %
@@ -2368,7 +2369,7 @@ In the following subsections, we present the adaptivity analysis based on the \T
 \label{subsec:alg_notation}
 %
 \begin{defn}[Assigned Variables ($\avar$)]
-Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. It is defined as follows:
+Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. It is defined as follows: \wq{$\ssa{c}$ is in the ssa form, maybe we need to also care about $[x_1,x_2,x_3]$}
 $$
 \begin{array}{lll}
    \avar(\ssa{c}) 	
@@ -2381,6 +2382,10 @@ $$
 $$
 \end{defn}
 %
+\begin{lem}
+For any program $\ssa{c}$, every variable in $\avar(c)$ is distinct
+\end{lem}
+
 \begin{defn}[Variable Flags ($\flag$)].
 \\
 Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $v$ showing up as the $i$-th element in $\avar$, i.e., $v = \avar(i)$:
