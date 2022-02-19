@@ -662,7 +662,7 @@ such that for every $1 \leq i < n$, $e_i=(v_{i-1},v_{i}) \land e_i \in E$  and a
 %
 \begin{defn}[path set ($\path$)].
 \\
-Given a \wq{DAG?} graph $G$, the path set of $G$ $\path(G)$ is defined as a \wq{finite?} set containing all paths $p$ in $G$.
+Given a directed acyclic graph $G = (V,E)$, the path set of $G$ ($\path(G)$) is defined as a finite set containing all paths $p$ in $G$.
 \end{defn}
 %
 %
@@ -2369,15 +2369,15 @@ In the following subsections, we present the adaptivity analysis based on the \T
 \label{subsec:alg_notation}
 %
 \begin{defn}[Assigned Variables ($\avar$)]
-Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. It is defined as follows: \wq{$\ssa{c}$ is in the ssa form, maybe we need to also care about $[x_1,x_2,x_3]$}
+Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. It is defined as follows:
 $$
 \begin{array}{lll}
    \avar(\ssa{c}) 	
-   		& = [x] 									& \ssa{c} 	= \ssa{\assign x e} \\
-     	& = [x] 									& \ssa{c} 	= \ssa{\assign x q(\qexpr)} \\
+   		& = [\ssa{x^{l}}] 									& \ssa{c} 	= [\ssa{\assign x e}]^l \\
+     	& = [\ssa{x^{l}}] 									& \ssa{c} 	= [\ssa{\assign x q(\qexpr)}]^l \\
      	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	& \ssa{c} 	= \ssa{c_1};\ssa{c_2}\\
-     	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	& \ssa{c} 	= \ssa{\eif (b , c_1, c_2}) \\
-     	& = \avar(\ssa{c}) 							& \ssa{c} 	= \ssa{\ewhile (b,\ssa{c})}
+     	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	& \ssa{c} 	= \ssa{\eif (b ,[x_1,x_2,x_3], c_1, c_2}) \\
+     	& = \avar(\ssa{c}) 							& \ssa{c} 	= \ssa{\ewhile (b, [x_1,x_2,x_3], {c})}
 \end{array}
 $$
 \end{defn}
@@ -2438,11 +2438,11 @@ expression $\expr$ and query expression $\qexpr$ respectively.
 %
 \begin{defn}[Data Flow Matrix ($\Mtrix$)]
 Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
-its data flow matrix $\Mtrix_{(\ssa{c}, \avar)}$ is a matrix of size $N \times N$ s.t.
+its data flow matrix $\Mtrix$ is a matrix of size $N \times N$ s.t.
 $\forall x, y \in \avar, x = \avar(i), y = \avar(j)$:
 %
 \[
-\Mtrix_{(\ssa{c}, \avar)}(i, j) :=
+\Mtrix(i, j) :=
 \left\{
 \begin{array}{ll}
 1	&	\flowsto(\ssa{x, y, c}) \\
@@ -3027,7 +3027,7 @@ $(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
 
 \begin{defn}[walk set ($\walk$)].
 \\
-Given a graph $G$, the walk set of $G$ $\walk(G)$ is defined as a set containing all finite walks $k$ in $G$.
+Given a labeled weighted graph $G=(V,E,W,\flag )$, the walk set of $G$ ($\walk(G)$) is defined as a set containing all finite walks $k$ in $G$.
 \end{defn}
 %
 %
