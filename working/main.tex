@@ -3308,12 +3308,12 @@ A_{\bf{prog}}(\ssa{c})
 %
 By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
 give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
-The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_walk}.
+The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_alg}.
 %
 \begin{algorithm}
 \caption{
 {Walk Search Algorithm ($\pathsearch$)}
-\label{alg:adpt_walk}
+\label{alg:adpt_alg}
 }
 \begin{algorithmic}
 \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
@@ -3321,12 +3321,13 @@ The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algor
 \STATE \qquad {\bf init} 
 current node: $c = s$, 
 queue: $q = [c]$, 
-vector recoding if the vertex is visited: visited$ = [0]*|V|$,
+vector recoding if the vertex is visited: 
+visited$ = [0]*|\vertxs|$,
 result: $r$
 \STATE \qquad {\bf while} $q$ isn't empty:
 \STATE \qquad \qquad take the vertex from beginning $c= q.pop()$
 \STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$
-\STATE \qquad \qquad currMinFlow = min(W(c), currMinFlow).
+\STATE \qquad \qquad currMinFlow = min($\weights$(c), currMinFlow).
 \STATE \qquad \qquad put all unvisited vertex $v$ having directed edge from c into $q$. 
 \STATE \qquad \qquad if $v$ is visited, then there is a circle in the graph, we update the result $r = r + $currMinFlow
 \RETURN $r$
@@ -3341,20 +3342,20 @@ result: $r$
 	Given a program $c$, we have:
 	%
 	\[
-	Adapt_{\bf{prog}}(c) \geq A(c).
+	A_{\bf{prog}}(\ssa{c}) \geq A(c).
 	\]
 	\end{thm}
 }
 \todo{
 \begin{proof}
-Given a program $c$ with a starting memory $m$ and an underlying database $D$, 
-we generate a $\progG = \{V, E, W, \flag \}$
+Given a program $\ssa{c}$ with a starting memory $m$ and an underlying database $D$, 
+we generate the $\progG = (\vertxs, \edges, \weights, \flag)$
 by the graph generation algorithm $\graphGen$ togehter with the weighting algorithm
 $\rb$.
 According to the Definition \ref{def:prog_adapt}, we have:
 %
 \[
-	Adapt_{\text{aprox}}(c) 
+	A_{\bf{prog}}(c) 
 	:= \max_{s, t \in V }
 \{\pathsearch(\progG, s, t)\},
 \]
@@ -3388,7 +3389,7 @@ According to the Definition \ref{def:prog_adapt}, we have:
 %  \right\}.
 % \]
 %
-We also construct a trace-based graph $G = (V, E)$ by the definition \ref{def:trace-based_graph}.
+We also construct a trace-based graph $G = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
 According to the Definition \ref{def:trace-based_adapt}, we have for all possible starting memory $m$ and database $D$,
 $$
 A(c) := 
@@ -3451,16 +3452,18 @@ The proof is developed by the case whether there is circle in the approximated g
 
 \begin{defn}
 [Subgraph]
-Given two graphs $G = (V_1, E_1)$, $G_{ssa} = (V_2, E_2)$, $G \subseteq G_{ssa}$ iff:\\
+Given two graphs $G_1 = (\vertxs_1, \edges_1)$, 
+$G_2 = (\vertxs_2, \edges_2)$, $G_1 \subseteq G_2$ iff:\\
 $\exists f, g$ so that \\
-1. for every $v \in V_1$, $f(v) \in V_2$. 
+1. for every $v \in \vertxs_1$, $f(v) \in \vertxs_2$. 
 \\
-2. $\forall e=(v_i, v_j) \in E_1$, there exists a path $g(e)$ from $f(v_i)$ to $f(v_2)$ in $G_2$.
+2. $\forall e=(v_i, v_j) \in \edges_1$, there exists a path $g(e)$ from $f(v_i)$ to $f(v_2)$ in $G_2$.
 \end{defn}
 %
 %
 \begin{defn}
-[Mapping of vertices from $G_s$ to $G_{ssa}$ graph]\label{lem:vertexmap}
+[Mapping of Vertexes from $\traceG$ to $\progG$ Graph]
+\label{lem:vertexmap}
 Let us define a map $f: \mathcal{AQ} -> \mathcal{LV} $ as follow:
 $f(q^{l,w}) = \ssa{x}^{l,w}$ 
 \end{defn}
@@ -3469,12 +3472,16 @@ $f(q^{l,w}) = \ssa{x}^{l,w}$
  $\forall t,m,w,c, \config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, every node in $t'-t$ has unique label.
 \end{lem}
 
-\begin{lem}[Label consistency in low level graph ]
-Given a low level program $c$, for a database $D$, a memory $m$, a loop maps $w$, every node $q^{(l,w)}$ in the low level graph $(V_1, E_1) = G(c, D, m,w)$ has unique label $(l,w)$. 
+\begin{lem}[Label Consistency in Trace-Based Graph]
+Given a program $\ssa{c}$, a database $D$, 
+a memory $\ssa{m}$, 
+a while map $w$, every vertex $(\qval, l, w)$ in the trace-based graph $(\vertxs_1, \edges_1) = G(\ssa{c}, D, \ssa{m}, w)$ 
+has unique label $(l,w)$. 
 \end{lem}
 \begin{proof}
- From the definition of $G(c, D, m,w)$, the vertices comes from the trace generated in the low level evaluation $ \config{m,c, [], w } \to^{*} \config{m', \eskip, t,w'}$.
-  This can be proved using Lemma 2.
+From the definition of $G(\ssa{c}, D, \ssa{m}, w)$, 
+the vertices come from the trace generated in the evaluation $ \config{m,c, [], w } \to^{*} \config{m', \eskip, t,w'}$.
+ This can be proved using Lemma 2.
 \end{proof}
 
 \begin{lem}
@@ -3486,7 +3493,8 @@ Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$, for any global list $G$ and a 
 Assume $G' = G[0, \ldots,i_1-1]$, so that $G';w ;\ssa{c} \hookrightarrow G'' ; w'$. For any database $D$ and memory $m$ and trace $t$,  $\config{m, |\ssa{c}|, t, w} \to^{*} \config{m', \eskip, t', w''}$. Then $w' = w''$.  
 \end{lem}
 
-\begin{lem}[$f_{D,m}$ is well defined]\label{lem:vertex}
+\begin{lem}[$f_{D,m}$ is well defined].
+\label{lem:vertex}
 Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$, for any global list $G$ and a loop maps $w$, such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$ and $\Gamma \vdash i_1$. For any database $D$ and memory $\ssa{m}$, the function $f_{D,m}: \mathcal{AQ} \to \mathcal{LV}$ maps all the nodes in the low level graph $(V_1, E_1) = G_{s}(\ssa{c}, D, \ssa{m},w)$ to a node in the ssa graph $(V_2,E_2) = G_{ssa}(M,V,G,i_1,i_2)$, defined as :
 
 $f_{D,m}(q^{l,w}) = \ssa{x}^{(l,w)}$ where $q^{(l,w)} \in V_1 $ and $\ssa{x}^{(l,w)} \in V_2$ is injective.
