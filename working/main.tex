@@ -41,7 +41,7 @@ In adaptive data analysis, a data analysis can depend on the results of
 previous analysis over the same data. This dependency may affect the
 \emph{generalization properties of the data analysis}. To study this phenomenon
 in a formal way, we consider the \emph{statistical query
-  model}. In this model, a dataset $X$ consisting of $d$ attributes (columns) and $n$
+  model}. In this model, a dataset $D$ consisting of $d$ attributes (columns) and $n$
 individuals' data (rows) can be accessed only through an interface to
 which one can submit statistical queries. More precisely, suppose that
 the type of a row is $R$ (as an example, a row with $d$ binary
@@ -60,7 +60,7 @@ interested.
  
 
 We are interested in the adaptivity of mechanisms in the model, which is straightforward supported by a high level language. In this language, queries are allowed to carry arguments to simulate the process of submitting a query to the interface in
-the model, for example, the expression $\query(e)$ tells us the argument $e$ is consumed to construct the
+the model, for example, the expression $\query(\qexpr)$ tells us the argument $\qexpr$ is consumed to construct the
 query. To be precise, one submitted query who needs the average of
 answers of previous queries is expressed as $\query(x)$, where the variable $x$ stores
 the expected average results.This makes these mechanisms quite straightforward to express in the high level language. However, this convenience pays at the price that the adaptivity $A$ of a mechanism $P$ becomes quite tricky to estimate because the definition of dependency between two queries becomes vague in the high level language. 
@@ -188,27 +188,27 @@ Each command is labeled with a label $l$, a natural number standing for the line
 %
 \[
 	\begin{array}{llll}
-	\mbox{While Maps} & w & \in & \mbox{Label} \to \mathbb{N} \\
+		\mbox{While Map} 
+		& w & \in & \mbox{Label} \to \mathbb{N} \\
 	 %
-	\mbox{Annotated Query} & \mathcal{AQ}  & ::= 
-		& \{ (\query(\qval), l, w)   \} \\
+		\mbox{Annotated Queries} 
+		& \mathcal{AQ}  & ::= & \{ (\query(\qval), l, w)   \} \\
 	\end{array}
 	\begin{array}{llll}
-	\mbox{Memory} & m & ::= & [] ~|~ m[x \to v] \\
-	\mbox{Trace} & t & ::= 
-		& [] ~|~ ( \query(\qval), l, w) :: t \\
+		\mbox{Memory} 
+		& m & ::= & \emptyset ~|~ (x^{l} \to v) :: m  \\
+		\mbox{Trace} 
+		& t & ::= & [] ~|~ ( \query(\qval), l, w) :: t \\
 	\end{array}
 \]
-%
-  	While maps are map from labels $l$ to iteration number $n$.
-%
-  	A mapping $[k \to n]$ gives accurate information on which while loop the statement is in by finding its corresponding label $k$, (also the key in the map). The label $k$ specifies the line number of the conditional of the while loop the current statement lives. And the mapped result $n$ indicates the iteration number the current statement belongs to. For example, the loop maps $w=[3:1, 4:2]$ indicates that the statement is currently in a nested loop, the outer while loop starting from label $3$ (where the outside conditional is) and in its first iteration, the statement is now in the inner loop starting from label $4$ and in the second iteration. We use $\emptyset$ to represent an empty map, indicating the statement is not in any loop. 
+%%
   	%
-  	\begin{defn}[While Maps].
+  	\begin{defn}[While Maps ($w$)].
   	\\
+  	While map is defined as a map, mapping from the key (labels $l$) to iteration number $n$, as follows:
 	\begin{ocaml}{}
 	type wm = | empty 
-	            | Cons of (int * int) & wm
+	          | Cons of (int * int) & wm
 
 	let rec  minus (w:wm) (l:int) : wm = 
 	    match w with 
@@ -223,48 +223,136 @@ Each command is labeled with a label $l$, a natural number standing for the line
 	        if k = l then (k,v+1):: tl else (k,v) :: plus tl l.         
 	\end{ocaml}
   	\end{defn}
-  	The  define operations on $w$ as follows.
+  	A mapping $[l \to n]$ gives accurate information on which while command 
+  	($\ewhile ~ [b]^l ~ \edo ~ c $) the statement is in by finding its corresponding label $l$, 
+  	(i.e., the key in the map). 
+  	The label $l$ specifies the line number of the guard $[b]^l$ of the while command, where the current statement lives in. 
+  	The mapped result $n$ indicates the iteration number, which the current statement belongs to. 
+  	For example, the while map $w=[3:1, 4:2]$ indicates that the statement is currently in a nested while loop, the first level while loop starting from line of label $3$ (i.e., the line of the outside guard is) 
+  	and in its first iteration, 
+  	the statement is now in the nested while loop starting from line of label $4$ (i.e., label of the guard for the nested while loop) 
+  	and in the second iteration. 
+  	We use $\emptyset$ to represent an empty map, indicating the statement is not in any while loop statement. 
+  	The two operations ($w \setminus l$ and $w + l$) 
+  	on $w$ is defined as follows:
   	%
-  	\todo{
+  	% \todo{
 	\begin{equation}
-	\begin{array}{lll}
-	w \setminus l   & := & \left\{
-	\begin{array}{lr} 
-		 w  & l \not\in Keys(w)   \\
-		 w' & w = w' [l \to \_] 
-	\end{array}
-	\right.\\
-	w + l & := & \left\{
-	\begin{array}{lr} 
-	 	w[l \to 0] & l \not \in Keys(w) \\   
-	    w'[l \to n+1] &  w = w'[l \to n]
-	\end{array}
-	\right.
-	\end{array}
+		w \setminus l  := \left\{
+		\begin{array}{cl} 
+			 w  & l \not\in Keys(w)   \\
+			 w' & w = w' [l \to \_] 
+		\end{array}
+		\right.
 	\end{equation}
-	}
+	%
+	%
+	\begin{equation}
+		w + l  :=  \left\{
+		\begin{array}{cl} 
+		 	w[l \to 0] & l \not \in Keys(w) \\   
+		    w'[l \to n+1] &  w = w'[l \to n]
+		\end{array}
+		\right.
+	\end{equation}
+	% }
 %
-  	We use $w \setminus l$ to remove the mapping of the key $l$ from the loop maps $w$. This is used when exiting the loop at line $l$. The special loop maps $w_l$ expresses a map identical to $w$, but without the mapping of label $l$. We record in $w$ the first iteration of a loop marked by label $l$ by assigning $l$ with the iteration $1$. The mapped number increase when going into another iteration of the same loop. We use $Keys(w)$ to return all the keys of the while maps $w$.
+We use $w \setminus l$ to remove the mapping of the key $l$ from the while map $w$. 
+This is used when exiting the loop at line $l$. 
+\todo{The special loop maps $w_l$ expresses a map identical to $w$, but without the mapping of label $l$.} 
+We record in $w$ the first iteration of a while loop marked with label $l$ by assigning $l$ with the iteration $1$. 
+The mapped number increases when going into the next iteration. 
+$Keys(w)$ is used to return the list containing all the keys of the while map $w$.
 }
 
-
+\begin{defn}[Label Order]
+The label with while map is partially ordered and defined as follows:
+$<_w and =_w$.\\
+\[
+  \begin{array}{lll}
+     w_1 =_w w_2  &  \triangleq &  Keys(w_1) = Keys(w_2) \land \forall k \in Keys(w_1). w_1(k) = w_2(k) \\
+     \emptyset =_w \emptyset & &   \\
+  \end{array}
+\] 
+$mk(w_i) =MinKey(w_i) $ 
+\[
+\begin{array}{llll}
+    w_1 <_w w_2 & \triangleq 
+     	& & w_1 = \emptyset \\
+       	& & mk(w_1) < mk(w_2) & w_1,w_2 != \emptyset  \\
+      	& & w_1(mk(w_1)) < w_2(mk(w_2))   & mk(w_1) = mk(w_2) \\
+     	& & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & o.w.
+\end{array}
+\]
+\end{defn}
+%
 
 {
 	%%% trace, queries
-	A memory is standard, a map from variables to values. Queries can be uniquely annotated as $\mathcal{AQ}$, and the annotation $(l,w)$ considers the location of the query by line number $l$ and which iteration the query is at when it appears in a loop statement, specified by $w$. A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
+A memory is standard, a map from labeled variables to values. 
+Queries can be uniquely annotated as defined in $\mathcal{AQ}$, and the annotation $(l,w)$ considers the location of the query by line number $l$ and which iteration the query is at when it appears in a while statement, specified by $w$.
 	}
 
-{	 
-	 %% trace
-	A trace can be regarded as the program history, where this history consists of the queries asked by the analyst during the execution of the program. We collect the trace with a trace-based small-step operational semantics based on transitions of the form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
-	It states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and loop maps updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
-	A configuration contains four elements: a memory $m$, the command $c$ to be evaluated, a starting trace $t$, a starting loop maps $w$. Most of the time, the loop maps remains empty until the evaluation goes into loops.  
-	We also have the evaluation of arithmetic expressions of the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmetic expression $\aexpr$ in the memory $m$, and similar for the boolean expressions $\config{m, \bexpr} \barrow \bexpr'$.  
-  }
+A configuration ($\config{m, c, t,w}$) contains four elements: a memory $m$, the command $c$ to be evaluated, a starting trace $t$, a starting while map $w$. Most of the time, the while maps remains empty until the evaluation goes into while statements.  
 
+ %% trace
+A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
+A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
+We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
+of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
+	%
+
+Given the partially ordered labels, the annotated queries in the trace is partially ordered as well. Its order and equivalence relation are defined in Definition.~\ref{def:query_dir} and \ref{def:query_equal}.
+%
+\begin{defn}[Query Order].
+\label{def:query_dir}
+\\
+The orders between two queries are defined as:
 {
-\begin{figure}
-\begin{mathpar}
+$\forall \query(\qval_1), \query(\qval_2), l_1, l_2, w_1, w_2 $.
+the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before annotated query $( \query(\qval_2), l_2, w_2)$, denoted as
+%
+\[
+\mathsf{To}((\query(\qval_1), l_1, w_1), ( \query(\qval_2), l_2, w_2))
+= 
+(\query(\qval_1), l_1, w_1) 
+<_q ( \query(\qval_2), l_2, w_2)
+\]
+where \\
+\[
+(\query(\qval_1), l_1, w_1) 
+<_q ( \query(\qval_2), l_2, w_2)
+ \triangleq 
+ \left\{
+ \begin{array}{ll}
+    l_1 < l_2  
+    & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2
+    \\
+    w_1 <_w w_2
+    & \mathsf{Otherwise}
+\end{array}  
+\right.
+\]
+}
+\end{defn}
+
+%
+\begin{defn}[Query Equivalence].
+\label{def:query_equal}
+ The equality between two query expressions $\qexpr_1$ and $\qexpr_2$ in certain memory $m$ is denoted  $ \qexpr_1 =_{q}^{m} \qexpr_2$.\\
+$\qexpr_1 =_{q}^{m} \qexpr_2$ iff $ \exists \qval. \config{m,  \qexpr_1} \qarrow \config{m, \qval} \land \config{m,  \qexpr_2 } \qarrow \config{m, \qval} $. \\
+We use $=_{q}$ as the shorthand for $=_{q}^{[]}$.\\
+$\qval \in_q t $ iff $\exists \qval' \in t. \qval =_q \qval'$.
+\end{defn}
+
+The small-step transition states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and while map updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
+We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
+%
+
+%
+The evaluation rules for arithmetic and boolean expressions are standard. 
+They have the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmetic expression $\aexpr$ in the memory $m$, and similar for the boolean expressions $\config{m, \bexpr} \barrow \bexpr'$, defined as follows:
+	\begin{mathpar}
 	\boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
 	\\
 	\inferrule{ 
@@ -275,6 +363,21 @@ Each command is labeled with a label $l$, a natural number standing for the line
 	\\
 	\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
 	\end{mathpar}
+
+\begin{figure}
+% \begin{subfigure}
+	\begin{mathpar}
+	\boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
+	\\
+	\inferrule{ 
+	  \config{m, \aexpr} \aarrow \aexpr'
+	}{
+	 \config{m,  \chi( \aexpr)} \aarrow \chi(\aexpr')
+	}
+	\\
+	\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
+	\end{mathpar}
+	%
 	\begin{mathpar}
 	\boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
 	\\
@@ -460,14 +563,14 @@ Each command is labeled with a label $l$, a natural number standing for the line
 	%
 	%
 	\end{mathpar}
+	% \end{subfigure}
 	    \caption{Trace-based operational semantics of while language.}
     	\label{fig:evaluation}
 	\end{figure}
-	}
 	%
 %
-{
-We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
+%
+%
 The rule $\textbf{query-e}$ evaluates the argument of a query request. When the argument is in normal form, this query will be answered.
 %
 The rule $\textbf{query-v}$ modifies the starting memory $m$ to $m[\qval/x]$ using the answer $\qval$ of the query $\query(\qval)$ from the mechanism, 
@@ -476,18 +579,15 @@ with the trace expanded by appending the query $\query(\qval)$ with the current 
 The rule for assignment is standard and the trace remains unchanged.%
 The sequence rule keeps tracking the modification of the trace, and the evaluation rule for if conditional goes into one branch based on the result of the conditional predicate $\bexpr$. 
 %
-The rules for while modify the while maps $w$. 
-In the rule $\textbf{ifw-true}$, the while maps $w$ is updated by $w + l$ because the execution goes into another iteration when the condition $n >0$ is satisfied. 
+The rules for while modify the while map $w$. 
+In the rule $\textbf{ifw-true}$, the while map $w$ is updated by $w + l$ because the execution goes into another iteration when the condition $n >0$ is satisfied. 
 %
-When $n$ reaches $0$, the loop exits and the while maps $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
-}   
+When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
 %
-{
 \subsection{ Query-based Dependency Graph}
 %
 We define adaptivity through a query-based dependency graph. In our model, an \emph{analyst} asks a sequence of queries to the mechanism, and the analyst receives the answers to these queries from the mechanism. A query is adaptively chosen by the analyst when the choice of this query is affected by answers from previous queries. In this model, the adaptivity we are interested in is the length of the longest sequence of such adaptively chosen queries, among all the queries the data analyst asks to the mechanism.  Also, when the analyst asks a query, the only information the analyst will have will be the answers to previous queries and the state of the program. It means that when we want to know if this query is adaptively chosen, we only need to check whether the choice of this query will be affected by changes of answers to previous queries. There are two possible situations that can  affect the choice of a query,  
 either the query argument directly uses the results of previous queries (data dependency), or the control flow of the program with respect to a query (whether to ask this query or not) depends on the results of previous queries (control flow dependency).
-}
 
 {
 As a first step, we give a definition of when one query may depend on a previous query, which is supposed to consider both control dependency and data dependency. We first look at two possible candidates:
@@ -500,24 +600,26 @@ As a first step, we give a definition of when one query may depend on a previous
 {
    The first candidate works well by witnessing the result of one query according to the change of the answer of another query. We can easily find that the two queries have nothing to do with each other in a simple example   
 %
-    $ p = \assign{x}{\query(\chi(1))} ; \assign{y}{\query(\chi(2))}$. This candidate definition works well with respect to data dependency. 
+    $ c = \assign{x}{\query(\chi(1))} ; \assign{y}{\query(\chi(2))}$. This candidate definition works well with respect to data dependency. 
     However, if fails to handle control dependency since it just monitors the changes to the answer of a query when the answer of previous queries returned change. 
     The key point is that this query may also not be asked because of an analyst decision which depend on the answers of previous queries. 
-    An example of this situation is shown in program $p_1$ as follows.
+    An example of this situation is shown in program $c_1$ as follows.
     \[
-      p_1 = \assign{x}{\query(\chi(1))} ; \eif( x > 2 ,\assign{y}{\query(\chi(2))}, \eskip )
+      c_1 = \assign{x}{\query(\chi(1))} ; \eif( x > 2 ,\assign{y}{\query(\chi(2))}, \eskip )
    	\]
 	%   
-   	We choose the second candidate, which performs well by witnessing the appearance of one query $\query(\chi(2))$ upon the change of the result of one previous query $\query(\chi(1))$ in $p_1$. It considers the control dependency, and at the same, does not miss the data dependency.
-   	In particular, the arguments of a query characterizes it. In this sense, if the data used in the arguments changes due to a different answer to a certain previous query, the appearance of the query may change as well.
+   	We choose the second candidate, which performs well by witnessing the appearance of one query $\query(\chi(2))$ upon the change of the result of one previous query $\query(\chi(1))$ in $c_1$. 
+   	It considers the control dependency, and at the same, does not miss the data dependency.
+   	In particular, the arguments of a query characterizes it.
+   	In this sense, if the data used in the arguments changes due to a different answer to a certain previous query, the appearance of the query may change as well.
    	This situation is also captured by our definition. 
-   	Let us look at another variant of program $p$, $p_2$, in which the queries equipped with functions using previously assigned variables storing answer of its previous query.
+   	Let us look at another variant of program $c$, $p_2$, in which the queries equipped with functions using previously assigned variables storing answer of its previous query.
     \[
-      p_2 = \assign{x}{\query(\chi(2))} ; \assign{y}{\query(x+\chi(3))}
+      c_2 = \assign{x}{\query(\chi(2))} ; \assign{y}{\query(x+\chi(3))}
    	\]
-    As a reminder, in the {\tt Loop} language, the query request is composed by two components: a symbol $\query$ representing a linear query type and the argument $\expr$, which represents the function specifying what the query asks. 
+    As a reminder, in the {\tt While} language, the query request is composed by two components: a symbol $\query$ representing a linear query type and the argument $\expr$, which represents the function specifying what the query asks. 
     So we do think $\query(\chi(1))$ is different from $\query(\chi(2))$.
-    Informally, we think $\query(x+\chi(3))$ may depend on the query $q(\chi(2))$, because equipped function of the former $x+\chi(3)$ depend on the data assigned with $\query(\chi(2))$.
+    Informally, we think $\query(x+\chi(3))$ may depend on the query $\query(\chi(2))$, because equipped function of the former $x+\chi(3)$ depend on the data assigned with $\query(\chi(2))$.
     We can see the appearance definition catches data dependency in such a way, 
     since $\query(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
 }
@@ -525,71 +627,11 @@ As a first step, we give a definition of when one query may depend on a previous
 {
    We give a formal definition of query may dependency based on the trace-based operational semantics as follows.
    }
-   %
 %
-\begin{defn}[Label Order]
-$<_w and =_w$.\\
-\[
-  \begin{array}{lll}
-     w_1 =_w w_2  &  \triangleq &  Keys(w_1) = Keys(w_2) \land \forall k \in Keys(w_1). w_1(k) = w_2(k) \\
-     \emptyset =_w \emptyset & &   \\
-  \end{array}
-\] 
-$mk(w_i) =MinKey(w_i) $ 
-\[
-\begin{array}{llll}
-    w_1 <_w w_2 & \triangleq 
-     	& & w_1 = \emptyset \\
-       	& & mk(w_1) < mk(w_2) & w_1,w_2 != \emptyset  \\
-      	& & w_1(mk(w_1)) < w_2(mk(w_2))   & mk(w_1) = mk(w_2) \\
-     	& & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & o.w.
-\end{array}
-\]
-\end{defn}
-$keys(w)$ returns the set of keys in $w$. $MinKey(w)$ returns the mininal element in $Key(w)$.
-%
-\begin{defn}[Query Direction]
-\label{def:query_dir}
-Direction between two queries.
-\\
-{
-$\forall \query(\qval_1), \query(\qval_2), l_1, l_2, w_1, w_2 $.
-the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before annotated query $( \query(\qval_2), l_2, w_2)$, denoted as
-%
-\[
-\mathsf{To}((\query(\qval_1), l_1, w_1), ( \query(\qval_2), l_2, w_2))
-= 
-(\query(\qval_1), l_1, w_1) 
-<_q ( \query(\qval_2), l_2, w_2)
-\]
-where \\
-\[
-(\query(\qval_1), l_1, w_1) 
-<_q ( \query(\qval_2), l_2, w_2)
- \triangleq 
- \left\{
- \begin{array}{ll}
-    l_1 < l_2  
-    & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2
-    \\
-    w_1 <_w w_2
-    & \mathsf{Otherwise}
-\end{array}  
-\right.
-\]
-}
-\end{defn}
 % 
 %
 \begin{defn}
- The equality between two query expressions $\qexpr_1$ and $\qexpr_2$ in certain memory $m$ is denoted  $ \qexpr_1 =_{q}^{m} \qexpr_2$.\\
-$\qexpr_1 =_{q}^{m} \qexpr_2$ iff $ \exists \qval. \config{m,  \qexpr_1} \qarrow \config{m, \qval} \land \config{m,  \qexpr_2 } \qarrow \config{m, \qval} $. \\
-We use $=_{q}$ as the shorthand for $=_{q}^{[]}$.\\
-$\qval \in_q t $ iff $\exists \qval' \in t. \qval =_q \qval'$.
-\end{defn}
-
-\begin{defn}
-Query may dependency.
+[Query may dependency].
 \label{def:query_dep}
 \\
 {
