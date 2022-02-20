@@ -20,7 +20,7 @@
     minimum height=2em]
 
 \begin{document}
-\title{Appendix for "Program Analysis for Adaptivity Analysis"}
+\title{Program Analysis for Adaptivity Analysis}
 
 \author{}
 
@@ -67,19 +67,19 @@ the expected average results.This makes these mechanisms quite straightforward t
 
 \[
 \begin{array}{l}
-     x \leftarrow q_1() ; \\
+     x \leftarrow \query(0) ; \\
     \eif \; (x_1 > 0 )\; \\
-     y \leftarrow q_2(x) \; \\
+     y \leftarrow \query(x) \; \\
 \end{array}
 \]
 
 The dependency between two query submissions is the essential of the adaptivity of a mechanism. To study the dependency, we first study its dual, independence between two queries, which is defined to be: one query
-$q_1$ does not
-depend on another query $q_2$ when the result of $q_1$ remains the
-same regardless of the modification of the result of $q_2$. Hence, it becomes hard to distinguish whether the variance of result of $q_1$ comes from the control flow or the argument of queries. Since we know that the result of one query from a specific $D$ may vary under different contexts in the high level language.  
+$\query(0)$ does not
+depend on another query $\query(x)$ when the result of $\query(0)$ remains the
+same regardless of the modification of the result of $\query(x)$. Hence, it becomes hard to distinguish whether the variance of result of $\query(0)$ comes from the control flow or the argument of queries. Since we know that the result of one query from a specific $D$ may vary under different contexts in the high level language.  
 
 
-To resolve the dilemma, we translate any program(mechanism) into its counterpart in a low level language, which mimics the high level one except its only allowing atomic queries, -- $q$ --. That is to say, given a data base $D$, the result of the
+To resolve the dilemma, we translate any program(mechanism) into its counterpart in a low level language, which mimics the high level one except its only allowing atomic queries, -- $\query(0)$ --. That is to say, given a data base $D$, the result of the
 query from $D$ becomes deterministic. We need to show the two programs $P$ and $P^*$ are observably equivalent over the translation. In this way, we can define the adaptivity of
 a program under this model only based on the control flow.
 To be specific, the adaptivity $A^*$ of a low level program $P^*$ is defined by
@@ -202,38 +202,52 @@ Each command is labeled with a label $l$, a natural number standing for the line
 %
   	While maps are map from labels $l$ to iteration number $n$.
 %
-  	A mapping $[k \to n]$ gives accurate information on which while loop the statement is in by finding its corresponding label $k$, (also the key in the map). The label $k$ specifies the line number of the conditional of the while loop the current statement lives. And the mapped result $n$ indicates the iteration number the current statement belongs to. For example, the loop maps $w=[3:1, 4:2]$ indicates that the statement is currently in a nested loop, the outer while loop starting from label $3$ (where the outside conditional is) and in its first iteration, the statement is now in the inner loop starting from label $4$ and in the second iteration. We use $\emptyset$ to represent an empty map, indicating the statement is not in any loop. We define operations on $w$ as follows.
+  	A mapping $[k \to n]$ gives accurate information on which while loop the statement is in by finding its corresponding label $k$, (also the key in the map). The label $k$ specifies the line number of the conditional of the while loop the current statement lives. And the mapped result $n$ indicates the iteration number the current statement belongs to. For example, the loop maps $w=[3:1, 4:2]$ indicates that the statement is currently in a nested loop, the outer while loop starting from label $3$ (where the outside conditional is) and in its first iteration, the statement is now in the inner loop starting from label $4$ and in the second iteration. We use $\emptyset$ to represent an empty map, indicating the statement is not in any loop. 
+  	%
+  	\begin{defn}[While Maps].
+  	\\
+	\begin{ocaml}{}
+	type wm = | empty 
+	            | Cons of (int * int) & wm
+
+	let rec  minus (w:wm) (l:int) : wm = 
+	    match w with 
+	       | [] => []
+	       | (k, v) :: tl => 
+	        if k = l then tl else (k,v) :: minus tl l.   
+
+	let rec plus (w:wm) (l:int) : wm = 
+	    match w with 
+	       | [] => [(l,0)]
+	       | (k, v) :: tl => 
+	        if k = l then (k,v+1):: tl else (k,v) :: plus tl l.         
+	\end{ocaml}
+  	\end{defn}
+  	The  define operations on $w$ as follows.
   	%
   	\todo{
-	\[
+	\begin{equation}
 	\begin{array}{lll}
-	w \setminus l     & = w  & l \not\in Keys(w)   \\
-	     & = w' & w = w' [l \to \_] \\
-	w + l & = w[l \to 0] & l \not \in Keys(w) \\   
-	     & = w'[l \to n+1] &  w = w'[l \to n]
+	w \setminus l   & := & \left\{
+	\begin{array}{lr} 
+		 w  & l \not\in Keys(w)   \\
+		 w' & w = w' [l \to \_] 
 	\end{array}
-	\]
+	\right.\\
+	w + l & := & \left\{
+	\begin{array}{lr} 
+	 	w[l \to 0] & l \not \in Keys(w) \\   
+	    w'[l \to n+1] &  w = w'[l \to n]
+	\end{array}
+	\right.
+	\end{array}
+	\end{equation}
 	}
 %
   	We use $w \setminus l$ to remove the mapping of the key $l$ from the loop maps $w$. This is used when exiting the loop at line $l$. The special loop maps $w_l$ expresses a map identical to $w$, but without the mapping of label $l$. We record in $w$ the first iteration of a loop marked by label $l$ by assigning $l$ with the iteration $1$. The mapped number increase when going into another iteration of the same loop. We use $Keys(w)$ to return all the keys of the while maps $w$.
 }
 
-\begin{ocaml}{}
-type wm = | empty 
-            | Cons of (int * int) & wm
 
-let rec  minus (w:wm) (l:int) : wm = 
-    match w with 
-       | [] => []
-       | (k, v) :: tl => 
-        if k = l then tl else (k,v) :: minus tl l.   
-
-let rec plus (w:wm) (l:int) : wm = 
-    match w with 
-       | [] => [(l,0)]
-       | (k, v) :: tl => 
-        if k = l then (k,v+1):: tl else (k,v) :: plus tl l.         
-\end{ocaml}
 
 {
 	%%% trace, queries
@@ -456,7 +470,8 @@ let rec plus (w:wm) (l:int) : wm =
 We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
 The rule $\textbf{query-e}$ evaluates the argument of a query request. When the argument is in normal form, this query will be answered.
 %
-The rule $\textbf{query-v}$ modifies the starting memory $m$ to $m[v_q/x]$ using the answer $v_q$ of the query $q(v)$ from the mechanism, with the trace expanded by appending the query $q(v)$ with the current annotation $(l,w)$. 
+The rule $\textbf{query-v}$ modifies the starting memory $m$ to $m[\qval/x]$ using the answer $\qval$ of the query $\query(\qval)$ from the mechanism, 
+with the trace expanded by appending the query $\query(\qval)$ with the current annotation $(l,w)$. 
 %
 The rule for assignment is standard and the trace remains unchanged.%
 The sequence rule keeps tracking the modification of the trace, and the evaluation rule for if conditional goes into one branch based on the result of the conditional predicate $\bexpr$. 
@@ -485,16 +500,26 @@ As a first step, we give a definition of when one query may depend on a previous
 {
    The first candidate works well by witnessing the result of one query according to the change of the answer of another query. We can easily find that the two queries have nothing to do with each other in a simple example   
 %
-    $ p = \assign{x}{q(\chi(1))} ; \assign{y}{q(\chi(2))}$. This candidate definition works well with respect to data dependency. However, if fails to handle control dependency since it just monitors the changes to the answer of a query when the answer of previous queries returned change. The key point is that this query may also not be asked because of an analyst decision which depend on the answers of previous queries. An example of this situation is shown in program $p_1$ as follows.
+    $ p = \assign{x}{\query(\chi(1))} ; \assign{y}{\query(\chi(2))}$. This candidate definition works well with respect to data dependency. 
+    However, if fails to handle control dependency since it just monitors the changes to the answer of a query when the answer of previous queries returned change. 
+    The key point is that this query may also not be asked because of an analyst decision which depend on the answers of previous queries. 
+    An example of this situation is shown in program $p_1$ as follows.
     \[
-      p_1 = \assign{x}{q(\chi(1))} ; \eif( x > 2 ,\assign{y}{q(\chi(2))}, \eskip )
+      p_1 = \assign{x}{\query(\chi(1))} ; \eif( x > 2 ,\assign{y}{\query(\chi(2))}, \eskip )
    	\]
 	%   
-   	We choose the second candidate, which performs well by witnessing the appearance of one query $q(\chi(2))$ upon the change of the result of one previous query $q(\chi(1))$ in $p_1$. It considers the control dependency, and at the same, does not miss the data dependency. In particular, the arguments of a query characterizes it. In this sense, if the data used in the arguments changes due to a different answer to a certain previous query, the appearance of the query may change as well. This situation is also captured by our definition. Let us look at another variant of program $p$, $p_2$, in which the queries equipped with functions using previously assigned variables storing answer of its previous query.
+   	We choose the second candidate, which performs well by witnessing the appearance of one query $\query(\chi(2))$ upon the change of the result of one previous query $\query(\chi(1))$ in $p_1$. It considers the control dependency, and at the same, does not miss the data dependency.
+   	In particular, the arguments of a query characterizes it. In this sense, if the data used in the arguments changes due to a different answer to a certain previous query, the appearance of the query may change as well.
+   	This situation is also captured by our definition. 
+   	Let us look at another variant of program $p$, $p_2$, in which the queries equipped with functions using previously assigned variables storing answer of its previous query.
     \[
-      p_2 = \assign{x}{q(\chi(2))} ; \assign{y}{q(x+\chi(3))}
+      p_2 = \assign{x}{\query(\chi(2))} ; \assign{y}{\query(x+\chi(3))}
    	\]
-    As a reminder, in the {\tt Loop} language, the query request is composed by two components: a symbol $q$ representing a linear query type and the argument $\expr$, which represents the function specifying what the query asks. So we do think $q(\chi(1))$ is different from $q(\chi(2))$. Informally, we think $q(x+\chi(3))$ may depend on the query $q(\chi(2))$, because equipped function of the former $x+\chi(3)$ depend on the data assigned with $q(\chi(2))$. We can see the appearance definition catches data dependency in such a way, since $q(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
+    As a reminder, in the {\tt Loop} language, the query request is composed by two components: a symbol $\query$ representing a linear query type and the argument $\expr$, which represents the function specifying what the query asks. 
+    So we do think $\query(\chi(1))$ is different from $\query(\chi(2))$.
+    Informally, we think $\query(x+\chi(3))$ may depend on the query $q(\chi(2))$, because equipped function of the former $x+\chi(3)$ depend on the data assigned with $\query(\chi(2))$.
+    We can see the appearance definition catches data dependency in such a way, 
+    since $\query(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
 }
 
 {
@@ -512,11 +537,12 @@ $<_w and =_w$.\\
 \] 
 $mk(w_i) =MinKey(w_i) $ 
 \[
-\begin{array}{lllr}
-     w_1 <_w w_2 & \triangleq & & w_1 = \emptyset \\
-     & \triangleq  & mk(w_1) < mk(w_2) & w_1,w_2 != \emptyset  \\
-     & \triangleq & w_1(mk(w_1)) < w_2(mk(w_2))   & mk(w_1) = mk(w_2) \\
-     & \triangleq & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & Otherwise
+\begin{array}{llll}
+    w_1 <_w w_2 & \triangleq 
+     	& & w_1 = \emptyset \\
+       	& & mk(w_1) < mk(w_2) & w_1,w_2 != \emptyset  \\
+      	& & w_1(mk(w_1)) < w_2(mk(w_2))   & mk(w_1) = mk(w_2) \\
+     	& & (w_1 \setminus mk(w_1) ) <_w (w_2 \setminus mk(w_2)) & o.w.
 \end{array}
 \]
 \end{defn}
