@@ -1055,7 +1055,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 \mbox{Arithmetic Expression} 
 & \saexpr & ::= & 
-\textrm{n} ~|~ \textrm{x} ~|~ \saexpr \oplus_a \saexpr  
+\textrm{n} ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr  
 \\
 %
 \mbox{Boolean Expression} & \bexpr & ::= & 
@@ -1086,7 +1086,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 {\ewhile ~ [ b ]^{l} , n,
 ~ 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c }
+~ \edo ~  \ssa{c} }
 \\
 &&&
 ~|~ \ssa{c};\ssa{c}  
@@ -1119,7 +1119,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\
 %
 \mbox{{SSA Memory Domain}}
-& {\mathcal{SM}} & ::= & {\{m\}}
+& {\mathcal{SM}} & ::= & {\{\ssa{m}\}}
 \\
 %
 \mbox{{Database Domain}}
@@ -1136,9 +1136,10 @@ and the boolean expression as $\ssa{\bexpr}$.
 The ssa expression can be either $\ssa{a}$ and $\ssa{b}$. 
 We also have the ssa variables annotated in a similar way as the annotated queries in the while language.
 %
-The labelled commands $\ssa{c}$ are now in the ssa form. 
+The labeled commands $\ssa{c}$ are now in the ssa form. 
 % assignment
-In the assignment $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$,  query request $[\assign {{\ssa{x}} } {\query({\ssa{e}})}]^{l}$ , the expression ${\ssa{\expr}}$ is now in the ssa form, similar for the $\ssa{\aexpr}$ in the loop and conditional $\ssa{\bexpr}$ in the if command. 
+In the assignment $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$,  query request $[\assign {{\ssa{x}} } {\query({\ssa{e}})}]^{l}$ , 
+the expression ${\ssa{\expr}}$ is now in the ssa form, similar for the $\ssa{\aexpr}$ in the while and conditional $\ssa{\bexpr}$ in the if command. 
 }
 
 {
@@ -1153,7 +1154,7 @@ and else branch $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] $.
 The $\bar{\ssa{x}}$ is a list of ssa variables, in which every element $\ssa{x}$ may depends on the corresponding element $\ssa{x_1}$ from $\bar{\ssa{x_1}}$ collected in the then branch or the corresponding element $\ssa{x_2}$ from $\bar{\ssa{x_2}}$ collected in the else branch. 
 %
 Every tuple $(\ssa{x,x_1,x_2 })$ from $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$ can be understood as $\ssa{x} = \phi(\ssa{x_1,x_2})$ in the normal ssa form. 
-The previous example $s_2^{s}$ can be used for reference. 
+The previous example $c_2^{s}$ can be used for reference. 
 The second part $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$ focuses on the then branch. 
 The list of ssa variables $y_1$ stores the assigned ssa variables before the if command, whose non-ssa version (variables in the while language) will be modified only in the then branch. 
 We can look at program $c_1$ as a reference,in which $x$ at line $1$ may be modified only in the then branch at line $3$. 
@@ -1172,7 +1173,11 @@ The ssa memory $\ssa{m}$ is a map from ssa variable $\ssa{x}$ to values.
 %
 {
 \subsection{Trace-based Operational Semantics of SSA Loop Language}
-When switching to the SSA loop language, we show that we are still able to achieve what we can get in Section~\ref{sec:while_language}. The operational semantics of the SSA loop language mimics its counterpart, of the form $\config{\ssa{m}, \ssa{c}, t, w} \to \config{\ssa{m'}, \eskip, t', w'}$. The SSA memory $\ssa{m}$ is a map from SSA variable $\ssa{x}$ to values. It still uses a trace to track the query requests during the execution, starting from an SSA configuration with SSA memory $\ssa{m}$ and program in its SSA form $\ssa{c}$, which allows a similar construction of the query-based dependency graph in the SSA language as in the {\tt Loop} language.
+When switching to the SSA language, we show that we are still able to achieve what we can get in Section~\ref{sec:while_language}. 
+The operational semantics of the SSA language mimics its counterpart, of the form $\config{\ssa{m}, \ssa{c}, t, w} \to \config{\ssa{m'}, \eskip, t', w'}$. 
+The SSA memory $\ssa{m}$ is a map from SSA variable $\ssa{x}$ to values.
+It still uses a trace to track the query requests during the execution, starting from an SSA configuration with an SSA memory $\ssa{m}$ and a program in its SSA form $\ssa{c}$, 
+which allows a similar construction of the query-based dependency graph in the SSA language as in the {\tt While} language.
 We show the evaluation rules in Figure~\ref{fig:ssa_evaluation}.
 }
 %
@@ -1392,7 +1397,7 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
     \label{fig:ssa_evaluation}
 \end{figure}
 \begin{defn}
-Query May Dependency in SSA Language.
+[Query May Dependency in SSA Language].
 \\
 {
 One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $\ssa{c}$,
@@ -1454,7 +1459,7 @@ t_3,w_3}
 %
 %
 \begin{defn}
-Trace-Based Dependency Graph in SSA Language.
+[Trace-Based Dependency Graph in SSA Language].
 \\
 {
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
@@ -1749,19 +1754,19 @@ c_3 \triangleq
  \begin{array}{lll}
     | 
     \ewhile ~ [ \ssa{\bexpr} ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
-    |_{low}  
+    |  
     &=&  
-    {\ewhile ~ [|\ssa{\bexpr}|_{low}]^{l},  ~ \edo ~ |\ssa{c}|_{low} 
+    {\ewhile ~ [|\ssa{\bexpr}|]^{l},  ~ \edo ~ |\ssa{c}| 
     }\\
-      |\ssa{c_1 ; c_2}|_{low}  &=& |\ssa{c_1}|_{low} ; |\ssa{c_2}|_{low} \\
-       |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|_{low}  &=&
-       [\eif(|\sbexpr|_{low}, |\ssa{ c_1}|_{low}, |\ssa{c_2}|_{low})]^{l}\\
-       | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}|_{low} & = & [\assign {|\ssa{x}|_{low}}{|\ssa{\expr}|_{low}} ]^{l}  \\
-       | [\assign {\ssa{x}}{q} ]^{l} |_{low} & = & [\assign {|\ssa{x}|_{low}}{q}]^{l} \\
-       |x_i|_{low} & = & x \\
-       |n |_{low} & = & n \\
-      | \ssa{\aexpr_1} \oplus_{a} \ssa{\aexpr_2} |_{low} & = &  |\ssa{\aexpr_1}|_{low} \oplus_a |\ssa{\aexpr_2}|_{low} \\
-      | \ssa{\bexpr_1} \oplus_{b} \ssa{\bexpr_2} |_{low} & = &  |\ssa{\bexpr_1}|_{low} \oplus_b |\ssa{\bexpr_2}|_{low}
+      |\ssa{c_1 ; c_2}|  &=& |\ssa{c_1}| ; |\ssa{c_2}| \\
+       |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|  &=&
+       [\eif(|\sbexpr|, |\ssa{ c_1}|, |\ssa{c_2}|)]^{l}\\
+       | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}| & = & [\assign {|\ssa{x}|}{|\ssa{\expr}|} ]^{l}  \\
+       | [\assign {\ssa{x}}{q} ]^{l} | & = & [\assign {|\ssa{x}|}{q}]^{l} \\
+       |x_i| & = & x \\
+       |n | & = & n \\
+      | \ssa{\aexpr_1} \oplus_{a} \ssa{\aexpr_2} | & = &  |\ssa{\aexpr_1}| \oplus_a |\ssa{\aexpr_2}| \\
+      | \ssa{\bexpr_1} \oplus_{b} \ssa{\bexpr_2} | & = &  |\ssa{\bexpr_1}| \oplus_b |\ssa{\bexpr_2}|
  \end{array}
 \]
     \caption{The erasure of SSA}
@@ -1775,10 +1780,9 @@ In this subsection, we show our transformation from the loop language to its ssa
 }
 %
 %
-\begin{defn}[ Written variables in a program]
-{
+\begin{defn}[\todo{Written Variables}].
+\\
 We defined the assigned variables in the while language program $c$ as $\avars{c}$,the assigned variables in the ssa-form program $\ssa{c}$ as $\avarssa{\ssa{c}}$ defined as follows.
-}
 \[
 \begin{array}{lll}
     \avars{\assign{x}{\expr}} & =& \{ x \} \\
@@ -1787,7 +1791,10 @@ We defined the assigned variables in the while language program $c$ as $\avars{c
     % \avars{  \eloop ~ \aexpr ~ \edo ~ c  } &= &  \avars{c} \\
     {\avars{  \ewhile ~ \bexpr ~ \edo ~ c  }} &= &  \avars{c} \\
     \avars{\eif(\bexpr, c_1, c_2)} & =&  \avars{c_1} \cup \avars{c_2}\\
-\end{array} ~~~~~
+\end{array} 
+\]
+%
+\[
 \begin{array}{lll}
     \avarssa{\ssa{\assign{x}{\expr}}} & =& \{ x \} \\
     \avarssa{\ssa{\assign{x}{q}}} & =& \{ x \} \\
@@ -1798,6 +1805,9 @@ We defined the assigned variables in the while language program $c$ as $\avars{c
     \avarssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =&  \{ \ssa{\bar{x}},\ssa{\bar{y}} , \ssa{\bar{z}} \} \\ && \cup \avarssa{\ssa{c_1}} \cup \avarssa{\ssa{c_2}}\\
 \end{array}
 \]
+\end{defn}
+\begin{defn}[\todo{Read Variables}].
+\\
 {
 The variables read in the while language programs $c$ as $\vars{c}$, variables used in ssa-form program $\ssa{c}$ : 
 }
@@ -1822,6 +1832,10 @@ The variables read in the while language programs $c$ as $\vars{c}$, variables u
     \varssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}], [\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =& \varssa{\ssa{\bexpr}} \cup \varssa{\ssa{c_1}} \cup \varssa{\ssa{c_2}} \cup \{\ssa{\bar{x_1}, \bar{x_2},\bar{y_1}, \bar{y_2},\bar{z_1}, \bar{z_2} }\}  \\
 \end{array}
 \]
+\end{defn}
+%
+\begin{defn}[\todo{Necessary Variables}].
+\\
 {
 We call the variables needed to be assigned before executing the program $c$ as necessary variables $\fv{c}$. Its ssa form is : $\fvssa{\ssa{c}}$.
 }  
@@ -1848,8 +1862,9 @@ We call the variables needed to be assigned before executing the program $c$ as 
 %
 \end{defn}
 %
+THe Lemma.~\ref{lem:fv} and \ref{lem:same_value} proved the preserving properties for variables and values during the transformation.
 %
-\begin{lem}
+\begin{lem}[Variable Preserving]
 \label{lem:fv}
 If $\Sigma;\delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\fvssa{\ssa{c}} = \delta(\fvars{c})$. 
 \end{lem}
@@ -1931,8 +1946,9 @@ To show:
 \end{proof}
 
 {
-	We first define a good memory in the loop language $m$ or in the ssa language $\ssa{m}$ with respect to a translation environment $\delta$, denoted as $m \vDash \delta$ and $\ssa{m} \vDash \delta$ respectively. 
-\begin{defn}[Well defined memory] 
+We first define a good memory in the loop language $m$ or in the ssa language $\ssa{m}$ with respect to a translation environment $\delta$, denoted as $m \vDash \delta$ and $\ssa{m} \vDash \delta$ respectively. 
+%
+\begin{defn}[Well Defined Memory].
 \begin{enumerate}
     % \item $m \vDash c \triangleq \forall x \in \fv{c}, \exists v, (x, v) \in m$.
     \item $ m \vDash \delta  \triangleq \forall x \in \dom(\delta), \exists v, (x,v) \in m$.
@@ -1943,13 +1959,13 @@ To show:
 %
 The part declared in the translation environment $\delta$ in a ssa memory $\ssa{m}$ can be reverted to corresponding part of the memory $m$ with an inverse of $\delta$ as follows.
 %
-\begin{defn}[Inverse of transformed memory]
+\begin{defn}[Inverse of Transformed memory]
  $m = \delta^{-1}(\ssa{m}) \triangleq \forall x \in \dom(\delta), (\delta(x), m(x)) \in \ssa{m} $.
 \end{defn}
 }
 %
-\begin{lem}[Value remains the same during transformation].
-\label{same_value}
+\begin{lem}[Value Preserving].
+\label{lem:same_value}
 {
 Given $\delta; e \hookrightarrow \ssa{e}$,  $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, then $\config{m, e} \to v $ and $\config{
 \ssa{m}, \ssa{e}} \to {v}$.
@@ -3435,7 +3451,7 @@ The proof is developed by the case whether there is circle in the approximated g
 
 \begin{defn}
 [Subgraph]
-Given two graphs $G_{low} = (V_1, E_1)$, $G_{ssa} = (V_2, E_2)$, $G_{low} \subseteq G_{ssa}$ iff:\\
+Given two graphs $G = (V_1, E_1)$, $G_{ssa} = (V_2, E_2)$, $G \subseteq G_{ssa}$ iff:\\
 $\exists f, g$ so that \\
 1. for every $v \in V_1$, $f(v) \in V_2$. 
 \\
@@ -3454,10 +3470,10 @@ $f(q^{l,w}) = \ssa{x}^{l,w}$
 \end{lem}
 
 \begin{lem}[Label consistency in low level graph ]
-Given a low level program $c$, for a database $D$, a memory $m$, a loop maps $w$, every node $q^{(l,w)}$ in the low level graph $(V_1, E_1) = G_{low}(c, D, m,w)$ has unique label $(l,w)$. 
+Given a low level program $c$, for a database $D$, a memory $m$, a loop maps $w$, every node $q^{(l,w)}$ in the low level graph $(V_1, E_1) = G(c, D, m,w)$ has unique label $(l,w)$. 
 \end{lem}
 \begin{proof}
- From the definition of $G_{low}(c, D, m,w)$, the vertices comes from the trace generated in the low level evaluation $ \config{m,c, [], w } \to^{*} \config{m', \eskip, t,w'}$.
+ From the definition of $G(c, D, m,w)$, the vertices comes from the trace generated in the low level evaluation $ \config{m,c, [], w } \to^{*} \config{m', \eskip, t,w'}$.
   This can be proved using Lemma 2.
 \end{proof}
 
@@ -3467,7 +3483,7 @@ Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$, for any global list $G$ and a 
 
 \begin{lem}\label{lem:samew}
 Given $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$, for any global list $G$ and a loop maps $w$, such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$. 
-Assume $G' = G[0, \ldots,i_1-1]$, so that $G';w ;\ssa{c} \hookrightarrow G'' ; w'$. For any database $D$ and memory $m$ and trace $t$,  $\config{m, |\ssa{c}|_{low}, t, w} \to^{*} \config{m', \eskip, t', w''}$. Then $w' = w''$.  
+Assume $G' = G[0, \ldots,i_1-1]$, so that $G';w ;\ssa{c} \hookrightarrow G'' ; w'$. For any database $D$ and memory $m$ and trace $t$,  $\config{m, |\ssa{c}|, t, w} \to^{*} \config{m', \eskip, t', w''}$. Then $w' = w''$.  
 \end{lem}
 
 \begin{lem}[$f_{D,m}$ is well defined]\label{lem:vertex}
@@ -3492,8 +3508,8 @@ By induction on $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$.
 }
 { \Gamma \vdash^{(i, i+1)}_{M, V} \assign{\ssa{x}}{q} 
 }~\textbf{query}$}
-  We assume $G;w \vDash ( [ \assign{\ssa{x}}{q}]^{l} , i, i+1 )$ and $G \vDash (M,V)$. We have the low level program $|[ \assign{\ssa{x}}{q}]^{l} |_{low} = [\assign{x}{q}]^{l}$. We choose the database $D$ and memory $m$, a starting trace $t$, 
-  from the definition of $(V_1,E_1)= G_{low}( [\assign{x}{q}]^{l} , D,m,w)$, we know $v_1$ comes from the trace $t' -t$ generated in the following ssa evaluation.
+  We assume $G;w \vDash ( [ \assign{\ssa{x}}{q}]^{l} , i, i+1 )$ and $G \vDash (M,V)$. We have the low level program $|[ \assign{\ssa{x}}{q}]^{l} | = [\assign{x}{q}]^{l}$. We choose the database $D$ and memory $m$, a starting trace $t$, 
+  from the definition of $(V_1,E_1)= G( [\assign{x}{q}]^{l} , D,m,w)$, we know $v_1$ comes from the trace $t' -t$ generated in the following ssa evaluation.
    \[ 
     \inferrule{
      \query(v)(D) = \qval
@@ -3521,7 +3537,7 @@ By induction on $ \Gamma \vdash_{M,V}^{(i_1,i_2)} \ssa{c}$.
 }
 ~\textbf{seq}$}
 }
-We assume $G; w \vDash (\ssa{c_1;c_2}, i_1, i_3)$ and denote $c_1 = |\ssa{c_1}|_{low}$ and $c_2 = |\ssa{c_2}|_{low}$.
+We assume $G; w \vDash (\ssa{c_1;c_2}, i_1, i_3)$ and denote $c_1 = |\ssa{c_1}|$ and $c_2 = |\ssa{c_2}|$.
 We choose the memory $m$, trace $t$ and hidden database $D$, we have the ssa evaluation:
 \[
 \inferrule
