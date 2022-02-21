@@ -1787,14 +1787,19 @@ c_3 \triangleq
 	\\
     |\ssa{c_1 ; c_2}|  &=& |\ssa{c_1}| ; |\ssa{c_2}| 
     \\
-    |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|  
+    |[\eif(\sbexpr,
+    [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,
+    [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , 
+    [\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , 
+    \ssa{ c_1, c_2)}]^{l}|  
     &=&
-    [\eif(|\sbexpr|, |\ssa{ c_1}|, |\ssa{c_2}|)]^{l}\\
+    [\eif(|\sbexpr|, |\ssa{ c_1}|, |\ssa{c_2}|)]^{l}
+    \\
     | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}| & = & [\assign {|\ssa{x}|}{|\ssa{\expr}|} ]^{l}
     \\
-    | [\assign {\ssa{x}}{\query(\qexpr)} ]^{l} | & = & [\assign {|\ssa{x}|}{|\query(\qexpr)|}]^{l}
+    | [\assign {\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} | & = & [\assign {|\ssa{x}|}{|\query(\ssa{\qexpr})|}]^{l}
     \\
-    |x_i| & = & x 
+    |\ssa{x}_i| & = & x 
     \\
     |n | & = & n 
     \\
@@ -1819,23 +1824,28 @@ We defined the assigned variables in the while language program $c$ as $\avars{c
 \[
 \begin{array}{lll}
     \avars{\assign{x}{\expr}} & =& \{ x \} \\
-    \avars{\assign{x}{q}} & =& \{ x \} \\
-    \avars{ c_1; c_2  }  & = & \avars{c_1} \cup \avars{c_2} \\
-    % \avars{  \eloop ~ \aexpr ~ \edo ~ c  } &= &  \avars{c} \\
-    {\avars{  \ewhile ~ \bexpr ~ \edo ~ c  }} &= &  \avars{c} \\
+    \avars{\assign{x}{\query}} & =& \{ x \} \\
+    \avars{c_1; c_2}  & = & \avars{c_1} \cup \avars{c_2} \\
+    \avars{\ewhile ~ \bexpr ~ \edo ~ c} &= &  \avars{c} \\
     \avars{\eif(\bexpr, c_1, c_2)} & =&  \avars{c_1} \cup \avars{c_2}\\
 \end{array} 
 \]
 %
 \[
 \begin{array}{lll}
-    \avarssa{\ssa{\assign{x}{\expr}}} & =& \{ x \} \\
-    \avarssa{\ssa{\assign{x}{q}}} & =& \{ x \} \\
-    \avarssa{ \ssa{c_1; c_2 } }  & = & \avarssa{c_1} \cup \avarssa{c_2} \\
-    {\avarssa{ \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c}  } }
+    \avarssa{\ssa{\assign{x}{\expr}}} & =& \{ \ssa{x} \}
+    \\
+    \avarssa{\ssa{\assign{x}{\query(\ssa{\qexpr})}}} & =& \{ \ssa{x} \}
+    \\
+    \avarssa{\ssa{c_1; c_2 } }  & = & \avarssa{\ssa{c}_1} \cup \avarssa{\ssa{c}_2}
+    \\
+    \avarssa{\ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ \ssa{c}}}
     & = &  
-    \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} \\
-    \avarssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =&  \{ \ssa{\bar{x}},\ssa{\bar{y}} , \ssa{\bar{z}} \} \\ && \cup \avarssa{\ssa{c_1}} \cup \avarssa{\ssa{c_2}}\\
+    \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} 
+    \\
+    \avarssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} 
+    & =&  \{ \ssa{\bar{x}},\ssa{\bar{y}} , \ssa{\bar{z}} \} 
+    \cup \avarssa{\ssa{c_1}} \cup \avarssa{\ssa{c_2}}\\
 \end{array}
 \]
 \end{defn}
@@ -1847,7 +1857,7 @@ The variables read in the while language programs $c$ as $\vars{c}$, variables u
 \[
 \begin{array}{lll}
     \vars{\assign{x}{\expr}} & =& \vars{\expr}  \\
-    \vars{\assign{x}{q}} & =&\{  \} \\
+    \vars{\assign{x}{\query(\qexpr)}} & =&\{  \} \\
     \vars{ c_1; c_2  }  & = & \vars{c_1} \cup \vars{c_2} \\
     \vars{  \eloop ~ \aexpr ~ \edo ~ c  } &= &\vars{\aexpr} \cup \vars{c} \\
     \vars{\eif(\bexpr, c_1, c_2)} & =& \vars{\bexpr} \cup \vars{c_1} \cup \vars{c_2}\\
@@ -1856,8 +1866,8 @@ The variables read in the while language programs $c$ as $\vars{c}$, variables u
 \[
 \begin{array}{lll}
     \varssa{\ssa{\assign{x}{\expr}}} & =& \varssa{\ssa{\expr}}  \\
-    \varssa{\ssa{\assign{x}{q}}} & =& \{  \} \\
-    \varssa{ \ssa{c_1; c_2}  }  & = & \varssa{\ssa{c_1}} \cup \varssa{\ssa{c_2}} \\
+    \varssa{\ssa{\assign{x}{\query(\qexpr)}}} & =& \{  \} \\
+    \varssa{ \ssa{c_1; c_2}  }  & = & \varssa{\ssa{c}_1} \cup \varssa{\ssa{c}_2} \\
     % \varssa{  \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } &= &\varssa{\ssa{\aexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
     {\varssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} }} 
     &= &
@@ -1875,7 +1885,7 @@ We call the variables needed to be assigned before executing the program $c$ as 
  \[
  \begin{array}{lll}
      \fvars{\assign{x}{\expr} }  & = & \vars{\expr}  \\
-     \fvars{\assign{x}{q} }  & = & \{ \}  \\
+     \fvars{\assign{x}{\query(\qexpr)} }  & = & \{ \}  \\
      {\fvars{  \ewhile ~ \bexpr ~ \edo ~ c  } }&= & \vars{\bexpr} \cup \fvars{c} \\
      \fvars{\eif(\bexpr, c_1, c_2)} & =& \vars{\bexpr} \cup \fvars{c_1} \cup \fvars{c_2}  \\
       \fvars{c_1 ; c_2} & = & \fvars{c_1} \cup ( \fvars{c_2} - \avars{c_1})
@@ -1884,7 +1894,7 @@ We call the variables needed to be assigned before executing the program $c$ as 
  \[
  \begin{array}{lll}
      \fvssa{\ssa{\assign{x}{\expr}} }  & = & \varssa{\ssa{\expr}}  \\
-     \fvssa{ \ssa{ \assign{x}{q}} }  & = & \{ \}  \\
+     \fvssa{ \ssa{ \assign{x}{\query(\qexpr)}} }  & = & \{ \}  \\
      {\fvssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } }
      &= & 
      \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}]\\
@@ -2723,13 +2733,12 @@ is as follows
 \lMtrix_1 = \left[ \begin{matrix}
  0   \\
  1 	 \\
- 0  \\
+ 0   \\
 \end{matrix}   \right ] 
 ~~~~~~~~~~~~~~
-\rMtrix_{\ssa{x_1 + 1}, 1}
+\rMtrix_{\ssa{x}_1 + 1, 1}
 = \left[ \begin{matrix} 
    1 & 0 & 0 \\
-   % (x_1) & (x_2) & (x_3) \\
 \end{matrix}  \right]
 \]
 %
@@ -2748,19 +2757,22 @@ $\avar' = \avar[0,\ldots, i_1-1], \avar';w; \ssa{c} \to \avar'' ; w' \land \avar
 %
 \subsection{Algorithmic Analysis Rules}
 %
-\paragraph{Variable Collection Algorithm}
-We first show how the assigned variables $\avar$ will be collected (via the command $\assign{x}{\expr}$ or $\assign{x}{\query}$). , through a variable estimating algorithm $\varCol$ of the form $\ag{\avar; w; \ssa{c}}{ \avar'; w'} $ in Figure~\ref{fig:var_col}. 
+\paragraph{Variable Collection Algorithm, $\varCol$}
+The $\varCol$ algorithm shows how the assigned variables $\avar$ are collected 
+(via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step.
+The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
+It has the form: $\ag{\avar; w; \ssa{c}}{ \avar'; w'} $. 
 The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
-The output of the algorithm is the updated global list $\avar'$, along with the updated while map $w$ for later estimation.   
+The output of the algorithm is the updated assigned variables $\avar'$, along with the updated while map $w$ for next steps' collecting.   
 %
-We have the algorithm of the form : $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in Figure \ref{fig:var_col}. 
+% We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in Figure \ref{fig:var_col}. 
 %
 \begin{figure}
 \begin{mathpar}
 \inferrule
 {
 }
-{ \ag{\avar ; w; \ssa{[\assign {x}{\expr}]^{l}}}{\avar ++ [\ssa{x}^{(l,w)}];w}
+{ \ag{\avar ; w; \ssa{[\assign {x}{\expr}]^{l}}}{\avar ++ [\ssa{x}];w}
 }
 ~\textbf{\varCol-asgn}
 \and
@@ -2768,7 +2780,7 @@ We have the algorithm of the form : $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in F
 {
 }
 { \ag{\avar ;w;  [ 
-\assign{\ssa{x}}{\query(\ssa{\expr})}]^{l}}{\avar ++ [\ssa{x}] ; w} 
+\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^{l}}{\avar ++ [\ssa{x}] ; w} 
 }~\textbf{\varCol-query}
 %
 \and 
@@ -2810,14 +2822,12 @@ We have the algorithm of the form : $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in F
 \inferrule
 {
 { \ag{\avar ++ \ssa{[\bar{x}]} ; (w + l); \ssa{c}}{\avar' ; w'}  }
-\and
-{\avar_f = \avar' ++ \ssa{[\bar{x}]} \wq{remove?} }
 }
 {
 \ag{\avar; w; 
 \ewhile ~ [ b ]^{l} ~ \ssa{n} ~ 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c }{\avar_f; w\setminus l }
+~ \edo ~  c }{\avar'; w \setminus l }
 }
 ~\textbf{\varCol-while}
  }
@@ -2826,13 +2836,17 @@ We have the algorithm of the form : $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in F
     \label{fig:var_col}
 \end{figure}
 %
-The assignment is the source of variables $\varCol$ estimates, 
+
+The assignment commands are the source of variables $\varCol$ collecting, 
 	in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
-	the output global list is extended by $\ssa{x}^{(l,w)}$. 
-	When it comes to the if command in the rule $\textbf{ag-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$. 
-	The sequence is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ in a sequence $\ssa{c_1;c_2}$. 
-	The while considers the while iterations as well by assuming the while iteration counter $\ssa{\aexpr}$ to be certain natural number $N$ in the rule $\textbf{\varCol-while}$. 
-	The algorithm counts the assigned variables in every iteration, including those new assigned variables in $\bar{\ssa{x}}$, those variables assigned in the body $\ssa{c}$, with the appropriate annotation showing the iteration number of the variables.     
+	the output assigned variables are extended by $\ssa{x}$. 
+\\
+	When it comes to the $\eif \ldots \eelse \ldots \ethen$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$.
+\\ 
+	The sequence command $\ssa{c_1;c_2}$ is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ preserving their order. 
+\\
+	The while command $\ewhile \ssa{\bexpr} \ldots \edo \ssa{c}$ considers the while guard as well. 
+	The algorithm counts the assigned variables in the iteration body $\ssa{c}$ as well as the guard.
 %
 \paragraph{Data Flow Matrix Generating Algorithm}
 %
