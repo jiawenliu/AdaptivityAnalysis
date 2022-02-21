@@ -52,8 +52,8 @@ the form of a function
 $p:D\to [0,1] $ where $D$ represents dataset. The collected answer of
 the asked query is the average result of $p$ on each row in the
 dataset $D$. For example, the result is the
-value $\frac{1}{n}\sum_{i=1}^n p(X_i)$ where
-$X_i$ is the row of index $i$ in $X$. While this model is rather
+value $\frac{1}{n}\sum_{i=1}^n p(D_i)$ where
+$D_i$ is the row of index $i$ in $D$. While this model is rather
 simple, in fact it supports sufficient statistics one may be
 interested.
 
@@ -79,22 +79,24 @@ depend on another query $\query(x)$ when the result of $\query(0)$ remains the
 same regardless of the modification of the result of $\query(x)$. Hence, it becomes hard to distinguish whether the variance of result of $\query(0)$ comes from the control flow or the argument of queries. Since we know that the result of one query from a specific $D$ may vary under different contexts in the high level language.  
 
 
-To resolve the dilemma, we translate any program(mechanism) into its counterpart in a low level language, which mimics the high level one except its only allowing atomic queries, -- $\query(0)$ --. That is to say, given a data base $D$, the result of the
+\todo{To resolve the dilemma, we translate any program(mechanism) into its counterpart in a low level language, which mimics the high level one except its only allowing atomic queries, -- $\query(0)$ --. That is to say, given a data base $D$, the result of the
 query from $D$ becomes deterministic. We need to show the two programs $P$ and $P^*$ are observably equivalent over the translation. In this way, we can define the adaptivity of
 a program under this model only based on the control flow.
-To be specific, the adaptivity $A^*$ of a low level program $P^*$ is defined by
-graphs, called dependency graph, which comes from the semantics of the low level program. The dependency graph is constructed using a
+To be specific, the adaptivity $A$ of a program $P$ is defined based on graphs, called dependency graph, which comes from the semantics of the low level program.} 
+ The dependency graph is constructed using a
 trace of queries generated along with the semantics: The queries in the trace consists of the nodes in the graph
 while the edge represents dependency. If there is no dependency between
-two node(queries), there will be no edge. Intuitively, we want to give an over-approximate of $A^*$ by static analysis. To this end, we propose {\THESYSTEM}, which estimates a reasonable upper bound on the arbitrary low level program.
+two node(queries), there will be no edge. 
+Intuitively, we want to give an approximation of the adaptivity by static analysis. 
+To this end, we propose {\THESYSTEM}, which estimates an upper bound on the program.
 
-The adaptivity $A$ of arbitrary high level program $P$ is defined to be the minimal of the adaptivity $A^*$ of all the possible $P^*$ via various valid translations. Being valid means the programs before and after the translation are observably equivalent. Naturally, following this definition, the upper bound estimated by {\THESYSTEM} is sound with respect to its low level adaptivity $A^*$, hence the high level one $A$. 
+\todo{The adaptivity $A$ of arbitrary high level program $c$ is defined to be the minimal of the adaptivity $A$ of all the possible $c$ via various valid translations. Being valid means the programs before and after the translation are observably equivalent. Naturally, following this definition, the upper bound estimated by {\THESYSTEM} is sound with respect to its low level adaptivity $A$, hence the high level one $A$.} 
 
 
 Finally we extend the language to support the probabilistic program and extend the adaptivity definition accordingly.
 
 
-The key component of the system is an program analysis procedure, which provides an upper bound on the adaptivity of the program.
+The key component of the system is a program analysis tool, which provides an upper bound on the adaptivity of the program.
 
 \section{Label While Language}
 \label{sec:while_language}
@@ -954,15 +956,15 @@ Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
 [Adaptivity Toplimit].
 \\
 {
-Given a program $c$ with a database $D$ and a starting memory $m$,
-the top limitation for $A(c, D, m)$ as follows:
+Given a program $c$ with a certain database $D$ and starting memory $m$,
+the top limitation for $A(c)$ w.r.t. the $D$ and $m$ is defined as follows:
 %
 \[
 \config{m, c, \emptyset, \emptyset} 
 \rightarrow^{*} 
 \config{m', \eskip, t', w'} 
 \implies
-A(c, D, m) \leq |t'|
+A_{D, m}(c) \leq |t'|
 \]
 }
 \end{lem}
@@ -1141,7 +1143,6 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \]
 %
 %
-{
 We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SVR}$, 
 and the boolean expression as $\ssa{\bexpr}$. 
 %
@@ -1150,9 +1151,10 @@ We also have the ssa variables annotated in a similar way as the annotated queri
 %
 The labeled commands $\ssa{c}$ are now in the ssa form. 
 % assignment
-In the assignment $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$,  query request $[\assign {{\ssa{x}} } {\query({\ssa{e}})}]^{l}$ , 
-the expression ${\ssa{\expr}}$ is now in the ssa form, similar for the $\ssa{\aexpr}$ in the while and conditional $\ssa{\bexpr}$ in the if command. 
-}
+In the assignment command $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$ and query request command 
+$[\assign {{\ssa{x}} } {\query({\ssa{\qexpr}})}]^{l}$ , 
+the expression ${\ssa{\expr}}$ and query expression 
+$\ssa{\qexpr}$ is now in their corresponding ssa forms. 
 
 {
 % if
@@ -1176,11 +1178,11 @@ In this sense, we can also regard every tuple $(\ssa{y,y_1,y_2 })$ from $[\bar{\
 The rest part $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$ focus on the else branch and can be understood similarly. 
 }
 
-{
-Also, the while command also has similar part $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$, focusing on the while body. 
-The new command ${{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}}$ does not have explicit label because it is only used for evaluation internally, we will discuss more about it when used in the operational semantics for the ssa loop language. 
-The ssa memory $\ssa{m}$ is a map from ssa variable $\ssa{x}$ to values.
-}
+The while command also has similar part $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$, focusing on the while body. 
+The new command ${{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}}$ does not have explicit label because it is only used for evaluation internally, we will discuss more about it when in the 
+small-step operational semantics for SSA language. 
+
+The SSA memory $\ssa{m}$ is a map from SSA variables $\ssa{x}$ to values.
 %
 %
 {
@@ -1583,7 +1585,9 @@ $A(c) = A(\ssa{c}) $.
 \end{coro}
 %
 \subsection{SSA Transformation}
-We use a translation environment $\delta$, to map variables $x$ in the low level language to those $\ssa{x}$ in ssa-form language. We use a name environment denoted as $\Sigma$, a set of ssa variables so we can get a fresh variable by $fresh(\Sigma)$. We define $\delta_1 \bowtie \delta_2 $ in a similar way as
+We use a translation environment $\delta$, to map variables $x$ in the {\tt While} language to those variables $\ssa{x}$ in the SSA language.
+We use a name environment denoted as $\Sigma$ as a set of ssa variables, to get a fresh variable by $fresh(\Sigma)$. 
+We define $\delta_1 \bowtie \delta_2 $ in a similar way as
 \cite{vekris2016refinement}.
 %
 \todo{
@@ -1824,7 +1828,7 @@ We defined the assigned variables in the while language program $c$ as $\avars{c
 \[
 \begin{array}{lll}
     \avars{\assign{x}{\expr}} & =& \{ x \} \\
-    \avars{\assign{x}{\query}} & =& \{ x \} \\
+    \avars{\assign{x}{\query(\qexpr)}} & =& \{ x \} \\
     \avars{c_1; c_2}  & = & \avars{c_1} \cup \avars{c_2} \\
     \avars{\ewhile ~ \bexpr ~ \edo ~ c} &= &  \avars{c} \\
     \avars{\eif(\bexpr, c_1, c_2)} & =&  \avars{c_1} \cup \avars{c_2}\\
@@ -1905,7 +1909,7 @@ We call the variables needed to be assigned before executing the program $c$ as 
 %
 \end{defn}
 %
-THe Lemma.~\ref{lem:fv} and \ref{lem:same_value} proved the preserving properties for variables and values during the transformation.
+The Lemma.~\ref{lem:fv} and \ref{lem:same_value} proved the preserving properties for variables and values during the transformation.
 %
 \begin{lem}[Variable Preserving]
 \label{lem:fv}
@@ -2109,7 +2113,7 @@ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $
  \and{ \ssa{x} \ fresh(\Sigma) }
  \and{ \Sigma' = \Sigma \cup \{x\} }
 }{
- \Sigma;\delta ; [\assign{x}{\query(\expr)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\query(\expr)}}]^{l} ; \delta'
+ \Sigma;\delta ; [\assign{x}{\query(\qexpr)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\query(\qexpr)}}]^{l} ; \delta'
 }~{\textbf{S-QUERY}}$} 
 We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$, we know that when we suppose $\config{m, \expr} \to v$.
  \[
@@ -2124,7 +2128,7 @@ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $
  \]
  We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
  
- To show: $\config{\ssa{m}, [\assign {\ssa{x}}{ \ssa{\query(\expr)}}]^{l} , t, w} \to^{*} \config{\ssa{m'}, \eskip, t, w} $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
+ To show: $\config{\ssa{m}, [\assign {\ssa{x}}{ \ssa{\query(\qexpr)}}]^{l} , t, w} \to^{*} \config{\ssa{m'}, \eskip, t, w} $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
  
  From the rule \textbf{ssa-query}, we know that 
  \[
@@ -2133,7 +2137,7 @@ We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $
 \ssa{\query(v)(D) = \qval} 
 }
 {
-\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{\query(\expr)}}]^l}, t, w} \xrightarrow{} \config{\ssa{  m[  x \mapsto v], \eskip,}  t \mathrel{++} [(q^{(l,w )},v)],w }
+\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{\query(\qexpr)}}]^l}, t, w} \xrightarrow{} \config{\ssa{  m[  x \mapsto v], \eskip,}  t \mathrel{++} [(q^{(l,w )},v)],w }
 }
 ~\textbf{ssa-query}
  \]
@@ -3221,7 +3225,7 @@ We can now look at the if statement.
 %
  \begin{defn}
 [Program-Based Dependency Graph].
-\label{def:prog_based_graph}
+\label{def:prog-based_graph}
 \\
 Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
 its program-based graph 
