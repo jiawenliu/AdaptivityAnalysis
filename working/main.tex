@@ -1676,11 +1676,152 @@ c_3 \triangleq
 \end{figure}
 %
 %
+%
+\subsection{Trace-based Adaptivity in SSA Language}
+With the trace-based operational semantics of the SSA language at hand, we are able to provide the trace-based adaptivity definition in the SSA language,
+by mimicking the corresponding definitions in the {\tt While} language.
+\begin{defn}
+[Query May Dependency in SSA Language].
+\\
 {
+One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
+%
+$\mathsf{DEP}_{ssa}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), \ssa{c}, \ssa{m}, D)$ is defined below. 
+%
+%
+\[
+\begin{array}{l}
+\exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
+  \left (\begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, \emptyset ,\emptyset} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{x}{\query({\alpha}_1)}]^{l_1} ; c_2,
+  t_1, w_1} 
+\\ 
+\rightarrow^{\textbf{{ssa-query-v}}} 
+\config{\ssa{m}_1[v_1/x], c_2,
+(\query({\alpha}_1),l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
+t_3,w_3}
+  % 
+ \\ \land
+  \left( 
+  \begin{array}{l}
+  (\query({\alpha}_2),l_2,w_2) \in_{q} (t_3-t_1) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. ~  
+  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\alpha}_1),l_1, w_1)::t_1, w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
+  \land 
+  (\query({\alpha}_2),l_2,w_2) \not \in_{q} (t_3'-t_1))
+\end{array} \right )
+\\\land
+\left( 
+  \begin{array}{l}
+	(\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
+	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\qval}_1),l_1,w_1)::t_1, w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
+	\land 
+	(\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1))
+\end{array} \right )
+\end{array} \right )
+\end{array}
+\]
+}
+\end{defn}
+%
+%
+\begin{defn}
+[Trace-Based Dependency Graph in SSA Language].
+\\
+{
+Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
+the dependency graph $\traceG(\ssa{c},D,\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
+\[
+\begin{array}{rlcl}
+	\text{Vertexes} &
+	\vertxs & := & \left\{ 
+	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
+	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
+	\begin{array}{l}
+	\config{\ssa{m} ,\ssa{c}, \emptyset, \emptyset}  
+	\to^{*}  
+	\config{\ssa{m'} , \eskip, t', w' }
+	\\ 
+	\land (\query({\qval}), l, w) \in t'
+	\end{array}
+	\right\}
+	\\
+	\text{Directed Edges} &
+	\edges & := & 
+	\left\{ 
+	(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
+	\middle\vert
+	\begin{array}{l}
+		\mathsf{DEP_{ssa}}(({\qval},l,w), ({\qval}',l',w'),
+		\ssa{c},w,\ssa{m},D) 
+		\\ \land 
+		\mathsf{To}(({\qval},l,w), ({\qval}',l',w'))
+	\end{array}
+	\right\}
+\end{array}
+\]
+}
+\end{defn}
+%
+\begin{defn}
+[Adaptivity of A Program in SSA Language].
+\\
+Given a program $\ssa{c}$ in SSA language, 
+its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
+$\traceG(\ssa{c},D,\ssa{m}) = (\vertxs, \edges)$, 
+for all possible starting SSA memory $\ssa{m}$ and database $D$.
+%
+%
+$$
+A(\ssa{c}) = \max \big 
+\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \path(\traceG(\ssa{c}, D, \ssa{m}) \big \} 
+$$
+\end{defn}
+%
+%
+\begin{thm}[{Graph Equivalence}].
+\\
+{
+Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $,
+$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, 
+then $G(c,D,m) = \traceG(\ssa{c}, D,\ssa{m}) $.
+}
+\end{thm}
+%
+\begin{proof}
+ The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\mathsf{DEP}$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\mathsf{DEP_s}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the while language execution, according to the transformation theorem.  
+\end{proof}
+%
+\begin{coro}
+[Trace-Based Adaptivity Equivalence].
+\\
+{Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, 
+$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and while map $w$, then 
+$A(c) = A(\ssa{c}) $.
+}
+\end{coro}
+%
+%
 \subsection{The Soundness of the Transformation}
 In this subsection, we show our transformation from the {\tt While} language to its SSA form is sound with respect to the adaptivity. 
 To be specific, a transformed program $\ssa{c}$ starting with appropriate configuration, generates the same trace as the program before the transformation $c$, in its corresponding configuration.
-}
 %
 %
 \begin{defn}[\todo{Written Variables}].
@@ -2352,148 +2493,6 @@ This proof is similar when it comes to the exit as in case 1.
 \end{itemize}
 %
 \end{proof}
-%
-%
-\subsection{Trace-based Adaptivity in SSA Language}
-With the trace-based operational semantics of the SSA language at hand, we are able to provide the trace-based adaptivity definition in the SSA language,
-by mimicking the corresponding definitions in the {\tt While} language.
-\begin{defn}
-[Query May Dependency in SSA Language].
-\\
-{
-One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $\ssa{c}$,
-with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
-%
-$\mathsf{DEP}_{ssa}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), \ssa{c}, \ssa{m}, D)$ is defined below. 
-%
-%
-\[
-\begin{array}{l}
-\exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
-  \left (\begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, \emptyset ,\emptyset} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{x}{\query({\alpha}_1)}]^{l_1} ; c_2,
-  t_1, w_1} 
-\\ 
-\rightarrow^{\textbf{{ssa-query-v}}} 
-\config{\ssa{m}_1[v_1/x], c_2,
-(\query({\alpha}_1),l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
-t_3,w_3}
-  % 
- \\ \land
-  \left( 
-  \begin{array}{l}
-  (\query({\alpha}_2),l_2,w_2) \in_{q} (t_3-t_1) 
-  % 
-  \\
-  \implies 
-  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. ~  
-  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\alpha}_1),l_1, w_1)::t_1, w_1} 
-  \\ 
-  \quad \quad 
-  \rightarrow^{*}
-  (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
-  \land 
-  (\query({\alpha}_2),l_2,w_2) \not \in_{q} (t_3'-t_1))
-\end{array} \right )
-\\\land
-\left( 
-  \begin{array}{l}
-	(\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
-  	% 
-  	\\
-  	\implies 
-	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
-	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\qval}_1),l_1,w_1)::t_1, w_1}
-	\\ 
-	\quad \quad 
-	\rightarrow^{*} 
-	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
-	\land 
-	(\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1))
-\end{array} \right )
-\end{array} \right )
-\end{array}
-\]
-}
-\end{defn}
-%
-%
-\begin{defn}
-[Trace-Based Dependency Graph in SSA Language].
-\\
-{
-Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
-the dependency graph $\traceG(\ssa{c},D,\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
-\[
-\begin{array}{rlcl}
-	\text{Vertexes} &
-	\vertxs & := & \left\{ 
-	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
-	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
-	\begin{array}{l}
-	\config{\ssa{m} ,\ssa{c}, \emptyset, \emptyset}  
-	\to^{*}  
-	\config{\ssa{m'} , \eskip, t', w' }
-	\\ 
-	\land (\query({\qval}), l, w) \in t'
-	\end{array}
-	\right\}
-	\\
-	\text{Directed Edges} &
-	\edges & := & 
-	\left\{ 
-	(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
-	\middle\vert
-	\begin{array}{l}
-		\mathsf{DEP_{ssa}}(({\qval},l,w), ({\qval}',l',w'),
-		\ssa{c},w,\ssa{m},D) 
-		\\ \land 
-		\mathsf{To}(({\qval},l,w), ({\qval}',l',w'))
-	\end{array}
-	\right\}
-\end{array}
-\]
-}
-\end{defn}
-%
-\begin{defn}
-[Adaptivity of A Program in SSA Language].
-\\
-Given a program $\ssa{c}$ in SSA language, 
-its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
-$\traceG(\ssa{c},D,\ssa{m}) = (\vertxs, \edges)$, 
-for all possible starting SSA memory $\ssa{m}$ and database $D$.
-%
-%
-$$
-A(\ssa{c}) = \max \big 
-\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \path(\traceG(\ssa{c}, D, \ssa{m}) \big \} 
-$$
-\end{defn}
-%
-%
-\begin{thm}[{Graph Equivalence}].
-\\
-{
-Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $,
-$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, 
-then $G(c,D,m) = \traceG(\ssa{c}, D,\ssa{m}) $.
-}
-\end{thm}
-%
-\begin{proof}
- The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\mathsf{DEP}$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\mathsf{DEP_s}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the while language execution, according to the transformation theorem.  
-\end{proof}
-%
-\begin{coro}
-[Trace-Based Adaptivity Equivalence].
-\\
-{Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, 
-$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and while map $w$, then 
-$A(c) = A(\ssa{c}) $.
-}
-\end{coro}
 %
 \clearpage
 %
