@@ -155,7 +155,7 @@ The key component of the system is an program analysis procedure, which provides
 \\
 %
 \mbox{Variables} 
-& \mathcal{VR}  & ::= & \{ x \}
+& \mathcal{VAR}  & ::= & \{ x \}
 \\ 
 %
 \mbox{Values} 
@@ -184,7 +184,7 @@ The key component of the system is an program analysis procedure, which provides
 {
 We evaluate programs in our {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as defined in the syntax.
 %
-Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the loop counter $\aexpr$ in the loop statement. We will also use  Loop Maps $w$ as defined below.  
+Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. Some non-standard syntaxes are explained as follows:  
 %
 \[
 	\begin{array}{llll}
@@ -203,7 +203,7 @@ Each command is labeled with a label $l$, a natural number standing for the line
 \]
 %%
   	%
-  	\begin{defn}[While Maps ($w$)].
+  	\begin{defn}[While Map ($w$)].
   	\\
   	While map is defined as a map, mapping from the key (labels $l$) to iteration number $n$, as follows:
 	\begin{ocaml}{}
@@ -223,7 +223,8 @@ Each command is labeled with a label $l$, a natural number standing for the line
 	        if k = l then (k,v+1):: tl else (k,v) :: plus tl l.         
 	\end{ocaml}
   	\end{defn}
-  	A mapping $[l \to n]$ gives accurate information on which while command 
+  	%
+  	A mapping in the while map $[l \to n]$ gives the accurate information on which while command 
   	($\ewhile ~ [b]^l ~ \edo ~ c $) the statement is in by finding its corresponding label $l$, 
   	(i.e., the key in the map). 
   	The label $l$ specifies the line number of the guard $[b]^l$ of the while command, where the current statement lives in. 
@@ -735,8 +736,19 @@ from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 \begin{defn}[path ($p$)].
 \\
-Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ is defined as a sequence of edges $e_1\ldots e_{n - 1}$ for which there is a sequence of vertexes $v_1, \ldots, v_n \in V$ 
-such that for every $1 \leq i < n$, $e_i=(v_{i-1},v_{i}) \land e_i \in E$  and all edges and vertexes are distinct. $len(p)$ returns the number of vertexes in $p$.
+Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ is defined as a sequence of edges $(e_1\ldots e_{n - 1})$ for which there is a sequence of vertexes $(v_1, \ldots, v_n) \in V$ 
+such that for every $1 \leq i < n$, $e_i=(v_{i},v_{i + 1}) \land e_i \in E$  and all edges and vertexes are distinct. 
+\\
+$(v_1, \ldots, v_n)$ is the vertexes sequence of this path and $\len(p)$ returns the number of vertexes in $p$.
+\end{defn}
+%
+\begin{defn}[path length ($\len(p)$)].
+\\
+Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in this with vertexes sequence
+$(v_1, \ldots, v_n)$, the length of $p$ is defined as the number of vertexes in its vertexes sequence as follows:
+\[
+\len(p) = \vert (v_1, \ldots, v_n) \vert = n
+\]
 \end{defn}
 %
 \begin{defn}[path set ($\path$)].
@@ -1001,7 +1013,7 @@ while $\query(x+\chi(3))$ only depends on $\query(0)$ at line $1$ in program $c_
 These three examples are structural similar in loop language, however, the dependency between variables are quite dissimilar. We consider variables here because query request is also bound to variables. To solve this dilemma, we move to single static assignment as follows.   
 \[
  c_1^{s} = \begin{array}{l}
-      \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
+      \clabel{ \assign{{\ssa{x}_1}}{\query(0)}}^{1} ; \\
       \eif  [({\ssa{x_1} }< 0 )]^{2}\\
       ([], [{ \ssa{x_3, x_1,x_2} }], []) \\
       \ethen \clabel{\assign{{\ssa{x_2}}}{\query(1)}}^{3}\\
@@ -1066,8 +1078,8 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 	~|~ \saexpr \sim \saexpr 
 	\\
 %
-\mbox{Query Expression} & \qexpr & ::= 
-& { \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
+\mbox{Query Expression} & \ssa{\qexpr} & ::= 
+& { \saexpr ~|~ \chi ~|~ \chi[\saexpr] ~|~ \ssa{\qexpr} \oplus_a \ssa{\qexpr}} 
 \\
 %
 \mbox{Query Values} & \qval & ::= 
@@ -1099,11 +1111,11 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\
 %
 \mbox{Trace} & t 
-& ::= & [] ~|~ \ssa{{(\query(\qval), l , w ) :: t}}
+& ::= & [] ~|~ {{(\query(\qval), l , w ) :: t}}
 \\
 %
 \mbox{SSA Variables} 
-& \mathcal{SVR}  & ::= & \{ \ssa{x}^{(l,w)} \}
+& \mathcal{SVAR}  & ::= & \{ \ssa{x}^{(l,w)} \}
 %
 \\
 \mbox{Values} 
@@ -1562,24 +1574,40 @@ then $G(c,D,m) = \traceG(\ssa{c}, D,\ssa{m}) $.
 \end{proof}
 %
 \begin{coro}
+[Trace-Based Adaptivity Equivalence].
+\\
 {Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, 
-$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and loop maps $w$, then 
-$A(c) = A_s(\ssa{c}) $.
+$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and while map $w$, then 
+$A(c) = A(\ssa{c}) $.
 }
 \end{coro}
 %
 \subsection{SSA Transformation}
 We use a translation environment $\delta$, to map variables $x$ in the low level language to those $\ssa{x}$ in ssa-form language. We use a name environment denoted as $\Sigma$, a set of ssa variables so we can get a fresh variable by $fresh(\Sigma)$. We define $\delta_1 \bowtie \delta_2 $ in a similar way as
 \cite{vekris2016refinement}.
-\[ \delta_1 \bowtie \delta_2 = \{ ( x, {\ssa{x_1}, \ssa{x_2}} ) \in \mathcal{VAR} \times \mathcal{SV} \times \mathcal{SV} \mid x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }  }  \} \]
-\[ \delta_1 \bowtie \delta_2 / \bar{x} = \{ ( x, {\ssa{x_1}, \ssa{x_2}} ) \in \mathcal{VAR} \times \mathcal{SV} \times \mathcal{SV} \mid x \not\in \bar{x} \land x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }   }  \} \]
+%
+\todo{
+\[ 
+\delta_1 \bowtie \delta_2 = \{ ( x, {\ssa{x_1}, \ssa{x_2}} ) \in 
+\mathcal{VAR} \times \mathcal{SVAR} \times \mathcal{SVAR} \mid x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }  }  \} 
+\]
+%
+\[ 
+\delta_1 \bowtie \delta_2 / \bar{x} = \{ ( x, {\ssa{x_1}, \ssa{x_2}} ) \in 
+\mathcal{VAR} \times \mathcal{SVAR} \times \mathcal{SVAR}
+ \mid x \not\in \bar{x} \land x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }   }  \} 
+ \]
+ }
+ %
+\todo{
 We call a list of variables $\bar{x}$.
 \[
  [\bar{x}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] = \{ (x, x_1,x_2)  | \forall 0 \leq i < |\bar{x}|, x = \bar{x }[i] \land x_1 = \bar{x_1}[i] \land x_2 = \bar{x_2 }[i] \land |\bar{x}| = |\bar{x_1}| = |\bar{x_2}|   \}
 \]
-
+}
 \begin{mathpar}
-\boxed{ \delta ; e \hookrightarrow \ssa{e} }\\
+\boxed{ \delta ; e \hookrightarrow \ssa{e} }
+\and
 \inferrule{
 }{
  \delta ; x \hookrightarrow \delta(x)
@@ -1622,15 +1650,16 @@ We call a list of variables $\bar{x}$.
 \and
 %
 \inferrule{
- {\delta ; q \hookrightarrow \ssa{q}}
+ {\delta ; \query \hookrightarrow \ssa{\query}}
  \and
- {\delta ; \expr \hookrightarrow \ssa{\expr}}
+ {\delta ; \qexpr \hookrightarrow \ssa{\qexpr}}
  \and
  {\delta' = \delta[x \mapsto \ssa{x} ]}
  \and{ \ssa{x} \ fresh(\Sigma) }
   \and { \Sigma' = \Sigma \cup \{ \ssa{x} \} }
 }{
- \Sigma;\delta ; [\assign{x}{\query(e)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\query(\expr)}}]^{l} ; \delta';\Sigma'
+ \Sigma;\delta ; [\assign{x}{\query(\qexpr)}]^{l} \hookrightarrow 
+ [\assign {\ssa{x}}{ \ssa{\query(\qexpr)}}]^{l} ; \delta';\Sigma'
 }~{\textbf{S-QUERY}}
 %
 %%
@@ -1752,24 +1781,28 @@ c_3 \triangleq
 \begin{figure}
    \[
  \begin{array}{lll}
-    | 
-    \ewhile ~ [ \ssa{\bexpr} ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~  c
-    |  
-    &=&  
-    {\ewhile ~ [|\ssa{\bexpr}|]^{l},  ~ \edo ~ |\ssa{c}| 
-    }\\
-      |\ssa{c_1 ; c_2}|  &=& |\ssa{c_1}| ; |\ssa{c_2}| \\
-       |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|  &=&
-       [\eif(|\sbexpr|, |\ssa{ c_1}|, |\ssa{c_2}|)]^{l}\\
-       | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}| & = & [\assign {|\ssa{x}|}{|\ssa{\expr}|} ]^{l}  \\
-       | [\assign {\ssa{x}}{q} ]^{l} | & = & [\assign {|\ssa{x}|}{q}]^{l} \\
-       |x_i| & = & x \\
-       |n | & = & n \\
-      | \ssa{\aexpr_1} \oplus_{a} \ssa{\aexpr_2} | & = &  |\ssa{\aexpr_1}| \oplus_a |\ssa{\aexpr_2}| \\
-      | \ssa{\bexpr_1} \oplus_{b} \ssa{\bexpr_2} | & = &  |\ssa{\bexpr_1}| \oplus_b |\ssa{\bexpr_2}|
+    | \ewhile ~ [ \sbexpr ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
+    ~ \edo ~  \ssa{c}|  
+    &=& \ewhile ~ [|\sbexpr|]^{l},  ~ \edo ~ |\ssa{c}| 
+	\\
+    |\ssa{c_1 ; c_2}|  &=& |\ssa{c_1}| ; |\ssa{c_2}| 
+    \\
+    |[\eif(\sbexpr,[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}|  
+    &=&
+    [\eif(|\sbexpr|, |\ssa{ c_1}|, |\ssa{c_2}|)]^{l}\\
+    | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}| & = & [\assign {|\ssa{x}|}{|\ssa{\expr}|} ]^{l}
+    \\
+    | [\assign {\ssa{x}}{\query(\qexpr)} ]^{l} | & = & [\assign {|\ssa{x}|}{|\query(\qexpr)|}]^{l}
+    \\
+    |x_i| & = & x 
+    \\
+    |n | & = & n 
+    \\
+    | \saexpr_1 \oplus_{a} \saexpr_2 | & = &  |\ssa{\aexpr_1}| \oplus_a |\ssa{\aexpr_2}| \\
+    | \sbexpr_1 \oplus_{b} \sbexpr_2 | & = &  |\sbexpr_1| \oplus_b |\sbexpr_2|
  \end{array}
 \]
-    \caption{The erasure of SSA}
+    \caption{The Erasure of SSA}
     \label{fig:ssa_erasure-while}
 \end{figure}
 %
