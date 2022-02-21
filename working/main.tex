@@ -2845,8 +2845,9 @@ The assignment commands are the source of variables $\varCol$ collecting,
 \\ 
 	The sequence command $\ssa{c_1;c_2}$ is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ preserving their order. 
 \\
-	The while command $\ewhile \ssa{\bexpr} \ldots \edo \ssa{c}$ considers the while guard as well. 
-	The algorithm counts the assigned variables in the iteration body $\ssa{c}$ as well as the guard.
+	The while command $\ewhile \ssa{\bexpr}, [\ssa{\bar{x}}] \ldots \edo \ssa{c}$ considers the newly generated variables by SSA transformation $\ssa{\bar{x}}$
+	as well and the newly assigned variables in its body $\ssa{c}$.
+
 %
 \paragraph{Data Flow Matrix Generating Algorithm}
 %
@@ -3219,7 +3220,8 @@ We can now look at the if statement.
 \subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
 %
  \begin{defn}
-[Program-Based Graph].
+[Program-Based Dependency Graph].
+\label{def:prog_based_graph}
 \\
 Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
 its program-based graph 
@@ -3287,7 +3289,7 @@ Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, a \emph
 for which there is a sequence of vertexes $(v_1, \ldots, v_{n})$ such that:
 \begin{itemize}
     \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
-    \item every vertex $v \in V$ appears in this vertices sequence $v_1, \ldots, v_{n}$ of $k$ at most $W(v)$ times.  
+    \item every vertex $v \in \vertxs$ appears in this vertexes sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
 \end{itemize}
 $(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
 \end{defn}
@@ -3317,7 +3319,7 @@ $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$,
 %
 the program-based adaptivity for $c$ is defined as%
 \[
-A_{\bf{prog}}(\ssa{c}) 
+\progA(\ssa{c}) 
 := \max
 \left\{ \qlen(k)\ \mid \  k\in \walk(\progG(\ssa{c}))\right \}.
 \]
@@ -3356,58 +3358,55 @@ A_{\bf{prog}}(\ssa{c})
 % \]
 \end{defn}  
 %
-By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
-give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
-The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_alg}.
-%
-\begin{algorithm}
-\caption{
-{Walk Search Algorithm ($\pathsearch$)}
-\label{alg:adpt_alg}
-}
-\begin{algorithmic}
-\REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
-\STATE  {\bf {bfs $(G, s, t)$}:}  
-\STATE \qquad {\bf init} 
-current node: $c = s$, 
-queue: $q = [c]$, 
-vector recoding if the vertex is visited: 
-visited$ = [0]*|\vertxs|$,
-result: $r$
-\STATE \qquad {\bf while} $q$ isn't empty:
-\STATE \qquad \qquad take the vertex from beginning $c= q.pop()$
-\STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$
-\STATE \qquad \qquad currMinFlow = min($\weights$(c), currMinFlow).
-\STATE \qquad \qquad put all unvisited vertex $v$ having directed edge from c into $q$. 
-\STATE \qquad \qquad if $v$ is visited, then there is a circle in the graph, we update the result $r = r + $currMinFlow
-\RETURN $r$
-\end{algorithmic}
-\end{algorithm}
-
+% By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
+% give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
+% The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_alg}.
+% %
+% \begin{algorithm}
+% \caption{
+% {Walk Search Algorithm ($\pathsearch$)}
+% \label{alg:adpt_alg}
+% }
+% \begin{algorithmic}
+% \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
+% \STATE  {\bf {bfs $(G, s, t)$}:}  
+% \STATE \qquad {\bf init} 
+% current node: $c = s$, 
+% queue: $q = [c]$, 
+% vector recoding if the vertex is visited: 
+% visited$ = [0]*|\vertxs|$,
+% result: $r$
+% \STATE \qquad {\bf while} $q$ isn't empty:
+% \STATE \qquad \qquad take the vertex from beginning $c= q.pop()$
+% \STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$
+% \STATE \qquad \qquad currMinFlow = min($\weights$(c), currMinFlow).
+% \STATE \qquad \qquad put all unvisited vertex $v$ having directed edge from c into $q$. 
+% \STATE \qquad \qquad if $v$ is visited, then there is a circle in the graph, we update the result $r = r + $currMinFlow
+% \RETURN $r$
+% \end{algorithmic}
+% \end{algorithm}
 %
 %
 \subsection{\todo{Soundness of the \THESYSTEM}}
 \todo{
 	\begin{thm}[Soundness of the \THESYSTEM].
-	Given a program $c$, we have:
+	Given a program $\ssa{c}$, we have:
 	%
 	\[
-	A_{\bf{prog}}(\ssa{c}) \geq A(c).
+	\progA(\ssa{c}) \geq A(\ssa{c}).
 	\]
 	\end{thm}
 }
 \todo{
 \begin{proof}
-Given a program $\ssa{c}$ with a starting memory $m$ and an underlying database $D$, 
-we generate the $\progG = (\vertxs, \edges, \weights, \flag)$
-by the graph generation algorithm $\graphGen$ togehter with the weighting algorithm
-$\rb$.
+Given a program $\ssa{c}$, 
+we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$
+by Definition.~\ref{def:prog-based_graph}
 According to the Definition \ref{def:prog_adapt}, we have:
 %
 \[
-	A_{\bf{prog}}(c) 
-	:= \max_{s, t \in V }
-\{\pathsearch(\progG, s, t)\},
+	\progA(\ssa{c}) 
+	:= \max\left\{ \qlen(k)\ \mid \  k\in \walk(\progG(\ssa{c}))\right \}.
 \]
 %
 % where 
@@ -3439,7 +3438,8 @@ According to the Definition \ref{def:prog_adapt}, we have:
 %  \right\}.
 % \]
 %
-We also construct a trace-based graph $G = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
+For an arbitrary starting memory $m$ and an arbitrary underlying database $D$,
+we also construct a trace-based graph $G = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
 According to the Definition \ref{def:trace-based_adapt}, we have for all possible starting memory $m$ and database $D$,
 $$
 A(c) := 
