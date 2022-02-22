@@ -2759,12 +2759,18 @@ $\avar' = \avar[0,\ldots, i_1-1], \avar';w; \ssa{c} \to \avar'' ; w' \land \avar
 \subsection{Algorithmic Analysis Rules}
 %
 \paragraph{Variable Collection Algorithm, $\varCol$}
+% The $\varCol$ algorithm shows how the assigned variables $\avar$ are collected 
+% (via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step.
+% The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
+% It has the form: $\ag{\avar; w; \ssa{c}}{ \avar'; w'} $. 
+% The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
+% The output of the algorithm is the updated assigned variables $\avar'$, along with the updated while map $w$ for next steps' collecting.   
 The $\varCol$ algorithm shows how the assigned variables $\avar$ are collected 
 (via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step.
 The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
-It has the form: $\ag{\avar; w; \ssa{c}}{ \avar'; w'} $. 
-The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
-The output of the algorithm is the updated assigned variables $\avar'$, along with the updated while map $w$ for next steps' collecting.   
+It has the form: $\ag{\avar; \ssa{c}}{ \avar'} $. 
+The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$ and a program $\ssa{c}$. 
+The output of the algorithm is the updated assigned variables $\avar'$ thorough the program $\ssa{c}$
 %
 % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in Figure \ref{fig:var_col}. 
 %
@@ -2773,31 +2779,31 @@ The output of the algorithm is the updated assigned variables $\avar'$, along wi
 \inferrule
 {
 }
-{ \ag{\avar ; w; \ssa{[\assign {x}{\expr}]^{l}}}{\avar ++ [\ssa{x}];w}
+{ \ag{\avar ; \ssa{[\assign {x}{\expr}]^{l}}}{\avar ++ [\ssa{x}]}
 }
 ~\textbf{\varCol-asgn}
 \and
 \inferrule
 {
 }
-{ \ag{\avar ;w;  [ 
-\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^{l}}{\avar ++ [\ssa{x}] ; w} 
+{ \ag{\avar; [ \assign{\ssa{x}}{\query(\ssa{\qexpr})}]^{l}}
+{\avar ++ [\ssa{x}]} 
 }~\textbf{\varCol-query}
 %
 \and 
 %
 \inferrule
 {
-\ag{\avar; w; \ssa{c_1}}{  \avar_1;w_1}
+\ag{\avar; \ssa{c_1}}{\avar_1}
 \and 
- \ag{\avar_1;w ; \ssa{c_2}}{ \avar_2; w_2}
+\ag{\avar_1; \ssa{c_2}}{ \avar_2}
  \\
  {\avar_3 = \avar_2 ++ \ssa{[\bar{x}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]} }}
 }
 {
-\ag{\avar; w;
+\ag{\avar;
 [\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}],
-[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{\avar_3 ;w}
+[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{\avar_3}
 }~\textbf{\varCol-if}
 %
 %
@@ -2806,13 +2812,13 @@ The output of the algorithm is the updated assigned variables $\avar'$, along wi
 %
 \inferrule
 {
-\ag{\avar; w; \ssa{c_1}}{\avar_1; w_1}
+\ag{\avar;  \ssa{c_1}}{\avar_1}
 \and 
-\ag{\avar_1;w_1; \ssa{c_2}}{\avar_2; w_2}
+\ag{\avar_1; \ssa{c_2}}{\avar_2}
 }
 {
-\ag{\avar; w;
-\ssa{(c_1 ; c_2)}}{\avar_2 ; w_2}
+\ag{\avar;
+\ssa{(c_1 ; c_2)}}{\avar_2 }
 }
 ~\textbf{\varCol-seq}
 \and 
@@ -2822,13 +2828,13 @@ The output of the algorithm is the updated assigned variables $\avar'$, along wi
 {
 \inferrule
 {
-{ \ag{\avar ++ \ssa{[\bar{x}]} ; (w + l); \ssa{c}}{\avar' ; w'}  }
+{ \ag{\avar ++ \ssa{[\bar{x}]} ; \ssa{c}}{\avar' }  }
 }
 {
-\ag{\avar; w; 
+\ag{\avar;  
 \ewhile ~ [ b ]^{l} ~ \ssa{n} ~ 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c }{\avar'; w \setminus l }
+~ \edo ~  c }{\avar' }
 }
 ~\textbf{\varCol-while}
  }
