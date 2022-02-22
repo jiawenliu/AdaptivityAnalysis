@@ -239,7 +239,6 @@ Each command is labeled with a label $l$, a natural number standing for the line
   	The two operations ($w \setminus l$ and $w + l$) 
   	on $w$ is defined as follows:
   	%
-  	% \todo{
 	\begin{equation}
 		w \setminus l  := \left\{
 		\begin{array}{cl} 
@@ -258,7 +257,6 @@ Each command is labeled with a label $l$, a natural number standing for the line
 		\end{array}
 		\right.
 	\end{equation}
-	% }
 %
 We use $w \setminus l$ to remove the mapping of the key $l$ from the while map $w$. 
 This is used when exiting the loop at line $l$.  
@@ -1074,7 +1072,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 \mbox{Boolean Expression} & \sbexpr & ::= & 
 	%
-	\textrm{true} ~|~ \textrm{false}  ~|~ \neg \sbexpr
+	\etrue ~|~ \efalse  ~|~ \neg \sbexpr
 	 ~|~ \sbexpr \oplus_b \sbexpr
 	%
 	~|~ \saexpr \sim \saexpr 
@@ -1097,7 +1095,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 ~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} 
 \\ 
 &&& 
-{\ewhile ~ [ b ]^{l} , n,
+{\ewhile ~ [ \sbexpr ]^{l} , n,
 ~ 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
 ~ \edo ~  \ssa{c} }
@@ -1196,7 +1194,8 @@ We show the evaluation rules in Figure~\ref{fig:ssa_evaluation}.
 }
 %
 The command 
-$\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time, which is a map from ssa variable $\ssa{x}$ to variable $\ssa{x_i}$. This map is designed for if condition, when the variable may comes from two branches and this command records which branch the variable comes from. 
+$\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time, which is a map from ssa variable $\ssa{x}$ to variable $\ssa{x}_i$. 
+This map is designed for $\eif$ command, when the variable may comes from two branches and this command records which branch the variable comes from. 
 %
 \begin{figure}
 \begin{mathpar}
@@ -1237,7 +1236,7 @@ $\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time
 m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 }} 
 \xrightarrow{} 
-\config{\ssa{  m[  x \mapsto v], \eskip,  
+\config{\ssa{  (x \mapsto v)::m, \eskip,  
 {\query(\qval),l,w )::t,w }}
 }
 }
@@ -1249,7 +1248,7 @@ m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 {
 }
 {
-\config{\ssa{ m, [\assign x v]^{l},  t,w} } \xrightarrow{} \config{\ssa{m[x \mapsto v], [\eskip]^{l}, t,w} }
+\config{\ssa{ m, [\assign x v]^{l},  t,w} } \xrightarrow{} \config{\ssa{(x \mapsto v)::m, [\eskip]^{l}, t,w} }
 }
 ~\textbf{ssa-assn}
 %
@@ -1291,7 +1290,7 @@ m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 %
 \inferrule{
 }{
- \config{ \ssa{m,} \eifvar(\ssa{\bar{x}, \bar{x}'}),\ssa{ t,w }} \to \config{ \ssa{m [\bar{x} \to m(\bar{x}')], \eskip , t,w }  }
+ \config{ \ssa{m,} \eifvar(\ssa{\bar{x}, \bar{x}'}),\ssa{ t,w }} \to \config{ \ssa{(\bar{x} \to m(\bar{x}'))::m, \eskip , t,w }  }
 }~\textbf{ssa-\eifvar}
 % %
 %
@@ -1414,20 +1413,21 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
 %
 {
 The key idea underneath the operational semantics is to have the trace and the execution path being constructed in a similar way as in the loop language.
-Take the query request as an example, the argument $\ssa{e}$ which contains ssa variables will be evaluated to a value $v$ first before the request is sent to the database in rule $\textbf{ssa-query-arg}$. 
+Take the query request as an example, the argument $\ssa{\expr}$ which contains ssa variables will be evaluated to a value $v$ first before the request is sent to the database in rule $\textbf{ssa-query-arg}$. 
 The trace expands in the rule $\textbf{ssa-query}$ likewise in the loop language. 
 The query $q$, a primitive symbol representing the abstract query in both the ssa language and  the loop language, makes no difference in the two languages. 
-Since we add the extra part $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}]  $ in the if command compared to its counterpart in the while language, 
+Since we add the extra part $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}]  $ 
+in the if command compared to its counterpart in the while language, 
 the rules relevant to the if condition ($\textbf{ssa-if-t}$ and $\textbf{ssa-if-f}$) use the command $ifvar(\ssa{\bar{x}, \bar{x}'})$ to update the ssa memory $\ssa{m}$ with the mapping from the new generated variable $\ssa{x}$ in $\bar{\ssa{x}}$ to the appropriate value $\ssa{m(x')}$ where $\ssa{x'}$ is the corresponding variable w.r.t $\ssa{x}$ in $\bar{\ssa{x'}}$.
 %
-The rule $\textbf{ssa-ifvar}$ reflects the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$.
+The rule $\textbf{ssa-\eifvar}$ reflects the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$.
 %
 It is easier to understand the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$ in the rule $\textbf{ssa-if-t}$ when we think about how ssa works: 
 in the ssa form, when a variable to be used may come from two sources (e.g. $\ssa{x_1}$ and $\ssa{x_2}$ in the rule), it generates a new variable $\ssa{x}$, assigning it with $\phi(\ssa{x_1}, \ssa{x_2})$,  and replaces the variable to be used with newly assigned $\ssa{x}$. 
 We know that in the future program after the if command, 
 only the variables $\bar{\ssa{x}}$ will be available instead of $\bar{\ssa{x_1}}, \bar{\ssa{x_2}}$ from two branches.
 For the evaluation of the program after the if command, we need to tell the memory the exact value of the newly generated variable $\ssa{x}$, which is the value stored in $\ssa{x_1}$ when the conditional $\ssa{b}$ is true, 
-or the value in $\ssa{x_2}$ when $\ssa{b}$ is false. To this end, the internal command $ifvar(\ssa{\bar{x}, \bar{x}'})$ plays its role. 
+or the value in $\ssa{x}_2$ when $\sbexpr$ is false. To this end, the internal command $\eifvar(\ssa{\bar{x}, \bar{x}'})$ plays its role. 
 For the if rule, w
 e need to instantiate the variables from $\bar{\ssa{x}}$ whose values come from two branches, 
 $\bar{\ssa{y}}$ whose values from then branch or assignment before the if command, and $\bar{\ssa{z}}$ whose values from else branch or before the if command. 
@@ -1450,7 +1450,6 @@ We use a name environment denoted as $\Sigma$ as a set of ssa variables, to get 
 We define $\delta_1 \bowtie \delta_2 $ in a similar way as
 \cite{vekris2016refinement}.
 %
-\todo{
 \[ 
 \delta_1 \bowtie \delta_2 = \{ ( x, {\ssa{x_1}, \ssa{x_2}} ) \in 
 \mathcal{VAR} \times \mathcal{SVAR} \times \mathcal{SVAR} \mid x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }  }  \} 
@@ -1461,14 +1460,12 @@ We define $\delta_1 \bowtie \delta_2 $ in a similar way as
 \mathcal{VAR} \times \mathcal{SVAR} \times \mathcal{SVAR}
  \mid x \not\in \bar{x} \land x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }   }  \} 
  \]
- }
  %
-\todo{
 We call a list of variables $\bar{x}$.
 \[
  [\bar{x}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] = \{ (x, x_1,x_2)  | \forall 0 \leq i < |\bar{x}|, x = \bar{x }[i] \land x_1 = \bar{x_1}[i] \land x_2 = \bar{x_2 }[i] \land |\bar{x}| = |\bar{x_1}| = |\bar{x_2}|   \}
 \]
-}
+%
 \begin{mathpar}
 \boxed{ \delta ; e \hookrightarrow \ssa{e} }
 \and
@@ -1785,13 +1782,13 @@ the dependency graph $\traceG(\ssa{c},D,\ssa{m}) = (\vertxs, \edges)$ is defined
 \\
 Given a program $\ssa{c}$ in SSA language, 
 its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
-$\traceG(\ssa{c}, \textrm{D},\ssa{m}) = (\vertxs, \edges)$, 
+$\traceG(\ssa{c}, \text{D},\ssa{m}) = (\vertxs, \edges)$, 
 for all possible starting SSA memory $\ssa{m}$ and database $D$.
 %
 %
 $$
 A(\ssa{c}) = \max \big 
-\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \path(\traceG(\ssa{c}, D, \ssa{m}) \big \} 
+\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \path(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
 $$
 \end{defn}
 %
@@ -1801,7 +1798,7 @@ $$
 {
 Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $,
 $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, 
-then $G(c,D,m) = \traceG(\ssa{c}, D,\ssa{m}) $.
+then $G(c,D,m) = \traceG(\ssa{c}, \text{D},\ssa{m}) $.
 }
 \end{thm}
 %
@@ -2549,11 +2546,11 @@ Consider the program $c$ below in the left hand side as an example, its assigned
 $$
 \ssa{c} = 
 \begin{array}{l}
-\left[\ssa{\assign {x_1} {q}}		\right]^1;
+\left[\ssa{\assign {x_1} {\query(0)}}		\right]^1;
 \\
-\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;
+\left[\ssa{\assign {x_2} {x_1 + 1}}		\right]^2;
 \\
-\left[\ssa{\assign {x_3} {x_2 + 2}}	\right]^3
+\left[\ssa{\assign {x_3} {x_2 + 2}}		\right]^3
 \end{array}
 ~~~~~~~~~~~~
 \avar = \left [ 
@@ -2651,11 +2648,11 @@ Consider the same program $c$ as above, its data flow matrix $\Mtrix$ and $\flag
 $$
 \ssa{c} = 
 \begin{array}{l}
-\left[\ssa{\assign {x_1} {q}}		\right]^1;
+\left[\ssa{\assign {x_1} {\query(0)}}	\right]^1;
 \\
-\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;
+\left[\ssa{\assign {x_2} {x_1 + 1}}		\right]^2;
 \\
-\left[\ssa{\assign {x_3} {x_2 + 2}}	\right]^3
+\left[\ssa{\assign {x_3} {x_2 + 2}}		\right]^3
 \end{array}
 ~~~~~~~~~~~~
 \Mtrix
