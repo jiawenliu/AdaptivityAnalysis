@@ -2853,10 +2853,11 @@ The assignment commands are the source of variables $\varCol$ collecting,
 Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
 %
 %
-\begin{defn}[Valid Index]
+\jl{
+\begin{defn}[Valid Index (Remove?)]
 Given an assigned variable list $\avar$, $\avar; \vDash (\ssa{c},i_1,i_2)$ iff 
 $\avar' = \avar[0,\ldots, i_1-1], \avar';\ssa{c} \to \avar'' \land \avar'' = \avar[0, \ldots, i_2-1] $.  
-\end{defn}
+\end{defn}}
 %
 %
 \paragraph{Data Flow Matrix Generating Algorithm}
@@ -2872,9 +2873,11 @@ $\ad{\Gamma ; \ssa{c} ; i_1}{\Mtrix; \flag; {i_2}}$.
 $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\avar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 %
 %
-% \begin{defn}[Valid gamma]
-% $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
-% \end{defn}
+\jl{
+\begin{defn}[Valid Gamma (Remove?)]
+$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
+\end{defn}
+}
 %
 % {$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
 % %
@@ -3108,13 +3111,15 @@ and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 %
 %
 \paragraph{Reachability Bounds}
-Given a program $c$, we use the algorithm $\rb(v, c)$ from paper \cite{10.1145/1806596.1806630} to estimate the reachability bound for each variable $v$. 
-The output of the algorithm $\rb(v, c)$ is an integer, which represents the reachability bound of the variable in program $c$.
+Given a program $c$ with its assigned variables $\avar$,
+we use the $\rb(\ssa{x}, \ssa{c})$ algorithm, from paper \cite{10.1145/1806596.1806630}, to estimate the reachability bound for each variable $\ssa{x} \in \avar$. 
+The input of $\rb$ is a program $\ssa{c}$ in SSA language and a variable $\ssa{x} $ from $\ssa{c}$.
+The output of $\rb(\ssa{x}, \ssa{c})$ is an integer representing the reachability bound of $\ssa{x}$ in $\ssa{c}$.
 %
 
 %
-The following example programs $\ssa{c}2$ and $\ssa{c}3$ with while loop illustrates how the algorithm works.
-The generated assigned variables, $\avar_{\ssa{c}2}$ and $\avar_{\ssa{c}3}$,
+The following example programs $\ssa{c}2$ and $\ssa{c}3$ with while loop illustrate how the algorithm works.
+The collected assigned variables, $\avar_{\ssa{c}2}$ and $\avar_{\ssa{c}3}$,
 data flow matrix $\Mtrix_{\ssa{c}2}$ and  $\Mtrix_{\ssa{c}3}$
 and variable flags $\flag_{\ssa{c}2}$ and $\flag_{\ssa{c}3}$
 for program $\ssa{c}2$ and $\ssa{c}3$
@@ -3123,7 +3128,7 @@ are presented in the right hand side.
 \[
 {\ssa{c}2 \triangleq
 \begin{array}{l}
-    \left[\ssa{ x_1 \leftarrow \query(1)}  \right]^1 ; 
+    \left[\ssa{ x_1} \leftarrow \query(1)  \right]^1 ; 
     \\
     \left[\ssa{i_1} \leftarrow 0 \right]^2 ; 
     \\
@@ -3134,14 +3139,14 @@ are presented in the right hand side.
     ~ \edo 
     \\
     ~ \Big( 
-    \left[\ssa{ y_1 \leftarrow \query(2)} \right]^4;
+    \left[\ssa{y}_1 \leftarrow \query(2) \right]^4;
     \\
     \left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5;
     \\
     \left[\ssa{i_2 \leftarrow 1  + i_3 } \right]^6
     \Big) ; 
     \\
-    \left[ \ssa{\assign{z_1}{x_3 + 2}}  \right]^{7}
+    \left[ \ssa{\assign{z_1}{x_3}} + 2  \right]^{7}
 \end{array}
 ,
 ~~~~
@@ -3197,7 +3202,7 @@ are presented in the right hand side.
 \[
 {{\ssa{c}3}  \triangleq
 \begin{array}{l}
-    \left[\ssa{ x_1 \leftarrow \query(1)}  \right]^1 ;
+    \left[\ssa{ x}_1 \leftarrow \query(1)  \right]^1 ;
     \\
     \left[\ssa{i_1} \leftarrow 1 \right]^2 ; 
     \\
@@ -3207,10 +3212,10 @@ are presented in the right hand side.
     ~ \edo
     \\
     ~ \Big( 
-    \left[\ssa{ y_1 \leftarrow \query(2)} \right]^3; \\
+    \left[\ssa{ y_1} \leftarrow \query(2) \right]^3; \\
     \left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5
     \Big) ; \\
-    \left[ \ssa{\assign{z_1}{x_3 + 2}}  \right]^{6}
+    \left[ \ssa{\assign{z_1}{x_3}} + 2  \right]^{6}
 \end{array},
 ~~~~~~
 \avar_{\ssa{c}3} = \left [ \begin{matrix}
@@ -3275,18 +3280,20 @@ We can now look at the if statement.
 %
  \ssa{c}4 \triangleq
 \begin{array}{l}
-   	\left[ \ssa{ x_1 \leftarrow \query(1)} \right]^1; 
+   	\left[ \ssa{x}_1 \leftarrow \query(1) \right]^1; 
    	\\
-   	\left[\ssa{ y_1 \leftarrow \query(2)} \right]^2 ; 
+   	\left[\ssa{y}_1 \leftarrow \query(2) \right]^2 ; 
    	\\
     \eif \;( \ssa{ x_1 + y_1 == 5} )^3,  \\
     \ssa{[ x_4,x_2,x_3 ],[] ,[y_3,y_1,y_2 ]} 
     \\
-    \mathsf{then} ~ \left[ \ssa{x_2 \leftarrow \query(3)}\right]^4 
+    \mathsf{then} ~ \left[ 
+    \ssa{x}_2 \leftarrow \query(3) \right]^4 
     \\
-    \mathsf{else} ~ \left[ \ssa{x_3 \leftarrow \query(4)} \right]^5 ; 
+    \mathsf{else} ~ \left[ 
+    \ssa{x}_3 \leftarrow \query(4) \right]^5 ; 
     \\
-    \ssa{y_2 \leftarrow 2} ) \\
+    \ssa{y}_2 \leftarrow 2 ) \\
    \left[ \ssa{ z_1 \leftarrow x_4 +y_3 }\right]^6
 \end{array},
 % \]
@@ -3335,7 +3342,8 @@ We can now look at the if statement.
 [Program-Based Dependency Graph].
 \label{def:prog-based_graph}
 \\
-Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$, s.t. $\Gamma \vdash_{M, \flag}^{i_1,i_2} \ssa{c}$, 
+Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$, s.t.,
+$\Gamma \vdash_{M, \flag} \ssa{c}$, 
 its program-based graph 
 $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \\
@@ -3343,44 +3351,44 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \begin{array}{rlcl}
 	\text{Vertexes} &
 	\vertxs & := & \left\{ 
-	\ssa{x^l} \middle\vert
-	\ssa{x^l} = \avar(i), i = 1, \ldots, N 
+	\ssa{x} \mid
+	\ssa{x} = \avar(i), i = 1, \ldots, N 
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
-	(\ssa{x_1^{l_1}}, \ssa{x_2^{l_2}}) 
+	(\ssa{x_1}, \ssa{x_2}) 
 	\in \avar \times \avar 
 	\middle\vert
 	\begin{array}{l}
 		\forall ~ i,j = 1, \ldots, N ~ s.t., ~\\
-		\ssa{x_1^{l_1}} = \avar(i),  \ssa{x_2^{l_2}} = \avar(j) \land
+		\ssa{x_1} = \avar(i),  \ssa{x_2} = \avar(j) \land
 		\Mtrix(i)(j) \geq 1
 	\end{array} 
 	\right\}
 	\\
 	\text{Flags} &
 	\flag & := & 
-	\left\{(\ssa{x^l}, f)  \in \vertxs \times \{0, 1, 2\} 
-	\middle\vert 
-	\forall i = 1, \ldots, N ~  s.t.
-	\ssa{x^l} = \avar(i) \land f = \flag(i)
-	\right\}
+	\big\{(\ssa{x}, f)  \in \vertxs \times \{0, 1, 2\} 
+	\mid 
+	\forall i = 1, \ldots, N ~  s.t. ~
+	\ssa{x} = \avar(i) \land f = \flag(i)
+	\big\}
 	\\
 	\text{Weights} &
 	\weights & := &
 	\bigcup
 	\begin{array}{l}
-		\left\{ (v, w) \in \vertxs \times (\mathbb{N} \cup \expr)
-		\middle\vert
+		\big\{ (v, w) \in \vertxs \times (\mathbb{N} \cup \expr)
+		\mid
 		\forall v \in \vertxs ~  s.t. ~ \flag(v) > 0 \land w = \rb(v, c)
-		\right\} 
+		\big\} 
 		\\
-		\left\{(v, 1)  \in \vertxs \times \{1\} 
-		\middle\vert 
+		\big\{(v, 1)  \in \vertxs \times \{1\} 
+		\mid
 		\forall v \in \vertxs ~  s.t. ~ \flag(v) = 0
-		\right\}
+		\big\}
 	\end{array} 
 \end{array}
 \]
