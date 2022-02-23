@@ -2541,9 +2541,11 @@ $$
      	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 
      	++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
      	& \ssa{c} 	= 
-     	[\ssa{\eif (b ,[\bar{x}], [\bar{y}], [\bar{z}], c_1, c_2}]^{(l, w)}) \\
+     	[\ssa{\eif ([\sbexpr]^{(l, w)} ,[\bar{x}, \bar{x_2}, \bar{x_2}], 
+     	[\bar{y}, \bar{y_2}, \bar{y_3}], 
+     	[\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}]) \\
      	& = \avar(\ssa{c}) ++ [\ssa{\bar{x}}]
-     	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, \ssa{[x_1,x_2,x_3], {c}})
+     	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c})
 \end{array}
 $$
 \end{defn}
@@ -2590,15 +2592,16 @@ Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a
 	\left(
 	\bigvee
 	\begin{array}{l}
-	\big(\exists 
-		\ewhile \ldots \edo \ssa{c'} ~ \in ~\ssa{c} ~ s.t. ~
+	\big(\exists  ~ \ssa{c'}, \ssa{\expr} ~ s.t.
+		\ewhile \ldots \edo \ssa{c'} ~ \in ~\ssa{c}
+		\land 
 		[\ssa{\assign{x}{\expr}}]^{l'} \in \ssa{c'}
 	\big)
 	\\
-	\big(\exists 
-		\eif \sbexpr \ethen \ssa{c_1} \eelse \ssa{c_2} ~\in \ssa{c} ~ s.t. ~
-		([\ssa{\assign{x}{\expr}}]^{l1} \in \ssa{c_1} \lor 
-		[\ssa{\assign{x}{\expr}}]^{l2} \in \ssa{c_2})
+	\big(\exists ~  \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2 ~ s.t. ~
+		\eif(\ldots, \ssa{c_1}, \ssa{c_2}) \in \ssa{c} \land
+		([\ssa{\assign{x}{\expr_1}}]^{l1} \in \ssa{c_1} \lor 
+		[\ssa{\assign{x}{\expr_2}}]^{l2} \in \ssa{c_2})
 	\big)
 	\end{array}
 	\right)
@@ -2606,7 +2609,7 @@ Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a
 	0 & \text{o.w.}
 	\end{array}
 	\right\}, 
-	i = 1, \ldots, |\avar|.
+	% i = 1, \ldots, |\avar|.
 \] 
 % It is inductively defined as follows:
 % $$
@@ -2632,7 +2635,7 @@ Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a
 %
 Operations on $\flag$ are defined as follows:
 \begin{equation}
-\begin{array}{lllr}
+\begin{array}{llll}
 {\flag_1 \uplus \flag_2}(i) & := &
 \left\{
 \begin{array}{ll}
@@ -2644,7 +2647,10 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 \\
 {\flag \uplus k}(i) & := & 
 \max\big\{ \flag(i), k \big\} 
-& i = 1, \ldots, |\flag|    \\
+& i = 1, \ldots, |\flag|    
+\\
+\left[ f \right] * k (i) & := &  f 
+& i = 1, \ldots, k 
 \end{array}
 \end{equation}
 
@@ -2799,23 +2805,27 @@ is as follows
 % The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
 % The output of the algorithm is the updated assigned variables $\avar'$, along with the updated while map $w$ for next steps' collecting.   
 The $\varCol$ algorithm shows how the assigned variables $\avar$ are collected 
-(via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step.
+(via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step, 
+along with constructing the flag for each variable, i.e., $\flag$.
 The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
-It has the form: $\ag{\avar; \ssa{c}}{ \avar'} $. 
-The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$ and a program $\ssa{c}$. 
-The output of the algorithm is the updated assigned variables $\avar'$ thorough the program $\ssa{c}$
+It has the form: 
+\jl{$\ag{\avar; \flag; \ssa{c}}{ \avar'; \flag'} $}. 
+The input of $\varCol$ is a program $\ssa{c}$, 
+the assigned variables $\avar$ collected before the program $\ssa{c}$ 
+as well as the flags $\flag$ for every corresponding variable .
+The output of the algorithm is the updated assigned variables $\avar'$ and flags $\flag'$ thorough the program $\ssa{c}$
 %
 % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in Figure \ref{fig:var_col}. 
 %
-\jl{
 \begin{figure}
+\jl{
 \begin{mathpar}
 \inferrule
 {
 \empty
 }
 { \ag{\avar ; \flag; \ssa{[\assign {x}{\expr}]^{l}}}
-{\avar ++ [\ssa{x}]; \flag++[0]}
+ {\avar ++ [\ssa{x}]; \flag++[0]}
 }
 ~\textbf{\varCol-asgn}
 \and
@@ -2833,14 +2843,20 @@ The output of the algorithm is the updated assigned variables $\avar'$ thorough 
 \ag{\avar; [];  \ssa{c_1}}{\avar_1; \flag_1}
 \and 
 \ag{\avar_1; []; \ssa{c_2}}{ \avar_2; \flag_2}
+\and 
+\avar' = [\bar{\ssa{x}}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]}
  \\
+k = \len(\avar')
+\and
  \todo{
- $\avar_3 = \avar_2 ++ \ssa{[\bar{x}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]}}$ 
+ $\avar_3 = \avar_2 ++ \avar'$ 
  }
  \and
- % \todo{
- % $\flag_3 = \flag ++ (\flag_1 \uplus 1) ++ (\flag_2 \uplus 1)$
- % }
+ \todo{
+ $
+ \flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1) ++ ([1]*k)
+ $
+ }
  }
 {
 \ag{\avar; \flag;
@@ -2870,29 +2886,33 @@ The output of the algorithm is the updated assigned variables $\avar'$ thorough 
 {
 \inferrule
 {
-{ \ag{\todo{$\avar ++ \ssa{[\bar{x}]}$}; [] ; \ssa{c}}
+{ \ag{\avar; [] ; \ssa{c}}
 {\avar'; \flag' }  }
+\\
+\avar'' = \avar'++ \ssa{[\bar{x}]}
+\and 
+\flag'' = \flag ++ (\flag' \uplus 1) ++ ([1]*\len(\ssa{[\bar{x}]}))
 }
 {
 \ag{\avar; \flag;  
 \ewhile [\ssa{b}]^{l}, \ssa{n}, 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-\edo  \ssa{c} }{\avar'; \flag ++ (\flag' \uplus 1) }
+\edo  \ssa{c} }{\avar''; \flag''}
 }
 ~\textbf{\varCol-while}
  }
 \end{mathpar}
+}
  \caption{The Algorithmic Rules of $\varCol$ }
     \label{fig:var_col}
 \end{figure}
 %
-}
 %
 The assignment commands are the source of variables $\varCol$ collecting, 
 	in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
 	the output assigned variables are extended by $\ssa{x}$. 
 \\
-	When it comes to the $\eif \ldots \eelse \ldots \ethen$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$.
+	When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$.
 \\ 
 	The sequence command $\ssa{c_1;c_2}$ is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ preserving their order. 
 \\
@@ -2915,11 +2935,11 @@ $\avar' = \avar[0,\ldots, i_1-1], \avar';\ssa{c} \to \avar'' \land \avar'' = \av
 In this data flow matrix generating algorithm, we analyze the data flow information among all assigned variables $\avar$ collected via the the $\varCol$ algorithm of length $N$.
 %
 We track the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $N \times N$. 
-We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\avar|$. 
+% We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\avar|$. 
 %
 The algorithm to fill in the matrix is of the form: 
-\jl{$\ad{\Gamma ; \ssa{c} ; \avar}{\Mtrix; \flag}$}
-$\ad{\Gamma ; \ssa{c} ; i_1}{\Mtrix; \flag; {i_2}}$. 
+\jl{$\ad{\Gamma ; \ssa{c} ; \avar}{\Mtrix}$}
+$\ad{\Gamma ; \ssa{c} ; i_1, i_2}{\Mtrix; \flag}$. 
 $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\avar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 %
 %
@@ -3041,7 +3061,8 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 \end{mathpar}
 \jl{Updated Flow Generation Algorithm}
 \jl{
-\framebox{$ {\Gamma} \vdash_{\Mtrix, \flag} ~ c $}
+\framebox{$ {\Gamma} 
+\vdash_{\Mtrix, \avar} ~ \ssa{c} $}
 \begin{mathpar}
 \inferrule
 {
@@ -3051,7 +3072,7 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 }
 {
 \ad{\Gamma; [\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; \avar}
- {\Mtrix; \flag_{\emptyset}}
+ {\Mtrix}
 }
 ~\textbf{\graphGen-asgn}
 \and
@@ -3060,13 +3081,11 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 {
 \ssa{x} = \avar(i)
 \and 
-\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
-\and
-\flag = \lMtrix_i
+\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr}} + \Gamma )
 }
 { 
 \ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} ; \avar }
-{\Mtrix;\flag}
+{\Mtrix}
 }~\textbf{\graphGen-query}}
 %
 \and 
@@ -3074,21 +3093,21 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 {
 \inferrule
 {
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \avar }{ \Mtrix_1;\flag_1  }}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \avar }{ \Mtrix_1}}
 \and 
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c_2}; \avar }{ \Mtrix_2; \flag_2}}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c_2}; \avar }{ \Mtrix_2}}
 \\
-{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix_x; \flag_{\emptyset}}}
+{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix_x}}
 %
 \\
 %
 {\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \avar }
-{ \Mtrix_y; \flag_{\emptyset}}}
+{ \Mtrix_y}}
 %
 \\
 %
 \ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \avar}
-{ \Mtrix_y; \flag_{\emptyset}}
+{ \Mtrix_y}
 \\
 {\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
 }
@@ -3097,7 +3116,7 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
 [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
 \ssa{ c_1, c_2)}}
-{ \Mtrix ; \flag_1 \uplus \flag_2 \uplus 2 }
+{ \Mtrix }
 }
 ~\textbf{\graphGen-if}
 }
@@ -3108,14 +3127,14 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 %
 \inferrule
 {
-{\ad{\Gamma; \ssa{c_1}; \avar }{ \Mtrix_1 ; \flag_1}  }
+{\ad{\Gamma; \ssa{c_1}; \avar }{ \Mtrix_1}  }
 \and 
 {
-\ad{\Gamma;\ssa{c_2}; \avar}{ \Mtrix_2; \flag_2}}
+\ad{\Gamma;\ssa{c_2}; \avar}{ \Mtrix_2}}
 }
 {
 \ad{\Gamma ; (\ssa{c_1 ; c_2} ); \avar}
-{( \Mtrix_1 {;} \Mtrix_2) ; \flag_1 \uplus \flag_2 }
+{( \Mtrix_1 {;} \Mtrix_2) }
 }
 ~\textbf{\graphGen-seq}
 %
@@ -3126,27 +3145,24 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 { 
 \inferrule
 {
-{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar}{ \Mtrix_{1};V_{1} }}
+{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar}{ \Mtrix_{1} }}
 \\
 {
-\ad{\Gamma;\ssa{c}; \avar  }{ \Mtrix_{2}; \flag_{2}}
+\ad{\Gamma;\ssa{c}; \avar  }{ \Mtrix_{2}}
 }
 \\
 {
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix; \flag}
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix}
 }
-\\
-{ \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
 \and
-{
-\flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
+{ \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
 }
 {
 \ad{\Gamma;
 \ewhile ~ [ b ]^{l} ~ \ssa{n} ~
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
 ~ \edo ~  c; \avar }
-{ \Mtrix'; \flag' }
+{ \Mtrix'}
 }~\textbf{\graphGen-while}
 }
 \end{mathpar}
@@ -3157,7 +3173,13 @@ Below we define the valid data flow matrix, to have a clear understanding on the
 For a global list $\avar$, $\avar \vDash (\Mtrix,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
-%
+\jl{
+\begin{defn}[Valid Matrix]
+Given a program $\ssa{c}$ with its assigned variables $\avar$, 
+$\avar \vDash \Mtrix$ iff the cardinality of $\Mtrix$ equals to the product of  $\avar$'s cardinality,
+i.e., $|\Mtrix| = |\avar| \times |\avar|$.
+\end{defn}
+}%
 %
 %
 \paragraph{Reachability Bounds}
