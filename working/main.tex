@@ -165,7 +165,7 @@ The key component of the system is a program analysis tool, which provides an up
 \\ 
 %
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
-::= & {\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \} } 
+::= & \left\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \right\} 
 \\
 %
 \mbox{{Query Results Domain}}
@@ -1124,7 +1124,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 \\
 \mbox{Annotated Queries} & \mathcal{AQ}  & 
-::= & {\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \} } 
+::= & \left\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \right\}
 \\
 %
 \mbox{{Query Results Domain}}
@@ -1136,7 +1136,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\
 %
 \mbox{{Database Domain}}
-& \dbdom & ::= & {\left\{ \qval \mapsto \qdom \right\}}
+& \dbdom & ::= & { \qval \mapsto \qdom }
 %
 %
 \end{array}
@@ -1420,7 +1420,7 @@ The trace expands in the rule $\textbf{ssa-query}$ likewise in the loop language
 The query $q$, a primitive symbol representing the abstract query in both the ssa language and  the loop language, makes no difference in the two languages. 
 Since we add the extra part $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}]  $ 
 in the if command compared to its counterpart in the while language, 
-the rules relevant to the if condition ($\textbf{ssa-if-t}$ and $\textbf{ssa-if-f}$) use the command $ifvar(\ssa{\bar{x}, \bar{x}'})$ to update the ssa memory $\ssa{m}$ with the mapping from the new generated variable $\ssa{x}$ in $\bar{\ssa{x}}$ to the appropriate value $\ssa{m(x')}$ where $\ssa{x'}$ is the corresponding variable w.r.t $\ssa{x}$ in $\bar{\ssa{x'}}$.
+the rules relevant to the if condition ($\textbf{ssa-if-t}$ and $\textbf{ssa-if-f}$) use the command $\eifvar(\ssa{\bar{x}, \bar{x}'})$ to update the ssa memory $\ssa{m}$ with the mapping from the new generated variable $\ssa{x}$ in $\bar{\ssa{x}}$ to the appropriate value $\ssa{m(x')}$ where $\ssa{x'}$ is the corresponding variable w.r.t $\ssa{x}$ in $\bar{\ssa{x'}}$.
 %
 The rule $\textbf{ssa-\eifvar}$ reflects the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$.
 %
@@ -1474,8 +1474,10 @@ We call a list of variables $\bar{x}$.
 \inferrule{
 }{
  \delta ; x \hookrightarrow \delta(x)
-}~{\textbf{S-VAR}}\\
-\boxed{ \Sigma; \delta ; c  \hookrightarrow \ssa{c} ; \delta' ; \Sigma' } \\
+}~{\textbf{S-VAR}}
+\and
+\boxed{ \Sigma; \delta ; c  \hookrightarrow \ssa{c} ; \delta' ; \Sigma' }
+\and
 \inferrule{
   { \delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
   \and
@@ -1564,47 +1566,48 @@ We call a list of variables $\bar{x}$.
 \[
 c_1 \triangleq
 \begin{array}{l}
-     \left[x \leftarrow q_1 \right]^1; \\
+     \left[x \leftarrow \query(1) \right]^1; \\
      \eif \; (x ==0)^{2} \; \\
-    \mathsf{then} \; \left[y \leftarrow q_2 \right]^3\; \\
-    \mathsf{else} \; \left[y \leftarrow 0 \right]^4 ; \\
+    \ethen \; \left[y \leftarrow \query(2) \right]^3\; \\
+    \eelse \; \left[y \leftarrow 0 \right]^4 ; \\
     \eif \; (x == 1 )^5\; \\
-    \mathsf{then} \; \left[ y \leftarrow 0 \right]^6\; \\
-    \mathsf{else} \; \left[y \leftarrow q_2 \right]^7\\
+    \ethen \; \left[ y \leftarrow 0 \right]^6\; \\
+    \eelse \; \left[y \leftarrow \query(2) \right]^7\\
 \end{array}
 %
 %
 \hspace{20pt} \hookrightarrow  \hspace{20pt}
 %
 \begin{array}{l}
-     \left[ \ssa{x_1} \leftarrow \ssa{q_1} \right]^1; \\
+     \left[ \ssa{x_1} \leftarrow \query(1) \right]^1; \\
      \eif \; (\ssa{x_1 ==0})^{2}, [\ssa{ y_3, y_1,y_2  }],[],[]  \; \\
-    \mathsf{then} \; \left[ \ssa{y_1 \leftarrow q_2} \right]^3\; \\
-    \mathsf{else} \; \left[\ssa{y_2 \leftarrow 0 } \right]^4 ; \\
+    \ethen \; \left[ \ssa{y_1} \leftarrow \query(2) \right]^3\; \\
+    \eelse \; \left[\ssa{y_2 \leftarrow 0 } \right]^4 ; \\
     \eif \; (\ssa{x_1 == 1} )^{5} , [\ssa{ y_6, y_4, y_5 } ] \; \\
-    \mathsf{then} \; \left[ \ssa{y_4 \leftarrow 0} \right]^6\; \\
-    \mathsf{else} \; \left[\ssa{y_5 \leftarrow q_2 } \right]^7\\
+    \ethen \; \left[ \ssa{y_4 \leftarrow 0} \right]^6\; \\
+    \eelse \; \left[\ssa{y_5} \leftarrow \query(2) \right]^7\\
 \end{array}
 \]
 \[
 c_2 \triangleq
 \begin{array}{l}
-   \left[ x \leftarrow q_1 \right]^1; \\
-   \left[y \leftarrow q_2\right]^2 ; \\
+   \left[ x \leftarrow \query(1) \right]^1; \\
+   \left[y \leftarrow \query(2) \right]^2 ; \\
     \eif \;( x + y == 5 )^3\; \\
-    \mathsf{then} \;\left[ z \leftarrow q_3\right]^4 \; \\
-    \mathsf{else} \;\left[ \ssa{\eskip}\right]^5 ; \\
+    \ethen \;\left[ z \leftarrow \query(3)\right]^4 \; \\
+    \eelse \;\left[ \ssa{\eskip}\right]^5 ; \\
    \left[ w \leftarrow q_4 \right]^6; \\
 \end{array}
 \hspace{20pt} \hookrightarrow \hspace{20pt}
 %
 \begin{array}{l}
-   \left[ \ssa{ x_1 \leftarrow q_1} \right]^1; \\
-   \left[\ssa{ y_1 \leftarrow q_2} \right]^2 ; \\
+   \left[ \ssa{ x_1 } \leftarrow \query(1) \right]^1; \\
+   \left[\ssa{ y_1} \leftarrow \query(2) \right]^2 ; \\
     \eif \;( \ssa{ x_1 + y_1 == 5} )^3, [ ],[] ,[ ]\; \\
-    \mathsf{then} \;\left[ \ssa{ z_1 \leftarrow q_3}\right]^4 \; \\
-    \mathsf{else} \;\left[ \eskip\right]^5 ; \\
-   \left[ \ssa{ w_1 \leftarrow q_4 }\right]^6; \\
+    \ethen \;\left[ \ssa{ z_1 }
+    \leftarrow \query(3)\right]^4 \; \\
+    \eelse \;\left[ \eskip\right]^5 ; \\
+   \left[ \ssa{ w_1} \leftarrow \query(4) \right]^6; \\
 \end{array}
 \]
 
@@ -1612,12 +1615,12 @@ c_2 \triangleq
 \[
 c_3 \triangleq
 \begin{array}{l}
-     \left[x \leftarrow q_1 \right]^1 ; \\
+     \left[x \leftarrow \query(1) \right]^1 ; \\
      \left[i \leftarrow 0 \right]^2 ; \\
     \ewhile ~  [i < 100]^3 ~ \edo
     \\
     ~ \Big( 
-    \left[z \leftarrow q_3 \right]^4; \\
+    \left[z \leftarrow \query(3) \right]^4; \\
     \left[x \leftarrow z + x \right]^5; \\
     \left[i \leftarrow i + 1 \right]^6
     \Big) ;
@@ -1626,14 +1629,14 @@ c_3 \triangleq
 \hspace{20pt} \hookrightarrow \hspace{20pt} 
 %
 \begin{array}{l}
-     \left[\ssa{x_1} \leftarrow \ssa{q_1} \right]^1 ; \\
+     \left[\ssa{x_1} \leftarrow \query(1) \right]^1 ; \\
      \left[\ssa{i_1} \leftarrow 0 \right]^2 ; \\
     \ewhile
     ~ [\ssa{i_1} < 100]^3, 0,
     ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }~
     \edo \\
     ~ \Big( 
-    \left[\ssa{z_1} \leftarrow \ssa{q_3} \right]^4; \\
+    \left[\ssa{z_1} \leftarrow \query(3) \right]^4; \\
     \left[ \ssa{x_2} \leftarrow \ssa{z_1 + x_3} \right]^5; \\
     \left[\ssa{i_2} \leftarrow \ssa{i_3} + 1 \right]^6
     \Big) ;
@@ -2863,13 +2866,15 @@ In this data flow matrix generating algorithm, we analyze the data flow informat
 We track the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $N \times N$. 
 We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\avar|$. 
 %
-The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{\Mtrix; \flag; {i_2}}$. 
+The algorithm to fill in the matrix is of the form: 
+\jl{$\ad{\Gamma ; \ssa{c} ; \avar}{\Mtrix; \flag}$}
+$\ad{\Gamma ; \ssa{c} ; i_1}{\Mtrix; \flag; {i_2}}$. 
 $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\avar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 %
 %
-\begin{defn}[Valid gamma]
-$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
-\end{defn}
+% \begin{defn}[Valid gamma]
+% $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
+% \end{defn}
 %
 % {$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
 % %
@@ -2887,7 +2892,7 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 {\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
 }
 {
- \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{\Mtrix; \flag_{\emptyset}; i+1 }
+ \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{\Mtrix; \flag_{0}; i+1 }
 }
 ~\textbf{\graphGen-asgn}
 \and
@@ -2981,9 +2986,121 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 }~\textbf{\graphGen-while}
 }
 \end{mathpar}
+\jl{Updated Flow Generation Algorithm}
+\jl{
+\framebox{$ {\Gamma} \vdash_{\Mtrix, \flag} ~ c $}
+\begin{mathpar}
+\inferrule
+{
+\ssa{x} = \avar(i)
+\and 
+\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
+}
+{
+\ad{\Gamma; [\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; \avar}
+ {\Mtrix; \flag_{\emptyset}}
+}
+~\textbf{\graphGen-asgn}
+\and
+{
+\inferrule
+{
+\ssa{x} = \avar(i)
+\and 
+\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
+\and
+\flag = \lMtrix_i \and \flag(i) = 1
+}
+{ 
+\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; \avar }
+{\Mtrix;\flag}
+}~\textbf{\graphGen-query}}
+%
+\and 
+%
+{
+\inferrule
+{
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \avar }{ \Mtrix_1;\flag_1  }}
+\and 
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c_2}; \avar }{ \Mtrix_2; \flag_2}}
+\\
+{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix_x; \flag_{\emptyset}}}
+%
+\\
+%
+{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \avar }
+{ \Mtrix_y; \flag_{\emptyset}}}
+%
+\\
+%
+\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \avar}
+{ \Mtrix_y; \flag_{\emptyset}}
+\\
+{\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
+}
+{
+\ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
+\bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
+[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
+\ssa{ c_1, c_2)}}
+{ \Mtrix ; \flag_1 \uplus \flag_2 \uplus 2 }
+}
+~\textbf{\graphGen-if}
+}
+%
+%
+%
+\and 
+%
+\inferrule
+{
+{\ad{\Gamma; \ssa{c_1}; \avar }{ \Mtrix_1 ; \flag_1}  }
+\and 
+{
+\ad{\Gamma;\ssa{c_2}; \avar}{ \Mtrix_2; \flag_2}}
+}
+{
+\ad{\Gamma ; (\ssa{c_1 ; c_2} ); \avar}
+{( \Mtrix_1 {;} \Mtrix_2) ; \flag_1 \uplus \flag_2 }
+}
+~\textbf{\graphGen-seq}
+%
+\and 
+%
+\and 
+%
+{ 
+\inferrule
+{
+{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar}{ \Mtrix_{1};V_{1} }}
+\\
+{
+\ad{\Gamma;\ssa{c}; \avar  }{ \Mtrix_{2}; \flag_{2}}
+}
+\\
+{
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix; \flag}
+}
+\\
+{ \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
+\and
+{
+\flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
+}
+{
+\ad{\Gamma;
+\ewhile ~ [ b ]^{l} ~ \ssa{n} ~
+[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
+~ \edo ~  c; \avar }
+{ \Mtrix'; \flag' }
+}~\textbf{\graphGen-while}
+}
+\end{mathpar}
+}
 %
 Below we define the valid data flow matrix, to have a clear understanding on the data flow generating algorithm:
-\begin{defn}[Valid matrix]
+\begin{defn}[Valid Matrix]
 For a global list $\avar$, $\avar \vDash (\Mtrix,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
