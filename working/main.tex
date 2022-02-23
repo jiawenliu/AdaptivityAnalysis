@@ -2525,10 +2525,11 @@ In the following subsections, we present the adaptivity analysis based on the \T
 \label{subsec:alg_notation}
 %
 \begin{defn}[Assigned Variables ($\avar$)]
-Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. It is defined as follows:
+Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. 
+It is defined as follows:
 $$
 \begin{array}{lll}
-   \avar(\ssa{c}) 	
+   \avar_{\ssa{c}} 	
    		& = [\ssa{x}] 									
    		& \ssa{c} 	= 
    			[\ssa{\assign x e}]^{(l, w)} \\
@@ -2575,22 +2576,58 @@ For any program $\ssa{c}$, every variable in $\avar(\ssa{c})$ is distinct
 
 \begin{defn}[Variable Flags ($\flag$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $v$ showing up as the $i$-th element in $\avar$, i.e., $v = \avar(i)$:
+Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\avar$ (i.e., $\ssa{x} = \avar(i)$), $\flag(i)$ is defined as follows:
 %
 %
 \[
-	F(i) := 
+	\flag(i) := 
 	\left\{
 	\begin{array}{ll}
-	1 & \text{the i-th variable $v = \avar(i)$ is assigned by a query in $\ssa{c}$}
+	2 & \ssa{x} = \avar(i) \land 
+	\assign{\ssa{x}}{\query(\ssa{\qexpr})} \in \ssa{c}
 	\\
-	2 & \text{the i-th variable $v = \avar(i)$ is showing up inside a while loop or $\eif$ branches} 
+	1 & \ssa{x} = \avar(i) \land 
+	\left(
+	\bigvee
+	\begin{array}{l}
+	\big(\exists 
+		\ewhile \ldots \edo \ssa{c'} ~ \in ~\ssa{c} ~ s.t. ~
+		[\ssa{\assign{x}{\expr}}]^{l'} \in \ssa{c'}
+	\big)
+	\\
+	\big(\exists 
+		\eif \sbexpr \ethen \ssa{c_1} \eelse \ssa{c_2} ~\in \ssa{c} ~ s.t. ~
+		([\ssa{\assign{x}{\expr}}]^{l1} \in \ssa{c_1} \lor 
+		[\ssa{\assign{x}{\expr}}]^{l2} \in \ssa{c_2})
+	\big)
+	\end{array}
+	\right)
 	\\
 	0 & \text{o.w.}
 	\end{array}
-	\right., 
+	\right\}, 
 	i = 1, \ldots, |\avar|.
 \] 
+% It is inductively defined as follows:
+% $$
+% \begin{array}{lll}
+%    \flag(\ssa{c}) 	
+%    		& = [0] 									
+%    		& \ssa{c} 	= 
+%    			[\ssa{\assign x e}]^{(l, w)} \\
+%      	& = [1] 									
+%      	& \ssa{c} 	= 
+%      		[\ssa{\assign x \query(\qexpr)}]^{(l, w)} \\
+%      	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	
+%      	& \ssa{c} 	= \ssa{c_1};\ssa{c_2}\\
+%      	& = ((\avar(\ssa{c_1}) ++ \avar (\ssa{c_2})) \uplus 2) 
+%      	\uplus \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+%      	& \ssa{c} 	= 
+%      	[\ssa{\eif (b ,[\bar{x}], [\bar{y}], [\bar{z}], c_1, c_2}]^{(l, w)}) \\
+%      	& = (\avar(\ssa{c}) \uplus 2) \uplus [\ssa{\bar{x}}]
+%      	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, \ssa{[x_1,x_2,x_3], {c}})
+% \end{array}
+% $$
 \end{defn}
 %
 Operations on $\flag$ are defined as follows:
@@ -2599,12 +2636,14 @@ Operations on $\flag$ are defined as follows:
 {\flag_1 \uplus \flag_2}(i) & := &
 \left\{
 \begin{array}{ll}
-1 & (\flag_1(i) = 1 \lor \flag_2(i) = 1) \land |\flag_1| = |\flag_2|\\
+k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}} 
+	\land |\flag_1| = |\flag_2|\\
 0 & o.w.
 \end{array}\right.
 & i = 1, \cdots, |\flag|  
 \\
-{\flag \uplus k}(i) & := & k 
+{\flag \uplus k}(i) & := & 
+\max\big\{ \flag(i), k \big\} 
 & i = 1, \ldots, |\flag|    \\
 \end{array}
 \end{equation}
@@ -2710,12 +2749,12 @@ the right matrix $\rMtrix_{\expr, i}$ generates a matrix of one row and $N$ colu
 where the locations of free variables in $\expr$ is marked as $1$. 
 %
 %
-\begin{defn}[Right Matrix ($\rMtrix_{\expr, i}$)].
+\begin{defn}[Right Matrix ($\rMtrix_{\expr}$)].
 \\
 Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$, 
-the right matrix $\rMtrix_{\expr, i}$ is defined as follows:
+the right matrix $\rMtrix_{\expr}$ is defined as follows:
 \[
-	\rMtrix_{\expr, i}(j) : = 
+	\rMtrix_{\expr}(j) : = 
 	\left\{
 	\begin{array}{ll}
 	1 & \ssa{x} \in FV(\expr) 
@@ -2726,12 +2765,12 @@ the right matrix $\rMtrix_{\expr, i}$ is defined as follows:
 	~~~~~~~~~~~~~~~~~~~~ 
 	\ssa{x} = \avar(j) ~ , ~ j = 1, \ldots, N
 \]
-where $FV(e)$ is the set of free variables in expression $\expr$.
+where $FV(\expr)$ is the set of free variables in expression $\expr$.
 %
 %
 \end{defn}
 %
-Using the same program $c$ as above with assigned variables $\avar = [ \ssa{x_1 , x_2 , x_3} ] $,
+Using the same program $\ssa{c}$ as above with assigned variables $\avar = [ \ssa{x_1 , x_2 , x_3} ] $,
 the left and right matrices are as follows w.r.t. its $2$-nd command 
 $\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;$ 
 is as follows
@@ -2742,7 +2781,7 @@ is as follows
  0   \\
 \end{matrix}   \right ] 
 ~~~~~~~~~~~~~~
-\rMtrix_{\ssa{x}_1 + 1, 1}
+\rMtrix_{\ssa{x}_1 + 1}
 = \left[ \begin{matrix} 
    1 & 0 & 0 \\
 \end{matrix}  \right]
@@ -2768,36 +2807,46 @@ The output of the algorithm is the updated assigned variables $\avar'$ thorough 
 %
 % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in Figure \ref{fig:var_col}. 
 %
+\jl{
 \begin{figure}
 \begin{mathpar}
 \inferrule
 {
+\empty
 }
-{ \ag{\avar ; \ssa{[\assign {x}{\expr}]^{l}}}{\avar ++ [\ssa{x}]}
+{ \ag{\avar ; \flag; \ssa{[\assign {x}{\expr}]^{l}}}
+{\avar ++ [\ssa{x}]; \flag++[0]}
 }
 ~\textbf{\varCol-asgn}
 \and
 \inferrule
 {
 }
-{ \ag{\avar; [ \assign{\ssa{x}}{\query(\ssa{\qexpr})}]^{l}}
-{\avar ++ [\ssa{x}]} 
+{ \ag{\avar; \flag; [ \assign{\ssa{x}}{\query(\ssa{\qexpr})}]^{l}}
+{\avar ++ [\ssa{x}]; \flag ++ [2]} 
 }~\textbf{\varCol-query}
 %
 \and 
 %
 \inferrule
 {
-\ag{\avar; \ssa{c_1}}{\avar_1}
+\ag{\avar; [];  \ssa{c_1}}{\avar_1; \flag_1}
 \and 
-\ag{\avar_1; \ssa{c_2}}{ \avar_2}
+\ag{\avar_1; []; \ssa{c_2}}{ \avar_2; \flag_2}
  \\
- {\avar_3 = \avar_2 ++ \ssa{[\bar{x}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]} }}
-}
+ \todo{
+ $\avar_3 = \avar_2 ++ \ssa{[\bar{x}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]}}$ 
+ }
+ \and
+ % \todo{
+ % $\flag_3 = \flag ++ (\flag_1 \uplus 1) ++ (\flag_2 \uplus 1)$
+ % }
+ }
 {
-\ag{\avar;
+\ag{\avar; \flag;
 [\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}],
-[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }{\avar_3}
+[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }
+{\avar_3; \flag_3}
 }~\textbf{\varCol-if}
 %
 %
@@ -2806,29 +2855,29 @@ The output of the algorithm is the updated assigned variables $\avar'$ thorough 
 %
 \inferrule
 {
-\ag{\avar;  \ssa{c_1}}{\avar_1}
+\ag{\avar; \flag \ssa{c_1}}{\avar_1; \flag_1}
 \and 
-\ag{\avar_1; \ssa{c_2}}{\avar_2}
+\ag{\avar_1; \flag_1 ; \ssa{c_2}}{\avar_2; \flag_2}
 }
 {
-\ag{\avar;
-\ssa{(c_1 ; c_2)}}{\avar_2 }
+\ag{\avar; \flag;
+\ssa{(c_1 ; c_2)}}{\avar_2 ; \flag_2}
 }
 ~\textbf{\varCol-seq}
 \and 
 %
-\and 
 %
 {
 \inferrule
 {
-{ \ag{\avar ++ \ssa{[\bar{x}]} ; \ssa{c}}{\avar' }  }
+{ \ag{\todo{$\avar ++ \ssa{[\bar{x}]}$}; [] ; \ssa{c}}
+{\avar'; \flag' }  }
 }
 {
-\ag{\avar;  
-\ewhile ~ [ b ]^{l} ~ \ssa{n} ~ 
+\ag{\avar; \flag;  
+\ewhile [\ssa{b}]^{l}, \ssa{n}, 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c }{\avar' }
+\edo  \ssa{c} }{\avar'; \flag ++ (\flag' \uplus 1) }
 }
 ~\textbf{\varCol-while}
  }
@@ -2837,7 +2886,8 @@ The output of the algorithm is the updated assigned variables $\avar'$ thorough 
     \label{fig:var_col}
 \end{figure}
 %
-
+}
+%
 The assignment commands are the source of variables $\varCol$ collecting, 
 	in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
 	the output assigned variables are extended by $\ssa{x}$. 
@@ -2997,7 +3047,7 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 {
 \ssa{x} = \avar(i)
 \and 
-\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
+\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr}} + \Gamma )
 }
 {
 \ad{\Gamma; [\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; \avar}
@@ -3012,10 +3062,10 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 \and 
 \Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
 \and
-\flag = \lMtrix_i \and \flag(i) = 1
+\flag = \lMtrix_i
 }
 { 
-\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; \avar }
+\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} ; \avar }
 {\Mtrix;\flag}
 }~\textbf{\graphGen-query}}
 %
