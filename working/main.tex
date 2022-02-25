@@ -149,37 +149,41 @@ The key component of the system is a program analysis tool, which provides an up
 \\
 %
 \mbox{Trace} 
-& t & ::= & [] ~|~ {\todo{$( \query(\qval), l, w) :: t$}} 
+& t & ::= & [] ~|~ {(\qval, l, w) :: t} 
 \\
 %
 \mbox{While Map}
 & w & ::= & {[] |  w[l \to n]}
 \\
 %
-& & &\todo{Separating Notations and Definitions}
- \\
-\mbox{Variables} 
+\end{array}
+\]
+%
+\todo{We use following notations to represent the set of corresponding definitions:}
+\[
+\begin{array}{llll}
+\mbox{Set of Variables} 
 & \mathcal{VAR}  &  & 
 \\ 
 %
-\mbox{Values} 
+\mbox{Set of Values} 
 & \mathcal{VAL}  & ::= & \{ v_0, \ldots, v_n, \ldots \}
 \\ 
 %
-\mbox{Annotated Queries} & \mathcal{AQ}  & 
-::= & \left\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \right\} 
+\mbox{Set of Annotated Queries} & \mathcal{AQ}  & 
+::= & \left\{(\qval_0, l_0, w_0), \ldots, (\qval_n, l_n, w_n), \ldots \right\} 
 \\
 %
-\mbox{{Query Results Domain}}
-& \qdom & ::= & {[-1,1]}
-\\
-%
-\mbox{{Memory Domain}}
+\mbox{{Set of Memories}}
 & \memdom & ::= & \left\{ \mathcal{VAR} \to \mathcal{VAL} \right\}
 \\
 %
-\mbox{{Database Domain}}
+\mbox{{Set of Databases}}
 & \dbdom & ::= & \qval \to \qdom
+\\
+%
+\mbox{{Domain of Query Results}}
+& \qdom & ::= & {[-1,1]}
 \end{array}
 \]
 %
@@ -197,13 +201,13 @@ Each command is labeled with a label $l$, a natural number standing for the line
 	 %
 		\mbox{Annotated Queries} 
 		& \mathcal{AQ}  & ::= & 
-		{\left\{( \query(\qval_0), l_0, w_0), \ldots \right\} }  \\
+		{\left\{(\qval_0, l_0, w_0), \ldots \right\} }  \\
 	\end{array}
 	\begin{array}{llll}
 		\mbox{Memory} 
 		& m & ::= & \emptyset ~|~ (x^{l} \to v) :: m  \\
 		\mbox{Trace} 
-		& t & ::= & [] ~|~ ( \query(\qval), l, w) :: t \\
+		& t & ::= & [] ~|~ (\qval, l, w) :: t \\
 	\end{array}
 \]
 %%
@@ -317,15 +321,15 @@ Given the partially ordered labels, the annotated queries in the trace is partia
 The orders between two queries are defined as:
 {
 $\forall \query(\qval_1), \query(\qval_2), l_1, l_2, w_1, w_2 $.
-the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before annotated query $( \query(\qval_2), l_2, w_2)$, denoted as
+the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before annotated query $( \query(\qval_2), l_2, w_2)$:
 %
-\[
-\mathsf{To}((\query(\qval_1), l_1, w_1), ( \query(\qval_2), l_2, w_2))
-= 
-(\query(\qval_1), l_1, w_1) 
-<_q ( \query(\qval_2), l_2, w_2)
-\]
-where \\
+% \[
+% \mathsf{To}((\query(\qval_1), l_1, w_1), ( \query(\qval_2), l_2, w_2))
+% = 
+% (\query(\qval_1), l_1, w_1) 
+% <_q ( \query(\qval_2), l_2, w_2)
+% \]
+% where \\
 \[
 (\query(\qval_1), l_1, w_1) 
 <_q ( \query(\qval_2), l_2, w_2)
@@ -508,7 +512,7 @@ They have the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmeti
 	{
 	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
 	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
+	\config{m[ v/ x], \eskip,  (\qval, l, w) :: t,w }
 	}
 	~\textbf{query-v}
 	}
@@ -642,10 +646,10 @@ As a first step, we give a definition of when one query may depend on a previous
 \label{def:query_dep}
 \\
 {
-One annotated query $({\alpha}_2,l_2, w_2)$ may depend on another query $({\alpha}_1, l_1, w_1)$ in a program $c$,
+One annotated query $({\qval}_2,l_2, w_2)$ may depend on another query $({\qval}_1, l_1, w_1)$ in a program $c$,
 with a starting memory $m$ and a hidden database $D$, denoted as 
 %
-$\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defined below. 
+$\mathsf{DEP}({(\qval_1, l_1, w_1)}, ({\qval}_2, l_2, w_2), c, m, D)$ is defined below. 
 }
 {
 \[
@@ -653,47 +657,47 @@ $\mathsf{DEP}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), c, m, D)$ is defin
 \exists m_1,m_3,t_1,t_3,c_2,v_1.\\
   \left (\begin{array}{l}   
 \config{m, c, \emptyset ,\emptyset} \rightarrow^{*} 
-\config{m_1, [\assign{x}{\query({\alpha}_1)}]^{l_1} ; c_2,
+\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
   t_1, w_1} 
 \rightarrow^{\textbf{query-v}} 
 \\ 
 \config{m_1[v_1/x], c_2,
-(\query({\alpha}_1),l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{m_3, \eskip,
+({\qval}_1,l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{m_3, \eskip,
 t_3,w_3}
   % 
  \\ 
  \bigwedge
   \left( 
   \begin{array}{l}
-  (\query({\alpha}_2),l_2,w_2) \in_{q} (t_3-t_1) 
+  ({\qval}_2,l_2,w_2) \in_{q} (t_3-t_1) 
   % 
   \\
   \implies 
   \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
-  \config{m_1[v/x], {c_2}, (\query({\alpha}_1),l_1, w_1)::t_1, w_1} 
+  \config{m_1[v/x], {c_2}, ({\qval}_1,l_1, w_1)::t_1, w_1} 
   \\ 
   \quad \quad 
   \rightarrow^{*}
   (\config{m_3', \eskip, t_3', w_3'} 
   \land 
-  (\query({\alpha}_2),l_2,w_2) \not \in_{q} (t_3'-t_1))
+  ({\qval}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
 \end{array} \right )
 \\
 \bigwedge
 \left( 
   \begin{array}{l}
-	(\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
+	({\qval}_2,l_2,w_2) \not\in_{q} (t_3-t_1)
   	% 
   	\\
   	\implies 
 	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-	\config{m_1[v/x], {c_2}, (\query({\qval}_1),l_1,w_1)::t_1, w_1}
+	\config{m_1[v/x], {c_2}, ({\qval}_1,l_1,w_1)::t_1, w_1}
 	\\ 
 	\quad \quad 
 	\rightarrow^{*} 
 	(\config{m_3', \eskip, t_3', w_3'} 
 	\land 
-	(\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1))
+	({\qval}_2,l_2,w_2)  \in_{q} (t_3'-t_1))
 \end{array} \right )
 \end{array} \right )
 \end{array}
@@ -709,7 +713,7 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 %
 \[
 \begin{array}{rlcl}
-	\text{Vertexes} &
+	\text{Vertices} &
 	\vertxs & := & \left\{ 
 	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
 	\exists m',  w', t' ~ s.t., ~  
@@ -717,7 +721,7 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 	\config{m ,c, \emptyset, \emptyset}  
 	\to^{*}  
 	\config{m' , \eskip, t', w' } \\ 
-	\land (\query({\qval}), l, w) \in t'
+	\land ({\qval}, l, w) \in t'
 	\end{array}
 	\right\}
 	\\
@@ -729,13 +733,13 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 	\begin{array}{l}
 		\mathsf{DEP}(({\qval},l,w), ({\qval}',l',w')),c,m,D) \\
 		\land 
-		\mathsf{To}(({\qval},l,w), ({\qval}',l',w'))
+		(({\qval},l,w) <_q ({\qval}',l',w'))
 	\end{array}
 	\right\}
 \end{array}
 \]
 \end{defn}
-The edge is directed, when an annotated query $(\query({\qval}),l,w)$ may depend on its previous query $(\query({\qval}'),l',w')$, we have the directed
+The edge is directed, when an annotated query $({\qval},l,w)$ may depend on its previous query $({\qval}',l',w')$, we have the directed
 edge $(({\qval},l,w), ({\qval}',l'.w'))$, 
 from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
@@ -743,26 +747,32 @@ from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 \todo{definition combining}
 \begin{defn}[path ($p$)].
 \\
-Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ is defined as a sequence of edges $(e_1\ldots e_{n - 1})$ for which there is a sequence of vertexes $(v_1, \ldots, v_n) \in V$ 
-such that for every $1 \leq i < n$, $e_i=(v_{i},v_{i + 1}) \land e_i \in E$  and all edges and vertexes are distinct. 
-\\
-$(v_1, \ldots, v_n)$ is the vertexes sequence of this path and $\len(p)$ returns the number of vertexes in $p$.
+Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ is defined as a sequence of edges $(e_1, \ldots, e_{n - 1})$ where $ e_1, \ldots, e_{n - 1} \in \edges$,
+for which there is a sequence of vertices $(v_1, \ldots, v_n)$ where $v_1, \ldots, v_n \in \vertxs$
+such that for every $1 \leq i < n$, $e_i=(v_{i},v_{i + 1})$
+and all edges and vertices are distinct. 
+
+$(v_1, \ldots, v_n)$ is the vertices sequence of this path.
+
+Length of the path $p$ ($\len(p)$) is the number of vertices in its vertices sequence $(v_1, \ldots, v_n)$, i.e., $\len(p) = n$.
+
+$\path(G)$ denotes a finite set containing all paths $p$ in $G$.
 \end{defn}
 %
-\begin{defn}[path length ($\len(p)$)].
-\\
-Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ with vertexes sequence
-$(v_1, \ldots, v_n)$, the length of $p$ is defined as the number of vertexes in its vertexes sequence as follows:
-\[
-\len(p) = \vert (v_1, \ldots, v_n) \vert = n
-\]
-\end{defn}
-%
-\begin{defn}[path set ($\path$)].
-\\
-Given a directed acyclic graph $G = (\vertxs, \edges)$, 
-the path set of $G$, i.e., $\path(G)$ is a finite set containing all paths $p$ in $G$.
-\end{defn}
+% \begin{defn}[path length ($\len(p)$)].
+% \\
+% Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ with vertices sequence
+% $(v_1, \ldots, v_n)$, the length of $p$ is defined as the number of vertices in its vertices sequence as follows:
+% \[
+% \len(p) = \vert (v_1, \ldots, v_n) \vert = n
+% \]
+% \end{defn}
+% %
+% \begin{defn}[path set ($\path$)].
+% \\
+% Given a directed acyclic graph $G = (\vertxs, \edges)$, 
+% the path set of $G$, i.e., $\path(G)$ is a finite set containing all paths $p$ in $G$.
+% \end{defn}
 %
 %
 \begin{defn}[Adaptivity of A Program in While Language].
@@ -785,7 +795,7 @@ We proved some useful properties for our language.
 [Trace Non-Decreasing].
 \\
 {
-for any program $c$ with a starting memory $m$, trace $t$ and while label $w$, if 
+For any program $c$ with a starting memory $m$, trace $t$ and while label $w$, if 
 $  
 \config{m, c, t, w} 
 \rightarrow^{*} 
@@ -824,7 +834,7 @@ On the other hand, in the operational semantics rule \textbf{query-v}:
 	{
 	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
 	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  (\query(\qval), l, w) :: t,w }
+	\config{m[ v/ x], \eskip,  (\qval, l, w) :: t,w }
 	}
 	~\textbf{query-v}
 	\]
@@ -904,20 +914,22 @@ Proof is obvious by induction on the operational semantics rules.
 \end{proof}
 %
 \todo{rewrite Lemma}
+The following lemma describes a property of the trace-based dependency graph.
+For any program $c$ with a database $D$ and a starting memory $m$,
+the directed edges in its trace-based dependency graph can only be constructed from nodes representing queries of smaller label to queries of greater label.
+There doesn't exist backward edges with direction from queries of greater label to smaller label.
 \begin{lem}
 \label{lem:edgeforwarding}
 {[Edges are Forwarding Only]}.
 \\
 %
 {
-Given a trace-based dependency graph $G = (V, E)$, 
-for any directed edge $(({\qval}',l',w'),({\qval},l,w)) \in E$, 
+Given a program $c$, a database $D$, a starting memory $m$ and the corresponding trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$, 
+for any directed edge $(({\qval}',l',w'),({\qval},l,w)) \in \edges$, 
 this is not the case that:
 %
 $$({\qval}',l',w') \geq_{q} ({\qval},l,w)$$
 %
-This means the directed edges in the trace-based dependency graph can only be constructed from nodes representing queries of smaller label to queries of greater label.
-There doesn't exist backward edges with direction from queries of greater label to smaller label.
 }
 \end{lem}
 %
@@ -963,7 +975,7 @@ Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
 [Adaptivity Toplimit].
 \\
 {
-Given a program $c$ with a certain database $D$ and starting memory $m$, then $A(c)$ w.r.t. the $D$ and $m$ is bounded, i.e.,:
+Given a program $c$ with a certain database $D$ and starting memory $m$, the $A(c)$ w.r.t. the $D$ and $m$ is bounded, i.e.,:
 %
 \[
 \config{m, c, \emptyset, \emptyset} 
@@ -1119,31 +1131,34 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\
 %
 \mbox{Trace} & t 
-& ::= & [] ~|~ {{(\query(\qval), l , w ) :: t}}
-\\
+& ::= & [] ~|~ {{(\qval, l , w ) :: t}}
+\end{array}
+\]
+\todo{Below are some notations representing the set of corresponding definitions in SSA language:}\[
+\begin{array}{llll}
 %
 \mbox{SSA Variables} 
 & \mathcal{SVAR}  &  & 
 %
 \\
-\mbox{Values} 
-& \mathcal{VAL}  & ::= & \{ v_0, \ldots, v_n, \ldots \}
+% \mbox{Values} 
+% & \mathcal{VAL}  & ::= & \{ v_0, \ldots, v_n, \ldots \}
+% %
+% \\
+% \mbox{Annotated Queries} & \mathcal{AQ}  & 
+% ::= & \left\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \right\}
+% \\
+% %
+% \mbox{{Query Results Domain}}
+% & \qdom & ::= & {[-1,1]}
+% \\
 %
-\\
-\mbox{Annotated Queries} & \mathcal{AQ}  & 
-::= & \left\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \right\}
-\\
-%
-\mbox{{Query Results Domain}}
-& \qdom & ::= & {[-1,1]}
+\mbox{{Set of SSA Memory}}
+& {\mathcal{SM}} & : & {\left\{ \mathcal{SVAR} \to \mathcal{VAL} \right\}}
 \\
 %
-\mbox{{SSA Memory Domain}}
-& {\mathcal{SM}} & ::= & {\left\{ \mathcal{SVAR} \to \mathcal{VAL} \right\}}
-\\
-%
-\mbox{{Database Domain}}
-& \dbdom & ::= & { \qval \mapsto \qdom }
+% \mbox{{Database Domain}}
+% & \dbdom & ::= & { \qval \mapsto \qdom }
 %
 %
 \end{array}
@@ -1246,7 +1261,7 @@ m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 }} 
 \xrightarrow{} 
 \config{\ssa{  (x \mapsto v)::m, \eskip,  
-{\query(\qval),l,w )::t,w }}
+{(\qval,l,w )::t,w }}
 }
 }
 ~\textbf{ssa-query-v}
@@ -1693,10 +1708,10 @@ by mimicking the corresponding definitions in the {\tt While} language.
 [Query May Dependency in SSA Language].
 \\
 {
-One annotated query $({\alpha}_1, l_1, w_1)$ may depend on another query $({\alpha}_2,l_2, w_2)$ in a program $\ssa{c}$,
+One annotated query $({\qval}_1, l_1, w_1)$ may depend on another query $({\qval}_2,l_2, w_2)$ in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
 %
-$\mathsf{DEP}_{ssa}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), \ssa{c}, \ssa{m}, D)$ is defined below. 
+$\mathsf{DEP}_{ssa}({(\qval_1, l_1, w_1)}, ({\qval}_2, l_2, w_2), \ssa{c}, \ssa{m}, D)$ is defined below. 
 %
 %
 \[
@@ -1704,45 +1719,45 @@ $\mathsf{DEP}_{ssa}({(\alpha_1, l_1, w_1)}, ({\alpha}_2, l_2, w_2), \ssa{c}, \ss
 \exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
   \left (\begin{array}{l}   
 \config{\ssa{m}, \ssa{c}, \emptyset ,\emptyset} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{x}{\query({\alpha}_1)}]^{l_1} ; c_2,
+\config{\ssa{m}_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
   t_1, w_1} 
 \\ 
 \rightarrow^{\textbf{{ssa-query-v}}} 
 \config{\ssa{m}_1[v_1/x], c_2,
-(\query({\alpha}_1),l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
+({\qval}_1,l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
 t_3,w_3}
   % 
  \\ \land
   \left( 
   \begin{array}{l}
-  (\query({\alpha}_2),l_2,w_2) \in_{q} (t_3-t_1) 
+  ({\qval}_2,l_2,w_2) \in_{q} (t_3-t_1) 
   % 
   \\
   \implies 
   \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. ~  
-  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\alpha}_1),l_1, w_1)::t_1, w_1} 
+  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, ({\qval}_1,l_1, w_1)::t_1, w_1} 
   \\ 
   \quad \quad 
   \rightarrow^{*}
   (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
   \land 
-  (\query({\alpha}_2),l_2,w_2) \not \in_{q} (t_3'-t_1))
+  ({\qval}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
 \end{array} \right )
 \\\land
 \left( 
   \begin{array}{l}
-	(\query({\qval}_2),l_2,w_2) \not\in_{q} (t_3-t_1)
+	({\qval}_2,l_2,w_2) \not\in_{q} (t_3-t_1)
   	% 
   	\\
   	\implies 
 	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
-	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, (\query({\qval}_1),l_1,w_1)::t_1, w_1}
+	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, ({\qval}_1,l_1,w_1)::t_1, w_1}
 	\\ 
 	\quad \quad 
 	\rightarrow^{*} 
 	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
 	\land 
-	(\query({\qval}_2),l_2,w_2))  \in_{q} (t_3'-t_1))
+	({\qval}_2,l_2,w_2))  \in_{q} (t_3'-t_1))
 \end{array} \right )
 \end{array} \right )
 \end{array}
@@ -1759,7 +1774,7 @@ Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
 the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
 \[
 \begin{array}{rlcl}
-	\text{Vertexes} &
+	\text{Vertices} &
 	\vertxs & := & \left\{ 
 	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
 	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
@@ -1768,7 +1783,7 @@ the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is 
 	\to^{*}  
 	\config{\ssa{m'} , \eskip, t', w' }
 	\\ 
-	\land (\query({\qval}), l, w) \in t'
+	\land ({\qval}, l, w) \in t'
 	\end{array}
 	\right\}
 	\\
@@ -1781,7 +1796,7 @@ the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is 
 		\mathsf{DEP_{ssa}}(({\qval},l,w), ({\qval}',l',w'),
 		\ssa{c},\ssa{m},D) 
 		\\ \land 
-		\mathsf{To}(({\qval},l,w), ({\qval}',l',w'))
+		(({\qval},l,w) <_q ({\qval}',l',w'))
 	\end{array}
 	\right\}
 \end{array}
@@ -3428,7 +3443,7 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \\
 \[
 \begin{array}{rlcl}
-	\text{Vertexes} &
+	\text{Vertices} &
 	\vertxs & := & \left\{ 
 	\ssa{x} \mid
 	\ssa{x} = \avar(i), i = 1, \ldots, N 
@@ -3476,19 +3491,19 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 Given a program $\ssa{c}$, we generate its program-based graph 
 $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$.
 %
-Then the program-based adaptivity for $c$ in our $\THESYSTEM$ is the number of query vertexes on a finite walk in $\progG$. This finite walk satisfies:
+Then the program-based adaptivity for $c$ in our $\THESYSTEM$ is the number of query vertices on a finite walk in $\progG$. This finite walk satisfies:
 \begin{itemize}
-\item the number of query vertexes on this walk is maximum
+\item the number of query vertices on this walk is maximum
 \item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
 \end{itemize}
 
 \begin{defn}[Finite Walk ($k$)].
 \\
 Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
-for which there is a sequence of vertexes $(v_1, \ldots, v_{n})$ such that:
+for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
 \begin{itemize}
     \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
-    \item every vertex $v \in \vertxs$ appears in this vertexes sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
+    \item every vertex $v \in \vertxs$ appears in this vertices sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
 \end{itemize}
 $(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
 \end{defn}
@@ -3557,8 +3572,8 @@ the program-based adaptivity for $c$ is defined as%
 % \]
 \end{defn}  
 %
-% By specifying the departure and destination vertexes $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
-% give the number of query vertexes on a finite walk from $s$ to $t$, which contains the maximum number of query vertexes.
+% By specifying the departure and destination vertices $s$ and $t$, the $\pathsearch(\progG, s, t)$ algorithm will 
+% give the number of query vertices on a finite walk from $s$ to $t$, which contains the maximum number of query vertices.
 % The pseudo-code of $\pathsearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_alg}.
 % %
 % \begin{algorithm}
@@ -3711,7 +3726,7 @@ $\exists f, g$ so that \\
 %
 %
 \begin{defn}
-[Mapping of Vertexes from $\traceG$ to $\progG$ Graph]
+[Mapping of Vertices from $\traceG$ to $\progG$ Graph]
 \label{lem:vertexmap}
 Let us define a map $f: \mathcal{AQ} -> \mathcal{LV} $ as follow:
 $f(q^{l,w}) = \ssa{x}^{l,w}$ 
