@@ -136,7 +136,8 @@ The key component of the system is a program analysis tool, which provides an up
 \\
 %
 \mbox{Query Value} & \qval & ::= 
-& \jl{n ~|~ \chi ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n]}
+& \jl{n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
+~|~ \chi[n] \oplus_a  n}
 \\
 %
 \mbox{Query Expression} 
@@ -154,19 +155,19 @@ The key component of the system is a program analysis tool, which provides an up
  	& & & ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 ~|~ [\eskip]^{l} 
  \\
 \mbox{Memory} 
-& m & ::= & \emptyset ~|~ (x^{l} \to v) :: m 
-\\
-%
-\mbox{Trace} 
-& t & ::= & [] ~|~ {\aq :: t} ~|~ t ++ t
-\\
-%
-\mbox{While Map}
-& w & ::= & {[] |  w[l \to n]}
+& m & ::= & \jl{[] ~|~ (x^{l} \to v)} :: m 
 \\
 %
 \mbox{Annotated Query} & \aq  & 
 ::= & (\qval, l, w)
+\\
+%
+\mbox{Trace} 
+& t & ::= & [] ~|~ {\aq :: t}
+\\
+%
+\mbox{While Map}
+& w & ::= & {[] |  w[l \to n]}
 \end{array}
 \]
 %
@@ -376,9 +377,9 @@ Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in t$ 
 		\aq \in t  
 		\triangleq \left\{
 		\begin{array}{ll} 
-			\efalse  			& t = []   				\\
-			\etrue 				& t = (\aq)::t' 	\\ 
-			\aq \in t'	& t = (\aq')::t' 
+			\efalse  			& t = []   		\\
+			\etrue 				& t = \aq::t' 	\\ 
+			\aq \in t'			& t = \aq'::t' 
 		\end{array}
 		\right.
 	\end{equation}
@@ -768,6 +769,7 @@ As a first step, we give a definition of when one query may depend on a previous
 [Query May Dependency].
 \label{def:query_dep}
 \\
+\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
 {
 One annotated query $({\qval}_2,l_2, w_2)$ may depend on another query $({\qval}_1, l_1, w_1)$ in a program $c$,
 with a starting memory $m$ and a hidden database $D$, denoted as 
@@ -779,7 +781,7 @@ $\mathsf{DEP}({(\qval_1, l_1, w_1)}, ({\qval}_2, l_2, w_2), c, m, D)$ is defined
 \begin{array}{l}
 \exists m_1,m_3,t_1,t_3,c_2,v_1.\\
   \left (\begin{array}{l}   
-\config{m, c, \emptyset ,\emptyset} \rightarrow^{*} 
+\config{m, c, [], []} \rightarrow^{*} 
 \config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
   t_1, w_1} 
 \rightarrow^{\textbf{query-v}} 
@@ -832,6 +834,8 @@ t_3,w_3}
 \begin{defn}[Trace-based Dependency Graph].
 \label{def:trace-based_graph}
 \\
+\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
+\\
 Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$ is defined as: 
 %
 \[
@@ -867,8 +871,7 @@ edge $(({\qval},l,w), ({\qval}',l'.w'))$,
 from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
 %
 %
-\todo{definition combining}
-\begin{defn}[path ($p$)].
+\begin{defn}[Path ($p$)].
 \\
 Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ is defined as a sequence of edges $(e_1, \ldots, e_{n - 1})$ where $ e_1, \ldots, e_{n - 1} \in \edges$,
 for which there is a sequence of vertices $(v_1, \ldots, v_n)$ where $v_1, \ldots, v_n \in \vertxs$
@@ -877,10 +880,10 @@ and all edges and vertices are distinct.
 
 $(v_1, \ldots, v_n)$ is the vertices sequence of this path.
 
-Length of the path $p$ ($\len(p)$) is the number of vertices in its vertices sequence $(v_1, \ldots, v_n)$, i.e., $\len(p) = n$.
-
-$\path(G)$ denotes a finite set containing all paths $p$ in $G$.
+\jl{Length of the path $p$ ($\len(p)$) is the number of vertices in its vertices sequence $(v_1, \ldots, v_n)$, i.e., $\len(p) = n$.}
 \end{defn}
+%
+\jl{We use $\path(G)$ to denote a finite set containing all paths $p$ in a directed acyclic graph $G = (\vertxs, \edges)$.}
 %
 % \begin{defn}[path length ($\len(p)$)].
 % \\
@@ -1036,11 +1039,12 @@ Proof is obvious by induction on the operational semantics rules.
 }
 \end{proof}
 %
-\todo{rewrite Lemma}
+\jl{
 The following lemma describes a property of the trace-based dependency graph.
 For any program $c$ with a database $D$ and a starting memory $m$,
 the directed edges in its trace-based dependency graph can only be constructed from nodes representing queries of smaller label to queries of greater label.
 There doesn't exist backward edges with direction from queries of greater label to smaller label.
+}
 \begin{lem}
 \label{lem:edgeforwarding}
 {[Edges are Forwarding Only]}.
@@ -1080,7 +1084,7 @@ with $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ can never be constructed in the t
 %
 \begin{lem}
 \label{lem:DAG}
-\todo{[Trace-based Dependency Graph is Directed Acyclic].}
+[Trace-based Dependency Graph is Directed Acyclic].
 \\
 %
 {
@@ -1221,6 +1225,16 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 	~|~ \saexpr \sim \saexpr 
 	\\
 %
+\mbox{Query Value} & \qval & ::= 
+& \jl{n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
+~|~ \chi[n] \oplus_a  n}
+\\
+%
+\mbox{Query Expression} 
+& \ssa{\qexpr} & ::= 
+& \jl{ \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr} 
+\\
+%
 \mbox{Query Expression} & \ssa{\qexpr} & ::= 
 & { \saexpr ~|~ \chi ~|~ \chi[\saexpr] ~|~ \ssa{\qexpr} \oplus_a \ssa{\qexpr}} 
 \\
@@ -1253,15 +1267,19 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 & \ssa{m} & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } 
 \\
 %
+\mbox{Annotated Query} 
+& \aq & ::= & (\qval, l , w )
+\\
+%
 \mbox{Trace} & t 
-& ::= & [] ~|~ {{(\qval, l , w ) :: t}}
+& ::= & [] ~|~ {\aq :: t}
 \end{array}
 \]
-\todo{Below are some notations representing the set of corresponding definitions in SSA language:}\[
-\begin{array}{llll}
+\jl{Below are some notations representing the set of corresponding definitions in SSA language:
+\[
+\begin{array}{lll}
 %
-\mbox{SSA Variables} 
-& \mathcal{SVAR}  &  & 
+\mathcal{SVAR}  & : & \mbox{SSA Variables} 
 %
 \\
 % \mbox{Values} 
@@ -1276,8 +1294,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 % & \qdom & ::= & {[-1,1]}
 % \\
 %
-\mbox{{Set of SSA Memory}}
-& {\mathcal{SM}} & : & {\left\{ \mathcal{SVAR} \to \mathcal{VAL} \right\}}
+{\mathcal{SM}} & : & \mbox{{Set of SSA Memory}}
 \\
 %
 % \mbox{{Database Domain}}
@@ -1286,6 +1303,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 \end{array}
 \]
+}
 %
 %
 We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SVR}$, 
@@ -1348,19 +1366,14 @@ This map is designed for $\eif$ command, when the variable may comes from two br
 \begin{mathpar}
 \boxed{\config{\ssa{m, a}} \xrightarrow{} \config{\ssa{a}} \;} 
 \and
-\inferrule{
-    \ssa{m}(\ssa{x}) = \ssa{v}
-}{ \config{\ssa{m, x }} \to \ssa{v} 
-}~{\textbf{ssa-var}}
-\\
-\boxed{ \config{\ssa{ m, c, t,w}} \xrightarrow{} \config{\ssa{ m', c',  t', w'}} \; }
+\boxed{ \config{\ssa{m, c}, t,w} \xrightarrow{} \config{\ssa{ m', c'},  t', w'}}
 \and
-{ Memory \times Com  \times Trace \times loop maps \Rightarrow^{}  Memory \times Com  \times Trace \times loop maps}
+\jl{Memory \times Command  \times Trace \times While Map \Rightarrow^{}  Memory \times Command  \times Trace \times Whil Map}
 \\
 {
 	\inferrule
 	{
-		\ssa{\config{m,\qexpr} \qarrow \config{m,\qexpr'}}
+		\ssa{\config{m,\qexpr} \qarrow \qexpr'}
 	}
 	{
 	\config{\ssa{
@@ -1383,8 +1396,8 @@ This map is designed for $\eif$ command, when the variable may comes from two br
 m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
 }} 
 \xrightarrow{} 
-\config{\ssa{  (x \mapsto v)::m, \eskip,  
-{(\qval,l,w )::t,w }}
+\config{\ssa{ (x \mapsto v)::m, \eskip,  
+{t++[(\qval,l,w)],w }}
 }
 }
 ~\textbf{ssa-query-v}
@@ -1553,7 +1566,7 @@ c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c
 }
 }
 \end{mathpar}
-    \caption{Operational semantics for the ssa language}
+    \caption{Operational Semantics for the SSA Language}
     \label{fig:ssa_evaluation}
 \end{figure}
 %
@@ -1830,6 +1843,7 @@ by mimicking the corresponding definitions in the {\tt While} language.
 \begin{defn}
 [Query May Dependency in SSA Language].
 \\
+\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
 {
 One annotated query $({\qval}_1, l_1, w_1)$ may depend on another query $({\qval}_2,l_2, w_2)$ in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
@@ -1892,6 +1906,7 @@ t_3,w_3}
 \begin{defn}
 [Trace-Based Dependency Graph in SSA Language].
 \\
+\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
 {
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
 the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
@@ -2695,6 +2710,22 @@ $$
 $$
 \end{defn}
 %
+\jl{
+The $[]$ represents an empty vector
+and $x::A$ represents add an element $x$ to the end of the vector $A$.
+The concatenation operation between 2 vectors $A_1$ and $A_2$ is mimic the standard list concatenation operations as follows:
+%
+\begin{equation}
+\begin{equation}
+		A_1 ++ A_2  
+		\triangleq \left\{
+		\begin{array}{ll} 
+			A_2 				& A_1 = []\\
+			x::(A_1' ++ A_2)	& A_1 = x::A_1'
+		\end{array}
+		\right.
+	\end{equation}\end{equation}
+}%
 Consider the program $c$ below in the left hand side as an example, its assigned variables $\avar$ (short for $\avar(\ssa{c})$) is as in the right hand side is shown as follows:
 $$
 \ssa{c} = 
@@ -3631,10 +3662,11 @@ for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
 $(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
 \end{defn}
 
-\begin{defn}[walk set ($\walk$)].
-\\
-Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, the walk set of $G$, ($\walk(G)$) is defined as a set containing all finite walks $k$ in $G$.
-\end{defn}
+\jl{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, we use $\walk(G)$ to denote a set containing all finite walks $k$ in $G$.}
+% \begin{defn}[walk set ($\walk$)].
+% \\
+% Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, the walk set of $G$, ($\walk(G)$) is defined as a set containing all finite walks $k$ in $G$.
+% \end{defn}
 %
 %
 \begin{defn}[Length of Finite Walk w.r.t Query ($\qlen$)].
