@@ -132,12 +132,21 @@ The key component of the system is a program analysis tool, which provides an up
 \\
 %
 \mbox{Query Value} & \qval & ::= 
-& { n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
+& { n ~|~ \chi ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ \qval \oplus_a  \qval }
+\\
+%
+\mbox{Query Value} & \qval & ::= 
+& \jl{n ~|~ \chi ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n]}
 \\
 %
 \mbox{Query Expression} 
 & \qexpr & ::= 
 & { \qval ~|~ \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
+\\
+%
+\mbox{Query Expression} 
+& \qexpr & ::= 
+& \jl{ \qval ~|~ \aexpr ~|~ \qexpr \oplus_a \qexpr} 
 \\
 \mbox{{Labeled Command}} & c & ::= 
 	&   [\assign x \expr]^{l} ~|~  [\assign x \query(\qexpr)]^{l}
@@ -149,41 +158,37 @@ The key component of the system is a program analysis tool, which provides an up
 \\
 %
 \mbox{Trace} 
-& t & ::= & [] ~|~ {(\qval, l, w) :: t} 
+& t & ::= & [] ~|~ {\aq :: t} ~|~ t ++ t
 \\
 %
 \mbox{While Map}
 & w & ::= & {[] |  w[l \to n]}
 \\
 %
+\mbox{Annotated Query} & \aq  & 
+::= & (\qval, l, w)
 \end{array}
 \]
 %
 \todo{We use following notations to represent the set of corresponding definitions:}
 \[
-\begin{array}{llll}
-\mbox{Set of Variables} 
-& \mathcal{VAR}  &  & 
+\begin{array}{lll}
+\mathcal{VAR} & : & \mbox{Set of Variables}  
 \\ 
 %
-\mbox{Set of Values} 
-& \mathcal{VAL}  & ::= & \{ v_0, \ldots, v_n, \ldots \}
+\mathcal{VAL} & : & \mbox{Set of Values} 
 \\ 
 %
-\mbox{Set of Annotated Queries} & \mathcal{AQ}  & 
-::= & \left\{(\qval_0, l_0, w_0), \ldots, (\qval_n, l_n, w_n), \ldots \right\} 
+ \mathcal{AQ}  & : & \mbox{Set of Annotated Queries}  
 \\
 %
-\mbox{{Set of Memories}}
-& \memdom & ::= & \left\{ \mathcal{VAR} \to \mathcal{VAL} \right\}
+\memdom  & : & \mbox{{Set of Memories}} 
 \\
 %
-\mbox{{Set of Databases}}
-& \dbdom & ::= & \qval \to \qdom
+\dbdom  & : & \mbox{{Set of Databases}} 
 \\
 %
-\mbox{{Domain of Query Results}}
-& \qdom & ::= & {[-1,1]}
+\qdom = {[-1,1]} & : & \mbox{{Domain of Query Results}}
 \end{array}
 \]
 %
@@ -194,22 +199,22 @@ We evaluate programs in our {\tt While} language by means of a trace-based opera
 %
 Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. Some non-standard syntaxes are explained as follows:  
 %
-\[
-	\begin{array}{llll}
-		\mbox{While Map} 
-		& w & \in & \mbox{Label} \to \mathbb{N} \\
-	 %
-		\mbox{Annotated Queries} 
-		& \mathcal{AQ}  & ::= & 
-		{\left\{(\qval_0, l_0, w_0), \ldots \right\} }  \\
-	\end{array}
-	\begin{array}{llll}
-		\mbox{Memory} 
-		& m & ::= & \emptyset ~|~ (x^{l} \to v) :: m  \\
-		\mbox{Trace} 
-		& t & ::= & [] ~|~ (\qval, l, w) :: t \\
-	\end{array}
-\]
+% \[
+% 	\begin{array}{llll}
+% 		\mbox{While Map} 
+% 		& w & \in & \mbox{Label} \to \mathbb{N} \\
+% 	 %
+% 		\mbox{Annotated Queries} 
+% 		& \mathcal{AQ}  & ::= & 
+% 		{\left\{(\qval_0, l_0, w_0), \ldots \right\} }  \\
+% 	\end{array}
+% 	\begin{array}{llll}
+% 		\mbox{Memory} 
+% 		& m & ::= & \emptyset ~|~ (x^{l} \to v) :: m  \\
+% 		\mbox{Trace} 
+% 		& t & ::= & [] ~|~ (\qval, l, w) :: t \\
+% 	\end{array}
+% \]
 %%
   	%
  \wq{Well-Formed While Map}
@@ -304,35 +309,26 @@ Queries can be uniquely annotated as defined in $\mathcal{AQ}$, and the annotati
 
 A configuration ($\config{m, c, t,w}$) contains four elements: a memory $m$, the command $c$ to be evaluated, a starting trace $t$, a starting while map $w$. Most of the time, the while maps remains empty until the evaluation goes into while statements.  
 
- %% trace
- \todo{Well-Formed Trace}
-A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
-A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
-We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
-of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
-	%
-
-Given the partially ordered labels, the annotated queries in the trace is partially ordered as well. Its order and equivalence relation are defined in Definition.~\ref{def:query_dir} and \ref{def:query_equal}.
+%
+\jl{
+The annotated query $\aq = (\qval, l, w)$ is a triple contains 3 elements. 
+$\qval$ is a query value representing the corresponding query request $\assign{x}{\query(\qval)}$ during the execution of the program.
+$l$ is the label of the corresponding query request  command and $w$ is the while map for this command.
+Given the label $l$ and while map $w$ are ordered, 
+the annotated queries also preserve this property. 
+Its order and equivalence relation are defined in Definition.~\ref{def:query_dir}.
 %
 \todo{notations duplicate}
-\begin{defn}[Query Order].
+\begin{defn}[Order of Annotated Queries].
 \label{def:query_dir}
 \\
-The orders between two queries are defined as:
-{
-$\forall \query(\qval_1), \query(\qval_2), l_1, l_2, w_1, w_2 $.
-the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before annotated query $( \query(\qval_2), l_2, w_2)$:
+Given 2 annotated queries 
+$ \aq_1 = (\qval_1, l_1, w_1), 
+\aq_2 = (\qval_2, l_2, w_2)$
+:
 %
-% \[
-% \mathsf{To}((\query(\qval_1), l_1, w_1), ( \query(\qval_2), l_2, w_2))
-% = 
-% (\query(\qval_1), l_1, w_1) 
-% <_q ( \query(\qval_2), l_2, w_2)
-% \]
-% where \\
 \[
-(\query(\qval_1), l_1, w_1) 
-<_q ( \query(\qval_2), l_2, w_2)
+\aq_1 <_{aq} \aq_2
  \triangleq 
  \left\{
  \begin{array}{ll}
@@ -344,53 +340,192 @@ the execution of annotated query $( \query(\qval_1), l_1, w_1)$ appears before a
 \end{array}  
 \right.
 \]
+%
+$\aq_1 \geq_{aq} \aq_2$  is defined vice versa.
+\end{defn}
+annotated query}
+%
+
+ %% trace
+ \todo{Well-Formed Trace}
+A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
+A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
+We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
+of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
+
+\jl{
+Given an annotated query $\aq$ and a trace $t$,
+the appending operation $\aq :: t$ is 
+the standard list appending operation, appends $\aq$ to the head of trace $t$.
 }
-\end{defn}
-
+\jl{
+The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is defined as the standard list concatenation operation as follows:
+\begin{equation}
+		t_1 ++ t_2  
+		\triangleq \left\{
+		\begin{array}{ll} 
+			t_2 				& t_1 = []\\
+			\aq::(t_1' ++ t_2)	& t_1 = \aq::t_1'
+		\end{array}
+		\right.
+	\end{equation}
 %
-\begin{defn}[Query Equivalence].
-\label{def:query_equal}
- The equality between two query expressions $\qexpr_1$ and $\qexpr_2$ in certain memory $m$ is denoted  $ \qexpr_1 =_{q}^{m} \qexpr_2$.\\
-$\qexpr_1 =_{q}^{m} \qexpr_2$ iff $ \exists \qval. \config{m,  \qexpr_1} \qarrow \config{m, \qval} \land \config{m,  \qexpr_2 } \qarrow \config{m, \qval} $. \\
-We use $=_{q}$ as the shorthand for $=_{q}^{[]}$.\\
-$\qval \in_q t $ iff $\exists \qval' \in t. \qval =_q \qval'$.
-\end{defn}
-
-The small-step transition states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and while map updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
-We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
+Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in t$ are defined as follows:
+  	%
+\begin{equation}
+		\aq \in t  
+		\triangleq \left\{
+		\begin{array}{ll} 
+			\efalse  			& t = []   				\\
+			\etrue 				& t = (\aq)::t' 	\\ 
+			\aq \in t'	& t = (\aq')::t' 
+		\end{array}
+		\right.
+	\end{equation}
+	%
+	%
+}
 %
-
 %
 The evaluation rules for arithmetic and boolean expressions are standard. 
 They have the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmetic expression $\aexpr$ in the memory $m$, and similar for the boolean expressions $\config{m, \bexpr} \barrow \bexpr'$, defined as follows:
+%
+\jl{
+\begin{mathpar}
+\boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
+\\
+\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
+\end{mathpar}
+}
+%
+\jl{
+Given the evaluation for the arithmetic and boolean expression, we defined the evaluation rules for query expression $\qexpr$ correspondingly as follows:
 	\begin{mathpar}
-	\boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
+	\boxed{ \config{m, \qexpr} \qarrow \qexpr' \, : \, Memory  \times QExpr \qarrow QExpr }
 	\\
+	\inferrule{ 
+	  \config{m, n \oplus_a n} \aarrow n'
+	}{
+	 \config{m,  n \oplus_a n} 
+	 \qarrow n'
+	}
+	\and
+	\inferrule{ 
+	  \config{m, \qexpr} \qarrow \qexpr'
+	}{
+	 \config{m,  \qexpr \oplus_a \qval} 
+	 \qarrow \qexpr' \oplus_a \qval
+	}
+	\and
+	\inferrule{ 
+	  \config{m, \qexpr_2} \qarrow \qexpr_2'
+	}{
+	 \config{m,  \qexpr_1 \oplus_a \qexpr_2} 
+	 \qarrow \qexpr_1 \oplus_a \qexpr_2'
+	}
+	\and
 	\inferrule{ 
 	  \config{m, \aexpr} \aarrow \aexpr'
 	}{
-	 \config{m,  \chi( \aexpr)} \aarrow \chi(\aexpr')
+	 \config{m,  \chi[\aexpr]} \qarrow \chi[\aexpr']
+	}
+	\and
+	\inferrule{ 
+	  \config{m, \aexpr} \aarrow \aexpr'
+	}{
+	 \config{m,  \aexpr} \qarrow \aexpr'
+	}	\end{mathpar}
+	%
+Given the evaluation rules for query expression, we can define its equivalence relation, as follows in Definition. ~ \ref{def:query_equal}.
+%
+\begin{defn}[Equivalence of Query].
+%
+\label{def:query_equal}
+ Given a memory $m$ and 2 query expressions $\qexpr_1$, $\qexpr_2$ s.t., $FV(\qexpr_1) \in \dom(m)$ and $FV(\qexpr_2) \in \dom(m)$:
+$$
+\query(\qexpr_1) =_{q}^{m} \query(\qexpr_2) \triangleq
+\left\{
+		\begin{array}{cl} 
+			\etrue			
+			& \exists \qval. \config{m,  \qexpr_1} \qarrow \config{m, \qval} \land \config{m,  \qexpr_2 } \qarrow \config{m, \qval}  				\\
+			\efalse  				
+			& \text{o.w.} 
+		\end{array}
+		\right.,
+$$
+%
+, where $FV(\qexpr)$ is the free variables in the corresponding query expression $\qexpr$.
+$\query(\qexpr_1) \neq_{q}^{m} \query(\qexpr_2)$  is defined vice versa.
+%
+We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}_{q}$.
+\end{defn}
+%
+Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition ~\ref{def:aq_equal}:
+%
+\begin{defn}[Equivalence of Annotated Queries].
+%
+\label{def:aq_equal}
+Given 2 annotated queries 
+$ \aq_1 = (\qval_1, l_1, w_1), 
+\aq_2 = (\qval_2, l_2, w_2)$
+:
+%
+\[
+\aq_1 =_{aq} \aq_2
+ \triangleq (l_1 = l_2 \land  w_1 =_w w_2 \land 
+ \qval_1 =_q \qval_2) 
+\]
+%
+$\aq_1 \neq_{aq} \aq_2$  is defined vice versa.
+%
+We use $=_{aq}$  and $\neq_{aq}$ as the shorthands for $=_{aq}^{[]}$ and $\neq^{[]}_{aq}$.
+\end{defn}
+}
+%
+The small-step transition states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and while map updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
+We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
+%
+%
+The rule $\textbf{query-e}$ evaluates the argument of a query request. When the argument is in normal form, this query will be answered.
+%
+The rule $\textbf{query-v}$ modifies the starting memory $m$ to $m[\qval/x]$ using the answer $\qval$ of the query $\query(\qval)$ from the mechanism, 
+with the trace expanded by appending the query $\query(\qval)$ with the current annotation $(l,w)$. 
+%
+The rule for assignment is standard and the trace remains unchanged.%
+The sequence rule keeps tracking the modification of the trace, and the evaluation rule for if conditional goes into one branch based on the result of the conditional predicate $\bexpr$. 
+%
+The rules for while modify the while map $w$. 
+In the rule $\textbf{ifw-true}$, the while map $w$ is updated by $w + l$ because the execution goes into another iteration when the condition $n >0$ is satisfied. 
+%
+When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
+With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition ~ \ref{def:wf_trace}.
+%
+\jl{
+\begin{defn}[Well Formed Trace].
+\label{def:wf_trace}
+\\
+Given a program $c$ with a starting configuration
+$\config{m, c, [], []}$ s.t., 
+$\config{m, c, [], []} \to \config{m', \eskip, t, w}$,
+the trace $t$ is well-formed w.r.t. the program $c$ and the starting memory $m$, i.e., $m, c \vDash t$ if and only if $\forall \aq_1, \aq_2 \in t$:
+\begin{itemize}
+	\item $(\aq_1 \neq_{q} \aq_2)$
+	%
+	\item $(\aq_1 <_{q} \aq_2) \Longleftrightarrow
+	\exists t_1, t_2, t_3 ~ s.t., ~ t_1 ++ [\aq_1] ++ t_2 ++ [\aq_2] ++ t_3 = t$
+\end{itemize}
+\end{defn}
+}
+\begin{figure}
+	\begin{mathpar}
+	\boxed{
+	Memory  \times Command \times Trace \times While Map 
+	\xrightarrow{}
+	Memory  \times Command \times Trace \times While Map
 	}
 	\\
-	\boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
-	\end{mathpar}
-
-\begin{figure}
-% \begin{subfigure}
-	% \begin{mathpar}
-	% \boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
-	% \\
-	% \inferrule{ 
-	%   \config{m, \aexpr} \aarrow \aexpr'
-	% }{
-	%  \config{m,  \chi( \aexpr)} \aarrow \chi(\aexpr')
-	% }
-	% \\
-	% \boxed{ \config{m, \bexpr} \barrow \bexpr' \, : \, Memory \times BExpr \Rightarrow BExpr }
-	% \end{mathpar}
-	%
-	\begin{mathpar}
-	\boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'} \; }
+	\boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'}
+	}
 	\\
 	\inferrule
 	{
@@ -495,7 +630,7 @@ They have the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmeti
 	{
 	\inferrule
 	{
-	\config{m,\qexpr} \qarrow \config{m,\qexpr'}
+	\config{m,\qexpr} \qarrow \qexpr'
 	}
 	{
 	\config{m, [\assign{x}{\query(\qexpr)}]^l, t, w} \xrightarrow{}  
@@ -582,18 +717,6 @@ They have the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmeti
 %
 %
 %
-The rule $\textbf{query-e}$ evaluates the argument of a query request. When the argument is in normal form, this query will be answered.
-%
-The rule $\textbf{query-v}$ modifies the starting memory $m$ to $m[\qval/x]$ using the answer $\qval$ of the query $\query(\qval)$ from the mechanism, 
-with the trace expanded by appending the query $\query(\qval)$ with the current annotation $(l,w)$. 
-%
-The rule for assignment is standard and the trace remains unchanged.%
-The sequence rule keeps tracking the modification of the trace, and the evaluation rule for if conditional goes into one branch based on the result of the conditional predicate $\bexpr$. 
-%
-The rules for while modify the while map $w$. 
-In the rule $\textbf{ifw-true}$, the while map $w$ is updated by $w + l$ because the execution goes into another iteration when the condition $n >0$ is satisfied. 
-%
-When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
 %
 \subsection{ Trace-based Adaptivity}
 %
