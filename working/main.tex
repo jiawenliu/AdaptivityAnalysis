@@ -499,12 +499,12 @@ When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label 
 With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition ~ \ref{def:wf_trace}.
 %
 \jl{
-\begin{defn}[Well Formed Trace].
+\begin{defn}[Well-formed Trace].
 \label{def:wf_trace}
 \\
 Given a program $c$ with a starting configuration
-$\config{m, c, [], []}$ s.t., 
-$\config{m, c, [], []} \to \config{m', \eskip, t, w}$,
+$\config{m, c, [], []}$ 
+\todo{remove? s.t., $\config{m, c, [], []} \to \config{m', \eskip, t, w}$,}
 the trace $t$ is well-formed w.r.t. the program $c$ and the starting memory $m$, i.e., $m, c \vDash t$ if and only if $\forall \aq_1, \aq_2 \in t$:
 \begin{itemize}
 	\item $(\aq_1 \neq_{q} \aq_2)$
@@ -514,6 +514,17 @@ the trace $t$ is well-formed w.r.t. the program $c$ and the starting memory $m$,
 \end{itemize}
 \end{defn}
 }
+\jl{
+\begin{thm}[Trace Generated from OS is Well-formed].
+\label{lem:os_wf_trace}
+\\
+Given a program $c$ with a starting configuration
+$\config{m, c, [], []}$ s.t., 
+$\config{m, c, [], []} \to \config{m', \eskip, t, w}$,
+$t$ is well-formed w.r.t. the program $c$ and the starting memory $m$.
+\end{thm}
+}
+
 \begin{figure}
 	\begin{mathpar}
 	\boxed{
@@ -1109,6 +1120,40 @@ with $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ can never be constructed in the t
 }
 \end{proof}
 %
+\begin{proof}
+Proving by showing a contradiction.
+\\
+By constructing an contradict hypothesis, i.e., 
+$\exists (\aq', \aq) \in \edges$ s.t., $\aq' \geq_{aq} \aq$, this lemma is proved by showing there is a contradiction.
+\\
+Given the program $c$, database $D$ and starting memory, we have:
+\[
+	\config{m, c, [], []} \to^* \config{m', \eskip, t, w}
+\]
+for some $m'$, $t$ and $w$ according to the operational semantics.
+
+Let $\aq' = (({\qval}',l',w'),), \aq = ({\qval},l,w)$ and $(\aq', \aq) \in \edges$ be the edge in $G$ s.t., $\aq' \geq_{aq} \aq$.
+\\
+According to the Definition ~ \ref{def:trace-based_graph}, we have:
+%
+$$
+(\aq', \aq \in \vertxs ) 
+\land (DEP(\aq', \aq, c, m D) ~ \star)
+$$
+%
+According to the Vertices defined in ~ \ref{def:trace-based_graph}, 
+we have $\aq' \in t$ and $\aq \in t$.
+\\
+According to the lemma ~ \ref{lem:os_wf_trace}, we know $t$ is a well-formed trace.
+\\
+By the definition ~ \ref{def:wf_trace}, we know there exist $t_1, t_2, t_3$ s.t.,
+\[
+	t_1 ++ [\aq] ++ t_2 ++ [\aq'] ++ t_3 = t ~ \diamond
+\]
+%
+According to the Definition ~ 
+\end{proof}
+%
 \begin{lem}
 \label{lem:DAG}
 [Trace-based Dependency Graph is Directed Acyclic].
@@ -1129,7 +1174,7 @@ Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
 [Adaptivity Toplimit].
 \\
 {
-Given a program $c$ with a certain database $D$ and starting memory $m$, the $A(c)$ w.r.t. the $D$ and $m$ is bounded, i.e.,:
+Given the program $c$ with a certain database $D$ and starting memory $m$, the $A(c)$ w.r.t. the $D$ and $m$ is bounded, i.e.,:
 %
 \[
 \config{m, c, \emptyset, \emptyset} 
