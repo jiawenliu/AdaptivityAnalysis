@@ -98,7 +98,7 @@ Finally we extend the language to support the probabilistic program and extend t
 
 The key component of the system is a program analysis tool, which provides an upper bound on the adaptivity of the program.
 
-\section{Label While Language}
+\section{Labeled {\tt While} Language}
 \label{sec:while_language}
 %
 \subsection{Syntax and Semantics}
@@ -196,7 +196,7 @@ The key component of the system is a program analysis tool, which provides an up
 %
 \subsection{ Trace-based Operational Semantics}
 {
-We evaluate programs in our {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as defined in the syntax.
+We evaluate programs in the {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as defined in the syntax.
 %
 Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. Some non-standard syntaxes are explained as follows:  
 %
@@ -319,7 +319,6 @@ Given the label $l$ and while map $w$ are ordered,
 the annotated queries also preserve this property. 
 Its order and equivalence relation are defined in Definition.~\ref{def:query_dir}.
 %
-\todo{notations duplicate}
 \begin{defn}[Order of Annotated Queries].
 \label{def:query_dir}
 \\
@@ -348,7 +347,6 @@ annotated query}
 %
 
  %% trace
- \todo{Well-Formed Trace}
 A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
 A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
 We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
@@ -358,9 +356,8 @@ of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $.
 Given an annotated query $\aq$ and a trace $t$,
 the appending operation $\aq :: t$ is 
 the standard list appending operation, appends $\aq$ to the head of trace $t$.
-}
-\jl{
-The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is defined as the standard list concatenation operation as follows:
+%
+The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
 \begin{equation}
 		t_1 ++ t_2  
 		\triangleq \left\{
@@ -455,7 +452,7 @@ $$
 		\right.,
 $$
 %
-, where $FV(\qexpr)$ is the free variables in the corresponding query expression $\qexpr$.
+, where $FV(\qexpr)$ is the free variables in the query expression $\qexpr$.
 $\query(\qexpr_1) \neq_{q}^{m} \query(\qexpr_2)$  is defined vice versa.
 %
 We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}_{q}$.
@@ -859,8 +856,8 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 	\middle\vert
 	\begin{array}{l}
 		\mathsf{DEP}(({\qval},l,w), ({\qval}',l',w')),c,m,D) \\
-		\land 
-		(({\qval},l,w) <_q ({\qval}',l',w'))
+		% \land 
+		% (({\qval},l,w) <_q ({\qval}',l',w'))
 	\end{array}
 	\right\}
 \end{array}
@@ -880,10 +877,10 @@ and all edges and vertices are distinct.
 
 $(v_1, \ldots, v_n)$ is the vertices sequence of this path.
 
-\jl{Length of the path $p$ ($\len(p)$) is the number of vertices in its vertices sequence $(v_1, \ldots, v_n)$, i.e., $\len(p) = n$.}
+\jl{Length of the path $p$ is the number of vertices in its vertices sequence $(v_1, \ldots, v_n)$, i.e., $\len(p) = n$.}
 \end{defn}
 %
-\jl{We use $\path(G)$ to denote a finite set containing all paths $p$ in a directed acyclic graph $G = (\vertxs, \edges)$.}
+\jl{We use $\path(G)$ to denote the finite set containing all paths $p$ in a directed acyclic graph $G = (\vertxs, \edges)$.}
 %
 % \begin{defn}[path length ($\len(p)$)].
 % \\
@@ -920,20 +917,49 @@ We proved some useful properties for our language.
 \begin{lem}
 [Trace Non-Decreasing].
 \\
-{
-For any program $c$ with a starting memory $m$, trace $t$ and while label $w$, if 
-$  
+\jl{
+For any program $c$ with a starting memory $m$, trace $t$ and while map $w$: 
+$$
 \config{m, c, t, w} 
-\rightarrow^{*} 
-\config{m, c', t', w'} 
-$ by the operational semantics, then there exists a trace $t''$ 
-s.t. $t'' ++ t = t'$
+\rightarrow
+\config{m, c', t', w'} \implies \exists ~ t'', ~ s.t., ~ t ++ t'' = t'
+$$
 }
 \end{lem}
 %
 \begin{proof}
 {
-Proof is obvious by induction on the operational semantics rules.
+Proof is obvious by induction on the operational semantic rules applied in the transition 
+.
+\\
+By induction on the operational semantic rules applied in the transition $\config{m, c, t, w} 
+\rightarrow
+\config{m, c', t', w'}$, 
+we have cases for each rule.
+By observation on the rules, 
+the trace $t$ remains unchanged in all the rules except the only one \textbf{query-v}.
+So, the rule \textbf{query-v} is the only interesting case to be discussed as following.
+\begin{itemize}
+\caseL{
+\[
+	\inferrule
+	{
+	\query(\qval) = v
+	}
+	{
+	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} \xrightarrow{}  
+	\config{m, \eskip, t ++ [(\qval, l, w)], w}
+	}
+	~\textbf{query-v}
+\]
+}
+%
+In this case, we have $c' = \eskip$, 
+$t' = t ++ [(\qval, l, w)]$, $m' = m[v/x]$ and $w' = w$.
+\\
+Let $t'' = [(\qval, l, w)]$, we have $t ++ [(\qval, l, w)] = t'$,
+i.e., $t ++ t'' = t'$. This case is proved.
+\end{itemize}
 }
 \end{proof}
 %
@@ -1042,8 +1068,9 @@ Proof is obvious by induction on the operational semantics rules.
 \jl{
 The following lemma describes a property of the trace-based dependency graph.
 For any program $c$ with a database $D$ and a starting memory $m$,
-the directed edges in its trace-based dependency graph can only be constructed from nodes representing queries of smaller label to queries of greater label.
-There doesn't exist backward edges with direction from queries of greater label to smaller label.
+the directed edges in its trace-based dependency graph can only be constructed from nodes representing 
+smaller annotated queries to annotated queries of greater order.
+There doesn't exist backward edges with direction from greater annotated queries to smaller ones.
 }
 \begin{lem}
 \label{lem:edgeforwarding}
@@ -1066,7 +1093,7 @@ $$({\qval}',l',w') \geq_{q} ({\qval},l,w)$$
 Proof is obvious based on the definition \ref{def:trace-based_graph}.
 }
 \\
-{
+\jl{
 In definition \ref{def:trace-based_graph},
 any edge $(({\qval}',l',w'),({\qval},l,w)) \in E$ defined in the traced-based dependency graph $G = (V,E)$ is restricted by
 a constraint
@@ -1123,7 +1150,7 @@ Proof is obvious based on the Lemma \ref{lem:DAG}.
 %
 \clearpage
 
-\section{SSA Language  }
+\section{Labeled SSA Language}
 %
 {
 \subsection{The Limit of {\tt While} Language}
