@@ -466,6 +466,13 @@ The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$
 		\right.
 	\end{equation}
 %
+%
+The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is defined as follows:
+\begin{equation}
+		t_1 - t_2  
+		\triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
+	\end{equation}
+%
 Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in t$ are defined as follows:
   	%
 \begin{equation}
@@ -506,9 +513,9 @@ With the operational semantics and relations between annotated queries, we restr
 \label{def:wf_trace}
 A trace $t$ is well formed if and only if it preserves the following two properties:
 \begin{itemize}
-	\item{\wq{Uniqueness}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 \neq_{q} \aq_2)$
+	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 \neq_{q} \aq_2)$
 	%
-	\item{\wq{Ordering}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 <_{q} \aq_2) \Longleftrightarrow
+	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 <_{q} \aq_2) \Longleftrightarrow
 	\exists t_1, t_2, t_3 ~ s.t., ~ t_1 ++ [\aq_1] ++ t_2 ++ [\aq_2] ++ t_3 = t$
 \end{itemize}
 \end{defn}
@@ -846,6 +853,54 @@ t_3,w_3}
 \end{array}
 \]
 }
+\[
+\exists m_1,m_3,t_1,t_3,c_2,v_1.\\
+  \left (
+  \begin{array}{l}   
+\config{m, c, [], []} \rightarrow^{*} 
+\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
+  t_1, w_1} 
+\rightarrow^{\textbf{query-v}} 
+\\ 
+\config{m_1[v_1/x], c_2,
+t_1++[\aq_1], w_1} \rightarrow^{*} \config{m_3, \eskip,
+t_3,w_3}
+  % 
+ \\ 
+  % 
+  \left( 
+  \begin{array}{l}
+  \aq_2 \in_{q} (t_3 - (t_1 ++ [\aq'])) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
+  \config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{m_3', \eskip, t_3', w_3'} 
+  \land 
+  \aq_2 \not \in_{q} (t_3'-(t_1 ++ [\aq_1])))
+\end{array} \right ) ~(b)
+\\
+\left( 
+  \begin{array}{l}
+	\aq_2 \not\in_{q} (t_3 - (t_1 ++ [\aq_1]))
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
+	\config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{m_3', \eskip, t_3', w_3'} 
+	\land 
+	\aq_2  \in_{q} (t_3' - (t_1 ++ [\aq_1])))
+\end{array} \right )
+\end{array}\right )
+\]
 \end{defn}
 %
 %
@@ -1148,28 +1203,69 @@ for some $m'$, $t$ and $w$ according to the operational semantics.
 }
 \\
 \jl{
-Let $\aq' = (({\qval}',l',w'),), \aq = ({\qval},l,w)$ and $(\aq', \aq) \in \edges$ be the edge in $G$ s.t., $\aq' \geq_{aq} \aq$.
+Let  $(\aq', \aq) \in \edges$ be the edge in $G$ s.t., $\aq' \geq_{aq} \aq$ where $\aq' = ({\qval}',l',w')$ and $\aq = ({\qval},l,w)$.
 }
 \\
 \jl{
 According to the Definition ~ \ref{def:trace-based_graph}, we have:
 %
 $$
-(DEP(\aq', \aq, c, m D) ~ (2))
+DEP(\aq', \aq, c, m, D) ~ (1)
 $$
 %
-% According to the Vertices defined in ~ \ref{def:trace-based_graph}, and the condition $(1)$,
-% we have $\aq' \in t$ and $\aq \in t$.
-% \\
-% According to the lemma ~ \ref{lem:os_wf_trace}, we know $t$ is a well-formed trace.
-% \\
-% By the definition ~ \ref{def:wf_trace}, we know there exist $t_1, t_2, t_3$ s.t.,
-% \[
-% 	t_1 ++ [\aq] ++ t_2 ++ [\aq'] ++ t_3 = t ~ \diamond
-% \]
 %
-According to the Definition ~ \ref{def:query_dep}, and the condition $(2)$, 
-we know there exists $t_1', t_3',t_2', m_1, m_3, c_2$ s.t.,
+According to the Definition ~ \ref{def:query_dep}, and the condition $(2)$,
+we know there exists $t_1, t_3, m_1, m_3, c_2$ s.t.,
+%
+\[
+\config{m, c, [], []} \rightarrow^{*} 
+\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
+  t_1, w_1} 
+\rightarrow^{\textbf{query-v}} 
+\config{m_1[v_1/x], c_2,
+(t_1 ++ [\aq'], w_1} \rightarrow^{*} \config{m_3, \eskip,
+t_3,w_3} ~ (a)	
+\]
+%
+and
+%
+\[
+ \bigwedge
+ \begin{array}{l}   
+  % 
+  \left( 
+  \begin{array}{l}
+  \aq \in_{q} (t_3 - (t_1 ++ [\aq'])) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
+  \config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{m_3', \eskip, t_3', w_3'} 
+  \land 
+  \aq \not \in_{q} (t_3'-(t_1 ++ [\aq'])))
+\end{array} \right ) ~(b)
+\\
+\left( 
+  \begin{array}{l}
+	({\qval}_2,l_2,w_2) \not\in_{q} (t_3 - (t_1 ++ [\aq']))
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
+	\config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{m_3', \eskip, t_3', w_3'} 
+	\land 
+	\aq  \in_{q} (t_3' - (t_1 ++ [\aq'])))
+\end{array} \right ) ~ (c)
+\end{array}
+\]
 %
 \[
 	t_1' ++ [\aq'] ++ t_2' ++ [\aq] ++ t_3' = t ~ \star
