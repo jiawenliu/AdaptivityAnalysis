@@ -174,7 +174,7 @@ The key component of the system is a program analysis tool, which provides an up
 \todo{We use following notations to represent the set of corresponding definitions:}
 \[
 \begin{array}{lll}
-\mathcal{VAR} & : & \mbox{Set of Variables}  
+\mathcal{VAR} & : & \mbox{Set of Infinite Variables}  
 \\ 
 %
 \mathcal{VAL} & : & \mbox{Set of Values} 
@@ -341,9 +341,8 @@ $ \aq_1 = (\qval_1, l_1, w_1),
 \right.
 \]
 %
-$\aq_1 \geq_{aq} \aq_2$  is defined vice versa.
-\end{defn}
-annotated query}
+$\aq_1 \geq_{aq} \aq_2$  is defined vice versa.\\
+\end{defn}}
 %
 
  %% trace
@@ -352,37 +351,7 @@ A trace can be regarded as the program history, where this history consists of a
 We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
 of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
 
-\jl{
-Given an annotated query $\aq$ and a trace $t$,
-the appending operation $\aq :: t$ is 
-the standard list appending operation, appends $\aq$ to the head of trace $t$.
-%
-The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
-\begin{equation}
-		t_1 ++ t_2  
-		\triangleq \left\{
-		\begin{array}{ll} 
-			t_2 				& t_1 = []\\
-			\aq::(t_1' ++ t_2)	& t_1 = \aq::t_1'
-		\end{array}
-		\right.
-	\end{equation}
-%
-Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in t$ are defined as follows:
-  	%
-\begin{equation}
-		\aq \in t  
-		\triangleq \left\{
-		\begin{array}{ll} 
-			\efalse  			& t = []   		\\
-			\etrue 				& t = \aq::t' 	\\ 
-			\aq \in t'			& t = \aq'::t' 
-		\end{array}
-		\right.
-	\end{equation}
-	%
-	%
-}
+
 %
 %
 The evaluation rules for arithmetic and boolean expressions are standard. 
@@ -452,7 +421,7 @@ $$
 		\right.,
 $$
 %
-, where $FV(\qexpr)$ is the free variables in the query expression $\qexpr$.
+, where $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
 $\query(\qexpr_1) \neq_{q}^{m} \query(\qexpr_2)$  is defined vice versa.
 %
 We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}_{q}$.
@@ -460,7 +429,7 @@ We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}
 %
 Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition ~\ref{def:aq_equal}:
 %
-\begin{defn}[Equivalence of Annotated Queries].
+\begin{defn}[Equivalence of Annotated Queries]
 %
 \label{def:aq_equal}
 Given 2 annotated queries 
@@ -480,6 +449,39 @@ We use $=_{aq}$  and $\neq_{aq}$ as the shorthands for $=_{aq}^{[]}$ and $\neq^{
 \end{defn}
 }
 %
+
+\jl{
+Given an annotated query $\aq$ and a trace $t$,
+the appending operation $\aq :: t$ is 
+the standard list appending operation, appends $\aq$ to the head of trace $t$.
+%
+The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
+\begin{equation}
+		t_1 ++ t_2  
+		\triangleq \left\{
+		\begin{array}{ll} 
+			t_2 				& t_1 = []\\
+			\aq::(t_1' ++ t_2)	& t_1 = \aq::t_1'
+		\end{array}
+		\right.
+	\end{equation}
+%
+Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in t$ are defined as follows:
+  	%
+\begin{equation}
+		\aq \in t  
+		\triangleq \left\{
+		\begin{array}{ll} 
+			\efalse  			& t = []   		\\
+			\etrue 				& t = \aq::t' 	\\ 
+			\aq \in t'			& t = \aq'::t'  \quad \aq \not=_{aq} \aq'
+		\end{array}
+		\right.
+	\end{equation}
+	%
+	%
+}
+
 The small-step transition states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and while map updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
 We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
 %
@@ -498,31 +500,39 @@ In the rule $\textbf{ifw-true}$, the while map $w$ is updated by $w + l$ because
 When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
 With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition ~ \ref{def:wf_trace}.
 %
+
 \jl{
-\begin{defn}[Well-formed Trace].
+\begin{defn}[Well-formed Trace]
 \label{def:wf_trace}
-\\
-Given a program $c$ with a starting configuration
-$\config{m, c, [], []}$ 
-\todo{remove? s.t., $\config{m, c, [], []} \to \config{m', \eskip, t, w}$,}
-the trace $t$ is well-formed w.r.t. the program $c$ and the starting memory $m$, i.e., $m, c \vDash t$ if and only if $\forall \aq_1, \aq_2 \in t$:
+A trace $t$ is well formed if and only if it preserves the following two properties:
 \begin{itemize}
-	\item $(\aq_1 \neq_{q} \aq_2)$
+	\item{\wq{Uniqueness}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 \neq_{q} \aq_2)$
 	%
-	\item $(\aq_1 <_{q} \aq_2) \Longleftrightarrow
+	\item{\wq{Ordering}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 <_{q} \aq_2) \Longleftrightarrow
 	\exists t_1, t_2, t_3 ~ s.t., ~ t_1 ++ [\aq_1] ++ t_2 ++ [\aq_2] ++ t_3 = t$
 \end{itemize}
 \end{defn}
 }
+
+
 \jl{
-\begin{thm}[Trace Generated from OS is Well-formed].
+\begin{thm}[Trace Generated from Operational Semantics is Well-formed].
 \label{lem:os_wf_trace}
 \\
-Given a program $c$ with a starting configuration
-$\config{m, c, [], []}$ s.t., 
+Given a program $c$,  a starting configuration, 
+$\config{m, c, [], []}$ s.t. 
 $\config{m, c, [], []} \to \config{m', \eskip, t, w}$,
-$t$ is well-formed w.r.t. the program $c$ and the starting memory $m$.
+$t$ is well-formed w.r.t. the program $c$ and the starting memory $m$, denoted ad $m, c \vDash t$ .
 \end{thm}
+\begin{proof}
+\wq{By induction on the program $c$.
+\caseL{Case $[\assign x \expr]^{l}$}
+ We assume a configuration $\config{m,[\assign x \expr]^{l} , [], []}$ s.t. there exists such an evaluation
+$\config{m, [\assign x \expr]^{l}, [], []} \to \config{m', \eskip, t, w}$.\\
+From the evaluation rule \rname{assn1} and rule \rname{assn2}, when we assume $m,e \to v$. We know:  $\config{m, [\assign x \expr]^{l}, [], []} \to \config{m[v/x], \eskip, [], []}$.  The resulting trace is an empty list, which is well formed by Definition~\ref{def:wf_trace}.
+}
+\todo{Other cases }
+\end{proof}
 }
 
 \begin{figure}
