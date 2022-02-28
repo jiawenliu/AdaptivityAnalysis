@@ -539,7 +539,7 @@ $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$,
 $t$ is well-formed w.r.t. the program $c$ and the starting memory $m$, denoted ad $m, c \vDash t$ .
 \end{thm}
 \begin{proof}
-\wq{By induction on the program $c$.
+{By induction on the program $c$.
 \caseL{Case $[\assign x \expr]^{l}$}
  We assume a configuration $\config{m,[\assign x \expr]^{l} , [], []}$ s.t. there exists such an evaluation
 $\config{m, [\assign x \expr]^{l}, [], []} \to \config{m', \eskip, t, w}$.\\
@@ -2041,58 +2041,56 @@ by mimicking the corresponding definitions in the {\tt While} language.
 \begin{defn}
 [Query May Dependency in SSA Language].
 \\
-\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
-{
-One annotated query $({\qval}_1, l_1, w_1)$ may depend on another query $({\qval}_2,l_2, w_2)$ in a program $\ssa{c}$,
+\jl{
+One annotated query $\aq_1 = ({\qval}_1, l_1, w_1)$ may depend on another query $\aq_2 = ({\qval}_2,l_2, w_2)$ in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
 %
-$\mathsf{DEP}_{ssa}({(\qval_1, l_1, w_1)}, ({\qval}_2, l_2, w_2), \ssa{c}, \ssa{m}, D)$ is defined below. 
+$\mathsf{DEP}_{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
 %
 %
 \[
 \begin{array}{l}
 \exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
   \left (\begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, \emptyset ,\emptyset} \rightarrow^{*} 
+\config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
 \config{\ssa{m}_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
   t_1, w_1} 
-\\ 
 \rightarrow^{\textbf{{ssa-query-v}}} 
-\config{\ssa{m}_1[v_1/x], c_2,
-(t_1 ++ [(\qval_1, l_1, w_1)], w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
-t_3,w_3}
+\\ 
+\config{\ssa{m}_1[v_1/x], c_2, t_1 ++ [\aq_1], w_1} 
+\rightarrow^{*} \config{\ssa{m}_3, \eskip, t_3,w_3}
   % 
- \\ \land
+ \\ \bigwedge
   \left( 
   \begin{array}{l}
-  ({\qval}_2,l_2,w_2) \in_{q} (t_3-t_1) 
+  \aq_2 \in_{aq} (t_3 - (t_1 ++ [\aq])) 
   % 
   \\
   \implies 
-  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. ~  
-  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, ({\qval}_1,l_1, w_1)::t_1, w_1} 
+  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'.  
+  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1} 
   \\ 
   \quad \quad 
   \rightarrow^{*}
   (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
   \land 
-  ({\qval}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
+  \aq_2 \not \in_{aq} (t_3'-(t_1 ++ [\aq_1])))
 \end{array} \right )
-\\\land
+\\\bigwedge
 \left( 
   \begin{array}{l}
-	({\qval}_2,l_2,w_2) \not\in_{q} (t_3-t_1)
+  	\aq_2 \not\in_{aq} (t_3 - (t_1 ++ [\aq_1]))
   	% 
   	\\
   	\implies 
 	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
-	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, ({\qval}_1,l_1,w_1)::t_1, w_1}
+	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1}
 	\\ 
 	\quad \quad 
 	\rightarrow^{*} 
 	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
 	\land 
-	({\qval}_2,l_2,w_2))  \in_{q} (t_3'-t_1))
+	\aq_2  \in_{aq} (t_3' - (t_1 ++ [\aq_1])))
 \end{array} \right )
 \end{array} \right )
 \end{array}
@@ -2104,36 +2102,25 @@ t_3,w_3}
 \begin{defn}
 [Trace-Based Dependency Graph in SSA Language].
 \\
-\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
-{
+\jl{
 Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
 the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
 \[
 \begin{array}{rlcl}
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
-	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
+	\aq \in \mathcal{AQ} \middle\vert
 	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
-	\begin{array}{l}
-	\config{\ssa{m} ,\ssa{c}, \emptyset, \emptyset}  
-	\to^{*}  
-	\config{\ssa{m'} , \eskip, t', w' }
-	\\ 
-	\land ({\qval}, l, w) \in t'
-	\end{array}
+	\config{\ssa{m} ,\ssa{c}, [], []}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }
+	\land \aq \in t'
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
-	(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
-	\middle\vert
-	\begin{array}{l}
-		\mathsf{DEP_{ssa}}(({\qval},l,w), ({\qval}',l',w'),
-		\ssa{c},\ssa{m},D) 
-		\\ \land 
-		(({\qval},l,w) <_q ({\qval}',l',w'))
-	\end{array}
+	(\aq, \aq') \in \mathcal{AQ} \times \mathcal{AQ} 
+	~ \middle\vert ~
+	\mathsf{DEP_{ssa}}(\aq, \aq', \ssa{c},\ssa{m},D) 
 	\right\}
 \end{array}
 \]
@@ -2909,9 +2896,10 @@ $$
 \end{defn}
 %
 \jl{
-The $[]$ represents an empty vector
-and $x::A$ represents add an element $x$ to the end of the vector $A$.
-The concatenation operation between 2 vectors $A_1$ and $A_2$ is mimic the standard list concatenation operations as follows:
+We are abusing the notations and operators from list here. 
+The notation $[]$ represents an empty vector
+and $x::A$ represents add an element $x$ to the head of the vector $A$.
+The concatenation operation between 2 vectors $A_1$ and $A_2$, i.e., $A_1 ++ A_2$ is mimic the standard list concatenation operations as follows:
 %
 \begin{equation}
 		A_1 ++ A_2  
@@ -2922,7 +2910,13 @@ The concatenation operation between 2 vectors $A_1$ and $A_2$ is mimic the stand
 		\end{array}
 		\right.
 \end{equation}
-}%
+%
+We use index within parenthesis to denote the access to the element of corresponding location,
+$A(i)$ denotes the element at location $i$ in the vector $A$ and 
+$M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matrix $M$. 
+}
+%
+
 Consider the program $c$ below in the left hand side as an example, its assigned variables $\avar$ (short for $\avar(\ssa{c})$) is as in the right hand side is shown as follows:
 $$
 \ssa{c} = 
@@ -3221,15 +3215,9 @@ The output of the algorithm is the updated assigned variables $\avar'$ and flags
  \\
 k = \len(\avar')
 \and
- \todo{
- $\avar_3 = \avar_2 ++ \avar'$ 
- }
+\avar_3 = \avar_2 ++ \avar'
  \and
- \todo{
- $
  \flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1) ++ ([1]^k)
- $
- }
  }
 {
 \ag{\avar; \flag;
@@ -3468,19 +3456,17 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 {
 {\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \avar }{ \Mtrix_1}}
 \and 
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c_2}; \avar }{ \Mtrix_2}}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_2}; \avar }{ \Mtrix_2}}
 \\
-{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix_x}}
-%
-\\
-%
-{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \avar }
-{ \Mtrix_y}}
+\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix_x}
 %
 \\
 %
-\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \avar}
-{ \Mtrix_y}
+\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \avar }{ \Mtrix_y}
+%
+\\
+%
+\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \avar }{ \Mtrix_z}
 \\
 {\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
 }
@@ -3518,24 +3504,22 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 { 
 \inferrule
 {
-{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar}{ \Mtrix_{1} }}
-\\
 {
-\ad{\Gamma;\ssa{c}; \avar  }{ \Mtrix_{2}}
+\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c}; \avar  }{ \Mtrix_{1}}
 }
 \\
 {
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix}
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{\Mtrix_2}
 }
-\and
-{ \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
+% \and
+% { \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
 }
 {
 \ad{\Gamma;
-\ewhile ~ [ b ]^{l} ~ \ssa{n} ~
+\ewhile [ \sbexpr ]^{l},\ssa{n},
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c; \avar }
-{ \Mtrix'}
+\edo  \ssa{c}; \avar }
+{ \Mtrix_{1} + \Mtrix_{2}}
 }~\textbf{\graphGen-while}
 }
 \end{mathpar}
