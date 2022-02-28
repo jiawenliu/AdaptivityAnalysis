@@ -412,14 +412,15 @@ Given the evaluation rules for query expression, we can define its equivalence r
 $$
 \qexpr_1 =_{q}^{m} \qexpr_2 \triangleq
 \left\{
-		\begin{array}{cl} 
+		\begin{array}{ll} 
 			\etrue			
 			& 
+		\exists \qval_1, \qval_2.
 		\begin{array}{l} 
-			\exists \qval_1, \qval_2. \config{m,  \qexpr_1} \qarrow \qval_1 \land \config{m,  \qexpr_2 } \qarrow \qval_2 
+			(\config{m,  \qexpr_1} \qarrow \qval_1 \land \config{m,  \qexpr_2 } \qarrow \qval_2) 
 			\\
-			\land \forall n \in \qdom. \exists v. ~ s.t., ~ 
-			\config{m, \qval_1[n/\chi]} \qarrow v \land \config{m,  \qval_2[n/\chi] } \qarrow v	
+			\land (\forall n \in \qdom. \exists v. ~ s.t., ~ 
+						\config{m, \qval_1[n/\chi]} \aarrow v \land \config{m,  \qval_2[n/\chi] } \aarrow v)	
 		\end{array}\\
 			\efalse  				
 			& \text{o.w.} 
@@ -679,7 +680,7 @@ From the evaluation rule \rname{assn1} and rule \rname{assn2}, when we assume $m
 	{
 	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
 	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  (\qval, l, w) :: t,w }
+	\config{m[ v/ x], \eskip,  t ++ [(\qval, l, w)],w }
 	}
 	~\textbf{query-v}
 	}
@@ -790,9 +791,7 @@ As a first step, we give a definition of when one query may depend on a previous
     since $\query(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
 }
 
-{
    We give a formal definition of query may dependency based on the trace-based operational semantics as follows.
-   }
 %
 % 
 %
@@ -807,103 +806,54 @@ with a starting memory $m$ and a hidden database $D$, denoted as
 %
 $\mathsf{DEP}(\aq_1, \aq_2, c, m, D)$ is defined below. 
 %
-% \[
-% \begin{array}{l}
-% \exists m_1,m_3,t_1,t_3,c_2,v_1.\\
-%   \left (\begin{array}{l}   
-% \config{m, c, [], []} \rightarrow^{*} 
-% \config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
-%   t_1, w_1} 
-% \rightarrow^{\textbf{query-v}} 
-% \\ 
-% \config{m_1[v_1/x], c_2,
-% ({\qval}_1,l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{m_3, \eskip,
-% t_3,w_3}
-%   % 
-%  \\ 
-%  \bigwedge
-%   \left( 
-%   \begin{array}{l}
-%   ({\qval}_2,l_2,w_2) \in_{q} (t_3-t_1) 
-%   % 
-%   \\
-%   \implies 
-%   \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
-%   \config{m_1[v/x], {c_2}, ({\qval}_1,l_1, w_1)::t_1, w_1} 
-%   \\ 
-%   \quad \quad 
-%   \rightarrow^{*}
-%   (\config{m_3', \eskip, t_3', w_3'} 
-%   \land 
-%   ({\qval}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
-% \end{array} \right )
-% \\
-% \bigwedge
-% \left( 
-%   \begin{array}{l}
-% 	({\qval}_2,l_2,w_2) \not\in_{q} (t_3-t_1)
-%   	% 
-%   	\\
-%   	\implies 
-% 	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-% 	\config{m_1[v/x], {c_2}, ({\qval}_1,l_1,w_1)::t_1, w_1}
-% 	\\ 
-% 	\quad \quad 
-% 	\rightarrow^{*} 
-% 	(\config{m_3', \eskip, t_3', w_3'} 
-% 	\land 
-% 	({\qval}_2,l_2,w_2)  \in_{q} (t_3'-t_1))
-% \end{array} \right )
-% \end{array} \right )
-% \end{array}
-% \]
 \[
-\exists m_1,m_3,t_1,t_3,c_2,v_1.\\
-  \left (
-  \begin{array}{l}   
-\config{m, c, [], []} \rightarrow^{*} 
-\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
-  t_1, w_1} 
-\rightarrow^{\textbf{query-v}} 
-\\ 
-\config{m_1[v_1/x], c_2,
-t_1++[\aq_1], w_1} \rightarrow^{*} \config{m_3, \eskip,
-t_3,w_3}
-  % 
- \\ 
-  % 
-  \left( 
-  \begin{array}{l}
-  \aq_2 \in_{q} (t_3 - (t_1 ++ [\aq_1])) 
-  % 
-  \\
-  \implies 
-  \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
-  \config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1} 
-  \\ 
-  \quad \quad 
-  \rightarrow^{*}
-  (\config{m_3', \eskip, t_3', w_3'} 
-  \land 
-  \aq_2 \not \in_{q} (t_3'-(t_1 ++ [\aq_1])))
-\end{array} \right )
+\exists m_1,m_3,t_1,t_3,c_2,v_1.
 \\
-\left( 
-  \begin{array}{l}
-	\aq_2 \not\in_{q} (t_3 - (t_1 ++ [\aq_1]))
-  	% 
-  	\\
-  	\implies 
-	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-	\config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1}
+\left (
+  \begin{array}{l}   
+	\config{m, c, [], []} \rightarrow^{*} 
+	\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,  t_1, w_1} 
+	\rightarrow^{\textbf{query-v}} 
 	\\ 
-	\quad \quad 
-	\rightarrow^{*} 
-	(\config{m_3', \eskip, t_3', w_3'} 
-	\land 
-	\aq_2  \in_{q} (t_3' - (t_1 ++ [\aq_1])))
-\end{array} \right )
-\end{array}\right )
+	\config{m_1[v_1/x], c_2,
+	t_1++[\aq_1], w_1} \rightarrow^{*} \config{m_3, \eskip,
+	t_3,w_3}
+	 \\ 
+	 \bigwedge
+	 \left( 
+	 \begin{array}{l}
+		\aq_2 \in_{aq} (t_3 - (t_1 ++ [\aq_1])) 
+		\\
+		\implies 
+		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.
+		\config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1} 
+		\\ 
+		\quad \quad 
+		\rightarrow^{*}
+		(\config{m_3', \eskip, t_3', w_3'} 
+		\land 
+		\aq_2 \not \in_{aq} (t_3'-(t_1 ++ [\aq_1])))
+	\end{array} 
+	\right)
+	\\
+	\bigwedge
+	\left( 
+    \begin{array}{l}
+		\aq_2 \not\in_{aq} (t_3 - (t_1 ++ [\aq_1]))
+	  	\\
+	  	\implies 
+		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
+		\config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1}
+		\\ 
+		\quad \quad 
+		\rightarrow^{*} 
+		(\config{m_3', \eskip, t_3', w_3'} 
+		\land 
+		\aq_2  \in_{aq} (t_3' - (t_1 ++ [\aq_1])))
+	\end{array} 
+	\right)
+\end{array}
+\right )
 \]
 }
 \end{defn}
@@ -919,11 +869,9 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 \begin{array}{rlcl}
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
-	\aq \in \mathcal{AQ} \middle\vert
+	\aq \in \mathcal{AQ} ~\middle\vert ~ 
 	\exists m',  w', t' ~ s.t., ~  
-	\config{m ,c, [], []}  
-	\to^{*}  
-	\config{m' , \eskip, t', w' }
+	\config{m ,c, [], []}  \to^{*} \config{m' , \eskip, t', w' }
 	\land \aq \in_{aq} t'
 	\right\}
 	\\
@@ -931,20 +879,14 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 	\edges & := & 
 	\left\{ 
 	(\aq, \aq') \in \mathcal{AQ} \times \mathcal{AQ} 
-	\middle\vert
-	\begin{array}{l}
-		\mathsf{DEP}(\aq, \aq',c,m,D) \\
-		% \land 
-		% (({\qval},l,w) <_q ({\qval}',l',w'))
-	\end{array}
+	~\middle\vert ~ \mathsf{DEP}(\aq, \aq',c,m,D)
 	\right\}
 \end{array}
 \]
 }
 \end{defn}
-The edges are directed. When an annotated query $\aq$ may depend on its previous query $\aq'$, we have the directed
-edge $(\aq, \aq')$, 
-from vertex $\aq $ to vertex $\aq'$.
+The edges are directed. When an annotated query $\aq$ may depend on its previous one $\aq'$, 
+we have the corresponded edge $(\aq, \aq')$ directed from $\aq $ to $\aq'$.
 %
 %
 \begin{defn}[Path ($p$)].
@@ -1065,7 +1007,7 @@ On the other hand, in the operational semantics rule \textbf{query-v}:
 	{
 	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
 	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  (\qval, l, w) :: t,w }
+	\config{m[ v/ x], \eskip,  (t ++ [(\qval, l, w)],w }
 	}
 	~\textbf{query-v}
 	\]
@@ -1158,10 +1100,10 @@ There doesn't exist backward edges with direction from greater annotated queries
 %
 {
 Given a program $c$, a database $D$, a starting memory $m$ and the corresponding trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$, 
-for any directed edge $(({\qval}',l',w'),({\qval},l,w)) \in \edges$, 
+for any directed edge $(\aq', \aq) \in \edges$, 
 this is not the case that:
 %
-$$({\qval}',l',w') \geq_{q} ({\qval},l,w)$$
+$$\aq' \geq_{q} \aq$$
 %
 }
 \end{lem}
@@ -1171,20 +1113,6 @@ $$({\qval}',l',w') \geq_{q} ({\qval},l,w)$$
 \todo{write down proof}
 Proof is obvious based on the definition \ref{def:trace-based_graph}.
 }
-% \jl{
-% In definition \ref{def:trace-based_graph},
-% any edge $(({\qval}',l',w'),({\qval},l,w)) \in E$ defined in the traced-based dependency graph $G = (V,E)$ is restricted by
-% a constraint
-% $To(({\qval}',l',w'),({\qval},l,w))$.
-% According to the Definition $\ref{def:query_dir}$, 
-% we have $({\qval}',l',w') <_{q} ({\qval},l,w)$ 
-% i.e., either $l' < l$ or $w' <_{w} w$.
-% }
-% \\
-% {
-% This implies that an edge $(({\qval}',l',w'),({\qval},l,w))$ 
-% with $({\qval}',l',w') \geq_{q} ({\qval},l,w)$ can never be constructed in the traced-based dependency graph $G = (V,E)$.
-% }
 \end{proof}
 %
 \begin{proof}
@@ -1203,7 +1131,7 @@ DEP(\aq', \aq, c, m, D) ~ (1)
 $$
 %
 %
-According to the Definition ~ \ref{def:query_dep}, and the condition $(2)$,
+According to the Definition \ref{def:query_dep}, and $(1)$,
 we know there exists $t_1, t_3, m_1, m_3, c_2$ s.t.,
 %
 \[
@@ -1224,7 +1152,7 @@ and
   % 
   \left( 
   \begin{array}{l}
-  \aq \in_{q} (t_3 - (t_1 ++ [\aq'])) 
+  \aq \in_{aq} (t_3 - (t_1 ++ [\aq'])) 
   % 
   \\
   \implies 
@@ -1235,12 +1163,12 @@ and
   \rightarrow^{*}
   (\config{m_3', \eskip, t_3', w_3'} 
   \land 
-  \aq \not \in_{q} (t_3'-(t_1 ++ [\aq'])))
+  \aq \not \in_{aq} (t_3'-(t_1 ++ [\aq'])))
 \end{array} \right ) ~(b)
 \\
 \left( 
   \begin{array}{l}
-	\aq \not\in_{q} (t_3 - (t_1 ++ [\aq']))
+	\aq \not\in_{aq} (t_3 - (t_1 ++ [\aq']))
   	% 
   	\\
   	\implies 
@@ -1251,7 +1179,7 @@ and
 	\rightarrow^{*} 
 	(\config{m_3', \eskip, t_3', w_3'} 
 	\land 
-	\aq  \in_{q} (t_3' - (t_1 ++ [\aq'])))
+	\aq  \in_{aq} (t_3' - (t_1 ++ [\aq'])))
 \end{array} \right ) ~ (c)
 \end{array}
 \]
@@ -1305,12 +1233,9 @@ This is contradict to the hypothesis, where $\aq' \geq_{aq} \aq$.
 According to the condition $(c)$, we know: $\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.$
   	% 
 \[ 
-	\config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1}
-	\quad \quad 
-	\rightarrow^{*} 
-	(\config{m_3', \eskip, t_3', w_3'} ~ (5)
-	\land 
-	\aq  \in_{q} (t_3' - (t_1 ++ [\aq']))) ~ (6)
+	\config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1} 
+	\rightarrow^{*} (\config{m_3', \eskip, t_3', w_3'} ~ (5)
+	\land \aq  \in_{q} (t_3' - (t_1 ++ [\aq']))) ~ (6)
 \] 
 %
 According to the Theorem \ref{thm:os_wf_trace} and $(5)$, we know $t_3'$ is a well-formed trace.
@@ -2134,7 +2059,7 @@ $\mathsf{DEP}_{ssa}({(\qval_1, l_1, w_1)}, ({\qval}_2, l_2, w_2), \ssa{c}, \ssa{
 \\ 
 \rightarrow^{\textbf{{ssa-query-v}}} 
 \config{\ssa{m}_1[v_1/x], c_2,
-({\qval}_1,l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
+(t_1 ++ [(\qval_1, l_1, w_1)], w_1} \rightarrow^{*} \config{\ssa{m}_3, \eskip,
 t_3,w_3}
   % 
  \\ \land
