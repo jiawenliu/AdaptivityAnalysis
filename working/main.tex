@@ -410,19 +410,25 @@ Given the evaluation rules for query expression, we can define its equivalence r
 \label{def:query_equal}
  Given a memory $m$ and 2 query expressions $\qexpr_1$, $\qexpr_2$ s.t., $FV(\qexpr_1) \in \dom(m)$ and $FV(\qexpr_2) \in \dom(m)$:
 $$
-\query(\qexpr_1) =_{q}^{m} \query(\qexpr_2) \triangleq
+\qexpr_1 =_{q}^{m} \qexpr_2 \triangleq
 \left\{
 		\begin{array}{cl} 
 			\etrue			
-			& \exists \qval. \config{m,  \qexpr_1} \qarrow \config{m, \qval} \land \config{m,  \qexpr_2 } \qarrow \config{m, \qval}  				\\
+			& 
+		\begin{array}{l} 
+			\exists \qval_1, \qval_2. \config{m,  \qexpr_1} \qarrow \qval_1 \land \config{m,  \qexpr_2 } \qarrow \qval_2 
+			\\
+			\land \forall n \in \qdom. \exists v. ~ s.t., ~ 
+			\config{m, \qval_1[n/\chi]} \qarrow v \land \config{m,  \qval_2[n/\chi] } \qarrow v	
+		\end{array}\\
 			\efalse  				
 			& \text{o.w.} 
 		\end{array}
-		\right.,
+		\right.
 $$
 %
 , where $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
-$\query(\qexpr_1) \neq_{q}^{m} \query(\qexpr_2)$  is defined vice versa.
+$\qexpr_1 \neq_{q}^{m} \qexpr_2$  is defined vice versa.
 %
 We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}_{q}$.
 \end{defn}
@@ -473,15 +479,15 @@ The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is
 		\triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
 	\end{equation}
 %
-Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in t$ are defined as follows:
+Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in_{aq} t$ are defined as follows:
   	%
 \begin{equation}
-		\aq \in t  
+		\aq \in_{aq} t  
 		\triangleq \left\{
 		\begin{array}{ll} 
 			\efalse  			& t = []   		\\
-			\etrue 				& t = \aq::t' 	\\ 
-			\aq \in t'			& t = \aq'::t'  \quad \aq \not=_{aq} \aq'
+			\etrue 				& t = \aq'::t' 	\quad \aq =_{aq} \aq'\\ 
+			\aq \in t'			& t = \aq'::t'  \quad \aq \neq_{aq} \aq'
 		\end{array}
 		\right.
 	\end{equation}
@@ -513,9 +519,9 @@ With the operational semantics and relations between annotated queries, we restr
 \label{def:wf_trace}
 A trace $t$ is well formed if and only if it preserves the following two properties:
 \begin{itemize}
-	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 \neq_{q} \aq_2)$
+	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \in_{aq} t$,$(\aq_1 \neq_{aq} \aq_2)$
 	%
-	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \in t$,$(\aq_1 <_{q} \aq_2) \Longleftrightarrow
+	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \in_{aq} t$,$(\aq_1 <_{aq} \aq_2) \Longleftrightarrow
 	\exists t_1, t_2, t_3 ~ s.t., ~ t_1 ++ [\aq_1] ++ t_2 ++ [\aq_2] ++ t_3 = t$
 \end{itemize}
 \end{defn}
@@ -524,11 +530,11 @@ A trace $t$ is well formed if and only if it preserves the following two propert
 
 \jl{
 \begin{thm}[Trace Generated from Operational Semantics is Well-formed].
-\label{lem:os_wf_trace}
+\label{thm:os_wf_trace}
 \\
 Given a program $c$,  a starting configuration, 
 $\config{m, c, [], []}$ s.t. 
-$\config{m, c, [], []} \to \config{m', \eskip, t, w}$,
+$\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$,
 $t$ is well-formed w.r.t. the program $c$ and the starting memory $m$, denoted ad $m, c \vDash t$ .
 \end{thm}
 \begin{proof}
@@ -794,65 +800,63 @@ As a first step, we give a definition of when one query may depend on a previous
 [Query May Dependency].
 \label{def:query_dep}
 \\
-\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
-{
-One annotated query $({\qval}_2,l_2, w_2)$ may depend on another query $({\qval}_1, l_1, w_1)$ in a program $c$,
+\jl{
+One annotated query $\aq_2 = ({\qval}_2,l_2, w_2)$ may depend on another query 
+$\aq_1 = ({\qval}_1, l_1, w_1)$ in a program $c$,
 with a starting memory $m$ and a hidden database $D$, denoted as 
 %
-$\mathsf{DEP}({(\qval_1, l_1, w_1)}, ({\qval}_2, l_2, w_2), c, m, D)$ is defined below. 
-}
-{
-\[
-\begin{array}{l}
-\exists m_1,m_3,t_1,t_3,c_2,v_1.\\
-  \left (\begin{array}{l}   
-\config{m, c, [], []} \rightarrow^{*} 
-\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
-  t_1, w_1} 
-\rightarrow^{\textbf{query-v}} 
-\\ 
-\config{m_1[v_1/x], c_2,
-({\qval}_1,l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{m_3, \eskip,
-t_3,w_3}
-  % 
- \\ 
- \bigwedge
-  \left( 
-  \begin{array}{l}
-  ({\qval}_2,l_2,w_2) \in_{q} (t_3-t_1) 
-  % 
-  \\
-  \implies 
-  \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
-  \config{m_1[v/x], {c_2}, ({\qval}_1,l_1, w_1)::t_1, w_1} 
-  \\ 
-  \quad \quad 
-  \rightarrow^{*}
-  (\config{m_3', \eskip, t_3', w_3'} 
-  \land 
-  ({\qval}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
-\end{array} \right )
-\\
-\bigwedge
-\left( 
-  \begin{array}{l}
-	({\qval}_2,l_2,w_2) \not\in_{q} (t_3-t_1)
-  	% 
-  	\\
-  	\implies 
-	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-	\config{m_1[v/x], {c_2}, ({\qval}_1,l_1,w_1)::t_1, w_1}
-	\\ 
-	\quad \quad 
-	\rightarrow^{*} 
-	(\config{m_3', \eskip, t_3', w_3'} 
-	\land 
-	({\qval}_2,l_2,w_2)  \in_{q} (t_3'-t_1))
-\end{array} \right )
-\end{array} \right )
-\end{array}
-\]
-}
+$\mathsf{DEP}(\aq_1, \aq_2, c, m, D)$ is defined below. 
+%
+% \[
+% \begin{array}{l}
+% \exists m_1,m_3,t_1,t_3,c_2,v_1.\\
+%   \left (\begin{array}{l}   
+% \config{m, c, [], []} \rightarrow^{*} 
+% \config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
+%   t_1, w_1} 
+% \rightarrow^{\textbf{query-v}} 
+% \\ 
+% \config{m_1[v_1/x], c_2,
+% ({\qval}_1,l_1, w_1)::t_1, w_1} \rightarrow^{*} \config{m_3, \eskip,
+% t_3,w_3}
+%   % 
+%  \\ 
+%  \bigwedge
+%   \left( 
+%   \begin{array}{l}
+%   ({\qval}_2,l_2,w_2) \in_{q} (t_3-t_1) 
+%   % 
+%   \\
+%   \implies 
+%   \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
+%   \config{m_1[v/x], {c_2}, ({\qval}_1,l_1, w_1)::t_1, w_1} 
+%   \\ 
+%   \quad \quad 
+%   \rightarrow^{*}
+%   (\config{m_3', \eskip, t_3', w_3'} 
+%   \land 
+%   ({\qval}_2,l_2,w_2) \not \in_{q} (t_3'-t_1))
+% \end{array} \right )
+% \\
+% \bigwedge
+% \left( 
+%   \begin{array}{l}
+% 	({\qval}_2,l_2,w_2) \not\in_{q} (t_3-t_1)
+%   	% 
+%   	\\
+%   	\implies 
+% 	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
+% 	\config{m_1[v/x], {c_2}, ({\qval}_1,l_1,w_1)::t_1, w_1}
+% 	\\ 
+% 	\quad \quad 
+% 	\rightarrow^{*} 
+% 	(\config{m_3', \eskip, t_3', w_3'} 
+% 	\land 
+% 	({\qval}_2,l_2,w_2)  \in_{q} (t_3'-t_1))
+% \end{array} \right )
+% \end{array} \right )
+% \end{array}
+% \]
 \[
 \exists m_1,m_3,t_1,t_3,c_2,v_1.\\
   \left (
@@ -870,7 +874,7 @@ t_3,w_3}
   % 
   \left( 
   \begin{array}{l}
-  \aq_2 \in_{q} (t_3 - (t_1 ++ [\aq'])) 
+  \aq_2 \in_{q} (t_3 - (t_1 ++ [\aq_1])) 
   % 
   \\
   \implies 
@@ -882,7 +886,7 @@ t_3,w_3}
   (\config{m_3', \eskip, t_3', w_3'} 
   \land 
   \aq_2 \not \in_{q} (t_3'-(t_1 ++ [\aq_1])))
-\end{array} \right ) ~(b)
+\end{array} \right )
 \\
 \left( 
   \begin{array}{l}
@@ -901,47 +905,46 @@ t_3,w_3}
 \end{array} \right )
 \end{array}\right )
 \]
+}
 \end{defn}
 %
 %
 \begin{defn}[Trace-based Dependency Graph].
 \label{def:trace-based_graph}
 \\
-\todo{change $(\qval_1, l_1, w_1)$ into $\aq_1$ for clear and concise}
-\\
+\jl{
 Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$ is defined as: 
 %
 \[
 \begin{array}{rlcl}
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
-	({\qval}, l,w) \in \mathcal{AQ} \middle\vert
+	\aq \in \mathcal{AQ} \middle\vert
 	\exists m',  w', t' ~ s.t., ~  
-	\begin{array}{l}
-	\config{m ,c, \emptyset, \emptyset}  
+	\config{m ,c, [], []}  
 	\to^{*}  
-	\config{m' , \eskip, t', w' } \\ 
-	\land ({\qval}, l, w) \in t'
-	\end{array}
+	\config{m' , \eskip, t', w' }
+	\land \aq \in_{aq} t'
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
-	(({\qval},l,w),({\qval}',l',w')) \in \mathcal{AQ} \times \mathcal{AQ} 
+	(\aq, \aq') \in \mathcal{AQ} \times \mathcal{AQ} 
 	\middle\vert
 	\begin{array}{l}
-		\mathsf{DEP}(({\qval},l,w), ({\qval}',l',w')),c,m,D) \\
+		\mathsf{DEP}(\aq, \aq',c,m,D) \\
 		% \land 
 		% (({\qval},l,w) <_q ({\qval}',l',w'))
 	\end{array}
 	\right\}
 \end{array}
 \]
+}
 \end{defn}
-The edge is directed, when an annotated query $({\qval},l,w)$ may depend on its previous query $({\qval}',l',w')$, we have the directed
-edge $(({\qval},l,w), ({\qval}',l'.w'))$, 
-from vertex $(\qval,l,w) $ to vertex $({\qval}',l'.w')$.
+The edges are directed. When an annotated query $\aq$ may depend on its previous query $\aq'$, we have the directed
+edge $(\aq, \aq')$, 
+from vertex $\aq $ to vertex $\aq'$.
 %
 %
 \begin{defn}[Path ($p$)].
@@ -1186,27 +1189,13 @@ Proof is obvious based on the definition \ref{def:trace-based_graph}.
 %
 \begin{proof}
 \jl{
-Proving by showing a contradiction.
-}
-\\
-\jl{
 By constructing an contradict hypothesis, i.e., 
 $\exists (\aq', \aq) \in \edges$ s.t., $\aq' \geq_{aq} \aq$, this lemma is proved by showing there is a contradiction.
 }
 \\
 \jl{
-Given the program $c$, database $D$ and starting memory, we have:
-\[
-	\config{m, c, [], []} \to^* \config{m', \eskip, t, w}
-\]
-for some $m'$, $t$ and $w$ according to the operational semantics.
-}
-\\
-\jl{
 Let  $(\aq', \aq) \in \edges$ be the edge in $G$ s.t., $\aq' \geq_{aq} \aq$ where $\aq' = ({\qval}',l',w')$ and $\aq = ({\qval},l,w)$.
-}
-\\
-\jl{
+%
 According to the Definition ~ \ref{def:trace-based_graph}, we have:
 %
 $$
@@ -1251,7 +1240,7 @@ and
 \\
 \left( 
   \begin{array}{l}
-	({\qval}_2,l_2,w_2) \not\in_{q} (t_3 - (t_1 ++ [\aq']))
+	\aq \not\in_{q} (t_3 - (t_1 ++ [\aq']))
   	% 
   	\\
   	\implies 
@@ -1267,32 +1256,104 @@ and
 \end{array}
 \]
 %
-\[
-	t_1' ++ [\aq'] ++ t_2' ++ [\aq] ++ t_3' = t ~ \star
-\]
 %
-According to the lemma ~ \ref{lem:os_wf_trace}, we know $t$ is a well-formed trace.
+According to the Theorem \ref{thm:os_wf_trace} and condition $(a)$, we know both $t_1$, $t_3$ are well-formed traces.
 }
 \\
 \jl{
-By the definition ~ \ref{def:wf_trace}, we know
+Proving by considering two cases as follows:
+\[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~(d) ~~ \lor ~~ \aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]
+%
+\begin{itemize}
+%
+	\caseL{case 1: \[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~ (d)\]}
+	By unfolding the trace subtraction operations, we have;
+	\[
+		\exists t_2. ~ s.t., ~ t_1 ++[\aq'] ++ t_2 = t_3 \land \aq \in_{aq} t_2 ~ (3)
+	\]
+%
+\todo{
+sub-lemma: 
+\[
+\aq \in_{aq} t \implies \exists t_1, t_2. ~ s.t., ~ t_1 ++ [\aq] ++ t_2 = t	
+\]
+}
+%
+According to the sub-lemma and $\aq \in_{aq} t_2$, we have:
+%
+\[
+	\exists t_{21}, t_{22} ~ s.t.,~ t_{21} ++ [\aq] ++ t_{22} = t_2 ~ (4)
+\]
+%
+By rewriting $(4)$ inside $(3)$, we have:
+%
+\[
+	t_1 ++[\aq'] ++ t_{21} ++ [\aq] ++ t_{22} = t_3 ~ \star
+\]
+%
+By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\star)$, we know
 %
 \[
 	\aq' <_{aq} \aq
 \]
 %
-This is contradict to the hypothesis where $\aq' \geq_{aq} \aq$.
-}
-\\
-\jl{
-Then we can conclude that 
-for any directed edge $(({\qval}',l',w'),({\qval},l,w)) \in \edges$, 
+This is contradict to the hypothesis, where $\aq' \geq_{aq} \aq$. 
+%
+%
+\caseL{case 2: \[\aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]} 
+%
+According to the condition $(c)$, we know: $\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.$
+  	% 
+\[ 
+	\config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1}
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{m_3', \eskip, t_3', w_3'} ~ (5)
+	\land 
+	\aq  \in_{q} (t_3' - (t_1 ++ [\aq']))) ~ (6)
+\] 
+%
+According to the Theorem \ref{thm:os_wf_trace} and $(5)$, we know $t_3'$ is a well-formed trace.
+%
+Unfolding the trace subtraction operations in $(6)$, we have;
+\[
+	\exists t_2'. ~ s.t., ~ t_1 ++[\aq'] ++ t_2' = t_3' \land \aq \in_{aq} t_2' ~ (7)
+\]
+%
+%
+According to the sub-lemma and $(7)$, we have:
+%
+\[
+	\exists t_{21}', t_{22}' ~ s.t.,~ t_{21}' ++ [\aq] ++ t_{22}' = t_2' ~ (8)
+\]
+%
+By rewriting $(8)$ inside $(7)$, we have:
+%
+\[
+	t_1 ++[\aq'] ++ t_{21}' ++ [\aq] ++ t_{22}' = t_3' ~ \diamond
+\]
+%
+By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\diamond)$, we know
+%
+\[
+	\aq' <_{aq} \aq
+\]
+%
+This is contradict to the hypothesis, where $\aq' \geq_{aq} \aq$.
+%
+\end{itemize}
+%
+From both cases, we derive $\aq' \geq_{aq} \aq$, which is contradict to the hypothesis, i.e., $\aq' \geq_{aq} \aq$.
+Then, we can conclude that 
+for any directed edge $(\aq', \aq) \in \edges$, 
 this is not the case that:
 %
-$$({\qval}',l',w') \geq_{q} ({\qval},l,w)$$
+$$\aq' \geq_{aq} \aq$$
 %
 }
 \end{proof}
+%
+%
 %
 \begin{lem}
 \label{lem:DAG}
