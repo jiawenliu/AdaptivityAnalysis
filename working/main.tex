@@ -128,7 +128,7 @@ The key component of the system is a program analysis tool, which provides an up
 \\
 %
 \mbox{Expression} 
-& \expr & ::= & {\aexpr \sep \bexpr ~|~ [] ~|~ [\expr, \dots, \expr]} 
+& \expr & ::= & v ~|~ {\aexpr \sep \bexpr ~|~ [\expr, \dots, \expr]} 
 \\
 %
 \mbox{Query Value} & \qval & ::= 
@@ -162,10 +162,10 @@ The key component of the system is a program analysis tool, which provides an up
 \end{array}
 \]
 %
-\todo{We use following notations to represent the set of corresponding definitions:}
+\todo{We use following notations to denote the set of corresponding definitions:}
 \[
 \begin{array}{lll}
-\mathcal{VAR} & : & \mbox{Set of Infinite Variables}  
+\mathcal{VAR} & : & \mbox{Set of Variables}  
 \\ 
 %
 \mathcal{VAL} & : & \mbox{Set of Values} 
@@ -1374,7 +1374,7 @@ In these three examples, the variable $x$ at line $5$ is implicit. In program $c
 while $\query(x+\chi(3))$ only depends on $\query(0)$ at line $1$ in program $c_3$. 
 These three examples are structural similar in loop language, however, the dependency between variables are quite dissimilar. We consider variables here because query request is also bound to variables. To solve this dilemma, we move to single static assignment as follows.   
 \[
- c_1^{s} = \begin{array}{l}
+ c_1^{ssa} = \begin{array}{l}
       \clabel{ \assign{{\ssa{x}_1}}{\query(0)}}^{1} ; \\
       \eif  [({\ssa{x_1} }< 0 )]^{2}\\
       ([], [{ \ssa{x_3, x_1,x_2} }], []) \\
@@ -1383,7 +1383,7 @@ These three examples are structural similar in loop language, however, the depen
       \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_3} + \chi(3)})}}^{5}
  \end{array}
  ~~~~~
-  c_2^{s} = \begin{array}{l}
+  c_2^{ssa} = \begin{array}{l}
       \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
       \eif  [({\ssa{x_1}} < 0 )]^{2}, \\
       ( [{\ssa{x_4, x_2,x_3}}], [], [] ) \\
@@ -1392,7 +1392,7 @@ These three examples are structural similar in loop language, however, the depen
       \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_4}}+\chi(3))}}^{5}
  \end{array}
  ~~~~~~~~
-  c_3^{s} = \begin{array}{l}
+  c_3^{ssa} = \begin{array}{l}
       \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
       \eif  [({\ssa{x_1}} < 0 )]^{2} \\
        ( [], [], [] ) \\
@@ -1423,16 +1423,12 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 & l & := & \mathbb{N} 
 \\ 
 %
-\mbox{While Map} 
-& w & ::= & [] ~|~  w[l \to n]
-\\
-%
-\mbox{Arithmetic Expression} 
+\mbox{SSA Arithmetic Expression} 
 & \saexpr & ::= & 
-\textrm{n} ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr  
+n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr  
 \\
 %
-\mbox{Boolean Expression} & \sbexpr & ::= & 
+\mbox{SSA Boolean Expression} & \sbexpr & ::= & 
 	%
 	\etrue ~|~ \efalse  ~|~ \neg \sbexpr
 	 ~|~ \sbexpr \oplus_b \sbexpr
@@ -1440,20 +1436,24 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 	~|~ \saexpr \sim \saexpr 
 	\\
 %
+\mbox{SSA Query Expression} 
+& \ssa{\qexpr} & ::= 
+& { \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr} 
+\\
+%
 \mbox{Query Value} & \qval & ::= 
 & {n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
 ~|~ \chi[n] \oplus_a  n}
 \\
 %
-\mbox{Query Expression} 
-& \ssa{\qexpr} & ::= 
-& { \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr} 
+\mbox{Value} 
+& v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
 \\
 %
-\mbox{Expression} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
+\mbox{SSA Expression} & \sexpr & ::= & v ~|~ \saexpr \sep \sbexpr ~|~ [\expr, \dots, \expr]
 \\	
 %
-\mbox{Labeled Command} 
+\mbox{Labeled SSA Command} 
 & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
 %
 ~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} 
@@ -1471,7 +1471,11 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\
 %
 \mbox{SSA Memory} 
-& \ssa{m} & ::= & [] ~|~ \ssa{ ({x^{l}} \to v) :: m } 
+& \ssa{m} & ::= & [] ~|~  (\ssa{x} \to v) :: \ssa{m } 
+\\
+%
+\mbox{While Map} 
+& w & ::= & [] ~|~  w[l \to n]
 \\
 %
 \mbox{Annotated Query} 
@@ -1482,38 +1486,12 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 & ::= & [] ~|~ {\aq :: t}
 \end{array}
 \]
-\jl{Below are some notations representing the set of corresponding definitions in SSA language:
-\[
-\begin{array}{lll}
-%
-\mathcal{SVAR}  & : & \mbox{Set of SSA Variables} 
-%
-\\
-% \mbox{Values} 
-% & \mathcal{VAL}  & ::= & \{ v_0, \ldots, v_n, \ldots \}
-% %
-% \\
-% \mbox{Annotated Queries} & \mathcal{AQ}  & 
-% ::= & \left\{( \query(\qval_0), l_0, w_0), \ldots, (\query(\qval_n), l_n, w_n), \ldots \right\}
-% \\
-% %
-% \mbox{{Query Results Domain}}
-% & \qdom & ::= & {[-1,1]}
-% \\
-%
-{\mathcal{SM}} & : & \mbox{{Set of SSA Memories}}
-\\
-%
-% \mbox{{Database Domain}}
-% & \dbdom & ::= & { \qval \mapsto \qdom }
-%
-%
-\end{array}
-\]
+\jl{
+We use $\mathcal{SVAR}$ and $\mathcal{SM}$ to denote the set of SSA Variables and SSA Memories respectively.
 }
 %
 %
-We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SVR}$, 
+We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SVAR}$, 
 and the boolean expression as $\ssa{\bexpr}$. 
 %
 The ssa expression can be either $\ssa{a}$ and $\ssa{b}$. 
@@ -1553,6 +1531,8 @@ The new command ${{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}}$ does not have expli
 small-step operational semantics for SSA language. 
 
 The SSA memory $\ssa{m}$ is a map from SSA variables $\ssa{x}$ to values.
+
+The others remain the same in SSA form language as in the {\tt While} language.
 %
 %
 {
@@ -2880,25 +2860,27 @@ In the following subsections, we present the adaptivity analysis based on the \T
 Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. 
 It is defined as follows:
 $$
-\begin{array}{lll}
-   \avar_{\ssa{c}} 	
-   		& = [\ssa{x}] 									
-   		& \ssa{c} 	= 
-   			[\ssa{\assign x e}]^{(l, w)} \\
-     	& = [\ssa{x}] 									
-     	& \ssa{c} 	= 
-     		[\ssa{\assign x \query(\qexpr)}]^{(l, w)} \\
-     	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	
-     	& \ssa{c} 	= \ssa{c_1};\ssa{c_2}\\
-     	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 
-     	++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
-     	& \ssa{c} 	= 
-     	[\ssa{\eif ([\sbexpr]^{(l, w)} ,[\bar{x}, \bar{x_2}, \bar{x_2}], 
+  \avar_{\ssa{c}} \triangleq
+  \left\{
+  \begin{array}{ll}
+   		[\ssa{x}] 									
+   		& \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
+   		\\
+     	\left[ \ssa{x} \right] 									
+     	& \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
+     	\\
+     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} 	
+     	& \ssa{c} = \ssa{c_1};\ssa{c_2}
+     	\\
+     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+     	& \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
      	[\bar{y}, \bar{y_2}, \bar{y_3}], 
-     	[\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}]) \\
-     	& = \avar(\ssa{c}) ++ [\ssa{\bar{x}}]
-     	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c})
+     	[\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
+     	\\
+     	\avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+     	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
+\right.
 $$
 \end{defn}
 %
@@ -2950,6 +2932,7 @@ For any program $\ssa{c}$, every variable in $\avar(\ssa{c})$ is distinct
  It is due to the SSA nature. We can prove it by induction on $\ssa{c}$.
 \end{proof}
 
+\jl{
 \begin{defn}[Variable Flags ($\flag$)].
 \\
 Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\avar$ (i.e., $\ssa{x} = \avar(i)$), $\flag(i)$ is defined as follows:
@@ -2959,51 +2942,35 @@ Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a
 	\flag(i) := 
 	\left\{
 	\begin{array}{ll}
-	2 & \ssa{x} = \avar(i) \land (\exists \qexpr. ~ s.t., ~
+	2 & 
+	\ssa{x} = \avar(i) \land (\exists \ssa{\qexpr}. ~ s.t., ~
 	[\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c})
 	\\
-	1 & \ssa{x} = \avar(i) \land 
+	1 &  
+	\begin{array}{l}
+	\ssa{x} = \avar(i) \bigwedge \\
 	\left(
 	\begin{array}{l}
-	\big(\exists  ~ \ssa{c'}, \ssa{\expr} ~ s.t.
-		\ewhile \ldots \edo \ssa{c'} \in_{c} \ssa{c}
+	\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
+		\ewhile [\sbexpr]^l \edo \ssa{c'} \in_{c} \ssa{c}
 		\land 
 		[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
 	\big) \bigvee
 	\\
-	\big(\exists ~  \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2 ~ s.t.
-		\eif(\ldots, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
+	\big(\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
+		\eif([\sbexpr]^l, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
 		([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
 		[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
 	\big)
 	\end{array}
 	\right)
+	\end{array}
 	\\
 	0 & \text{o.w.}
 	\end{array}
 	\right\}. 
-	% i = 1, \ldots, |\avar|.
 \] 
-% It is inductively defined as follows:
-% $$
-% \begin{array}{lll}
-%    \flag(\ssa{c}) 	
-%    		& = [0] 									
-%    		& \ssa{c} 	= 
-%    			[\ssa{\assign x e}]^{(l, w)} \\
-%      	& = [1] 									
-%      	& \ssa{c} 	= 
-%      		[\ssa{\assign x \query(\qexpr)}]^{(l, w)} \\
-%      	& = \avar(\ssa{c_1}) ++ \avar (\ssa{c_2}) 	
-%      	& \ssa{c} 	= \ssa{c_1};\ssa{c_2}\\
-%      	& = ((\avar(\ssa{c_1}) ++ \avar (\ssa{c_2})) \uplus 2) 
-%      	\uplus \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
-%      	& \ssa{c} 	= 
-%      	[\ssa{\eif (b ,[\bar{x}], [\bar{y}], [\bar{z}], c_1, c_2}]^{(l, w)}) \\
-%      	& = (\avar(\ssa{c}) \uplus 2) \uplus [\ssa{\bar{x}}]
-%      	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, \ssa{[x_1,x_2,x_3], {c}})
-% \end{array}
-% $$
+%
 \end{defn}
 %
 Operations on $\flag$ are defined as follows:
@@ -3022,40 +2989,63 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 \max\big\{ \flag(i), k \big\} 
 & i = 1, \ldots, |\flag|    
 \\
-\left[ f \right]^k (i) & := &  f 
-& i = 1, \ldots, k 
+\left[ n \right]^k (i) & := &  n
+& i = 1, \ldots, k \quad \land \quad n \in \{0, 1, 2\} 
 \end{array}
 \end{equation}
-
-\begin{defn}[Data Flow Direction ($\flowsto$)].
-\\
+%
 Given a program  $\ssa{c}$ with its assigned variables $\avar$,
 and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\avar$ 
 (i.e., $\ssa{x} = \avar(i)$ and $\ssa{y} = \avar(j)$),
-$\ssa{y}$ is defined as flows to $\ssa{x}$ in $\ssa{c}$, $\flowsto(\ssa{x, y, c})$ if and only if 
-there exists
-a command $\assign{\ssa{x}}{\expr}$ or $\assign{\ssa{x}}{\query(\qexpr)}$ in $\ssa{c}$ s.t.,
+we say $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$ if and only if $j < i$ and
+the program $\ssa{c}$ contains either 
+a command $\assign{\ssa{x}}{\sexpr}$ or $\assign{\ssa{x}}{\query(\ssa{\qexpr})}$,
+such that $\ssa{y}$ shows up as a free variable in $\sexpr$ or $\ssa{\qexpr}$.
+We use $\flowsto(\ssa{x, y, c})$ to denote $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, which is formally defined in \ref{def:flowsto}.
+We use $FV(\expr)$ and $FV(\qexpr)$ denote the set of free variables in 
+expression $\expr$ and query expression $\qexpr$ respectively.
+%
+\begin{defn}[Data Flow Direction ($\flowsto$)].
+\label{def:flowsto}
+\\
+Given a program  $\ssa{c}$ with its assigned variables $\avar$,
+and two variables $\ssa{x}$, $\ssa{y}$ s.t., $\ssa{x} = \avar(i)$ and $\ssa{y} = \avar(j)$,
+$\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is defined as:
+%
 \[
-	\ssa{y} \in (FV(\expr) \cup FV(\qexpr)) \land j < i,
+	\flowsto(\ssa{x, y, c}) \triangleq 
+	(j < i) \land \left(
+	\begin{array}{l}
+	(\exists \sexpr, l . ~ [\assign{\ssa{x}}{\sexpr}]^l \in_{c} \ssa{c} 
+	\land \ssa{y} \in FV(\sexpr))
+	\\
+	\lor 
+	(\exists \ssa{\qexpr}, l. ~ [\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c} 
+	\land \ssa{y} \in FV(\ssa{\qexpr}))
+	\end{array}
+	\right)
 \]
+%
 where $FV(\expr)$ and $FV(\qexpr)$ is the set of free variables in 
 expression $\expr$ and query expression $\qexpr$ respectively.
 \end{defn}
+}
 %
 %
 \begin{defn}[Data Flow Matrix ($\Mtrix$)]
 Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
 its data flow matrix $\Mtrix$ is a matrix of size $N \times N$ s.t.
-$\forall \ssa{x, y} \in \avar, \ssa{x} = \avar(i), \ssa{y} = \avar(j)$:
+$\forall \ssa{x, y} \in \avar. ~ \ssa{x} = \avar(i), \ssa{y} = \avar(j)$:
 %
 \[
-\Mtrix(i, j) :=
+\Mtrix(i, j) \triangleq
 \left\{
 \begin{array}{ll}
 1	&	\flowsto(\ssa{x, y, c}) \\
 0	& o.w.
 \end{array}
-\right.
+\right.,
+\ssa{x} = \avar(i); \ssa{y} = \avar(j); i, j = 1, \ldots, N .
 \]
 %
 \end{defn}
@@ -3118,8 +3108,7 @@ the left matrix $\lMtrix_i$ is defined as follows:
 	0 & o.w.
 	\end{array}
 	\right.,
-	~~~~~~~~~~~~~~~~~~~~ 
-	j = 1, \ldots, N
+	j = 1, \ldots, N.
 \]
 \end{defn}
 %
@@ -3141,18 +3130,15 @@ the right matrix $\rMtrix_{\expr}$ is defined as follows:
 	0 & o.w.
 	\end{array}
 	\right.,
-	~~~~~~~~~~~~~~~~~~~~ 
-	\ssa{x} = \avar(j) ~ , ~ j = 1, \ldots, N
+	\ssa{x} = \avar(j) ~ , ~ j = 1, \ldots, N.
 \]
-where $FV(\expr)$ is the set of free variables in expression $\expr$.
 %
 %
 \end{defn}
 %
-Using the same program $\ssa{c}$ as above with assigned variables $\avar = [ \ssa{x_1 , x_2 , x_3} ] $,
-the left and right matrices are as follows w.r.t. its $2$-nd command 
-$\left[\ssa{\assign {x_2} {x_1 + 1}}	\right]^2;$ 
-is as follows
+Using the same example program $\ssa{c}$ as above with assigned variables $\avar = [ \ssa{x_1 , x_2 , x_3} ] $,
+the left and right matrices w.r.t. its $2$-nd command 
+$\left[\ssa{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 \[
 \lMtrix_1 = \left[ \begin{matrix}
  0   \\
@@ -3315,15 +3301,6 @@ $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends
 $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
 \end{defn}
 }
-%
-% {$ \forall 0 \leq z < |\bar{x}|. \bar{x}(z) = x_z, \bar{x_1}(z) = x_{1z}, \bar{x_2}(z) = x_{2z} $ } \\
-% %
-% $ \Gamma \vdash_{
-% \Mtrix, v_{\emptyset}}^{i, i+ |\ssa{\bar{x}}|} 
-% \ssa{[ \bar{x},\bar{x_1},\bar{x_2}   ]} 
-% \triangleq { \forall 0 \leq z < |\bar{x}|.  
-% \Gamma \vdash_{\Mtrix_{x_z}, \flag_{\emptyset}}^{i+z, i+z+1 } x_z \leftarrow x_{1z} + x_{2z} }$ 
-% where $\Mtrix = \sum_{z\in [|\bar{x}|] } \Mtrix_{x_z} $
 %%
 %
 \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
@@ -3533,7 +3510,7 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 %
 Below we define the valid data flow matrix, to have a clear understanding on the data flow generating algorithm:
 \begin{defn}[Valid Matrix]
-For a global list $\avar$, $\avar \vDash (\Mtrix,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
+For a assigned variables $\avar$, $\avar \vDash (\Mtrix,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
 \jl{
@@ -3778,7 +3755,7 @@ We can now look at the if statement.
 \label{def:prog-based_graph}
 \\
 Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$, s.t.,
-$\Gamma \vdash_{M, \flag} \ssa{c}$, 
+$\Gamma \vdash_{\Mtrix_c, \flag_c} \ssa{c}$, 
 its program-based graph 
 $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \\
@@ -3787,28 +3764,25 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
 	\ssa{x} \mid
-	\ssa{x} = \avar(i), i = 1, \ldots, N 
+	\ssa{x} = \avar(i); ~ i = 1, \ldots, N
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
 	(\ssa{x_1}, \ssa{x_2}) 
-	\in \avar \times \avar 
-	\middle\vert
-	\begin{array}{l}
-		\forall ~ i,j = 1, \ldots, N ~ s.t., ~\\
-		\ssa{x_1} = \avar(i),  \ssa{x_2} = \avar(j) \land
-		\Mtrix(i)(j) \geq 1
-	\end{array} 
+	% \in \avar \times \avar 
+	\mid
+		(\ssa{x_1} = \avar(i) \land \ssa{x_2} = \avar(j) \land
+		\Mtrix_c(i, j) \geq 1); ~ i,j = 1, \ldots, N
 	\right\}
 	\\
 	\text{Flags} &
 	\flag & := & 
-	\big\{(\ssa{x}, f)  \in \vertxs \times \{0, 1, 2\} 
+	\big\{(\ssa{x}, n)  \in \vertxs \times \{0, 1, 2\} 
 	\mid 
-	\forall i = 1, \ldots, N ~  s.t. ~
-	\ssa{x} = \avar(i) \land f = \flag(i)
+	(\ssa{x} = \avar(i) \land n = \flag_c(i)); ~
+	i = 1, \ldots, N
 	\big\}
 	\\
 	\text{Weights} &
@@ -3817,27 +3791,18 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 	\begin{array}{l}
 		\big\{ (v, w) \in \vertxs \times (\mathbb{N} \cup \expr)
 		\mid
-		\forall v \in \vertxs ~  s.t. ~ \flag(v) > 0 \land w = \rb(v, c)
+		v \in \vertxs \land \flag(v) > 0 \land w = \rb(v, c)
 		\big\} 
 		\\
 		\big\{(v, 1)  \in \vertxs \times \{1\} 
 		\mid
-		\forall v \in \vertxs ~  s.t. ~ \flag(v) = 0
+		v \in \vertxs \land \flag(v) = 0
 		\big\}
 	\end{array} 
 \end{array}
 \]
 \end{defn} 
 %
-Given a program $\ssa{c}$, we generate its program-based graph 
-$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$.
-%
-Then the program-based adaptivity for $c$ in our $\THESYSTEM$ is the number of query vertices on a finite walk in $\progG$. This finite walk satisfies:
-\begin{itemize}
-\item the number of query vertices on this walk is maximum
-\item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
-\end{itemize}
-
 \begin{defn}[Finite Walk ($k$)].
 \\
 Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
@@ -3863,8 +3828,18 @@ Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$ and a \e
 	\qlen(k) = \len\{ v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \}
 \]
 \end{defn}
-
-
+%
+Given a program $\ssa{c}$, we generate its program-based graph 
+$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$.
+%
+Then the adaptivity bound based on program analysis for $\ssa{c}$ is the number of query vertices on a finite walk in $\progG(\ssa{c})$. This finite walk satisfies:
+\begin{itemize}
+\item the number of query vertices on this walk is maximum
+\item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
+\end{itemize}
+It is formally defined in \ref{def:prog_adapt}.
+%
+%
 \begin{defn}
 [{Program-Based Adaptivity}].
 \label{def:prog_adapt}
@@ -4062,14 +4037,14 @@ TR^{ssa} \triangleq
 Adapt($TR$) = 2
 
 {
-Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ and empty whlemap $\emptyset$.
- \[[]; \emptyset; TR^{ssa} \to G; w  \land w = \emptyset\].
+Using \THESYSTEM, we first generate a assigned variables $G$ from an empty list $[]$ and empty while map $[]$.
+ \[[]; []; TR^{ssa} \to G; w  \land w = []\].
  %
  \[G_{k=2} = \left[
   {a_1}^2 , {a_3}^{(2,[2:1])} , x_1^{4} , a_2^{5} ,  i_3^{3} , 
-  i_2^{6}, i_1^{2} , l_1^{7} , {l_1}^{(5,\emptyset)}   \right] \]
+  i_2^{6}, i_1^{2} , l_1^{7} , {l_1}^{(5, [])}   \right] \]
   %
-  We denote $a_1^{1}$ short for ${a_1}^{(1,\emptyset)}$ and ${a_3}^{(2,1)}$ short for ${a_3}^{(2,[2:1])}$, where the label $(2, 1)$ represents at line number $2$ and in the $1$ st iteration.
+  We denote $a_1^{1}$ short for ${a_1}^{(1, [])}$ and ${a_3}^{(2,1)}$ short for ${a_3}^{(2,[2:1])}$, where the label $(2, 1)$ represents at line number $2$ and in the $1$ st iteration.
   } 
 \[
 {
@@ -4215,7 +4190,7 @@ Adapt($MR$) = k.
 \\
 %
 {
-Using \THESYSTEM, we first generate a global list $G$ from an empty list $[]$ and empty whlemap $\emptyset$.
+Using \THESYSTEM, we first generate a assigned variables $G$ from an empty list $[]$ and empty whlemap $\emptyset$.
  \[[]; \emptyset; MR^{ssa} \to G; w  \land w = \emptyset\].
  %
  \[
