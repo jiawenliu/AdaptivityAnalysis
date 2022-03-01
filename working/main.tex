@@ -108,7 +108,7 @@ The key component of the system is a program analysis tool, which provides an up
  \mbox{Arithmetic Operators} & \oplus_a & ::= & + ~|~ - ~|~ \times 
 %
 ~|~ \div \\  
-  \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land ~|~ \neg\\
+  \mbox{Boolean Operators} & \oplus_b & ::= & \lor ~|~ \land \\
   %
    \mbox{Relational Operators} & \sim & ::= & < ~|~ \leq ~|~ == \\  
    \mbox{Label} & l & \in &  \mathbb{N}  \\  
@@ -132,30 +132,21 @@ The key component of the system is a program analysis tool, which provides an up
 \\
 %
 \mbox{Query Value} & \qval & ::= 
-& { n ~|~ \chi ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ \qval \oplus_a  \qval }
-\\
-%
-\mbox{Query Value} & \qval & ::= 
-& \jl{n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
+& {n ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
 ~|~ \chi[n] \oplus_a  n}
 \\
 %
 \mbox{Query Expression} 
 & \qexpr & ::= 
-& { \qval ~|~ \aexpr ~|~ \chi ~|~ \chi[\aexpr] ~|~ \qexpr \oplus_a \qexpr} 
-\\
-%
-\mbox{Query Expression} 
-& \qexpr & ::= 
-& \jl{ \qval ~|~ \aexpr ~|~ \qexpr \oplus_a \qexpr} 
+& { \qval ~|~ \aexpr ~|~ \qexpr \oplus_a \qexpr} 
 \\
 \mbox{{Labeled Command}} & c & ::= 
-	&   [\assign x \expr]^{l} ~|~  [\assign x \query(\qexpr)]^{l}
+	&  [\eskip]^{l}  ~|~ [\assign x \expr]^{l} ~|~  [\assign x \query(\qexpr)]^{l}
 	\\
- 	& & & ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 ~|~ [\eskip]^{l} 
+ 	& & & ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 
  \\
 \mbox{Memory} 
-& m & ::= & \jl{[] ~|~ (x^{l} \to v)} :: m 
+& m & ::= & [] ~|~ (x^{l} \to v) :: m 
 \\
 %
 \mbox{Annotated Query} & \aq  & 
@@ -167,7 +158,7 @@ The key component of the system is a program analysis tool, which provides an up
 \\
 %
 \mbox{While Map}
-& w & ::= & {[] |  w[l \to n]}
+& w & ::= & [] ~|~  w[l \to n]
 \end{array}
 \]
 %
@@ -200,24 +191,6 @@ We evaluate programs in the {\tt While} language by means of a trace-based opera
 %
 Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. Some non-standard syntaxes are explained as follows:  
 %
-% \[
-% 	\begin{array}{llll}
-% 		\mbox{While Map} 
-% 		& w & \in & \mbox{Label} \to \mathbb{N} \\
-% 	 %
-% 		\mbox{Annotated Queries} 
-% 		& \mathcal{AQ}  & ::= & 
-% 		{\left\{(\qval_0, l_0, w_0), \ldots \right\} }  \\
-% 	\end{array}
-% 	\begin{array}{llll}
-% 		\mbox{Memory} 
-% 		& m & ::= & \emptyset ~|~ (x^{l} \to v) :: m  \\
-% 		\mbox{Trace} 
-% 		& t & ::= & [] ~|~ (\qval, l, w) :: t \\
-% 	\end{array}
-% \]
-%%
-  	%
  \wq{Well-Formed While Map}
   	\begin{defn}[While Map ($w$)].
   	\\
@@ -419,8 +392,8 @@ $$
 		\begin{array}{l} 
 			(\config{m,  \qexpr_1} \qarrow \qval_1 \land \config{m,  \qexpr_2 } \qarrow \qval_2) 
 			\\
-			\land (\forall n \in \qdom. \exists v. ~ s.t., ~ 
-						\config{m, \qval_1[n/\chi]} \aarrow v \land \config{m,  \qval_2[n/\chi] } \aarrow v)	
+			\land (\forall r \in \qdom. \exists v. ~ s.t., ~ 
+						\config{m, \qval_1[r/\chi]} \aarrow v \land \config{m,  \qval_2[r/\chi] } \aarrow v)	
 		\end{array}\\
 			\efalse  				
 			& \text{o.w.} 
@@ -494,8 +467,52 @@ Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in_{aq
 	%
 	%
 }
+%
+\jl{
+\begin{defn}[Equivalence of Program]
+%
+\label{def:aq_prog}
+Given 2 programs $c_1$ and $c_2$:
+%
+\[
+c_1 =_{c} c_2
+ \triangleq 
+ \left\{
+		\begin{array}{ll} 
+			\etrue 				
+			& c_1 = \assign{x}{\query(\expr)} \land c_2 = \assign{x}{\query(\expr)}
+			\\ 
+			\etrue 				
+			& c_1 = \eskip \land c_2 = \eskip
+			\\ 
+			c_1^f =_{c} c_2^f \land c_1^t =_{c} c_2^t
+			& c_1 = \eif(b, c_1^t, c_1^f) \land c_2 = \eif(b, c_2^t, c_2^f)
+			\\ 
+			c_1' =_{c} c_2' 				
+			& c_1 = \ewhile b \edo c_1' \land c_2 = \ewhile b \edo c_2'
+			\\ 
+			\qexpr_1 =_{q} \qexpr_2  			
+			& c_1 = \assign{x}{\query(\qexpr_1)} \land c_1 = \assign{x}{\query(\qexpr_2)} 
+			\\
+			c_1^h =_{c} c_2^h \land c_1^t =_{c} c_2^t
+			& c_1 = c_1^h;c_1^t \land c_2 = c_2^h;c_2^t 
+		\end{array}
+		\right.
+\]
+%
+$c_1 \neq_{c} c_2$  is defined vice versa.
+%
+\end{defn}
+%
+Given 2 programs $c$ and $c'$, $c' \in_{c} c$ is defined as:
+\begin{equation}
+\exists c_1, c_2, c''. ~ s.t.,~
+c =_{c} c_1; c''; c_2 \land c' =_{c} c''
+\end{equation} 
+}
 
-The small-step transition states that a configuration $\config{m, c, t,w}$ evaluates to another configuration with the trace and while map updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
+%
+The small-step transition states that a configuration $\config{m, c, t, w}$ evaluates to another configuration with the trace and while map updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
 We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
 %
 %
@@ -519,7 +536,7 @@ With the operational semantics and relations between annotated queries, we restr
 \label{def:wf_trace}
 A trace $t$ is well formed if and only if it preserves the following two properties:
 \begin{itemize}
-	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \in_{aq} t$,$(\aq_1 \neq_{aq} \aq_2)$
+	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \in_{aq} t. ~ (\aq_1 \neq_{aq} \aq_2)$
 	%
 	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \in_{aq} t. ~ 
 	(\aq_1 <_{aq} \aq_2) \Longleftrightarrow
@@ -1103,7 +1120,7 @@ Given a program $c$, a database $D$, a starting memory $m$ and the corresponding
 for any directed edge $(\aq', \aq) \in \edges$, 
 this is not the case that:
 %
-$$\aq' \geq_{q} \aq$$
+$$\aq' \geq_{aq} \aq$$
 %
 }
 \end{lem}
@@ -1297,13 +1314,13 @@ Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
 }
 %
 \begin{lem}
-[Adaptivity Toplimit].
+[Adaptivity is Bounded].
 \\
 {
 Given the program $c$ with a certain database $D$ and starting memory $m$, the $A(c)$ w.r.t. the $D$ and $m$ is bounded, i.e.,:
 %
 \[
-\config{m, c, \emptyset, \emptyset} 
+\config{m, c, [], []} 
 \rightarrow^{*} 
 \config{m', \eskip, t', w'} 
 \implies
@@ -1395,7 +1412,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 %
 ~|~ \div \\  
 \mbox{Boolean Operators} 
-& \oplus_b & ::= & \lor ~|~ \land ~|~ \neg
+& \oplus_b & ::= & \lor ~|~ \land
 \\
   %
 \mbox{Relational Operators} 
@@ -1407,7 +1424,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\ 
 %
 \mbox{While Map} 
-& w & \in & \mbox{Label} \times \mathbb{N} 
+& w & ::= & [] ~|~  w[l \to n]
 \\
 %
 \mbox{Arithmetic Expression} 
@@ -1424,21 +1441,13 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 	\\
 %
 \mbox{Query Value} & \qval & ::= 
-& \jl{n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
+& {n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
 ~|~ \chi[n] \oplus_a  n}
 \\
 %
 \mbox{Query Expression} 
 & \ssa{\qexpr} & ::= 
-& \jl{ \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr} 
-\\
-%
-\mbox{Query Expression} & \ssa{\qexpr} & ::= 
-& { \saexpr ~|~ \chi ~|~ \chi[\saexpr] ~|~ \ssa{\qexpr} \oplus_a \ssa{\qexpr}} 
-\\
-%
-\mbox{Query Values} & \qval & ::= 
-& { n ~|~ \chi ~|~ \chi[n] ~|~ \qval \oplus_a  \qval }
+& { \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr} 
 \\
 %
 \mbox{Expression} & \sexpr & ::= & \saexpr \sep \sbexpr ~|~ [] ~|~ [\expr, \dots, \expr]
@@ -1462,7 +1471,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 \\
 %
 \mbox{SSA Memory} 
-& \ssa{m} & ::= & \emptyset ~|~ \ssa{ ({x^{l}} \to v) :: m } 
+& \ssa{m} & ::= & [] ~|~ \ssa{ ({x^{l}} \to v) :: m } 
 \\
 %
 \mbox{Annotated Query} 
@@ -1492,7 +1501,7 @@ To distinguish between the loop language and in ssa form, we denote the ssa vari
 % & \qdom & ::= & {[-1,1]}
 % \\
 %
-{\mathcal{SM}} & : & \mbox{{Set of SSA Memory}}
+{\mathcal{SM}} & : & \mbox{{Set of SSA Memories}}
 \\
 %
 % \mbox{{Database Domain}}
@@ -2112,7 +2121,7 @@ the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is 
 	\aq \in \mathcal{AQ} \middle\vert
 	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
 	\config{\ssa{m} ,\ssa{c}, [], []}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }
-	\land \aq \in t'
+	\land \aq \in_{aq} t'
 	\right\}
 	\\
 	\text{Directed Edges} &
@@ -2847,16 +2856,14 @@ This proof is similar when it comes to the exit as in case 1.
 \section{\THESYSTEM}
 There are four steps to get the adaptivity of a program $\ssa{c}$ based on analyzing the program. 
 \begin{enumerate}
-    % \item Estimate the variables that are new generated (via assignment) and store these variables in a global list $G$. We have the algorithm of the form : $\ag{ G;w; \ssa{c}}{G';w'} $.
-    % \item We start to track the dependence between variables in a matrix $M$, whose size is $|G| \times |G|$, and track whether arbitrary variable is assigned with a query result in a vector $V$ with size $|G|$. The algorithm to fill in the matrix is of the form: $\ad{\Gamma ; \ssa{c} ; i_1}{M;V;{i_2}}$. $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the global list $G$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
     \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable vector $\avar$. 
+    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\avar$.
     %
     \item Tracking the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\avar| \times |\avar|$. 
-    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\avar$.
     %
     \item Estimating the reachability bound of each variable in $\avar$.
     %
-    \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute its adaptivity.
+    \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute the adaptivity bound.
 \end{enumerate}
 
 In the following subsections, 
@@ -2952,23 +2959,22 @@ Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a
 	\flag(i) := 
 	\left\{
 	\begin{array}{ll}
-	2 & \ssa{x} = \avar(i) \land 
-	\assign{\ssa{x}}{\query(\ssa{\qexpr})} \in \ssa{c}
+	2 & \ssa{x} = \avar(i) \land (\exists \qexpr. ~ s.t., ~
+	[\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c})
 	\\
 	1 & \ssa{x} = \avar(i) \land 
 	\left(
-	\bigvee
 	\begin{array}{l}
 	\big(\exists  ~ \ssa{c'}, \ssa{\expr} ~ s.t.
-		\ewhile \ldots \edo \ssa{c'} ~ \in ~\ssa{c}
+		\ewhile \ldots \edo \ssa{c'} \in_{c} \ssa{c}
 		\land 
-		[\ssa{\assign{x}{\expr}}]^{l'} \in \ssa{c'}
-	\big)
+		[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
+	\big) \bigvee
 	\\
 	\big(\exists ~  \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2 ~ s.t.
-		\eif(\ldots, \ssa{c_1}, \ssa{c_2}) \in \ssa{c} \land
-		([\ssa{\assign{x}{\expr_1}}]^{l1} \in \ssa{c_1} \lor 
-		[\ssa{\assign{x}{\expr_2}}]^{l2} \in \ssa{c_2})
+		\eif(\ldots, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
+		([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
+		[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
 	\big)
 	\end{array}
 	\right)
