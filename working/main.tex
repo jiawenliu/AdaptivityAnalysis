@@ -504,9 +504,9 @@ $c_1 \neq_{c} c_2$  is defined vice versa.
 %
 \end{defn}
 %
-Given 2 programs $c$ and $c'$, $c' \in_{c} c$ is defined as:
+Given 2 programs $c$ and $c'$, $c'$ is a sub-program of$c$, i.e., $c' \in_{c} c$ is defined as:
 \begin{equation}
-\exists c_1, c_2, c''. ~ s.t.,~
+c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
 c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
 }
@@ -550,19 +550,176 @@ A trace $t$ is well formed if and only if it preserves the following two propert
 \begin{thm}[Trace Generated from Operational Semantics is Well-formed].
 \label{thm:os_wf_trace}
 \\
-Given a program $c$,  a starting configuration, 
+Given a program $c$, a starting configuration, 
 $\config{m, c, [], []}$ s.t. 
 $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$,
-$t$ is well-formed w.r.t. the program $c$ and the starting memory $m$, denoted ad $m, c \vDash t$ .
+$t$ is well-formed \todo{w.r.t. the program $c$ and the starting memory $m$, denoted as $m, c \vDash t$} .
 \end{thm}
 \begin{proof}
-{By induction on the program $c$.
+\wq{By induction on the program $c$.
 \caseL{Case $[\assign x \expr]^{l}$}
  We assume a configuration $\config{m,[\assign x \expr]^{l} , [], []}$ s.t. there exists such an evaluation
-$\config{m, [\assign x \expr]^{l}, [], []} \to \config{m', \eskip, t, w}$.\\
+$\config{m, [\assign x \expr]^{l}, [], []} \to \config{m', \eskip, t, w}$.
+\\
 From the evaluation rule \rname{assn1} and rule \rname{assn2}, when we assume $m,e \to v$. We know:  $\config{m, [\assign x \expr]^{l}, [], []} \to \config{m[v/x], \eskip, [], []}$.  The resulting trace is an empty list, which is well formed by Definition~\ref{def:wf_trace}.
 }
-\todo{Other cases }
+\caseL{Case $[\assign{x}{\query(\qexpr)}]^{l}$}
+By repeatedly applying the operational semantics rule \rname{query-e}, we know there exist $\qval$ s.t.,:
+%
+\[
+\config{m, [\assign{x}{\query(\qexpr)}]^{l}, [], []} \to^{*} \config{m', [\assign{x}{\query(\qval)}]^{l}, [], []}
+\]
+%
+According to the evaluation rule \rname{query-v}, we have the following transition:
+\[
+	\config{m', [\assign{x}{\query(\qval)}]^{l}, [], []} \to \config{m', \eskip, [(\qval, l, [])], []}
+\]
+%
+The resulting trace is $[(\qval, l, [])]$, which is well formed by Definition~\ref{def:wf_trace}.
+%%
+\caseL{$\eif([b]^l, c_1, c_2)$}
+Let $\config{m', \eskip, t, w} ~ (\star)$ be the configuration 
+s.t. $\config{m, \eif([b]^l, c_1, c_2), [], []} \to^{*} \config{m', \eskip, t, w}$.
+It is sufficient to show that $t$ is well-formed.
+\\
+According to the evaluation rule \rname{if}, we know there exists an evaluation by repeatedly applying \rname{if} 
+%
+\[
+\config{m, \eif([b]^l, c_1, c_2), [], []} \to^{*} \config{m_b, \eif([v]^l, c_1, c_2), [], []} ~ (1)
+\]
+%
+where $v$ is either $\etrue$ or $\efalse$.
+\\
+Considering 2 subcases where $v$ is either $\etrue$ or $\efalse$:
+%
+\subcaseL{$v = \etrue$}
+%
+By applying the evaluation rule \rname{if-t}, we have:
+\[
+\config{m_b, \eif([\etrue]^l, c_1, c_2), [], []} \to \config{m_b, c_1, [], []} ~ (t1)
+\]
+%
+By induction hypothesis on $c_1$ with starting memory $m_b$, let $\config{m_1, \eskip, t_1, w_1}$ be the configuration s.t.
+\[
+	\config{m_b, c_1, [], []} \to^{*} \config{m_1, \eskip, t_1, w_1} ~(t2)
+\]
+we know $t$ is a well formed trace \todo{w.r.t. program $c_1$}.
+\\
+According to the evaluation $(a)$, $(t1)$ and $(t2)$, we know $\config{m_1, \eskip, t_1, w_1}$ 
+is the assumed configuration $\config{m', \eskip, t, w}$ such that
+\[
+	\config{m, \eif([b]^l, c_1, c_2), [], []} \to^{*} \config{m_1, \eskip, t_1, w_1}
+\]
+%
+Since $t_1$ is well-formed, this subcase is proved.
+%
+\subcaseL{$v = \efalse$}
+%
+By applying the evaluation rule \rname{if-f}, we have:
+\[
+\config{m_b, \eif([\efalse]^l, c_1, c_2), [], []} \to \config{m', c_2, [], []} ~ (f1)
+\]
+%
+By induction hypothesis on $c_1$ with starting memory $m'$, let $\config{m_2, \eskip, t_2, w_2}$ be the configuration s.t.
+\[
+	\config{m_b, c_2, [], []} \to^{*} \config{m_2, \eskip, t_2, w_2} ~(f2)
+\]
+we know $t$ is a well formed trace \todo{w.r.t. program $c_1$}.
+\\
+According to the evaluation $(a)$, $(f1)$ and $(f2)$, we know $\config{m_2, \eskip, t_2, w_2}$ 
+is the assumed configuration $\config{m', \eskip, t, w}$ in $(\star)$ such that
+\[
+	\config{m, \eif([b]^l, c_1, c_2), [], []} \to^{*} \config{m_2, \eskip, t_2, w_2}
+\]
+%
+Since $t_2$ is well-formed, this subcase is proved.
+%
+\caseL{Case $c_1; c_2$}
+%
+According to the evaluation rule \rname{seq1}, we have the following evaluation by repeatedly applying \rname{seq1} 
+%
+\[
+\config{m, c_1;c_2, [], []} \to^{*} \config{m_1, [\eskip]^l;c_2,  t_1, w_1} ~ (1)
+\]
+%
+where 
+%
+\[
+	\config{m, c_1, [], []]} \to^{*} \config{m_1, [\eskip]^l, t_1, w_1]} ~ (2)
+\]
+%
+\todo{sub-lemma-w:
+for any program $c$ with starting memory $m$, s.t.,
+$\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, then 
+\[
+	w = []
+\]
+}
+%
+According to sub-lemma-w, we know $w_1 = []$.
+%
+By induction hypothesis on $c_1$ and $(2)$, we know $t_1$ is well-formed.
+%
+According to the evaluation rule \rname{seq2}, we have:
+%
+\[
+\config{m_1, [\eskip]^l;c_2,  t_1, []} \to \config{m_1, c_2, t_1, []} ~ (3)
+\]
+%
+let $\config{m_2, [\eskip]^l, t, w]}$ be the configuration s.t.,:
+%
+\[
+	\config{m_1, c_2, t_1, []} \to^{*} \config{m', [\eskip]^l, t, w]}.
+\]
+%
+It is sufficient to show $t$ is well-formed.     
+\\
+%
+By induction hypothesis on $c_2$ and let $\config{m_2, [\eskip]^l, t_2, w_2]}$ be the configuration s.t.,:
+%
+\[
+	\config{m_1, c_2, [], []} \to^{*} \config{m_2, [\eskip]^l, t_2, w_2]},
+\]
+%
+we know $t_2$ is well-formed.
+%
+\\
+\todo{sub-lemma-t:
+Given a program $c$ with a starting memory $m$, 
+for any starting trace $t_1$ and $t_2$ 
+s.t.,
+$\config{m, c, t_1, []} \to^{*} \config{m', \eskip, t_1', w}$ and 
+$\config{m, c, t_1, []} \to^{*} \config{m', \eskip, t_2', w}$
+\[
+	t_1' - t_1 = t_2' - t_2
+\]
+}
+\\
+According to sub-lemma-t, we know
+\[
+t - t_1 = t_2 - [] = t_2
+\]
+%
+Unfold the subtraction operations, we have:
+\[
+	t = t_1 + t_2'
+\]
+%
+Unfold the definition~\ref{def:wf_trace}, it is sufficient to show trace $t$ holds both the Uniqueness and Ordering property:
+%
+\caseL{Uniqueness:} of $t$, 
+by distinction of labels in $c_1$ and $c_2$, 
+	\[
+	\forall \aq_1 \in t_1, \aq_2 \in t_2'. ~ \aq_1 \neq_{aq} \aq_2
+	\] 
+\caseL{Ordering} of $t_2$, By orders of labels in $c_2$ greater than labels in $c_1$,
+	\[
+	\forall \aq_1 \in t_1, \aq_2 \in t_2'. ~ \aq_1 <_{aq} \aq_2 \land 
+	\exists t_1', t', t_3'. ~ t_1' ++ [\aq_1] ++ t' ++ [\aq_2]  ++ t_3' = t
+	\]
+	Concluding that $t$ is well-formed.
+%
+\caseL{Case $\ewhile [b]^l \edo c'$}
 \end{proof}
 }
 
