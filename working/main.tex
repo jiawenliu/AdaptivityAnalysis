@@ -189,9 +189,9 @@ We use following notations to represent the set of corresponding definitions:
 {
 We evaluate programs in the {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as defined in the syntax.
 %
-Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. Some non-standard syntaxes are explained as follows:  
+Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. Some non-standard syntax is explained as follows:  
 %
- \wq{Well-Formed While Map}
+ \wq{While Map is a standard map from label to natural number.}
   	\begin{defn}[While Map ($w$)].
   	\\
   	While map is defined as a map, mapping from the key (labels $l$) to iteration number $n$, as follows:
@@ -472,7 +472,7 @@ Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in_{aq
 \begin{defn}[Equivalence of Program]
 %
 \label{def:aq_prog}
-Given 2 programs $c_1$ and $c_2$:
+Given 2 programs $c_1$ and $c_2$:\wq{how about $e_1$ and $e_2$, and $e_1 = e_2$, semantic equivalence as well in first case? }
 %
 \[
 c_1 =_{c} c_2
@@ -480,7 +480,7 @@ c_1 =_{c} c_2
  \left\{
 		\begin{array}{ll} 
 			\etrue 				
-			& c_1 = \assign{x}{\query(\expr)} \land c_2 = \assign{x}{\query(\expr)}
+			& c_1 = \assign{x}{\query(\expr)} \land c_2 = \assign{x}{\query(\expr)} 
 			\\ 
 			\etrue 				
 			& c_1 = \eskip \land c_2 = \eskip
@@ -550,20 +550,20 @@ A trace $t$ is well formed if and only if it preserves the following two propert
 \begin{thm}[Trace Generated from Operational Semantics is Well-formed].
 \label{thm:os_wf_trace}
 \\
-Given a program $c$, a starting configuration, 
-$\config{m, c, [], []}$ s.t. 
-$\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$,
-$t$ is well-formed \todo{w.r.t. the program $c$ and the starting memory $m$, denoted as $m, c \vDash t$} .
+Given a program $c$, a memory $m$, \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
+there exists the evaluation 
+$\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
+$t$ is well-formed. }
 \end{thm}
 \begin{proof}
-\wq{By induction on the program $c$.
-\caseL{Case $[\assign x \expr]^{l}$}
+{By induction on the program $c$.
+\caseL{ $[\assign x \expr]^{l}$}
  We assume a configuration $\config{m,[\assign x \expr]^{l} , [], []}$ s.t. there exists such an evaluation
 $\config{m, [\assign x \expr]^{l}, [], []} \to \config{m', \eskip, t, w}$.
 \\
-From the evaluation rule \rname{assn1} and rule \rname{assn2}, when we assume $m,e \to v$. We know:  $\config{m, [\assign x \expr]^{l}, [], []} \to \config{m[v/x], \eskip, [], []}$.  The resulting trace is an empty list, which is well formed by Definition~\ref{def:wf_trace}.
+From the evaluation rule \rname{assn1} and rule \rname{assn2}, when we assume $\config{m,e} \to^{*} v$. We know:  $\config{m, [\assign x \expr]^{l}, [], []} \to^{*} \config{m[v/x], \eskip, [], []}$.  The resulting trace is an empty list, which is well formed according to Definition~\ref{def:wf_trace}.
 }
-\caseL{Case $[\assign{x}{\query(\qexpr)}]^{l}$}
+\caseL{$[\assign{x}{\query(\qexpr)}]^{l}$}
 By repeatedly applying the operational semantics rule \rname{query-e}, we know there exist $\qval$ s.t.,:
 %
 \[
@@ -1283,20 +1283,10 @@ $$\aq' \geq_{aq} \aq$$
 \end{lem}
 %
 \begin{proof}
+This lemma is proved by showing there is a contradiction. 
+
 {
-\todo{write down proof}
-Proof is obvious based on the definition \ref{def:trace-based_graph}.
-}
-\end{proof}
-%
-\begin{proof}
-\jl{
-By constructing an contradict hypothesis, i.e., 
-$\exists (\aq', \aq) \in \edges$ s.t., $\aq' \geq_{aq} \aq$, this lemma is proved by showing there is a contradiction.
-}
-\\
-\jl{
-Let  $(\aq', \aq) \in \edges$ be the edge in $G$ s.t., $\aq' \geq_{aq} \aq$ where $\aq' = ({\qval}',l',w')$ and $\aq = ({\qval},l,w)$.
+Assume there exists an edge  $(\aq', \aq) \in \edges$ and $\aq' \geq_{aq} \aq$, where $\aq' = ({\qval}',l',w')$ and $\aq = ({\qval},l,w)$.
 %
 According to the Definition ~ \ref{def:trace-based_graph}, we have:
 %
@@ -1305,13 +1295,13 @@ DEP(\aq', \aq, c, m, D) ~ (1)
 $$
 %
 %
-According to the Definition \ref{def:query_dep}, and $(1)$,
-we know there exists $t_1, t_3, m_1, m_3, c_2$ s.t.,
+Unfolding the Definition \ref{def:query_dep} in $(1)$,
+we know: there exists $t_1, t_3, m_1, m_3, c_2$ s.t.,
 %
 \[
 \config{m, c, [], []} \rightarrow^{*} 
-\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
-  t_1, w_1} 
+\config{m_1, [\assign{x}{\query({\qval'})}]^{l'} ; c_2,
+  t_1, w'} 
 \rightarrow^{\textbf{query-v}} 
 \config{m_1[v_1/x], c_2,
 (t_1 ++ [\aq'], w_1} \rightarrow^{*} \config{m_3, \eskip,
@@ -1359,16 +1349,16 @@ and
 \]
 %
 %
-According to the Theorem \ref{thm:os_wf_trace} and condition $(a)$, we know both $t_1$, $t_3$ are well-formed traces.
+According to the Theorem \ref{thm:os_wf_trace} and $(a)$, we know both $t_1$, $t_3$ are well-formed traces.
 }
 \\
-\jl{
-Proving by considering two cases as follows:
-\[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~(d) ~~ \lor ~~ \aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]
+{
+Look at $(b)$ and $(c)$ separately. 
+% \[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~(d) ~~ \lor ~~ \aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]
 %
 \begin{itemize}
 %
-	\caseL{case 1: \[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~ (d)\]}
+	\caseL{ (b) If we have \[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~ (d)\]}
 	By unfolding the trace subtraction operations, we have;
 	\[
 		\exists t_2. ~ s.t., ~ t_1 ++[\aq'] ++ t_2 = t_3 \land \aq \in_{aq} t_2 ~ (3)
@@ -1399,10 +1389,10 @@ By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\star)$, 
 	\aq' <_{aq} \aq
 \]
 %
-This is contradict to the hypothesis, where $\aq' \geq_{aq} \aq$. 
+This is contradict to our assumption, where $\aq' \geq_{aq} \aq$. 
 %
 %
-\caseL{case 2: \[\aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]} 
+\caseL{(c), If we have \[\aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]} 
 %
 According to the condition $(c)$, we know: $\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.$
   	% 
@@ -1412,33 +1402,40 @@ According to the condition $(c)$, we know: $\exists v \in \qdom, v \neq v_1, m_3
 	\land \aq  \in_{q} (t_3' - (t_1 ++ [\aq']))) ~ (6)
 \] 
 %
-According to the Theorem \ref{thm:os_wf_trace} and $(5)$, we know $t_3'$ is a well-formed trace.
-%
-Unfolding the trace subtraction operations in $(6)$, we have;
+According to the Theorem \ref{thm:os_wf_trace} and $(5)$, \wq{maybe also the sum-lemma-t},
+we know $t_3'- (t_1 ++ [\aq'])$ is a well-formed trace.
+
+From $(a)$, we know that the minimal line number of $c_2$ is greater than $l'$, so we know that : 
 \[
-	\exists t_2'. ~ s.t., ~ t_1 ++[\aq'] ++ t_2' = t_3' \land \aq \in_{aq} t_2' ~ (7)
+  \forall aq'' \in t_3'- (t_1 ++ [\aq']), aq''>_{aq} aq'
 \]
+ From $6$ we conclude that 
 %
-%
-According to the sub-lemma and $(7)$, we have:
-%
-\[
-	\exists t_{21}', t_{22}' ~ s.t.,~ t_{21}' ++ [\aq] ++ t_{22}' = t_2' ~ (8)
-\]
-%
-By rewriting $(8)$ inside $(7)$, we have:
-%
-\[
-	t_1 ++[\aq'] ++ t_{21}' ++ [\aq] ++ t_{22}' = t_3' ~ \diamond
-\]
-%
-By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\diamond)$, we know
+% Unfolding the trace subtraction operations in $(6)$, we have;
+% \[
+% 	\exists t_2'. ~ s.t., ~ t_1 ++[\aq'] ++ t_2' = t_3' \land \aq \in_{aq} t_2' ~ (7)
+% \]
+% %
+% %
+% According to the sub-lemma and $(7)$, we have:
+% %
+% \[
+% 	\exists t_{21}', t_{22}' ~ s.t.,~ t_{21}' ++ [\aq] ++ t_{22}' = t_2' ~ (8)
+% \]
+% %
+% By rewriting $(8)$ inside $(7)$, we have:
+% %
+% \[
+% 	t_1 ++[\aq'] ++ t_{21}' ++ [\aq] ++ t_{22}' = t_3' ~ \diamond
+% \]
+% %
+% By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\diamond)$, we know
 %
 \[
 	\aq' <_{aq} \aq
 \]
 %
-This is contradict to the hypothesis, where $\aq' \geq_{aq} \aq$.
+This is contradict to the assumption,  $\aq' \geq_{aq} \aq$.
 %
 \end{itemize}
 %
