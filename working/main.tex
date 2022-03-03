@@ -1175,7 +1175,7 @@ By rule \rname{seq1}, we have the following evaluations:
 	\config{m, c';\ewhile [b]^l \edo c', t_2, w+l} \to^{*} \config{m', \eskip;\ewhile [b]^l \edo c', t_2', w'} ~ (w3)
 \] 
 %
-where 
+, where 
 $\config{m, c', t_1, w+l} \to^{*} \config{m_1', \eskip, t_1', w_1'}$
 and
 $\config{m, c', t_2, w+l} \to^{*} \config{m_2', \eskip, t_2', w_2'}$. 
@@ -1184,9 +1184,8 @@ $\config{m, c', t_2, w+l} \to^{*} \config{m_2', \eskip, t_2', w_2'}$.
 %
 By induction hypothesis on $c'$, we know:
 \[
-t_1' - t_1 = t_2' - t_2
+t_1' - t_1 = t_2' - t_2.
 \]
-. 
 %
 By the rule \rname{seq2}, we have:
 %
@@ -1261,22 +1260,102 @@ t - t_1 = t_2 - [] = t_2
 %
 Unfold the subtraction operations, we have:
 \[
-	t = t_1 + t_2'
+	t = t_1 + t_2
 \]
 %
 Unfold the definition~\ref{def:wf_trace}, it is sufficient to show trace $t$ holds both the Uniqueness and Ordering property:
 %
-\caseL{Uniqueness:} of $t$, 
-by distinction of labels in $c_1$ and $c_2$, 
-	\[
-	\forall \aq_1 \in t_1, \aq_2 \in t_2'. ~ \aq_1 \aqneq \aq_2
-	\] 
-\caseL{Ordering} of $t_2$, By orders of labels in $c_2$ greater than labels in $c_1$,
-	\[
-	\forall \aq_1 \in t_1, \aq_2 \in t_2'. ~ \aq_1 <_{aq} \aq_2 \land 
-	\exists t_1', t', t_3'. ~ t_1' ++ [\aq_1] ++ t' ++ [\aq_2]  ++ t_3' = t
-	\]
-	Concluding that $t$ is well-formed.
+\caseL{Uniqueness:} 
+By the distinction properties of labels in program $c$, 
+\[
+	\forall \aq_1 \in t_1, \aq_2 \in t_2. ~ \aq_1 \aqneq \aq_2
+\] 
+%
+Since $t = t_1 ++ t_2$ and both $t_1$ and $t_2$ are well-formed, we know:
+\[
+	\forall \aq_1, \aq_2 \in t. ~ \aq_1 \aqneq \aq_2
+\]
+%
+THe Uniqueness property for $t$ is proved.
+%
+\caseL{Ordering}
+%
+By the definition of ordering property, we need to show $\forall \aq_1, \aq_2 \aqin t$:
+\[
+	(\aq_1 <_{aq} \aq_2) \Longleftrightarrow
+	\exists t^1, t^2, t^3, \aq_1', \aq_2'. ~ s.t.,~ 
+	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t^1 ++ [\aq_1'] ++ t^2 ++ [\aq_2'] ++ t^3 = t
+\]
+%
+Since $t = t_1 ++ t_2$, there are 4 cases need to be proved:
+\\
+$(1) ~ \aq_1, \aq_2 \aqin t_1$
+\\
+$(2) ~ \aq_2, \aq_2 \aqin t_2$
+\\
+$(3) ~ \aq_2 \aqin t_1, \aq_1 \aqin t_2$ 
+\\
+$(4) ~ \aq_1 \aqin t_1, \aq_2 \aqin t_2$
+\\
+Given both $t_1$ and $t_2$ are well-formed, we know this property is true in case $(1)$ and $(2)$.
+\\
+By the ordering properties of labels in program $c_1; c_2$,
+we know all the labels in $c_2$ are greater than the labels in $c_1$, i.e.,
+\[
+	\forall \aq_1 \aqin t_1, \aq_2 \aqin t_2. ~ \aq_1 <_{aq} \aq_2 ~ (a)
+\]
+%
+Then we have the case $(3)$ proved because the premise is $\efalse$ in this case.
+%
+To prove the ordering property in case $(4)$, it is sufficient to show the following 2 implications:
+\[
+	(\aq_1 <_{aq} \aq_2) 
+	\Longrightarrow
+	\exists t^1, t^2, t^3, \aq_1', \aq_2'. ~ s.t.,~ 
+	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t^1 ++ [\aq_1'] ++ t^2 ++ [\aq_2'] ++ t^3 = t
+\]
+%
+\[
+	% \forall \aq_1, \aq_2 \aqin t. ~
+	\exists t^1, t^2, t^3, \aq_1', \aq_2'. ~ s.t.,~ 
+	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t^1 ++ [\aq_1'] ++ t^2 ++ [\aq_2'] ++ t^3 = t
+	 \Longrightarrow
+	(\aq_1 <_{aq} \aq_2)
+\]
+%
+By Corollary~\ref{coro:aqintrace} and the hypothesis $(4)$, we know:
+%
+\[
+	\exists t_1', t_1'', \aq_1'. ~ (\aq_1 \aqeq \aq_1') \land t_1' ++ [\aq_1'] ++ t_1'' = t_1
+\]
+%
+\[
+	\exists t_2', t_2'', \aq_2'. ~ (\aq_2 \aqeq \aq_2') \land t_2' ++ [\aq_2'] ++ t_2'' = t_2
+\]
+%
+Since $t = t_1 ++ t_2$ we know:
+\[
+	\exists t_1', t_1'', \aq_1', t_2', t_2'', \aq_2'. ~ (\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land 
+	t_1' ++ [\aq_1'] ++ t_1'' ++ t_2' ++ [\aq_2'] ++ t_2'' = t_1 ++ t_2 = t
+\]
+%
+Let $t^1 = t_1'$, $t^2 = t_1'' ++ t_2'$ and $t^3 = t_2''$, we have:
+%
+\[
+	\exists t^1, t^2, t^3, \aq_1', \aq_2'. ~ s.t.,~ 
+	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t^1 ++ [\aq_1'] ++ t^2 ++ [\aq_2'] ++ t^3 = t
+\]
+%
+This case is proved.
+%
+\\
+%
+For the other directions, according to the hypothesis $(4)$ and $(a)$ proved above, we know:
+\[
+	(\aq_1 <_{aq} \aq_2)
+\]
+%
+This case is proved.
 %
 \caseL{$\ewhile [b]^l \edo c'$}
 \end{proof}
