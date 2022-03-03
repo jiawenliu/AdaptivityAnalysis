@@ -281,16 +281,17 @@ A memory is standard, a map from labeled variables to values.
 Queries can be uniquely annotated as defined in $\mathcal{AQ}$, and the annotation $(l,w)$ considers the location of the query by line number $l$ and which iteration the query is at when it appears in a while statement, specified by $w$.
 	}
 
-A configuration ($\config{m, c, t,w}$) contains four elements: a memory $m$, the command $c$ to be evaluated, a starting trace $t$, a starting while map $w$. Most of the time, the while maps remains empty until the evaluation goes into while statements.  
+A configuration, $\config{m, c, t,w}$, contains four elements: a memory $m$, the command $c$ to be evaluated, a starting trace $t$, a starting while map $w$. Most of the time, the while maps remains empty until the evaluation goes into while statements.  
 
 %
 \jl{
 The annotated query $\aq = (\qval, l, w)$ is a triple contains 3 elements. 
 $\qval$ is a query value representing the corresponding query request $\assign{x}{\query(\qval)}$ during the execution of the program.
-$l$ is the label of the corresponding query request  command and $w$ is the while map for this command.
+$l$ is the label of the query request command in a program.
+$w$ is the while map indicating if or not this command is in a while loop, and which iteration it is in.
 Given the label $l$ and while map $w$ are ordered, 
 the annotated queries also preserve this property. 
-Its order and equivalence relation are defined in Definition.~\ref{def:query_dir}.
+Its order and equivalence relation are defined in Definition~\ref{def:query_dir}.
 %
 \begin{defn}[Order of Annotated Queries].
 \label{def:query_dir}
@@ -314,17 +315,15 @@ $ \aq_1 = (\qval_1, l_1, w_1),
 \right.
 \]
 %
-$\aq_1 \geq_{aq} \aq_2$  is defined vice versa.\\
-\end{defn}}
+$\aq_1 \aqgeq \aq_2$  is defined vice versa.
+\end{defn}
+}
 %
-
  %% trace
 A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
 A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
 We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
 of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
-
-
 %
 %
 The evaluation rules for arithmetic and boolean expressions are standard. 
@@ -376,7 +375,7 @@ Given the evaluation for the arithmetic and boolean expression, we defined the e
 	 \config{m,  \aexpr} \qarrow \aexpr'
 	}	\end{mathpar}
 	%
-Given the evaluation rules for query expression, we can define its equivalence relation, as follows in Definition. ~ \ref{def:query_equal}.
+Given the evaluation rules for query expression, we can define its equivalence relation, as follows in Definition~\ref{def:query_equal}.
 %
 \begin{defn}[Equivalence of Query].
 %
@@ -407,7 +406,7 @@ $\qexpr_1 \neq_{q}^{m} \qexpr_2$  is defined vice versa.
 We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}_{q}$.
 \end{defn}
 %
-Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition ~\ref{def:aq_equal}:
+Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition~\ref{def:aq_equal}:
 %
 \begin{defn}[Equivalence of Annotated Queries]
 %
@@ -418,12 +417,12 @@ $ \aq_1 = (\qval_1, l_1, w_1),
 :
 %
 \[
-\aq_1 =_{aq} \aq_2
+\aq_1 \aqeq \aq_2
  \triangleq (l_1 = l_2 \land  w_1 =_w w_2 \land 
  \qval_1 =_q \qval_2) 
 \]
 %
-$\aq_1 \neq_{aq} \aq_2$  is defined vice versa.
+$\aq_1 \aqneq \aq_2$  is defined vice versa.
 %
 \end{defn}
 }
@@ -452,15 +451,15 @@ The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is
 		\triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
 	\end{equation}
 %
-Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \in_{aq} t$ are defined as follows:
+Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \aqin t$ are defined as follows:
   	%
 \begin{equation}
-		\aq \in_{aq} t  
+		\aq \aqin t  
 		\triangleq \left\{
 		\begin{array}{ll} 
 			\efalse  			& t = []   		\\
-			\etrue 				& t = \aq'::t' 	\quad \aq =_{aq} \aq'\\ 
-			\aq \in t'			& t = \aq'::t'  \quad \aq \neq_{aq} \aq'
+			\etrue 				& t = \aq'::t' 	\quad \aq \aqeq \aq'\\ 
+			\aq \in t'			& t = \aq'::t'  \quad \aq \aqneq \aq'
 		\end{array}
 		\right.
 	\end{equation}
@@ -527,7 +526,7 @@ The rules for while modify the while map $w$.
 In the rule $\textbf{ifw-true}$, the while map $w$ is updated by $w + l$ because the execution goes into another iteration when the condition $n >0$ is satisfied. 
 %
 When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label $l$ of this while statement by $w \setminus l$ in the rule $\textbf{ifw-false}$.  
-With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition ~ \ref{def:wf_trace}.
+With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition~\ref{def:wf_trace}.
 %
 
 \jl{
@@ -535,11 +534,12 @@ With the operational semantics and relations between annotated queries, we restr
 \label{def:wf_trace}
 A trace $t$ is well formed if and only if it preserves the following two properties:
 \begin{itemize}
-	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \in_{aq} t. ~ (\aq_1 \neq_{aq} \aq_2)$
+	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \aqin t. ~ (\aq_1 \aqneq \aq_2)$
 	%
-	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \in_{aq} t. ~ 
+	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \aqin t. ~ 
 	(\aq_1 <_{aq} \aq_2) \Longleftrightarrow
-	\exists t_1, t_2, t_3. ~ s.t., ~ t_1 ++ [\aq_1] ++ t_2 ++ [\aq_2] ++ t_3 = t$
+	\exists t_1, t_2, t_3, \aq_1', \aq_2'. ~ s.t.,~ 
+	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t_1 ++ [\aq_1'] ++ t_2 ++ [\aq_2'] ++ t_3 = t$
 \end{itemize}
 \end{defn}
 }
@@ -658,17 +658,20 @@ where
 	\config{m, c_1, [], []]} \to^{*} \config{m_1, [\eskip]^l, t_1, w_1]} ~ (2)
 \]
 %
-\todo{Sub-Lemma-w:
+\todo{
+\begin{lem}[While Map Remains Unchanged (Invariant)]
+\label{lem:wunchange}
 Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
 $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
 \[
 	w = w'
 \]
-\begin{subproof}[Proof of Sub-Lemma-w]
+\end{lem}
+\begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
 %
 By induction on program $c$, we have following cases:
 %
-\caseL{ $[\assign x \expr]^{l}$}
+\caseL{$[\assign x \expr]^{l}$}
 %
 From the evaluation rule \rname{assn1} and rule \rname{assn2}, we know there exists an evaluation
 $$
@@ -748,7 +751,7 @@ According to the evaluation $(a)$, $(f1)$ and $(f2)$, we the following evaluatio
 %
 , where the resulting while map is still $w$, this sub-case is proved.
 %
-\caseL{$$c_1; c_2$$}
+\caseL{$c_1; c_2$}
 %
 According to the evaluation rule \rname{seq1}, we have the following evaluation by repeatedly applying \rname{seq1} 
 %
@@ -787,7 +790,7 @@ According to the evaluations $(1)$, $(3)$ and $(4)$, we have:
 %
 This case is proved.
 %
-\caseL{$$\ewhile [b]^l \edo c'$$}
+\caseL{$\ewhile [b]^l \edo c'$}
 %
 According to the \rname{while-b} and \rname{ifw-b} rule, we have following evaluation:
 \[
@@ -865,7 +868,7 @@ This sub-case is proved.
 \end{subproof}
 }
 %
-According to sub-lemma-w, we know $w_1 = []$.
+According to Lemma~\ref{lem:wunchange}], we know $w_1 = []$.
 %
 By induction hypothesis on $c_1$ and $(2)$, we know $t_1$ is well-formed.
 %
@@ -893,18 +896,23 @@ By induction hypothesis on $c_2$ and let $\config{m_2, [\eskip]^l, t_2, w_2]}$ b
 we know $t_2$ is well-formed.
 %
 \\
-\todo{Sub-Lemma-t:
+\todo{
+\begin{lem}[Trace Uniqueness]
+\label{lem:tunique}
 Given a program $c$ with a starting memory $m$, 
-for any starting trace $t_1$ and $t_2$ 
-s.t.,
-$\config{m, c, t_1, []} \to^{*} \config{m_1', \eskip, t_1', w_1'}$ and 
-$\config{m, c, t_2, []} \to^{*} \config{m_2', \eskip, t_2', w_2'}$
+for any starting trace $t_1$ and $t_2$, if there exist evaluations
+$$\config{m, c, t_1, []} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% 
+$$\config{m, c, t_2, []} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+%
+then:
 %
 \[
 	t_1' - t_1 = t_2' - t_2
 \]
+\end{lem}
 %
-\begin{subproof}[Proof of Sub-Lemma-t]
+\begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
 %
 By induction on program $c$, we have following cases:
 %
@@ -915,7 +923,6 @@ $$
 \config{m, [\assign x \expr]^{l}, t_1, w} \to^{*} \config{m[v/x], \eskip, t_1, w}
 $$
 %
-and 
 \[
 \config{m, [\assign x \expr]^{l}, t_2, w} \to^{*} \config{m[v/x], \eskip, t_2, w}
 \]
@@ -1049,7 +1056,7 @@ According to the evaluations $(1), (3), (5)$ and $(2), (4), (6)$, we have the fo
 %
 Since $t_1'' - t_1 = t_2'' - t_2$, this sub-case is proved.
 %
-\caseL{$$c_1; c_2$$}
+\caseL{$c_1; c_2$}
 %
 According to the evaluation rule \rname{seq1}, we have the following 2 evaluations by repeatedly applying \rname{seq1} 
 %
@@ -1126,7 +1133,7 @@ Again, by the definition of trace subtraction, we have:
 %
 This case is proved.
 %
-\caseL{$$\ewhile [b]^l \edo c'$$}
+\caseL{$\ewhile [b]^l \edo c'$}
 %
 According to the \rname{while-b} and \rname{ifw-b} rule, we have following 2 evaluations:
 %
@@ -1172,6 +1179,8 @@ where
 $\config{m, c', t_1, w+l} \to^{*} \config{m_1', \eskip, t_1', w_1'}$
 and
 $\config{m, c', t_2, w+l} \to^{*} \config{m_2', \eskip, t_2', w_2'}$. 
+%
+\\
 %
 By induction hypothesis on $c'$, we know:
 \[
@@ -1245,7 +1254,7 @@ Because $t_1 - t_1 = t_2 - t_2 = []$, this sub-case is proved.
 \end{subproof}
 }
 \\
-According to sub-lemma-t, we know
+According to Lemma~\ref{lem:tunique}, we know
 \[
 t - t_1 = t_2 - [] = t_2
 \]
@@ -1260,7 +1269,7 @@ Unfold the definition~\ref{def:wf_trace}, it is sufficient to show trace $t$ hol
 \caseL{Uniqueness:} of $t$, 
 by distinction of labels in $c_1$ and $c_2$, 
 	\[
-	\forall \aq_1 \in t_1, \aq_2 \in t_2'. ~ \aq_1 \neq_{aq} \aq_2
+	\forall \aq_1 \in t_1, \aq_2 \in t_2'. ~ \aq_1 \aqneq \aq_2
 	\] 
 \caseL{Ordering} of $t_2$, By orders of labels in $c_2$ greater than labels in $c_1$,
 	\[
@@ -1546,7 +1555,7 @@ $\mathsf{DEP}(\aq_1, \aq_2, c, m, D)$ is defined below.
 	 \bigwedge
 	 \left( 
 	 \begin{array}{l}
-		\aq_2 \in_{aq} (t_3 - (t_1 ++ [\aq_1])) 
+		\aq_2 \aqin (t_3 - (t_1 ++ [\aq_1])) 
 		\\
 		\implies 
 		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.
@@ -1556,14 +1565,14 @@ $\mathsf{DEP}(\aq_1, \aq_2, c, m, D)$ is defined below.
 		\rightarrow^{*}
 		(\config{m_3', \eskip, t_3', w_3'} 
 		\land 
-		\aq_2 \not \in_{aq} (t_3'-(t_1 ++ [\aq_1])))
+		\aq_2 \not \aqin (t_3'-(t_1 ++ [\aq_1])))
 	\end{array} 
 	\right)
 	\\
 	\bigwedge
 	\left( 
     \begin{array}{l}
-		\aq_2 \not\in_{aq} (t_3 - (t_1 ++ [\aq_1]))
+		\aq_2 \not\aqin (t_3 - (t_1 ++ [\aq_1]))
 	  	\\
 	  	\implies 
 		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
@@ -1573,7 +1582,7 @@ $\mathsf{DEP}(\aq_1, \aq_2, c, m, D)$ is defined below.
 		\rightarrow^{*} 
 		(\config{m_3', \eskip, t_3', w_3'} 
 		\land 
-		\aq_2  \in_{aq} (t_3' - (t_1 ++ [\aq_1])))
+		\aq_2  \aqin (t_3' - (t_1 ++ [\aq_1])))
 	\end{array} 
 	\right)
 \end{array}
@@ -1596,7 +1605,7 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 	\aq \in \mathcal{AQ} ~\middle\vert ~ 
 	\exists m',  w', t' ~ s.t., ~  
 	\config{m ,c, [], []}  \to^{*} \config{m' , \eskip, t', w' }
-	\land \aq \in_{aq} t'
+	\land \aq \aqin t'
 	\right\}
 	\\
 	\text{Directed Edges} &
@@ -1694,107 +1703,6 @@ i.e., $t ++ t'' = t'$. This case is proved.
 }
 \end{proof}
 %
-\paragraph{Non-Determinism of queries.}
-% 
-{
-When evaluating a query $\query(\qval)$ on a given database $D$, 
-in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
-we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
-The mechanism is considered as primitive operations in our language, behaving as black box to programmers.
-There are different kinds of mechanisms, 
-such as adding noise sampled from certain probabilistic distribution to the result \cite{dwork2015preserving}.
-Because of the randomness of the underlying mechanism, the evaluation of a query $\query(\qval)$ is non-deterministic. 
-That's the reason, in the Definition \ref{def:query_dep}, given a fixed database $D$, there will be a query domain $\qdom$ where $\query(\qval)(D) $ can be evaluated to different values $v \in \qdom$.
-}
-\\
-{
-On the other hand, in the operational semantics rule \textbf{query-v}:
-\[
-		\inferrule
-	{
-	\query(\qval) = v
-	}
-	{
-	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
-	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  (t ++ [(\qval, l, w)],w }
-	}
-	~\textbf{query-v}
-	\]
-, we evaluate the query given database $D$ based on an assumption that the underlying mechanism is fixed.
-This fixed mechanism only adds constant $0$ to the original result $v$ returned from the database, i.e., $v = \query(\qval)(D)$. 
-}
-%
-\\
-%
-The Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this property.
-%
-\begin{lem}
-[Semi-Determinism].
-\label{lem:semidetrm}\\
-{
-for any program $c$ with a starting memory $m$, trace $t$ and while label $w$, 
-if program $c$ contains neither  
-$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then
-%
-$$
-\bigwedge
-\left\{\begin{array}{l}
-\config{m, c, t, w} 
-\rightarrow^{*} 
-\config{m_1, \eskip, t_1, w_1} 
-\\ 
-\config{m, c, t, w} 
-\rightarrow^{*} 
-\config{m_2, \eskip, t_2, w_2} 
-\end{array}
-\right\}
-\implies
-(m_1 = m_2 \land t_1 = t_2 \land w_1 = w_2)
- $$ 
-}
-\end{lem}
-%
-\begin{proof}
-{
-Proof is obvious by induction on the operational semantics rules.
-}
-\end{proof}
-%
-%
-\begin{lem}
-[Query Semi-Determinism].
-\label{lem:querysemidetrm}
-\\
-{
-Given a program $c; \assign{x}{\query(\qexpr)}; c'$ with a starting memory $m$, trace $t$ and while label $w$, 
-s.t. $c$ contains neither  
-$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then:
-%
-\[
-\bigwedge
-\left\{
-\begin{array}{l}
-\config{m, c; \assign{x}{\query(\qexpr)}; c', t, w} 
-\rightarrow^{*} 
-\config{m_1, \assign{x}{\query(\qval_1)}; c', t_1, w_1} 
-\\
-\config{m, c; \assign{x}{\query(\qexpr)}; c', t, w} 
-\rightarrow^{*} 
-\config{m_2, \assign{x}{\query(\qval_2)}; c', t_2, w_2} 
-\end{array}
-\right\}
-\implies
-(\qval_1 = \qval_2 \land m_1 = m_2 \land t_1 = t_2 \land w_1 = w_2)
-\]
-}
-\end{lem}
-%
-\begin{proof}
-{
-Proof is obvious by induction on the operational semantics rules.
-}
-\end{proof}
 %
 \jl{
 The following lemma describes a property of the trace-based dependency graph.
@@ -1813,7 +1721,7 @@ Given a program $c$, a database $D$, a starting memory $m$ and the corresponding
 for any directed edge $(\aq', \aq) \in \edges$, 
 this is not the case that:
 %
-$$\aq' \geq_{aq} \aq$$
+$$\aq' \aqgeq \aq$$
 %
 }
 \end{lem}
@@ -1822,9 +1730,9 @@ $$\aq' \geq_{aq} \aq$$
 This lemma is proved by showing there is a contradiction. 
 
 \jl{
-Assume there exists an edge  $(\aq', \aq) \in \edges$ and $\aq' \geq_{aq} \aq$, where $\aq' = ({\qval}',l',w')$ and $\aq = ({\qval},l,w)$.
+Assume there exists an edge  $(\aq', \aq) \in \edges$ and $\aq' \aqgeq \aq$, where $\aq' = ({\qval}',l',w')$ and $\aq = ({\qval},l,w)$.
 %
-According to the Definition ~ \ref{def:trace-based_graph}, we have:
+According to the Definition~\ref{def:trace-based_graph}, we have:
 %
 $$
 DEP(\aq', \aq, c, m, D) ~ (1)
@@ -1851,7 +1759,7 @@ and
   % 
   \left( 
   \begin{array}{l}
-  \aq \in_{aq} (t_3 - (t_1 ++ [\aq'])) 
+  \aq \aqin (t_3 - (t_1 ++ [\aq'])) 
   % 
   \\
   \implies 
@@ -1862,12 +1770,12 @@ and
   \rightarrow^{*}
   (\config{m_3', \eskip, t_3', w_3'} 
   \land 
-  \aq \not \in_{aq} (t_3'-(t_1 ++ [\aq'])))
+  \aq \not \aqin (t_3'-(t_1 ++ [\aq'])))
 \end{array} \right ) ~(b)
 \\
 \left( 
   \begin{array}{l}
-	\aq \not\in_{aq} (t_3 - (t_1 ++ [\aq']))
+	\aq \not\aqin (t_3 - (t_1 ++ [\aq']))
   	% 
   	\\
   	\implies 
@@ -1878,7 +1786,7 @@ and
 	\rightarrow^{*} 
 	(\config{m_3', \eskip, t_3', w_3'} 
 	\land 
-	\aq  \in_{aq} (t_3' - (t_1 ++ [\aq'])))
+	\aq  \aqin (t_3' - (t_1 ++ [\aq'])))
 \end{array} \right ) ~ (c)
 \end{array}
 \]
@@ -1890,33 +1798,67 @@ According to the Theorem \ref{thm:os_wf_trace} and $(a)$, we know both $t_1$, $t
 % \jl{
 \\
 Consider 2 cases:
- \[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~(d) ~~ \lor ~~ \aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]
+ \[\aq \aqin (t_3 - (t_1 ++[\aq'])) ~(d) ~~ \lor ~~ \aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]
 %
 \begin{itemize}
 %
-	\caseL{ (d) \[\aq \in_{aq} (t_3 - (t_1 ++[\aq'])) ~ (d)\]}
+	\caseL{ (d) \[\aq \aqin (t_3 - (t_1 ++[\aq'])) ~ (d)\]}
 	By unfolding the trace subtraction operations, we have;
 	\[
-		\exists t_2. ~ s.t., ~ t_1 ++[\aq'] ++ t_2 = t_3 \land \aq \in_{aq} t_2 ~ (3)
+		\exists t_2. ~ s.t., ~ t_1 ++[\aq'] ++ t_2 = t_3 \land \aq \aqin t_2 ~ (3)
 	\]
 %
 \todo{
-sub-lemma: 
+\begin{coro}
+\label{coro:aqintrace}
 \[
-\aq \in_{aq} t \implies \exists t_1, t_2. ~ s.t., ~ t_1 ++ [\aq] ++ t_2 = t	
+\aq \aqin t \implies \exists t_1, t_2, \aq'. ~ s.t., ~ (\aq \aqeq \aq') \land t_1 ++ [\aq'] ++ t_2 = t	
 \]
+\end{coro}
+\begin{subproof}
+By unfolding the $\aq \aqin t$, we have the following cases:
+%
+\caseL{$t = []$} The hypothesis is $\efalse$, this case is proved.
+%
+\caseL{$t = \aq'::t' \land \aq' \aqeq \aq $}
+%
+Let $t_1 = []$ and $t_2 = t'$, by unfolding the list concatenation operation, we have:
+%
+\[
+	t_1 ++ [\aq'] ++ t_2 = [] ++ [\aq'] ++ t' = t
+\]
+%
+Since $\aq' \aqeq \aq$ by the hypothesis, this case is proved.
+%
+\caseL{$t = \aq'::t' \land \aq' \aqneq \aq $}
+%
+By induction hypothesis on $\aq \aqin t'$, we know:
+%
+\[
+	\exists t_1', t_2', \aq''. ~ s.t., ~ (\aq \aqeq \aq'') \land t_1' ++ [\aq''] ++ t_2' = t'	
+\]
+%
+Let $t_1 = \aq'::t_1'$ and $t_2 = t_2'$, by unfolding the list concatenation operation, we have:
+%
+\[
+	t_1 ++ [\aq''] ++ t_2 = (\aq':: t_1') ++ [\aq''] ++ t_2' = \aq'::t' = t
+\]
+%
+Since $\aq'' \aqeq \aq$ by the hypothesis, this case is proved.
+%
+\end{subproof}
 }
 %
-According to the sub-lemma and $\aq \in_{aq} t_2$, we have:
+According to the Corollary~\ref{coro:aqintrace} and $\aq \aqin t_2$, we have:
 %
 \[
-	\exists t_{21}, t_{22} ~ s.t.,~ t_{21} ++ [\aq] ++ t_{22} = t_2 ~ (4)
+	\exists t_{21}, t_{22}, \aq' ~ s.t.,~ (\aq \aqeq \aq') \land t_{21} ++ [\aq'] ++ t_{22} = t_2 ~ (4)
 \]
 %
 By rewriting $(4)$ inside $(3)$, we have:
 %
 \[
-	t_1 ++[\aq'] ++ t_{21} ++ [\aq] ++ t_{22} = t_3 ~ \star
+	\exists t_{21}, t_{22}, \aq'' ~ s.t.,~ (\aq \aqeq \aq'') \land t_1 ++[\aq'] ++ t_{21} ++ [\aq''] ++ t_{22} = t_3 ~ \star
 \]
 %
 By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\star)$, we know
@@ -1925,7 +1867,7 @@ By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\star)$, 
 	\aq' <_{aq} \aq
 \]
 %
-This is contradict to our assumption, where $\aq' \geq_{aq} \aq$. 
+This is contradict to our assumption, where $\aq' \aqgeq \aq$. 
 %
 %
 \caseL{(e), \[\aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]} 
@@ -1948,7 +1890,7 @@ From $(a)$, we know that the minimal line number of $c_2$ is greater than $l'$, 
 %
 Unfolding the trace subtraction operations in $(6)$, we have;
 \[
-	\exists t_2'. ~ s.t., ~ t_1 ++[\aq'] ++ t_2' = t_3' \land \aq \in_{aq} t_2' ~ (7)
+	\exists t_2'. ~ s.t., ~ t_1 ++[\aq'] ++ t_2' = t_3' \land \aq \aqin t_2' ~ (7)
 \]
 %
 %
@@ -1970,16 +1912,16 @@ By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\diamond)
 	\aq' <_{aq} \aq
 \]
 %
-This is contradict to the assumption,  $\aq' \geq_{aq} \aq$.
+This is contradict to the assumption,  $\aq' \aqgeq \aq$.
 %
 \end{itemize}
 %
-From both cases, we derive $\aq' \geq_{aq} \aq$, which is contradict to the hypothesis, i.e., $\aq' \geq_{aq} \aq$.
+From both cases, we derive $\aq' \aqgeq \aq$, which is contradict to the hypothesis, i.e., $\aq' \aqgeq \aq$.
 Then, we can conclude that 
 for any directed edge $(\aq', \aq) \in \edges$, 
 this is not the case that:
 %
-$$\aq' \geq_{aq} \aq$$
+$$\aq' \aqgeq \aq$$
 %
 }
 \end{proof}
@@ -2741,7 +2683,7 @@ $\mathsf{DEP}_{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below.
  \\ \bigwedge
   \left( 
   \begin{array}{l}
-  \aq_2 \in_{aq} (t_3 - (t_1 ++ [\aq])) 
+  \aq_2 \aqin (t_3 - (t_1 ++ [\aq])) 
   % 
   \\
   \implies 
@@ -2752,12 +2694,12 @@ $\mathsf{DEP}_{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below.
   \rightarrow^{*}
   (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
   \land 
-  \aq_2 \not \in_{aq} (t_3'-(t_1 ++ [\aq_1])))
+  \aq_2 \not \aqin (t_3'-(t_1 ++ [\aq_1])))
 \end{array} \right )
 \\\bigwedge
 \left( 
   \begin{array}{l}
-  	\aq_2 \not\in_{aq} (t_3 - (t_1 ++ [\aq_1]))
+  	\aq_2 \not\aqin (t_3 - (t_1 ++ [\aq_1]))
   	% 
   	\\
   	\implies 
@@ -2768,7 +2710,7 @@ $\mathsf{DEP}_{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 	\rightarrow^{*} 
 	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
 	\land 
-	\aq_2  \in_{aq} (t_3' - (t_1 ++ [\aq_1])))
+	\aq_2  \aqin (t_3' - (t_1 ++ [\aq_1])))
 \end{array} \right )
 \end{array} \right )
 \end{array}
@@ -2790,7 +2732,7 @@ the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is 
 	\aq \in \mathcal{AQ} \middle\vert
 	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
 	\config{\ssa{m} ,\ssa{c}, [], []}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }
-	\land \aq \in_{aq} t'
+	\land \aq \aqin t'
 	\right\}
 	\\
 	\text{Directed Edges} &
@@ -2936,7 +2878,7 @@ We call the variables needed to be assigned before executing the program $c$ as 
 %
 \end{defn}
 %
-The Lemma.~\ref{lem:fv} and \ref{lem:same_value} proved the preserving properties for variables and values during the transformation.
+The Lemma~\ref{lem:fv} and \ref{lem:same_value} proved the preserving properties for variables and values during the transformation.
 %
 \begin{lem}[Variable Preserving]
 \label{lem:fv}
@@ -3760,18 +3702,11 @@ $$
 \Mtrix
 =  \left[ 
 \begin{matrix}
- % & (x_1) & (x_2) & (x_3) \\
-% (x_1) & 0 & 0 & 0 \\
-% (x_2) & 1 & 0 & 0 \\
-% (x_3) & 1 & 1 & 0 \\
  0 & 0 & 0 \\
  1 & 0 & 0 \\
  1 & 1 & 0 \\
 \end{matrix} \right] ~ , 
 \flag = \left [ \begin{matrix}
-% (x_1) & 1 \\
-% (x_2) & 0 \\
-% (x_3) & 0 \\
 1 \\
 0 \\
 0 \\
@@ -4326,23 +4261,6 @@ are presented in the right hand side.
 \ssa{i}_3 \\
 \ssa{z}_1 \\
 \end{matrix} \right ]
-% ,~~~~~~
-% \Mtrix =  \left[ \begin{matrix}
-%  & (x_1) & i_1 & (x_3) & (i_3) & (z_1)  \\
-% (x_1) & 0 & 0 & 0 & 0 & 0 \\
-% (i_1) & 0 & 0 & 0 & 0 & 0 \\
-% (x_3) & 1 & 0 & 0 & 0 & 0 \\
-% (i_3) & 0 & 1 & 0 & 0 & 0 \\
-% (z_1) & 0 & 0 & 1 & 0 & 0 \\
-% \end{matrix} \right]
-% ,~~~~~~
-% \flag = \left [ \begin{matrix}
-% (x_1)  & 1 \\
-% (i_1)  & 0 \\
-% (x_3)  & 2 \\
-% (i_3)  & 2 \\
-% (z_1)  & 0 \\
-% \end{matrix} \right ]
 ,~~~~~~
 \Mtrix_{\ssa{c}3}  =  \left[ \begin{matrix}
  0 & 0 & 0 & 0 & 0 \\
@@ -4364,20 +4282,6 @@ are presented in the right hand side.
 %
 We can now look at the if statement.
 \[ 
-% c_4 \triangleq
-% \begin{array}{l}
-%    \left[ x \leftarrow q_1 \right]^1; 
-%    \\
-%    \left[y \leftarrow q_2\right]^2 ; 
-%    \\
-%     \eif \;( x + y == 5 )^3
-%     \\
-%     \mathsf{then} ~ \left[ x \leftarrow q_3 \right]^4 \; \\
-%     \mathsf{else} ~ \left[ x \leftarrow q_4 \right]^5 ; \\
-%     y \leftarrow 2 ) ;\\
-%    \left[ z \leftarrow x +y \right]^6; \\
-% \end{array}
-% \hspace{20pt} \hookrightarrow \hspace{20pt}
 %
  \ssa{c}4 \triangleq
 \begin{array}{l}
@@ -4621,7 +4525,7 @@ the program-based adaptivity for $c$ is defined as%
 \begin{proof}
 Given a program $\ssa{c}$, 
 we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$
-by Definition.~\ref{def:prog-based_graph}
+by Definition~\ref{def:prog-based_graph}
 According to the Definition \ref{def:prog_adapt}, we have:
 %
 \[
@@ -4947,21 +4851,7 @@ i_2^7 & 2
 \draw[very thick,->, red] (12, 0)  -- (8.1, 1.9) ;
 \draw[very thick,->] (12, 0)  -- (3.1, 0) ;
 \draw[very thick,->] (12, 0)  -- (0.1, 3.9) ;
-% \draw[very thick,->] (12, 4)  -- (8.1, 2.1) ;
-% %
-% \draw[very thick,->] (12, 2)  -- (8.1, 0.1) ;
-% \draw[very thick,->] (12, 0)  -- (8.1, 0) ;
-% \draw[very thick,->] (12, 4)  -- (8, 0.2) ;
-% %
-% \draw[very thick,->] (12, 2)  -- (8.1, 3.9) ;
-% \draw[very thick,->] (12, 0)  -- (8, 3.8) ;
-% \draw[very thick,->] (12, 4)  -- (8.1, 4) ;
 %
-% \draw[very thick,->] (12, 2)  -- (8.1, 3.9) ;
-%%%% The longest path representing the adaptivity
-% \draw[ultra thick, red, ->, dashed] (3, 4.1)  -- (0.1, 4.1);
-% \draw[ultra thick, red, ->, dashed] (8, 4.1)  -- (3.1, 4.1);
-% \draw[ultra thick, red, ->, dashed] (12, 4.1)  -- (8.1, 4.1);
 \end{tikzpicture}
 }
 \end{center}
@@ -5039,6 +4929,111 @@ $\forall k. \forall D$, we have $A(TR^L) = (k - 1)$ given all possible execution
 \end{center}
 }
 \end{example}
+%%
+%%
+\section{Non Determinism}
+%%
+\paragraph{Non-Determinism of queries.}
+% 
+{
+When evaluating a query $\query(\qval)$ on a given database $D$, 
+in addition to obtain a result $v$ from the database $v = \query(\qval)(D)$,
+we assume there is an underlying mechanism that will perform extra manipulations on $v$. 
+The mechanism is considered as primitive operations in our language, behaving as black box to programmers.
+There are different kinds of mechanisms, 
+such as adding noise sampled from certain probabilistic distribution to the result \cite{dwork2015preserving}.
+Because of the randomness of the underlying mechanism, the evaluation of a query $\query(\qval)$ is non-deterministic. 
+That's the reason, in the Definition \ref{def:query_dep}, given a fixed database $D$, there will be a query domain $\qdom$ where $\query(\qval)(D) $ can be evaluated to different values $v \in \qdom$.
+}
+\\
+{
+On the other hand, in the operational semantics rule \textbf{query-v}:
+\[
+		\inferrule
+	{
+	\query(\qval) = v
+	}
+	{
+	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
+	\xrightarrow{} 
+	\config{m[ v/ x], \eskip,  (t ++ [(\qval, l, w)],w }
+	}
+	~\textbf{query-v}
+	\]
+, we evaluate the query given database $D$ based on an assumption that the underlying mechanism is fixed.
+This fixed mechanism only adds constant $0$ to the original result $v$ returned from the database, i.e., $v = \query(\qval)(D)$. 
+}
+%
+\\
+%
+The Lemma \ref{lem:semidetrm} and \ref{lem:querysemidetrm} formalize this property.
+%
+\begin{lem}
+[Semi-Determinism].
+\label{lem:semidetrm}\\
+{
+for any program $c$ with a starting memory $m$, trace $t$ and while label $w$, 
+if program $c$ contains neither  
+$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then
+%
+$$
+\bigwedge
+\left\{\begin{array}{l}
+\config{m, c, t, w} 
+\rightarrow^{*} 
+\config{m_1, \eskip, t_1, w_1} 
+\\ 
+\config{m, c, t, w} 
+\rightarrow^{*} 
+\config{m_2, \eskip, t_2, w_2} 
+\end{array}
+\right\}
+\implies
+(m_1 = m_2 \land t_1 = t_2 \land w_1 = w_2)
+ $$ 
+}
+\end{lem}
+%
+\begin{proof}
+{
+Proof is obvious by induction on the operational semantics rules.
+}
+\end{proof}
+%
+%
+\begin{lem}
+[Query Semi-Determinism].
+\label{lem:querysemidetrm}
+\\
+{
+Given a program $c; \assign{x}{\query(\qexpr)}; c'$ with a starting memory $m$, trace $t$ and while label $w$, 
+s.t. $c$ contains neither  
+$[\assign{x}{\query(\qexpr)}]^l$ nor $[\assign{x}{\query(\qval)}]^l$ for any $\qexpr$ and $\qval$, then:
+%
+\[
+\bigwedge
+\left\{
+\begin{array}{l}
+\config{m, c; \assign{x}{\query(\qexpr)}; c', t, w} 
+\rightarrow^{*} 
+\config{m_1, \assign{x}{\query(\qval_1)}; c', t_1, w_1} 
+\\
+\config{m, c; \assign{x}{\query(\qexpr)}; c', t, w} 
+\rightarrow^{*} 
+\config{m_2, \assign{x}{\query(\qval_2)}; c', t_2, w_2} 
+\end{array}
+\right\}
+\implies
+(\qval_1 = \qval_2 \land m_1 = m_2 \land t_1 = t_2 \land w_1 = w_2)
+\]
+}
+\end{lem}
+%
+\begin{proof}
+{
+Proof is obvious by induction on the operational semantics rules.
+}
+\end{proof}
 % %
 \section{Analysis of Generalization Error}
 
@@ -5127,6 +5122,7 @@ for $\zeta = \min\limits_{\lambda \in [0, 1)}
 \left( \frac{2B \ (\sigma^2 h) - \ln(1 - \lambda)}{\lambda} \right)$
 
 \clearpage
+
 
 % \input{new-algo}
 
