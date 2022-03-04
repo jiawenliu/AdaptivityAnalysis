@@ -544,12 +544,13 @@ A trace $t$ is well formed if and only if it preserves the following two propert
 \end{defn}
 }
 
-
 \jl{
 \begin{thm}[Trace Generated from Operational Semantics is Well-formed].
 \label{thm:os_wf_trace}
 \\
-Given a program $c$, a memory $m$ and a configuration $\config{m', \eskip, t, w}$ s.t., $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, then $t$ is well formed with respect to $c$ and $m$, denoted as $m, c \vDash t$.
+Given a program $c$, 
+with arbitrary starting memory $m$, trace $t$ and while map $w$
+if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, w, c \vDash t' - t$.
 \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
 there exists the evaluation 
 $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
@@ -658,215 +659,6 @@ where
 	\config{m, c_1, [], []]} \to^{*} \config{m_1, [\eskip]^l, t_1, w_1]} ~ (2)
 \]
 %
-\todo{
-\begin{lem}[While Map Remains Unchanged (Invariant)]
-\label{lem:wunchange}
-Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
-$\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
-\[
-	w = w'
-\]
-\end{lem}
-\begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
-%
-By induction on program $c$, we have following cases:
-%
-\caseL{$[\assign x \expr]^{l}$}
-%
-From the evaluation rule \rname{assn1} and rule \rname{assn2}, we know there exists an evaluation
-$$
-\config{m, [\assign x \expr]^{l}, t, w} \to^{*} \config{m[v/x], \eskip, t', w}
-$$
-%
-, where $\config{m,e} \to^{*} v$.
-%
-The resulting while map is $w$, this case is proved because $w = w$.
-%
-\caseL{$[\assign{x}{\query(\qexpr)}]^{l}$}
-%
-By repeatedly applying the operational semantics rule \rname{query-e}, we know there exist $\qval$ s.t.,:
-%
-\[
-\config{m, [\assign{x}{\query(\qexpr)}]^{l}, t, w} \to^{*} \config{m', [\assign{x}{\query(\qval)}]^{l}, t', w}
-\]
-%
-According to the evaluation rule \rname{query-v}, we have the following transition:
-\[
-	\config{m', [\assign{x}{\query(\qval)}]^{l}, t', []} \to \config{m', \eskip, t' ++ [(\qval, l, w)], w}
-\]
-%
-The resulting while map is $w$, this case is proved because $w = w$.
-%%
-\caseL{$\eif([b]^l, c_1, c_2)$}
-%
-According to the evaluation rule \rname{if}, we know there exists an evaluation by repeatedly applying the rule \rname{if}: 
-%
-\[
-\config{m, \eif([b]^l, c_1, c_2), t, w} \to^{*} \config{m_b, \eif([v]^l, c_1, c_2), t', w} ~ (1)
-\]
-%
-where $v$ is either $\etrue$ or $\efalse$.
-\\
-Considering 2 subcases where $v$ is either $\etrue$ or $\efalse$:
-%
-\subcaseL{$v = \etrue$}
-%
-By applying the evaluation rule \rname{if-t}, we have:
-\[
-\config{m_b, \eif([\etrue]^l, c_1, c_2), t', w} \to \config{m_b, c_1, t', w} ~ (t1)
-\]
-%
-By induction hypothesis on $c_1$ with starting memory $m_b$, trace $t'$ and while map $w$, let $\config{m_1, \eskip, t_1, w_1}$ be the configuration s.t.
-\[
-	\config{m_b, c_1, t', w} \to^{*} \config{m_1, \eskip, t_1, w_1} ~(t2)
-\]
-we know $w_1 = w$.
-\\
-According to the evaluation $(a)$, $(t1)$ and $(t2)$, we have the following evaluation:
-% 
-\[
-	\config{m, \eif([b]^l, c_1, c_2), t, w} \to^{*} \config{m_1, \eskip, t_1, w}
-\]
-%
-, where the resulting while map is still $w$, this sub-case is proved.
-%
-\subcaseL{$v = \efalse$}
-%
-By applying the evaluation rule \rname{if-f}, we have:
-\[
-\config{m_b, \eif([\efalse]^l, c_1, c_2), t', w} \to \config{m', c_2, t', w} ~ (f1)
-\]
-%
-By induction hypothesis on $c_1$ with starting memory $m_b$, trace $t'$ and while map $w$, 
-let $\config{m_2, \eskip, t_2, w_2}$ be the configuration s.t.
-\[
-	\config{m_b, c_2, t', w} \to^{*} \config{m_2, \eskip, t_2, w_2} ~(f2)
-\]
-we know $w_2 = w$.
-\\
-According to the evaluation $(a)$, $(f1)$ and $(f2)$, we the following evaluation:
-\[
-	\config{m, \eif([b]^l, c_1, c_2), t, w} \to^{*} \config{m_2, \eskip, t_2, w}
-\]
-%
-, where the resulting while map is still $w$, this sub-case is proved.
-%
-\caseL{$c_1; c_2$}
-%
-According to the evaluation rule \rname{seq1}, we have the following evaluation by repeatedly applying \rname{seq1} 
-%
-\[
-\config{m, c_1;c_2, t, w} \to^{*} \config{m_1, [\eskip]^l;c_2,  t_1, w_1} ~ (1)
-\]
-%
-where 
-%
-\[
-	\config{m, c_1, t, w} \to^{*} \config{m_1, [\eskip]^l, t_1, w_1]} ~ (2)
-\]
-%
-By induction hypothesis on $c_1$ and $(2)$, we know $w_1 = w$.
-%
-According to the evaluation rule \rname{seq2}, we have:
-%
-\[
-\config{m_1, [\eskip]^l;c_2,  t_1, w} \to \config{m_1, c_2, t_1, w} ~ (3)
-\]
-%
-let $\config{m_2, [\eskip]^l, t_2, w_2]}$ be the configuration s.t.,:
-%
-\[
-	\config{m_1, c_2, t_1, w} \to^{*} \config{m_2, [\eskip]^l, t_2, w_2]}~ (4).
-\]
-%
-%
-By induction hypothesis on $c_2$, $m_1$, $t_1$, $w$ and $(4)$, we know $w_2 = w$.
-%
-\\
-According to the evaluations $(1)$, $(3)$ and $(4)$, we have:
-\[
-	\config{m, c_1;c_2, t, w} \to^{*} \config{m', [\eskip]^l, t', w}
-\]
-%
-This case is proved.
-%
-\caseL{$\ewhile [b]^l \edo c'$}
-%
-According to the \rname{while-b} and \rname{ifw-b} rule, we have following evaluation:
-\[
-	\config{m, \ewhile [b]^l \edo c', t, w} \to^{*}
-	\config{m, \eif_w([v]^l, c', \eskip), t, w} ~ (w1)
-\]
-%
-where $v$ is either $\etrue$ or $\efalse$.
-%
-\subcaseL{$v = \etrue$ }
-%
-By evaluation rule \rname{ifw-true}, we have:
-%
-\[
-	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l \edo c', \eskip), t, w} 
-	\to^{*} \config{m, c';\ewhile [b]^l \edo c', t, w+l} ~ (w2)
-\]
-%
-By rule \rname{seq1}, we have the following evaluation:
-%
-\[
-	\config{m, c';\ewhile [b]^l \edo c', t, w+l} \to^{*} \config{m', \eskip;\ewhile [b]^l \edo c', t', w'} ~ (w3)
-\] 
-%
-where $\config{m, c', t, w+l} \to^{*} \config{m', \eskip, t', w'} ~ (w4)$. 
-%
-By induction hypothesis on $c'$ and the evaluation $(w4)$, we know $w' = w + l$. Then we have $\config{m, c', t, w+l} \to^{*} \config{m', \eskip, t', w+l} ~ (w5)$.
-%
-By the rule \rname{seq2}, we have:
-%
-\[
-	\config{m', \eskip;\ewhile [b]^l \edo c', t', w + l} \to \config{m', \ewhile [b]^l \edo c', t', w + l} ~ (w6)
-\]
-%
-By the termination of the while loop, we know there exist an evaluation by repeating the evaluation in $(w1), (w2), (w3)$ and $(w6)$:
-%
-\[
-	\config{m', \ewhile [b]^l \edo c', t', w + l} \to^{*} \config{m', \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t'', w''}
-\]
-%
-By the evaluation $(w5)$, we know in the evaluation of each iterations, the resulting while map is always $w + l$. So we have $w'' = w + l$.
-%
-By evaluation rule \rname{ifw-false}, we have:
-%
-\[
-	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t'', w + l} 
-	\to^{*} \config{m, \eskip, t, (w + l)/l}
-\]
-%
-By the hypothesis that $l \notin Keys(w)$, unfolding the $(w + l)/l$ operation, we have:
-%
-\[
-	w = (w + l)/l.
-\]
-%
-This sub-case is proved.
-%
-\subcaseL{$v = \efalse$}
-%
-By evaluation rule \rname{ifw-false}, we have:
-%
-\[
-	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t, w} 
-	\to^{*} \config{m, \eskip, t, w/l}
-\]
-%
-By the hypothesis that $l \notin Keys(w)$, unfolding the $w/l$ operation, we have:
-%
-\[
-	w = w/l.
-\]
-%
-This sub-case is proved.
-%
-\end{subproof}
-}
 %
 According to Lemma~\ref{lem:wunchange}], we know $w_1 = []$.
 %
@@ -895,363 +687,6 @@ By induction hypothesis on $c_2$ and let $\config{m_2, [\eskip]^l, t_2, w_2]}$ b
 %
 we know $t_2$ is well-formed.
 %
-\\
-\todo{
-\begin{lem}[Trace Uniqueness]
-\label{lem:tunique}
-Given a program $c$ with a starting memory $m$, 
-for any starting trace $t_1$ and $t_2$, if there exist evaluations
-$$\config{m, c, t_1, []} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
-% 
-$$\config{m, c, t_2, []} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
-%
-then:
-%
-\[
-	t_1' - t_1 = t_2' - t_2
-\]
-\end{lem}
-%
-\begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
-%
-By induction on program $c$, we have following cases:
-%
-\caseL{ $[\assign x \expr]^{l}$}
-%
-From the evaluation rule \rname{assn1} and rule \rname{assn2}, we know there exist evaluations
-$$
-\config{m, [\assign x \expr]^{l}, t_1, w} \to^{*} \config{m[v/x], \eskip, t_1, w}
-$$
-%
-\[
-\config{m, [\assign x \expr]^{l}, t_2, w} \to^{*} \config{m[v/x], \eskip, t_2, w}
-\]
-%
-for starting trace $t_1$ and $t_2$ respectively, where $\config{m,e} \aarrow^{*} v$.
-%
-Since the resulting traces in the 2 evaluations are still $t_1$ and $t_2$, 
-and $t_1 - t_1 = t_2 - t_2 = []$, this case is proved.
-%
-\caseL{$[\assign{x}{\query(\qexpr)}]^{l}$}
-%
-By repeatedly applying the operational semantics rule \rname{query-e}, we know there exist evaluations
-%
-\[
-\config{m, [\assign{x}{\query(\qexpr)}]^{l}, t_1, w} \to^{*} \config{m, [\assign{x}{\query(\qval)}]^{l}, t_1, w}
-\]
-%
-\[
-\config{m, [\assign{x}{\query(\qexpr)}]^{l}, t_2, w} \to^{*} \config{m, [\assign{x}{\query(\qval)}]^{l}, t_2, w}
-\]
-%
-for starting trace $t_1$ and $t_2$ respectively, where $\config{m, \qexpr} \qarrow^{*} \qval$.
-%
-\\
-%
-According to the evaluation rule \rname{query-v}, we then have the following 2 transitions with starting trace $t_1$ and $t_2$ respectively:
-%
-\[
-\config{m, [\assign{x}{\query(\qval)}]^{l}, t_1, w} \to \config{m_1, \eskip, t_1 ++ [(\qval, l, w)], w}
-\]
-%
-\[
-\config{m, [\assign{x}{\query(\qval)}]^{l}, t_2, w} \to \config{m_2, \eskip, t_2 ++ [(\qval, l, w)], w}
-\]
-%
-The resulting traces are $t_1 ++ [(\qval, l, w)]$, and $t_2 ++ [(\qval, l, w)]$. 
-\\
-By unfolding the trace subtraction operation, we have:
-\[
-(t_1 ++ [(\qval, l, w)]) - t_1 = [(\qval, l, w)]
-%
-\land
-%
-(t_2 ++ [(\qval, l, w)]) - t_2 = [(\qval, l, w)]
-\]
-%
-This case is proved.
-%%
-\caseL{$\eif([b]^l, c_1, c_2)$}
-%
-According to the evaluation rule \rname{if}, we know there exist 2 evaluations for $t_1$ and $t_2$ respectively by repeatedly applying the rule \rname{if}: 
-%
-\[
-\config{m, \eif([b]^l, c_1, c_2), t_1, w} \to^{*} \config{m, \eif([v]^l, c_1, c_2), t_1, w} ~ (1)
-\]
-%
-\[
-\config{m, \eif([b]^l, c_1, c_2), t_2, w} \to^{*} \config{m, \eif([v]^l, c_1, c_2), t_2, w} ~ (2)
-\]
-%
-, where $\config{m, b} \barrow^{*} v$ and $v$ is either $\etrue$ or $\efalse$.
-\\
-Considering 2 subcases where $v$ is either $\etrue$ or $\efalse$:
-%
-\subcaseL{$v = \etrue$}
-%
-By applying the evaluation rule \rname{if-t}, we have:
-\[
-\config{m, \eif([\etrue]^l, c_1, c_2), t_1, w} \to \config{m, c_1, t_1, w} ~ (3)
-\]
-%
-\[
-\config{m, \eif([\etrue]^l, c_1, c_2), t_2, w} \to \config{m, c_1, t_2, w} ~ (4)
-\]
-%
-By induction hypothesis on $c_1$ with $m$, $w$ $t_1$ and $t_2$, we know there exist evaluations:
-\[
-	\config{m, c_1, t_1, w} \to^{*} \config{m_1, \eskip, t_1', w_1} ~ (5)
-\]
-%
-\[
-	\config{m, c_1, t_2, w} \to^{*} \config{m_2, \eskip, t_2', w_2} ~ (6)
-\]
-%
-, where $t_1' - t_1 = t_2' - t_2$.
-\\
-According to the evaluations $(1), (3), (5)$ and $(2), (4), (6)$, we have the following 2 evaluations:
-% 
-\[
-	\config{m, \eif([b]^l, c_1, c_2), t_1, w} \to^{*} \config{m_1, \eskip, t_1', w_1}
-\]
-%
-\[
-	\config{m, \eif([b]^l, c_1, c_2), t_2, w} \to^{*} \config{m_2, \eskip, t_2', w_2}
-\]
-%
-Since $t_1' - t_1 = t_2' - t_2$, this sub-case is proved.
-%
-\subcaseL{$v = \efalse$}
-%
-By applying the evaluation rule \rname{if-f}, we have:
-%
-\[
-\config{m, \eif([\efalse]^l, c_1, c_2), t_1, w} \to \config{m, c_2, t_1, w} ~ (3)
-\]
-%
-\[
-\config{m, \eif([\efalse]^l, c_1, c_2), t_2, w} \to \config{m, c_2, t_2, w} ~ (4)
-\]
-%
-By induction hypothesis on $c_2$ with $m$, $w$ $t_1$ and $t_2$, we know there exist evaluations:
-\[
-	\config{m, c_2, t_1, w} \to^{*} \config{m_1', \eskip, t_1'', w_1'} ~ (5)
-\]
-%
-\[
-	\config{m, c_2, t_2, w} \to^{*} \config{m_2', \eskip, t_2'', w_2'} ~ (6)
-\]
-%
-, where $t_1'' - t_1 = t_2'' - t_2$.
-\\
-According to the evaluations $(1), (3), (5)$ and $(2), (4), (6)$, we have the following 2 evaluations:
-% 
-\[
-	\config{m, \eif([b]^l, c_1, c_2), t_1, w} \to^{*} \config{m_1', \eskip, t_1'', w_1'}
-\]
-%
-\[
-	\config{m, \eif([b]^l, c_1, c_2), t_2, w} \to^{*} \config{m_2', \eskip, t_2'', w_2'}
-\]
-%
-Since $t_1'' - t_1 = t_2'' - t_2$, this sub-case is proved.
-%
-\caseL{$c_1; c_2$}
-%
-According to the evaluation rule \rname{seq1}, we have the following 2 evaluations by repeatedly applying \rname{seq1} 
-%
-\[
-\config{m, c_1;c_2, t_1, w} \to^{*} \config{m_1^1, [\eskip]^l;c_2,  t_1^1, w_1^1} ~ (1)
-\]
-%
-%
-\[
-\config{m, c_1;c_2, t_2, w} \to^{*} \config{m_2^1, [\eskip]^l;c_2,  t_2^1, w_2^1} ~ (2)
-\]
-%
-where 
-%
-\[
-	\config{m, c_1, t_1, w} \to^{*} \config{m_1^1, [\eskip]^l, t_1^1, w_1^1]} ~ (3)
-\]
-%
-%
-\[
-\config{m, c_1, t_2, w} \to^{*} \config{m_2^1, [\eskip]^l,  t_2^1, w_2^1} ~ (4)
-\]
-%
-%
-By induction hypothesis on $c_1$ and $(3), (4)$, we know $t_1^1 - t_1 = t_2^1 - t_2 ~ (a)$.
-%
-%
-According to the evaluation rule \rname{seq2}, we have:
-%
-\[
-\config{m_1^1, [\eskip]^l;c_2, t_1^1, w_1^1} \to \config{m_1^1, c_2, t_1^1, w_1^1}
-\]
-%
-\[
-\config{m_2^1, [\eskip]^l;c_2, t_2^1, w_2^1} \to \config{m_2^1, c_2, t_2^1, w_2^1}
-\]
-%
-%
-%
-By induction hypothesis on $c_2$, $t_2^1$ and $t_1^1$ we have the following 2 evaluations 
-%
-\[
-	\config{m_1^1, c_2, t_1^1, w} \to^{*} \config{m_1^2, \eskip, t_1^2, w_1^2]}
-\]
-%
-\[
-	\config{m_2^1, c_2, t_2^1, w} \to^{*} \config{m_2^2, \eskip, t_2^2, w_2^2]}
-\]
-%
-and $t_1^2 - t_1^1 = t_2^2 - t_2^1 ~ (b)$.
-%
-\\
-By $(a)$ and $(b)$, unfolding the trace subtraction operation, we know
-%
-\[
-\exists t_1', t_1'', t_2', t_2''. ~ 
-t_1 ++ t_1' = t_1^1 \land t_1^1 ++ t_1'' = t_1^2 
-\land t_2 ++ t_2' = t_2^1 \land t_2^1 ++ t_2'' = t_2^2 
-\]
-%
-By writing, we have:
-%
-\[
-\exists t_1', t_1'', t_2', t_2''. ~ 
-t_1 ++ t_1' ++ t_1'' = t_1^2 
-\land t_2 ++ t_2' ++ t_2'' = t_2^2 
-\]
-%
-Again, by the definition of trace subtraction, we have:
-%
-\[
-	t_2^2 - t_2 = t_1^2 - t_1
-\]
-%
-This case is proved.
-%
-\caseL{$\ewhile [b]^l \edo c'$}
-%
-According to the \rname{while-b} and \rname{ifw-b} rule, we have following 2 evaluations:
-%
-\[
-	\config{m, \ewhile [b]^l \edo c', t_1, w} \to^{*}
-	\config{m, \eif_w([v]^l, c', \eskip), t_1, w}
-\]
-%
-\[
-	\config{m, \ewhile [b]^l \edo c', t_2, w} \to^{*}
-	\config{m, \eif_w([v]^l, c', \eskip), t_2, w}
-\]
-%
-where $v$ is either $\etrue$ or $\efalse$.
-%
-\subcaseL{$v = \etrue$ }
-%
-By evaluation rule \rname{ifw-true}, we have:
-%
-\[
-	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l \edo c', \eskip), t_1, w} 
-	\to^{*} \config{m, c';\ewhile [b]^l \edo c', t_1, w+l} ~ (w2)
-\]
-%
-\[
-	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l \edo c', \eskip), t_2, w} 
-	\to^{*} \config{m, c';\ewhile [b]^l \edo c', t_2, w+l} ~ (w2)
-\]
-%
-%
-By rule \rname{seq1}, we have the following evaluations:
-%
-\[
-	\config{m, c';\ewhile [b]^l \edo c', t_1, w+l} \to^{*} \config{m', \eskip;\ewhile [b]^l \edo c', t_1', w'} ~ (w3)
-\] 
-%
-%
-\[
-	\config{m, c';\ewhile [b]^l \edo c', t_2, w+l} \to^{*} \config{m', \eskip;\ewhile [b]^l \edo c', t_2', w'} ~ (w3)
-\] 
-%
-, where 
-$\config{m, c', t_1, w+l} \to^{*} \config{m_1', \eskip, t_1', w_1'}$
-and
-$\config{m, c', t_2, w+l} \to^{*} \config{m_2', \eskip, t_2', w_2'}$. 
-%
-\\
-%
-By induction hypothesis on $c'$, we know:
-\[
-t_1' - t_1 = t_2' - t_2.
-\]
-%
-By the rule \rname{seq2}, we have:
-%
-\[
-	\config{m_1', \eskip;\ewhile [b]^l \edo c', t_1', w + l} \to \config{m_1', \ewhile [b]^l \edo c', t_1', w_1'} ~ (w6)
-\]
-%
-\[
-	\config{m_2', \eskip;\ewhile [b]^l \edo c', t_2', w + l} \to \config{m_2', \ewhile [b]^l \edo c', t_2', w_2'} ~ (w6)
-\]
-%
-By the termination of the while loop, we know there exist an evaluation by repeating the evaluation in $(w1), (w2), (w3)$ and $(w6)$:
-%
-\[
-	\config{m_1', \ewhile [b]^l \edo c', t_1', w_1'} \to^{*} \config{m_1^n, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_1^n, w_1^n}
-\]
-%
-\[
-	\config{m_2', \ewhile [b]^l \edo c', t_2', w_2'} \to^{*} \config{m_2^n, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_2^n, w_2^n}
-\]
-%
-By the evaluation $(w5)$ and induction hypothesis on each iteration, we know the resulting trace $t_1^i$ and $t_2^i$ in the evaluation of each iteration $i = 2, \ldots, k$ satisfies:
-%
-\[
-t_1^i - t_1^{i - 1} = t_2^i - t_2^{i - 1}
-\]
-%
-By unfolding the trace subtraction operation, we have:
-%
-\[
-	t_1^n - t_1 = t_2^n - t_2
-\]
-%
-By evaluation rule \rname{ifw-false}, we have:
-%
-\[
-	\config{m_1^n, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_1^n, w_1^n} 
-	\to^{*} \config{m_1^n, \eskip, t_1^n, w_1^n - l}
-\]
-%
-\[
-	\config{m_2^n, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_2^n, w_2^n} 
-	\to^{*} \config{m_2^n, \eskip, t_2^n, w_2^n - l}
-\]
-%
-Since $t_1^n - t_1 = t_2^n - t_2$, this sub-case is proved.
-%
-\subcaseL{$v = \efalse$}
-%
-By evaluation rule \rname{ifw-false}, we have:
-%
-\[
-	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_1, w} 
-	\to^{*} \config{m, \eskip, t_1, w/l}
-\]
-%
-%
-\[
-	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_2, w} 
-	\to^{*} \config{m, \eskip, t_2, w/l}
-\]
-%
-Because $t_1 - t_1 = t_2 - t_2 = []$, this sub-case is proved.
-%
-\end{subproof}
-}
 \\
 According to Lemma~\ref{lem:tunique}, we know
 \[
@@ -1636,6 +1071,69 @@ This sub-case is proved.
 %
 %
 %
+\todo{
+\begin{lem}[While Map Remains Unchanged (Invariant)]
+\label{lem:wunchange}
+Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
+$\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
+\[
+	w = w'
+\]
+\end{lem}
+\begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
+%
+Proof in File: ``lem\_wunchange.tex''
+% \input{lem_wunchange}
+%
+\end{subproof}
+}
+%
+\todo{
+\begin{lem}[Trace is Written Only]
+\label{lem:twriteonly}
+Given a program $c$ with starting trace $t_1$ and $t_2$,
+for arbitrary starting memory $m$ and while map $w$,
+if there exist evaluations
+$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% 
+$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+%
+then:
+%
+\[
+	m_1' = m_2' \land w_1' = w_2'
+\]
+\end{lem}
+%
+\begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
+%
+Proof in File: ``lem\_twriteonly.tex''
+% \input{lem_twriteonly}
+\end{subproof}
+}
+%
+\todo{
+\begin{lem}[Trace Uniqueness]
+\label{lem:tunique}
+Given a program $c$ with a starting memory $m$, 
+for any starting trace $t_1$ and $t_2$, if there exist evaluations
+$$\config{m, c, t_1, []} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% 
+$$\config{m, c, t_2, []} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+%
+then:
+%
+\[
+	t_1' - t_1 = t_2' - t_2
+\]
+\end{lem}
+%
+\begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
+%
+Proof in File: {\tt ``lem\_tunique.tex''}
+% \input{lem_tunique}
+\end{subproof}
+}
 %
 \subsection{ Trace-based Adaptivity}
 %
