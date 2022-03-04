@@ -1358,6 +1358,80 @@ For the other directions, according to the hypothesis $(4)$ and $(a)$ proved abo
 This case is proved.
 %
 \caseL{$\ewhile [b]^l \edo c'$}
+%
+According to the \rname{while-b} and \rname{ifw-b} rule, we have following evaluation:
+\[
+	\config{m, \ewhile [b]^l \edo c', [], []} \to^{*}
+	\config{m, \eif_w([v]^l, c', \eskip), [], []} ~ (w1)
+\]
+%
+where $v$ is either $\etrue$ or $\efalse$.
+%
+\subcaseL{$v = \etrue$ }
+%
+By evaluation rule \rname{ifw-true}, we have:
+%
+\[
+	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l \edo c', \eskip), [], []} 
+	\to^{*} \config{m, c';\ewhile [b]^l \edo c', [], [l \mapsto 1]} ~ (w2)
+\]
+%
+By rule \rname{seq1}, we have the following evaluation:
+%
+\[
+	\config{m, c';\ewhile [b]^l \edo c', [], [l \mapsto 1]} \to^{*} \config{m', \eskip;\ewhile [b]^l \edo c', t', w'} ~ (w3)
+\] 
+%
+where $\config{m, c', [], [l \mapsto 1]} \to^{*} \config{m', \eskip, t', w'} ~ (w4)$. 
+%
+By induction hypothesis on $c'$ and the evaluation $(w4)$, we know $w' = w + l$. Then we have $\config{m, c', t, w+l} \to^{*} \config{m', \eskip, t', w+l} ~ (w5)$.
+%
+By the rule \rname{seq2}, we have:
+%
+\[
+	\config{m', \eskip;\ewhile [b]^l \edo c', t', w + l} \to \config{m', \ewhile [b]^l \edo c', t', w + l} ~ (w6)
+\]
+%
+By the termination of the while loop, we know there exist an evaluation by repeating the evaluation in $(w1), (w2), (w3)$ and $(w6)$:
+%
+\[
+	\config{m', \ewhile [b]^l \edo c', t', w + l} \to^{*} \config{m', \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t'', w''}
+\]
+%
+By the evaluation $(w5)$, we know in the evaluation of each iterations, the resulting while map is always $w + l$. So we have $w'' = w + l$.
+%
+By evaluation rule \rname{ifw-false}, we have:
+%
+\[
+	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t'', w + l} 
+	\to^{*} \config{m, \eskip, t, (w + l)/l}
+\]
+%
+By the hypothesis that $l \notin Keys(w)$, unfolding the $(w + l)/l$ operation, we have:
+%
+\[
+	w = (w + l)/l.
+\]
+%
+This sub-case is proved.
+%
+\subcaseL{$v = \efalse$}
+%
+By evaluation rule \rname{ifw-false}, we have:
+%
+\[
+	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t, w} 
+	\to^{*} \config{m, \eskip, t, w/l}
+\]
+%
+By the hypothesis that $l \notin Keys(w)$, unfolding the $w/l$ operation, we have:
+%
+\[
+	w = w/l.
+\]
+%
+This sub-case is proved.
+%
 \end{proof}
 }
 
