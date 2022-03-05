@@ -3851,10 +3851,42 @@ It is sufficient to show that:
 \]
 \\
 \todo{
-	\begin{defn}[Intermediate Graph $\midG(\ssa(c))$].
+	\begin{defn}[Intermediate Graph $\midG$].
 	\label{def:midgraph}
 	\\
 	$\mathcal{AV}$ : Annotated Variables based on program execution
+	\\
+	Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
+	a database $D$, a starting memory $\ssa{m}$,
+	s.t., $\Gamma \vdash_{\Mtrix_c, \flag_c} \ssa{c}$,
+	the intermediate graph $\midG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges, \flags)$ is defined as: \\
+\[
+\begin{array}{rlcl}
+	\text{Vertices} &
+	\vertxs & := & \left\{ 
+	\av \in \mathcal{AV} \middle\vert
+	\exists \ssa{m'},  w', t_{q}, t_{var}.  ~ s.t., ~  
+	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, t_{q}, t_{var}, w' }
+	\land \av \in t_{var}
+	\right\}
+	\\
+	\text{Directed Edges} &
+	\edges & := & 
+	\left\{ 
+	(\av, \av') \in \mathcal{AV} \times \mathcal{AV} 
+	~ \middle\vert ~
+	\mathsf{flowsTo}(\av, \av', \ssa{c},\ssa{m},D) 
+	\right\}
+	\\
+	\text{Flags} &
+	\flag & := & 
+	\big\{(\ssa{x}, n)  \in \vertxs \times \{0, 1, 2\} 
+	\mid 
+	(\ssa{x} = \avar(i) \land n = \flag_c(i)); ~
+	i = 1, \ldots, N
+	\big\}
+\end{array}
+\]
 	\end{defn}
 \begin{subproof}
 Proving by Definition~\ref{def:midgraph}.
