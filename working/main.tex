@@ -808,9 +808,9 @@ Proof in File: {\tt ``lem\_twriteonly.tex''}
 \label{lem:tunique}
 Given a program $c$ with a starting memory $m$, 
 for any starting trace $t_1$ and $t_2$, if there exist evaluations
-$$\config{m, c, t_1, []} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
 % 
-$$\config{m, c, t_2, []} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
 %
 then:
 %
@@ -990,7 +990,9 @@ $(v_1, \ldots, v_n)$ is the vertices sequence of this path.
 \jl{Length of the path $p$ is the number of vertices in its vertices sequence $(v_1, \ldots, v_n)$, i.e., $\len(p) = n$.}
 \end{defn}
 %
-\jl{We use $\paths(G)$ to denote the finite set containing all paths $p$ in a directed acyclic graph $G = (\vertxs, \edges)$.}
+\jl{We use $\paths(G)$ to denote the finite set containing all paths $p$ in a directed acyclic graph $G = (\vertxs, \edges)$;
+and $p_{\aq_1 \to \aq_2} \in \paths(G)$ where $\aq_1, \aq_2 \in \vertxs$ denotes the path from vertex $\aq_1$ to $\aq_2$ .
+}
 %
 %
 %
@@ -3721,9 +3723,16 @@ for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
     \item every vertex $v \in \vertxs$ appears in this vertices sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
 \end{itemize}
 $(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
+\\
+\jl{
+Length of this finite walk $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = n$.
+}
 \end{defn}
 
-\jl{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, we use $\walks(G)$ to denote a set containing all finite walks $k$ in $G$.}
+\jl{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, 
+we use $\walks(G)$ to denote a set containing all finite walks $k$ in $G$;
+and $k_{v_1 \to v_2} \in \walks(G)$where $v_1, v_2 \in \vertxs$ denotes the walk from vertex $v_1$ to $v_2$ .
+}
 % \begin{defn}[walk set ($\walks$)].
 % \\
 % Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, the walk set of $G$, ($\walks(G)$) is defined as a set containing all finite walks $k$ in $G$.
@@ -3764,38 +3773,6 @@ the program-based adaptivity for $c$ is defined as%
 \left\{ \qlen(k)\ \mid \  k\in \walks(\progG(\ssa{c}))\right \}.
 \]
 }
-% \[
-% Adapt_{\bf{prog}}(c) 
-% := \max
-% \left\{\pathssearch(\progG(\ssa{c}), s, t)\ |\ \progG(\ssa{c}) = \big( V, E, W, \flag \big) \land s, t \in V \right\}.
-% \]
-%
-% \[
-% \pathssearch(\progG, s, t) := 
-% \max_{p \in \paths(s, t) }
-% \left\{
-% \begin{array}{c}
-% \sum\limits_{ c \in \mathcal{C}(p)}
-% \{|q|*\text{maxflow}(c) 
-% ~ | ~ q \in \text{query nodes on c}\}
-% \\
-% +
-% \sum\limits_{v \in p}
-% \left\{
-% w 
-% \left|
-% \begin{array}{c}
-% (v, w) \in W_{aprox} \land v \in p 
-% \\
-% \land v \text{ is a query node} 
-% \\
-% \land v \text{ isn't on any circle}
-% \end{array}
-% \right .
-% \right\}
-% \end{array}
-%  \right\}.
-% \]
 \end{defn}  
 %
 % By specifying the departure and destination vertices $s$ and $t$, the $\pathssearch(\progG, s, t)$ algorithm will 
@@ -3870,6 +3847,133 @@ It is sufficient to show that:
 	\exists k \in \walks(\progG(\ssa{c})) \land 
 	\len(p) \leq \qlen(k)
 \]
+\\
+\todo{
+	\begin{defn}[Intermediate Graph $\midG(\ssa(c))$].
+	\label{def:midgraph}
+	\\
+	$\mathcal{AV}$ : Annotated Variables based on program execution
+	\end{defn}
+\begin{subproof}
+Proving by Definition~\ref{def:midgraph}.
+\end{subproof}
+}
+\\
+\todo{
+	\begin{lem}[Injective Mapping of vertices from $\traceG(\ssa{c})$ to $\midG(\ssa{c})$].
+	\label{lem:injv_trace_to_mid}
+	\\
+	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+	\\
+	$\midG(\ssa{c}) = \{\midV, \midE, \midF\}$
+\[
+	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
+	~ \forall \aq \in \traceV. ~ 
+	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+\]
+	\end{lem}
+}
+\\
+\todo{
+	\begin{lem}[One-on-One Mapping from $\edges$ of $\traceG(\ssa{c})$ to $\paths(\midG(\ssa{c}))$].
+	\label{lem:bie_trace_to_mid}
+	\\
+	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+	\\
+	$\midG(\ssa{c}) = \{\midV, \midE, \midF\}$
+	\\
+	An injective function $ f: \traceV \to \midV$ s.t.,
+	$\forall \aq \in \traceV. ~ \midF(f(\aq)) = 2$ 
+\[
+	\forall e = (\aq_1, \aq_2) \in \traceE. ~ 
+	\exists p_{f(\aq_1) \to f(\aq_2)} \in \paths(\midG(\ssa{c}))
+\]
+	\end{lem}
+\begin{subproof}
+Proving by Lemma~\ref{lem:injv_trace_to_mid} and Definition~\ref{def:midgraph} and acyclic property of $\traceG$ and $\midG$.
+\end{subproof}
+}
+\\
+\todo{
+	\begin{lem}[Surjective Mapping of Vertices from $\midG(\ssa{c})$ to $\progG(\ssa{c})$].
+	\label{lem:sujv_mid_to_prog}
+	\\
+	$\midG(\ssa{c}) = \{\midV, \midE, \midF\}$
+	\\
+	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
+	\\
+	$\exists ~ \kw{surjective} ~ f: \mathcal{AV} \to \mathcal{SVAR}.$
+	%
+\[
+	\forall \av \in \midV. ~ 
+	f(\av) \in \progV \land \progF(f(\av)) = \midF(\av) \land
+	|\kw{image}(f(\av))| \leq W(f(\av))
+\]
+\end{lem}
+\begin{subproof}
+Proving by Definition~\ref{def:midgraph}.
+\end{subproof}
+}
+\\
+\todo{
+	\begin{lem}[Surjective Mapping from $\edges$ of $\midG(\ssa{c}))$ to $\edges$ of $\progG(\ssa{c})$].
+	\label{lem:suje_mid_to_prog}
+	\\
+	$\midG(\ssa{c}) = \{\midV, \midE, \midF\}$
+	\\
+	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
+	\\
+	A surjective function $f: \progV \to \midV$ s.t.,
+	$\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
+	%
+\[
+	\exists ~ \kw{surjective} ~ g: \midE \to \progE. ~
+	\forall e_{mid} = (\av_1, \av_2) \in \midE. 
+	\exists e_{prog} = ({f(\av_1) \to f(\av_2)}) \in \progE
+\]
+	\end{lem}
+\begin{subproof}
+Proving by Lemma~\ref{lem:sujv_mid_to_prog}.
+\end{subproof}
+}
+\\
+\todo{
+	\begin{lem}[Surjective Mapping from $\paths(\midG(\ssa{c}))$ to $\walks(\progG(\ssa{c}))$].
+	\label{lem:sujpathwalk_mid_to_prog}
+	\\
+	$\midG(\ssa{c}) = \{\midV, \midE, \midF\}$
+	\\
+	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
+	\\
+	A surjective function $f: \progV \to \midV$ s.t.,
+	$\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
+	\\
+	A surjective function $g: \midE \to \progE$ s.t.,
+	$\forall e_{mid} = (\av_1, \av_2) \in \midE. 
+	\exists e_{prog} = ({f(\av_1) \to f(\av_2)}) \in \progE$
+	\\
+	$\exists ~ \kw{surjective} ~ h: \paths(\midG(\ssa{c})) \to \walks(\progG(\ssa{c}))$ s.t.:
+	%
+\[
+	\forall p_{\av_1 \to \av_2} \in \paths(\midG(\ssa{c})). ~
+	\exists k_{f(\av_1) \to f(\av_2)} \in \walks(\progG(\ssa{c})) s.t.:
+\]
+\item $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+%
+\item $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+%
+\item $\forall \av \in p_{\av_1 \to \av_2}. ~ 
+\kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}
+$
+	\end{lem}
+%
+\begin{subproof}
+Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\midG(\ssa{c}))$, and Lemma~\ref{lem:suje_mid_to_prog} and Lemma~\ref{lem:sujv_mid_to_prog}.
+\caseL{ $l = 1$: }
+\caseL{ $l = l' + 1$, $l' \geq 1$: }
+\end{subproof}
+}
+\\
 Let $\forall p, \ssa{m}, D$ be arbitrary... s.t. $(e\ldots, e_{n-1})$, $(a\ldots a_n)$ be the Vsequence....
 Unfold the definition of $\len(p)$ and $\qlen(k)$, it is suffice to show:
 $\exists k ~ s.t., ~ n \leq \len\{ v \mid v \in (v_1, \ldots, v_{s}) \land \flag(v) = 1 \} $
