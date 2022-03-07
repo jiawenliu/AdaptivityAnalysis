@@ -799,7 +799,7 @@ then:
 \begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
 %
 Proof in File: {\tt ``lem\_twriteonly.tex''}
-% \input{lem_twriteonly}
+\input{lem_twriteonly}
 \end{subproof}
 }
 %
@@ -2943,6 +2943,7 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 \end{array}
 \end{equation}
 %
+\todo{
 Given a program  $\ssa{c}$ with its assigned variables $\avar$,
 and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\avar$ 
 (i.e., $\ssa{x} = \avar(i)$ and $\ssa{y} = \avar(j)$),
@@ -2978,6 +2979,7 @@ $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is de
 where $FV(\expr)$ and $FV(\qexpr)$ is the set of free variables in 
 expression $\expr$ and query expression $\qexpr$ respectively.
 \end{defn}
+}
 }
 %
 %
@@ -3896,6 +3898,132 @@ It is sufficient to show that:
 \end{defn}
 }
 \\
+\todo{
+\begin{defn}[Variable May Dependency].
+\label{def:var_dep}
+\\
+One annotated variable $\av_2 = (\ssa{x}_2,l_2, w_2)$ may depend on another 
+$\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $c$,
+with a starting memory $m$ and a hidden database $D$, denoted as 
+%
+$\vardep(\av_1, \av_2, c, m, D)$ is defined below. 
+%
+\[
+\exists m_1,m_3,t_1,t_3,c_2,v_1.
+\\
+\left (
+  \begin{array}{l}   
+	\config{m, c, [], [], []} \rightarrow^{*} 
+	\config{m_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; c_2, t^q_1, t_1, w_1} 
+	\rightarrow^{\textbf{ssa-assn2}} 
+	\\ 
+	\config{m_1[v_1/\ssa{x}_1], c_2, t^q_1, t_1++[\av_1], w_1} 
+	\rightarrow^{*} \config{m_3, \eskip, t^q_3, t_3,w_3}
+	 \\ 
+	 \bigwedge
+	 \left( 
+	 \begin{array}{l}
+		\av_2 \in (t_3 - (t_1 ++ [\av_1])) 
+		\\
+		\implies 
+		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.
+		\config{m_1[v/\ssa{x}_1], {c_2}, t^q_3, t_1 ++ [\av_1], w_1} 
+		\\ 
+		\quad \quad 
+		\rightarrow^{*}
+		(\config{m_3', \eskip, t^{q'}_3, t_3', w_3'} 
+		\land 
+		\av_2 \not \in (t_3'-(t_1 ++ [\av_1])))
+	\end{array} 
+	\right)
+	\\
+	\bigwedge
+	\left( 
+    \begin{array}{l}
+		\av_2 \not\in (t_3 - (t_1 ++ [\av_1]))
+	  	\\
+	  	\implies 
+		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
+		\config{m_1[v/\ssa{x}_1], {c_2}, t^q_3, t_1 ++ [\av_1], w_1}
+		\\ 
+		\quad \quad 
+		\rightarrow^{*} 
+		(\config{m_3', \eskip, t^{q'}_3, t_3', w_3'} 
+		\land 
+		\av_2  \in (t_3' - (t_1 ++ [\av_1])))
+	\end{array} 
+	\right)
+\end{array}
+\right )
+\]
+\end{defn}
+}
+%
+\\
+\todo{
+	\begin{lem}[$\vardep$ is Transitive].
+	\label{lem:vardep_trans}
+	\\
+	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+	\\
+	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+\[
+	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
+	~ \forall \aq \in \traceV. ~ 
+	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+\]
+	\end{lem}
+}
+\\
+%
+\todo{
+	\begin{lem}[$\flowsto$ is Transitive].
+	\label{lem:flowsto_trans}
+	\\
+	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+	\\
+	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+\[
+	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
+	~ \forall \aq \in \traceV. ~ 
+	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+\]
+	\end{lem}
+}
+\\
+%
+\todo{
+	\begin{lem}[$\qdep$ Implies $\vardep$].
+	\label{lem:querydep_vardep}
+	\\
+	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+	\\
+	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+\[
+	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
+	~ \forall \aq \in \traceV. ~ 
+	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+\]
+	\end{lem}
+}
+\\
+%
+\todo{
+	\begin{lem}[$\vardep$ Implies \flowsto].
+	\label{lem:vardep_flows}
+	\\
+	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+	\\
+	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+\[
+	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
+	~ \forall \aq \in \traceV. ~ 
+	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+\]
+	\end{lem}
+}
+\\
+%
 \todo{
 	\begin{lem}[Injective Mapping of vertices from $\traceG$ to $\midG$].
 	\label{lem:injv_trace_to_mid}

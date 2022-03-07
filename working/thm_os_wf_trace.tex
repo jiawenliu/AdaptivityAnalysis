@@ -241,7 +241,7 @@ This case is proved.
 According to the \rname{while-b} and \rname{ifw-b} rule, we have following evaluation:
 \[
 	\config{m, \ewhile [b]^l \edo c', t, w} \to^{*}
-	\config{m, \eif_w([v]^l, c', \eskip), t, w} ~ (w1)
+	\config{m, \eif_w([v]^l, c';\ewhile [b]^l, 2 \edo c', \eskip), t, w} ~ (w1)
 \]
 %
 where $\config{m, b} \barrow^{*} v$ and $v$ is either $\etrue$ or $\efalse$.
@@ -252,7 +252,7 @@ By evaluation rule \rname{ifw-true}, we have:
 %
 \[
 	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l, 2 \edo c', \eskip), t, w} 
-	\to^{*} \config{m, c';\ewhile [b]^l \edo c', t, [l \mapsto 1]} ~ (w2)
+	\to^{*} \config{m, c';\ewhile [b]^l, 2 \edo c', t, [l \mapsto 1]} ~ (w2)
 \]
 %
 By rule \rname{seq1}, we have the following evaluation:
@@ -262,22 +262,24 @@ By rule \rname{seq1}, we have the following evaluation:
 \] 
 %
 where $\config{m, c', t, [l \mapsto 1]} \to^{*} \config{m', \eskip, t', w'} ~ (w4)$. 
+\\
 %
 By induction hypothesis on $c'$ and the evaluation $(w4)$, we know $t' - t$ is well-formed.
 \\
 By the rule \rname{seq2}, we have:
 %
 \[
-	\config{m', \eskip;\ewhile [b]^l, 2 \edo c', t', w'} \to \config{m', \ewhile [b]^l, 2 \edo c', t', w'} ~ (w6)
+	\config{m', \eskip;\ewhile [b]^l, 2 \edo c', t', w'} \to \config{m', \ewhile [b]^l, 2 \edo c', t', w'} ~ (w5)
 \]
 %
-By the termination of the while loop, we know there exist an evaluation by repeating the evaluation in $(w1), (w2), (w3)$ and $(w6)$:
+By the termination of the while loop, we know there exist an evaluation by repeating the evaluation in $(w1), (w2), (w3)$ and $(w5)$:
 %
 \[
 	\config{m', \ewhile [b]^l, 2 \edo c', t', w'} \to^{*} \config{m^n, \eif_w([\efalse]^l, c';\ewhile [b]^l, n + 1, \edo c', \eskip), t^n, w^n}
 \]
 %
-By the evaluation $(w5)$, we know for every resulting trace $t^i$ in the evaluation of each iteration $i = 2, \ldots, n$,
+By the conclusion from $(w3)$ and $(w4)$, i.e., $(t' - t)$ is well-formed, 
+we know for every resulting trace $t^i$ in the evaluation of each iteration $i = 2, \ldots, n$, where $n \geq 1$,
 the following invariant holds:
 \\
 $t^i - t^{i - 1}$ is well formed.
@@ -286,12 +288,13 @@ $t^i - t^{i - 1}$ is well formed.
 By evaluation rule \rname{ifw-false}, we have:
 %
 \[
-	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l, n + 1 \edo c', \eskip), t^n, w + l} 
-	\to^{*} \config{m, \eskip, t^n, (w + l)/l}
+	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l, n + 1 \edo c', \eskip), t^n, w^n} 
+	\to^{*} \config{m, \eskip, t^n, w^n/l}
 \]
 %
 %
 It is sufficient to show $(t^n - t)$ is well-formed.
+\\
 %
 Unfolding the definition~\ref{def:wf_trace}, it is sufficient to show that the trace $(t^n - t)$ holds both the \emph{Uniqueness} and \emph{Ordering} property.
 \\
