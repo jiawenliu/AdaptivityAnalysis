@@ -185,27 +185,30 @@ where
 %
 By induction hypothesis on $c_1$ and $(3), (4)$, we know $t_1^1 - t_1 = t_2^1 - t_2 ~ (a)$.
 %
+\\
 %
-According to the evaluation rule \rname{seq2}, we have:
+By Lemma~\ref{lem:twriteonly}, we know $m_1^1= m_2^1$ and $w_1^1= w_2^1$.
+%
+%
+According to the evaluation rule \rname{seq2}, let $m^1 = m_1^1= m_2^1$ and $w^1 = w_1^1= w_2^1$, we have:
 %
 \[
-\config{m_1^1, [\eskip]^l;c_2, t_1^1, w_1^1} \to \config{m_1^1, c_2, t_1^1, w_1^1}
+\config{m^1, [\eskip]^l;c_2, t_1^1, w^1} \to \config{m^1, c_2, t_1^1, w^1}
 \]
 %
 \[
-\config{m_2^1, [\eskip]^l;c_2, t_2^1, w_2^1} \to \config{m_2^1, c_2, t_2^1, w_2^1}
+\config{m^1, [\eskip]^l;c_2, t_2^1, w^1} \to \config{m^1, c_2, t_2^1, w^1}
 \]
 %
 %
-%
-By induction hypothesis on $c_2$, $t_2^1$ and $t_1^1$ we have the following 2 evaluations 
+By induction hypothesis on $c_2$, $m^1$, $w^1$, $t_2^1$ and $t_1^1$ we have the following 2 evaluations 
 %
 \[
-	\config{m_1^1, c_2, t_1^1, w} \to^{*} \config{m_1^2, \eskip, t_1^2, w_1^2]}
+	\config{m^1, c_2, t_1^1, w^1} \to^{*} \config{m_1^2, \eskip, t_1^2, w_1^2]}
 \]
 %
 \[
-	\config{m_2^1, c_2, t_2^1, w} \to^{*} \config{m_2^2, \eskip, t_2^2, w_2^2]}
+	\config{m^1, c_2, t_2^1, w^1} \to^{*} \config{m_2^2, \eskip, t_2^2, w_2^2]}
 \]
 %
 and $t_1^2 - t_1^1 = t_2^2 - t_2^1 ~ (b)$.
@@ -241,12 +244,12 @@ According to the \rname{while-b} and \rname{ifw-b} rule, we have following 2 eva
 %
 \[
 	\config{m, \ewhile [b]^l \edo c', t_1, w} \to^{*}
-	\config{m, \eif_w([v]^l, c', \eskip), t_1, w}
+	\config{m, \eif_w([v]^l, c'; \ewhile [b]^l, 2 \edo c', \eskip), t_1, w}
 \]
 %
 \[
 	\config{m, \ewhile [b]^l \edo c', t_2, w} \to^{*}
-	\config{m, \eif_w([v]^l, c', \eskip), t_2, w}
+	\config{m, \eif_w([v]^l, c'; \ewhile [b]^l, 2 \edo c', \eskip), t_2, w}
 \]
 %
 where $v$ is either $\etrue$ or $\efalse$.
@@ -256,32 +259,34 @@ where $v$ is either $\etrue$ or $\efalse$.
 By evaluation rule \rname{ifw-true}, we have:
 %
 \[
-	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l \edo c', \eskip), t_1, w} 
-	\to^{*} \config{m, c';\ewhile [b]^l \edo c', t_1, w+l} ~ (w2)
+	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l, 2 \edo c', \eskip), t_1, w} 
+	\to^{*} \config{m, c';\ewhile [b]^l , 2 \edo c', t_1, w+l} ~ (w2)
 \]
 %
 \[
-	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l \edo c', \eskip), t_2, w} 
-	\to^{*} \config{m, c';\ewhile [b]^l \edo c', t_2, w+l} ~ (w2)
+	\config{m, \eif_w([\etrue]^l, c';\ewhile [b]^l, 2 \edo c', \eskip), t_2, w} 
+	\to^{*} \config{m, c';\ewhile [b]^l, 2 \edo c', t_2, w+l} ~ (w2')
 \]
 %
 %
 By rule \rname{seq1}, we have the following evaluations:
 %
 \[
-	\config{m, c';\ewhile [b]^l \edo c', t_1, w+l} \to^{*} \config{m', \eskip;\ewhile [b]^l \edo c', t_1', w'} ~ (w3)
+	\config{m, c';\ewhile [b]^l, 2 \edo c', t_1, w+l} \to^{*} \config{m_1', \eskip;\ewhile [b]^l, 2 \edo c', t_1', w_1'}
+	~ (w3)
 \] 
 %
 %
 \[
-	\config{m, c';\ewhile [b]^l \edo c', t_2, w+l} \to^{*} \config{m', \eskip;\ewhile [b]^l \edo c', t_2', w'} ~ (w3)
+	\config{m, c';\ewhile [b]^l , 2 \edo c', t_2, w+l} \to^{*} \config{m_2', \eskip;\ewhile [b]^l, 2 \edo c', t_2', w_2'}
+	~ (w3')
 \] 
 %
 , where 
-$\config{m, c', t_1, w+l} \to^{*} \config{m_1', \eskip, t_1', w_1'}$
+$\config{m, c', t_1, w+l} \to^{*} \config{m_1', \eskip, t_1', w_1'} ~ (w4)$
 and
-$\config{m, c', t_2, w+l} \to^{*} \config{m_2', \eskip, t_2', w_2'}$. 
-%
+$\config{m, c', t_2, w+l} \to^{*} \config{m_2', \eskip, t_2', w_2'} ~ (w4')$. 
+%%
 \\
 %
 By induction hypothesis on $c'$, we know:
@@ -289,30 +294,36 @@ By induction hypothesis on $c'$, we know:
 t_1' - t_1 = t_2' - t_2.
 \]
 %
-By the rule \rname{seq2}, we have:
+By Lemma~\ref{lem:twriteonly}, we also have $m_1' = m_2' \land w_1' = w_2'$.
+%
+\\
+%
+By the rule \rname{seq2}, let $m' = m_1' = m_2'$ and $w' = w_1' = w_2'$ we have:
 %
 \[
-	\config{m_1', \eskip;\ewhile [b]^l \edo c', t_1', w + l} \to \config{m_1', \ewhile [b]^l \edo c', t_1', w_1'} ~ (w6)
+	\config{m', \eskip;\ewhile [b]^l \edo c', t_1', w'} \to \config{m', \ewhile [b]^l, 2 \edo c', t_1', w'} ~ (w5)
 \]
 %
 \[
-	\config{m_2', \eskip;\ewhile [b]^l \edo c', t_2', w + l} \to \config{m_2', \ewhile [b]^l \edo c', t_2', w_2'} ~ (w6)
+	\config{m', \eskip;\ewhile [b]^l \edo c', t_2', w'} \to \config{m', \ewhile [b]^l, 2 \edo c', t_2', w'} ~ (w5')
 \]
 %
-By the termination of the while loop, we know there exist an evaluation by repeating the evaluation in $(w1), (w2), (w3)$ and $(w6)$:
+By the termination of the while loop, we know there exist 2 evaluations for $t_1'$ and $t_2'$ respectively,
+by repeating the evaluation in $(w2) - (w5)$, and $(w2') - (w5')$:
 %
 \[
-	\config{m_1', \ewhile [b]^l \edo c', t_1', w_1'} \to^{*} \config{m_1^n, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_1^n, w_1^n}
+	\config{m', \ewhile [b]^l \edo c', t_1', w'} \to^{*} \config{m_1^n, \eif_w([\efalse]^l, c';\ewhile [b]^l, n + 1 \edo c', \eskip), t_1^n, w_1^n}
 \]
 %
 \[
-	\config{m_2', \ewhile [b]^l \edo c', t_2', w_2'} \to^{*} \config{m_2^n, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_2^n, w_2^n}
+	\config{m', \ewhile [b]^l \edo c', t_2', w'} \to^{*} \config{m_2^n, \eif_w([\efalse]^l, c';\ewhile [b]^l, n + 1 \edo c', \eskip), t_2^n, w_2^n}
 \]
 %
-By the evaluation $(w5)$ and induction hypothesis on each iteration, we know the resulting trace $t_1^i$ and $t_2^i$ in the evaluation of each iteration $i = 2, \ldots, k$ satisfies:
+By the evaluation $(w4)$ and induction hypothesis on each iteration, we know the following invariant holds for the resulted trace $t_1^i$ and $t_2^i$ in the evaluation of each iteration $i = 2, \ldots, n$, where $n \geq 1$: 
+%
 %
 \[
-t_1^i - t_1^{i - 1} = t_2^i - t_2^{i - 1}
+(t_1^i - t_1^{i - 1} = t_2^i - t_2^{i - 1}) \land (m_1^i = m_2^i) \land (w_1^i = w_2^i)
 \]
 %
 By unfolding the trace subtraction operation, we have:
@@ -341,13 +352,13 @@ By evaluation rule \rname{ifw-false}, we have:
 %
 \[
 	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_1, w} 
-	\to^{*} \config{m, \eskip, t_1, w/l}
+	\to^{*} \config{m, \eskip, t_1, w - l}
 \]
 %
 %
 \[
 	\config{m, \eif_w([\efalse]^l, c';\ewhile [b]^l \edo c', \eskip), t_2, w} 
-	\to^{*} \config{m, \eskip, t_2, w/l}
+	\to^{*} \config{m, \eskip, t_2, w - l}
 \]
 %
 Because $t_1 - t_1 = t_2 - t_2 = []$, this sub-case is proved.
