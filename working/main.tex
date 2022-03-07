@@ -893,7 +893,7 @@ One annotated query $\aq_2 = ({\qval}_2,l_2, w_2)$ may depend on another query
 $\aq_1 = ({\qval}_1, l_1, w_1)$ in a program $c$,
 with a starting memory $m$ and a hidden database $D$, denoted as 
 %
-$\mathsf{DEP}(\aq_1, \aq_2, c, m, D)$ is defined below. 
+$\qdep(\aq_1, \aq_2, c, m, D)$ is defined below. 
 %
 \[
 \exists m_1,m_3,t_1,t_3,c_2,v_1.
@@ -968,14 +968,14 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 	\edges & := & 
 	\left\{ 
 	(\aq, \aq') \in \mathcal{AQ} \times \mathcal{AQ} 
-	~\middle\vert ~ \mathsf{DEP}(\aq, \aq',c,m,D)
+	~\middle\vert ~ \qdep(\aq, \aq',c,m,D)
 	\right\}
 \end{array}
 \]
 }
 \end{defn}
 The edges are directed. When an annotated query $\aq$ may depend on its previous one $\aq'$, 
-we have the corresponded edge $(\aq, \aq')$ directed from $\aq $ to $\aq'$.
+we have the corresponded edge $(\aq, \aq')$ from $\aq $ to $\aq'$.
 %
 %
 \begin{defn}[Path ($p$)].
@@ -1983,7 +1983,7 @@ by mimicking the corresponding definitions in the {\tt While} language.
 One annotated query $\aq_1 = ({\qval}_1, l_1, w_1)$ may depend on another query $\aq_2 = ({\qval}_2,l_2, w_2)$ in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
 %
-$\mathsf{DEP}_{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
+$\qdep^{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
 %
 %
 \[
@@ -1991,22 +1991,22 @@ $\mathsf{DEP}_{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 \exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
   \left (\begin{array}{l}   
 \config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,
+\config{\ssa{m}_1, [\assign{\ssa{x}}{\query({\qval}_1)}]^{l_1} ; c_2,
   t_1, w_1} 
 \rightarrow^{\textbf{{ssa-query-v}}} 
 \\ 
-\config{\ssa{m}_1[v_1/x], c_2, t_1 ++ [\aq_1], w_1} 
+\config{\ssa{m}_1[v_1/\ssa{x}], c_2, t_1 ++ [\aq_1], w_1} 
 \rightarrow^{*} \config{\ssa{m}_3, \eskip, t_3,w_3}
   % 
  \\ \bigwedge
   \left( 
   \begin{array}{l}
-  \aq_2 \aqin (t_3 - (t_1 ++ [\aq])) 
+  \aq_2 \aqin (t_3 - (t_1 ++ [\aq_1])) 
   % 
   \\
   \implies 
   \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'.  
-  \config{\ssa{m}_1[v/x], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1} 
+  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1} 
   \\ 
   \quad \quad 
   \rightarrow^{*}
@@ -2022,7 +2022,7 @@ $\mathsf{DEP}_{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below.
   	\\
   	\implies 
 	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
-	\config{\ssa{m}_1[v/x], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1}
+	\config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1}
 	\\ 
 	\quad \quad 
 	\rightarrow^{*} 
@@ -2058,7 +2058,7 @@ the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is 
 	\left\{ 
 	(\aq, \aq') \in \mathcal{AQ} \times \mathcal{AQ} 
 	~ \middle\vert ~
-	\mathsf{DEP_{ssa}}(\aq, \aq', \ssa{c},\ssa{m},D) 
+	\qdep^{ssa}(\aq, \aq', \ssa{c},\ssa{m},D) 
 	\right\}
 \end{array}
 \]
@@ -2091,7 +2091,7 @@ then $G(c,D,m) = \traceG(\ssa{c}, \text{D},\ssa{m}) $.
 \end{thm}
 %
 \begin{proof}
- The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\mathsf{DEP}$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\mathsf{DEP_s}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the while language execution, according to the transformation theorem.  
+ The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\qdep$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\qdep^{ssa}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the while language execution, according to the transformation theorem.  
 \end{proof}
 %
 \begin{coro}
@@ -2884,7 +2884,8 @@ For any program $\ssa{c}$, every variable in $\avar(\ssa{c})$ is distinct
 \jl{
 \begin{defn}[Variable Flags ($\flag$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\avar$ (i.e., $\ssa{x} = \avar(i)$), $\flag(i)$ is defined as follows:
+Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\avar$ (i.e., $\ssa{x} = \avar(i)$), 
+$\flag(i) \in \{0, 1, 2\}$ is defined as follows:
 %
 %
 \[
@@ -2934,12 +2935,12 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 \end{array}\right.
 & i = 1, \cdots, |\flag_1|  
 \\
-{\flag \uplus k}(i) & := & 
-\max\big\{ \flag(i), k \big\} 
+{\flag \uplus n}(i) & := & 
+\max\big\{ \flag(i), n \big\} 
 & i = 1, \ldots, |\flag|    
 \\
 \left[ n \right]^k (i) & := &  n
-& i = 1, \ldots, k \quad \land \quad n \in \{0, 1, 2\} 
+& i = 1, \ldots, k ~ \land ~ |\left[ n \right]^k| = k
 \end{array}
 \end{equation}
 %
@@ -2947,15 +2948,26 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 Given a program  $\ssa{c}$ with its assigned variables $\avar$,
 and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\avar$ 
 (i.e., $\ssa{x} = \avar(i)$ and $\ssa{y} = \avar(j)$),
-we say $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$ if and only if $j < i$ and
-the program $\ssa{c}$ contains either 
-a command $\assign{\ssa{x}}{\sexpr}$ or $\assign{\ssa{x}}{\query(\ssa{\qexpr})}$,
-such that $\ssa{y}$ shows up as a free variable in $\sexpr$ or $\ssa{\qexpr}$.
-We use $\flowsto(\ssa{x, y, c})$ to denote $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, which is formally defined in \ref{def:flowsto}.
-We use $FV(\expr)$ and $FV(\qexpr)$ denote the set of free variables in 
-expression $\expr$ and query expression $\qexpr$ respectively.
+we say $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$ if and only if $j < i$ and 
+the value of $\ssa{y}$ directly or indirectly influence the evaluation of the value of $\ssa{x}$ as follows:
 %
-\begin{defn}[Data Flow Direction ($\flowsto$)].
+\begin{itemize}
+	\item (Directly Influence) The program $\ssa{c}$ contains either 
+	a command $\assign{\ssa{x}}{\sexpr}$ or $\assign{\ssa{x}}{\query(\ssa{\qexpr})}$,
+	such that $\ssa{y}$ shows up as a free variable in $\sexpr$ or $\ssa{\qexpr}$.
+	We use $\flowsto(\ssa{x, y, c})$ to denote $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$.
+%
+	\item (Indirectly Influence) The program $\ssa{c}$ contains either a while loop
+	command
+	or if condition command, such that $\ssa{y}$ shows up in the guard
+	and $\ssa{x}$ shows up in the left hand of an assignment command in the body.
+\end{itemize}
+%
+This is formally defined in \ref{def:flowsto}.
+We use $FV(\expr)$, $FV(\sbexpr)$ and $FV(\qexpr)$ denote the set of free variables in 
+expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ respectively.
+%
+\begin{defn}[Data Flows between Assigned Variables ($\flowsto$)].
 \label{def:flowsto}
 \\
 Given a program  $\ssa{c}$ with its assigned variables $\avar$,
@@ -2963,21 +2975,35 @@ and two variables $\ssa{x}$, $\ssa{y}$ s.t., $\ssa{x} = \avar(i)$ and $\ssa{y} =
 $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is defined as:
 %
 \[
-	\flowsto(\ssa{x, y, c}) \triangleq 
-	(j < i) \land \left(
+	\begin{array}{l}
+	\flowsto(\ssa{x, y, c}) \triangleq 	(j < i) \land 
+	\\
+	\left( \bigvee
 	\begin{array}{l}
 	(\exists \sexpr, l . ~ [\assign{\ssa{x}}{\sexpr}]^l \in_{c} \ssa{c} 
 	\land \ssa{y} \in FV(\sexpr))
 	\\
-	\lor 
 	(\exists \ssa{\qexpr}, l. ~ [\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c} 
 	\land \ssa{y} \in FV(\ssa{\qexpr}))
+	\\
+	\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
+		\ewhile [\sbexpr]^l \edo \ssa{c'} \in_{c} \ssa{c}
+		\land 
+		[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
+		\land \ssa{y} \in FV(\sbexpr)
+	\big)
+	\\
+	\big(\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
+		\eif([\sbexpr]^l, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
+		([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
+		[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
+		\land \ssa{y} \in FV(\sbexpr)
+	\big)
 	\end{array}
-	\right)
+	\right).
+	\end{array}
 \]
 %
-where $FV(\expr)$ and $FV(\qexpr)$ is the set of free variables in 
-expression $\expr$ and query expression $\qexpr$ respectively.
 \end{defn}
 }
 }
@@ -3097,11 +3123,6 @@ $\left[\ssa{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 \]
 %
 %
-\todo{
-	\begin{lem}[DEP impleis $\flowsto$].
-	\label{lem:dep_flowsto}
-	\end{lem}
-}
 %
 \subsection{Algorithmic Analysis Rules}
 %
@@ -3899,26 +3920,26 @@ It is sufficient to show that:
 }
 \\
 \todo{
-\begin{defn}[Variable May Dependency].
+\begin{defn}[Variable May Dependency $\vardep$].
 \label{def:var_dep}
 \\
 One annotated variable $\av_2 = (\ssa{x}_2,l_2, w_2)$ may depend on another 
-$\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $c$,
-with a starting memory $m$ and a hidden database $D$, denoted as 
+$\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and a hidden database $D$, denoted as 
 %
-$\vardep(\av_1, \av_2, c, m, D)$ is defined below. 
+$\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
 %
 \[
-\exists m_1,m_3,t_1,t_3,c_2,v_1.
+\exists \ssa{m}_1, \ssa{m}_3, t_1, t_3, \ssa{c}_2,v_1.
 \\
 \left (
   \begin{array}{l}   
-	\config{m, c, [], [], []} \rightarrow^{*} 
-	\config{m_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; c_2, t^q_1, t_1, w_1} 
+	\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} 
+	\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_2, t^q_1, t_1, w_1} 
 	\rightarrow^{\textbf{ssa-assn2}} 
 	\\ 
-	\config{m_1[v_1/\ssa{x}_1], c_2, t^q_1, t_1++[\av_1], w_1} 
-	\rightarrow^{*} \config{m_3, \eskip, t^q_3, t_3,w_3}
+	\config{\ssa{m}_1[v_1/\ssa{x}_1], \ssa{c}_2, t^q_1, t_1++[\av_1], w_1} 
+	\rightarrow^{*} \config{\ssa{m}_3, \eskip, t^q_3, t_3,w_3}
 	 \\ 
 	 \bigwedge
 	 \left( 
@@ -3926,12 +3947,12 @@ $\vardep(\av_1, \av_2, c, m, D)$ is defined below.
 		\av_2 \in (t_3 - (t_1 ++ [\av_1])) 
 		\\
 		\implies 
-		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.
-		\config{m_1[v/\ssa{x}_1], {c_2}, t^q_3, t_1 ++ [\av_1], w_1} 
+		\exists v \in \mathbb{N}, v \neq v_1, \ssa{m}_3', t_3', w_3'.
+		\config{\ssa{m}_1[v/\ssa{x}_1], {\ssa{c}_2}, t^q_3, t_1 ++ [\av_1], w_1} 
 		\\ 
 		\quad \quad 
 		\rightarrow^{*}
-		(\config{m_3', \eskip, t^{q'}_3, t_3', w_3'} 
+		(\config{\ssa{m}_3', \eskip, t^{q'}_3, t_3', w_3'} 
 		\land 
 		\av_2 \not \in (t_3'-(t_1 ++ [\av_1])))
 	\end{array} 
@@ -3943,12 +3964,12 @@ $\vardep(\av_1, \av_2, c, m, D)$ is defined below.
 		\av_2 \not\in (t_3 - (t_1 ++ [\av_1]))
 	  	\\
 	  	\implies 
-		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-		\config{m_1[v/\ssa{x}_1], {c_2}, t^q_3, t_1 ++ [\av_1], w_1}
+		\exists v \in \mathbb{N}, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
+		\config{\ssa{m}_1[v/\ssa{x}_1], {\ssa{c}_2}, t^q_3, t_1 ++ [\av_1], w_1}
 		\\ 
 		\quad \quad 
 		\rightarrow^{*} 
-		(\config{m_3', \eskip, t^{q'}_3, t_3', w_3'} 
+		(\config{\ssa{m}_3', \eskip, t^{q'}_3, t_3', w_3'} 
 		\land 
 		\av_2  \in (t_3' - (t_1 ++ [\av_1])))
 	\end{array} 
@@ -3964,15 +3985,19 @@ $\vardep(\av_1, \av_2, c, m, D)$ is defined below.
 	\begin{lem}[$\vardep$ is Transitive].
 	\label{lem:vardep_trans}
 	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
+	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, t_q, t_{var}, w} $.
+	Then, $\forall \av_1, \av_2, \av_3 \in t_{var}$:
 \[
-	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
-	~ \forall \aq \in \traceV. ~ 
-	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+	\Big(\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \land 
+	\vardep(\av_2, \av_3, \ssa{c}, \ssa{m}, D) \Big)
+	\implies
+	\vardep(\av_1, \av_3, \ssa{c}, \ssa{m}, D)
 \]
 	\end{lem}
+	\begin{subproof}[of Lemma~\ref{lem:vardep_trans}]
+	Proof by unfolding and rewriting the Definition~\ref{def:var_dep}.
+	\end{subproof}
 }
 \\
 %
@@ -3980,15 +4005,17 @@ $\vardep(\av_1, \av_2, c, m, D)$ is defined below.
 	\begin{lem}[$\flowsto$ is Transitive].
 	\label{lem:flowsto_trans}
 	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+	Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$. 
+	Then $\forall x_1, x_2, x_3 \in \avar$
 \[
-	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
-	~ \forall \aq \in \traceV. ~ 
-	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+	\Big(\flowsto(x_1, x_2) \land \flowsto(x_2, x_3) \Big)
+	\implies
+	\flowsto(x_1, x_3)
 \]
 	\end{lem}
+	\begin{subproof}[of Lemma~\ref{lem:flowsto_trans}]
+	Proof by unfolding the Definition~\ref{def:flowsto}.
+	\end{subproof}
 }
 \\
 %
@@ -3996,15 +4023,17 @@ $\vardep(\av_1, \av_2, c, m, D)$ is defined below.
 	\begin{lem}[$\qdep$ Implies $\vardep$].
 	\label{lem:querydep_vardep}
 	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
+	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, t_q, t_{var}, w} $.
+	Then, $\forall \aq_1, \aq_2 \in t_{q}$
 \[
-	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
-	~ \forall \aq \in \traceV. ~ 
-	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+	\qdep(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D) \implies 
+	\vardep(\pi_2(\aq_1), \pi_2(\aq_2), \ssa{c}, \ssa{m}, D)
 \]
 	\end{lem}
+	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
+	Proof by unfolding the Definition~\ref{def:var_dep} and Definition~\ref{def:query_dep}.
+	\end{subproof}
 }
 \\
 %
@@ -4012,15 +4041,17 @@ $\vardep(\av_1, \av_2, c, m, D)$ is defined below.
 	\begin{lem}[$\vardep$ Implies \flowsto].
 	\label{lem:vardep_flows}
 	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
+	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, t_q, t_{var}, w} $.
+	Then, $\forall \av_1, \av_2 \in t_{var}$
 \[
-	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
-	~ \forall \aq \in \traceV. ~ 
-	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+	\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \implies 
+	\flowsto(\pi_1(\av_1), \pi_1(\av_2))
 \]
 	\end{lem}
+	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
+	Proof by showing contradiction based on the Definition~\ref{def:var_dep} and Definition~\ref{def:flowsto}.
+	\end{subproof}
 }
 \\
 %
