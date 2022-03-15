@@ -2036,6 +2036,16 @@ $\qdep^{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 }
 \end{defn}
 %
+\todo{
+\begin{lem}[Inversion of Query May Dependency in SSA Language]
+Given a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and  hidden database $D$, 
+if one annotated query $\aq_1 = ({\qval}_1, l_1, w_1)$ may depend on another query $\aq_2 = ({\qval}_2,l_2, w_2)$, i.e., $\qdep^{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$,
+Then there must be a sequence of variables $x_1, \ldots, x_n$ s.t.,
+ $x_i \in FV(\expr_{i + 1})$, and $\assign{x_{i + 1}}{\expr_{i +1}} \in_{\ssa{c}} \ssa{c}$
+\end{lem}
+}
+%
 %
 \begin{defn}
 [Trace-Based Dependency Graph in SSA Language].
@@ -3855,8 +3865,7 @@ According to the Definition \ref{def:prog_adapt}, we have:
 	\progA(\ssa{c}) 
 	:= \max\left\{ \qlen(k)\ \mid \  k\in \walks(\progG(\ssa{c}))\right \}.
 \]
-For an arbitrary starting memory $m$ and an arbitrary underlying database $D$,
-we also construct a trace-based graph $\traceG(\ssa{c}, \text{D}, \ssa{m}) = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
+%
 According to the Definition \ref{def:trace-based_adapt}, we have the trace-based adaptivity as follows:
 $$
 A(\ssa{c}) = \max \big 
@@ -3865,7 +3874,7 @@ $$
 %
 Then, we need to show:
 \[
-A(\ssa{c}) = \max \big 
+\max \big 
 \{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
 \leq
 \max\left\{ \qlen(k) \ \mid \  k\in \walks(\progG(\ssa{c}))\right \}
@@ -3877,6 +3886,112 @@ It is sufficient to show that:
 	\exists k \in \walks(\progG(\ssa{c})) \land 
 	\len(p) \leq \qlen(k)
 \]
+%
+Taking an arbitrary starting memory $m$ and an arbitrary underlying database $D$,
+we construct a trace-based graph $\traceG(\ssa{c}, \text{D}, \ssa{m}) = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
+%
+\\
+%
+Let $\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$ be the intermediate graph by Definition~\ref{def:midgraph}.
+\\
+By Lemma~\ref{lem:bie_trace_to_mid}, we know:
+\[
+	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
+	\exists p' \in \paths(\midG(\ssa{c},\ssa{m},\text{D})) \land 
+	\len(p) = \len_q(p')
+\]
+%
+Then it is sufficient to show that:
+%
+\[
+	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
+	\exists k \in \walks(\progG(\ssa{c})) \land 
+	\qlen(p) \leq \qlen(k)
+\]
+%
+We prove a stronger statement instead:
+\[
+	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
+	\exists k \in \walks(\progG(\ssa{c})) \land 
+	\qlen(p) = \qlen(k)	
+\]
+%
+%
+By Lemma~\ref{lem:sujv_mid_to_prog}, let $g$ be the surjective function $g: \progV \to \midV$ s.t.:
+%
+$$
+\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) 
+\land |\kw{image}(f(\av))| \leq W(f(\av)).
+$$
+%
+%
+% \item(1) $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+% %
+% \item(2) $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+% %
+% \item(3) $\forall \av \in p_{\av_1 \to \av_2}. ~ 
+% \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}$
+%
+Let $\ssa{m}$ and $D$ be an arbitrary memory and database $D$,
+taking an arbitrary path $p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m})$ with:
+%
+\item Edge sequence: $(e, \ldots, e_{n-1})$
+%
+\item Vertices sequence: $(\av_1, \ldots, \av_n)$.
+\\
+By Lemma~\ref{lem:sujpathwalk_mid_to_prog}, let $h: \paths(\midG(\ssa{c}, \text{D}, \ssa{m})) \to \walks(\progG(\ssa{c}))$ be the surjective function satisfies:
+%
+\[
+	\forall p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
+	\text{ with }
+	\left\{
+	\begin{array}{ll}
+	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
+	\\ 
+	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
+	\end{array}
+	\right.
+\]
+%
+\[
+	\exists k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))
+	\text{ with }
+	\left\{
+	\begin{array}{ll}
+	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
+	\\ 
+	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
+	\end{array}
+	\right.
+\]
+%
+We have the walk:
+$k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))$ with:
+%
+\item Edges sequence: $(g(e), \ldots, g(e_{n-1}) $
+%
+\item Vertices sequence: $(f(\av_1), \ldots, f(\av_{n}))$.
+\\
+It is sufficient to show 
+%
+\[
+	\qlen(p_{\av_1 \to \av_n}) = \qlen(k_{f(\av_1) \to f(\av_n)})
+\]
+%
+Unfold the definition of $\qlen$, it is suffice to show:
+\[
+\len \big( \av \mid \av \in (\av_1, \ldots, \av_n) \land \midF(\av) = 2 \big) 
+= \len \big(f(\av) \mid f(\av) \in (f(\av_1), \ldots, f(\av_{n})) \land \progF(f(\av)\big) = 2)	
+~ (a)
+\]
+%
+By Lemma~\ref{lem:sujv_mid_to_prog}, we know:
+%
+\[
+	\forall \av \in \midV. ~ \midF(\av) = \progF(f(\av)) ~(b)
+\]
+By rewriting $(b)$ in $(a)$, we have this case proved.
+%
 \\
 \todo{
 \begin{defn}[Intermediate Graph $\midG$].
@@ -4196,106 +4311,6 @@ Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\midG(
 \caseL{ $l = l' + 1$, $l' \geq 1$: }
 \end{subproof}
 }
-\\
-Let $\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$ be the intermediate graph by Definition~\ref{def:midgraph}.
-\\
-By Lemma~\ref{lem:bie_trace_to_mid}, we know:
-\[
-	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
-	\exists p' \in \paths(\midG(\ssa{c},\ssa{m},\text{D})) \land 
-	\len(p) = \len_q(p')
-\]
-%
-Then it is sufficient to show that:
-%
-\[
-	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
-	\exists k \in \walks(\progG(\ssa{c})) \land 
-	\qlen(p) \leq \qlen(k)
-\]
-%
-We prove a stronger statement instead:
-\[
-	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
-	\exists k \in \walks(\progG(\ssa{c})) \land 
-	\qlen(p) = \qlen(k)	
-\]
-%
-%
-By Lemma~\ref{lem:sujv_mid_to_prog}, let $g$ be the surjective function $g: \progV \to \midV$ s.t.:
-%
-$$
-\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) 
-\land |\kw{image}(f(\av))| \leq W(f(\av)).
-$$
-%
-%
-% \item(1) $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
-% %
-% \item(2) $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
-% %
-% \item(3) $\forall \av \in p_{\av_1 \to \av_2}. ~ 
-% \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}$
-%
-Let $\ssa{m}$ and $D$ be an arbitrary memory and database $D$,
-taking an arbitrary path $p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m})$ with:
-%
-\item Edge sequence: $(e, \ldots, e_{n-1})$
-%
-\item Vertices sequence: $(\av_1, \ldots, \av_n)$.
-\\
-By Lemma~\ref{lem:sujpathwalk_mid_to_prog}, let $h: \paths(\midG(\ssa{c}, \text{D}, \ssa{m})) \to \walks(\progG(\ssa{c}))$ be the surjective function satisfies:
-%
-\[
-	\forall p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
-	\\ 
-	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
-	\end{array}
-	\right.
-\]
-%
-\[
-	\exists k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
-	\\ 
-	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
-	\end{array}
-	\right.
-\]
-%
-We have the walk:
-$k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))$ with:
-%
-\item Edges sequence: $(g(e), \ldots, g(e_{n-1}) $
-%
-\item Vertices sequence: $(f(\av_1), \ldots, f(\av_{n}))$.
-\\
-It is sufficient to show 
-%
-\[
-	\qlen(p_{\av_1 \to \av_n}) = \qlen(k_{f(\av_1) \to f(\av_n)})
-\]
-%
-Unfold the definition of $\qlen$, it is suffice to show:
-\[
-\len \big( \av \mid \av \in (\av_1, \ldots, \av_n) \land \midF(\av) = 2 \big) 
-= \len \big(f(\av) \mid f(\av) \in (f(\av_1), \ldots, f(\av_{n})) \land \progF(f(\av)\big) = 2)	
-~ (a)
-\]
-%
-By Lemma~\ref{lem:sujv_mid_to_prog}, we know:
-%
-\[
-	\forall \av \in \midV. ~ \midF(\av) = \progF(f(\av)) ~(b)
-\]
-By rewriting $(b)$ in $(a)$, we have this case proved.
 \end{proof}
 %
 %
