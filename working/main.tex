@@ -153,8 +153,16 @@ The key component of the system is a program analysis tool, which provides an up
 ::= & (\qval, l, w)
 \\
 %
-\mbox{Trace} 
-& t & ::= & [] ~|~ {\aq :: t}
+\mbox{Annotated Variable} & \aq  & 
+::= & \jl{(x, l, w)}
+\\
+%
+\mbox{Query Trace} 
+& \qtrace & ::= & [] ~|~ {\aq :: t}
+\\
+%
+\mbox{\todo{Variable Trace}} 
+& \vtrace & ::= & [] ~|~ {\av :: t}
 \\
 %
 \mbox{While Map}
@@ -172,6 +180,9 @@ We use following notations to represent the set of corresponding definitions:
 \\ 
 %
  \mathcal{AQ}  & : & \mbox{Set of Annotated Queries}  
+\\
+%
+ \mathcal{AV}  & : & \mbox{Set of Annotated Variables}  
 \\
 %
 \memdom  & : & \mbox{{Set of Memories}} 
@@ -320,10 +331,23 @@ $\aq_1 \aqgeq \aq_2$  is defined vice versa.
 }
 %
  %% trace
-A trace $t$ is a list of annotated queries accumulated along the execution of the program. 
+A query trace $\qtrace$ is a list of annotated queries accumulated along the execution of the program. 
 A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
 We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
 of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
+%
+\\
+%
+\todo{The annotated variable $\av$.}
+%
+\\
+%
+\todo{A variable trace $\vtrace$.}
+%
+\\
+%
+\todo{Operations on variable trace $\vtrace$.}
+\\
 %
 %
 The evaluation rules for arithmetic and boolean expressions are standard. 
@@ -427,7 +451,7 @@ $\aq_1 \aqneq \aq_2$  is defined vice versa.
 \end{defn}
 }
 %
-
+%
 \jl{
 Given an annotated query $\aq$ and a trace $t$,
 the appending operation $\aq :: t$ is 
@@ -528,9 +552,47 @@ In the rule $\textbf{ifw-true}$, the while map $w$ is updated by $w + l$ because
 When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label $l$ of this while statement by $w - l$ in the rule $\textbf{ifw-false}$.  
 With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition~\ref{def:wf_trace}.
 %
+%
+\todo{
+	\begin{lem}[Determinism of Variable Trace]
+	\end{lem}
+}
+%
+\todo{
+\begin{defn}[Well-formed Variable Trace]
+\label{def:wf_vtrace}
+A trace $t$ is well formed if and only if it preserves the following two properties:
+\begin{itemize}
+	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \aqin t. ~ (\aq_1 \aqneq \aq_2)$
+	%
+	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \aqin t. ~ 
+	(\aq_1 <_{aq} \aq_2) \Longleftrightarrow
+	\exists t_1, t_2, t_3, \aq_1', \aq_2'. ~ s.t.,~ 
+	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t_1 ++ [\aq_1'] ++ t_2 ++ [\aq_2'] ++ t_3 = t$
+\end{itemize}
+\end{defn}
+}
 
+\todo{
+\begin{thm}[Variable Trace Generated from Operational Semantics is Well-formed].
+\label{thm:os_wf_vtrace}
+\\
+Given a program $c$, 
+with arbitrary starting memory $m$, trace $t$ and while map $w$
+if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, w, c \vDash t' - t$.
+% \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
+% there exists the evaluation 
+% $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
+% $t$ is well-formed. }
+\end{thm}
+\begin{proof}
+% \input{thm_os_wf_vtrace}
+\end{proof}
+}
+%
+%
 \jl{
-\begin{defn}[Well-formed Trace]
+\begin{defn}[Well-formed Query Trace]
 \label{def:wf_trace}
 A trace $t$ is well formed if and only if it preserves the following two properties:
 \begin{itemize}
@@ -545,7 +607,7 @@ A trace $t$ is well formed if and only if it preserves the following two propert
 }
 
 \jl{
-\begin{thm}[Trace Generated from Operational Semantics is Well-formed].
+\begin{thm}[Query Trace Generated from Operational Semantics is Well-formed].
 \label{thm:os_wf_trace}
 \\
 Given a program $c$, 
@@ -563,13 +625,15 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 
 \begin{figure}
 	\begin{mathpar}
+	\todo{
 	\boxed{
-	Memory  \times Command \times Trace \times While Map 
+	Memory  \times Command \times QTrace \times VTrace \times While Map 
 	\xrightarrow{}
-	Memory  \times Command \times Trace \times While Map
+	Memory  \times Command \times QTrace \times VTrace \times While Map
 	}
 	\\
-	\boxed{ \config{m, c, t,w} \xrightarrow{} \config{m', c',  t', w'}
+	\boxed{ \config{m, c, t, w} \xrightarrow{} \config{m', c',  t', w'}
+	}
 	}
 	\\
 	\inferrule
@@ -947,6 +1011,27 @@ $\qdep(\aq_1, \aq_2, c, m, D)$ is defined below.
 }
 \end{defn}
 %
+\begin{defn}
+[Variable May Dependency].
+\label{def:var_dep}
+\\
+\jl{
+One annotated variable $\av_2 = ({x}_2,l_2, w_2)$ may depend on another query 
+$\av_1 = ({x}_1, l_1, w_1)$ in a program $c$,
+with a starting memory $m$ and a hidden database $D$, denoted as 
+%
+$\vardep(\av_1, \av_2, c, m, D)$ is defined below. 
+%
+\[
+\exists \qval_1, \qval_2. ~
+\aq_1 = (\qval_1, l_1, w_1)
+\land
+\aq_2 = (\qval_2, l_2, w_2)
+\land 
+\qdep(\aq_1, \aq_2, c, m, D)
+\]
+}
+\end{defn}
 %
 \begin{defn}[Trace-based Dependency Graph].
 \label{def:trace-based_graph}
@@ -958,17 +1043,17 @@ Given a program $c$, a database $D$, a starting memory $m$, the trace-based depe
 \begin{array}{rlcl}
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
-	\aq \in \mathcal{AQ} ~\middle\vert ~ 
-	\exists m',  w', t' ~ s.t., ~  
-	\config{m ,c, [], []}  \to^{*} \config{m' , \eskip, t', w' }
-	\land \aq \aqin t'
+	\av \in \mathcal{AV} ~\middle\vert ~ 
+	\exists \ssa{m'},  w, \qtrace, \vtrace. ~  
+	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, \qtrace, \vtrace, w }
+	\land \av \in \vtrace
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
-	(\aq, \aq') \in \mathcal{AQ} \times \mathcal{AQ} 
-	~\middle\vert ~ \qdep(\aq, \aq',c,m,D)
+	(\av, \av') \in \mathcal{AV} \times \mathcal{AV} 
+	~\middle\vert ~ \vardep(\av, \av',c,m,D)
 	\right\}
 \end{array}
 \]
@@ -1431,12 +1516,16 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 & \aq & ::= & (\qval, l , w )
 \\
 %
+\mbox{Annotated SSA Variable}
+& \av & ::= & (\ssa{x}, l, w)
+\\
+%
 \mbox{Trace} & t 
 & ::= & [] ~|~ {\aq :: t}
 \end{array}
 \]
 \jl{
-We use $\mathcal{SVAR}$ and $\mathcal{SM}$ to denote the set of SSA Variables and SSA Memories respectively.
+We use $\mathcal{SVAR}$, $\mathcal{SAV}$ and $\mathcal{SM}$ to denote the set of SSA Variables, Annotated SSA Variables and SSA Memories respectively.
 }
 %
 %
@@ -2036,6 +2125,29 @@ $\qdep^{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 }
 \end{defn}
 %
+%
+\begin{defn}
+[SSA Variable May Dependency].
+\label{def:svar_dep}
+\\
+\jl{
+One annotated ssa variable $\av_2 = (\ssa{x}_2,l_2, w_2)$ may depend on another one 
+$\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $c$,
+with a starting memory $m$ and a hidden database $D$, denoted as 
+%
+$\vardep^{ssa}(\av_1, \av_2, c, m, D)$ is defined below. 
+%
+\[
+\exists \qval_1, \qval_2. ~
+\aq_1 = (\qval_1, l_1, w_1)
+\land
+\aq_2 = (\qval_2, l_2, w_2)
+\land 
+\qdep^{ssa}(\aq_1, \aq_2, c, m, D)
+\]
+}
+\end{defn}
+%
 \todo{
 \begin{lem}[Inversion of Query May Dependency in SSA Language]
 Given a program $\ssa{c}$,
@@ -2062,18 +2174,18 @@ the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is 
 \begin{array}{rlcl}
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
-	\aq \in \mathcal{AQ} \middle\vert
-	\exists \ssa{m'},  w', t'.  ~ s.t., ~  
-	\config{\ssa{m} ,\ssa{c}, [], []}  \to^{*}  \config{\ssa{m'} , \eskip, t', w' }
-	\land \aq \aqin t'
+	\av \in \mathcal{SAV} \middle\vert
+	\exists \ssa{m'},  w, \qtrace, \vtrace.  ~ 
+	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, \qtrace, \vtrace, w }
+	\land \av \in \vtrace
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
-	(\aq, \aq') \in \mathcal{AQ} \times \mathcal{AQ} 
+	(\av, \av') \in \mathcal{SAV} \times \mathcal{AQ} 
 	~ \middle\vert ~
-	\qdep^{ssa}(\aq, \aq', \ssa{c},\ssa{m},D) 
+	\vardep^{ssa}(\av, \av', \ssa{c},\ssa{m},D) 
 	\right\}
 \end{array}
 \]
@@ -4014,9 +4126,9 @@ By rewriting $(b)$ in $(a)$, we have this case proved.
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
 	\av \in \mathcal{AV} \middle\vert
-	\exists \ssa{m'},  w', t_{q}, t_{var}.  ~ s.t., ~  
-	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, t_{q}, t_{var}, w' }
-	\land \av \in t_{var}
+	\exists \ssa{m'},  w', \qtrace, \vtrace.  ~ s.t., ~  
+	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, \qtrace, \vtrace, w' }
+	\land \av \in \vtrace
 	\right\}
 	\\
 	\text{Directed Edges} &
@@ -4038,67 +4150,6 @@ By rewriting $(b)$ in $(a)$, we have this case proved.
 \]
 \end{defn}
 }
-\\
-\todo{
-\begin{defn}[Variable May Dependency $\vardep$].
-\label{def:var_dep}
-\\
-One annotated variable $\av_2 = (\ssa{x}_2,l_2, w_2)$ may depend on another 
-$\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $\ssa{c}$,
-with a starting memory $\ssa{m}$ and a hidden database $D$, denoted as 
-%
-$\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
-%
-\[
-\exists \ssa{m}_1, \ssa{m}_3, t_1, t_3, \ssa{c}_2,v_1.
-\\
-\left (
-  \begin{array}{l}   
-	\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} 
-	\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_2, t^q_1, t_1, w_1} 
-	\rightarrow^{\textbf{ssa-assn2}} 
-	\\ 
-	\config{\ssa{m}_1[v_1/\ssa{x}_1], \ssa{c}_2, t^q_1, t_1++[\av_1], w_1} 
-	\rightarrow^{*} \config{\ssa{m}_3, \eskip, t^q_3, t_3,w_3}
-	 \\ 
-	 \bigwedge
-	 \left( 
-	 \begin{array}{l}
-		\av_2 \in (t_3 - (t_1 ++ [\av_1])) 
-		\\
-		\implies 
-		\exists v \in \mathbb{N}, v \neq v_1, \ssa{m}_3', t_3', w_3'.
-		\config{\ssa{m}_1[v/\ssa{x}_1], {\ssa{c}_2}, t^q_3, t_1 ++ [\av_1], w_1} 
-		\\ 
-		\quad \quad 
-		\rightarrow^{*}
-		(\config{\ssa{m}_3', \eskip, t^{q'}_3, t_3', w_3'} 
-		\land 
-		\av_2 \not \in (t_3'-(t_1 ++ [\av_1])))
-	\end{array} 
-	\right)
-	\\
-	\bigwedge
-	\left( 
-    \begin{array}{l}
-		\av_2 \not\in (t_3 - (t_1 ++ [\av_1]))
-	  	\\
-	  	\implies 
-		\exists v \in \mathbb{N}, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
-		\config{\ssa{m}_1[v/\ssa{x}_1], {\ssa{c}_2}, t^q_3, t_1 ++ [\av_1], w_1}
-		\\ 
-		\quad \quad 
-		\rightarrow^{*} 
-		(\config{\ssa{m}_3', \eskip, t^{q'}_3, t_3', w_3'} 
-		\land 
-		\av_2  \in (t_3' - (t_1 ++ [\av_1])))
-	\end{array} 
-	\right)
-\end{array}
-\right )
-\]
-\end{defn}
-}
 %
 \\
 \todo{
@@ -4106,8 +4157,8 @@ $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 	\label{lem:vardep_trans}
 	\\
 	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
-	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, t_q, t_{var}, w} $.
-	Then, $\forall \av_1, \av_2, \av_3 \in t_{var}$:
+	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
+	Then, $\forall \av_1, \av_2, \av_3 \in \vtrace$:
 \[
 	\Big(\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \land 
 	\vardep(\av_2, \av_3, \ssa{c}, \ssa{m}, D) \Big)
@@ -4144,8 +4195,8 @@ $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 	\label{lem:querydep_vardep}
 	\\
 	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
-	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, t_q, t_{var}, w} $.
-	Then, $\forall \aq_1, \aq_2 \in t_{q}$
+	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
+	Then, $\forall \aq_1, \aq_2 \in \qtrace$
 \[
 	\qdep(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D) \implies 
 	\vardep(\pi_2(\aq_1), \pi_2(\aq_2), \ssa{c}, \ssa{m}, D)
@@ -4162,8 +4213,8 @@ $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 	\label{lem:vardep_flows}
 	\\
 	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
-	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, t_q, t_{var}, w} $.
-	Then, $\forall \av_1, \av_2 \in t_{var}$
+	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
+	Then, $\forall \av_1, \av_2 \in \vtrace$
 \[
 	\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \implies 
 	\flowsto(\pi_1(\av_1), \pi_1(\av_2))
@@ -4171,7 +4222,7 @@ $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 	\end{lem}
 	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
 	Proof by showing contradiction based on the Definition~\ref{def:var_dep} and Definition~\ref{def:flowsto}.
-	Let $\av_1, \av_2 \in t_{var}$ be 2 arbitrary annotated variables in the variable trace $t_{var}$,
+	Let $\av_1, \av_2 \in \vtrace$ be 2 arbitrary annotated variables in the variable trace $\vtrace$,
 	s.t., $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$.
 	\\
 	Unfolding the $\vardep$ definition, we have:	
