@@ -250,13 +250,14 @@ $\vardep^{ssa}(\av_1, \av_2, c, m, D)$ is defined below.
 \end{defn}
 %
 \begin{defn}
-[Annotated Variables May Dependency in SSA Language].
+[Annotated Variables May Dependency in SSA Language]
+\label{def:avar_dep}.
 \\
 \jl{
 One annotated variable $\av_2 = (\ssa{x}_2, v_2,l_2, w_2)$ may depend on another one  $\av_1 = (\ssa{x}_1, v_1, l_1, w_1)$in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
 %
-$\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
+$\avdep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
 %
 %
 \[
@@ -267,40 +268,40 @@ $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 \config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \qtrace_1,  \vtrace_1, w_1} 
 \rightarrow^{\textbf{ssa-query-v (/ assn-v)}} 
 \\ 
-\config{\ssa{m}_1[v_1/\ssa{x}], c_2, \qtrace_1', \vtrace_1 ++ [(\ssa{x}_1, v_1, l_1, w_1)], w_1} 
+\config{\ssa{m}_1[v_1/\ssa{x}], c_2, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
 \rightarrow^{*} \config{\ssa{m}_3, \eskip, \qtrace_3, \vtrace_3, w_3}
   % 
  \\ \bigwedge
   \left( 
   \begin{array}{l}
-  \av_2 \aqin (t_3 - (t_1 ++ [\aq_1])) 
+  \av_2 \in (\vtrace_3'-(\vtrace_1 ++ [\av_1])) 
   % 
   \\
   \implies 
   \exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'.  
-  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [(\ssa{x}_1, v_1, l_1, w_1)], w_1} 
+  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
   \\ 
   \quad \quad 
   \rightarrow^{*}
   (\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
   \land 
-  \av_2 \not \in (\vtrace_3'-(\vtrace_1 ++ [\av_1])))
+  \av_2 \not\in (\vtrace_3'-(\vtrace_1 ++ [\av_1])))
 \end{array} \right )
 \\\bigwedge
 \left( 
   \begin{array}{l}
-  	\aq_2 \not\aqin (\vtrace_3 - (\vtrace_1 ++ [\aq_1]))
+  	\av_2 \notin (\vtrace_3 - (\vtrace_1 ++ [\av_1]))
   	% 
   	\\
   	\implies 
 	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'. 
-	\config{\ssa{m}_1[v /\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [(\ssa{x}_1, v_1, l_1, w_1)], w_1}
+	\config{\ssa{m}_1[v /\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1}
 	\\ 
 	\quad \quad 
 	\rightarrow^{*} 
 	(\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
 	\land 
-	\av_2  \in (\vtrace_3' - (\vtrace_1 ++ [\aq_1])))
+	\av_2  \in (\vtrace_3' - (\vtrace_1 ++ [\av_1])))
 \end{array} \right )
 \end{array} \right )
 \end{array}
@@ -309,7 +310,8 @@ $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below.
 \end{defn}
 %
 \todo{
-\begin{defn}[Variable May Dependency].
+\begin{defn}[Variable May Dependency]
+\label{def:var_dep}.
 \\
 Given a program $\ssa{c}$ with its assigned variables $\avar_{\ssa{c}}$, 
 one variable $\ssa{x}_2 \in \avar_{\ssa{c}}$ may depend on another variable 
@@ -323,7 +325,7 @@ $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 \land
 \av_2 = (\ssa{x}_2, v_2, l_2, w_2)
 \land 
-\vardep(\av_1, \av_2, c, m, D)
+\avdep(\av_1, \av_2, c, m, D)
 \] 
 %
 %
@@ -357,7 +359,6 @@ $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 % \end{array}
 % % \]
 % where $\ssa{m}(x) = \kw{null}$ if $x \notin \kw{dom}(\ssa{m})$.
-
 \end{defn}
 %
 %
