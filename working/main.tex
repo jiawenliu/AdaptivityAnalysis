@@ -143,30 +143,22 @@ The key component of the system is a program analysis tool, which provides an up
 \mbox{{Labeled Command}} & c & ::= 
 	&  [\eskip]^{l}  ~|~ [\assign x \expr]^{l} ~|~  [\assign x \query(\qexpr)]^{l}
 	\\
- 	& & & ~|~  \ewhile ~ [b]^l ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 
+ 	& & & ~|~  \ewhile ~ [b]^l, n ~ \edo ~ c  ~|~ c;c  ~|~ \eif([\bexpr]^l, c, c) 	 
  \\
 \mbox{Memory} 
 & m & ::= & [] ~|~ (x^{l} \to v) :: m 
 \\
 %
-\mbox{Annotated Query} & \aq  & 
-::= & (\qval, l, w)
+\mbox{Annotated Variable} 
+& \av & ::= & (x, v, l, n)
 \\
 %
-\mbox{Annotated Variable} & \aq  & 
-::= & \jl{(x, l, w)}
+\mbox{Variable Trace} & \vtrace
+& ::= & [] | \av :: \vtrace
 \\
 %
-\mbox{Query Trace} 
-& \qtrace & ::= & [] ~|~ {\aq :: t}
-\\
-%
-\mbox{\todo{Variable Trace}} 
-& \vtrace & ::= & [] ~|~ {\av :: t}
-\\
-%
-\mbox{While Map}
-& w & ::= & [] ~|~  w[l \to n]
+\mbox{Variable Counter} & \vcounter
+& ::= & \mathcal{VAR} \to \mathbb{N}
 \end{array}
 \]
 %
@@ -179,8 +171,6 @@ We use following notations to represent the set of corresponding definitions:
 \mathcal{VAL} & : & \mbox{Set of Values} 
 \\ 
 %
- \mathcal{AQ}  & : & \mbox{Set of Annotated Queries}  
-\\
 %
  \mathcal{AV}  & : & \mbox{Set of Annotated Variables}  
 \\
@@ -195,95 +185,100 @@ We use following notations to represent the set of corresponding definitions:
 \end{array}
 \]
 %
+\todo{
+\begin{defn}[Assigned Variables ($\avar$)]
+Given a program $c$, its assigned variables $\avar_{c}$ is a vector containing all variables newly assigned in the program preserving the order, $\forall \ssa{x} \in \avar, \ssa{x} \in \mathcal{SVAR}$.
+It is defined as follows:
+$$
+  \avar_{\ssa{c}} \triangleq
+  \left\{
+  \begin{array}{ll}
+   		[\ssa{x}] 									
+   		& \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
+   		\\
+     	\left[ \ssa{x} \right] 									
+     	& \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
+     	\\
+     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} 	
+     	& \ssa{c} = \ssa{c_1};\ssa{c_2}
+     	\\
+     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}}
+     	& \ssa{c} =\eif([\bexpr]^{(l, w)}, c_1, c_2) 
+     	\\
+     	\avar_{\ssa{c}'}
+     	& \ssa{c} 	= \ewhile [\bexpr]^{(l, w)}, n \edo c'
+\end{array}
+\right.
+$$
+\end{defn}
+%
+\begin{defn}[Query Variables ($\qvar$)].
+\\
+Given a program $c$, its query variables $\qvar$ is a vector containing all variables newly assigned by a query in the programm, $\qvar \subset \mathcal{VAR}$.
+It is defined as follows:
+$$
+  \qvar_{\ssa{c}} \triangleq
+  \left\{
+  \begin{array}{ll}
+   		[] 									
+   		& \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
+   		\\
+     	\left[ \ssa{x} \right] 									
+     	& \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
+     	\\
+     	\qvar_{\ssa{c_1}} ++ \qvar_{\ssa{c_2}} 	
+     	& \ssa{c} = \ssa{c_1};\ssa{c_2}
+     	\\
+     	\qvar_{\ssa{c_1}} ++ \qvar_{\ssa{c_2}}
+     	& \ssa{c} =\eif([\sbexpr]^{(l, w)} , c_1, c_2) 
+     	\\
+     	\qvar_{\ssa{c}'}
+     	& \ssa{c} 	= \ewhile [\bexpr]^{(l, w)}, n \edo c'
+\end{array}
+\right.
+$$
+\end{defn}
+%
+We are abusing the notations and operators from list here. 
+The notation $[]$ represents an empty vector
+and $x::A$ represents add an element $x$ to the head of the vector $A$.
+The concatenation operation between 2 vectors $A_1$ and $A_2$, i.e., $A_1 ++ A_2$ is mimic the standard list concatenation operations as follows:
+%
+\begin{equation}
+		A_1 ++ A_2  
+		\triangleq \left\{
+		\begin{array}{ll} 
+			A_2 				& A_1 = []\\
+			x::(A_1' ++ A_2)	& A_1 = x::A_1'
+		\end{array}
+		\right.
+\end{equation}
+%
+We use index within parenthesis to denote the access to the element of corresponding location,
+$A(i)$ denotes the element at location $i$ in the vector $A$ and 
+$M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matrix $M$. 
+%
+\\
+%
+The variable counter $\vcounter_{c}$ maps every assigned variables $\avar_{c}$ to a natural number $n \in \mathbb{N}$ in a certain execution. This natural number $n$ represents the visiting times of this variable in this certain execution.
+\\
+We use variable name $x$ within parenthesis to denote the access to the associated natural number of this variable in the variable counter $\vcounter_{c}$, 
+$\vcounter_{c}(x)$ denote the visiting times of variable $x$.
+%
+\begin{defn}[Initial Variable Counter $\vcounter^0_{c}$]
+Given a program $c$ with its assigned variables $\avar_{c}$ of length $N$, its initial variable counter $\vcounter^0_{c}$ maps all the variable to $0$, i.e.:
+\[
+	\vcounter^0_{c}(x) = 0, x = \avar_{c}(i) \forall i = 1, \ldots, N 
+\]
+\end{defn}
+%
+}
 %
 \subsection{ Trace-based Operational Semantics}
 {
 We evaluate programs in the {\tt While} language by means of a trace-based operational semantics, to capture the dependency between queries. For distinguishing elements in the the trace, we add a label to commands in the {\tt While} language as defined in the syntax.
 %
 Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. Some non-standard syntax is explained as follows:  
-%
- \wq{While Map is a standard map from label to natural number.}
-  	\begin{defn}[While Map ($w$)].
-  	\\
-  	While map is defined as a map, mapping from the key (labels $l$) to iteration number $n$, as follows:
-	\begin{ocaml}{}
-	type wm = | empty 
-	          | Cons of (int * int) & wm
-
-	let rec  minus (w:wm) (l:int) : wm = 
-	    match w with 
-	       | [] => []
-	       | (k, v) :: tl => 
-	        if k = l then tl else (k,v) :: minus tl l.   
-
-	let rec plus (w:wm) (l:int) : wm = 
-	    match w with 
-	       | [] => [(l,0)]
-	       | (k, v) :: tl => 
-	        if k = l then (k,v+1):: tl else (k,v) :: plus tl l.         
-	\end{ocaml}
-  	\end{defn}
-  	%
-  	A mapping in the while map $[l \to n]$ gives the accurate information on which while command 
-  	($\ewhile ~ [b]^l ~ \edo ~ c $) the statement is in by finding its corresponding label $l$, 
-  	(i.e., the key in the map). 
-  	The label $l$ specifies the line number of the guard $[b]^l$ of the while command, where the current statement lives in. 
-  	The mapped result $n$ indicates the iteration number, which the current statement belongs to. 
-  	For example, the while map $w=[3:1, 4:2]$ indicates that the statement is currently in a nested while loop, the first level while loop starting from line of label $3$ (i.e., the line of the outside guard is) 
-  	and in its first iteration, 
-  	the statement is now in the nested while loop starting from line of label $4$ (i.e., label of the guard for the nested while loop) 
-  	and in the second iteration. 
-  	We use $\emptyset$ to represent an empty map, indicating the statement is not in any while loop statement. 
-  	The two operations ($w - l$ and $w + l$) 
-  	on $w$ is defined as follows:
-  	%
-	\begin{equation}
-		w - l  := \left\{
-		\begin{array}{cl} 
-			 w  & l \not\in Keys(w)   \\
-			 w' & w = w' [l \to \_] 
-		\end{array}
-		\right.
-	\end{equation}
-	%
-	%
-	\begin{equation}
-		w + l  :=  \left\{
-		\begin{array}{cl} 
-		 	w[l \to 0] & l \not \in Keys(w) \\   
-		    w'[l \to n+1] &  w = w'[l \to n]
-		\end{array}
-		\right.
-	\end{equation}
-%
-We use $w - l$ to remove the mapping of the key $l$ from the while map $w$. 
-This is used when exiting the loop at line $l$.  
-We record in $w$ the first iteration of a while loop marked with label $l$ by assigning $l$ with the iteration $1$. 
-The mapped number increases when going into the next iteration. 
-
-$Keys(w)$ is used to return the list containing all the keys of the while map $w$. $MinKeys(w)$ returns the minimal key in $Keys(w)$.
-}
-
-\begin{defn}[While Map Order]
-The label with while map is partially ordered and defined as follows:
-$<_w and =_w$.\\
-\[
-  \begin{array}{lll}
-     w_1 =_w w_2  &  \triangleq &  Keys(w_1) = Keys(w_2) \land \forall k \in Keys(w_1). w_1(k) = w_2(k) \\
-     \emptyset =_w \emptyset & &   \\
-  \end{array}
-\] 
-$mk(w_i) =MinKey(w_i) $ 
-\[
-\begin{array}{llll}
-    w_1 <_w w_2 & \triangleq 
-     	& & w_1 = \emptyset \\
-       	& & mk(w_1) < mk(w_2) & w_1,w_2 != \emptyset  \\
-      	& & w_1(mk(w_1)) < w_2(mk(w_2))   & mk(w_1) = mk(w_2) \\
-     	& & (w_1 - mk(w_1) ) <_w (w_2 - mk(w_2)) & o.w.
-\end{array}
-\]
-\end{defn}
 %
 
 {
@@ -295,8 +290,8 @@ Queries can be uniquely annotated as defined in $\mathcal{AQ}$, and the annotati
 A configuration, $\config{m, c, t,w}$, contains four elements: a memory $m$, the command $c$ to be evaluated, a starting trace $t$, a starting while map $w$. Most of the time, the while maps remains empty until the evaluation goes into while statements.
 \\
 %
-\jl{
-The annotated query $\aq = (\qval, l, w)$ is a triple contains 3 elements. 
+\todo{
+The annotated query $\av = (\qval, l, w)$ is a triple contains 3 elements. 
 $\qval$ is a query value representing the corresponding query request $\assign{x}{\query(\qval)}$ during the execution of the program.
 $l$ is the label of the query request command in a program.
 $w$ is the while map indicating if or not this command is in a while loop, and which iteration it is in.
@@ -304,75 +299,44 @@ Given the label $l$ and while map $w$ are ordered,
 the annotated queries also preserve this property. 
 Its order and equivalence relation are defined in Definition~\ref{def:query_dir}.
 %
-\begin{defn}[Order of Annotated Queries].
+\begin{defn}[Order of Annotated Variables].
 \label{def:query_dir}
 \\
 Given 2 annotated queries 
-$ \aq_1 = (\qval_1, l_1, w_1), 
-\aq_2 = (\qval_2, l_2, w_2)$
+$\av_1 = (x_1, v_1, l_1, n_1), 
+\av_2 = (x_2, v_2, l_2, n_2)$
 :
 %
 \[
-\aq_1 <_{aq} \aq_2
+\av_1 \avlt \av_2
  \triangleq 
  \left\{
  \begin{array}{ll}
-    l_1 < l_2  
-    & w_1=\emptyset \lor w_2 = \emptyset \lor w_1 =_w w_2
+    n_1 < n_2  
+    & l_1 = l_2
     \\
-    w_1 <_w w_2
-    & \mathsf{Otherwise}
+    w_1 <_w w_2 & o.w.
 \end{array}  
 \right.
 \]
 %
-$\aq_1 \aqgeq \aq_2$  is defined vice versa.
+$\av_1 \avgeq \av_2$  is defined vice versa.
 \end{defn}
 }
 %
  %% trace
-A query trace $\qtrace$ is a list of annotated queries accumulated along the execution of the program. 
+A variable trace $\vtrace$ is a list of annotated queries accumulated along the execution of the program. 
 A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
-We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, t,w}$,
-of form $ \config{m,c, t, w} \to \config{m', \eskip, t', w'} $. 
+We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, \vtrace, \vcounter}$,
+of form $ \config{m,c, \vtrace, \vcounter} \to \config{m', \eskip, \vtrace', \vcounter'} $. 
 %
-\\
 %
-\todo{The annotated variable $\av$.}
 %
-\\
-%
-\todo{A variable trace $\vtrace$.}
-%
-\\
-%
-\todo{Operations on variable trace $\vtrace$.}
-\\
-%
-\todo{
-\begin{defn}[Equivalence of Annotated Variables]
-%
-\label{def:av_equal}
-Given 2 annotated queries 
-$ \av_1 = (\qval_1, l_1, w_1), 
-\av_2 = (\qval_2, l_2, w_2)$
-:
-%
-\[
-\aq_1 \aqeq \aq_2
- \triangleq (l_1 = l_2 \land  w_1 =_w w_2 \land 
- \qval_1 =_q \qval_2) 
-\]
-%
-$\av_1 \aqneq \av_2$  is defined vice versa.
-%
-\end{defn}
-}
 %
 The evaluation rules for arithmetic and boolean expressions are standard. 
 They have the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmetic expression $\aexpr$ in the memory $m$, and similar for the boolean expressions $\config{m, \bexpr} \barrow \bexpr'$, defined as follows:
 %
-\jl{
+{
 \begin{mathpar}
 \boxed{ \config{m,\aexpr} \aarrow \aexpr' \, : \, Memory  \times AExpr \Rightarrow AExpr }
 \\
@@ -380,7 +344,6 @@ They have the form $\config{m,\aexpr} \aarrow \aexpr' $, evaluating an arithmeti
 \end{mathpar}
 }
 %
-\jl{
 Given the evaluation for the arithmetic and boolean expression, we defined the evaluation rules for query expression $\qexpr$ correspondingly as follows:
 	\begin{mathpar}
 	\boxed{ \config{m, \qexpr} \qarrow \qexpr' \, : \, Memory  \times QExpr \qarrow QExpr }
@@ -449,32 +412,52 @@ $\qexpr_1 \neq_{q}^{m} \qexpr_2$  is defined vice versa.
 We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}_{q}$.
 \end{defn}
 %
-Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition~\ref{def:aq_equal}:
+Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition~\ref{def:av_equal}:
 %
-\begin{defn}[Equivalence of Annotated Queries]
+\todo{
+\begin{defn}[Equivalence of Annotated Variables]
 %
-\label{def:aq_equal}
+\label{def:av_equal}
 Given 2 annotated queries 
-$ \aq_1 = (\qval_1, l_1, w_1), 
-\aq_2 = (\qval_2, l_2, w_2)$
+$ \av_1 = (x_1, v_1, l_1, n_1), 
+\av_2 = (x_2, v_2, l_2, n_2)$
 :
 %
 \[
-\aq_1 \aqeq \aq_2
+\av_1 \aveq \av_2
  \triangleq (l_1 = l_2 \land  w_1 =_w w_2 \land 
  \qval_1 =_q \qval_2) 
 \]
 %
-$\aq_1 \aqneq \aq_2$  is defined vice versa.
+$\av_1 \avneq \av_2$  is defined vice versa.
 %
 \end{defn}
 }
 %
+% \begin{defn}[Equivalence of Annotated Queries]
+% %
+% \label{def:aq_equal}
+% Given 2 annotated queries 
+% $ \av_1 = (\qval_1, l_1, w_1), 
+% \av_2 = (\qval_2, l_2, w_2)$
+% :
+% %
+% \[
+% \av_1 \aveq \av_2
+%  \triangleq (l_1 = l_2 \land  w_1 =_w w_2 \land 
+%  \qval_1 =_q \qval_2) 
+% \]
+% %
+% $\av_1 \avneq \av_2$  is defined vice versa.
+% %
+% \end{defn}
+% }
 %
-\jl{
-Given an annotated query $\aq$ and a trace $t$,
-the appending operation $\aq :: t$ is 
-the standard list appending operation, appends $\aq$ to the head of trace $t$.
+%
+\todo{
+Given an annotated variable $\av$ and a trace $t$,
+the appending operation $\av :: t$ is 
+the standard list appending operation, appends $\av$ to the head of trace $t$.
 %
 The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
 \begin{equation}
@@ -482,7 +465,7 @@ The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$
 		\triangleq \left\{
 		\begin{array}{ll} 
 			t_2 				& t_1 = []\\
-			\aq::(t_1' ++ t_2)	& t_1 = \aq::t_1'
+			\av::(t_1' ++ t_2)	& t_1 = \av::t_1'
 		\end{array}
 		\right.
 	\end{equation}
@@ -494,15 +477,15 @@ The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is
 		\triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
 	\end{equation}
 %
-Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \aqin t$ are defined as follows:
+Given an annotated query $\av$, $\av$ belongs to a trace $t$, i.e., $\av \avin t$ are defined as follows:
   	%
 \begin{equation}
-		\aq \aqin t  
+		\av \avin t  
 		\triangleq \left\{
 		\begin{array}{ll} 
 			\efalse  			& t = []   		\\
-			\etrue 				& t = \aq'::t' 	\quad \aq \aqeq \aq'\\ 
-			\aq \in t'			& t = \aq'::t'  \quad \aq \aqneq \aq'
+			\etrue 				& t = \av'::t' 	\quad \av \aveq \av'\\ 
+			\av \in t'			& t = \av'::t'  \quad \av \avneq \av'
 		\end{array}
 		\right.
 	\end{equation}
@@ -510,7 +493,7 @@ Given an annotated query $\aq$, $\aq$ belongs to a trace $t$, i.e., $\aq \aqin t
 	%
 }
 %
-\jl{
+\todo{
 \begin{defn}[Equivalence of Program]
 %
 \label{def:aq_prog}
@@ -572,89 +555,20 @@ When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label 
 With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition~\ref{def:wf_trace}.
 %
 %
-\todo{
-	\begin{lem}[Determinism of Variable Trace]
-	\end{lem}
-}
-\\
 %
-\todo{
-\begin{defn}[Well-formed Variable Trace]
-\label{def:wf_vtrace}
-A trace $t$ is well formed if and only if it preserves the following two properties:
-\begin{itemize}
-	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \aqin t. ~ (\aq_1 \aqneq \aq_2)$
-	%
-	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \aqin t. ~ 
-	(\aq_1 <_{aq} \aq_2) \Longleftrightarrow
-	\exists t_1, t_2, t_3, \aq_1', \aq_2'. ~ s.t.,~ 
-	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t_1 ++ [\aq_1'] ++ t_2 ++ [\aq_2'] ++ t_3 = t$
-\end{itemize}
-\end{defn}
-}
-\\
-\todo{
-\begin{thm}[Variable Trace Generated from Operational Semantics is Well-formed].
-\label{thm:os_wf_vtrace}
-\\
-Given a program $c$, 
-with arbitrary starting memory $m$, trace $t$ and while map $w$
-if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, w, c \vDash t' - t$.
-% \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
-% there exists the evaluation 
-% $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
-% $t$ is well-formed. }
-\end{thm}
-\begin{proof}
-% \input{thm_os_wf_vtrace}
-\end{proof}
-}
 %
-\\
-%
-\jl{
-\begin{defn}[Well-formed Query Trace]
-\label{def:wf_trace}
-A trace $t$ is well formed if and only if it preserves the following two properties:
-\begin{itemize}
-	\item{\emph{(Uniqueness)}} $\forall \aq_1, \aq_2 \aqin t. ~ (\aq_1 \aqneq \aq_2)$
-	%
-	\item{\emph{(Ordering)}} $\forall \aq_1, \aq_2 \aqin t. ~ 
-	(\aq_1 <_{aq} \aq_2) \Longleftrightarrow
-	\exists t_1, t_2, t_3, \aq_1', \aq_2'. ~ s.t.,~ 
-	(\aq_1 \aqeq \aq_1') \land (\aq_2 \aqeq \aq_2') \land t_1 ++ [\aq_1'] ++ t_2 ++ [\aq_2'] ++ t_3 = t$
-\end{itemize}
-\end{defn}
-}
-
-\jl{
-\begin{thm}[Query Trace Generated from Operational Semantics is Well-formed].
-\label{thm:os_wf_trace}
-\\
-Given a program $c$, 
-with arbitrary starting memory $m$, trace $t$ and while map $w$
-if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, w, c \vDash t' - t$.
-% \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
-% there exists the evaluation 
-% $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
-% $t$ is well-formed. }
-\end{thm}
-\begin{proof}
-\input{thm_os_wf_trace}
-\end{proof}
-}
-
 \begin{figure}
+\jl{
 	\begin{mathpar}
-	\todo{
 	\boxed{
-	Memory  \times Command \times QTrace \times VTrace \times While Map 
+	Memory  \times Command \times VTrace \times VCounter
 	\xrightarrow{}
-	Memory  \times Command \times QTrace \times VTrace \times While Map
+	Memory  \times Command \times VTrace \times VCounter
 	}
-	\\
-	\boxed{ \config{m, c, t, w} \xrightarrow{} \config{m', c',  t', w'}
-	}
+	\\\\
+	\boxed{ \config{m, c, \vtrace, \vcounter} 
+	\xrightarrow{} 
+	\config{m', c',  \vtrace', \vcounter'}
 	}
 	\\
 	\inferrule
@@ -662,19 +576,24 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	 \config{m, \expr } \xrightarrow{}  \config{m, \expr' }
 	}
 	{
-	\config{m, [\assign x \expr]^{l},  t, w} \xrightarrow{} \config{m, [\assign x \expr']^{l}, t, w}
+	\config{m, [\assign x \expr]^{l},  \vtrace, \vcounter} \xrightarrow{} \config{m, [\assign x \expr']^{l}, \vtrace, \vcounter}
 	}
-	~\textbf{assn1}
+	~\textbf{assn-e}
 	%
-	~~~~~~
+	\\
 	%
 	\inferrule
 	{
+	\vcounter'[x] = \vcounter[x] + 1
+	\and 
+	\av = (x, v, l, \vcounter'[x])
 	}
 	{
-	\config{m, [\assign x v]^{l},  t, w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t, w}
+	\config{m, [\assign x v]^{l},  \vtrace, \vcounter} 
+	\xrightarrow{} 
+	\config{m[v/x], [\eskip]^{l}, \vtrace ++ [\av], \vcounter'}
 	}
-	~\textbf{assn2}
+	~\textbf{assn-v}
 	%
 	\and
 	%
@@ -684,13 +603,11 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	 \empty
 	}
 	{
-	\config{m, \ewhile ~ [b]^{l} ~ \edo ~ c, t, w }
+	\config{m, \ewhile ~ [b]^{l}, n ~ \edo ~ c, \vtrace, \vcounter }
 	\xrightarrow{} 
-	\config{
-	m, c ; 
-	\eif_w (b, c ; 
-	\ewhile ~ [b]^{l} ~ \edo ~ c,  \eskip),
-	t, w
+	\config{ m, 
+	c ; \eif_w (b, c ; \ewhile ~ [b]^{l}, (n + 1) ~ \edo ~ c,  \eskip),
+	\vtrace, \vcounter
 	}
 	}
 	~\textbf{while-b}
@@ -704,11 +621,9 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	 m, b \xrightarrow{} b'
 	}
 	{
-	\config{m, 
-	\eif_w (b, c, \eskip) ,  
-	t, w }
-	\xrightarrow{} \config{m, 
-	 \eif_w (b', c,  \eskip), t, w }
+	\config{m, \eif_w (b, c, \eskip) , \vtrace, \vcounter }
+	\xrightarrow{} 
+	\config{m, \eif_w (b', c, \eskip), \vtrace, \vcounter }
 	}
 	~\textbf{ifw-b}
 	}
@@ -723,14 +638,11 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	}
 	{
 	\config{m, 
-	\eif_w (b, 
-	c ; \ewhile ~ [b]^{l} ~ \edo ~ c, 
-	\eskip),
-	t, w }
+	\eif_w (\etrue, c ; \ewhile ~ [b]^{l}, n ~ \edo ~ c, \eskip),
+	\vtrace, \vcounter }
 	\xrightarrow{} 
-	\config{m, 
-	c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
-	t, {(w + l)} }
+	\config{m, c ; \ewhile ~ [b]^{l}, n ~ \edo ~ c,  
+	\vtrace, \vcounter }
 	}
 	~\textbf{ifw-true}
 	}
@@ -743,13 +655,11 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	 \empty
 	}
 	{
-	\config{
-	m, 
+	\config{ m, 
 	\eif_w (\efalse, c; \ewhile ~ [b]^{l} ~ \edo ~ c,\eskip), 
-	t, w 
+	\vtrace, \vcounter 
 	}
-	\xrightarrow{} \config{m, 
-	 \eskip, t, (w - l) }
+	\xrightarrow{} \config{m, \eskip, \vtrace, \vcounter }
 	}
 	~\textbf{ifw-false}
 	}
@@ -763,8 +673,8 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	\config{m,\qexpr} \qarrow \qexpr'
 	}
 	{
-	\config{m, [\assign{x}{\query(\qexpr)}]^l, t, w} \xrightarrow{}  
-	\config{m, [\assign{x}{\query(\qexpr')}]^l, t, w}
+	\config{m, [\assign{x}{\query(\qexpr)}]^l, \vtrace, \vcounter} \xrightarrow{}  
+	\config{m, [\assign{x}{\query(\qexpr')}]^l, \vtrace, \vcounter}
 	}
 	~\textbf{query-e}
 	}
@@ -773,11 +683,15 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	\inferrule
 	{
 	\query(\qval) = v
+	\and
+	\vcounter'[x] = \vcounter[x] + 1
+	\and 
+	\av = (x, \qval, l, \vcounter'[x])
 	}
 	{
-	\config{m, [\assign{x}{\query(\qval)}]^l, t, w} 
+	\config{m, [\assign{x}{\query(\qval)}]^l, \vtrace, \vcounter} 
 	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  t ++ [(\qval, l, w)],w }
+	\config{m[ v/ x], \eskip,  \vtrace ++ [\av], \vcounter' }
 	}
 	~\textbf{query-v}
 	}
@@ -787,22 +701,23 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	%
 	\inferrule
 	{
-	\config{m, c_1,  t,w} \xrightarrow{} \config{m', c_1',  t',w'}
+	\config{m, c_1, \vtrace, \vcounter} \xrightarrow{} \config{m', c_1',  \vtrace', \vcounter'}
 	}
 	{
-	\config{m, c_1; c_2,  t,w} \xrightarrow{} \config{m', c_1'; c_2, t',w'}
+	\config{m, c_1; c_2, \vtrace, \vcounter} \xrightarrow{} \config{m', c_1'; c_2, \vtrace', \vcounter'}
 	}
 	~\textbf{seq1}
 	%
-	\and
+	~~~~~~~
 	%
 	\inferrule
 	{
 	}
 	{
-	\config{m, [\eskip]^{l} ; c_2,  t,w} \xrightarrow{} \config{m, c_2,  t,w}
+	\config{m, [\eskip]^{l} ; c_2, \vtrace, \vcounter} \xrightarrow{} \config{m, c_2, \vtrace, \vcounter}
 	}
 	~\textbf{seq2}
+	%
 	\and
 	%
 	\inferrule
@@ -810,10 +725,11 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	\config{ m, \bexpr} \barrow \bexpr'
 	}
 	{
-	\config{m, \eif([\bexpr]^{l}, c_1, c_2),  t,w} 
-	\xrightarrow{} \config{m,  \eif([\bexpr']^{l}, c_1, c_2),  t,w}
+	\config{m, \eif([\bexpr]^{l}, c_1, c_2),  \vtrace, \vcounter} 
+	\xrightarrow{} 
+	\config{m,  \eif([\bexpr']^{l}, c_1, c_2), \vtrace, \vcounter}
 	}
-	~\textbf{if}
+	~\textbf{if-b}
 	%
 	\and
 	%
@@ -821,24 +737,27 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 	{
 	}
 	{
-	\config{m, \eif([\etrue]^{l}, c_1, c_2),t,w} 
-	\xrightarrow{} \config{m, c_1,  t,w}
+	\config{m, \eif([\etrue]^{l}, c_1, c_2), \vtrace, \vcounter} 
+	\xrightarrow{} 
+	\config{m, c_1, \vtrace, \vcounter}
 	}
 	~\textbf{if-t}
 	%
-	~~~~~~
+	\and
 	%
 	\inferrule
 	{
 	}
 	{
-	\config{m,  \eif([\efalse]^{l}, c_1, c_2),  t,w} 
-	\xrightarrow{} \config{m, c_2,  t,w}
+	\config{m, \eif([\efalse]^{l}, c_1, c_2), \vtrace, \vcounter} 
+	\xrightarrow{} 
+	\config{m, c_2, \vtrace, \vcounter}
 	}
 	~\textbf{if-f}
 	%
 	%
 	\end{mathpar}
+}
 	% \end{subfigure}
 	    \caption{Trace-based Operational Semantics of {\tt While} Language.}
     	\label{fig:evaluation}
@@ -847,83 +766,6 @@ if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is
 %
 %
 %
-\jl{
-\begin{lem}[While Map Remains Unchanged (Invariant)]
-\label{lem:wunchange}
-Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
-$\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
-\[
-	w = w'
-\]
-\end{lem}
-\begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
-%
-Proof in File: {\tt ``lem\_wunchange.tex''}
-% \input{lem_wunchange}
-%
-\end{subproof}
-}
-%
-\jl{
-\begin{lem}[Trace is Written Only]
-\label{lem:twriteonly}
-Given a program $c$ with starting trace $t_1$ and $t_2$,
-for arbitrary starting memory $m$ and while map $w$,
-if there exist evaluations
-$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
-% 
-$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
-%
-then:
-%
-\[
-	m_1' = m_2' \land w_1' = w_2'
-\]
-\end{lem}
-%
-\begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
-%
-Proof in File: {\tt ``lem\_twriteonly.tex''}
-% \input{lem_twriteonly}
-\end{subproof}
-}
-%
-\jl{
-\begin{lem}[Trace Uniqueness]
-\label{lem:tunique}
-Given a program $c$ with a starting memory $m$, \wq{a while map w,}
-for any starting trace $t_1$ and $t_2$, if there exist evaluations
-$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
-% 
-$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
-%
-then:
-%
-\[
-	t_1' - t_1 = t_2' - t_2
-\]
-\end{lem}
-%
-\begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
-%
-Proof in File: {\tt ``lem\_tunique.tex''}
-% \input{lem_tunique}
-\end{subproof}
-}
-%
-\jl{
-\begin{coro}
-\label{coro:aqintrace}
-\[
-\aq \aqin t \implies \exists t_1, t_2, \aq'. ~ s.t., ~ (\aq \aqeq \aq') \land t_1 ++ [\aq'] ++ t_2 = t	
-\]
-\end{coro}
-\begin{subproof}
-Proof in File: {\tt ``coro\_aqintrace.tex''}
-% \input{coro_aqintrace}
-%
-\end{subproof}
-}
 %
 \subsection{ Trace-based Adaptivity}
 %
@@ -965,87 +807,87 @@ As a first step, we give a definition of when one query may depend on a previous
     since $\query(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
 }
 
-   We give a formal definition of query may dependency based on the trace-based operational semantics as follows.
+   We give a formal definition of variable may dependency based on the trace-based operational semantics as follows.
 %
 % 
 %
-\begin{defn}
-[Query May Dependency].
-\label{def:query_dep}
-\\
-\jl{
-One annotated query $\aq_2 = ({\qval}_2,l_2, w_2)$ may depend on another query 
-$\aq_1 = ({\qval}_1, l_1, w_1)$ in a program $c$,
-with a starting memory $m$ and a hidden database $D$, denoted as 
-%
-$\qdep(\aq_1, \aq_2, c, m, D)$ is defined below. 
-%
-\[
-\exists m_1,m_3,t_1,t_3,c_2,v_1.
-\\
-\left (
-  \begin{array}{l}   
-	\config{m, c, [], []} \rightarrow^{*} 
-	\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,  t_1, w_1} 
-	\rightarrow^{\textbf{query-v}} 
-	\\ 
-	\config{m_1[v_1/x], c_2,
-	t_1++[\aq_1], w_1} \rightarrow^{*} \config{m_3, \eskip,
-	t_3,w_3}
-	 \\ 
-	 \bigwedge
-	 \left( 
-	 \begin{array}{l}
-		\aq_2 \aqin (t_3 - (t_1 ++ [\aq_1])) 
-		\\
-		\implies 
-		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.
-		\config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1} 
-		\\ 
-		\quad \quad 
-		\rightarrow^{*}
-		(\config{m_3', \eskip, t_3', w_3'} 
-		\\ 
-		\quad \quad 
-		\land 
-		\aq_2 \not \aqin (t_3'-(t_1 ++ [\aq_1])))
-	\end{array} 
-	\right)
-	\\
-	\bigwedge
-	\left( 
-    \begin{array}{l}
-		\aq_2 \not\aqin (t_3 - (t_1 ++ [\aq_1]))
-	  	\\
-	  	\implies 
-		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-		\config{m_1[v/x], {c_2}, t_1 ++ [\aq_1], w_1}
-		\\ 
-		\quad \quad 
-		\rightarrow^{*} 
-		(\config{m_3', \eskip, t_3', w_3'} 
-		\\ 
-		\quad \quad 
-		\land 
-		\aq_2  \aqin (t_3' - (t_1 ++ [\aq_1])))
-	\end{array} 
-	\right)
-\end{array}
-\right )
-\]
-}
-\end{defn}
-%
 % \begin{defn}
-% [Variable May Dependency].
-% \label{def:var_dep}
+% \todo{[Remove ? Query May Dependency]}.
+% \label{def:query_dep}
 % \\
 % \jl{
-% One annotated variable $\av_2 = ({x}_2,l_2, w_2)$ may depend on another query 
-% $\av_1 = ({x}_1, l_1, w_1)$ in a program $c$,
+% One annotated query $\av_2 = ({\qval}_2,l_2, w_2)$ may depend on another query 
+% $\av_1 = ({\qval}_1, l_1, w_1)$ in a program $c$,
 % with a starting memory $m$ and a hidden database $D$, denoted as 
 % %
-% $\vardep(\av_1, \av_2, c, m, D)$ is defined below. 
+% $\qdep(\av_1, \av_2, c, m, D)$ is defined below. 
+% %
+% \[
+% \exists m_1,m_3,t_1,t_3,c_2,v_1.
+% \\
+% \left (
+%   \begin{array}{l}   
+% 	\config{m, c, [], []} \rightarrow^{*} 
+% 	\config{m_1, [\assign{x}{\query({\qval}_1)}]^{l_1} ; c_2,  t_1, w_1} 
+% 	\rightarrow^{\textbf{query-v}} 
+% 	\\ 
+% 	\config{m_1[v_1/x], c_2,
+% 	t_1++[\av_1], w_1} \rightarrow^{*} \config{m_3, \eskip,
+% 	t_3,w_3}
+% 	 \\ 
+% 	 \bigwedge
+% 	 \left( 
+% 	 \begin{array}{l}
+% 		\av_2 \avin (t_3 - (t_1 ++ [\av_1])) 
+% 		\\
+% 		\implies 
+% 		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.
+% 		\config{m_1[v/x], {c_2}, t_1 ++ [\av_1], w_1} 
+% 		\\ 
+% 		\quad \quad 
+% 		\rightarrow^{*}
+% 		(\config{m_3', \eskip, t_3', w_3'} 
+% 		\\ 
+% 		\quad \quad 
+% 		\land 
+% 		\av_2 \not \avin (t_3'-(t_1 ++ [\av_1])))
+% 	\end{array} 
+% 	\right)
+% 	\\
+% 	\bigwedge
+% 	\left( 
+%     \begin{array}{l}
+% 		\av_2 \not\avin (t_3 - (t_1 ++ [\av_1]))
+% 	  	\\
+% 	  	\implies 
+% 		\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
+% 		\config{m_1[v/x], {c_2}, t_1 ++ [\av_1], w_1}
+% 		\\ 
+% 		\quad \quad 
+% 		\rightarrow^{*} 
+% 		(\config{m_3', \eskip, t_3', w_3'} 
+% 		\\ 
+% 		\quad \quad 
+% 		\land 
+% 		\av_2  \avin (t_3' - (t_1 ++ [\av_1])))
+% 	\end{array} 
+% 	\right)
+% \end{array}
+% \right )
+% \]
+% }
+% \end{defn}
+% %
+% \begin{defn}
+% [remove :?: Query Variable May Dependency].
+% \label{def:qvar_dep}
+% \\
+% {
+% One annotated ssa variable $\av_2 = (\ssa{x}_2,l_2, w_2)$ may depend on another one 
+% $\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $c$,
+% with a starting memory $m$ and a hidden database $D$, denoted as 
+% %
+% $\vardep^{ssa}(\av_1, \av_2, c, m, D)$ is defined below. 
 % %
 % \[
 % \exists \qval_1, \qval_2. ~
@@ -1053,75 +895,392 @@ $\qdep(\aq_1, \aq_2, c, m, D)$ is defined below.
 % \land
 % \aq_2 = (\qval_2, l_2, w_2)
 % \land 
-% \qdep(\aq_1, \aq_2, c, m, D)
+% \qdep^{ssa}(\aq_1, \aq_2, c, m, D)
 % \]
 % }
 % \end{defn}
 %
-\begin{defn}[Trace-based Dependency Graph].
-\label{def:trace-based_graph}
-\\
 \jl{
-Given a program $c$, a database $D$, a starting memory $m$, the trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$ is defined as: 
+\begin{defn}
+[Annotated Variables May Dependency]
+\label{def:avar_dep}.
+\\
+One annotated variable $\av_2 = (x_2, v_2, l_2, n_2)$ may depend on another one 
+$\av_1 = (x_1, v_1, l_1, n_1)$ in a program $c$,
+with a starting memory $m$ and  hidden database $D$, denoted as 
+%
+$\avdep(\av_1, \av_2, c, m, D)$ is defined below. 
+%
+%
+\[
+\begin{array}{l}
+\exists \ssa{m}_1, \ssa{m}_3, \vtrace_1, \vtrace_3, \ssa{c}_2, v_1, ({\qval}_1 \lor \sexpr_1).\\
+  \left (\begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \qtrace_1,  \vtrace_1, w_1} 
+\rightarrow^{\textbf{ssa-query-v (/ assn-v)}} 
+\\ 
+\config{\ssa{m}_1[v_1/\ssa{x}], c_2, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
+\rightarrow^{*} \config{\ssa{m}_3, \eskip, \qtrace_3, \vtrace_3, w_3}
+  % 
+ \\ \bigwedge
+  \left( 
+  \begin{array}{l}
+  \av_2 \in (\vtrace_3'-(\vtrace_1 ++ [\av_1])) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'.  
+  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
+		\\ 
+		\quad \quad 
+  \land 
+  \av_2 \not\in (\vtrace_3'-(\vtrace_1 ++ [\av_1])))
+\end{array} \right )
+\\\bigwedge
+\left( 
+  \begin{array}{l}
+  	\av_2 \notin (\vtrace_3 - (\vtrace_1 ++ [\av_1]))
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'. 
+	\config{\ssa{m}_1[v /\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
+		\\ 
+		\quad \quad 
+	\land 
+	\av_2  \in (\vtrace_3' - (\vtrace_1 ++ [\av_1])))
+\end{array} \right )
+\end{array} \right )
+\end{array}
+\]
+%
+\end{defn}
+%
+\begin{defn}
+[Annotated Variables May Dependency -- Version 2]
+\label{def:avar_dep2}.
+\\
+One annotated variable $\av_2 = (x_2, v_2, l_2, n_2)$ may depend on another one  $\av_1 = (x_1, v_1, l_1, n_1)$in a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and hidden database $D$, denoted as 
+%
+$\avdep(\av_1, \av_2, c, m, D)$ is defined below. 
+%
+\[
+\begin{array}{l}
+\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1'.
+\\
+  \left(
+  \begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\\ 
+\config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+\rightarrow^{*} 
+\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qval}_2) (/ \sexpr_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+\rightarrow^{\textbf{{ssa-query-v} (/ assn-v)}} 
+\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
+  % 
+ \\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
+\rightarrow^{*} 
+\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
+\\
+\bigwedge
+\av_2 \notin \vtrace_2'
+\end{array}
+\right)
+\end{array}
+ \]
+%
+\end{defn}
+%
+\begin{defn}[Variable May Dependency].
+\label{def:var_dep}
+\\
+Given a program $\ssa{c}$ with its assigned variables $\avar_{\ssa{c}}$, 
+one variable $\ssa{x}_2 \in \avar_{\ssa{c}}$ may depend on another variable 
+$\ssa{x}_1 \in \avar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
+%
+$\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
+%
+\[
+\exists v_1, v_2, n_1, n_2, m, D. ~
+\av_1 = (x_1, v_1, l_1, n_1)
+\land
+\av_2 = (x_2, v_2, l_2, n_2)
+\land 
+\avdep(\av_1, \av_2, c, m, D)
+\] 
+%
+%
+\end{defn}
+%
+%
+\begin{defn}[Execution Based Dependency Graph].
+\\
+Given a program $c$, a database $D$, a starting memory $m$ with its assigned variables $\avar_c$ and initial variable counter $\vcounter^0_{c}$ with its corresponding execution:
+$\config{m, c, [], \vcounter^0_{c}} 
+\to^{*}
+\config{\ssa{m'}, \eskip, \vtrace, \vcounter}$,
+the dependency graph $\traceG(c, m, D) = (\vertxs, \edges, \weights, \qflag)$ is defined as:
 %
 \[
 \begin{array}{rlcl}
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
-	\av \in \mathcal{AV} ~\middle\vert ~ 
-	\exists \ssa{m'},  w, \qtrace, \vtrace. ~  
-	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, \qtrace, \vtrace, w }
-	\land \av \in \vtrace
+	x \in \mathcal{VAR}
+	~ \middle\vert ~
+	x = \avar_{c}(i); i = 0, \ldots, |\avar_{c}| 
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
-	(\av, \av') \in \mathcal{AV} \times \mathcal{AV} 
-	~\middle\vert ~ \vardep(\av, \av',c,m,D)
+	(x, x') \in \mathcal{VAR} \times \mathcal{VAR}
+	~ \middle\vert ~
+	\vardep(x, x', c); 
+	x = \avar_{c}(i); x' = \avar_{c}(j); i,j = 0, \ldots, |\avar_{c}| 
+	\right\}
+	\\
+	\text{Weights} &
+	\weights & := & 
+	\left\{ 
+	(x, n) \in \mathcal{VAR} \times \mathbb{N}
+	~ \middle\vert ~
+	n = \vcounter(x); x = \avar_{c}(i); i = 0, \ldots, |\avar_{c}|
+	\right\}
+	\\
+	\text{Query Flags} &
+	\qflag & := & 
+	\left\{(x, n)  \in \vertxs \times \{0, 1\} 
+	~ \middle\vert ~
+	\left\{
+	\begin{array}{ll}
+	n = 1 & x \in \qvar_{c} \\ 
+	n = 0 & o.w.
+	\end{array}
+	\right\};
+	x = \avar_{c}(i); i = 0, \ldots, |\avar_{c}|
 	\right\}
 \end{array}
 \]
-}
-\end{defn}
-The edges are directed. When an annotated query $\aq$ may depend on its previous one $\aq'$, 
-we have the corresponded edge $(\aq, \aq')$ from $\aq $ to $\aq'$.
-%
-%
-\begin{defn}[Path ($p$)].
-\\
-Given a directed graph $G = (\vertxs, \edges)$, a path $p$ in $G$ is defined as a sequence of edges $(e_1, \ldots, e_{n - 1})$ where $ e_1, \ldots, e_{n - 1} \in \edges$,
-for which there is a sequence of vertices $(v_1, \ldots, v_n)$ where $v_1, \ldots, v_n \in \vertxs$
-such that for every $1 \leq i < n$, $e_i=(v_{i},v_{i + 1})$
-and all edges and vertices are distinct. 
-
-$(v_1, \ldots, v_n)$ is the vertices sequence of this path.
-
-\jl{Length of the path $p$ is the number of vertices in its vertices sequence $(v_1, \ldots, v_n)$, i.e., $\len(p) = n$.}
 \end{defn}
 %
-\jl{We use $\paths(G)$ to denote the finite set containing all paths $p$ in a directed acyclic graph $G = (\vertxs, \edges)$;
-and $p_{\aq_1 \to \aq_2} \in \paths(G)$ where $\aq_1, \aq_2 \in \vertxs$ denotes the path from vertex $\aq_1$ to $\aq_2$ .
-}
 %
-%
-%
-\begin{defn}[Adaptivity of A Program in While Language].
-\label{def:trace-based_adapt}
+\begin{defn}[Finite Walk ($k$)].
+\label{def:finitewalk}
 \\
-Given a program $c$, 
-its adaptivity is defined as the length of the longest path in its
-trace-based dependency graph $G(c,D,m)$, 
-for all possible starting memory $m$ and database $D$.
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
+for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
+\begin{itemize}
+    \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
+    \item every vertex $v \in \vertxs$ appears in this vertices sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
+\end{itemize}
+$(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
+\\
+%
+Length of this finite walk $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = n$.
+\end{defn}
+%
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
+we use $\walks(G)$ to denote a set containing all finite walks $k$ in $G$;
+and $k_{v_1 \to v_2} \in \walks(G)$where $v_1, v_2 \in \vertxs$ denotes the walk from vertex $v_1$ to $v_2$ .
+%
+%
+\begin{defn}[Length of Finite Walk w.r.t. Query ($\qlen$)].
+\label{def:qlen}
+\\
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
+\[
+	\qlen(k) = \len\big(
+	v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \big)
+\]
+, where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \big)$ is a subsequence of $k$'s vertex sequence.
+\end{defn}
+%
+Given a program $c$ with a starting memory $m$ and database $D$, we generate its program-based graph 
+$\traceG(c, m, D) = (\vertxs, \edges, \weights, \qflag)$.
+%
+Then the adaptivity bound based on program analysis for $\ssa{c}$ is the number of query vertices on a finite walk in $\progG(\ssa{c})$. This finite walk satisfies:
+%
+\begin{itemize}
+\item the number of query vertices on this walk is maximum
+\item the visiting times of each vertex $v$ on this walk is bound by its weight $\weights(v)$.
+\end{itemize}
+%
+It is formally defined in \ref{def:trace_adapt}.
+%
+\begin{defn}
+[Adaptivity of A Program].
+\label{def:trace_adapt}
+\\
+Given a program $\ssa{c}$ in SSA language, 
+its adaptivity is defined for all possible starting SSA memory $\ssa{m}$ and database $D$ as follows:
 %
 $$
-A(c) = \max \big \{ 
-\len(p) \vert m \in \memdom, D \in \dbdom,p \in \paths(G(c, D, m)) 
-\big \} 
+A(c) = \max \big 
+\{ \qlen(k) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom , k \in \walks(\traceG(c, m, D) \big \} 
 $$
 \end{defn}
+}
+\\
+%
 %
 We proved some useful properties for our language.
+\\
+%
+\todo{
+\begin{defn}[Well-formed Trace]
+\label{def:wf_trace}
+A trace $t$ is well formed if and only if it preserves the following two properties:
+\begin{itemize}
+	\item{\emph{(Uniqueness)}} $\forall \av_1, \av_2 \avin t. ~ (\av_1 \avneq \av_2)$
+	%
+	\item{\emph{(Ordering)}} $\forall \av_1, \av_2 \avin t. ~ 
+	(\av_1 \avlt \av_2) \Longleftrightarrow
+	\exists t_1, t_2, t_3, \av_1', \av_2'. ~ s.t.,~ 
+	(\av_1 \aveq \av_1') \land (\av_2 \aveq \av_2') \land t_1 ++ [\av_1'] ++ t_2 ++ [\av_2'] ++ t_3 = t$
+\end{itemize}
+\end{defn}
+}
+\\
+\todo{
+\begin{thm}[Variable Trace Generated from Operational Semantics is Well-formed].
+\label{thm:os_wf_trace}
+\\
+Given a program $c$, 
+with arbitrary starting memory $m$, trace $\vtrace$ and variable counter $\vcounter$
+if $\config{m, c, \vtrace, \vcounter} \to^{*} 
+\config{m', \eskip, \vtrace', \vcounter'}$, then $(\vtrace' - \vtrace)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, c \vDash \vtrace' - \vtrace$.
+% \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
+% there exists the evaluation 
+% $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
+% $t$ is well-formed. }
+\end{thm}
+\begin{proof}
+\input{thm_os_wf_trace}
+\end{proof}
+}
+%
+% \\
+%
+% \jl{
+% \begin{defn}[Well-formed Query Trace]
+% \label{def:wf_trace}
+% A trace $t$ is well formed if and only if it preserves the following two properties:
+% \begin{itemize}
+% 	\item{\emph{(Uniqueness)}} $\forall \av_1, \av_2 \avin t. ~ (\av_1 \avneq \av_2)$
+% 	%
+% 	\item{\emph{(Ordering)}} $\forall \av_1, \av_2 \avin t. ~ 
+% 	(\av_1 <_{aq} \av_2) \Longleftrightarrow
+% 	\exists t_1, t_2, t_3, \av_1', \av_2'. ~ s.t.,~ 
+% 	(\av_1 \aveq \av_1') \land (\av_2 \aveq \av_2') \land t_1 ++ [\av_1'] ++ t_2 ++ [\av_2'] ++ t_3 = t$
+% \end{itemize}
+% \end{defn}
+% }
+
+% \jl{
+% \begin{thm}[Query Trace Generated from Operational Semantics is Well-formed].
+% \label{thm:os_wf_trace}
+% \\
+% Given a program $c$, 
+% with arbitrary starting memory $m$, trace $t$ and while map $w$
+% if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, w, c \vDash t' - t$.
+% \end{thm}
+% \begin{proof}
+% \input{thm_os_wf_trace}
+% \end{proof}
+% }
+%
+\todo{
+\begin{lem}[While Map Remains Unchanged (Invariant)]
+\label{lem:wunchange}
+Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
+$\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
+\[
+	w = w'
+\]
+\end{lem}
+\begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
+%
+Proof in File: {\tt ``lem\_wunchange.tex''}
+% \input{lem_wunchange}
+%
+\end{subproof}
+}
+%
+\todo{
+\begin{lem}[Trace is Written Only]
+\label{lem:twriteonly}
+Given a program $c$ with starting trace $t_1$ and $t_2$,
+for arbitrary starting memory $m$ and while map $w$,
+if there exist evaluations
+$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% 
+$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+%
+then:
+%
+\[
+	m_1' = m_2' \land w_1' = w_2'
+\]
+\end{lem}
+%
+\begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
+%
+Proof in File: {\tt ``lem\_twriteonly.tex''}
+% \input{lem_twriteonly}
+\end{subproof}
+}
+%
+\todo{
+\begin{lem}[Trace Uniqueness]
+\label{lem:tunique}
+Given a program $c$ with a starting memory $m$, \wq{a while map w,}
+for any starting trace $t_1$ and $t_2$, if there exist evaluations
+$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% 
+$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+%
+then:
+%
+\[
+	t_1' - t_1 = t_2' - t_2
+\]
+\end{lem}
+%
+\begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
+%
+Proof in File: {\tt ``lem\_tunique.tex''}
+% \input{lem_tunique}
+\end{subproof}
+}
+%
+\todo{
+\begin{coro}
+\label{coro:aqintrace}
+\[
+\av \avin t \implies \exists t_1, t_2, \av'. ~ s.t., ~ (\av \aveq \av') \land t_1 ++ [\av'] ++ t_2 = t	
+\]
+\end{coro}
+\begin{subproof}
+Proof in File: {\tt ``coro\_aqintrace.tex''}
+% \input{coro_aqintrace}
+%
+\end{subproof}
+}
+%
 \begin{lem}
 [Trace Non-Decreasing].
 \\
@@ -1172,7 +1331,7 @@ i.e., $t ++ t'' = t'$. This case is proved.
 \end{proof}
 %
 %
-\jl{
+\todo{
 The following lemma describes a property of the trace-based dependency graph.
 For any program $c$ with a database $D$ and a starting memory $m$,
 the directed edges in its trace-based dependency graph can only be constructed from nodes representing 
@@ -1186,10 +1345,10 @@ There doesn't exist backward edges with direction from greater annotated queries
 %
 {
 Given a program $c$, a database $D$, a starting memory $m$ and the corresponding trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$, 
-for any directed edge $(\aq', \aq) \in \edges$, 
+for any directed edge $(\av', \av) \in \edges$, 
 this is not the case that:
 %
-$$\aq' \aqgeq \aq$$
+$$\av' \avgeq \av$$
 %
 }
 \end{lem}
@@ -1198,12 +1357,12 @@ $$\aq' \aqgeq \aq$$
 This lemma is proved by showing there is a contradiction. 
 
 \jl{
-Assume there exists an edge  $(\aq', \aq) \in \edges$ and $\aq' \aqgeq \aq$, where $\aq' = ({\qval}',l',w')$ and $\aq = ({\qval},l,w)$.
+Assume there exists an edge  $(\av', \av) \in \edges$ and $\av' \avgeq \av$, where $\av' = ({\qval}',l',w')$ and $\av = ({\qval},l,w)$.
 %
 According to the Definition~\ref{def:trace-based_graph}, we have:
 %
 $$
-DEP(\aq', \aq, c, m, D) ~ (1)
+DEP(\av', \av, c, m, D) ~ (1)
 $$
 %
 %
@@ -1216,7 +1375,7 @@ we know: there exists $t_1, t_3, m_1, m_3, c_2$ s.t.,
   t_1, w'} 
 \rightarrow^{\textbf{query-v}} 
 \config{m_1[v_1/x], c_2,
-(t_1 ++ [\aq'], w_1} \rightarrow^{*} \config{m_3, \eskip, t_3,w_3} ~ (a)	
+(t_1 ++ [\av'], w_1} \rightarrow^{*} \config{m_3, \eskip, t_3,w_3} ~ (a)	
 \]
 %
 and
@@ -1227,34 +1386,34 @@ and
   % 
   \left( 
   \begin{array}{l}
-  \aq \aqin (t_3 - (t_1 ++ [\aq'])) 
+  \av \avin (t_3 - (t_1 ++ [\av'])) 
   % 
   \\
   \implies 
   \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
-  \config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1} 
+  \config{m_1[v/x], {c_2}, t_1 ++ [\av'], w_1} 
   \\ 
   \quad \quad 
   \rightarrow^{*}
   (\config{m_3', \eskip, t_3', w_3'} 
   \land 
-  \aq \not \aqin (t_3'-(t_1 ++ [\aq'])))
+  \av \not \avin (t_3'-(t_1 ++ [\av'])))
 \end{array} \right ) ~(b)
 \\
 \left( 
   \begin{array}{l}
-	\aq \not\aqin (t_3 - (t_1 ++ [\aq']))
+	\av \not\avin (t_3 - (t_1 ++ [\av']))
   	% 
   	\\
   	\implies 
 	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-	\config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1}
+	\config{m_1[v/x], {c_2}, t_1 ++ [\av'], w_1}
 	\\ 
 	\quad \quad 
 	\rightarrow^{*} 
 	(\config{m_3', \eskip, t_3', w_3'} 
 	\land 
-	\aq  \aqin (t_3' - (t_1 ++ [\aq'])))
+	\av  \avin (t_3' - (t_1 ++ [\av'])))
 \end{array} \right ) ~ (c)
 \end{array}
 \]
@@ -1266,90 +1425,90 @@ According to the Theorem \ref{thm:os_wf_trace} and $(a)$, we know both $t_1$, $t
 % \jl{
 \\
 Consider 2 cases:
- \[\aq \aqin (t_3 - (t_1 ++[\aq'])) ~(d) ~~ \lor ~~ \aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]
+ \[\av \avin (t_3 - (t_1 ++[\av'])) ~(d) ~~ \lor ~~ \av \notin_{aq} (t_3 - (t_1 ++[\av'])) ~(e)\]
 %
 \begin{itemize}
 %
-	\caseL{ (d) \[\aq \aqin (t_3 - (t_1 ++[\aq'])) ~ (d)\]}
+	\caseL{ (d) \[\av \avin (t_3 - (t_1 ++[\av'])) ~ (d)\]}
 	By unfolding the trace subtraction operations, we have;
 	\[
-		\exists t_2. ~ s.t., ~ t_1 ++[\aq'] ++ t_2 = t_3 \land \aq \aqin t_2 ~ (3)
+		\exists t_2. ~ s.t., ~ t_1 ++[\av'] ++ t_2 = t_3 \land \av \avin t_2 ~ (3)
 	\]
 %
 %
-According to the Corollary~\ref{coro:aqintrace} and $\aq \aqin t_2$, we have:
+According to the Corollary~\ref{coro:aqintrace} and $\av \avin t_2$, we have:
 %
 \[
-	\exists t_{21}, t_{22}, \aq' ~ s.t.,~ (\aq \aqeq \aq') \land t_{21} ++ [\aq'] ++ t_{22} = t_2 ~ (4)
+	\exists t_{21}, t_{22}, \av' ~ s.t.,~ (\av \aveq \av') \land t_{21} ++ [\av'] ++ t_{22} = t_2 ~ (4)
 \]
 %
 By rewriting $(4)$ inside $(3)$, we have:
 %
 \[
-	\exists t_{21}, t_{22}, \aq'' ~ s.t.,~ (\aq \aqeq \aq'') \land t_1 ++[\aq'] ++ t_{21} ++ [\aq''] ++ t_{22} = t_3 ~ \star
+	\exists t_{21}, t_{22}, \av'' ~ s.t.,~ (\av \aveq \av'') \land t_1 ++[\av'] ++ t_{21} ++ [\av''] ++ t_{22} = t_3 ~ \star
 \]
 %
 By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\star)$, we know
 %
 \[
-	\aq' <_{aq} \aq
+	\av' <_{aq} \av
 \]
 %
-This is contradict to our assumption, where $\aq' \aqgeq \aq$. 
+This is contradict to our assumption, where $\av' \avgeq \av$. 
 %
 %
-\caseL{(e), \[\aq \notin_{aq} (t_3 - (t_1 ++[\aq'])) ~(e)\]} 
+\caseL{(e), \[\av \notin_{aq} (t_3 - (t_1 ++[\av'])) ~(e)\]} 
 %
 According to the condition $(c)$, we know: $\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.$
   	% 
 \[ 
-	\config{m_1[v/x], {c_2}, t_1 ++ [\aq'], w_1} 
+	\config{m_1[v/x], {c_2}, t_1 ++ [\av'], w_1} 
 	\rightarrow^{*} (\config{m_3', \eskip, t_3', w_3'} ~ (5)
-	\land \aq  \in_{q} (t_3' - (t_1 ++ [\aq']))) ~ (6)
+	\land \av  \in_{q} (t_3' - (t_1 ++ [\av']))) ~ (6)
 \] 
 %
 According to the Theorem \ref{thm:os_wf_trace}, Sub-Lemma-t and $(5)$,
-we know $t_3'- (t_1 ++ [\aq'])$ is a well-formed trace.
+we know $t_3'- (t_1 ++ [\av'])$ is a well-formed trace.
 \\
 From $(a)$, we know that the minimal line number of $c_2$ is greater than $l'$, so we know that : 
 \[
-  \forall \aq'' \in t_3'- (t_1 ++ [\aq']), \aq''>_{aq} \aq'
+  \forall \av'' \in t_3'- (t_1 ++ [\av']), \av''>_{aq} \av'
 \]
 %
 Unfolding the trace subtraction operations in $(6)$, we have;
 \[
-	\exists t_2'. ~ s.t., ~ t_1 ++[\aq'] ++ t_2' = t_3' \land \aq \aqin t_2' ~ (7)
+	\exists t_2'. ~ s.t., ~ t_1 ++[\av'] ++ t_2' = t_3' \land \av \avin t_2' ~ (7)
 \]
 %
 %
 According to the sub-lemma and $(7)$, we have:
 %
 \[
-	\exists t_{21}', t_{22}' ~ s.t.,~ t_{21}' ++ [\aq] ++ t_{22}' = t_2' ~ (8)
+	\exists t_{21}', t_{22}' ~ s.t.,~ t_{21}' ++ [\av] ++ t_{22}' = t_2' ~ (8)
 \]
 %
 By rewriting $(8)$ inside $(7)$, we have:
 %
 \[
-	t_1 ++[\aq'] ++ t_{21}' ++ [\aq] ++ t_{22}' = t_3' ~ \diamond
+	t_1 ++[\av'] ++ t_{21}' ++ [\av] ++ t_{22}' = t_3' ~ \diamond
 \]
 %
 By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\diamond)$, we know
 %
 \[
-	\aq' <_{aq} \aq
+	\av' <_{aq} \av
 \]
 %
-This is contradict to the assumption,  $\aq' \aqgeq \aq$.
+This is contradict to the assumption,  $\av' \avgeq \av$.
 %
 \end{itemize}
 %
-From both cases, we derive $\aq' \aqgeq \aq$, which is contradict to the hypothesis, i.e., $\aq' \aqgeq \aq$.
+From both cases, we derive $\av' \avgeq \av$, which is contradict to the hypothesis, i.e., $\av' \avgeq \av$.
 Then, we can conclude that 
-for any directed edge $(\aq', \aq) \in \edges$, 
+for any directed edge $(\av', \av) \in \edges$, 
 this is not the case that:
 %
-$$\aq' \aqgeq \aq$$
+$$\av' \avgeq \av$$
 %
 }
 \end{proof}
@@ -1398,1543 +1557,6 @@ Proof is obvious based on the Lemma \ref{lem:DAG}.
 \clearpage
 %
 %
-\section{Labeled SSA Language}
-%
-{
-\subsection{The Limit of {\tt While} Language}
-we see the power of the labelled loop language to achieve the adaptivity semantically, from its being capable to express many adaptive data analysis algorithm,  allowing the construction of the query-based dependency graph using traces from the execution, and so on.
-However, it is not powerful enough to reach the adaptivity syntactically. The main difficulty is its implicit control flow which raises extra complexity to figure out where some variables used come from. We use three simple but relevant examples to show why the loop language suffers. We use $\query(0),\query(1)$ to represent linear queries.
-%
-\[
- c_1 = \begin{array}{l}
-      \clabel{ \assign{x}{\query(0)}}^{1} ; \\
-      \eif  [(x < 0 )]^{2} \\
-      \ethen \clabel{\assign{x}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{y}{\query(x+\chi(3))}}^{5}
- \end{array}
- ~~~~~
- c_2 = \begin{array}{l}
-      \clabel{ \assign{x}{\query(0)}}^{1} ; \\
-      \eif  [(x < 0 )]^{2} \\
-      \ethen \clabel{\assign{x}{\query(1)}}^{3}\\
-      \eelse \clabel{\assign{x}{\query(2)}}^{4} ; \\
-      \clabel{\assign{y}{\query(x+\chi(3))}}^{5}
- \end{array}
- ~~~~~~~~
-  c_3 = \begin{array}{l}
-      \clabel{ \assign{x}{\query(0)}}^{1} ; \\
-      \eif  [(x < 0 )]^{2} \\
-      \ethen \clabel{\assign{z}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{y}{\query(x+\chi(3)}}^{5}
- \end{array}
-\]
-In these three examples, the variable $x$ at line $5$ is implicit. In program $c_1$, it refers to the either $x$ at line $1$, or $x$ at line $3$, which means the result of query request $\query(x+\chi(3))$ assigned to the variable $y$ may depend on $\query(0)$(bound to $x$ at line $1$) or $\query(1)$($x$ at line $3$). When we have a look at the other two programs $c_2$ and $c_3$, it is another talk. We think $\query(x+\chi(3))$ may depend on either $\query(1)$($x$ at line $3$) or $\query(x+\chi(3))$($x$ at line $4$) in $c_2$,     
-while $\query(x+\chi(3))$ only depends on $\query(0)$ at line $1$ in program $c_3$. 
-These three examples are structural similar in loop language, however, the dependency between variables are quite dissimilar. We consider variables here because query request is also bound to variables. To solve this dilemma, we move to single static assignment as follows.   
-\[
- c_1^{ssa} = \begin{array}{l}
-      \clabel{ \assign{{\ssa{x}_1}}{\query(0)}}^{1} ; \\
-      \eif  [({\ssa{x_1} }< 0 )]^{2}\\
-      ([], [{ \ssa{x_3, x_1,x_2} }], []) \\
-      \ethen \clabel{\assign{{\ssa{x_2}}}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_3} + \chi(3)})}}^{5}
- \end{array}
- ~~~~~
-  c_2^{ssa} = \begin{array}{l}
-      \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
-      \eif  [({\ssa{x_1}} < 0 )]^{2}, \\
-      ( [{\ssa{x_4, x_2,x_3}}], [], [] ) \\
-      \ethen \clabel{\assign{{\ssa{x_2}}}{\query(1)}}^{3}\\
-      \eelse \clabel{\assign{{\ssa{x_3}}}{\query(2)}}^{4} ; \\
-      \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_4}}+\chi(3))}}^{5}
- \end{array}
- ~~~~~~~~
-  c_3^{ssa} = \begin{array}{l}
-      \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
-      \eif  [({\ssa{x_1}} < 0 )]^{2} \\
-       ( [], [], [] ) \\
-      \ethen \clabel{\assign{{\ssa{z_1}}}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_1}}+\chi(3))}}^{5}
- \end{array}
-\]
-To distinguish between the loop language and in ssa form, we denote the ssa variable ${\ssa{x_1}}$ in bold. As we can see, the data flow becomes explicit in ssa form and the analysis on the dependency between variables in the program becomes much clear now. Considering this advantage, we aim to estimate the adaptivity through an analysis on program in ssa form. 
-}
-%
-\subsection{Dependency in SSA Language}
-\todo{
-\input{ssa_dep}
-}
-%
-\subsection{SSA form Language}
-\[
-\begin{array}{llll}
- \mbox{Arithmetic Operators} 
-& \oplus_a & ::= & + ~|~ - ~|~ \times 
-%
-~|~ \div \\  
-\mbox{Boolean Operators} 
-& \oplus_b & ::= & \lor ~|~ \land
-\\
-  %
-\mbox{Relational Operators} 
-& \sim & ::= & < ~|~ \leq ~|~ == 
-\\  
-%
-\mbox{Label} 
-& l & := & \mathbb{N} 
-\\ 
-%
-\mbox{SSA Arithmetic Expression} 
-& \saexpr & ::= & 
-n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr  
-\\
-%
-\mbox{SSA Boolean Expression} & \sbexpr & ::= & 
-	%
-	\etrue ~|~ \efalse  ~|~ \neg \sbexpr
-	 ~|~ \sbexpr \oplus_b \sbexpr
-	%
-	~|~ \saexpr \sim \saexpr 
-	\\
-%
-\mbox{SSA Query Expression} 
-& \ssa{\qexpr} & ::= 
-& { \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr} 
-\\
-%
-\mbox{Query Value} & \qval & ::= 
-& {n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
-~|~ \chi[n] \oplus_a  n}
-\\
-%
-\mbox{Value} 
-& v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
-\\
-%
-\mbox{SSA Expression} & \sexpr & ::= & v ~|~ \saexpr \sep \sbexpr ~|~ [\expr, \dots, \expr]
-\\	
-%
-\mbox{Labeled SSA Command} 
-& \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
-%
-~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} 
-\\ 
-&&& 
-{\ewhile ~ [ \sbexpr ]^{l} , n,
-~ 
-[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  \ssa{c} }
-\\
-&&&
-~|~ \ssa{c};\ssa{c}  
-~|~ [\eif(\sbexpr, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , \ssa{c}, \ssa{c})]^l 
-~|~ [\eskip]^{l} 
-\\
-%
-\mbox{SSA Memory} 
-& \ssa{m} & ::= & [] ~|~  (\ssa{x} \to v) :: \ssa{m } 
-\\
-%
-\mbox{While Map} 
-& w & ::= & [] ~|~  w[l \to n]
-\\
-%
-\mbox{Annotated Query} 
-& \aq & ::= & (\qval, l , w )
-\\
-%
-\mbox{Trace} & t 
-& ::= & [] ~|~ {\aq :: t}
-\end{array}
-\]
-\jl{
-We use $\mathcal{SVAR}$, $\mathcal{SAV}$ and $\mathcal{SM}$ to denote the set of SSA Variables, Annotated SSA Variables and SSA Memories respectively.
-}
-%
-%
-We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SVAR}$, 
-and the boolean expression as $\ssa{\bexpr}$. 
-%
-The ssa expression can be either $\ssa{a}$ and $\ssa{b}$. 
-We also have the ssa variables annotated in a similar way as the annotated queries in the while language.
-%
-The labeled commands $\ssa{c}$ are now in the ssa form. 
-% assignment
-In the assignment command $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$ and query request command 
-$[\assign {{\ssa{x}} } {\query({\ssa{\qexpr}})}]^{l}$ , 
-the expression ${\ssa{\expr}}$ and query expression 
-$\ssa{\qexpr}$ is now in their corresponding ssa forms. 
-
-{
-% if
-The if command now contains the extra part 
-$([\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , 
-[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
-[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] )$, 
-which helps to track the dependency of new assigned variables in both branches($[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$), 
-then branch $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$, 
-and else branch $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] $. 
-The $\bar{\ssa{x}}$ is a list of ssa variables, in which every element $\ssa{x}$ may depends on the corresponding element $\ssa{x_1}$ from $\bar{\ssa{x_1}}$ collected in the then branch or the corresponding element $\ssa{x_2}$ from $\bar{\ssa{x_2}}$ collected in the else branch. 
-%
-Every tuple $(\ssa{x,x_1,x_2 })$ from $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$ can be understood as $\ssa{x} = \phi(\ssa{x_1,x_2})$ in the normal ssa form. 
-The previous example $c_2^{s}$ can be used for reference. 
-The second part $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$ focuses on the then branch. 
-The list of ssa variables $y_1$ stores the assigned ssa variables before the if command, whose non-ssa version (variables in the while language) will be modified only in the then branch. 
-We can look at program $c_1$ as a reference,in which $x$ at line $1$ may be modified only in the then branch at line $3$. 
-The list $\bar{\ssa{y_2}}$ tracks the ssa variables assigned only in the then branch. 
-If the variables are assigned in both branches such as in the program $c_2$, they goes into $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$. Then we think every ssa variable in $\bar{\ssa{y}}$ may come from the corresponding variable $\ssa{y_1}$ in $\bar{\ssa{y_1}}$ before the if command or $\ssa{y_2}$ in $\bar{\ssa{y_2}}$ in the then branch. 
-In this sense, we can also regard every tuple $(\ssa{y,y_1,y_2 })$ from $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$ as $\ssa{y} = \phi(\ssa{y_1,y_2})$. 
-The rest part $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$ focus on the else branch and can be understood similarly. 
-}
-
-The while command also has similar part $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$, focusing on the while body. 
-The new command ${{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}}$ does not have explicit label because it is only used for evaluation internally, we will discuss more about it when in the 
-small-step operational semantics for SSA language. 
-
-The SSA memory $\ssa{m}$ is a map from SSA variables $\ssa{x}$ to values.
-
-The others remain the same in SSA form language as in the {\tt While} language.
-%
-%
-{
-\subsection{Trace-based Operational Semantics for SSA Language}
-When switching to the SSA language, we show that we are still able to achieve what we can get in Section~\ref{sec:while_language}. 
-The operational semantics of the SSA language mimics its counterpart, of the form $\config{\ssa{m}, \ssa{c}, t, w} \to \config{\ssa{m'}, \eskip, t', w'}$. 
-The SSA memory $\ssa{m}$ is a map from SSA variable $\ssa{x}$ to values.
-It still uses a trace to track the query requests during the execution, starting from an SSA configuration with an SSA memory $\ssa{m}$ and a program in its SSA form $\ssa{c}$, 
-which allows a similar construction of the query-based dependency graph in the SSA language as in the {\tt While} language.
-We show the evaluation rules in Figure~\ref{fig:ssa_evaluation}.
-}
-%
-The command 
-$\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time, which is a map from ssa variable $\ssa{x}$ to variable $\ssa{x}_i$. 
-This map is designed for $\eif$ command, when the variable may comes from two branches and this command records which branch the variable comes from. 
-%
-\begin{figure}
-\begin{mathpar}
-\boxed{\config{\ssa{m, a}} \xrightarrow{} \config{\ssa{a}} \;} 
-\and
-\boxed{ \config{\ssa{m, c}, t,w} \xrightarrow{} \config{\ssa{ m', c'},  t', w'}}
-\and
-\jl{Memory \times Command  \times Trace \times While Map \Rightarrow^{}  Memory \times Command  \times Trace \times Whil Map}
-\\
-{
-	\inferrule
-	{
-		\ssa{\config{m,\qexpr} \qarrow \qexpr'}
-	}
-	{
-	\config{\ssa{
-		m, [\assign{x}{\query(\qexpr)}]^l, t, w} }
-	\xrightarrow{} 
-	\config{\ssa{
-		m, [\assign{x}{\query(\qexpr')}]^l, t, w
-	}}
-	}
-	~\textbf{ssa-query-e}}
-%
-\and
-\inferrule
-{
-{
-\ssa{\query(\qval)(D) = v}}
-}
-{
-\config{\ssa{
-m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, t, w
-}} 
-\xrightarrow{} 
-\config{\ssa{ (x \mapsto v)::m, \eskip,  
-{t++[(\qval,l,w)],w }}
-}
-}
-~\textbf{ssa-query-v}
-%
-\and
-%
-\inferrule
-{
-}
-{
-\config{\ssa{ m, [\assign x v]^{l},  t,w} } \xrightarrow{} \config{\ssa{(x \mapsto v)::m, [\eskip]^{l}, t,w} }
-}
-~\textbf{ssa-assn}
-%
-\and
-%
-\inferrule
-{
-\config{ \ssa{m, \bexpr}} \barrow \ssa{\bexpr'}
-}
-{
-\config {\ssa{m, [\eif(\bexpr, [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l},  t,w} } 
-\xrightarrow{} \config{ \ssa{ m,  [\eif(\sbexpr',[ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l},  t, w} }
-}
-~\textbf{ssa-if}
-%
-\and
-%
-\inferrule
-{
-}
-{
-\config{\ssa{m, [\eif(\etrue, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l},t,w}} 
-\xrightarrow{} \config{m, c_1; { \ \eifvar(\bar{\ssa{x}},\bar{\ssa{x_1}}); \eifvar(\bar{\ssa{y}},\bar{\ssa{y_2}});\eifvar(\bar{\ssa{z}},\bar{\ssa{z_1}}) }  ,  t,w}
-}
-~\textbf{ssa-if-t}
-%
-\and
-%
-\inferrule
-{
-}
-{
-\config{\ssa{m, [\eif(\efalse, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l},t,w}} 
-\xrightarrow{} \config{m, c_2 ; { \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});\eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}) },  t,w}
-}
-~\textbf{ssa-if-f}
-%
-\and
-%
-\inferrule{
-}{
- \config{ \ssa{m,} \eifvar(\ssa{\bar{x}, \bar{x}'}),\ssa{ t,w }} \to \config{ \ssa{(\bar{x} \to m(\bar{x}'))::m, \eskip , t,w }  }
-}~\textbf{ssa-\eifvar}
-% %
-%
-\and
-%
-%
-{
-{\inferrule
-{
- {n = 0 \rightarrow i = 1 }
- \and
- {n > 0 \rightarrow i = 2 }
-}
-{
-\config{
-\ssa{m},  
-\ssa{
-\ewhile ~ 
-[\bexpr]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] 
-~ \edo ~ {c} 
-}, t, w 
-}
-\xrightarrow{} 
-\\ 
-\config{\ssa{m},
-\eif_w (\ssa{
-b[\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n, 
-c[\bar{x_i}/\bar{x'}] 
-}; 
-\ssa{
-\ewhile ~ 
-[b]^{l}, n+1, 
-[\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  
-~ \edo ~ c} ,  
-\eskip),
-t, w 
-}
-}
-~\textbf{ssa-while-b}
-}
-}
-%
-\and
-%
-{{\inferrule
-{
- \ssa{m, b \xrightarrow{} b'}
-}
-{
-\config{\ssa{m, \eif_w (b, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n,  c_1,  c_2)} ,  t, w }
-\xrightarrow{} \config{\ssa{ m, 
- \eif_w (b', [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n , c_1 , c_2 )}, t, w }
-}
-~\textbf{ssa-ifw-b}
-}
-}
-%
-\and
-%
-{
-\inferrule
-{
- \empty
-}
-{
-\config{
-\ssa{
-m, 
-{
-\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
-c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-\eskip)
-} 
-},  t, w 
-}
-\\
-\xrightarrow{} 
-\config{
-\ssa{m, 
-{
-\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
-c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-}
-}
-t, (w + l) }
-}
-~\textbf{ssa-ifw-true}
-}
-\and
-%
-{{
-\inferrule
-{
- { n = 0 \rightarrow i = 1 }
- \and
- {n > 0 \rightarrow i =2}
-}
-{
-\config{\ssa{
-m, \eif_w (
-\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, 
-{  
-c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-\eskip)
-} 
-)} ,  t, w }
-\\
-\xrightarrow{} 
-\config{\ssa{m, 
-{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w - l) }
-}
-~\textbf{ssa-ifw-false}
-}
-}
-\end{mathpar}
-    \caption{Operational Semantics for the SSA Language}
-    \label{fig:ssa_evaluation}
-\end{figure}
-%
-%
-{
-The key idea underneath the operational semantics is to have the trace and the execution path being constructed in a similar way as in the loop language.
-Take the query request as an example, the argument $\ssa{\expr}$ which contains ssa variables will be evaluated to a value $v$ first before the request is sent to the database in rule $\textbf{ssa-query-arg}$. 
-The trace expands in the rule $\textbf{ssa-query}$ likewise in the loop language. 
-The query $q$, a primitive symbol representing the abstract query in both the ssa language and  the loop language, makes no difference in the two languages. 
-Since we add the extra part $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}]  $ 
-in the if command compared to its counterpart in the while language, 
-the rules relevant to the if condition ($\textbf{ssa-if-t}$ and $\textbf{ssa-if-f}$) use the command $\eifvar(\ssa{\bar{x}, \bar{x}'})$ to update the ssa memory $\ssa{m}$ with the mapping from the new generated variable $\ssa{x}$ in $\bar{\ssa{x}}$ to the appropriate value $\ssa{m(x')}$ where $\ssa{x'}$ is the corresponding variable w.r.t $\ssa{x}$ in $\bar{\ssa{x'}}$.
-%
-The rule $\textbf{ssa-\eifvar}$ reflects the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$.
-%
-It is easier to understand the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$ in the rule $\textbf{ssa-if-t}$ when we think about how ssa works: 
-in the ssa form, when a variable to be used may come from two sources (e.g. $\ssa{x_1}$ and $\ssa{x_2}$ in the rule), it generates a new variable $\ssa{x}$, assigning it with $\phi(\ssa{x_1}, \ssa{x_2})$,  and replaces the variable to be used with newly assigned $\ssa{x}$. 
-We know that in the future program after the if command, 
-only the variables $\bar{\ssa{x}}$ will be available instead of $\bar{\ssa{x_1}}, \bar{\ssa{x_2}}$ from two branches.
-For the evaluation of the program after the if command, we need to tell the memory the exact value of the newly generated variable $\ssa{x}$, which is the value stored in $\ssa{x_1}$ when the conditional $\ssa{b}$ is true, 
-or the value in $\ssa{x}_2$ when $\sbexpr$ is false. To this end, the internal command $\eifvar(\ssa{\bar{x}, \bar{x}'})$ plays its role. 
-For the if rule, w
-e need to instantiate the variables from $\bar{\ssa{x}}$ whose values come from two branches, 
-$\bar{\ssa{y}}$ whose values from then branch or assignment before the if command, and $\bar{\ssa{z}}$ whose values from else branch or before the if command. 
-Correspondingly, we need to have three ifvar commands.   
-}
-
-{
-	The evaluation of while depends on the while iteration counter $\ssa{n}$ and the guard $\ssa{\bexpr}$. 
-	When $\ssa{\bexpr}$ is evaluated to $\etrue$, the while is still executing, and all the variables $\ssa{x}$ in $\bar{\ssa{x}}$ of the loop body $\ssa{c}$ are replaced as the corresponding variables in $\bar{\ssa{x_1}}$ in the first iteration($n=0$), or $\bar{\ssa{x_2}}$ in other iterations($n > 0$). 
-	The while turns to an exit when $\ssa{n} > 0$, 
-	and the memory $\ssa{m}$ updates the mapping of variables in $\bar{\ssa{x}}$ with $\bar{\ssa{x_1}}$ if the guard $\bexpr$ evaluates to $\efalse$, 
-	which means the while body is not executed once. 
-	When the while enters the exit after executing the body a few times($n$), the variables in $\bar{\ssa{x}}$ is instantiated with the value from the body $\ssa{m}(\bar{\ssa{x_2}})$. 
-}
-%
-%
-\subsection{SSA Transformation}
-We use a translation environment $\delta$, to map variables $x$ in the {\tt While} language to those variables $\ssa{x}$ in the SSA language.
-We use a name environment denoted as $\Sigma$ as a set of ssa variables, to get a fresh variable by $fresh(\Sigma)$. 
-We define $\delta_1 \bowtie \delta_2 $ in a similar way as
-\cite{vekris2016refinement}.
-%
-\[ 
-\delta_1 \bowtie \delta_2 = \{ ( x, {\ssa{x_1}, \ssa{x_2}} ) \in 
-\mathcal{VAR} \times \mathcal{SVAR} \times \mathcal{SVAR} \mid x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }  }  \} 
-\]
-%
-\[ 
-\delta_1 \bowtie \delta_2 / \bar{x} = \{ ( x, {\ssa{x_1}, \ssa{x_2}} ) \in 
-\mathcal{VAR} \times \mathcal{SVAR} \times \mathcal{SVAR}
- \mid x \not\in \bar{x} \land x \mapsto {\ssa{x_1}} \in \delta_1 , x \mapsto {\ssa{x_2} } \in \delta_2, {\ssa{x_1} \not= {\ssa{x_2} }   }  \} 
- \]
- %
-We call a list of variables $\bar{x}$.
-\[
- [\bar{x}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] = \{ (x, x_1,x_2)  | \forall 0 \leq i < |\bar{x}|, x = \bar{x }[i] \land x_1 = \bar{x_1}[i] \land x_2 = \bar{x_2 }[i] \land |\bar{x}| = |\bar{x_1}| = |\bar{x_2}|   \}
-\]
-%
-\begin{mathpar}
-\boxed{ \delta ; e \hookrightarrow \ssa{e} }
-\and
-\inferrule{
-}{
- \delta ; x \hookrightarrow \delta(x)
-}~{\textbf{S-VAR}}
-\and
-\boxed{ \Sigma; \delta ; c  \hookrightarrow \ssa{c} ; \delta' ; \Sigma' }
-\and
-\inferrule{
-  { \delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
-  \and
-  { \Sigma; \delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1;\Sigma_1 }
-  \and
-  {\Sigma_1; \delta ; c_2 \hookrightarrow \ssa{c_2} ; \delta_2 ; \Sigma_2 }
-  \\
-  {[\bar{x}, \ssa{\bar{{x_1}}, \bar{{x_2}}}] = \delta_1 \bowtie \delta_2  }
-  \and
-   {[\bar{y}, \ssa{\bar{{y_1}}, \bar{{y_2}}}] = \delta \bowtie \delta_1 / \bar{x} }
-  \and
-   {[\bar{z}, \ssa{\bar{{z_1}}, \bar{{z_2}}}] = \delta \bowtie \delta_2 / \bar{x} }
-  \\
-  { \delta' =\delta[\bar{x} \mapsto \ssa{\bar{{x}}'} ][\bar{y} \mapsto \ssa{\bar{{y}}'} ][\bar{z} \mapsto \ssa{\bar{{z}}'} ]}
-  \and 
-  {\ssa{\bar{{x}}', \bar{y}', \bar{z}'} \ fresh(\Sigma_2)
-  }
-  \and{\Sigma' = \Sigma_2 \cup \{ \ssa{ \bar{x}', \bar{y}', \bar{z}' } \} }
-}{
- \Sigma; \delta ; [\eif(\bexpr, c_1, c_2)]^l  \hookrightarrow [\ssa{ \eif(\bexpr, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ,[\bar{{y}}', \bar{{y_1}}, \bar{{y_2}}] ,[\bar{{z}}', \bar{{z_1}}, \bar{{z_2}}] , {c_1}, {c_2})}]^l; \delta';\Sigma'
-}~{\textbf{S-IF}}
-%
-\and
-%
-\inferrule{
- {\delta ; \expr \hookrightarrow \ssa{\expr} }
- \and
- {\delta' = \delta[x \mapsto \ssa{{x}} ]}
- \and{ \ssa{x} \ fresh(\Sigma) }
- \and { \Sigma' = \Sigma \cup \{ \ssa{x} \} }
-}{
- \Sigma;\delta ; [\assign x \expr]^{l} \hookrightarrow [\ssa{\assign {{x}}{ \expr}}]^{l} ; \delta'; \Sigma'
-}~{\textbf{S-ASSN}}
-%
-\and
-%
-\inferrule{
- {\delta ; \query \hookrightarrow \ssa{\query}}
- \and
- {\delta ; \qexpr \hookrightarrow \ssa{\qexpr}}
- \and
- {\delta' = \delta[x \mapsto \ssa{x} ]}
- \and{ \ssa{x} \ fresh(\Sigma) }
-  \and { \Sigma' = \Sigma \cup \{ \ssa{x} \} }
-}{
- \Sigma;\delta ; [\assign{x}{\query(\qexpr)}]^{l} \hookrightarrow 
- [\assign {\ssa{x}}{ \ssa{\query(\qexpr)}}]^{l} ; \delta';\Sigma'
-}~{\textbf{S-QUERY}}
-%
-%%
-\and
-%
-%
-\and
-%
-\inferrule{
-    { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-     \and
-    { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-    \\
-     {
-     \ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-    \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-    \and 
-     {\delta' ; \bexpr \hookrightarrow \ssa{\bexpr} }
-     \and
-    {\ssa{c' = c_1[\bar{x}'/ \bar{x_1}]   } }
-  }{ 
-  \Sigma; \delta ;  \ewhile ~ [\bexpr]^{l} ~ \edo ~ c 
-  \hookrightarrow 
-  \ssa{\ewhile ~ [\bexpr]^{l}, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ; \delta'; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-WHILE}
-}
-\and
-%
-\inferrule{
- {\Sigma;\delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1} 
- \and
- {\Sigma_1; \delta_1 ; c_2 \hookrightarrow \ssa{c_2} ; \delta'; \Sigma'} 
-}{
-\Sigma;\delta ; c_1 ; c_2 \hookrightarrow \ssa{c_1} ; \ssa{c_2} \ ; \delta';\Sigma'
-}~{\textbf{S-SEQ}}
-\end{mathpar}
-
-\paragraph{Concrete examples.}
-\[
-c_1 \triangleq
-\begin{array}{l}
-     \left[x \leftarrow \query(1) \right]^1; \\
-     \eif \; (x ==0)^{2} \; \\
-    \ethen \; \left[y \leftarrow \query(2) \right]^3\; \\
-    \eelse \; \left[y \leftarrow 0 \right]^4 ; \\
-    \eif \; (x == 1 )^5\; \\
-    \ethen \; \left[ y \leftarrow 0 \right]^6\; \\
-    \eelse \; \left[y \leftarrow \query(2) \right]^7\\
-\end{array}
-%
-%
-\hspace{20pt} \hookrightarrow  \hspace{20pt}
-%
-\begin{array}{l}
-     \left[ \ssa{x_1} \leftarrow \query(1) \right]^1; \\
-     \eif \; (\ssa{x_1 ==0})^{2}, [\ssa{ y_3, y_1,y_2  }],[],[]  \; \\
-    \ethen \; \left[ \ssa{y_1} \leftarrow \query(2) \right]^3\; \\
-    \eelse \; \left[\ssa{y_2 \leftarrow 0 } \right]^4 ; \\
-    \eif \; (\ssa{x_1 == 1} )^{5} , [\ssa{ y_6, y_4, y_5 } ] \; \\
-    \ethen \; \left[ \ssa{y_4 \leftarrow 0} \right]^6\; \\
-    \eelse \; \left[\ssa{y_5} \leftarrow \query(2) \right]^7\\
-\end{array}
-\]
-\[
-c_2 \triangleq
-\begin{array}{l}
-   \left[ x \leftarrow \query(1) \right]^1; \\
-   \left[y \leftarrow \query(2) \right]^2 ; \\
-    \eif \;( x + y == 5 )^3\; \\
-    \ethen \;\left[ z \leftarrow \query(3)\right]^4 \; \\
-    \eelse \;\left[ \ssa{\eskip}\right]^5 ; \\
-   \left[ w \leftarrow q_4 \right]^6; \\
-\end{array}
-\hspace{20pt} \hookrightarrow \hspace{20pt}
-%
-\begin{array}{l}
-   \left[ \ssa{ x_1 } \leftarrow \query(1) \right]^1; \\
-   \left[\ssa{ y_1} \leftarrow \query(2) \right]^2 ; \\
-    \eif \;( \ssa{ x_1 + y_1 == 5} )^3, [ ],[] ,[ ]\; \\
-    \ethen \;\left[ \ssa{ z_1 }
-    \leftarrow \query(3)\right]^4 \; \\
-    \eelse \;\left[ \eskip\right]^5 ; \\
-   \left[ \ssa{ w_1} \leftarrow \query(4) \right]^6; \\
-\end{array}
-\]
-
-{
-\[
-c_3 \triangleq
-\begin{array}{l}
-     \left[x \leftarrow \query(1) \right]^1 ; \\
-     \left[i \leftarrow 0 \right]^2 ; \\
-    \ewhile ~  [i < 100]^3 ~ \edo
-    \\
-    ~ \Big( 
-    \left[z \leftarrow \query(3) \right]^4; \\
-    \left[x \leftarrow z + x \right]^5; \\
-    \left[i \leftarrow i + 1 \right]^6
-    \Big) ;
-\end{array}
-%
-\hspace{20pt} \hookrightarrow \hspace{20pt} 
-%
-\begin{array}{l}
-     \left[\ssa{x_1} \leftarrow \query(1) \right]^1 ; \\
-     \left[\ssa{i_1} \leftarrow 0 \right]^2 ; \\
-    \ewhile
-    ~ [\ssa{i_1} < 100]^3, 0,
-    ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }~
-    \edo \\
-    ~ \Big( 
-    \left[\ssa{z_1} \leftarrow \query(3) \right]^4; \\
-    \left[ \ssa{x_2} \leftarrow \ssa{z_1 + x_3} \right]^5; \\
-    \left[\ssa{i_2} \leftarrow \ssa{i_3} + 1 \right]^6
-    \Big) ;
-\end{array}
-\]
-}
-%
-\begin{figure}
-   \[
- \begin{array}{lll}
-    | \ewhile ~ [ \sbexpr ]^{l}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-    ~ \edo ~  \ssa{c}|  
-    &=& \ewhile ~ [|\sbexpr|]^{l},  ~ \edo ~ |\ssa{c}| 
-	\\
-    |\ssa{c_1 ; c_2}|  &=& |\ssa{c_1}| ; |\ssa{c_2}| 
-    \\
-    |[\eif(\sbexpr,
-    [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,
-    [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , 
-    [\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , 
-    \ssa{ c_1, c_2)}]^{l}|  
-    &=&
-    [\eif(|\sbexpr|, |\ssa{ c_1}|, |\ssa{c_2}|)]^{l}
-    \\
-    | [\assign {\ssa{x}}{\ssa{\expr}}]^{l}| & = & [\assign {|\ssa{x}|}{|\ssa{\expr}|} ]^{l}
-    \\
-    | [\assign {\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} | & = & [\assign {|\ssa{x}|}{|\query(\ssa{\qexpr})|}]^{l}
-    \\
-    |\ssa{x}_i| & = & x 
-    \\
-    |n | & = & n 
-    \\
-    | \saexpr_1 \oplus_{a} \saexpr_2 | & = &  |\ssa{\aexpr_1}| \oplus_a |\ssa{\aexpr_2}| \\
-    | \sbexpr_1 \oplus_{b} \sbexpr_2 | & = &  |\sbexpr_1| \oplus_b |\sbexpr_2|
- \end{array}
-\]
-    \caption{The Erasure of SSA}
-    \label{fig:ssa_erasure-while}
-\end{figure}
-%
-%
-%
-\subsection{Trace-based Adaptivity in SSA Language}
-With the trace-based operational semantics of the SSA language at hand, we are able to provide the trace-based adaptivity definition in the SSA language,
-by mimicking the corresponding definitions in the {\tt While} language.
-%
-\begin{defn}
-[Query May Dependency in SSA Language].
-\\
-\jl{
-One annotated query $\aq_1 = ({\qval}_1, l_1, w_1)$ may depend on another query $\aq_2 = ({\qval}_2,l_2, w_2)$ in a program $\ssa{c}$,
-with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
-%
-$\qdep^{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
-%
-%
-\[
-\begin{array}{l}
-\exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
-  \left (\begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}}{\query({\qval}_1)}]^{l_1} ; c_2,
-  t_1, w_1} 
-\rightarrow^{\textbf{{ssa-query-v}}} 
-\\ 
-\config{\ssa{m}_1[v_1/\ssa{x}], c_2, t_1 ++ [\aq_1], w_1} 
-\rightarrow^{*} \config{\ssa{m}_3, \eskip, t_3,w_3}
-  % 
- \\ \bigwedge
-  \left( 
-  \begin{array}{l}
-  \aq_2 \aqin (t_3 - (t_1 ++ [\aq_1])) 
-  % 
-  \\
-  \implies 
-  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'.  
-  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1} 
-  \\ 
-  \quad \quad 
-  \rightarrow^{*}
-  (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
-  \land 
-  \aq_2 \not \aqin (t_3'-(t_1 ++ [\aq_1])))
-\end{array} \right )
-\\\bigwedge
-\left( 
-  \begin{array}{l}
-  	\aq_2 \not\aqin (t_3 - (t_1 ++ [\aq_1]))
-  	% 
-  	\\
-  	\implies 
-	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
-	\config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1}
-	\\ 
-	\quad \quad 
-	\rightarrow^{*} 
-	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
-	\land 
-	\aq_2  \aqin (t_3' - (t_1 ++ [\aq_1])))
-\end{array} \right )
-\end{array} \right )
-\end{array}
-\]
-}
-\end{defn}
-%
-%
-\begin{defn}
-[SSA Variable May Dependency].
-\label{def:svar_dep}
-\\
-\jl{
-One annotated ssa variable $\av_2 = (\ssa{x}_2,l_2, w_2)$ may depend on another one 
-$\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $c$,
-with a starting memory $m$ and a hidden database $D$, denoted as 
-%
-$\vardep^{ssa}(\av_1, \av_2, c, m, D)$ is defined below. 
-%
-\[
-\exists \qval_1, \qval_2. ~
-\aq_1 = (\qval_1, l_1, w_1)
-\land
-\aq_2 = (\qval_2, l_2, w_2)
-\land 
-\qdep^{ssa}(\aq_1, \aq_2, c, m, D)
-\]
-}
-\end{defn}
-%
-\todo{
-\begin{lem}[Inversion of Query May Dependency in SSA Language]
-Given a program $\ssa{c}$,
-with a starting memory $\ssa{m}$ and  hidden database $D$, 
-if one annotated query $\aq_1 = ({\qval}_1, l_1, w_1)$ may depend on another query $\aq_2 = ({\qval}_2,l_2, w_2)$, i.e., $\qdep^{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$,
-Then there must be a sequence of variables $x_1, \ldots, x_n$ s.t.,
- $$
- x_i \in FV(\expr_{i + 1})
- \land 
- \assign{x_{i + 1}}{\expr_{i +1}} \in_{\ssa{c}} \ssa{c},
- ~ i = 1, \ldots, n - 1
- $$
-\end{lem}
-}
-%
-%
-\begin{defn}
-[Trace-Based Dependency Graph in SSA Language].
-\\
-\jl{
-Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$,
-the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
-\[
-\begin{array}{rlcl}
-	\text{Vertices} &
-	\vertxs & := & \left\{ 
-	\av \in \mathcal{SAV} \middle\vert
-	\exists \ssa{m'},  w, \qtrace, \vtrace.  ~ 
-	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, \qtrace, \vtrace, w }
-	\land \av \in \vtrace
-	\right\}
-	\\
-	\text{Directed Edges} &
-	\edges & := & 
-	\left\{ 
-	(\av, \av') \in \mathcal{SAV} \times \mathcal{AQ} 
-	~ \middle\vert ~
-	\vardep^{ssa}(\av, \av', \ssa{c},\ssa{m},D) 
-	\right\}
-\end{array}
-\]
-}
-\end{defn}
-%
-\begin{defn}
-[Adaptivity of A Program in SSA Language].
-\\
-Given a program $\ssa{c}$ in SSA language, 
-its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
-$\traceG(\ssa{c}, \text{D},\ssa{m}) = (\vertxs, \edges)$, 
-for all possible starting SSA memory $\ssa{m}$ and database $D$.
-%
-%
-$$
-A(\ssa{c}) = \max \big 
-\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
-$$
-\end{defn}
-%
-%
-\begin{thm}[{Graph Equivalence}].
-\\
-{
-Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $,
-$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, 
-then $G(c,D,m) = \traceG(\ssa{c}, \text{D},\ssa{m}) $.
-}
-\end{thm}
-%
-\begin{proof}
- The nodes in the two graphs are the same according to soundness of the transformation theorem. We will show that the edges are the same. Unfold the definition of $\qdep$, when we find some $v$ in the codomain of one query that may change the appearance of another query,  we can always show that $v = \ssa{v}$ works for $\qdep^{ssa}$ as well. In the other direction, for any $\ssa{v}$ that may change the appearance of another query and lead to a different trace $t_3'$ in the ssa execution, there is the same $v = \ssa{v}$ so that the trace $t_3'$ is generated in the while language execution, according to the transformation theorem.  
-\end{proof}
-%
-\begin{coro}
-[Trace-Based Adaptivity Equivalence].
-\\
-{Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, 
-$\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, starting with a trace $t$ and while map $w$, then 
-$A(c) = A(\ssa{c}) $.
-}
-\end{coro}
-%
-%
-\subsection{The Soundness of the Transformation}
-In this subsection, we show our transformation from the {\tt While} language to its SSA form is sound with respect to the adaptivity. 
-To be specific, a transformed program $\ssa{c}$ starting with appropriate configuration, generates the same trace as the program before the transformation $c$, in its corresponding configuration.
-%
-%
-\begin{defn}[\todo{Written Variables}].
-\\
-We defined the assigned variables in the while language program $c$ as $\avars{c}$,the assigned variables in the ssa-form program $\ssa{c}$ as $\avarssa{\ssa{c}}$ defined as follows.
-\[
-\begin{array}{lll}
-    \avars{\assign{x}{\expr}} & =& \{ x \} \\
-    \avars{\assign{x}{\query(\qexpr)}} & =& \{ x \} \\
-    \avars{c_1; c_2}  & = & \avars{c_1} \cup \avars{c_2} \\
-    \avars{\ewhile ~ \bexpr ~ \edo ~ c} &= &  \avars{c} \\
-    \avars{\eif(\bexpr, c_1, c_2)} & =&  \avars{c_1} \cup \avars{c_2}\\
-\end{array} 
-\]
-%
-\[
-\begin{array}{lll}
-    \avarssa{\ssa{\assign{x}{\expr}}} & =& \{ \ssa{x} \}
-    \\
-    \avarssa{\ssa{\assign{x}{\query(\ssa{\qexpr})}}} & =& \{ \ssa{x} \}
-    \\
-    \avarssa{\ssa{c_1; c_2 } }  & = & \avarssa{\ssa{c}_1} \cup \avarssa{\ssa{c}_2}
-    \\
-    \avarssa{\ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ \ssa{c}}}
-    & = &  
-    \{\ssa{\bar{x}}\} \cup \avarssa{\ssa{c}} 
-    \\
-    \avarssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} 
-    & =&  \{ \ssa{\bar{x}},\ssa{\bar{y}} , \ssa{\bar{z}} \} 
-    \cup \avarssa{\ssa{c_1}} \cup \avarssa{\ssa{c_2}}\\
-\end{array}
-\]
-\end{defn}
-\begin{defn}[\todo{Read Variables}].
-\\
-{
-The variables read in the while language programs $c$ as $\vars{c}$, variables used in ssa-form program $\ssa{c}$ : 
-}
-\[
-\begin{array}{lll}
-    \vars{\assign{x}{\expr}} & =& \vars{\expr}  \\
-    \vars{\assign{x}{\query(\qexpr)}} & =&\{  \} \\
-    \vars{ c_1; c_2  }  & = & \vars{c_1} \cup \vars{c_2} \\
-    \vars{  \eloop ~ \aexpr ~ \edo ~ c  } &= &\vars{\aexpr} \cup \vars{c} \\
-    \vars{\eif(\bexpr, c_1, c_2)} & =& \vars{\bexpr} \cup \vars{c_1} \cup \vars{c_2}\\
-\end{array}
-\]
-\[
-\begin{array}{lll}
-    \varssa{\ssa{\assign{x}{\expr}}} & =& \varssa{\ssa{\expr}}  \\
-    \varssa{\ssa{\assign{x}{\query(\qexpr)}}} & =& \{  \} \\
-    \varssa{ \ssa{c_1; c_2}  }  & = & \varssa{\ssa{c}_1} \cup \varssa{\ssa{c}_2} \\
-    % \varssa{  \eloop ~ \ssa{\aexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } &= &\varssa{\ssa{\aexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
-    {\varssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} }} 
-    &= &
-    \varssa{\ssa{\bexpr}} \cup \varssa{\ssa{c}}  \cup \{ \ssa{\bar{x_1}} \} \cup \{ \ssa{\bar{x_2}} \}\\
-    \varssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}], [\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =& \varssa{\ssa{\bexpr}} \cup \varssa{\ssa{c_1}} \cup \varssa{\ssa{c_2}} \cup \{\ssa{\bar{x_1}, \bar{x_2},\bar{y_1}, \bar{y_2},\bar{z_1}, \bar{z_2} }\}  \\
-\end{array}
-\]
-\end{defn}
-%
-\begin{defn}[\todo{Necessary Variables}].
-\\
-{
-We call the variables needed to be assigned before executing the program $c$ as necessary variables $\fv{c}$. Its ssa form is : $\fvssa{\ssa{c}}$.
-}  
- \[
- \begin{array}{lll}
-     \fvars{\assign{x}{\expr} }  & = & \vars{\expr}  \\
-     \fvars{\assign{x}{\query(\qexpr)} }  & = & \{ \}  \\
-     {\fvars{  \ewhile ~ \bexpr ~ \edo ~ c  } }&= & \vars{\bexpr} \cup \fvars{c} \\
-     \fvars{\eif(\bexpr, c_1, c_2)} & =& \vars{\bexpr} \cup \fvars{c_1} \cup \fvars{c_2}  \\
-      \fvars{c_1 ; c_2} & = & \fvars{c_1} \cup ( \fvars{c_2} - \avars{c_1})
- \end{array}
- \]
- \[
- \begin{array}{lll}
-     \fvssa{\ssa{\assign{x}{\expr}} }  & = & \varssa{\ssa{\expr}}  \\
-     \fvssa{ \ssa{ \assign{x}{\query(\qexpr)}} }  & = & \{ \}  \\
-     {\fvssa{  \ewhile ~ \ssa{\bexpr, n, [\bar{x}, \bar{x_1}, \bar{x_2}] ~ \edo ~ c} } }
-     &= & 
-     \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}]\\
-     \fvssa{\eif(\ssa{\bexpr,[\bar{x}, \bar{x_1}, \bar{x_2}],[\bar{y}, \bar{y_1}, \bar{y_2}],[\bar{z}, \bar{z_1}, \bar{z_2}], c_1, c_2} )} & =& \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c_1}} \cup \fvssa{\ssa{c_2}}  \\
-      \fvssa{\ssa{c_1 ; c_2}} & = & \fvssa{\ssa{c_1}} \cup ( \fvssa{\ssa{c_2}} - \avarssa{\ssa{c_1}})
- \end{array}
- \]
-%
-\end{defn}
-%
-The Lemma~\ref{lem:fv} and \ref{lem:same_value} proved the preserving properties for variables and values during the transformation.
-%
-\begin{lem}[Variable Preserving]
-\label{lem:fv}
-If $\Sigma;\delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\fvssa{\ssa{c}} = \delta(\fvars{c})$. 
-\end{lem}
-\begin{proof}
- By induction on the transformation.
- \begin{itemize}
-    \caseL{Case $\inferrule{
-  { \delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
-  \and
-  { \delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1 }
-  \and
-  {\delta ; c_2 \hookrightarrow \ssa{c_2} ; \delta_2 }
-  \\
-  {[\bar{x}, \ssa{\bar{{x_1}}, \bar{{x_2}}}] = \delta_1 \bowtie \delta_2  }
-  \and
-   {[\bar{y}, \ssa{\bar{{y_1}}, \bar{{y_2}}}] = \delta \bowtie \delta_1 / \bar{x} }
-  \and
-   {[\bar{z}, \ssa{\bar{{z_1}}, \bar{{z_2}}}] = \delta \bowtie \delta_2 / \bar{x} }
-  \\
-  { \delta' =\delta[\bar{x} \mapsto \ssa{\bar{{x}}'} ]}
-  \and 
-  {\ssa{\bar{{x}}', \bar{y}', \bar{z}'} \ fresh }
-}{
- \delta ; [\eif(\bexpr, c_1, c_2)]^l  \hookrightarrow [\ssa{ \eif(\bexpr, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ,[\bar{{y}}', \bar{{y_1}}, \bar{{y_2}}] ,[\bar{{z}}', \bar{{z_1}}, \bar{{z_2}}] , {c_1}, {c_2})}]^l; \delta'
-}~{\textbf{S-IF}} $}
-From the definition of $\fvssa{[\eif(\sbexpr, [\bar{\ssa{x'}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , \ssa{c_1}, \ssa{c_2})]^l} = \varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c_1}} \cup \fvssa{\ssa{c_2}}$. We want to show: \[\varssa{\ssa{\bexpr}}) \cup \fvssa{\ssa{c_1}} \cup \fvssa{\ssa{c_2}} = \delta( \vars{\bexpr}) \cup \delta(\fv{c_1}) \cup \delta(\fv{c_2}  )\]
-By induction hypothosis on the second and third premise, we know that : $\fvssa{\ssa{c_1}} = \delta(\fv{c_1}) $ and $\fvssa{\ssa{c_2}} = \delta(\fv{c_2}) $.  We still need to show that: 
-\[
-  \varssa{\ssa{\bexpr}} = \delta(\vars{\bexpr})
-\] 
-From the first premise, we know that $\vars{b} \subseteq \dom(\delta)$. This is goal is proved by the rule $\textbf{S-VAR}$ on all the variables in $\bexpr$.\\
-{\caseL{Case
-$\inferrule{
-    { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-     \and
-    { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-    \\
-     {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-    \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-    \and 
-     {\delta' ; \bexpr \hookrightarrow \ssa{\bexpr} }
-     \and
-    {\ssa{c' = c_1[\bar{x}'/ \bar{x_1}]   } }
-    % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
-  }{ 
-  \Sigma; \delta ;  \ewhile ~ [\bexpr]^{l} ~ \edo ~ c 
-  \hookrightarrow 
-  \ssa{\ewhile ~ [\bexpr]^{l}, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ; \delta'; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-WHILE}}
-$}
-}
-{
-Unfolding the definition, we need to show:
-\[\varssa{\ssa{\bexpr}} \cup \fvssa{\ssa{c'}}[\ssa{ \bar{x_1}} / \ssa{\bar{x}}] = \delta (\vars{\bexpr}) \cup \delta(\fv{c} ) \]
-We can similarly show that $\varssa{\ssa{\bexpr}} = \delta(\vars{b})$ as in the if case. We still need to show that: 
-\[
- \fvssa{\ssa{c_1[\bar{x}' / \bar{x_1}]}}[ \ssa{ \bar{x_1} } / \ssa{\bar{x}'}] =  \delta(\fv{c} )
-\]
-It is proved by induction hypothesis on $  { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$.\\
-}
-%
-\caseL{Case $\inferrule{
- {\Sigma;\delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1} 
- \and
- {\Sigma_1; \delta_1 ; c_2 \hookrightarrow \ssa{c_2} ; \delta'; \Sigma'} 
-}{
-\Sigma;\delta ; c_1 ; c_2 \hookrightarrow \ssa{c_1} ; \ssa{c_2} \ ; \delta';\Sigma'
-}~{\textbf{S-SEQ}}$}
-To show:
-  \[ \fvssa{\ssa{c_1}} \cup ( \fvssa{\ssa{c_2}} - \avarssa{\ssa{c_1}}) = \delta(\fv{c_1} )\cup \delta( \fv{c_2} - \avars{c_1}) \]
-  By induction hypothesis on the first premise, we know that : $ \fvssa{\ssa{c_1}} = \delta(\fv{c_1} ) $, still to show: 
-    \[ ( \fvssa{\ssa{c_2}} - \avarssa{\ssa{c_1}}) = \delta( \fv{c_2} - \avars{c_1})
-    \]
-    We know that $\delta_1 = \delta [\avars{c_1} \mapsto \avarssa{\ssa{c_1}} ]$, so by induction hypothesis, we know: $ \fvssa{\ssa{c_2}} = \delta[\avars{c_1} \mapsto \avarssa{\ssa{c_1}} ]( \fv{c_2})  = \delta(\fv{c_2}) \cup \avarssa{\ssa{c_1}} - \delta(\avars{c_1}) $.
-    
-    This case is proved.
- \end{itemize}
- 
-\end{proof}
-
-{
-We first define a good memory in the {\tt While} language $m$ or in the ssa language $\ssa{m}$ with respect to a translation environment $\delta$, denoted as $m \vDash \delta$ and $\ssa{m} \vDash \delta$ respectively. 
-%
-\begin{defn}[Well Defined Memory].
-\begin{enumerate}
-    % \item $m \vDash c \triangleq \forall x \in \fv{c}, \exists v, (x, v) \in m$.
-    \item $ m \vDash \delta  \triangleq \forall x \in \dom(\delta), \exists v, (x,v) \in m$.
-    % \item $\ssa{m} \vDash_{ssa} \ssa{c} \triangleq \forall \ssa{x} \in \fvssa{\ssa{c}}, \exists v, (\ssa{x}, v) \in \ssa{m}$.
-    \item $ \ssa{m} \vDash_{ssa} \delta  \triangleq \forall \ssa{x} \in \codom(\delta), \exists v, (\ssa{x},v) \in \ssa{m}$.
-\end{enumerate}
-\end{defn}
-%
-The part declared in the translation environment $\delta$ in a ssa memory $\ssa{m}$ can be reverted to corresponding part of the memory $m$ with an inverse of $\delta$ as follows.
-%
-\begin{defn}[Inverse of Transformed memory]
- $m = \delta^{-1}(\ssa{m}) \triangleq \forall x \in \dom(\delta), (\delta(x), m(x)) \in \ssa{m} $.
-\end{defn}
-}
-%
-\begin{lem}[Value Preserving].
-\label{lem:same_value}
-{
-Given $\delta; e \hookrightarrow \ssa{e}$,  $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, then $\config{m, e} \to v $ and $\config{
-\ssa{m}, \ssa{e}} \to {v}$.
-}
-\end{lem}
-
-\begin{thm}[Soundness of transformation]
-Given $\Sigma; \delta ; c \hookrightarrow \ssa{c} ; \delta';\Sigma' $, $\forall m. m \vDash \delta. \forall \ssa{m}, \ssa{m} \vDash_{ssa} \delta \land m = \delta^{-1}(\ssa{m})$, if there exist an execution of $c$ in the while language, starting with a trace $t$ and loop maps $w$, $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w' } $,  then there also exists a corresponding execution of $\ssa{c}$ in the ssa language so that 
-  $\config{  {\ssa{m}}, \ssa{c}, t, w} \to^{*} \config{{  \ssa{m'}}, \eskip, t', w' } $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
-\end{thm}
-
-\begin{proof}
- We assume that $q$ is the same when transformed to $\ssa{q}$, as the primitive in both languages. And the value remains the same during the transformation.  
- It is proved by induction on the transformation rules.
- \begin{itemize}
-   \caseL{Case $\inferrule{
- {\Sigma;\delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1;\Sigma_1} 
- \and
- {\Sigma_1; \delta_1 ; c_2 \hookrightarrow \ssa{c_2} ; \delta'; \Sigma'} 
-}{
-\Sigma;\delta ; c_1 ; c_2 \hookrightarrow \ssa{c_1} ; \ssa{c_2} \ ; \delta';\Sigma'
-}~{\textbf{S-SEQ}}$}
-We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$.
-\[
-\inferrule
-{
-{\config{m, c_1,  t,w} \xrightarrow{}^{*} \config{m_1, \eskip,  t_1,w_1}}
-\and
-{\config{m_1, c_2,  t_1,w_1} \xrightarrow{}^{*} \config{m', \eskip,  t',w'}}
-}
-{
-\config{m, c_1; c_2,  t,w} \xrightarrow{}^{*} \config{m', \eskip, t',w'}
-}
-\]
- We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
- 
- To show: $ \config{\ssa{ m, c_1;c_2 }, t, w } \xrightarrow{}^{*} \config{\ssa{m', \eskip}, t'. w' }$ and $ m' = \delta'^{-1} (\ssa{m'}) $.
- 
- By induction hypothesis on the first premise, we have:
- \[ \config{\ssa{m, c_1}, t,w} \xrightarrow{}^{*} \config{\ssa{m_1, \eskip},t_1,w_1 } \land m_1 = \delta_1^{-1}(\ssa{m_1}) \]
-  By induction hypothesis on the second premise, using the conclusion $ m_1 = \delta_1^{-1}(\ssa{m_1}) $.
-  We have:
-  \[
-   \config{\ssa{m_1, c_2}, t_1,w_1} \xrightarrow{}^{*} \config{\ssa{m', \eskip},t',w' } \land m' = \delta'^{-1}(\ssa{m'})
-  \]
-  So we know that 
-  \[
-  \inferrule{
-  { \config{\ssa{m, c_1}, t,w} \xrightarrow{}^{*} \config{\ssa{m_1, \eskip},t_1,w_1 }  }
-  \and
-  { \config{\ssa{m_1, c_2}, t_1,w_1} \xrightarrow{}^{*} \config{\ssa{m', \eskip},t',w' } }
-  }{
-  \config{\ssa{m, c_1;c_2 }, t,w} \xrightarrow{}^{*} \config{\ssa{m', \eskip}, t' , w' }
-  }
-  \]
- \caseL{Case $\inferrule{
- { \delta ; \expr \hookrightarrow \sexpr}
- \and
- {\delta' = \delta[x \mapsto \ssa{x} ]}
- \and{ \ssa{x} \ fresh(\Sigma) }
- \and {\Sigma' = \Sigma \cup \{x\} }
-}{
- \Sigma;\delta ; [\assign x \expr]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ; \delta';\Sigma'
-}~{\textbf{S-ASSN}} $ }
-
- We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$, we know that the resulting trace is still $t$ from its evaluation rule $\textbf{assn}$ when we suppose $m, \expr \to v$.
- \[
- \inferrule
-{
-}
-{
-\config{m, [\assign x v]^{l},  t,w} \xrightarrow{} \config{m[v/x], [\eskip]^{l}, t,w}
-}
-~\textbf{assn}
- \]
- We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
- 
- To show: $\config{\ssa{m}, [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} , t, w} \to^{*} \config{\ssa{m'}, \eskip, t, w} $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
- 
- From the rule \textbf{ssa-assn}, we assume $\ssa{m}, \ssa{\expr} \to \ssa{v}$, we know that 
- \[
- \inferrule
-{
-}
-{
-\config{\ssa{ m, [\assign x v]^{l}},  t,w } \xrightarrow{} \config{\ssa{m[x \mapsto v], [\eskip]^{l}}, t,w }
-}
-~\textbf{ssa-assn}
- \]
- We also know that $\delta'= \delta[x \mapsto \ssa{x}]$ and $m = \delta^{-1}(\ssa{m})$, $m'= m[v/x]$. We can show that $ m[v/x] = \delta[x \mapsto \ssa{x}]^{-1}(\ssa{m}[\ssa{x} \mapsto v]) $.
- 
-\caseL{Case $\inferrule{
- {\delta ; q \hookrightarrow \ssa{q}}
- \and
- {\delta ; \expr \hookrightarrow \ssa{\expr}}
- \and
- {\delta' = \delta[x \mapsto \ssa{x} ]}
- \and{ \ssa{x} \ fresh(\Sigma) }
- \and{ \Sigma' = \Sigma \cup \{x\} }
-}{
- \Sigma;\delta ; [\assign{x}{\query(\qexpr)}]^{l} \hookrightarrow [\assign {\ssa{x}}{ \ssa{\query(\qexpr)}}]^{l} ; \delta'
-}~{\textbf{S-QUERY}}$} 
-We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$, we know that when we suppose $\config{m, \expr} \to v$.
- \[
-\inferrule
-{
-\query(v)(D) = \qval 
-}
-{
-\config{m, [\assign{x}{\query(v)}]^l, t, w} \xrightarrow{} \config{m[ \qval/ x], \eskip,  t \mathrel{++} [\query(v),l,w )],w }
-}
-~\textbf{query}
- \]
- We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
- 
- To show: $\config{\ssa{m}, [\assign {\ssa{x}}{ \ssa{\query(\qexpr)}}]^{l} , t, w} \to^{*} \config{\ssa{m'}, \eskip, t, w} $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
- 
- From the rule \textbf{ssa-query}, we know that 
- \[
- \inferrule
-{
-\ssa{\query(v)(D) = \qval} 
-}
-{
-\config{ \ssa{ m, [\assign{\ssa{x}}{\ssa{\query(\qexpr)}}]^l}, t, w} \xrightarrow{} \config{\ssa{  m[  x \mapsto v], \eskip,}  t \mathrel{++} [(q^{(l,w )},v)],w }
-}
-~\textbf{ssa-query}
- \]
- We also know that $\delta'= \delta[x \mapsto \ssa{x}]$ and $m = \delta^{-1}(\ssa{m})$, $m'= m[v/x]$. We can show that $ m[v/x] = \delta[x \mapsto \ssa{x}]^{-1}(\ssa{m}[\ssa{x} \mapsto v]) $.
-
-  \caseL{Case $\inferrule{
-  { \delta ; \bexpr \hookrightarrow \ssa{\bexpr} }
-  \and
-  { \Sigma; \delta ; c_1 \hookrightarrow \ssa{c_1} ; \delta_1;\Sigma_1 }
-  \and
-  {\Sigma_1; \delta ; c_2 \hookrightarrow \ssa{c_2} ; \delta_2 ; \Sigma_2 }
-  \\
-  {[\bar{x}, \ssa{\bar{{x_1}}, \bar{{x_2}}}] = \delta_1 \bowtie \delta_2  }
-  \and
-   {[\bar{y}, \ssa{\bar{{y_1}}, \bar{{y_2}}}] = \delta \bowtie \delta_1 / \bar{x} }
-  \and
-   {[\bar{z}, \ssa{\bar{{z_1}}, \bar{{z_2}}}] = \delta \bowtie \delta_2 / \bar{x} }
-  \\
-  { \delta' =\delta[\bar{x} \mapsto \ssa{\bar{{x}}'} ][\bar{y} \mapsto \ssa{\bar{{y}}'} ][\bar{z} \mapsto \ssa{\bar{{z}}'} ]}
-  \and 
-  {\ssa{\bar{{x}}', \bar{y}', \bar{z}'} \ fresh(\Sigma_2)
-  }
-  \and{\Sigma' = \Sigma_2 \cup \{ \ssa{ \bar{x}', \bar{y}', \bar{z}' } \} }
-}{
- \Sigma; \delta ; [\eif(\bexpr, c_1, c_2)]^l  \hookrightarrow [\ssa{ \eif(\bexpr, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ,[\bar{{y}}', \bar{{y_1}}, \bar{{y_2}}] ,[\bar{{z}}', \bar{{z_1}}, \bar{{z_2}}] , {c_1}, {c_2})}]^l; \delta';\Sigma'
-}~{\textbf{S-IF}}$}
-We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$.
-There are two possible evaluation rules depending on the the condition $b$, we choose the case when $b = \etrue$, we know there is an execution in ssa language so that $\ssa{\bexpr} = \etrue$, we use the rule $\textbf{if-t}$.  
- \[\inferrule
-{
-}
-{
-\config{m, [\eif(\etrue, c_1, c_2)]^{l},t,w} 
-\xrightarrow{} \config{m, c_1,  t,w} \to^{*} \config{m', \eskip, t', w'}
-}
-\]
- We choose the transformed memory ${\ssa{m}} $ so that  $ m =\delta^{-1}(\ssa{m})$.
- 
- To show: $\config{\ssa{m}, [\eif(\etrue, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}', \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}}', \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l}, t, w} \to^{*} \config{\ssa{m'}, \eskip, t', w'} $ and $ m' = \delta'^{-1}(\ssa{m'}) $.
-
-We use the corresponding rule $\textbf{SSA-IF-T}$.  
-\[
-\inferrule
-{
-}
-{
-\config{\ssa{ { m} , [\eif(\etrue, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , [\bar{\ssa{y}}', \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}}', \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{c_1, c_2})]^{l}},t,w} 
-\xrightarrow{} \\ \config{\ssa{ m, c_1}; \eifvar(\ssa{\bar{x}', \bar{x_1}});\eifvar(\ssa{\bar{y}', \bar{y_2}});\eifvar(\ssa{\bar{z}', \bar{z_1}}),  t,w } 
-}~\textbf{ssa-if-t}
-\]
-By induction hypothesis on $ \Sigma;\delta ; c_1 \hookrightarrow  \ssa{c_1}; \delta_1;\Sigma_1$, and we know that $\config{m, c_1,  t,w} \to^{*} \config{m', \eskip, t', w'} $, from our assumption that $ m =\delta^{-1}(\ssa{m})$, we know that 
-\[\config{\ssa{ { m}, c_1},  t,w} \to^{*} \config{ \ssa{ { m_1 }, \eskip,} t', w' } \land m' = \delta_1^{-1}(\ssa{m_1}) \]
-and we then have:
-\[
-\inferrule
-{
-  \config{\ssa{ { m}, c_1},  t,w} \to^{*} \config{ \ssa{ { m_1 }, \eskip,} t', w' }
-}
-{
- \config{\ssa{  m, c_1;} \eifvar(\ssa{\bar{x}', \bar{x_1})};\eifvar(\ssa{\bar{y}', \bar{y_1})};\eifvar(\ssa{\bar{z}', \bar{z_1})},  t,w  }  \to^{*}
- \config{\ssa{ { m_1 [ \bar{x}' \mapsto {m_1}(\bar{x_1}),\bar{y}' \mapsto {m_1}(\bar{y_2}),\bar{z}' \mapsto {m_1}(\bar{z_1}) ] }, \eskip}, t', w'  }
-}
-\]
-Now, we want to show that $ m' = \delta[\bar{x} \mapsto \ssa{\bar{x}'},\bar{y} \mapsto \ssa{\bar{y}'},\bar{z} \mapsto \ssa{\bar{z}'} ]^{-1}(\ssa{ m_1 [ \bar{x}' \mapsto {m_1}(\bar{x_1}),\bar{y}' \mapsto {m_1}(\bar{y_2}),\bar{z}' \mapsto {m_1}(\bar{z_1}) ] }) $.
-
-Unfold the definition, we want to show that $$\forall x  \in ( \dom(\delta) \cup \bar{x} \cup \bar{y} \cup \bar{z} ), (\delta[\bar{x} \mapsto \ssa{\bar{x}'},\bar{y} \mapsto \ssa{\bar{y}'},\bar{z} \mapsto \ssa{\bar{z}'} ](x), m'(x)) \in \ssa{m_1 [ \bar{x}' \mapsto {m_1}(\bar{x_1}),\bar{y}' \mapsto {m_1}(\bar{y_2}),\bar{z}' \mapsto {m_1}(\bar{z_1}) ] } .$$
-\begin{enumerate}
-    \item For variable $x$ in $\bar{x}$, we can find a corresponding ssa variable $\ssa{x} \in \ssa{\bar{x}'}$, so that $( \ssa{x}, m'(x) ) \in \ssa{ m_1 [\bar{x}' \mapsto m_1(\bar{x_1})] } $. It is because we know $[x \mapsto \ssa{x_1}]$ for certain $\ssa{x_1} \in \ssa{\bar{x_1}}$ in $\delta_1$, then by unfolding  $m' = \delta_1^{-1}(\ssa{m_1})$ and $\ssa{\bar{x_1}} \in \codom(\delta_1)$, we know $(\ssa{x_1}, m'(x)) \in \ssa{m_1}$ so that $m'(x) = \ssa{m_1}(\ssa{x_1})$.
-    \item For variable $y \in \bar{y}$, we know that $y \in \dom(\delta_1)$, then $[ y \mapsto \ssa{y_2} ]$ for certain $\ssa{y_2} \in \ssa{\bar{y_2}}$ in $\delta_1$.  So we know that $(\delta_1(y), m'(y) ) \in \ssa{m_1}$, and then $m'(y) = \ssa{m_1(y_2)}$. We can show $(\ssa{y}, m'(y)) \in \ssa{m_1[\bar{y}' \mapsto m_1(\bar{y_2})]}$.
-    \item For variable $z \in \bar{z}$, we know that $z \not\in \dom(\delta_1)$ by the definition (otherwise $z$ will appear in $\bar{x}$), then $[ z \mapsto \ssa{z_1} ]$ for certain $ \ssa{z_1} \in \ssa{\bar{z_1}}$ in $\delta$.  We know $(\delta(z), m(z)) \in \ssa{m}$ from our assumption, so we have $ m(z) = \ssa{m(z_1)}$. Because $z$ is not modified in $c_1$, so that $m(z) = m'(z)$. Also $\ssa{m}$ will not shrink during execution and $\ssa{z_1}$ will not be written in $\ssa{c_1}$, so $(\ssa{z_1}, m'(z)) \in \ssa{m_1}$. Then we can show that $ (\ssa{z}, m'(z) ) \in \ssa{m_1[\bar{z}' \mapsto m_1(\bar{z_1})] }$.
-    \item For variable $k \in \dom(\delta)- \bar{x} - \bar{y}-\bar{z}$. From our assumption $ m = \delta^{-1}(\ssa{m})$, we can show $(\delta(k), m(k) ) \in \ssa{m}$. We know that $k$ is not written in either branch from our definition, so $(\delta(k), m'(k) ) \in \ssa{m_1} $ .
-\end{enumerate}
-
-{
-\caseL{
-	Case
-	$
-	\inferrule{
-    { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }
-     \and
-    { [ \bar{x}, \ssa{\bar{{x_1}}}, \ssa{\bar{{x_2}}} ] = \delta \bowtie \delta_1 }
-    \\
-     {\ssa{\bar{{x}}'} \ fresh(\Sigma_1 )}
-    \and {\delta' = \delta[\bar{x} \mapsto \ssa{\bar{{x}}'}]}
-    \and 
-     {\delta' ; \bexpr \hookrightarrow \ssa{\bexpr} }
-     \and
-    {\ssa{c' = c_1[\bar{x}'/ \bar{x_1}]   } }
-    % \and{ \delta' ; c \hookrightarrow \ssa{c'} ; \delta'' }
-  }{ 
-  \Sigma; \delta ;  \ewhile ~ [\bexpr]^{l} ~ \edo ~ c 
-  \hookrightarrow 
-  \ssa{\ewhile ~ [\bexpr]^{l}, 0, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ {c} } ; \delta'; \Sigma_1 \cup \{\ssa{\bar{x}'}  \}
-}~{\textbf{S-WHILE}}
-$
-}
-}
-\\
-{
-We choose an arbitrary memory $m$ so that $m \vDash \delta$, we choose a trace $t$ and a loop maps $w$. Suppose $ \config{m ,a} \to v_N $. There are two cases, when $v_N=0$, the loop body is not executed so we can easily show that the trace is not modified.
-%
-When the while loop is still running ($v_N > 0$), we have the following evaluation in the while language:
-\[
-\inferrule
-{
- \empty
-}
-{
-\config{
-m, \ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  t, w 
-}
-\xrightarrow{} \config{m, c ; 
-\eif_w (b, c ; 
-\ewhile ~ [b]^{l} ~ \edo [c]^{l + 1},  \eskip),
-t, w }
-}
-~\textbf{while-b}
-\]
-which follows by the following evaluation:
-\[
-	\inferrule
-{
- m, b \xrightarrow{} b'
-}
-{
-\config{m, \eif_w (b, c,  \eskip) ,  t, w }
-\xrightarrow{} \config{m, 
- \eif_w (b', c,  \eskip), t, w }
-}
-~\textbf{ifw-b}
-\]
-In the corresponding ssa-form language, we have the corresponding evaluation in the same way by assuming 
-$m = \delta^{-1}(\ssa{m})$.
-%
-\[
-	\inferrule
-{
- {n = 0 \rightarrow i = 1 }
- \and
- {n > 0 \rightarrow i = 2 }
-}
-{
-\config{
-\ssa{m},  
-\ssa{\ewhile ~ [\bexpr]^{l}, n, 
-[\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] 
-~ \edo ~ {c} 
-},  t, w 
-}
-\xrightarrow{} \\ 
-\config{
-\ssa{m},
-\eif_w 
-(\ssa{b[\bar{x_i}/\bar{x'}], [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  c[\bar{x_i}/\bar{x'}] }; 
-\ssa{
-\ewhile ~ [b]^{l}, n+1, 
-[\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  
-~ \edo ~ c} ,  \eskip),
-t, w
-}
-}
-~\textbf{ssa-while-b}
-\]
-This evaluation is followed by the following evaluation:
-\[
-	\inferrule
-{
- \ssa{m, b \xrightarrow{} b'}
-}
-{
-\config{\ssa{m, \eif_w (b, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n,  c_1,  c_2)} ,  t, w }
-\xrightarrow{} \config{\ssa{ m, 
- \eif_w (b', [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n , c_1 , c_2 )}, t, w }
-}
-~\textbf{ssa-ifw-b}
-\]
-%
-Depending on if the counter $n$ is equal to $0$ or not, there are two possible execution paths (the variables $\ssa{\bar{x}}$ is replaced by the $\ssa{\bar{x_1}}$ or $\ssa{\bar{x_2}}$). We start from the first iteration (when $n =0$) when $v_N >0$. 
-}
-{
-By induction hypothsis on the premise $ { \Sigma; \delta ; c \hookrightarrow \ssa{c_1} ; \delta_1; \Sigma_1 }$, we know that 
-\[ \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l)  } \to^{*} \config{\ssa{{m'}, \eskip}, t'_{i}, w'  } \land m' = \delta_1^{-1}(\ssa{m'})   \]
-Hence we can conclude that:
-\[
-  \inferrule{
-   \config{\ssa{{m}, c'[ \bar{x_1}/\bar{x}'  ]}, t, (w+l) }  \to^{*} \config{\ssa{{m'}, \eskip}, t'_{1}, w'  }
-  }{
-  \config{\ssa{ {m}, c'[ \bar{x_1}/\bar{x}'  ];  [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t, (w + l)  }  \to^{*} \\ \config{ \ssa{{m'}, [\eloop ~ (\valr_N-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t'_{1}, w'  } 
-  }
-\]
-%
-Then there are two cases, 
-%
-\begin{enumerate}
-     \item  when guard in the $\eif_w$ expression evaluates to $\efalse$, the while loop terminates and exits.
-     The execution in the while language is defined in the evaluation rule $\textbf{ifw-false}$ as follows.
-     \[
-		\inferrule
-		{
-		 \empty
-		}
-		{
-		\config{\ssa{
-		m, \eif_w (
-		\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, 
-		c; {\ewhile ~ [b]^{l} ~ \edo ~ c},
-		\eskip)
-		)} ,  t, w }
-		\\
-		\xrightarrow{} 
-		\config{\ssa{m, 
-		{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w - l) }
-		}
-		~\textbf{ifw-false}
-	\]
-%
-	The corresponding ssa-form evaluation as follows:
-	\[
-		\inferrule
-		{
-		 { n = 0 \rightarrow i = 1 }
-		 \and
-		 {n > 0 \rightarrow i =2}
-		}
-		{
-		\config{\ssa{
-		m, \eif_w (
-		\efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],   n, 
-		{  
-		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-		\eskip)
-		} 
-		)} ,  t, w }
-		\\
-		\xrightarrow{} 
-		\config{\ssa{m, 
-		{\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, t, (w - l) }
-		}
-		~\textbf{ssa-ifw-false}
-	\]
-	We can see that both traces are not changed during the exit of the while. We need to show that $ m' = \delta^{-1} (\ssa{m'[\bar{x} \mapsto m'(\bar{x_2})]}) $. We know that $[ \bar{x} \mapsto \bar{x_2}]$ in $\delta_1$ from the definition, so we can show that for any variable $\ssa{x_2} \in \bar{x_2}$, $( \ssa{x_2}, m'(x) ) \in \ssa{m'}$. For variables $x \in {\dom(\delta) - \bar{x} } $, the variable is not modified during the execution of $c$ so that we know $m(x) = m'(x)$, and then we can show that $(\delta(x), m'(x)) \in \ssa{m'} $ because $\delta(x)$ is not written in $\ssa{c'[\bar{x_1}/ \bar{x}']}$ .
-%
-  	\item 
-		when guard in the $\eif_w$ expression evaluates to $\etrue$, the while terminates and exits.
-     The execution in the while language is defined in the evaluation rule $\textbf{ifw-true}$.
-          %
-     We want to show that : assuming in the $i-th$ $(i < \ssa{n})$ iteration, starting with $t_i$ and $w_i$ and $m_i = \delta_1^{-1}(\ssa{m_i})$,
-     this command is evaluated according to the while language operation semantics as
-     	$
-		\config{m, \eif_w (\etrue, c ; \ewhile ~ [b]^{l} ~ \edo ~ c, ,  \eskip) ,  t, w }
-		\xrightarrow{}^* \config{m, c 
-		t, (w + l) }
- 		$.
-     %
-     Then the corresponding ssa form evaluation as follows : 
-     %
-     \[ 
-     \inferrule{}{
-     	\config{
-		\ssa{
-			m, 
-			{
-			\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
-			c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-			\eskip)
-			} 
-		},  t, w 
-		}
-		\\
-		\xrightarrow{} 
-		\config{
-		\ssa{m, 
-		{
-		\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
-		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-		}
-		}
-		t, (w + l) }
-		} 
-     \]  
-     and $m_i = \delta^{-1}(\ssa{m_i}) $.
-     We then have the evaluation in the while language:
-     \[
-		\inferrule
-		{
-		 \empty
-		}
-		{
-		\config{m, 
-		\eif_w (b, 
-		c ; \ewhile ~ [b]^{l} ~ \edo ~ c, 
-		\eskip),
-		t, w }
-		\xrightarrow{} 
-		\config{m, 
-		c ; \ewhile ~ [b]^{l} ~ \edo ~ c,  
-		t, (w + l) }
-		}
-		~\textbf{ifw-true}
-	\]
-	We then have the following evaluation:
-	\[
-		\inferrule
-		{
-		 \empty
-		}
-		{
-		\config{
-		\ssa{
-		m, 
-		{
-		\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
-		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-		\eskip)
-		} 
-		},  t, w 
-		}
-		\\
-		\xrightarrow{} 
-		\config{
-		\ssa{m, 
-		{
-		\eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
-		c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-		}
-		}
-		t, (w + l) }
-		}
-		~\textbf{ssa-ifw-true}
-	\]
-%
-By induction hypothsis on the premise $  { \Sigma; \delta_1 ; c \hookrightarrow \ssa{c_2} ; \delta_1; \Sigma_1 }$, we know that
-%
-\[
-\config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l)  } \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  } \land m_{i+1} = \delta_1^{-1}(\ssa{m_{i+1}})
-\]
-%
-Hence we can conclude that:
-\[
-  \inferrule{
-   \config{\ssa{{m_i}, c'[ \bar{x_2}/\bar{x}'  ]}, t_i, (w_i+l) }  \to^{*} \config{\ssa{{m_{i+1}}, \eskip}, t_{i+1}, w_{i+1}  }
-  }{
-  \config{\ssa{ {m_i}, c'[ \bar{x_2}/\bar{x}'  ];  [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l} },  t_i, (w_i + l)  }  \to^{*} \\ \config{ \ssa{{m_{i+1}}, [\eloop ~ (\valr_N-i-1), n+1, [\bar{\ssa{x}}', \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~  \edo ~ c' ]^{l}}, t_{i+1}, w_{i+1}  } 
-  }
-\]
-So we can show that before the exit of the loop after ($v_N= n $) iterations, we have $t_{n} = t_{n}$ and $m_{n} = \delta_1^{-1}(\ssa{m_{n}})$.
- \end{enumerate}
-%
-This proof is similar when it comes to the exit as in case 1. 
-}
-\end{itemize}
-%
-\end{proof}
-%
-\clearpage
 %
 %
 \section{\THESYSTEM}
@@ -3871,14 +2493,6 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 		\Mtrix_c(i, j) \geq 1); ~ i,j = 1, \ldots, N
 	\right\}
 	\\
-	\text{Flags} &
-	\flag & := & 
-	\big\{(\ssa{x}, n)  \in \vertxs \times \{0, 1, 2\} 
-	\mid 
-	(\ssa{x} = \avar(i) \land n = \flag_c(i)); ~
-	i = 1, \ldots, N
-	\big\}
-	\\
 	\text{Weights} &
 	\weights & := &
 	\bigcup
@@ -3893,13 +2507,27 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 		v \in \vertxs \land \flag(v) = 0
 		\big\}
 	\end{array} 
+	\\
+	\text{Query Flags} &
+	\qflag & := & 
+	\big\{(\ssa{x}, n)  \in \vertxs \times \{0, 1\} 
+	\mid 
+	\left\{
+	\begin{array} {ll}
+	n = 1 & \flag_c(i) = 2
+	\\  
+	n = 0 & o.w.
+	\end{array}
+	\right\};
+	\ssa{x} = \avar(i); i = 1, \ldots, N
+	\big\}
 \end{array}
 \]
 \end{defn} 
 %
 \begin{defn}[Finite Walk ($k$)].
 \\
-Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
 for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
 \begin{itemize}
     \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
@@ -3912,7 +2540,7 @@ Length of this finite walk $k$ is the number of vertices in its vertex sequence,
 }
 \end{defn}
 
-\jl{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, 
+\jl{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
 we use $\walks(G)$ to denote a set containing all finite walks $k$ in $G$;
 and $k_{v_1 \to v_2} \in \walks(G)$where $v_1, v_2 \in \vertxs$ denotes the walk from vertex $v_1$ to $v_2$ .
 }
@@ -3924,16 +2552,16 @@ and $k_{v_1 \to v_2} \in \walks(G)$where $v_1, v_2 \in \vertxs$ denotes the walk
 %
 \begin{defn}[Length of Finite Walk w.r.t. Query ($\qlen$)].
 \\
-Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
 \[
 	\qlen(k) = \len\big(
-	v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 2 \big)
+	v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 2 \big)
 \]
-, where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 2 \big)$ is a subsequence of $k$'s vertex sequence.
+, where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 2 \big)$ is a subsequence of $k$'s vertex sequence.
 \end{defn}
 %
 Given a program $\ssa{c}$, we generate its program-based graph 
-$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$.
+$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$.
 %
 Then the adaptivity bound based on program analysis for $\ssa{c}$ is the number of query vertices on a finite walk in $\progG(\ssa{c})$. This finite walk satisfies:
 \begin{itemize}
@@ -3949,7 +2577,7 @@ It is formally defined in \ref{def:prog_adapt}.
 \\
 {
 Given a program $\ssa{c}$ and its program-based graph 
-$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$,
+$\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$,
 %
 the program-based adaptivity for $c$ is defined as%
 \[
@@ -4002,7 +2630,7 @@ the program-based adaptivity for $c$ is defined as%
 \jl{
 \begin{proof}
 Given a program $\ssa{c}$, 
-we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$
+we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$
 by Definition~\ref{def:prog-based_graph}
 According to the Definition \ref{def:prog_adapt}, we have:
 %
@@ -4224,10 +2852,10 @@ By rewriting $(b)$ in $(a)$, we have this case proved.
 	\\
 	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
 	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
-	Then, $\forall \aq_1, \aq_2 \in \qtrace$
+	Then, $\forall \av_1, \av_2 \in \qtrace$
 \[
-	\qdep(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D) \implies 
-	\vardep(\pi_2(\aq_1), \pi_2(\aq_2), \ssa{c}, \ssa{m}, D)
+	\qdep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \implies 
+	\vardep(\pi_2(\av_1), \pi_2(\av_2), \ssa{c}, \ssa{m}, D)
 \]
 	\end{lem}
 	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
@@ -4267,8 +2895,8 @@ By rewriting $(b)$ in $(a)$, we have this case proved.
 	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
 \[
 	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
-	~ \forall \aq \in \traceV. ~ 
-	f(\aq) \in \midV \land \midF(f(\aq)) = 2
+	~ \forall \av \in \traceV. ~ 
+	f(\av) \in \midV \land \midF(f(\av)) = 2
 \]
 	\end{lem}
 \begin{subproof}
@@ -4285,10 +2913,10 @@ Proving by Definition~\ref{def:midgraph} and Definition~\ref{def:prog_adapt}.
 	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
 	\\
 	An injective function $ f: \traceV \to \midV$ s.t.,
-	$\forall \aq \in \traceV. ~ \midF(f(\aq)) = 2$ 
+	$\forall \av \in \traceV. ~ \midF(f(\av)) = 2$ 
 \[
-	\forall e = (\aq_1, \aq_2) \in \traceE. ~ 
-	\exists p_{f(\aq_1) \to f(\aq_2)} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
+	\forall e = (\av_1, \av_2) \in \traceE. ~ 
+	\exists p_{f(\av_1) \to f(\av_2)} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
 \]
 	\end{lem}
 \begin{subproof}
@@ -4402,9 +3030,9 @@ Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\midG(
 % [Surjective Mapping of Vertices from $\traceG$ to $\progG$ Graph]
 % \label{lem:vertexmap}
 % \[
-% 	\forall \aq \in \vertxs. \exists f: \mathcal{AQ} \to \mathcal{SVAR}. 
-% 	~ f(\aq) \in \vertxs_{prog} \land \flag(f(\aq)) = 2
-% 	\land |image(f(\aq))| \leq \weights(f(\aq)) 
+% 	\forall \av \in \vertxs. \exists f: \mathcal{AQ} \to \mathcal{SVAR}. 
+% 	~ f(\av) \in \vertxs_{prog} \land \flag(f(\av)) = 2
+% 	\land |image(f(\av))| \leq \weights(f(\av)) 
 % \]
 % \end{lem}
 % %
@@ -4412,7 +3040,7 @@ Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\midG(
 % [Mapping from Edges of $\traceG$ to Walks of $\progG$]
 % \label{lem:edgewalkmap}
 % \[
-% 	\forall e = (\aq_1, \aq_2) \in \edges. \exists k \in \walks(\progG(\ssa{c})). ~ from ~ f(\aq_1) ~to~ f(\aq_2)
+% 	\forall e = (\av_1, \av_2) \in \edges. \exists k \in \walks(\progG(\ssa{c})). ~ from ~ f(\av_1) ~to~ f(\av_2)
 % \]
 % \end{lem}
 %
