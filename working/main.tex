@@ -984,10 +984,12 @@ $\avdep(\av_1, \av_2, c, m, D)$ is defined below.
 \config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
 \config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
 \\ 
-\config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+ \bigwedge
+ \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
 \rightarrow^{*} 
-\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qval}_2) (/ \sexpr_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
-\rightarrow^{\textbf{{ssa-query-v} (/ assn-v)}} 
+\config{\ssa{m}_2, [\assign{\ssa/{x}_2}{\query({\qval}_2) (/ \sexpr_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+\\
+\qquad \rightarrow^{\textbf{{ssa-query-v} (/ assn-v)}} 
 \config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
   % 
  \\ 
@@ -1169,39 +1171,13 @@ if $\config{m, c, \vtrace, \vcounter} \to^{*}
 % $t$ is well-formed. }
 \end{thm}
 \begin{proof}
-\input{thm_os_wf_trace}
+Proof in File: {\tt ``thm\_os\_wf\_trace.tex''}.
+% \input{thm_os_wf_trace}
 \end{proof}
 }
 %
 % \\
 %
-% \jl{
-% \begin{defn}[Well-formed Query Trace]
-% \label{def:wf_trace}
-% A trace $t$ is well formed if and only if it preserves the following two properties:
-% \begin{itemize}
-% 	\item{\emph{(Uniqueness)}} $\forall \av_1, \av_2 \avin t. ~ (\av_1 \avneq \av_2)$
-% 	%
-% 	\item{\emph{(Ordering)}} $\forall \av_1, \av_2 \avin t. ~ 
-% 	(\av_1 <_{aq} \av_2) \Longleftrightarrow
-% 	\exists t_1, t_2, t_3, \av_1', \av_2'. ~ s.t.,~ 
-% 	(\av_1 \aveq \av_1') \land (\av_2 \aveq \av_2') \land t_1 ++ [\av_1'] ++ t_2 ++ [\av_2'] ++ t_3 = t$
-% \end{itemize}
-% \end{defn}
-% }
-
-% \jl{
-% \begin{thm}[Query Trace Generated from Operational Semantics is Well-formed].
-% \label{thm:os_wf_trace}
-% \\
-% Given a program $c$, 
-% with arbitrary starting memory $m$, trace $t$ and while map $w$
-% if $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$, then $(t' - t)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, w, c \vDash t' - t$.
-% \end{thm}
-% \begin{proof}
-% \input{thm_os_wf_trace}
-% \end{proof}
-% }
 %
 \todo{
 \begin{lem}[While Map Remains Unchanged (Invariant)]
@@ -1354,163 +1330,8 @@ $$\av' \avgeq \av$$
 \end{lem}
 %
 \begin{proof}
-This lemma is proved by showing there is a contradiction. 
-
-\jl{
-Assume there exists an edge  $(\av', \av) \in \edges$ and $\av' \avgeq \av$, where $\av' = ({\qval}',l',w')$ and $\av = ({\qval},l,w)$.
-%
-According to the Definition~\ref{def:trace-based_graph}, we have:
-%
-$$
-DEP(\av', \av, c, m, D) ~ (1)
-$$
-%
-%
-Unfolding the Definition \ref{def:query_dep} in $(1)$,
-we know: there exists $t_1, t_3, m_1, m_3, c_2$ s.t.,
-%
-\[
-\config{m, c, [], []} \rightarrow^{*} 
-\config{m_1, [\assign{x}{\query({\qval'})}]^{l'} ; c_2,
-  t_1, w'} 
-\rightarrow^{\textbf{query-v}} 
-\config{m_1[v_1/x], c_2,
-(t_1 ++ [\av'], w_1} \rightarrow^{*} \config{m_3, \eskip, t_3,w_3} ~ (a)	
-\]
-%
-and
-%
-\[
- \bigwedge
- \begin{array}{l}   
-  % 
-  \left( 
-  \begin{array}{l}
-  \av \avin (t_3 - (t_1 ++ [\av'])) 
-  % 
-  \\
-  \implies 
-  \exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. ~  
-  \config{m_1[v/x], {c_2}, t_1 ++ [\av'], w_1} 
-  \\ 
-  \quad \quad 
-  \rightarrow^{*}
-  (\config{m_3', \eskip, t_3', w_3'} 
-  \land 
-  \av \not \avin (t_3'-(t_1 ++ [\av'])))
-\end{array} \right ) ~(b)
-\\
-\left( 
-  \begin{array}{l}
-	\av \not\avin (t_3 - (t_1 ++ [\av']))
-  	% 
-  	\\
-  	\implies 
-	\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'. 
-	\config{m_1[v/x], {c_2}, t_1 ++ [\av'], w_1}
-	\\ 
-	\quad \quad 
-	\rightarrow^{*} 
-	(\config{m_3', \eskip, t_3', w_3'} 
-	\land 
-	\av  \avin (t_3' - (t_1 ++ [\av'])))
-\end{array} \right ) ~ (c)
-\end{array}
-\]
-%
-%
-According to the Theorem \ref{thm:os_wf_trace} and $(a)$, we know both $t_1$, $t_3$ are well-formed traces.
-% }
-% \\
-% \jl{
-\\
-Consider 2 cases:
- \[\av \avin (t_3 - (t_1 ++[\av'])) ~(d) ~~ \lor ~~ \av \notin_{aq} (t_3 - (t_1 ++[\av'])) ~(e)\]
-%
-\begin{itemize}
-%
-	\caseL{ (d) \[\av \avin (t_3 - (t_1 ++[\av'])) ~ (d)\]}
-	By unfolding the trace subtraction operations, we have;
-	\[
-		\exists t_2. ~ s.t., ~ t_1 ++[\av'] ++ t_2 = t_3 \land \av \avin t_2 ~ (3)
-	\]
-%
-%
-According to the Corollary~\ref{coro:aqintrace} and $\av \avin t_2$, we have:
-%
-\[
-	\exists t_{21}, t_{22}, \av' ~ s.t.,~ (\av \aveq \av') \land t_{21} ++ [\av'] ++ t_{22} = t_2 ~ (4)
-\]
-%
-By rewriting $(4)$ inside $(3)$, we have:
-%
-\[
-	\exists t_{21}, t_{22}, \av'' ~ s.t.,~ (\av \aveq \av'') \land t_1 ++[\av'] ++ t_{21} ++ [\av''] ++ t_{22} = t_3 ~ \star
-\]
-%
-By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\star)$, we know
-%
-\[
-	\av' <_{aq} \av
-\]
-%
-This is contradict to our assumption, where $\av' \avgeq \av$. 
-%
-%
-\caseL{(e), \[\av \notin_{aq} (t_3 - (t_1 ++[\av'])) ~(e)\]} 
-%
-According to the condition $(c)$, we know: $\exists v \in \qdom, v \neq v_1, m_3', t_3', w_3'.$
-  	% 
-\[ 
-	\config{m_1[v/x], {c_2}, t_1 ++ [\av'], w_1} 
-	\rightarrow^{*} (\config{m_3', \eskip, t_3', w_3'} ~ (5)
-	\land \av  \in_{q} (t_3' - (t_1 ++ [\av']))) ~ (6)
-\] 
-%
-According to the Theorem \ref{thm:os_wf_trace}, Sub-Lemma-t and $(5)$,
-we know $t_3'- (t_1 ++ [\av'])$ is a well-formed trace.
-\\
-From $(a)$, we know that the minimal line number of $c_2$ is greater than $l'$, so we know that : 
-\[
-  \forall \av'' \in t_3'- (t_1 ++ [\av']), \av''>_{aq} \av'
-\]
-%
-Unfolding the trace subtraction operations in $(6)$, we have;
-\[
-	\exists t_2'. ~ s.t., ~ t_1 ++[\av'] ++ t_2' = t_3' \land \av \avin t_2' ~ (7)
-\]
-%
-%
-According to the sub-lemma and $(7)$, we have:
-%
-\[
-	\exists t_{21}', t_{22}' ~ s.t.,~ t_{21}' ++ [\av] ++ t_{22}' = t_2' ~ (8)
-\]
-%
-By rewriting $(8)$ inside $(7)$, we have:
-%
-\[
-	t_1 ++[\av'] ++ t_{21}' ++ [\av] ++ t_{22}' = t_3' ~ \diamond
-\]
-%
-By the \emph{ordering} property in definition \ref{def:wf_trace} and $(\diamond)$, we know
-%
-\[
-	\av' <_{aq} \av
-\]
-%
-This is contradict to the assumption,  $\av' \avgeq \av$.
-%
-\end{itemize}
-%
-From both cases, we derive $\av' \avgeq \av$, which is contradict to the hypothesis, i.e., $\av' \avgeq \av$.
-Then, we can conclude that 
-for any directed edge $(\av', \av) \in \edges$, 
-this is not the case that:
-%
-$$\av' \avgeq \av$$
-%
-}
+Proof in File: {\tt ``edge\_forward.tex''}.
+% \input{edge_forward}
 \end{proof}
 %
 %
@@ -1557,6 +1378,7 @@ Proof is obvious based on the Lemma \ref{lem:DAG}.
 \clearpage
 %
 %
+\input{ssa}
 %
 %
 \section{\THESYSTEM}
