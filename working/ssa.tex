@@ -118,6 +118,7 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
 %
 ~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} 
+%
 \\ 
 &&& 
 {\ewhile ~ [ \sbexpr ]^{l} , n,
@@ -179,13 +180,13 @@ A memory is standard, a map from labeled variables to values.
 %
 \\
 %
-The variable counter $\vcounter_{c}$ maps every assigned variables $\avar_{c}$ to a natural number $n \in \mathbb{N}$ in a certain execution. This natural number $n$ represents the visiting times of this variable in this certain execution.
+The variable counter $\vcounter$ maps every variable to a natural number $n \in \mathbb{N}$ in a certain execution of program $\ssa{c}$. This natural number $n$ represents the visiting times of this variable in this certain execution.
 %
 We use variable name $x$ within parenthesis to denote the access to the associated natural number of this variable in the variable counter $\vcounter_{c}$, 
 $\vcounter_{c}(x)$ denote the visiting times of variable $x$.
 %
 \\
-The annotated variable / event $\av = (x, l, n, v) $ or $\av = (x, l, n, \qval) $  is a quradic contains 4 elements. 
+The annotated variable / event $\av = (x, l, n, v) $ or $\av = (x, l, n, \qval) $  is a quaternary tuple contains 4 elements. 
 $\qval$ is a query value representing the corresponding query request $\assign{x}{\query(\qval)}$ during the execution of the program.
 %
 \\
@@ -193,7 +194,7 @@ A variable trace $\vtrace$ is a list of annotated queries accumulated along the 
 A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
 %
 \\
-A configuration, $\config{m, c, \vtrace, \vcounter}$, contains four elements: a memory $m$, the command $c$ to be evaluated, a trace $t$ and variable $\vcounter$. 
+A configuration, $\config{\ssa{m, c, \vtrace, \vcounter}}$, contains four elements: a SSA memory $\ssa{m}$, the command $\ssa{c}$ to be evaluated, a trace $t$ and variable $\vcounter$. 
 %
 \\
  %% trace
@@ -317,22 +318,20 @@ With the operational semantics and relations between annotated queries, we restr
   %
   \and
   %
-  {
-  {\inferrule
+  \inferrule
   {
    \empty
   }
   {
   \config{\ssa{m, \ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace, \vcounter}}
+  \\
   \xrightarrow{} 
   \config{\ssa{ m, 
   \eif_w (b, n, [\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], 
   c[\bar{x_i}/\bar{x'}]; \ewhile ~ [b]^{l}, (n + 1), [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c,  \eskip),
   \vtrace, \vcounter}}
   }
-  ~\textbf{while-b}
-  }
-  }
+  ~\textbf{ssa-while-b}
   %
   \and
   %
@@ -377,7 +376,7 @@ With the operational semantics and relations between annotated queries, we restr
 %
   \and
   %
-\inferrule
+  \inferrule
   {
   { n = 0 \rightarrow i = 1 }
   \and
@@ -574,21 +573,20 @@ e need to instantiate the variables from $\bar{\ssa{x}}$ whose values come from 
 $\bar{\ssa{y}}$ whose values from then branch or assignment before the if command, and $\bar{\ssa{z}}$ whose values from else branch or before the if command. 
 Correspondingly, we need to have three ifvar commands.   
 }
-
-{
+\\
   The evaluation of while depends on the while iteration counter $\ssa{n}$ and the guard $\ssa{\bexpr}$. 
   When $\ssa{\bexpr}$ is evaluated to $\etrue$, the while is still executing, and all the variables $\ssa{x}$ in $\bar{\ssa{x}}$ of the loop body $\ssa{c}$ are replaced as the corresponding variables in $\bar{\ssa{x_1}}$ in the first iteration($n=0$), or $\bar{\ssa{x_2}}$ in other iterations($n > 0$). 
   The while turns to an exit when $\ssa{n} > 0$, 
   and the memory $\ssa{m}$ updates the mapping of variables in $\bar{\ssa{x}}$ with $\bar{\ssa{x_1}}$ if the guard $\bexpr$ evaluates to $\efalse$, 
   which means the while body is not executed once. 
   When the while enters the exit after executing the body a few times($n$), the variables in $\bar{\ssa{x}}$ is instantiated with the value from the body $\ssa{m}(\bar{\ssa{x_2}})$. 
-}
 %
 %
 \subsection{Event and Trace}
 %
 %
 \todo{
+%
 Events preserve the order of execution. The order relation is defined in Definition~\ref{def:query_dir}.
 %
 \begin{defn}[Order of Annotated Variables / Events].
@@ -615,8 +613,6 @@ $\av_1 = (x_1, v_1, l_1, n_1),
 $\av_1 \avgeq \av_2$  is defined vice versa.
 \end{defn}
 }
-%
-%
 %
 %
 %
@@ -1060,7 +1056,7 @@ As a first step, we give a definition of when one query may depend on a previous
 [Annotated Variables / Events May Dependency]
 \label{def:avar_dep}.
 \\
-One annotated variable $\av_2 = (x_2, v_2, l_2, n_2)$ may depend on another one 
+One event $\av_2 = (x_2, v_2, l_2, n_2)$ may depend on another one 
 $\av_1 = (x_1, v_1, l_1, n_1)$ in a program $c$,
 with a starting memory $m$ and  hidden database $D$, denoted as 
 %
@@ -1072,7 +1068,7 @@ $\avdep(\av_1, \av_2, c, m, D)$ is defined below.
 \exists \ssa{m}_1, \ssa{m}_3, \vtrace_1, \vtrace_3, \ssa{c}_2, v_1, ({\qval}_1 \lor \sexpr_1).\\
   \left (\begin{array}{l}   
 \config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \qtrace_1,  \vtrace_1, w_1} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ v_1)}]^{l_1} ; \ssa{c}_1, \qtrace_1,  \vtrace_1, w_1} 
 \rightarrow^{\textbf{ssa-query-v (/ assn-v)}} 
 \\ 
 \config{\ssa{m}_1[v_1/\ssa{x}], c_2, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
@@ -1124,27 +1120,65 @@ $\avdep(\av_1, \av_2, c, m, D)$ is defined below.
 [Annotated Variables May Dependency -- Version 2]
 \label{def:avar_dep2}.
 \\
-One annotated variable $\av_2 = (\ssa{x}_2, v_2, l_2, n_2)$ may depend on another one  $\av_1 = (\ssa{x}_1, v_1, l_1, n_1)$in a program $\ssa{c}$,
+One event $\av_2$ may depend on another one  $\av_1$in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and hidden database $D$, denoted as 
 %
 $\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below. 
 %
 \[
+\begin{array}{ll}
 \begin{array}{l}
 \exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
-\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1'.
+\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', \sexpr_2.
 \\
   \left(
   \begin{array}{l}   
 \config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
 \\ 
  \bigwedge
  \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+ \\
+  \qquad \rightarrow^{*} 
+  \config{\ssa{m}_2, [\assign{\ssa{x}_2}{\sexpr_2}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
+  % 
+ \\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
 \rightarrow^{*} 
-\config{\ssa{m}_2, [\assign{\ssa/{x}_2}{\query({\qval}_2) (/ \sexpr_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
 \\
-\qquad \rightarrow^{\textbf{{ssa-query-v} (/ assn-v)}} 
+\bigwedge
+\av_2 \notin \vtrace_2'
+\end{array}
+\right)
+\end{array} 
+&
+\begin{array}{l}
+\av_1 = (\ssa{x}_1, v_1, l_1, n_1)
+\\
+\av_2 = (\ssa{x}_2, v_2, l_2, n_2)
+\end{array}
+\\
+\begin{array}{l}
+\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', {\qexpr}_2.
+\\
+  \left(
+  \begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1)}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+ \\
+\qquad \rightarrow^{*} 
+\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qexpr}_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+\\
+\qquad \rightarrow^{*} 
 \config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
   % 
  \\ 
@@ -1157,6 +1191,85 @@ $\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below.
 \av_2 \notin \vtrace_2'
 \end{array}
 \right)
+\end{array} 
+&
+\begin{array}{l}
+\av_1 = (\ssa{x}_1, \qval_1, l_1, n_1)
+\\
+\av_2 = (\ssa{x}_2, \qval_2, l_2, n_2)
+\end{array}
+\\
+\begin{array}{l}
+\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', {\qexpr}_2.
+\\
+  \left(
+  \begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+ \\
+\qquad \rightarrow^{*} 
+\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qexpr}_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+\\
+\qquad \rightarrow^{*} 
+\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
+  % 
+ \\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
+\rightarrow^{*} 
+\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
+\\
+\bigwedge
+\av_2 \notin \vtrace_2'
+\end{array}
+\right)
+\end{array} 
+&
+\begin{array}{l}
+\av_1 = (\ssa{x}_1, v_1, l_1, n_1)
+\\
+\av_2 = (\ssa{x}_2, \qval_2, l_2, n_2)
+\end{array}
+\\
+\begin{array}{l}
+\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', \sexpr_2.
+\\
+  \left(
+  \begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+ \\
+\qquad \rightarrow^{*} 
+\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\sexpr_2}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+\\
+\qquad \rightarrow^{*} 
+\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
+  % 
+ \\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
+\rightarrow^{*} 
+\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
+\\
+\bigwedge
+\av_2 \notin \vtrace_2'
+\end{array}
+\right)
+\end{array} 
+&
+\begin{array}{l}
+\av_1 = (\ssa{x}_1, \qval_1, l_1, n_1)
+\\
+\av_2 = (\ssa{x}_2, v_2, l_2, n_2)
+\end{array}
 \end{array}
  \]
 %
@@ -1172,10 +1285,10 @@ $\ssa{x}_1 \in \avar_{\ssa{c}}$ in $\ssa{c}$ denoted as
 $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 %
 \[
-\exists v_1, v_2, n_1, n_2, l_1, l_2, \ssa{m}, D. ~
-\av_1 = (\ssa{x}_1, l_1, n_1, v_1)
+\exists \av_1, \av_2, \ssa{m}, D. ~
+\projl{\av_1} = \ssa{x}_1
 \land
-\av_2 = (\ssa{x}_2, l_2, n_2, v_2)
+\projl{\av_2} = \ssa{x}_2
 \land 
 \avdep(\av_1, \av_2, c, \ssa{m}, D)
 \] 
