@@ -193,7 +193,30 @@ $\qval$ is a query value representing the corresponding query request $\assign{x
 A variable trace $\vtrace$ is a list of annotated queries accumulated along the execution of the program. 
 A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
 %
-\\
+\todo{
+Given an annotated variable $\av$ and a trace $t$,
+the appending operation $\av :: t$ is 
+the standard list appending operation, appends $\av$ to the head of trace $t$.
+%
+The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
+\begin{equation}
+    t_1 ++ t_2  
+    \triangleq \left\{
+    \begin{array}{ll} 
+      t_2         & t_1 = []\\
+      \av::(t_1' ++ t_2)  & t_1 = \av::t_1'
+    \end{array}
+    \right.
+  \end{equation}
+%
+%
+The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is defined as follows:
+\begin{equation}
+    t_1 - t_2  
+    \triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
+  \end{equation}
+}
+%
 A configuration, $\config{\ssa{m, c, \vtrace, \vcounter}}$, contains four elements: a SSA memory $\ssa{m}$, the command $\ssa{c}$ to be evaluated, a trace $t$ and variable $\vcounter$. 
 %
 \\
@@ -301,11 +324,11 @@ With the operational semantics and relations between annotated queries, we restr
   }
   ~\textbf{assn-e}
   %
-  ~~~~~~~
+  \\
   %
   \inferrule
   {
-  \vcounter'[\ssa{x}] = \vcounter(\ssa{x}) + 1
+  \vcounter'(\ssa{x}) = \vcounter(\ssa{x}) + 1
   \and 
   \av = (\ssa{x}, l, \vcounter'(\ssa{x}), v)
   }
@@ -340,10 +363,10 @@ With the operational semantics and relations between annotated queries, we restr
    \ssa{\config{m, b} \xrightarrow{} b'}
   }
   {
-  \config{\ssa{m, \eif_w (b, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n,  c_1,  c_2)} ,  \vtrace, \vcounter}
+  \config{\ssa{m, \eif_w (b, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n,  c_1,  c_2)} ,  \vtrace, \vcounter}
   \xrightarrow{} 
   \config{\ssa{m, 
-   \eif_w (b', n, [\bar{{x}}',\bar{{x_1}}, \bar{{x_2}}] , n , c_1 , c_2 )}, \vtrace, \vcounter}
+   \eif_w (b', [\bar{{x}}',\bar{{x_1}}, \bar{{x_2}}] , n , c_1 , c_2 )}, \vtrace, \vcounter}
   }
   ~\textbf{ssa-ifw-b}
   %
@@ -366,7 +389,6 @@ With the operational semantics and relations between annotated queries, we restr
   \config{
   \ssa{m, 
   {
-  \eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
   c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
   }
   }
