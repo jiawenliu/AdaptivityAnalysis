@@ -291,13 +291,13 @@ A configuration, $\config{m, c, t,w}$, contains four elements: a memory $m$, the
 \\
 %
 \todo{
-The annotated query $\av = (\qval, l, w)$ is a triple contains 3 elements. 
-$\qval$ is a query value representing the corresponding query request $\assign{x}{\query(\qval)}$ during the execution of the program.
-$l$ is the label of the query request command in a program.
-$w$ is the while map indicating if or not this command is in a while loop, and which iteration it is in.
-Given the label $l$ and while map $w$ are ordered, 
-the annotated queries also preserve this property. 
-Its order and equivalence relation are defined in Definition~\ref{def:query_dir}.
+The annotated query $\av = (\qval,v,l,n)$ is a tuple  contains 4 elements. }
+% $\qval$ is a query value representing the corresponding query request $\assign{x}{\query(\qval)}$ during the execution of the program.
+% $l$ is the label of the query request command in a program.
+% $w$ is the while map indicating if or not this command is in a while loop, and which iteration it is in.
+% Given the label $l$ and while map $w$ are ordered, 
+% the annotated queries also preserve this property. 
+% Its order and equivalence relation are defined in Definition~\ref{def:query_dir}.
 %
 \begin{defn}[Order of Annotated Variables].
 \label{def:query_dir}
@@ -315,7 +315,7 @@ $\av_1 = (x_1, v_1, l_1, n_1),
     n_1 < n_2  
     & l_1 = l_2
     \\
-    w_1 <_w w_2 & o.w.
+    w_1 <_w w_2 & o.w. \wq{hard:-(}
 \end{array}  
 \right.
 \]
@@ -556,7 +556,8 @@ With the operational semantics and relations between annotated queries, we restr
 %
 %
 %
-%
+\wq{we define map update as follows, if we update the map $m$ with value $v$ at its key $k$, we denote $m[x \to v]$ or $m[v/x]$.}%
+
 \begin{figure}
 \jl{
 	\begin{mathpar}
@@ -584,14 +585,14 @@ With the operational semantics and relations between annotated queries, we restr
 	%
 	\inferrule
 	{
-	\vcounter'[x] = \vcounter[x] + 1
+	n = \vcounter[x] + 1
 	\and 
-	\av = (x, v, l, \vcounter'[x])
+	\av = (x, v, l, n)
 	}
 	{
 	\config{m, [\assign x v]^{l},  \vtrace, \vcounter} 
 	\xrightarrow{} 
-	\config{m[v/x], [\eskip]^{l}, \vtrace ++ [\av], \vcounter'}
+	\config{m[v/x], [\eskip]^{l}, \vtrace ++ [\av], \vcounter[x \to n]} 
 	}
 	~\textbf{assn-v}
 	%
@@ -606,64 +607,64 @@ With the operational semantics and relations between annotated queries, we restr
 	\config{m, \ewhile ~ [b]^{l}, n ~ \edo ~ c, \vtrace, \vcounter }
 	\xrightarrow{} 
 	\config{ m, 
-	c ; \eif_w (b, c ; \ewhile ~ [b]^{l}, (n + 1) ~ \edo ~ c,  \eskip),
+	c ; \eif (b, c ; \ewhile ~ [b]^{l}, (n + 1) ~ \edo ~ c,  \eskip),
 	\vtrace, \vcounter
 	}
 	}
 	~\textbf{while-b}
 	}
 	}
-	%
-	\and
-	%
-	{{\inferrule
-	{
-	 m, b \xrightarrow{} b'
-	}
-	{
-	\config{m, \eif_w (b, c, \eskip) , \vtrace, \vcounter }
-	\xrightarrow{} 
-	\config{m, \eif_w (b', c, \eskip), \vtrace, \vcounter }
-	}
-	~\textbf{ifw-b}
-	}
-	}
-	%
-	\and
-	%
-	{{
-	\inferrule
-	{
-	 \empty
-	}
-	{
-	\config{m, 
-	\eif_w (\etrue, c ; \ewhile ~ [b]^{l}, n ~ \edo ~ c, \eskip),
-	\vtrace, \vcounter }
-	\xrightarrow{} 
-	\config{m, c ; \ewhile ~ [b]^{l}, n ~ \edo ~ c,  
-	\vtrace, \vcounter }
-	}
-	~\textbf{ifw-true}
-	}
-	}
-	\and
-	%
-	{{
-	\inferrule
-	{
-	 \empty
-	}
-	{
-	\config{ m, 
-	\eif_w (\efalse, c; \ewhile ~ [b]^{l} ~ \edo ~ c,\eskip), 
-	\vtrace, \vcounter 
-	}
-	\xrightarrow{} \config{m, \eskip, \vtrace, \vcounter }
-	}
-	~\textbf{ifw-false}
-	}
-	}
+% 	%
+% 	\and
+% 	%
+% 	{{\inferrule
+% 	{
+% 	 m, b \xrightarrow{} b'
+% 	}
+% 	{
+% 	\config{m, \eif_w (b, c, \eskip) , \vtrace, \vcounter }
+% 	\xrightarrow{} 
+% 	\config{m, \eif_w (b', c, \eskip), \vtrace, \vcounter }
+% 	}
+% 	~\textbf{ifw-b}
+% 	}
+% 	}
+% 	%
+% 	\and
+% 	%
+% 	{{
+% 	\inferrule
+% 	{
+% 	 \empty
+% 	}
+% 	{
+% 	\config{m, 
+% 	\eif_w (\etrue, c ; \ewhile ~ [b]^{l}, n ~ \edo ~ c, \eskip),
+% 	\vtrace, \vcounter }
+% 	\xrightarrow{} 
+% 	\config{m, c ; \ewhile ~ [b]^{l}, n ~ \edo ~ c,  
+% 	\vtrace, \vcounter }
+% 	}
+% 	~\textbf{ifw-true}
+% 	}
+% 	}
+% 	\and
+% 	%
+% 	{{
+% 	\inferrule
+% 	{
+% 	 \empty
+% 	}
+% 	{
+% 	\config{ m, 
+% 	\eif_w (\efalse, c; \ewhile ~ [b]^{l} ~ \edo ~ c,\eskip), 
+% 	\vtrace, \vcounter 
+% 	}
+% 	\xrightarrow{} \config{m, \eskip, \vtrace, \vcounter }
+% 	}
+% 	~\textbf{ifw-false}
+% 	}
+% 	}
 	%
 	\and
 	%
@@ -684,14 +685,14 @@ With the operational semantics and relations between annotated queries, we restr
 	{
 	\query(\qval) = v
 	\and
-	\vcounter'[x] = \vcounter[x] + 1
+	n = \vcounter[x] + 1
 	\and 
-	\av = (x, \qval, l, \vcounter'[x])
+	\av = (x, \qval, l, n)
 	}
 	{
 	\config{m, [\assign{x}{\query(\qval)}]^l, \vtrace, \vcounter} 
 	\xrightarrow{} 
-	\config{m[ v/ x], \eskip,  \vtrace ++ [\av], \vcounter' }
+	\config{m[ v/ x], \eskip,  \vtrace ++ [\av], \vcounter[x \to n] }
 	}
 	~\textbf{query-v}
 	}
@@ -767,6 +768,24 @@ With the operational semantics and relations between annotated queries, we restr
 %
 %
 %
+\wq{Evaluation context
+$
+\begin{array}{ll}
+ E     & ::= [\cdot] | x \leftarrow E | if~ E ~ c_1, c_2 | x \leftarrow query(E) | while ~ E~ do~c  | E;c | skip;E 
+\end{array}
+$
+\begin{mathpar}
+	\inferrule
+	{
+	}
+	{
+	\config{m, E[e], \vtrace, \vcounter} 
+	\xrightarrow{} 
+	\config{m, E[e'] \vtrace, \vcounter}
+	}
+\end{mathpar}
+}
+
 \subsection{ Trace-based Adaptivity}
 %
 We define adaptivity through a query-based dependency graph. In our model, an \emph{analyst} asks a sequence of queries to the mechanism, and the analyst receives the answers to these queries from the mechanism. A query is adaptively chosen by the analyst when the choice of this query is affected by answers from previous queries. In this model, the adaptivity we are interested in is the length of the longest sequence of such adaptively chosen queries, among all the queries the data analyst asks to the mechanism.  Also, when the analyst asks a query, the only information the analyst will have will be the answers to previous queries and the state of the program. It means that when we want to know if this query is adaptively chosen, we only need to check whether the choice of this query will be affected by changes of answers to previous queries. There are two possible situations that can  affect the choice of a query,  
