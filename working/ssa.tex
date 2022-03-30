@@ -1,69 +1,5 @@
 \section{Labeled SSA Language}
 %
-{
-\subsection{The Limit of {\tt While} Language}
-we see the power of the labelled loop language to achieve the adaptivity semantically, from its being capable to express many adaptive data analysis algorithm,  allowing the construction of the query-based dependency graph using traces from the execution, and so on.
-However, it is not powerful enough to reach the adaptivity syntactically. The main difficulty is its implicit control flow which raises extra complexity to figure out where some variables used come from. We use three simple but relevant examples to show why the loop language suffers. We use $\query(0),\query(1)$ to represent linear queries.
-%
-\[
- c_1 = \begin{array}{l}
-      \clabel{ \assign{x}{\query(0)}}^{1} ; \\
-      \eif  [(x < 0 )]^{2} \\
-      \ethen \clabel{\assign{x}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{y}{\query(x+\chi(3))}}^{5}
- \end{array}
- ~~~~~
- c_2 = \begin{array}{l}
-      \clabel{ \assign{x}{\query(0)}}^{1} ; \\
-      \eif  [(x < 0 )]^{2} \\
-      \ethen \clabel{\assign{x}{\query(1)}}^{3}\\
-      \eelse \clabel{\assign{x}{\query(2)}}^{4} ; \\
-      \clabel{\assign{y}{\query(x+\chi(3))}}^{5}
- \end{array}
- ~~~~~~~~
-  c_3 = \begin{array}{l}
-      \clabel{ \assign{x}{\query(0)}}^{1} ; \\
-      \eif  [(x < 0 )]^{2} \\
-      \ethen \clabel{\assign{z}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{y}{\query(x+\chi(3)}}^{5}
- \end{array}
-\]
-In these three examples, the variable $x$ at line $5$ is implicit. In program $c_1$, it refers to the either $x$ at line $1$, or $x$ at line $3$, which means the result of query request $\query(x+\chi(3))$ assigned to the variable $y$ may depend on $\query(0)$(bound to $x$ at line $1$) or $\query(1)$($x$ at line $3$). When we have a look at the other two programs $c_2$ and $c_3$, it is another talk. We think $\query(x+\chi(3))$ may depend on either $\query(1)$($x$ at line $3$) or $\query(x+\chi(3))$($x$ at line $4$) in $c_2$,     
-while $\query(x+\chi(3))$ only depends on $\query(0)$ at line $1$ in program $c_3$. 
-These three examples are structural similar in loop language, however, the dependency between variables are quite dissimilar. We consider variables here because query request is also bound to variables. To solve this dilemma, we move to single static assignment as follows.   
-\[
- c_1^{ssa} = \begin{array}{l}
-      \clabel{ \assign{{\ssa{x}_1}}{\query(0)}}^{1} ; \\
-      \eif  [({\ssa{x_1} }< 0 )]^{2}\\
-      ([], [{ \ssa{x_3, x_1,x_2} }], []) \\
-      \ethen \clabel{\assign{{\ssa{x_2}}}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_3} + \chi(3)})}}^{5}
- \end{array}
- ~~~~~
-  c_2^{ssa} = \begin{array}{l}
-      \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
-      \eif  [({\ssa{x_1}} < 0 )]^{2}, \\
-      ( [{\ssa{x_4, x_2,x_3}}], [], [] ) \\
-      \ethen \clabel{\assign{{\ssa{x_2}}}{\query(1)}}^{3}\\
-      \eelse \clabel{\assign{{\ssa{x_3}}}{\query(2)}}^{4} ; \\
-      \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_4}}+\chi(3))}}^{5}
- \end{array}
- ~~~~~~~~
-  c_3^{ssa} = \begin{array}{l}
-      \clabel{ \assign{{\ssa{x_1}}}{\query(0)}}^{1} ; \\
-      \eif  [({\ssa{x_1}} < 0 )]^{2} \\
-       ( [], [], [] ) \\
-      \ethen \clabel{\assign{{\ssa{z_1}}}{\query(1)}}^{3}\\
-      \eelse \clabel{\eskip}^{4} ; \\
-      \clabel{\assign{{\ssa{y_1}}}{\query({\ssa{x_1}}+\chi(3))}}^{5}
- \end{array}
-\]
-To distinguish between the loop language and in ssa form, we denote the ssa variable ${\ssa{x_1}}$ in bold. As we can see, the data flow becomes explicit in ssa form and the analysis on the dependency between variables in the program becomes much clear now. Considering this advantage, we aim to estimate the adaptivity through an analysis on program in ssa form. 
-}
-%s
 %
 \subsection{SSA form Language}
 \[
@@ -132,23 +68,27 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 ~|~ [\eskip]^{l} 
 \\
 %
-\mbox{SSA Memory} 
-& \ssa{m} & ::= & [] ~|~  (\ssa{x} \to v) :: \ssa{m } 
-\\
-%
-\mbox{Annotated Variable / Event} 
-& \av & ::= & (\ssa{x}, v, l, n) | (\ssa{x}, \qval, l, n)
+\mbox{Event} 
+& \event & ::= & (\ssa{x}, v, l, n) | (\ssa{x}, \qval, v, l, n) | (\sbexpr, v, l, n)
 \\
 %
 \mbox{Trace} & \vtrace
-& ::= & [] | \av :: \vtrace
+& ::= & \dot | \vtrace \cdot \event
+\\
+%
+\mbox{Environment} 
+& \env & ::= & \vtrace \to v \cup \{\bot\}
+\\
+%
+\mbox{Query Environment} 
+& \qenv & ::= & \vtrace \to \qval \cup \{\bot\}
 \\
 %
 \mbox{Variable Counter} & \vcounter
 & ::= & \mathcal{SVAR} \to \mathbb{N}
 \end{array}
 \]
-We use following notations to represent the set of corresponding definitions:
+We use following notations to represent the set of corresponding terms:
 \[
 \begin{array}{lll}
 \mathcal{SVAR} & : & \mbox{Set of Variables}  
@@ -158,7 +98,7 @@ We use following notations to represent the set of corresponding definitions:
 \\ 
 %
 %
- \mathcal{AV}  & : & \mbox{Set of Annotated Variables}  
+ \eventset  & : & \mbox{Set of Events}  
 \\
 %
 \mathcal{SM}  & : & \mbox{{Set of SSA Memories}} 
@@ -172,215 +112,149 @@ We use following notations to represent the set of corresponding definitions:
 \]
 %
 %
-\paragraph{Consistences to the {\tt While} Language}
-Each command is labeled with a label $l$, a natural number standing for the line of code where the command appears. Notice that we associate the label $l$ to the conditional predicate $\bexpr$ in the if statement, and to the guard $\bexpr$ in the while statement. 
-\\
-  %%% trace, queries
-A memory is standard, a map from labeled variables to values. 
+Environment :
+\[
+\env(\vtrace \cdot (x, v, l, n)) x \triangleq v
+~~
+\env(\vtrace \cdot (y, v, l, n)) x \triangleq \env(\vtrace) x
+~~
+\env(\cdot) x \triangleq \bot
+\]
 %
-\\
-%
-The variable counter $\vcounter$ maps every variable to a natural number $n \in \mathbb{N}$ in a certain execution of program $\ssa{c}$. This natural number $n$ represents the visiting times of this variable in this certain execution.
-%
-We use variable name $x$ within parenthesis to denote the access to the associated natural number of this variable in the variable counter $\vcounter_{c}$, 
-$\vcounter_{c}(x)$ denote the visiting times of variable $x$.
-%
-\\
-The annotated variable / event $\av = (x, l, n, v) $ or $\av = (x, l, n, \qval) $  is a quaternary tuple contains 4 elements. 
-$\qval$ is a query value representing the corresponding query request $\assign{x}{\query(\qval)}$ during the execution of the program.
-%
-\\
-A variable trace $\vtrace$ is a list of annotated queries accumulated along the execution of the program. 
-A trace can be regarded as the program history, where this history consists of all the queries asked by the analyst during the execution of the program. 
-%
-\todo{
-Given an annotated variable $\av$ and a trace $t$,
-the appending operation $\av :: t$ is 
-the standard list appending operation, appends $\av$ to the head of trace $t$.
-%
-The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
-\begin{equation}
-    t_1 ++ t_2  
-    \triangleq \left\{
-    \begin{array}{ll} 
-      t_2         & t_1 = []\\
-      \av::(t_1' ++ t_2)  & t_1 = \av::t_1'
-    \end{array}
-    \right.
-  \end{equation}
-%
-%
-The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is defined as follows:
-\begin{equation}
-    t_1 - t_2  
-    \triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
-  \end{equation}
-}
-%
-A configuration, $\config{\ssa{m, c, \vtrace, \vcounter}}$, contains four elements: a SSA memory $\ssa{m}$, the command $\ssa{c}$ to be evaluated, a trace $t$ and variable $\vcounter$. 
-%
-\\
- %% trace
-We collect the trace with a trace-based small-step operational semantics based on transitions of the program configuration $\config{m, c, \vtrace, \vcounter}$,
-of form $ \config{m,c, \vtrace, \vcounter} \to \config{m', \eskip, \vtrace', \vcounter'} $. 
-%
-\\
-%
-\paragraph{Differences in SSA form Language}
-We use $\ssa{\aexpr}$ to express arithmetic expressions which now contains ssa variable $\ssa{x} \in \mathcal{SVAR}$, 
-and the boolean expression as $\ssa{\bexpr}$. 
-%
-The ssa expression can be either $\ssa{a}$ and $\ssa{b}$. 
-We also have the ssa variables annotated in a similar way as the annotated queries in the while language.
-%
-The labeled commands $\ssa{c}$ are now in the ssa form. 
-% assignment
-In the assignment command $[\assign {\ssa{x}}{ \ssa{\expr}}]^{l}$ and query request command 
-$[\assign {{\ssa{x}} } {\query({\ssa{\qexpr}})}]^{l}$ , 
-the expression ${\ssa{\expr}}$ and query expression 
-$\ssa{\qexpr}$ is now in their corresponding ssa forms. 
-
-{
-% if
-The if command now contains the extra part 
-$([\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , 
-[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
-[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] )$, 
-which helps to track the dependency of new assigned variables in both branches($[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$), 
-then branch $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$, 
-and else branch $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] $. 
-The $\bar{\ssa{x}}$ is a list of ssa variables, in which every element $\ssa{x}$ may depends on the corresponding element $\ssa{x_1}$ from $\bar{\ssa{x_1}}$ collected in the then branch or the corresponding element $\ssa{x_2}$ from $\bar{\ssa{x_2}}$ collected in the else branch. 
-%
-Every tuple $(\ssa{x,x_1,x_2 })$ from $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$ can be understood as $\ssa{x} = \phi(\ssa{x_1,x_2})$ in the normal ssa form. 
-The previous example $c_2^{s}$ can be used for reference. 
-The second part $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$ focuses on the then branch. 
-The list of ssa variables $y_1$ stores the assigned ssa variables before the if command, whose non-ssa version (variables in the while language) will be modified only in the then branch. 
-We can look at program $c_1$ as a reference,in which $x$ at line $1$ may be modified only in the then branch at line $3$. 
-The list $\bar{\ssa{y_2}}$ tracks the ssa variables assigned only in the then branch. 
-If the variables are assigned in both branches such as in the program $c_2$, they goes into $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$. Then we think every ssa variable in $\bar{\ssa{y}}$ may come from the corresponding variable $\ssa{y_1}$ in $\bar{\ssa{y_1}}$ before the if command or $\ssa{y_2}$ in $\bar{\ssa{y_2}}$ in the then branch. 
-In this sense, we can also regard every tuple $(\ssa{y,y_1,y_2 })$ from $[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]$ as $\ssa{y} = \phi(\ssa{y_1,y_2})$. 
-The rest part $[\bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$ focus on the else branch and can be understood similarly. 
-}
-
-The while command also has similar part $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$, focusing on the while body. 
-The new command ${{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}}$ does not have explicit label because it is only used for evaluation internally, we will discuss more about it when in the 
-small-step operational semantics for SSA language. 
-%
-\\
-The SSA memory $\ssa{m}$ is a map from SSA variables $\ssa{x}$ to values.
-%
-\\
-The others remain the same in SSA form language as in the {\tt While} language.
-%
+% The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
+% \begin{equation}
+%     t_1 ++ t_2  
+%     \triangleq \left\{
+%     \begin{array}{ll} 
+%       t_2         & t_1 = []\\
+%       \event::(t_1' ++ t_2)  & t_1 = \event::t_1'
+%     \end{array}
+%     \right.
+%   \end{equation}
+% %
+% %
+% The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is defined as follows:
+% \begin{equation}
+%     t_1 - t_2  
+%     \triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
+%   \end{equation}
 %
 %
 \subsection{Trace-based Operational Semantics for SSA Language}
+%
+%
+%
 {
+\begin{mathpar}
+\boxed{ \config{\trace,\aexpr} \aarrow v \, : \, Trace  \times AExpr \Rightarrow Value }
+\\
+\boxed{ \config{\trace, \bexpr} \barrow v \, : \, Trace \times BExpr \Rightarrow Value }
+\end{mathpar}
+}
 %
-%
-The small-step transition states that a configuration $\config{m,c, \vtrace, \vcounter}$ evaluates to another configuration with the trace and while map updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.  
-We define rules of the trace-based operational semantics in Figure~\ref{fig:evaluation}.
-%
-%
-The rule $\textbf{query-e}$ evaluates the argument of a query request. When the argument is in normal form, this query will be answered.
-%
-The rule $\textbf{query-v}$ modifies the starting memory $m$ to $m[\qval/x]$ using the answer $\qval$ of the query $\query(\qval)$ from the mechanism, 
-with the trace expanded by appending the query $\query(\qval)$ with the current annotation $(l,w)$. 
-%
-The rule for assignment is standard and the trace remains unchanged.%
-The sequence rule keeps tracking the modification of the trace, and the evaluation rule for if conditional goes into one branch based on the result of the conditional predicate $\bexpr$. 
-%
-The rules for while modify the while map $w$. 
-In the rule $\textbf{ifw-true}$, the while map $w$ is updated by $w + l$ because the execution goes into another iteration when the condition $n >0$ is satisfied. 
-%
-When $n$ reaches $0$, the loop exits and the while map $w$ eliminates the label $l$ of this while statement by $w - l$ in the rule $\textbf{ifw-false}$.  
-With the operational semantics and relations between annotated queries, we restrict the well-formed trace w.r.t. the execution of a program $c$ in Definition~\ref{def:wf_trace}.
-%
-%
+Given the evaluation for the arithmetic and boolean expression, we defined the evaluation rules for query expression $\qexpr$ correspondingly as follows:
+  \begin{mathpar}
+  \boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, Trace  \times QExpr \qarrow QValue }
+  \\
+  \inferrule{ 
+    \config{\trace, \qexpr_1} \qarrow \qval_1
+    \and
+    \config{m, \qexpr_2} \qarrow \qval_2
+  }{
+   \config{\trace,  \qexpr_1 \oplus_a \qexpr_2} 
+   \qarrow n'
+  }
+  \and
+  \inferrule{ 
+    \config{m, \aexpr} \aarrow v
+  }{
+   \config{m,  \chi[\aexpr]} \qarrow \chi[v]
+  }
+  \end{mathpar}
 %
 %
 \begin{figure}
 \jl{
   \begin{mathpar}
   \boxed{
-  Memory  \times Command \times VTrace \times VCounter
+  Command \times Trace \times VCounter
   \xrightarrow{}
-  Memory  \times Command \times VTrace \times VCounter
+  Command \times Trace \times VCounter
   }
   \\
-  \boxed{\config{\ssa{m, c, \vtrace, \vcounter}}
+  \boxed{\config{\ssa{c, \vtrace, \vcounter}}
   \xrightarrow{} 
-  \config{\ssa{m', c',  \vtrace', \vcounter'}}
+  \config{\ssa{c',  \vtrace', \vcounter'}}
   }
-  \\
-  \inferrule
-  {
-   \config{\ssa{m, \expr}} \xrightarrow{}  \ssa{\expr'}
-  }
-  {
-  \config{\ssa{m, [\assign{x}{\ssa{\expr}}]^{l},  \vtrace, \vcounter}}
-  \xrightarrow{} 
-  \config{\ssa{m, [\assign{x}{\ssa{\expr}'}]^{l}, \vtrace, \vcounter}}
-  }
-  ~\textbf{assn-e}
-  %
   \\
   %
   \inferrule
   {
   \vcounter'(\ssa{x}) = \vcounter(\ssa{x}) + 1
   \and 
-  \av = (\ssa{x}, l, \vcounter'(\ssa{x}), v)
+  \event = (\ssa{x}, l, \vcounter'(\ssa{x}), v)
   }
   {
-  \config{\ssa{m}, [\assign{\ssa{x}}{v}]^{l},  \vtrace, \vcounter} 
+  \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace, \vcounter} 
   \xrightarrow{} 
-  \config{\ssa{m}[v/\ssa{x}], [\eskip]^{l}, \vtrace ++ [\av], \vcounter'}
+  \config{[\eskip]^{l}, \vtrace \cdot \event, \vcounter'}
   }
-  ~\textbf{assn-v}
+  ~\textbf{assn}
   %
   \and
   %
   \inferrule
   {
-   \empty
+   \vtrace, b \barrow \etrue
+   \and 
+   \event = (b, \etrue, l, \vcounter(l))
+   \and 
+   \vcounter'(l) = \vcounter(l) + 1
   }
   {
-  \config{\ssa{m, \ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace, \vcounter}}
+  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace, \vcounter}}
   \\
   \xrightarrow{} 
   \config{\ssa{ m, 
-  \eif_w (b, n, [\bar{x_i}/\bar{x'}],  [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], 
   c[\bar{x_i}/\bar{x'}]; \ewhile ~ [b]^{l}, (n + 1), [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c,  \eskip),
-  \vtrace, \vcounter}}
+  \vtrace\cdot \event, \vcounter'}}
   }
-  ~\textbf{ssa-while-b}
+  ~\textbf{ssa-while-t}
   %
-  \and
+  %
+    \and
   %
   \inferrule
   {
-   \ssa{\config{m, b} \xrightarrow{} b'}
+   \vtrace, b \barrow \efalse
+   \and 
+   \event = (b, \efalse, l, \vcounter(l))
+   \and 
+   \vcounter'(l) = \vcounter(l) + 1
   }
   {
-  \config{\ssa{m, \eif_w (b, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] , n,  c_1,  c_2)} ,  \vtrace, \vcounter}
+  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace, \vcounter}}
+  \\
   \xrightarrow{} 
-  \config{\ssa{m, 
-   \eif_w (b', [\bar{{x}}',\bar{{x_1}}, \bar{{x_2}}] , n , c_1 , c_2 )}, \vtrace, \vcounter}
+  \config{\ssa{ m, 
+  [\eskip]^l  \eskip),
+  \vtrace \cdot \event, \vcounter'}}
   }
-  ~\textbf{ssa-ifw-b}
+  ~\textbf{ssa-while-f}
   %
   \and
   %
  \inferrule
   {
-   \empty
-  }
+   \vtrace, b \barrow \efalse
+   \and 
+   \event = (b, \efalse, l, \vcounter(l))
+   \and 
+   \vcounter'(l) = \vcounter(l) + 1  }
   {
   \config{
   \ssa{
-  m, 
-  \eif_w (\etrue, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
+  \eif ([b]^l, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
   c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
   \eskip), \vtrace, \vcounter
   }}
@@ -394,41 +268,9 @@ With the operational semantics and relations between annotated queries, we restr
   }
   \vtrace, \vcounter}
   }
-  ~\textbf{ssa-ifw-true}
-%
-  \and
+  ~\textbf{ssa-if-true}
   %
-  \inferrule
-  {
-  { n = 0 \rightarrow i = 1 }
-  \and
-  {n > 0 \rightarrow i =2}
-  }
-  {
-  \config{\ssa{
-  m, \eif_w (
-  \efalse, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}],  n, 
-  c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-  \eskip)),\vtrace, \vcounter }}
-  \\
-  \xrightarrow{} 
-  \config{\ssa{m, {\eskip}; \eifvar(\bar{x'}, \bar{x_i}) }, \vtrace, \vcounter }
-  }
-  ~\textbf{ssa-ifw-false}
   %
-  \and
-  %
-  {
-  \inferrule
-  {
-  \config{\ssa{m,\qexpr}} \qarrow \qexpr'
-  }
-  {
-  \config{\ssa{m, [\assign{x}{\query(\qexpr)}]^l, \vtrace, \vcounter}} \xrightarrow{}  
-  \config{\ssa{m, [\assign{x}{\query(\qexpr')}]^l, \vtrace, \vcounter}}
-  }
-  ~\textbf{ssa-query-e}
-  }
   \and
   {
   \inferrule
@@ -437,14 +279,14 @@ With the operational semantics and relations between annotated queries, we restr
   \and
   \vcounter'[\ssa{x}] = \vcounter[\ssa{x}] + 1
   \and 
-  \av = (\ssa{x}, \qval, l, \vcounter'[\ssa{x}])
+  \event = (\ssa{x}, \qval, l, \vcounter'[\ssa{x}])
   }
   {
-  \config{\ssa{m, [\assign{x}{\query(\qval)}]^l, \vtrace, \vcounter}}
+  \config{\ssa{m, [\assign{x}{\query(\qexpr)}]^l, \vtrace, \vcounter}}
   \xrightarrow{} 
-  \config{\ssa{m[v/ x], \eskip,  \vtrace ++ [\av], \vcounter'} }
+  \config{\ssa{m[v/ x], \eskip,  \vtrace ++ [\event], \vcounter'} }
   }
-  ~\textbf{ssa-query-v}
+  ~\textbf{ssa-query}
   }
   %
   \and
@@ -475,45 +317,29 @@ With the operational semantics and relations between annotated queries, we restr
   %
   \and
   %
-  \inferrule
-  {
-  \config{\ssa{m, \sbexpr}} \barrow \sbexpr'
-  }
-  {
-  \config{\ssa{m, 
-  \eif([\sbexpr]^l, [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
-  [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
-  [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), 
-  \vtrace, \vcounter}} 
-  \\
-  \xrightarrow{} 
-  \config{\ssa{m,  
-  [\eif([\sbexpr']^l,[ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
-  [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
-  [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , c_1, c_2)]^{l}, 
-  \vtrace, \vcounter}}
-  }
-  ~\textbf{ssa-if-b}
-  %
-  \and
   %
   \inferrule
   {
+     \vtrace, b \barrow \etrue
+   \and 
+   \event = (b, \etrue, l, \vcounter(l))
+   \and 
+   \vcounter'(l) = \vcounter(l) + 1 
   }
   {
-  \config{\ssa{m, 
+  \config{\ssa{
   \eif([\etrue]^{l}, [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
   [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
   [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), 
   \vtrace, \vcounter}}
   \\
   \xrightarrow{} 
-  \config{\ssa{m, 
+  \config{\ssa{ 
   c_1; 
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace, \vcounter}}
+  \vtrace \cdot \event, \vcounter'}}
   }
   ~\textbf{ssa-if-t}
   %
@@ -521,9 +347,14 @@ With the operational semantics and relations between annotated queries, we restr
   %
   \inferrule
   {
+   \vtrace, b \barrow \efalse
+   \and 
+   \event = (b, \efalse, l, \vcounter(l))
+   \and 
+   \vcounter'(l) = \vcounter(l) + 1 
   }
   {
-  \config{\ssa{m, 
+  \config{\ssa{
   \eif([\efalse]^{l},[\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
   [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
   [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), \vtrace, \vcounter}}
@@ -534,7 +365,7 @@ With the operational semantics and relations between annotated queries, we restr
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace, \vcounter}}
+  \vtrace \cdot \event, \vcounter'}}
   }
   ~\textbf{ssa-if-f}
   %
@@ -559,55 +390,9 @@ With the operational semantics and relations between annotated queries, we restr
   \end{figure}
   %
 %
-{
-When switching to the SSA language, we show that we are still able to achieve what we can get in Section~\ref{sec:while_language}. 
-The operational semantics of the SSA language mimics its counterpart, of the form $\config{\ssa{m}, \ssa{c}, t, w} \to \config{\ssa{m'}, \eskip, t', w'}$. 
-The SSA memory $\ssa{m}$ is a map from SSA variable $\ssa{x}$ to values.
-It still uses a trace to track the query requests during the execution, starting from an SSA configuration with an SSA memory $\ssa{m}$ and a program in its SSA form $\ssa{c}$, 
-which allows a similar construction of the query-based dependency graph in the SSA language as in the {\tt While} language.
-We show the evaluation rules in Figure~\ref{fig:os_ssa}.
-}
-%
-The command 
-$\mathsf{\eifvar}(\bar{x},\bar{x}')$ stores the variable map during the run time, which is a map from ssa variable $\ssa{x}$ to variable $\ssa{x}_i$. 
-This map is designed for $\eif$ command, when the variable may comes from two branches and this command records which branch the variable comes from. 
-%
-%
-{
-The key idea underneath the operational semantics is to have the trace and the execution path being constructed in a similar way as in the loop language.
-Take the query request as an example, the argument $\ssa{\expr}$ which contains ssa variables will be evaluated to a value $v$ first before the request is sent to the database in rule $\textbf{ssa-query-arg}$. 
-The trace expands in the rule $\textbf{ssa-query}$ likewise in the loop language. 
-The query $q$, a primitive symbol representing the abstract query in both the ssa language and  the loop language, makes no difference in the two languages. 
-Since we add the extra part $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] ,[\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}]  $ 
-in the if command compared to its counterpart in the while language, 
-the rules relevant to the if condition ($\textbf{ssa-if-t}$ and $\textbf{ssa-if-f}$) use the command $\eifvar(\ssa{\bar{x}, \bar{x}'})$ to update the ssa memory $\ssa{m}$ with the mapping from the new generated variable $\ssa{x}$ in $\bar{\ssa{x}}$ to the appropriate value $\ssa{m(x')}$ where $\ssa{x'}$ is the corresponding variable w.r.t $\ssa{x}$ in $\bar{\ssa{x'}}$.
-%
-The rule $\textbf{ssa-\eifvar}$ reflects the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$.
-%
-It is easier to understand the usage of $\eifvar(\ssa{\bar{x}, \bar{x}'})$ in the rule $\textbf{ssa-if-t}$ when we think about how ssa works: 
-in the ssa form, when a variable to be used may come from two sources (e.g. $\ssa{x_1}$ and $\ssa{x_2}$ in the rule), it generates a new variable $\ssa{x}$, assigning it with $\phi(\ssa{x_1}, \ssa{x_2})$,  and replaces the variable to be used with newly assigned $\ssa{x}$. 
-We know that in the future program after the if command, 
-only the variables $\bar{\ssa{x}}$ will be available instead of $\bar{\ssa{x_1}}, \bar{\ssa{x_2}}$ from two branches.
-For the evaluation of the program after the if command, we need to tell the memory the exact value of the newly generated variable $\ssa{x}$, which is the value stored in $\ssa{x_1}$ when the conditional $\ssa{b}$ is true, 
-or the value in $\ssa{x}_2$ when $\sbexpr$ is false. To this end, the internal command $\eifvar(\ssa{\bar{x}, \bar{x}'})$ plays its role. 
-For the if rule, w
-e need to instantiate the variables from $\bar{\ssa{x}}$ whose values come from two branches, 
-$\bar{\ssa{y}}$ whose values from then branch or assignment before the if command, and $\bar{\ssa{z}}$ whose values from else branch or before the if command. 
-Correspondingly, we need to have three ifvar commands.   
-}
-\\
-  The evaluation of while depends on the while iteration counter $\ssa{n}$ and the guard $\ssa{\bexpr}$. 
-  When $\ssa{\bexpr}$ is evaluated to $\etrue$, the while is still executing, and all the variables $\ssa{x}$ in $\bar{\ssa{x}}$ of the loop body $\ssa{c}$ are replaced as the corresponding variables in $\bar{\ssa{x_1}}$ in the first iteration($n=0$), or $\bar{\ssa{x_2}}$ in other iterations($n > 0$). 
-  The while turns to an exit when $\ssa{n} > 0$, 
-  and the memory $\ssa{m}$ updates the mapping of variables in $\bar{\ssa{x}}$ with $\bar{\ssa{x_1}}$ if the guard $\bexpr$ evaluates to $\efalse$, 
-  which means the while body is not executed once. 
-  When the while enters the exit after executing the body a few times($n$), the variables in $\bar{\ssa{x}}$ is instantiated with the value from the body $\ssa{m}(\bar{\ssa{x_2}})$. 
-%
 %
 \subsection{Event and Trace}
 %
-%
-\todo{
 %
 Events preserve the order of execution. The order relation is defined in Definition~\ref{def:query_dir}.
 %
@@ -615,12 +400,12 @@ Events preserve the order of execution. The order relation is defined in Definit
 \label{def:query_dir}
 \\
 Given 2 annotated queries 
-$\av_1 = (x_1, v_1, l_1, n_1), 
-\av_2 = (x_2, v_2, l_2, n_2)$
+$\event_1 = (x_1, v_1, l_1, n_1), 
+\event_2 = (x_2, v_2, l_2, n_2)$
 :
 %
 \[
-\av_1 \avlt \av_2
+\event_1 \eventlt \event_2
  \triangleq 
  \left\{
  \begin{array}{ll}
@@ -632,9 +417,8 @@ $\av_1 = (x_1, v_1, l_1, n_1),
 \right.
 \]
 %
-$\av_1 \avgeq \av_2$  is defined vice versa.
+$\event_1 \eventgeq \event_2$  is defined vice versa.
 \end{defn}
-}
 %
 %
 %
@@ -671,32 +455,30 @@ We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}
 %
 Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition~\ref{def:av_equal}:
 %
-\todo{
-\begin{defn}[Equivalence of Annotated Variables / Events]
+\begin{defn}[Equivalence of Events]
 %
 \label{def:av_equal}
 Given 2 annotated queries 
-$ \av_1 = (x_1, v_1, l_1, n_1), 
-\av_2 = (x_2, v_2, l_2, n_2)$
+$ \event_1 = (x_1, v_1, l_1, n_1), 
+\event_2 = (x_2, v_2, l_2, n_2)$
 :
 %
 \[
-\av_1 \aveq \av_2
+\event_1 \eventeq \event_2
  \triangleq (l_1 = l_2 \land  w_1 =_w w_2 \land 
  \qval_1 =_q \qval_2) 
 \]
 %
-$\av_1 \avneq \av_2$  is defined vice versa.
+$\event_1 \eventneq \event_2$  is defined vice versa.
 %
 \end{defn}
-}
 %
 %
 %
 \todo{
-Given an annotated variable $\av$ and a trace $t$,
-the appending operation $\av :: t$ is 
-the standard list appending operation, appends $\av$ to the head of trace $t$.
+Given an annotated variable $\event$ and a trace $t$,
+the appending operation $\event :: t$ is 
+the standard list appending operation, appends $\event$ to the head of trace $t$.
 %
 The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
 \begin{equation}
@@ -704,7 +486,7 @@ The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$
     \triangleq \left\{
     \begin{array}{ll} 
       t_2         & t_1 = []\\
-      \av::(t_1' ++ t_2)  & t_1 = \av::t_1'
+      \event::(t_1' ++ t_2)  & t_1 = \event::t_1'
     \end{array}
     \right.
   \end{equation}
@@ -716,15 +498,15 @@ The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is
     \triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
   \end{equation}
 %
-Given an annotated query $\av$, $\av$ belongs to a trace $t$, i.e., $\av \avin t$ are defined as follows:
+Given an annotated query $\event$, $\event$ belongs to a trace $t$, i.e., $\event \eventin t$ are defined as follows:
     %
 \begin{equation}
-    \av \avin t  
+    \event \eventin t  
     \triangleq \left\{
     \begin{array}{ll} 
       \efalse       & t = []      \\
-      \etrue        & t = \av'::t'  \quad \av \aveq \av'\\ 
-      \av \in t'      & t = \av'::t'  \quad \av \avneq \av'
+      \etrue        & t = \event'::t'  \quad \event \eventeq \event'\\ 
+      \event \in t'      & t = \event'::t'  \quad \event \eventneq \event'
     \end{array}
     \right.
   \end{equation}
@@ -732,7 +514,6 @@ Given an annotated query $\av$, $\av$ belongs to a trace $t$, i.e., $\av \avin t
   %
 }
 %
-\todo{
 \begin{defn}[Equivalence of Program]
 %
 \label{def:aq_prog}
@@ -772,14 +553,12 @@ Given 2 programs $c$ and $c'$, $c'$ is a sub-program of$c$, i.e., $c' \in_{c} c$
 c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
 c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
-}
 %
-\todo{
-\begin{defn}[Assigned Variables ($\avar$)]
-Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. 
+\begin{defn}[Assigned Variables ($\eventar$)]
+Given a program $\ssa{c}$, its assigned variables $\eventar$ is a vector containing all variables newly assigned in the program preserving the order. 
 It is defined as follows:
 $$
-  \avar_{\ssa{c}} \triangleq
+  \eventar_{\ssa{c}} \triangleq
   \left\{
   \begin{array}{ll}
       [\ssa{x}]                   
@@ -788,15 +567,15 @@ $$
       \left[ \ssa{x} \right]                  
       & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}}  
+      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
       & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+      \eventar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
       & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
@@ -817,15 +596,15 @@ $$
       \left[ \ssa{x} \right]                  
       & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}}  
+      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
       & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+      \eventar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
       & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
@@ -854,298 +633,29 @@ $M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matri
 %
 %
 \begin{defn}[Initial Variable Counter $\vcounter^0_{c}$]
-Given a program $c$ with its assigned variables $\avar_{c}$ of length $N$, its initial variable counter $\vcounter^0_{c}$ maps all the variable to $0$, i.e.:
+Given a program $c$ with its assigned variables $\eventar_{c}$ of length $N$, its initial variable counter $\vcounter^0_{c}$ maps all the variable to $0$, i.e.:
 \[
-  \vcounter^0_{c}(x) = 0, x = \avar_{c}(i) \forall i = 1, \ldots, N 
+  \vcounter^0_{c}(x) = 0, x = \eventar_{c}(i) \forall i = 1, \ldots, N 
 \]
 \end{defn}
 %
-We define some properties and prove lemmas for trace and event w.r.t. the operational semantics as follows.
-%
-\todo{
-\begin{defn}[Well-formed Trace]
-\label{def:wf_trace}
-A trace $t$ is well formed if and only if it preserves the following two properties:
-\begin{itemize}
-  \item{\emph{(Uniqueness)}} $\forall \av_1, \av_2 \avin t. ~ (\av_1 \avneq \av_2)$
-  %
-  \item{\emph{(Ordering)}} $\forall \av_1, \av_2 \avin t. ~ 
-  (\av_1 \avlt \av_2) \Longleftrightarrow
-  \exists t_1, t_2, t_3, \av_1', \av_2'. ~ s.t.,~ 
-  (\av_1 \aveq \av_1') \land (\av_2 \aveq \av_2') \land t_1 ++ [\av_1'] ++ t_2 ++ [\av_2'] ++ t_3 = t$
-\end{itemize}
-\end{defn}
-}
-\\
-\todo{
-\begin{thm}[Variable Trace Generated from Operational Semantics is Well-formed].
-\label{thm:os_wf_trace}
-\\
-Given a program $c$, 
-with arbitrary starting memory $m$, trace $\vtrace$ and variable counter $\vcounter$
-if $\config{m, c, \vtrace, \vcounter} \to^{*} 
-\config{m', \eskip, \vtrace', \vcounter'}$, then $(\vtrace' - \vtrace)$ is a well formed trace with respect to program $c$, $m$ and $w$, denoted as $m, c \vDash \vtrace' - \vtrace$.
-% \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
-% there exists the evaluation 
-% $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
-% $t$ is well-formed. }
-\end{thm}
-\begin{proof}
-Proof in File: {\tt ``thm\_os\_wf\_trace.tex''}.
-% \input{thm_os_wf_trace}
-\end{proof}
-}
-%
-% \\
-%
-%
-\todo{
-\begin{lem}[While Map Remains Unchanged (Invariant)]
-\label{lem:wunchange}
-Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
-$\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
-\[
-  w = w'
-\]
-\end{lem}
-\begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
-%
-Proof in File: {\tt ``lem\_wunchange.tex''}
-% \input{lem_wunchange}
-%
-\end{subproof}
-}
-%
-\todo{
-\begin{lem}[Trace is Written Only]
-\label{lem:twriteonly}
-Given a program $c$ with starting trace $t_1$ and $t_2$,
-for arbitrary starting memory $m$ and while map $w$,
-if there exist evaluations
-$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
-% 
-$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
-%
-then:
-%
-\[
-  m_1' = m_2' \land w_1' = w_2'
-\]
-\end{lem}
-%
-\begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
-%
-Proof in File: {\tt ``lem\_twriteonly.tex''}
-% \input{lem_twriteonly}
-\end{subproof}
-}
-%
-\todo{
-\begin{lem}[Trace Uniqueness]
-\label{lem:tunique}
-Given a program $c$ with a starting memory $m$, \wq{a while map w,}
-for any starting trace $t_1$ and $t_2$, if there exist evaluations
-$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
-% 
-$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
-%
-then:
-%
-\[
-  t_1' - t_1 = t_2' - t_2
-\]
-\end{lem}
-%
-\begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
-%
-Proof in File: {\tt ``lem\_tunique.tex''}
-% \input{lem_tunique}
-\end{subproof}
-}
-%
-\todo{
-\begin{coro}
-\label{coro:aqintrace}
-\[
-\av \avin t \implies \exists t_1, t_2, \av'. ~ s.t., ~ (\av \aveq \av') \land t_1 ++ [\av'] ++ t_2 = t  
-\]
-\end{coro}
-\begin{subproof}
-Proof in File: {\tt ``coro\_aqintrace.tex''}
-% \input{coro_aqintrace}
-%
-\end{subproof}
-}
-%
-\begin{lem}
-[Trace Non-Decreasing].
-\\
-\jl{
-For any program $c$ with a starting memory $m$, trace $t$ and while map $w$: 
-$$
-\config{m, c, t, w} 
-\rightarrow
-\config{m, c', t', w'} \implies \exists ~ t'', ~ s.t., ~ t ++ t'' = t'
-$$
-}
-\end{lem}
-%
-\begin{proof}
-{
-Proof is obvious by induction on the operational semantic rules applied in the transition 
-.
-\\
-By induction on the operational semantic rules applied in the transition $\config{m, c, t, w} 
-\rightarrow
-\config{m, c', t', w'}$, 
-we have cases for each rule.
-By observation on the rules, 
-the trace $t$ remains unchanged in all the rules except the only one \textbf{query-v}.
-So, the rule \textbf{query-v} is the only interesting case to be discussed as following.
-\begin{itemize}
-\caseL{
-\[
-  \inferrule
-  {
-  \query(\qval) = v
-  }
-  {
-  \config{m, [\assign{x}{\query(\qval)}]^l, t, w} \xrightarrow{}  
-  \config{m, \eskip, t ++ [(\qval, l, w)], w}
-  }
-  ~\textbf{query-v}
-\]
-}
-%
-In this case, we have $c' = \eskip$, 
-$t' = t ++ [(\qval, l, w)]$, $m' = m[v/x]$ and $w' = w$.
-\\
-Let $t'' = [(\qval, l, w)]$, we have $t ++ [(\qval, l, w)] = t'$,
-i.e., $t ++ t'' = t'$. This case is proved.
-\end{itemize}
-}
-\end{proof}
-%
-}
 %
 \subsection{ Trace-based Adaptivity}
 %
-We define adaptivity through a query-based dependency graph. In our model, an \emph{analyst} asks a sequence of queries to the mechanism, and the analyst receives the answers to these queries from the mechanism. A query is adaptively chosen by the analyst when the choice of this query is affected by answers from previous queries. In this model, the adaptivity we are interested in is the length of the longest sequence of such adaptively chosen queries, among all the queries the data analyst asks to the mechanism.  Also, when the analyst asks a query, the only information the analyst will have will be the answers to previous queries and the state of the program. It means that when we want to know if this query is adaptively chosen, we only need to check whether the choice of this query will be affected by changes of answers to previous queries. There are two possible situations that can  affect the choice of a query,  
-either the query argument directly uses the results of previous queries (data dependency), or the control flow of the program with respect to a query (whether to ask this query or not) depends on the results of previous queries (control flow dependency).
-
-{
-As a first step, we give a definition of when one query may depend on a previous query, which is supposed to consider both control dependency and data dependency. We first look at two possible candidates:
-\begin{enumerate}
-    \item One query may depend on a previous query if and only if a change of the answer to the previous query may also change the result of the query.
-    \item One query may depend on a previous query if and only if a change of the answer to the previous query may also change the appearance of the query.
-\end{enumerate}
-}
-
-{
-   The first candidate works well by witnessing the result of one query according to the change of the answer of another query. We can easily find that the two queries have nothing to do with each other in a simple example   
-%
-    $ c = \assign{x}{\query(\chi(1))} ; \assign{y}{\query(\chi(2))}$. This candidate definition works well with respect to data dependency. 
-    However, if fails to handle control dependency since it just monitors the changes to the answer of a query when the answer of previous queries returned change. 
-    The key point is that this query may also not be asked because of an analyst decision which depend on the answers of previous queries. 
-    An example of this situation is shown in program $c_1$ as follows.
-    \[
-      c_1 = \assign{x}{\query(\chi(1))} ; \eif( x > 2 ,\assign{y}{\query(\chi(2))}, \eskip )
-    \]
-  %   
-    We choose the second candidate, which performs well by witnessing the appearance of one query $\query(\chi(2))$ upon the change of the result of one previous query $\query(\chi(1))$ in $c_1$. 
-    It considers the control dependency, and at the same, does not miss the data dependency.
-    In particular, the arguments of a query characterizes it.
-    In this sense, if the data used in the arguments changes due to a different answer to a certain previous query, the appearance of the query may change as well.
-    This situation is also captured by our definition. 
-    Let us look at another variant of program $c$, $p_2$, in which the queries equipped with functions using previously assigned variables storing answer of its previous query.
-    \[
-      c_2 = \assign{x}{\query(\chi(2))} ; \assign{y}{\query(x+\chi(3))}
-    \]
-    As a reminder, in the {\tt While} language, the query request is composed by two components: a symbol $\query$ representing a linear query type and the argument $\expr$, which represents the function specifying what the query asks. 
-    So we do think $\query(\chi(1))$ is different from $\query(\chi(2))$.
-    Informally, we think $\query(x+\chi(3))$ may depend on the query $\query(\chi(2))$, because equipped function of the former $x+\chi(3)$ depend on the data assigned with $\query(\chi(2))$.
-    We can see the appearance definition catches data dependency in such a way, 
-    since $\query(x+\chi(2))$ will not be the same query if the value of $x$ is changed.    
-}
-
-   We give a formal definition of variable may dependency based on the trace-based operational semantics as follows.
 %
 % 
 %
 %
 \jl{
-\begin{defn}
-[Annotated Variables / Events May Dependency]
-\label{def:avar_dep}.
-\\
-One event $\av_2 = (x_2, v_2, l_2, n_2)$ may depend on another one 
-$\av_1 = (x_1, v_1, l_1, n_1)$ in a program $c$,
-with a starting memory $m$ and  hidden database $D$, denoted as 
-%
-$\avdep(\av_1, \av_2, c, m, D)$ is defined below. 
-%
-%
-\[
-\begin{array}{l}
-\exists \ssa{m}_1, \ssa{m}_3, \vtrace_1, \vtrace_3, \ssa{c}_2, v_1, ({\qval}_1 \lor \sexpr_1).\\
-  \left (\begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ v_1)}]^{l_1} ; \ssa{c}_1, \qtrace_1,  \vtrace_1, w_1} 
-\rightarrow^{\textbf{ssa-query-v (/ assn-v)}} 
-\\ 
-\config{\ssa{m}_1[v_1/\ssa{x}], c_2, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
-\rightarrow^{*} \config{\ssa{m}_3, \eskip, \qtrace_3, \vtrace_3, w_3}
-  % 
- \\ \bigwedge
-  \left( 
-  \begin{array}{l}
-  \av_2 \in (\vtrace_3'-(\vtrace_1 ++ [\av_1])) 
-  % 
-  \\
-  \implies 
-  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'.  
-  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
-  \\ 
-  \quad \quad 
-  \rightarrow^{*}
-  (\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
-    \\ 
-    \quad \quad 
-  \land 
-  \av_2 \not\in (\vtrace_3'-(\vtrace_1 ++ [\av_1])))
-\end{array} \right )
-\\\bigwedge
-\left( 
-  \begin{array}{l}
-    \av_2 \notin (\vtrace_3 - (\vtrace_1 ++ [\av_1]))
-    % 
-    \\
-    \implies 
-  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'. 
-  \config{\ssa{m}_1[v /\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1}
-  \\ 
-  \quad \quad 
-  \rightarrow^{*} 
-  (\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
-    \\ 
-    \quad \quad 
-  \land 
-  \av_2  \in (\vtrace_3' - (\vtrace_1 ++ [\av_1])))
-\end{array} \right )
-\end{array} \right )
-\end{array}
-\]
-%
-\end{defn}
 %
 \begin{defn}
-[Annotated Variables May Dependency -- Version 2]
-\label{def:avar_dep2}.
+[Annotated Variables May Dependency]
+\label{def:event_dep}.
 \\
-One event $\av_2$ may depend on another one  $\av_1$in a program $\ssa{c}$,
+One event $\event_2$ may depend on another one  $\event_1$in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and hidden database $D$, denoted as 
 %
-$\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below. 
+$\eventdep(\event_1, \event_2, c, \ssa{m}, D)$ is defined below. 
 %
 \[
 \begin{array}{ll}
@@ -1159,13 +669,13 @@ $\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below.
 \config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
 \\ 
  \bigwedge
- \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+ \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\event_1], t_1[\ssa{x}_1]++} 
  \\
   \qquad \rightarrow^{*} 
   \config{\ssa{m}_2, [\assign{\ssa{x}_2}{\sexpr_2}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
   \\
   \qquad \rightarrow^{*} 
-  \config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
+  \config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\event_2], t_2[\ssa{x}_2]++} 
   % 
  \\ 
  \bigwedge
@@ -1174,15 +684,15 @@ $\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below.
 \config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
 \\
 \bigwedge
-\av_2 \notin \vtrace_2'
+\qenv(\event_2) \neq \qenv(\event'_2)
 \end{array}
 \right)
 \end{array} 
 &
 \begin{array}{l}
-\av_1 = (\ssa{x}_1, v_1, l_1, n_1)
-\\
-\av_2 = (\ssa{x}_2, v_2, l_2, n_2)
+\event_1 = (\ssa{x}_1, v_1, l_1, n_1) 
+\text{or}
+\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1) 
 \end{array}
 \\
 \begin{array}{l}
@@ -1195,13 +705,13 @@ $\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below.
 \config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1)}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
 \\ 
  \bigwedge
- \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+ \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\event_1], t_1[\ssa{x}_1]++} 
  \\
 \qquad \rightarrow^{*} 
 \config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qexpr}_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
 \\
 \qquad \rightarrow^{*} 
-\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
+\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\event_2], t_2[\ssa{x}_2]++} 
   % 
  \\ 
  \bigwedge
@@ -1210,87 +720,13 @@ $\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below.
 \config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
 \\
 \bigwedge
-\av_2 \notin \vtrace_2'
+\event_2 \notin \vtrace_2'
 \end{array}
 \right)
 \end{array} 
 &
 \begin{array}{l}
-\av_1 = (\ssa{x}_1, \qval_1, l_1, n_1)
-\\
-\av_2 = (\ssa{x}_2, \qval_2, l_2, n_2)
-\end{array}
-\\
-\begin{array}{l}
-\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
-\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', {\qexpr}_2.
-\\
-  \left(
-  \begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
-\\ 
- \bigwedge
- \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
- \\
-\qquad \rightarrow^{*} 
-\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qexpr}_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
-\\
-\qquad \rightarrow^{*} 
-\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
-  % 
- \\ 
- \bigwedge
- \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
-\rightarrow^{*} 
-\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
-\\
-\bigwedge
-\av_2 \notin \vtrace_2'
-\end{array}
-\right)
-\end{array} 
-&
-\begin{array}{l}
-\av_1 = (\ssa{x}_1, v_1, l_1, n_1)
-\\
-\av_2 = (\ssa{x}_2, \qval_2, l_2, n_2)
-\end{array}
-\\
-\begin{array}{l}
-\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
-\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', \sexpr_2.
-\\
-  \left(
-  \begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
-\\ 
- \bigwedge
- \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
- \\
-\qquad \rightarrow^{*} 
-\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\sexpr_2}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
-\\
-\qquad \rightarrow^{*} 
-\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
-  % 
- \\ 
- \bigwedge
- \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
-\rightarrow^{*} 
-\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
-\\
-\bigwedge
-\av_2 \notin \vtrace_2'
-\end{array}
-\right)
-\end{array} 
-&
-\begin{array}{l}
-\av_1 = (\ssa{x}_1, \qval_1, l_1, n_1)
-\\
-\av_2 = (\ssa{x}_2, v_2, l_2, n_2)
+\event_1 = (\ssa{b}_1, v_1, l_1, n_1)
 \end{array}
 \end{array}
  \]
@@ -1300,19 +736,19 @@ $\avdep(\av_1, \av_2, c, \ssa{m}, D)$ is defined below.
 \begin{defn}[Variable May Dependency].
 \label{def:var_dep}
 \\
-Given a program $\ssa{c}$ with its assigned variables $\avar_{\ssa{c}}$, 
-one variable $\ssa{x}_2 \in \avar_{\ssa{c}}$ may depend on another variable 
-$\ssa{x}_1 \in \avar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
+Given a program $\ssa{c}$ with its assigned variables $\eventar_{\ssa{c}}$, 
+one variable $\ssa{x}_2 \in \eventar_{\ssa{c}}$ may depend on another variable 
+$\ssa{x}_1 \in \eventar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
 %
 $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 %
 \[
-\exists \av_1, \av_2, \ssa{m}, D. ~
-\projl{\av_1} = \ssa{x}_1
+\exists \event_1, \event_2, \ssa{m}, D. ~
+\projl{\event_1} = \ssa{x}_1
 \land
-\projl{\av_2} = \ssa{x}_2
+\projl{\event_2} = \ssa{x}_2
 \land 
-\avdep(\av_1, \av_2, c, \ssa{m}, D)
+\eventdep(\event_1, \event_2, c, \ssa{m}, D)
 \] 
 %
 %
@@ -1321,7 +757,7 @@ $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 %
 \begin{defn}[Execution Based Dependency Graph].
 \\
-Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$ with its assigned variables $\avar_c$ and initial variable counter $\vcounter^0_{c}$ with its corresponding execution:
+Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$ with its assigned variables $\eventar_c$ and initial variable counter $\vcounter^0_{c}$ with its corresponding execution:
 $\config{\ssa{m}, \ssa{c}, [], \vcounter^0_{\ssa{c}}} 
 \to^{*}
 \config{\ssa{m'}, \eskip, \vtrace, \vcounter}$,
@@ -1333,7 +769,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   \vertxs & := & \left\{ 
   x \in \mathcal{VAR}
   ~ \middle\vert ~
-  x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}| 
+  x = \eventar_{\ssa{c}}(i); i = 0, \ldots, |\eventar_{\ssa{c}}| 
   \right\}
   \\
   \text{Directed Edges} &
@@ -1342,7 +778,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   (x, x') \in \mathcal{VAR} \times \mathcal{VAR}
   ~ \middle\vert ~
   \vardep(x, x', c); 
-  x = \avar_{\ssa{c}}(i); x' = \avar_{\ssa{c}}(j); i,j = 0, \ldots, |\avar_{\ssa{c}}| 
+  x = \eventar_{\ssa{c}}(i); x' = \eventar_{\ssa{c}}(j); i,j = 0, \ldots, |\eventar_{\ssa{c}}| 
   \right\}
   \\
   \text{Weights} &
@@ -1350,7 +786,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   \left\{ 
   (x, n) \in \mathcal{VAR} \times \mathbb{N}
   ~ \middle\vert ~
-  n = \vcounter(x); x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}|
+  n = \vcounter(x); x = \eventar_{\ssa{c}}(i); i = 0, \ldots, |\eventar_{\ssa{c}}|
   \right\}
   \\
   \text{Query Flags} &
@@ -1363,7 +799,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   n = 0 & o.w.
   \end{array}
   \right\};
-  x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}|
+  x = \eventar_{\ssa{c}}(i); i = 0, \ldots, |\eventar_{\ssa{c}}|
   \right\}
 \end{array}
 \]
@@ -1443,14 +879,12 @@ There doesn't exist backward edges with direction from greater annotated queries
 [Edges are Forwarding Only].
 \\
 %
-{
 Given a program $c$, a database $D$, a starting memory $m$ and the corresponding trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$, 
-for any directed edge $(\av', \av) \in \edges$, 
+for any directed edge $(\event', \event) \in \edges$, 
 this is not the case that:
 %
-$$\av' \avgeq \av$$
+$$\event' \eventgeq \event$$
 %
-}
 \end{lem}
 %
 \begin{proof}
