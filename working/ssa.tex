@@ -68,12 +68,24 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 ~|~ [\eskip]^{l} 
 \\
 %
+\mbox{Assignment Event} 
+& \asnevent & ::= & (\ssa{x}, l, n, v) | (\ssa{x}, l, n, \qval, v)
+\\
+%
+\mbox{Testing Event} 
+& \testevent & ::= & (\sbexpr, l, n, v)
+\\
+%
 \mbox{Event} 
-& \event & ::= & (\ssa{x}, v, l, n) | (\ssa{x}, \qval, v, l, n) | (\sbexpr, v, l, n)
+& \event & ::= & \asnevent | \testevent
 \\
 %
 \mbox{Trace} & \vtrace
 & ::= & | \vtrace \cdot \event
+\\
+%
+\mbox{Event Signature} & \sig
+& ::= & (x, l, n) | (x, l, n, \query) | (b, l, n)
 \\
 %
 \mbox{Environment} 
@@ -82,14 +94,6 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 %
 \mbox{Query Environment} 
 & \qenv & ::= & \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}
-\\
-%
-\mbox{Variable Counter} & \vcounter
-& ::= & \mathcal{SVAR} \to \mathbb{N}
-\\
-%
-\mbox{Action} & \action
-& ::= & (x, l, n) | (x, \query, l, n) | (b, l, n)
 \end{array}
 \]
 We use following notations to represent the set of corresponding terms:
@@ -102,10 +106,18 @@ We use following notations to represent the set of corresponding terms:
 \\ 
 %
 %
- \eventset  & : & \mbox{Set of Events}  
+\eventset  & : & \mbox{Set of Events}  
 \\
 %
-\mathcal{SM}  & : & \mbox{{Set of SSA Memories}} 
+%
+\eventset^{\asn}  & : & \mbox{Set of Assignment Events}  
+\\
+%
+\eventset^{\test}  & : & \mbox{Set of Testing Events}  
+\\
+%
+%
+\eventset  & : & \mbox{Set of Events}  
 \\
 %
 \dbdom  & : & \mbox{{Set of Databases}} 
@@ -116,87 +128,28 @@ We use following notations to represent the set of corresponding terms:
 \]
 %
 %
+%
 Environment $ \env : \vtrace \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
 \[
 \begin{array}{ll}
-\env(\vtrace \cdot (x, v, l, n)) x \triangleq v
+\env(\vtrace \cdot (x, l, n, v)) x \triangleq v
 &
-\env(\vtrace \cdot (x, \qval, v, l, n)) x \triangleq v
+\env(\vtrace \cdot (x, l, n, \qval, v)) x \triangleq v
 \\
-\env(\vtrace \cdot (y, v, l, n)) x \triangleq \env(\vtrace) x
+\env(\vtrace \cdot (y, l, n, v)) x \triangleq \env(\vtrace) x
 &
 \env() x \triangleq \bot
 \end{array}
 \]
 %
-%
-Query Environment $\qenv: \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
+Counter $\vcounter : \trace \to \mathbb{N} \to \mathbb{N}$
 \[
 \begin{array}{ll}
-\env(\vtrace \cdot (x, v, l, n)) x \triangleq \env(\vtrace) x
+\vcounter(\vtrace \cdot (x, l, n, v)) l \triangleq n
 &
-\env(\vtrace \cdot (x, \qval, v, l, n)) x \triangleq \qval
-\\
-\env(\vtrace \cdot (y, v, l, n)) x \triangleq \env(\vtrace) x
-&
-\env() x \triangleq \bot
+\vcounter() l \triangleq 0
 \end{array}
 \]
-%
-Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
-\[
-\begin{array}{ll}
-\pi_v((x, v, l, n)) \triangleq v
-&
-\pi_v (x, \qval, v, l, n) \triangleq v
-\\
-\pi_v (b, v, l, n)  \triangleq v
-&
-\end{array}
-\]
-%
-Event Query Value : $\pi_{q} : \eventset \to \mathcal{VAL}$
-\[
-\begin{array}{ll}
-\pi_{q} (x, v, l, n) \triangleq v
-&
-\pi_{q} (x, \qval, v, l, n) \triangleq \qval
-\\
-\pi_{q} (b, v, l, n)  \triangleq v
-&
-\end{array}
-\]%
-% 
-Event Action : $\pi_{\action} : \eventset \to \mathcal{VAL}$
-\[
-\begin{array}{ll}
-\pi_{\action} (x, v, l, n) \triangleq (x, l, n)
-&
-\pi_{\action} (x, \qval, v, l, n) \triangleq (x, \query, l, n)
-\\
-\pi_{\action} (b, v, l, n)  \triangleq (b, l, n)
-&
-\end{array}
-\]%
-%
-%The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
-% \begin{equation}
-%     t_1 ++ t_2  
-%     \triangleq \left\{
-%     \begin{array}{ll} 
-%       t_2         & t_1 = []\\
-%       \event::(t_1' ++ t_2)  & t_1 = \event::t_1'
-%     \end{array}
-%     \right.
-%   \end{equation}
-% %
-% %
-% The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is defined as follows:
-% \begin{equation}
-%     t_1 - t_2  
-%     \triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
-%   \end{equation}
-%
 %
 \subsection{Trace-based Operational Semantics for SSA Language}
 %
@@ -236,9 +189,9 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 \jl{
   \begin{mathpar}
   \boxed{
-  Command \times Trace \times VCounter
+  Command \times Trace
   \xrightarrow{}
-  Command \times Trace \times VCounter
+  Command \times Trace
   }
   \\
   \boxed{\config{\ssa{c, \vtrace, \vcounter}}
@@ -249,12 +202,10 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   %
   \inferrule
   {
-  \vcounter'(l) = \vcounter(l) + 1
-  \and 
-  \event = (\ssa{x}, v, l, \vcounter'(l))
+  \event = (\ssa{x}, l, \vcounter(\vtrace) l + 1, v)
   }
   {
-  \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace, \vcounter} 
+  \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace } 
   \xrightarrow{} 
   \config{[\eskip]^{l}, \vtrace \cdot \event, \vcounter'}
   }
@@ -266,17 +217,15 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
    \vtrace, b \barrow \etrue
    \and 
-   \event = (b, \etrue, l, \vcounter(l))
-   \and 
-   \vcounter'(l) = \vcounter(l) + 1
+   \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
   }
   {
   \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace, \vcounter}}
   \\
   \xrightarrow{} 
-  \config{\ssa{ m, 
+  \config{\ssa{
   c[\bar{x_i}/\bar{x'}]; \ewhile ~ [b]^{l}, (n + 1), [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c,  \eskip),
-  \vtrace\cdot \event, \vcounter'}}
+  \vtrace\cdot \event}}
   }
   ~\textbf{ssa-while-t}
   %
@@ -287,17 +236,15 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
    \vtrace, b \barrow \efalse
    \and 
-   \event = (b, \efalse, l, \vcounter(l))
-   \and 
-   \vcounter'(l) = \vcounter(l) + 1
+   \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
   }
   {
-  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace, \vcounter}}
+  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace}}
   \\
   \xrightarrow{} 
-  \config{\ssa{ m, 
+  \config{\ssa{
   [\eskip]^l ,
-  \vtrace \cdot \event, \vcounter'}}
+  \vtrace \cdot \event}}
   }
   ~\textbf{ssa-while-f}
   %
@@ -306,16 +253,16 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
   \inferrule
   {
+   \vtrace, \qexpr \qarrow \qval
+   \and 
   \query(\qval) = v
-  \and
-  \vcounter'(l) = \vcounter(l) + 1
   \and 
-  \event = (\ssa{x}, \qval, l, \vcounter'(l))
+  \event = (\ssa{x}, l, \vcounter(\vtrace) l + 1, \qval, v)
   }
   {
-  \config{\ssa{m, [\assign{x}{\query(\qexpr)}]^l, \vtrace, \vcounter}}
+  \config{\ssa{[\assign{x}{\query(\qexpr)}]^l, \vtrace}}
   \xrightarrow{} 
-  \config{\ssa{m[v/ x], \eskip,  \vtrace \cdot \event, \vcounter'} }
+  \config{\ssa{\eskip,  \vtrace \cdot \event} }
   }
   ~\textbf{ssa-query}
   }
@@ -325,14 +272,14 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   %
   \inferrule
   {
-  \config{\ssa{c_1, \vtrace, \vcounter}}
+  \config{\ssa{c_1, \vtrace}}
   \xrightarrow{}
-  \config{\ssa{c_1',  \vtrace', \vcounter'}}
+  \config{\ssa{c_1',  \vtrace'}}
   }
   {
-  \config{\ssa{c_1; c_2, \vtrace, \vcounter}} 
+  \config{\ssa{c_1; c_2, \vtrace}} 
   \xrightarrow{} 
-  \config{\ssa{c_1'; c_2, \vtrace', \vcounter'}}
+  \config{\ssa{c_1'; c_2, \vtrace'}}
   }
   ~\textbf{ssa-seq1}
   %
@@ -340,12 +287,12 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   %
   \inferrule
   {
-    \config{\ssa{c_2, \vtrace, \vcounter}}
+    \config{\ssa{c_2, \vtrace}}
   \xrightarrow{}
-  \config{\ssa{c_2',  \vtrace', \vcounter'}}
+  \config{\ssa{c_2',  \vtrace'}}
   }
   {
-  \config{\ssa{[\eskip]^{l} ; c_2, \vtrace, \vcounter}} \xrightarrow{} \config{\ssa{ c_2', \vtrace', \vcounter'}}
+  \config{\ssa{[\eskip]^{l} ; c_2, \vtrace}} \xrightarrow{} \config{\ssa{ c_2', \vtrace'}}
   }
   ~\textbf{ssa-seq2}
   %
@@ -356,16 +303,14 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
      \vtrace, b \barrow \etrue
    \and 
-   \event = (b, \etrue, l, \vcounter(l))
-   \and 
-   \vcounter'(l) = \vcounter(l) + 1 
+   \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
   }
   {
   \config{\ssa{
   \eif([\etrue]^{l}, [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
   [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
   [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), 
-  \vtrace, \vcounter}}
+  \vtrace}}
   \\
   \xrightarrow{} 
   \config{\ssa{ 
@@ -373,7 +318,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \cdot \event, \vcounter'}}
+  \vtrace \cdot \event}}
   }
   ~\textbf{ssa-if-t}
   %
@@ -383,23 +328,21 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
    \vtrace, b \barrow \efalse
    \and 
-   \event = (b, \efalse, l, \vcounter(l))
-   \and 
-   \vcounter'(l) = \vcounter(l) + 1 
+   \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
   }
   {
   \config{\ssa{
   \eif([\efalse]^{l},[\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
   [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
-  [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), \vtrace, \vcounter}}
+  [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), \vtrace}}
   \\
   \xrightarrow{} 
-  \config{\ssa{m, 
+  \config{\ssa{
   c_2;
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \cdot \event, \vcounter'}}
+  \vtrace \cdot \event}}
   }
   ~\textbf{ssa-if-f}
   %
@@ -409,9 +352,9 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
   }
   {
-   \config{\ssa{m}, \eifvar(\ssa{\bar{x}, \bar{x}'}), \ssa{\vtrace, \vcounter}} 
+   \config{\eifvar(\ssa{\bar{x}, \bar{x}'}), \ssa{\vtrace}} 
    \to 
-   \config{\ssa{(\bar{x} \to m(\bar{x}'))::m, \eskip, \vtrace, \vcounter}}
+   \config{\ssa{\eskip, \vtrace}}
   }~\textbf{ssa-\eifvar}
   % %
   %
@@ -428,9 +371,99 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 \subsection{Event and Trace}
 %
 %
+Environment $ \env : \vtrace \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
+\[
+\begin{array}{ll}
+\env(\vtrace \cdot (x, l, n, v)) x \triangleq v
+&
+\env(\vtrace \cdot (x, l, n, \qval, v)) x \triangleq v
+\\
+\env(\vtrace \cdot (y, l, n, v)) x \triangleq \env(\vtrace) x
+&
+\env() x \triangleq \bot
+\end{array}
+\]
+
+%
+Query Environment $\qenv: \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
+\[
+\begin{array}{ll}
+\qenv(\vtrace \cdot (x, l, n, v)) x \triangleq \qenv(\vtrace) x
+&
+\qenv(\vtrace \cdot (x, l, n, \qval, v)) x \triangleq \qval
+\\
+\qenv(\vtrace \cdot (y, l, n, v)) x \triangleq \qenv(\vtrace) x
+&
+\qenv() x \triangleq \bot
+\end{array}
+\]
+%
+Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
+\[
+\begin{array}{ll}
+\pi_v((x, l, n, v)) \triangleq v
+&
+\pi_v (x, l, n, \qval, v) \triangleq v
+\\
+\pi_v (b, l, n, v)  \triangleq v
+&
+\end{array}
+\]
+%
+Event Query Value : $\pi_{q} : \eventset \to \mathcal{VAL}$
+\[
+\begin{array}{ll}
+\pi_{q} (x, l, n, v) \triangleq v
+&
+\pi_{q} (x, l, n, \qval, v) \triangleq \qval
+\\
+\pi_{q} (b, l, n, v)  \triangleq v
+&
+\end{array}
+\]%
+% 
+Event Signature : $\pi_{\sig} : \eventset \to \mathcal{VAL}$
+\[
+\begin{array}{ll}
+\pi_{\sig} (x, l, n, v) \triangleq (x, l, n)
+&
+\pi_{\sig} (x, l, n, \qval, v) \triangleq (x, l, n, \query)
+\\
+\pi_{\sig} (b, l, n, v)  \triangleq (b, l, n)
+&
+\end{array}
+\]
+%
+Equivalence of 2 events : $\event_1 \eventeq \event_2$
+\[
+\event_1 \sigeq \event_2 \triangleq
+\left\{
+\begin{array}{ll}
+\etrue & \event_1 = (x, l, n, v) \land \event_2 = (x, l, n, v) \\
+\etrue & \event_1 = (x, l, n, \qval_1, v) \land \event_2 = (x, l, n, \qval', v)  
+\land \qval_1 =_{q} \qval_2\\
+\etrue & \event_1 = (b, l, n, v) \land \event_2 = (b, l, n, v) \\
+\efalse & o.w.
+\end{array}
+\right.
+\]
+
+Signature Equivalence of 2 events : $\event_1 \sigeq \event_2$
+\[
+\event_1 \sigeq \event_2 \triangleq
+\left\{
+\begin{array}{ll}
+\etrue & \event_1 = (x, l, n, v) \land \event_2 = (x, l, n, v') \\
+\etrue & \event_1 = (x, l, n, \qval, v) \land \event_2 = (x, l, n, \qval', v') \\
+\etrue & \event_1 = (b, l, n, v) \land \event_2 = (b, l, n, v') \\
+\efalse & o.w.
+\end{array}
+\right.
+\]
+%
 Events preserve the order of execution. The order relation is defined in Definition~\ref{def:query_dir}.
 %
-\begin{defn}[Order of Annotated Variables / Events].
+\begin{defn}[Order of Events].
 \label{def:query_dir}
 \\
 Given 2 annotated queries 
@@ -488,64 +521,24 @@ We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}
 %
 Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition~\ref{def:av_equal}:
 %
-\begin{defn}[Equivalence of Events]
-%
-\label{def:av_equal}
-Given 2 annotated queries 
-$ \event_1 = (x_1, v_1, l_1, n_1), 
-\event_2 = (x_2, v_2, l_2, n_2)$
-:
-%
-\[
-\event_1 \eventeq \event_2
- \triangleq (l_1 = l_2 \land  n_1 = n_2 \land 
- \qval_1 =_q \qval_2) 
-\]
-%
-$\event_1 \eventneq \event_2$  is defined vice versa.
-%
-\end{defn}
 %
 %
 %
-\todo{
-Given an annotated variable $\event$ and a trace $t$,
-the appending operation $\event :: t$ is 
-the standard list appending operation, appends $\event$ to the head of trace $t$.
 %
-The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
-\begin{equation}
-    t_1 ++ t_2  
-    \triangleq \left\{
-    \begin{array}{ll} 
-      t_2         & t_1 = []\\
-      \event::(t_1' ++ t_2)  & t_1 = \event::t_1'
-    \end{array}
-    \right.
-  \end{equation}
-%
-%
-The subtraction operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 - t_2$ is defined as follows:
-\begin{equation}
-    t_1 - t_2  
-    \triangleq t_3 ~ s.t., t_2 ++ t_3 = t_1
-  \end{equation}
-%
-Given an annotated query $\event$, $\event$ belongs to a trace $t$, i.e., $\event \eventin t$ are defined as follows:
+Given an annotated query $\event$, $\event$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
     %
 \begin{equation}
-    \event \eventin t  
+    \event \eventin \trace  
     \triangleq \left\{
     \begin{array}{ll} 
-      \efalse       & t = []      \\
-      \etrue        & t = \event'::t'  \quad \event \eventeq \event'\\ 
-      \event \in t'      & t = \event'::t'  \quad \event \eventneq \event'
+      \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \sigeq \event') \\
+      (\trace' \cdot \event') & \trace =  (\trace' \cdot \event') \land (\event \signeq \event') \\ 
+      \efalse                 & o.w.
     \end{array}
     \right.
   \end{equation}
   %
   %
-}
 %
 \begin{defn}[Equivalence of Program]
 %
@@ -587,28 +580,27 @@ c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
 c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
 %
-\begin{defn}[Assigned Variables ($\avar$)]
-Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. 
-It is defined as follows:
+
+\begin{defn}[Labeled Variables ($\lvar : \ssa{c} \to \mathcal{VAR} \times \mathbb{N}$)]
 $$
-  \avar_{\ssa{c}} \triangleq
+  \lvar({\ssa{c}}) \triangleq
   \left\{
   \begin{array}{ll}
-      [\ssa{x}]                   
-      & \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
+      \{\ssa{x}^l\}                   
+      & \ssa{c} = [\ssa{\assign x e}]^{l} 
       \\
-      \left[ \ssa{x} \right]                  
-      & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
+      \{\ssa{x}^l\}                   
+      & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{l} 
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}}  
+      \lvar{(\ssa{c_1})} \cup \lvar{(\ssa{c_2})}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+      \lvar({\ssa{c}}) \cup \lvar({\ssa{c_2}}) \cup \ssa{\{\bar{x}, \bar{y}, \bar{z}\}} 
       & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+      \lvar({\ssa{c}'}) \cup \{\ssa{\bar{x}}\}
       & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
@@ -629,48 +621,21 @@ $$
       \left[ \ssa{x} \right]                  
       & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}}  
+      \lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+      \lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
       & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+      \lvar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
       & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
 $$
 \end{defn}
 %
-We are abusing the notations and operators from list here. 
-The notation $[]$ represents an empty vector
-and $x::A$ represents add an element $x$ to the head of the vector $A$.
-The concatenation operation between 2 vectors $A_1$ and $A_2$, i.e., $A_1 ++ A_2$ is mimic the standard list concatenation operations as follows:
-%
-\begin{equation}
-    A_1 ++ A_2  
-    \triangleq \left\{
-    \begin{array}{ll} 
-      A_2         & A_1 = []\\
-      x::(A_1' ++ A_2)  & A_1 = x::A_1'
-    \end{array}
-    \right.
-\end{equation}
-%
-We use index within parenthesis to denote the access to the element of corresponding location,
-$A(i)$ denotes the element at location $i$ in the vector $A$ and 
-$M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matrix $M$. 
-%
-%
-%
-\begin{defn}[Initial Variable Counter $\vcounter^0_{c}$]
-Given a program $c$ with its assigned variables $\avar_{c}$ of length $N$, its initial variable counter $\vcounter^0_{c}$ maps all the variable to $0$, i.e.:
-\[
-  \vcounter^0_{c}(x) = 0, x = \avar_{c}(i) \forall i = 1, \ldots, N 
-\]
-\end{defn}
 %
 %
 \subsection{ Trace-based Adaptivity}
@@ -681,13 +646,15 @@ Given a program $c$ with its assigned variables $\avar_{c}$ of length $N$, its i
 %
 %
 \begin{defn}
-[Events May Dependency]
-\label{def:event_dep}.
+[Value Dependency of Events]
+\label{def:event_valdep}.
 \\
-One event $\event_2$ may depend on another one  $\event_1$in a program $\ssa{c}$,
-with a starting memory $\ssa{m}$ and hidden database $D$, denoted as 
+One event $\event_2$ may have a value dependency on an assignment event $\event_1$ or 
+in a program $\ssa{c}$
+with hidden database $D$, denoted as 
 %
-$\eventdep(\event_1, \event_2, c, D)$ inductively on form of $\event_1$. 
+$\eventdep^{val}(\event_1, \event_2, c, D)$, where $\event_1 = (\ssa{x}_1, l_1, n_1, v_1) $ or 
+$\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1)$
 %
 \[
 \begin{array}{ll}
@@ -705,8 +672,12 @@ $\eventdep(\event_1, \event_2, c, D)$ inductively on form of $\event_1$.
 \\ 
  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1, \vcounter_1'} 
   \qquad \rightarrow^{*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} or
-  \eif([\sbexpr]^l_2, \cdots) or \ewhile [\sbexpr]^l_2 \cdots; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2, \vcounter_2} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} 
+  \\
+  or
+  \eif([\sbexpr]^l_2, \cdots) 
+  or \ewhile [\sbexpr]^l_2 \cdots; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2, \vcounter_2} 
   \\
   \qquad \rightarrow^{assn/query/test} 
   \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2, \vcounter_3} 
@@ -721,19 +692,27 @@ $\eventdep(\event_1, \event_2, c, D)$ inductively on form of $\event_1$.
   \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2', \vcounter_3'} 
 \\
 \bigwedge
-\pi_{q}(\event_2) \neq \pi_{q}(\event_2') 
-\bigwedge
-\pi_{\action}(\event_2) = \pi_{\action}(\event_2)
+\event_2 \neq_{v} \event_2'
 \end{array}
 \right)
 \end{array} 
 &
-\begin{array}{l}
-\event_1 = (\ssa{x}_1, v_1, l_1, n_1) 
-\text{or} \\
-\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1) 
 \end{array}
+ \]
+%
+\end{defn}
+%
+\begin{defn}
+[Testing Dependency of Events]
+\label{def:event_testdep}.
 \\
+One event $\event_2$ may have a testing dependency on a testing event $\event_1 = (\ssa{b}_1, l_1, n_1, v_1)$
+in a program $\ssa{c}$, with a hidden database $D$, 
+denoted as 
+%
+$\eventdep^{test}(\event_1, \event_2, c, D)$, is defined as follows: 
+%
+\[
 \begin{array}{l}
 \forall \vtrace_0, \vcounter_0
 \\
@@ -760,35 +739,51 @@ $\eventdep(\event_1, \event_2, c, D)$ inductively on form of $\event_1$.
   \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2', \vcounter_3'} 
 \\
 \bigwedge
-(\event_2) \notin \vtrace_2'
+(\event_2) \notin_{\sig} \vtrace_2'
 \end{array}
 \right)
 \end{array} 
-&
-\begin{array}{l}
-\event_1 = (\ssa{b}_1, v_1, l_1, n_1)
-\end{array}
-\end{array}
  \]
+%
+\end{defn}
+%
+%
+\begin{defn}[Event May Dependency].
+\label{def:event_dep}
+\\
+One assignment event $\event_2$ may depend on another assignment event $\event_1$
+in a program $\ssa{c}$, with a hidden database $D$, denoted as 
+%
+$\eventdep(\event_1, \event_2, c, D)$, is defined as follows: 
+%
+\[
+\eventdep^{val}(\event_1, \event_2, c, D) 
+\lor
+\Big(
+\exists \event_b = (\ssa{b}, l, n, v). ~ \eventdep^{val}(\event_1, \event_b, c, D) 
+\land \eventdep^{test}(\event_b, \event_2, c, D) 
+\Big)
+\] 
+%
 %
 \end{defn}
 %
 \begin{defn}[Variable May Dependency].
 \label{def:var_dep}
 \\
-Given a program $\ssa{c}$ with its assigned variables $\avar_{\ssa{c}}$, 
-one variable $\ssa{x}_2 \in \avar_{\ssa{c}}$ may depend on another variable 
-$\ssa{x}_1 \in \avar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
+Given a program $\ssa{c}$, 
+one variable $\ssa{x}_2^{l_2} \in \lvar_{\ssa{c}}$ may depend on another variable 
+$\ssa{x}_1^{l_1} \in \lvar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
 %
-$\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
+$\vardep(\ssa{x}_1^{l_1}, \ssa{x}_2^{l_2}, \ssa{c})$ is defined below.
 %
 \[
-\exists \event_1, \event_2, \ssa{m}, D. ~
-\projl{\event_1} = \ssa{x}_1
+\exists \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom. ~
+\projl{\event_1} = (\ssa{x}_1, l_1)
 \land
-\projl{\event_2} = \ssa{x}_2
+\projl{\event_2} = (\ssa{x}_2, l_2)
 \land 
-\eventdep(\event_1, \event_2, c, \ssa{m}, D)
+\eventdep(\event_1, \event_2, c, D)
 \] 
 %
 %
@@ -797,49 +792,49 @@ $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 %
 \begin{defn}[Execution Based Dependency Graph].
 \\
-Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$ with its assigned variables $\avar_c$ and initial variable counter $\vcounter^0_{c}$ with its corresponding execution:
-$\config{\ssa{m}, \ssa{c}, [], \vcounter^0_{\ssa{c}}} 
-\to^{*}
-\config{\ssa{m'}, \eskip, \vtrace, \vcounter}$,
-the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights, \qflag)$ is defined as:
+Given a program $\ssa{c}$ with its assigned variables $\lvar_c$ 
+the dependency graph $\traceG(\ssa{c}, D) = (\vertxs, \edges, \weights, \qflag)$ is defined as:
 %
 \[
 \begin{array}{rlcl}
   \text{Vertices} &
   \vertxs & := & \left\{ 
-  x \in \mathcal{VAR}
+  x^l \in \mathcal{VAR} \times \mathbb{N}
   ~ \middle\vert ~
-  x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}| 
+  x^l \in \lvar({\ssa{c}})
   \right\}
   \\
   \text{Directed Edges} &
   \edges & := & 
   \left\{ 
-  (x, x') \in \mathcal{VAR} \times \mathcal{VAR}
+  (x^l, x'^{l'}) \in (\mathcal{VAR} \times \mathbb{N}) \times (\mathcal{VAR} \times \mathbb{N})
   ~ \middle\vert ~
-  \vardep(x, x', c); 
-  x = \avar_{\ssa{c}}(i); x' = \avar_{\ssa{c}}(j); i,j = 0, \ldots, |\avar_{\ssa{c}}| 
+  \vardep(x^l, x'^{l'}, c) \land
+  x^l, x'^{l'} \in \lvar({\ssa{c}})
   \right\}
   \\
   \text{Weights} &
   \weights & := & 
   \left\{ 
-  (x, n) \in \mathcal{VAR} \times \mathbb{N}
-  ~ \middle\vert ~
-  n = \vcounter(x); x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}|
+  (x^l, n) \in \mathcal{VAR} \times \mathbb{N}
+  ~ \middle\vert ~ 
+  x^l \in \lvar({\ssa{c}}) 
+  \forall \vtrace, s.t.,
+  \config{\ssa{c}, } \to^{*} \config{\eskip, \vtrace},
+  n = \max_{\vtrace}\vcounter(\vtrace)l; 
   \right\}
   \\
   \text{Query Flags} &
   \qflag & := & 
-  \left\{(x, n)  \in \vertxs \times \{0, 1\} 
+  \left\{(x^l, n)  \in \vertxs \times \{0, 1\} 
   ~ \middle\vert ~
   \left\{
   \begin{array}{ll}
-  n = 1 & x \in \qvar_{\ssa{c}} \\ 
+  n = 1 & x^l \in \qvar({\ssa{c}}) \\ 
   n = 0 & o.w.
   \end{array}
   \right\};
-  x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}|
+  x^l \in \lvar({\ssa{c}})
   \right\}
 \end{array}
 \]
@@ -877,8 +872,8 @@ Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$ and a \
 , where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \big)$ is a subsequence of $k$'s vertex sequence.
 \end{defn}
 %
-Given a program $c$ with a starting memory $m$ and database $D$, we generate its program-based graph 
-$\traceG(\ssa{c, m}, D) = (\vertxs, \edges, \weights, \qflag)$.
+Given a program $c$ with a database $D$, we generate its program-based graph 
+$\traceG(\ssa{c}, D) = (\vertxs, \edges, \weights, \qflag)$.
 %
 Then the adaptivity bound based on program analysis for $\ssa{c}$ is the number of query vertices on a finite walk in $\progG(\ssa{c})$. This finite walk satisfies:
 %
@@ -898,7 +893,7 @@ its adaptivity is defined for all possible starting SSA memory $\ssa{m}$ and dat
 %
 $$
 A(c) = \max \big 
-\{ \qlen(k) \mid D \in \dbdom , k \in \walks(\traceG(c, m, D) \big \} 
+\{ \qlen(k) \mid D \in \dbdom , k \in \walks(\traceG(c, D) \big \} 
 $$
 \end{defn}
 %
@@ -917,7 +912,7 @@ There doesn't exist backward edges with direction from greater annotated queries
 [Edges are Forwarding Only].
 \\
 %
-Given a program $c$, a database $D$, a starting memory $m$ and the corresponding trace-based dependency graph $G(c,D,m) = (\vertxs, \edges)$, 
+Given a program $c$, a database $D$, a starting memory $m$ and the corresponding trace-based dependency graph $G(c,D) = (\vertxs, \edges)$, 
 for any directed edge $(\event', \event) \in \edges$, 
 this is not the case that:
 %
@@ -974,8 +969,8 @@ Proof is obvious based on the Lemma \ref{lem:DAG}.
 \clearpage
 %
 %
-\subsection{SSA Transformation and Soundness of Transformation}
-in File {\tt ``ssa\_transform\_sound.tex''}
+% \subsection{SSA Transformation and Soundness of Transformation}
+% in File {\tt ``ssa\_transform\_sound.tex''}
 % \input{ssa_transform_sound}
 %
 \clearpage
