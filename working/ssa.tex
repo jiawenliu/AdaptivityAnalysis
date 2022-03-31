@@ -73,7 +73,7 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 \\
 %
 \mbox{Trace} & \vtrace
-& ::= & \cdot | \vtrace \cdot \event
+& ::= & | \vtrace \cdot \event
 \\
 %
 \mbox{Environment} 
@@ -86,6 +86,10 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 %
 \mbox{Variable Counter} & \vcounter
 & ::= & \mathcal{SVAR} \to \mathbb{N}
+\\
+%
+\mbox{Action} & \action
+& ::= & (x, l, n) | (x, \query, l, n) | (b, l, n)
 \end{array}
 \]
 We use following notations to represent the set of corresponding terms:
@@ -112,7 +116,7 @@ We use following notations to represent the set of corresponding terms:
 \]
 %
 %
-Environment : $\vtrace \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
+Environment $ \env : \vtrace \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
 \[
 \begin{array}{ll}
 \env(\vtrace \cdot (x, v, l, n)) x \triangleq v
@@ -121,12 +125,12 @@ Environment : $\vtrace \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
 \\
 \env(\vtrace \cdot (y, v, l, n)) x \triangleq \env(\vtrace) x
 &
-\env(\cdot) x \triangleq \bot
+\env() x \triangleq \bot
 \end{array}
 \]
 %
 %
-Query Environment : $\vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
+Query Environment $\qenv: \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
 \[
 \begin{array}{ll}
 \env(\vtrace \cdot (x, v, l, n)) x \triangleq \env(\vtrace) x
@@ -135,10 +139,47 @@ Query Environment : $\vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
 \\
 \env(\vtrace \cdot (y, v, l, n)) x \triangleq \env(\vtrace) x
 &
-\env(\cdot) x \triangleq \bot
+\env() x \triangleq \bot
+\end{array}
+\]
+%
+Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
+\[
+\begin{array}{ll}
+\pi_v((x, v, l, n)) \triangleq v
+&
+\pi_v (x, \qval, v, l, n) \triangleq v
+\\
+\pi_v (b, v, l, n)  \triangleq v
+&
+\end{array}
+\]
+%
+Event Query Value : $\pi_{q} : \eventset \to \mathcal{VAL}$
+\[
+\begin{array}{ll}
+\pi_{q} (x, v, l, n) \triangleq v
+&
+\pi_{q} (x, \qval, v, l, n) \triangleq \qval
+\\
+\pi_{q} (b, v, l, n)  \triangleq v
+&
 \end{array}
 \]%
-% The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
+% 
+Event Action : $\pi_{\action} : \eventset \to \mathcal{VAL}$
+\[
+\begin{array}{ll}
+\pi_{\action} (x, v, l, n) \triangleq (x, l, n)
+&
+\pi_{\action} (x, \qval, v, l, n) \triangleq (x, \query, l, n)
+\\
+\pi_{\action} (b, v, l, n)  \triangleq (b, l, n)
+&
+\end{array}
+\]%
+%
+%The concatenation operation between 2 traces $t_1$ and $t_2$, i.e., $t_1 ++ t_2$ is the standard list concatenation operation as follows:
 % \begin{equation}
 %     t_1 ++ t_2  
 %     \triangleq \left\{
@@ -169,8 +210,8 @@ Query Environment : $\vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
 \end{mathpar}
 }
 %
-Given the evaluation for the arithmetic and boolean expression, we defined the evaluation rules for query expression $\qexpr$ correspondingly as follows:
-  \begin{mathpar}
+
+\begin{mathpar}
   \boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, Trace  \times QExpr \qarrow QValue }
   \\
   \inferrule{ 
@@ -189,6 +230,7 @@ Given the evaluation for the arithmetic and boolean expression, we defined the e
   }
   \end{mathpar}
 %
+The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 %
 \begin{figure}
 \jl{
@@ -207,9 +249,9 @@ Given the evaluation for the arithmetic and boolean expression, we defined the e
   %
   \inferrule
   {
-  \vcounter'(\ssa{x}) = \vcounter(\ssa{x}) + 1
+  \vcounter'(l) = \vcounter(l) + 1
   \and 
-  \event = (\ssa{x}, l, \vcounter'(\ssa{x}), v)
+  \event = (\ssa{x}, v, l, \vcounter'(l))
   }
   {
   \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace, \vcounter} 
@@ -254,54 +296,26 @@ Given the evaluation for the arithmetic and boolean expression, we defined the e
   \\
   \xrightarrow{} 
   \config{\ssa{ m, 
-  [\eskip]^l  \eskip),
+  [\eskip]^l ,
   \vtrace \cdot \event, \vcounter'}}
   }
   ~\textbf{ssa-while-f}
   %
   \and
   %
- \inferrule
-  {
-   \vtrace, b \barrow \efalse
-   \and 
-   \event = (b, \efalse, l, \vcounter(l))
-   \and 
-   \vcounter'(l) = \vcounter(l) + 1  }
-  {
-  \config{
-  \ssa{
-  \eif ([b]^l, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}], n,  
-  c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-  \eskip), \vtrace, \vcounter
-  }}
-  \\
-  \xrightarrow{} 
-  \config{
-  \ssa{m, 
-  {
-  c; \ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c},
-  }
-  }
-  \vtrace, \vcounter}
-  }
-  ~\textbf{ssa-if-true}
-  %
-  %
-  \and
   {
   \inferrule
   {
   \query(\qval) = v
   \and
-  \vcounter'[\ssa{x}] = \vcounter[\ssa{x}] + 1
+  \vcounter'(l) = \vcounter(l) + 1
   \and 
-  \event = (\ssa{x}, \qval, l, \vcounter'[\ssa{x}])
+  \event = (\ssa{x}, \qval, l, \vcounter'(l))
   }
   {
   \config{\ssa{m, [\assign{x}{\query(\qexpr)}]^l, \vtrace, \vcounter}}
   \xrightarrow{} 
-  \config{\ssa{m[v/ x], \eskip,  \vtrace ++ [\event], \vcounter'} }
+  \config{\ssa{m[v/ x], \eskip,  \vtrace \cdot \event, \vcounter'} }
   }
   ~\textbf{ssa-query}
   }
@@ -311,14 +325,14 @@ Given the evaluation for the arithmetic and boolean expression, we defined the e
   %
   \inferrule
   {
-  \config{\ssa{m, c_1, \vtrace, \vcounter}}
+  \config{\ssa{c_1, \vtrace, \vcounter}}
   \xrightarrow{}
-  \config{\ssa{m', c_1',  \vtrace', \vcounter'}}
+  \config{\ssa{c_1',  \vtrace', \vcounter'}}
   }
   {
-  \config{\ssa{m, c_1; c_2, \vtrace, \vcounter}} 
+  \config{\ssa{c_1; c_2, \vtrace, \vcounter}} 
   \xrightarrow{} 
-  \config{\ssa{m', c_1'; c_2, \vtrace', \vcounter'}}
+  \config{\ssa{c_1'; c_2, \vtrace', \vcounter'}}
   }
   ~\textbf{ssa-seq1}
   %
@@ -326,9 +340,12 @@ Given the evaluation for the arithmetic and boolean expression, we defined the e
   %
   \inferrule
   {
+    \config{\ssa{c_2, \vtrace, \vcounter}}
+  \xrightarrow{}
+  \config{\ssa{c_2',  \vtrace', \vcounter'}}
   }
   {
-  \config{\ssa{m, [\eskip]^{l} ; c_2, \vtrace, \vcounter}} \xrightarrow{} \config{\ssa{m, c_2, \vtrace, \vcounter}}
+  \config{\ssa{[\eskip]^{l} ; c_2, \vtrace, \vcounter}} \xrightarrow{} \config{\ssa{ c_2', \vtrace', \vcounter'}}
   }
   ~\textbf{ssa-seq2}
   %
@@ -426,10 +443,9 @@ $\event_1 = (x_1, v_1, l_1, n_1),
  \triangleq 
  \left\{
  \begin{array}{ll}
-    n_1 < n_2  
-    & l_1 = l_2
+    l_1 < l_2 & n_1 = n_2
     \\
-    w_1 <_w w_2 & o.w.
+    n_1 < n_2  & o.w.
 \end{array}  
 \right.
 \]
@@ -482,7 +498,7 @@ $ \event_1 = (x_1, v_1, l_1, n_1),
 %
 \[
 \event_1 \eventeq \event_2
- \triangleq (l_1 = l_2 \land  w_1 =_w w_2 \land 
+ \triangleq (l_1 = l_2 \land  n_1 = n_2 \land 
  \qval_1 =_q \qval_2) 
 \]
 %
@@ -671,36 +687,43 @@ Given a program $c$ with its assigned variables $\avar_{c}$ of length $N$, its i
 One event $\event_2$ may depend on another one  $\event_1$in a program $\ssa{c}$,
 with a starting memory $\ssa{m}$ and hidden database $D$, denoted as 
 %
-$\eventdep(\event_1, \event_2, c, \ssa{m}, D)$ is defined below. 
+$\eventdep(\event_1, \event_2, c, D)$ inductively on form of $\event_1$. 
 %
 \[
 \begin{array}{ll}
 \begin{array}{l}
-\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
-\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', \sexpr_2.
+\forall \vtrace_0, \vcounter_0
+\\
+\exists \vcounter_1, \vcounter_2, \vcounter_3,
+\vcounter_1', \vcounter_2', \vcounter_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
 \\
   \left(
   \begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}_1}{v_1}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1, \vcounter_1}  \rightarrow^{assn}
 \\ 
- \bigwedge
- \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\event_1], t_1[\ssa{x}_1]++} 
- \\
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1, \vcounter_1'} 
   \qquad \rightarrow^{*} 
-  \config{\ssa{m}_2, [\assign{\ssa{x}_2}{\sexpr_2}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} or
+  \eif([\sbexpr]^l_2, \cdots) or \ewhile [\sbexpr]^l_2 \cdots; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2, \vcounter_2} 
   \\
-  \qquad \rightarrow^{*} 
-  \config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\event_2], t_2[\ssa{x}_2]++} 
+  \qquad \rightarrow^{assn/query/test} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2, \vcounter_3} 
   % 
  \\ 
  \bigwedge
- \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
-\rightarrow^{*} 
-\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1', \vcounter_1} 
+  \qquad \rightarrow^{*} 
+  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2', \vcounter_2'} 
+  \\
+  \qquad \rightarrow^{assn/query/test} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2', \vcounter_3'} 
 \\
 \bigwedge
-\qenv(\event_2) \neq \qenv(\event'_2)
+\pi_{q}(\event_2) \neq \pi_{q}(\event_2') 
+\bigwedge
+\pi_{\action}(\event_2) = \pi_{\action}(\event_2)
 \end{array}
 \right)
 \end{array} 
@@ -712,31 +735,32 @@ $\eventdep(\event_1, \event_2, c, \ssa{m}, D)$ is defined below.
 \end{array}
 \\
 \begin{array}{l}
-\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
-\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1', {\qexpr}_2.
+\forall \vtrace_0, \vcounter_0
+\\
+\exists \vcounter_1, \vcounter_2, \vcounter_3,
+\vcounter_1', \vcounter_2', \vcounter_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
 \\
   \left(
   \begin{array}{l}   
-\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
-\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1)}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1, \vcounter_1}  \rightarrow^{assn}
 \\ 
- \bigwedge
- \config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\event_1], t_1[\ssa{x}_1]++} 
- \\
-\qquad \rightarrow^{*} 
-\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qexpr}_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
-\\
-\qquad \rightarrow^{*} 
-\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\event_2], t_2[\ssa{x}_2]++} 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1, \vcounter_1'} 
+  \qquad \rightarrow^{*} 
+  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2, \vcounter_2} 
+  \\
+  \qquad \rightarrow^{assn/query/test} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2, \vcounter_3} 
   % 
  \\ 
  \bigwedge
- \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
-\rightarrow^{*} 
-\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1', \vcounter_1} 
+  \qquad \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2', \vcounter_3'} 
 \\
 \bigwedge
-\event_2 \notin \vtrace_2'
+(\event_2) \notin \vtrace_2'
 \end{array}
 \right)
 \end{array} 
