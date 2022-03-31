@@ -554,11 +554,11 @@ c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
 c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
 %
-\begin{defn}[Assigned Variables ($\eventar$)]
-Given a program $\ssa{c}$, its assigned variables $\eventar$ is a vector containing all variables newly assigned in the program preserving the order. 
+\begin{defn}[Assigned Variables ($\avar$)]
+Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. 
 It is defined as follows:
 $$
-  \eventar_{\ssa{c}} \triangleq
+  \avar_{\ssa{c}} \triangleq
   \left\{
   \begin{array}{ll}
       [\ssa{x}]                   
@@ -567,15 +567,15 @@ $$
       \left[ \ssa{x} \right]                  
       & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
       \\
-      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}}  
+      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
       & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \eventar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+      \avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
       & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
@@ -596,15 +596,15 @@ $$
       \left[ \ssa{x} \right]                  
       & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
       \\
-      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}}  
+      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \eventar_{\ssa{c_1}} ++ \eventar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+      \avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
       & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \eventar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+      \avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
       & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
@@ -633,9 +633,9 @@ $M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matri
 %
 %
 \begin{defn}[Initial Variable Counter $\vcounter^0_{c}$]
-Given a program $c$ with its assigned variables $\eventar_{c}$ of length $N$, its initial variable counter $\vcounter^0_{c}$ maps all the variable to $0$, i.e.:
+Given a program $c$ with its assigned variables $\avar_{c}$ of length $N$, its initial variable counter $\vcounter^0_{c}$ maps all the variable to $0$, i.e.:
 \[
-  \vcounter^0_{c}(x) = 0, x = \eventar_{c}(i) \forall i = 1, \ldots, N 
+  \vcounter^0_{c}(x) = 0, x = \avar_{c}(i) \forall i = 1, \ldots, N 
 \]
 \end{defn}
 %
@@ -646,10 +646,9 @@ Given a program $c$ with its assigned variables $\eventar_{c}$ of length $N$, it
 % 
 %
 %
-\jl{
 %
 \begin{defn}
-[Annotated Variables May Dependency]
+[Events May Dependency]
 \label{def:event_dep}.
 \\
 One event $\event_2$ may depend on another one  $\event_1$in a program $\ssa{c}$,
@@ -691,7 +690,7 @@ $\eventdep(\event_1, \event_2, c, \ssa{m}, D)$ is defined below.
 &
 \begin{array}{l}
 \event_1 = (\ssa{x}_1, v_1, l_1, n_1) 
-\text{or}
+\text{or} \\
 \event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1) 
 \end{array}
 \\
@@ -736,9 +735,9 @@ $\eventdep(\event_1, \event_2, c, \ssa{m}, D)$ is defined below.
 \begin{defn}[Variable May Dependency].
 \label{def:var_dep}
 \\
-Given a program $\ssa{c}$ with its assigned variables $\eventar_{\ssa{c}}$, 
-one variable $\ssa{x}_2 \in \eventar_{\ssa{c}}$ may depend on another variable 
-$\ssa{x}_1 \in \eventar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
+Given a program $\ssa{c}$ with its assigned variables $\avar_{\ssa{c}}$, 
+one variable $\ssa{x}_2 \in \avar_{\ssa{c}}$ may depend on another variable 
+$\ssa{x}_1 \in \avar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
 %
 $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 %
@@ -757,7 +756,7 @@ $\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
 %
 \begin{defn}[Execution Based Dependency Graph].
 \\
-Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$ with its assigned variables $\eventar_c$ and initial variable counter $\vcounter^0_{c}$ with its corresponding execution:
+Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$ with its assigned variables $\avar_c$ and initial variable counter $\vcounter^0_{c}$ with its corresponding execution:
 $\config{\ssa{m}, \ssa{c}, [], \vcounter^0_{\ssa{c}}} 
 \to^{*}
 \config{\ssa{m'}, \eskip, \vtrace, \vcounter}$,
@@ -769,7 +768,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   \vertxs & := & \left\{ 
   x \in \mathcal{VAR}
   ~ \middle\vert ~
-  x = \eventar_{\ssa{c}}(i); i = 0, \ldots, |\eventar_{\ssa{c}}| 
+  x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}| 
   \right\}
   \\
   \text{Directed Edges} &
@@ -778,7 +777,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   (x, x') \in \mathcal{VAR} \times \mathcal{VAR}
   ~ \middle\vert ~
   \vardep(x, x', c); 
-  x = \eventar_{\ssa{c}}(i); x' = \eventar_{\ssa{c}}(j); i,j = 0, \ldots, |\eventar_{\ssa{c}}| 
+  x = \avar_{\ssa{c}}(i); x' = \avar_{\ssa{c}}(j); i,j = 0, \ldots, |\avar_{\ssa{c}}| 
   \right\}
   \\
   \text{Weights} &
@@ -786,7 +785,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   \left\{ 
   (x, n) \in \mathcal{VAR} \times \mathbb{N}
   ~ \middle\vert ~
-  n = \vcounter(x); x = \eventar_{\ssa{c}}(i); i = 0, \ldots, |\eventar_{\ssa{c}}|
+  n = \vcounter(x); x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}|
   \right\}
   \\
   \text{Query Flags} &
@@ -799,7 +798,7 @@ the dependency graph $\traceG(\ssa{c}, \ssa{m}, D) = (\vertxs, \edges, \weights,
   n = 0 & o.w.
   \end{array}
   \right\};
-  x = \eventar_{\ssa{c}}(i); i = 0, \ldots, |\eventar_{\ssa{c}}|
+  x = \avar_{\ssa{c}}(i); i = 0, \ldots, |\avar_{\ssa{c}}|
   \right\}
 \end{array}
 \]
@@ -858,11 +857,9 @@ its adaptivity is defined for all possible starting SSA memory $\ssa{m}$ and dat
 %
 $$
 A(c) = \max \big 
-\{ \qlen(k) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom , k \in \walks(\traceG(c, m, D) \big \} 
+\{ \qlen(k) \mid D \in \dbdom , k \in \walks(\traceG(c, m, D) \big \} 
 $$
 \end{defn}
-}
-\\
 %
 %
 %
