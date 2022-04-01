@@ -68,16 +68,11 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 ~|~ [\eskip]^{l} 
 \\
 %
-\mbox{Assignment Event} 
-& \asnevent & ::= & (\ssa{x}, l, n, v) | (\ssa{x}, l, n, \qval, v)
-\\
-%
-\mbox{Testing Event} 
-& \testevent & ::= & (\sbexpr, l, n, v)
-\\
-%
 \mbox{Event} 
-& \event & ::= & \asnevent | \testevent
+& \event & ::= & 
+      (\ssa{x}, l, n, v)   \mbox{Assignment Event} \\
+&&& | (\ssa{x}, l, n, \qval, v) \\
+&&& | (\sbexpr, l, n, v) \mbox{Testing Event}
 \\
 %
 \mbox{Trace} & \vtrace
@@ -86,14 +81,14 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 %
 \mbox{Event Signature} & \sig
 & ::= & (x, l, n) | (x, l, n, \query) | (b, l, n)
-\\
-%
-\mbox{Environment} 
-& \env & ::= & \vtrace \to \mathcal{SVAR} \to v \cup \{\bot\}
-\\
-%
-\mbox{Query Environment} 
-& \qenv & ::= & \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}
+% \\
+% %
+% \mbox{Environment} 
+% & \env & ::= & \vtrace \to \mathcal{SVAR} \to v \cup \{\bot\}
+% \\
+% %
+% \mbox{Query Environment} 
+% & \qenv & ::= & \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}
 \end{array}
 \]
 We use following notations to represent the set of corresponding terms:
@@ -160,12 +155,8 @@ Counter $\vcounter : \trace \to \mathbb{N} \to \mathbb{N}$
 \boxed{ \config{\trace,\aexpr} \aarrow v \, : \, Trace  \times AExpr \Rightarrow Value }
 \\
 \boxed{ \config{\trace, \bexpr} \barrow v \, : \, Trace \times BExpr \Rightarrow Value }
-\end{mathpar}
-}
-%
-
-\begin{mathpar}
-  \boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, Trace  \times QExpr \qarrow QValue }
+\\
+\boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, Trace  \times QExpr \qarrow QValue }
   \\
   \inferrule{ 
     \config{\trace, \qexpr_1} \qarrow \qval_1
@@ -194,9 +185,9 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   Command \times Trace
   }
   \\
-  \boxed{\config{\ssa{c, \vtrace, \vcounter}}
+  \boxed{\config{\ssa{c, \vtrace}}
   \xrightarrow{} 
-  \config{\ssa{c',  \vtrace', \vcounter'}}
+  \config{\ssa{c',  \vtrace'}}
   }
   \\
   %
@@ -207,7 +198,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
   \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace } 
   \xrightarrow{} 
-  \config{[\eskip]^{l}, \vtrace \cdot \event, \vcounter'}
+  \config{[\eskip]^{l}, \vtrace \cdot \event}
   }
   ~\textbf{assn}
   %
@@ -220,7 +211,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
    \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
   }
   {
-  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace, \vcounter}}
+  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace}}
   \\
   \xrightarrow{} 
   \config{\ssa{
@@ -461,14 +452,42 @@ Signature Equivalence of 2 events : $\event_1 \sigeq \event_2$
 \right.
 \]
 %
-Events preserve the order of execution. The order relation is defined in Definition~\ref{def:query_dir}.
+%
+\begin{defn}[Equivalence of Query].
+%
+\label{def:query_equal}
+Given a trace $\trace$ and 2 query expressions $\qexpr_1$, $\qexpr_2$:
+$$
+\qexpr_1 =_{q}^{\trace} \qexpr_2 \triangleq
+\left\{
+    \begin{array}{ll} 
+      \etrue      
+      & 
+    \exists \qval_1, \qval_2.
+    \begin{array}{l} 
+      (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+      \\
+      \land (\forall r \in \qdom. \exists v. ~ s.t., ~ 
+            \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+    \end{array}\\
+      \efalse         
+      & \text{o.w.} 
+    \end{array}
+    \right.
+$$
+%
+, where $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
+$\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  is defined vice versa.
+%
+We use $=_{q}$  and $\neq_{q}$ as the shorthands when $\trace$ is empty.
+\end{defn}
 %
 \begin{defn}[Order of Events].
 \label{def:query_dir}
 \\
-Given 2 annotated queries 
-$\event_1 = (x_1, v_1, l_1, n_1), 
-\event_2 = (x_2, v_2, l_2, n_2)$
+Given 2 events 
+$\event_1 = (x_1, l_1, n_1), 
+\event_2 = (x_2, l_2, n_2)$
 :
 %
 \[
@@ -488,40 +507,6 @@ $\event_1 \eventgeq \event_2$  is defined vice versa.
 %
 %
 %
-Given the evaluation rules for query expression, we define its equivalence relation in Definition~\ref{def:query_equal}.
-%
-\begin{defn}[Equivalence of Query].
-%
-\label{def:query_equal}
- Given a memory $m$ and 2 query expressions $\qexpr_1$, $\qexpr_2$ s.t., $FV(\qexpr_1) \in \dom(m)$ and $FV(\qexpr_2) \in \dom(m)$:
-$$
-\qexpr_1 =_{q}^{m} \qexpr_2 \triangleq
-\left\{
-    \begin{array}{ll} 
-      \etrue      
-      & 
-    \exists \qval_1, \qval_2.
-    \begin{array}{l} 
-      (\config{m,  \qexpr_1} \qarrow \qval_1 \land \config{m,  \qexpr_2 } \qarrow \qval_2) 
-      \\
-      \land (\forall r \in \qdom. \exists v. ~ s.t., ~ 
-            \config{m, \qval_1[r/\chi]} \aarrow v \land \config{m,  \qval_2[r/\chi] } \aarrow v)  
-    \end{array}\\
-      \efalse         
-      & \text{o.w.} 
-    \end{array}
-    \right.
-$$
-%
-, where $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
-$\qexpr_1 \neq_{q}^{m} \qexpr_2$  is defined vice versa.
-%
-We use $=_{q}$  and $\neq_{q}$ as the shorthands for $=_{q}^{[]}$ and $\neq^{[]}_{q}$.
-\end{defn}
-%
-Then, we have the corresponding equivalence relation between 2 annotated queries defined in Definition~\ref{def:av_equal}:
-%
-%
 %
 %
 %
@@ -531,8 +516,21 @@ Given an annotated query $\event$, $\event$ belongs to a trace $\trace$, i.e., $
     \event \eventin \trace  
     \triangleq \left\{
     \begin{array}{ll} 
+      \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \eventeq \event') \\
+      \event \eventin \trace' & \trace =  (\trace' \cdot \event') \land (\event \eventneq \event') \\ 
+      \efalse                 & o.w.
+    \end{array}
+    \right.
+  \end{equation}
+  %
+Given an event $\event$, $\event$ signature belongs to a trace $\trace$, i.e., $\event \sigin \trace$ are defined as follows:
+    %
+\begin{equation}
+    \event \sigin \trace  
+    \triangleq \left\{
+    \begin{array}{ll} 
       \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \sigeq \event') \\
-      (\trace' \cdot \event') & \trace =  (\trace' \cdot \event') \land (\event \signeq \event') \\ 
+      \event \sigin \trace'   & \trace =  (\trace' \cdot \event') \land (\event \signeq \event') \\ 
       \efalse                 & o.w.
     \end{array}
     \right.
@@ -581,9 +579,10 @@ c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
 %
 
-\begin{defn}[Labeled Variables ($\lvar : \ssa{c} \to \mathcal{VAR} \times \mathbb{N}$)]
+\begin{defn}[Labeled Variables ($\lvar_{c} \subseteq \mathcal{VAR} \times \mathbb{N}$ or 
+$\lvar : c \to \mathcal{P}(\mathcal{VAR} \times \mathbb{N})$]
 $$
-  \lvar({\ssa{c}}) \triangleq
+  \lvar_{c} \triangleq
   \left\{
   \begin{array}{ll}
       \{\ssa{x}^l\}                   
@@ -592,22 +591,22 @@ $$
       \{\ssa{x}^l\}                   
       & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{l} 
       \\
-      \lvar{(\ssa{c_1})} \cup \lvar{(\ssa{c_2})}  
+      \lvar_{\ssa{c_1}} \cup \lvar{(\ssa{c_2})}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \lvar({\ssa{c}}) \cup \lvar({\ssa{c_2}}) \cup \ssa{\{\bar{x}, \bar{y}, \bar{z}\}} 
-      & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
+      \lvar_{\ssa{c}} \cup \lvar_{\ssa{c_2}} \cup \ssa{\{\bar{x}, \bar{y}, \bar{z}\}} 
+      & \ssa{c} =\eif([\sbexpr]^{l} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \lvar({\ssa{c}'}) \cup \{\ssa{\bar{x}}\}
-      & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
+      \lvar_{\ssa{c}'} \cup \{\ssa{\bar{x}}\}
+      & \ssa{c}   = \ewhile ([\sbexpr]^{l}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
 $$
 \end{defn}
 %
-\begin{defn}[Query Variables ($\qvar$)].
+\begin{defn}[Query Variables ($\qvar_{c} \subseteq \mathcal{VAR} \times \mathbb{N}$)].
 \\
 Given a program $c$, its query variables $\qvar$ is a vector containing all variables newly assigned by a query in the programm, $\qvar \subset \mathcal{VAR}$.
 It is defined as follows:
@@ -615,22 +614,22 @@ $$
   \qvar_{\ssa{c}} \triangleq
   \left\{
   \begin{array}{ll}
-      []                  
+      \{\}                  
       & \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
       \\
-      \left[ \ssa{x} \right]                  
+      \{\ssa{x}^l\}                  
       & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
       \\
-      \lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}}  
+      \qvar_{\ssa{c_1}} \cup \qvar_{\ssa{c_2}}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
-      & \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
+      \qvar_{\ssa{c_1}} \cup \qvar_{\ssa{c_2}} \cup \{\ssa{\bar{x}, \bar{y}, \bar{z}}\} 
+      & \ssa{c} =\eif([\sbexpr]^{l} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \lvar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
-      & \ssa{c}   = \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
+      \qvar_{\ssa{c}'} \cup \{\ssa{\bar{x}}\}
+      & \ssa{c}   = \ewhile ([\sbexpr]^{l}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
 $$
@@ -657,46 +656,23 @@ $\eventdep^{val}(\event_1, \event_2, c, D)$, where $\event_1 = (\ssa{x}_1, l_1, 
 $\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1)$
 %
 \[
-\begin{array}{ll}
-\begin{array}{l}
-\forall \vtrace_0
-\\
-\exists 
+\exists \vtrace_0,
 \vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
-\\
   \left(
   \begin{array}{l}   
 \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
-\config{[\assign{\ssa{x}_1}{\expr_1}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
-  \qquad \rightarrow^{*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} 
-  \\
-  or
-  \eif([\sbexpr]^l_2, \cdots) 
-  or \ewhile [\sbexpr]^l_2 \cdots; \ssa{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2} 
-  \\
-  \qquad \rightarrow^{assn/query/test} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2, } 
+\config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2 } 
   % 
  \\ 
  \bigwedge
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1',} 
-  \qquad \rightarrow^{*} 
-  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
-  \\
-  \qquad \rightarrow^{assn/query/test} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2'} 
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2' } 
 \\
 \bigwedge
-\event_2 \neq_{v} \event_2'
+\event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
 \end{array}
 \right)
-\end{array} 
-&
-\end{array}
  \]
 %
 \end{defn}
@@ -712,33 +688,23 @@ denoted as
 $\eventdep^{test}(\event_1, \event_2, c, D)$, is defined as follows: 
 %
 \[
-\begin{array}{l}
-\exists \vtrace_0
+\exists \vtrace_0,
 \vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
-\\
   \left(
   \begin{array}{l}   
 \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
-\config{[\assign{\ssa{x}_1}{\expr_1}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
-  \qquad \rightarrow^{*} 
-  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2} 
-  \\
-  \qquad \rightarrow^{assn/query/test} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2} 
+\config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2 } 
   % 
  \\ 
  \bigwedge
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
-  \qquad \rightarrow^{*} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
 \\
 \bigwedge
-(\event_2) \notin_{\sig} \vtrace_2'
+\event_2 \signeq \event_2'
 \end{array}
 \right)
-\end{array} 
  \]
 %
 \end{defn}
