@@ -28,6 +28,57 @@
 
 \maketitle
 %
+\begin{example}
+\[
+\begin{array}{ll}
+& \sem{
+\ewhile {}^0 (x > 0) {}^1 x = x - 1;
+} \triangleq \\
+& \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\}
+\\
+\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \right> 
+\mid \pi_i^0 \in \mathbb{T^{+}} \land 
+\sem{(x > 0)}\env(\pi_1^0) = \etrue  \land
+\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v \right\}
+\\
+\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_2} {}^0 \right> 
+\left \vert 
+\begin{array}{l}
+\pi_i^0 \in \mathbb{T^{+}} \\
+\land 
+\sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
+\land
+\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
+\land 
+\sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0) = \etrue \\
+\land
+\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2
+\end{array}
+\right.
+\right\}
+\\
+\cup & \cdots 
+\\
+\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0 \xrightarrow{\neg(x > 0)} {}^l \right>  
+\left \vert 
+\begin{array}{l}
+\pi_1^0 \in \mathbb{T^{+}}\\
+\land 
+\sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
+\land
+\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
+\land \cdots \\
+% \land
+% \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2\\
+\land 
+\sem{(x > 0)}\env(\pi_i{}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0) = \efalse \\
+\land l = \kw{aft}[\ewhile {}^0 (x > 0) {}^1 x = x - 1;]
+\end{array}
+\right.
+\right\}
+\end{array}
+\]
+\end{example}
 %
 \begin{example}
 \[
@@ -149,57 +200,114 @@
 \]
 \end{example}
 %
-\begin{example}
+\clearpage
+\begin{example}[counter example]
+If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) includes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$), 
+then by Definition~2 (in \cite{cousot2019abstract}), there is a counter example;
+\[
+	\ewhile {}^2 (x > 0) {}^3 y = 1; 
+\]
+Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$,
+in this example, $y$ doesn't rely on $z$. 
+However, according to value dependency defined in Definition~2 \cite{cousot2019abstract} we can derive 
+\[
+	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
+\]
+%
+\begin{proof}
+By semantics definition, we have:
+%
 \[
 \begin{array}{ll}
-& \sem{
-\ewhile {}^0 (x > 0) {}^1 x = x - 1;
-} \triangleq \\
-& \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\}
+& \sem{ \ewhile {}^2 (x > 0) {}^3 y = 1; } \triangleq \\
+& \left\{ \left< \pi_1^2, ^2\right> \mid \pi_1^2 \in \mathbb{T^{+}} \right\}
 \\
-\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \right> 
-\mid \pi_i^0 \in \mathbb{T^{+}} \land 
-\sem{(x > 0)}\env(\pi_1^0) = \etrue  \land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v \right\}
+\cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> 
+\mid \pi_i^2 \in \mathbb{T^{+}} \land 
+\sem{(x > 0)}\env(\pi_1^2) = \etrue  \land
+\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = 1 \right\}
 \\
-\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_2} {}^0 \right> 
+\cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> 
 \left \vert 
 \begin{array}{l}
-\pi_i^0 \in \mathbb{T^{+}} \\
+\pi_i^2 \in \mathbb{T^{+}} \\
 \land 
-\sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
+\sem{(x > 0)}\env(\pi_1^2) = \etrue  \\
 \land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
+\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = 1 \\
 \land 
-\sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0) = \etrue \\
+\sem{(x > 0)}\env(\pi_1{}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2) = \etrue \\
 \land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2
+\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3) = 1
 \end{array}
 \right.
 \right\}
 \\
 \cup & \cdots 
 \\
-\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0 \xrightarrow{\neg(x > 0)} {}^l \right>  
+\cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3\xrightarrow{(x = x - 1) = v_1} {}^2 \cdots  {}^2 \xrightarrow{\neg(x > 0)} {}^l \right>  
 \left \vert 
 \begin{array}{l}
-\pi_1^0 \in \mathbb{T^{+}}\\
+\pi_1^2 \in \mathbb{T^{+}}\\
 \land 
-\sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
+\sem{(x > 0)}\env(\pi_1^2) = \etrue  \\
 \land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
+\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = v_1 \\
 \land \cdots \\
 % \land
-% \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2\\
+% \sem{(x - 1)}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(x = x - 1) = v} {}^2 \xrightarrow{(x > 0)} {}^3) = v_2\\
 \land 
-\sem{(x > 0)}\env(\pi_i{}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0) = \efalse \\
-\land l = \kw{aft}[\ewhile {}^0 (x > 0) {}^1 x = x - 1;]
+\sem{(x > 0)}\env(\pi_i{}^2 \xrightarrow{(x > 0)} {}^3\xrightarrow{(y = 1) = 1} {}^2 \cdots {}^2) = \efalse \\
+\land l = \kw{aft}[\ewhile {}^2 (x > 0) {}^3 y = 1;]
 \end{array}
 \right.
 \right\}
 \end{array}
 \]
+%
+%
+Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$,
+pick $\pi_0 = {}^0 \xrightarrow{z = 1} {}^1 \xrightarrow{x = 2} {}^2$, 
+$\pi_0' = {}^0 \xrightarrow{z = 2} {}^1 \xrightarrow{x = 2} {}^2$:
+\[
+	\left< \pi_0^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> \in \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;}
+\]
+%
+\[
+	\left< \pi_0'^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1}{}^2\right> \in \sem{\ewhile {}^2 (x > 0) {}^3 y = 1; }
+\]
+%
+By Definition of $\mathsf{seqval}$, we have:
+\[
+	\mathsf{seqval}\sem{y}{}^2(\pi_0^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 ) = 1 \cdot
+\]
+%
+\[
+	\mathsf{seqval}\sem{y}{}^2(\pi_0'^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1}{}^2 ) = 1 \cdot 1 \cdot
+\]
+%
+If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2) ) includes timing channel, i.e., 
+%
+\[
+	\mathsf{diff}(1 \cdot, 1 \cdot 1 \cdot) = \etrue
+\]
+%
+By Definition~2 (in \cite{cousot2019abstract}), 
+\[
+	\mathcal{S}^{+\infty}\sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} 
+\in \mathcal{D}^2(z, y)
+\].
+%
+By Definition~(4) (in \cite{cousot2019abstract}):
+\[
+	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
+\]
+%
+However, intuitively, the execution of $y$ doesn't relys on value of $z$ at all. This is a false positive example (or over approximation) of dependency.
+%
+\end{proof}
 \end{example}
+%
 \input{ssa}
 %
 %

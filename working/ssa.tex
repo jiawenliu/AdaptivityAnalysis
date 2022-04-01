@@ -427,18 +427,18 @@ Event Signature : $\pi_{\sig} : \eventset \to \mathcal{VAL}$
 %
 Equivalence of 2 events : $\event_1 \eventeq \event_2$
 \[
-\event_1 \sigeq \event_2 \triangleq
+\event_1 \eventeq \event_2 \triangleq
 \left\{
 \begin{array}{ll}
 \etrue & \event_1 = (x, l, n, v) \land \event_2 = (x, l, n, v) \\
-\etrue & \event_1 = (x, l, n, \qval_1, v) \land \event_2 = (x, l, n, \qval', v)  
+\etrue & \event_1 = (x, l, n, \qval_1, v) \land \event_2 = (x, l, n, \qval_2, v)  
 \land \qval_1 =_{q} \qval_2\\
 \etrue & \event_1 = (b, l, n, v) \land \event_2 = (b, l, n, v) \\
 \efalse & o.w.
 \end{array}
 \right.
 \]
-
+%
 Signature Equivalence of 2 events : $\event_1 \sigeq \event_2$
 \[
 \event_1 \sigeq \event_2 \triangleq
@@ -623,12 +623,12 @@ $$
       \qvar_{\ssa{c_1}} \cup \qvar_{\ssa{c_2}}  
       & \ssa{c} = \ssa{c_1};\ssa{c_2}
       \\
-      \qvar_{\ssa{c_1}} \cup \qvar_{\ssa{c_2}} \cup \{\ssa{\bar{x}, \bar{y}, \bar{z}}\} 
+      \qvar_{\ssa{c_1}} \cup \qvar_{\ssa{c_2}} 
       & \ssa{c} =\eif([\sbexpr]^{l} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
       [\bar{y}, \bar{y_2}, \bar{y_3}], 
       [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
       \\
-      \qvar_{\ssa{c}'} \cup \{\ssa{\bar{x}}\}
+      \qvar_{\ssa{c}'}
       & \ssa{c}   = \ewhile ([\sbexpr]^{l}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
@@ -637,11 +637,7 @@ $$
 %
 %
 %
-\subsection{ Trace-based Adaptivity}
-%
-%
-% 
-%
+\subsection{Events Dependency}
 %
 %
 \begin{defn}
@@ -657,19 +653,19 @@ $\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1)$
 %
 \[
 \exists \vtrace_0,
-\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2, \event_2'.
   \left(
-  \begin{array}{l}   
-\config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+  \begin{array}{ll}   
+ & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
 \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
   \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2 } 
   % 
  \\ 
- \bigwedge
-  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+ \bigwedge &
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
   \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2' } 
 \\
-\bigwedge
+\bigwedge &
 \event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
 \end{array}
 \right)
@@ -689,20 +685,19 @@ $\eventdep^{test}(\event_1, \event_2, c, D)$, is defined as follows:
 %
 \[
 \exists \vtrace_0,
-\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1.
   \left(
-  \begin{array}{l}   
-\config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
-\config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2 } 
-  % 
- \\ 
- \bigwedge
-  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
-\\
-\bigwedge
-\event_2 \signeq \event_2'
+  \begin{array}{ll}   
+  & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+    \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+    \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2} 
+  \\ 
+  \bigwedge &
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+  \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
+  \\
+  \bigwedge &
+  \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
 \end{array}
 \right)
  \]
@@ -712,11 +707,10 @@ $\eventdep^{test}(\event_1, \event_2, c, D)$, is defined as follows:
 %
 \begin{defn}[Event May Dependency].
 \label{def:event_dep}
-\\
-One assignment event $\event_2$ may depend on another assignment event $\event_1$
-in a program $\ssa{c}$, with a hidden database $D$, denoted as 
-%
-$\eventdep(\event_1, \event_2, c, D)$, is defined as follows: 
+\\ 
+Given two events $\event_1, \event_2 \in \eventset^{\asn}$,
+$\event_2$ may depend on $\event_1$ in a program $\ssa{c}$ with a hidden database $D$, denoted as $\eventdep(\event_1, \event_2, c, D)$,
+if and only if
 %
 \[
 \eventdep^{val}(\event_1, \event_2, c, D) 
@@ -834,6 +828,7 @@ Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$ and a \
 , where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \big)$ is a subsequence of $k$'s vertex sequence.
 \end{defn}
 %
+\subsection{Trace-based Adaptivity}
 Given a program $c$ with a database $D$, we generate its program-based graph 
 $\traceG(\ssa{c}, D) = (\vertxs, \edges, \weights, \qflag)$.
 %
