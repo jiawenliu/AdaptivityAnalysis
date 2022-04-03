@@ -1,0 +1,479 @@
+\begin{thm}[$\vardep$ implies $\flowsto$]
+Given a program $\ssa{c}$, 
+\[
+  \forall \ssa{x}_1^{l_1}, \ssa{x}_2^{l_2} \in \lvar_{\ssa{c}}.
+  \vardep(\ssa{x}_1^{l_1}, \ssa{x}_2^{l_2}, \ssa{c})
+  \implies 
+  \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}}. ~ n \geq 0 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_n, \ssa{x}_2^{l_2}) \Big)
+\]
+\end{thm}
+\begin{proof}
+Unfolding $\vardep(\ssa{x}_1^{l_1}, \ssa{x}_2^{l_2}, \ssa{c})$ by Definition~\ref{def:var_dep},
+we get:
+\[
+\exists \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom. ~
+\projl{\event_1} = (\ssa{x}_1, l_1)
+\land
+\projl{\event_2} = (\ssa{x}_2, l_2)
+\land 
+\eventdep(\event_1, \event_2, c, D)
+\]
+%
+Unfolding $\eventdep(\event_1, \event_2, c, D)$ by Definition~\ref{def:event_dep}, we have:
+\[
+\eventdep^{val}(\event_1, \event_2, c, D) ~ (a) 
+\lor
+\Big(
+\exists \event_b \in \eventset^{\test}. ~ \eventdep^{val}(\event_1, \event_b, c, D) 
+\land \eventdep^{test}(\event_b, \event_2, c, D) ~ (b)
+\Big)
+\]
+Prove by cases $(a)$ and $(b)$:
+\caseL{$(a)$}
+Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:event_valdep}, we have:
+\[
+\begin{array}{ll}
+\begin{array}{l}
+\forall \vtrace_0, \vcounter_0
+\\
+\exists \vcounter_1, \vcounter_2, \vcounter_3,
+\vcounter_1', \vcounter_2', \vcounter_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
+\\
+  \left(
+  \begin{array}{l}   
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1, \vcounter_1}  \rightarrow^{assn}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1, \vcounter_1'} 
+  \qquad \rightarrow^{*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} 
+  \\
+  or
+  \eif([\sbexpr]^l_2, \cdots) 
+  or \ewhile [\sbexpr]^l_2 \cdots; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2, \vcounter_2} 
+  \\
+  \qquad \rightarrow^{assn/query/test} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2, \vcounter_3} 
+  % 
+ \\ 
+ \bigwedge
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1', \vcounter_1} 
+  \qquad \rightarrow^{*} 
+  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2', \vcounter_2'} 
+  \\
+  \qquad \rightarrow^{assn/query/test} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2', \vcounter_3'} 
+\\
+\bigwedge
+\event_2 \neq_{v} \event_2'
+\end{array}
+\right)
+\end{array} 
+&
+\end{array}
+ \]
+ %
+ By inversion lemma, we know $\exists \expr_1 or \qexpr_1$, $\exists \expr_2 or \qexpr_2$
+ \[
+\begin{array}{ll}
+\begin{array}{l}
+\forall \vtrace_0, \vcounter_0
+\\
+\exists \vcounter_1, \vcounter_2, \vcounter_3,
+\vcounter_1', \vcounter_2', \vcounter_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
+\\
+  \left(
+  \begin{array}{l}   
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \qquad \rightarrow^{*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2} 
+  % 
+ \\ 
+ \bigwedge
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \qquad \rightarrow^{*} 
+  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
+  \\
+  \qquad \rightarrow^{assn/query/test} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2'} 
+\\
+\bigwedge
+\event_2 \neq_{v} \event_2'
+\end{array}
+\right)
+\end{array} 
+&
+\end{array}
+ \]
+ By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:
+ \[\Big( \exists z_1, \cdots, z_m \in \lvar_{\ssa{c}}. ~ m \geq 0 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_m, \ssa{x}_2^{l_2}) \Big)
+  \]
+ \caseL{$m = 0$}
+\[
+  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event_2} 
+\]
+and
+\[
+   \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_2'} 
+\]
+By operational semantics rule \rname{ssa-assn} and \rname{ssa-query}, we have 
+\[
+  x_1 \in VAR(\expr_2) \lor x_1 \in VAR(\qexpr_2)
+\]
+By $\flowsto$ definition, we have:
+\[
+\flowsto(x_1, x_2)
+\]
+%
+ \caseL{$m = 1$}
+ let $\vtrace_2 = \cdot \event'$, there are 2 cases:
+ \subcaseL{$\event' \in \eventset^{\test}$}
+\[
+\begin{array}{l}
+  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event_2} 
+\end{array}
+\]
+and
+\[
+\begin{array}{l}
+\config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_2'}
+\end{array} 
+\]
+By operational semantics rule \rname{ssa-assn} and \rname{ssa-query}, we have 
+\[
+  x_1 \in VAR(\expr_2) \lor x_1 \in VAR(\qexpr_2)
+\]
+By $\flowsto$ definition, we have:
+\[
+\flowsto(x_1, x_2)
+\]
+\subcaseL{$\event' \in \eventset^{\asn}$}
+\[
+  \flowsto(x_1, x_2) \lor \flowsto(x_1, z) \land \flowsto(z, x_2)
+\]
+this case is proved.
+
+\caseL{$m = n + 1, n \geq 0$}
+By induction hypothesis on $n$, we have $\exists y_1, \cdots, y_n$ s.t.:
+\[
+\begin{array}{ll}
+      & \flowsto(x_1, x_2) \\
+  \lor  & \flowsto(x_1, y_1) \land \flowsto(y_1, x_2)\\
+  \lor  & \flowsto(x_1, y_1) \land \flowsto(y_1, z) \land \flowsto(z, x_2) \\
+  \lor  & \flowsto(x_1, z) \land \flowsto(z, y_1) \land \flowsto(y_1, x_2) \\
+  \lor  & \cdots \\
+  \lor  & \flowsto(x_1, y_1) \land \cdots \land \flowsto(y_n, z) \land \flowsto(z, x_2) \\
+\end{array}
+\]
+This case is proved.
+
+\caseL{$(b)$}
+Unfolding $\eventdep^{val}(\event_1, \event_b, c, D)$ and $\eventdep^{test}(\event_b, \event_2, c, D)$, we have:
+\[
+  \ldots
+\]
+induction on length of $m = |\vtrace_2^v| + |\vtrace_2^b|$:
+it is sufficient to show:
+ \[\Big( \exists z_1, \cdots, z_m \in \lvar_{\ssa{c}}. ~ m \geq 0 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_m, \ssa{x}_2^{l_2}) \Big)
+  \]
+ \caseL{$m = 0$}
+\[
+\begin{array}{l}
+  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{\eif([b]^{l_2}, c_t, c_f) or \ewhile([b]^{l_2}, c');\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{test} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_b} 
+ \end{array}
+\]
+and
+\[
+   \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{\eif([b]^{l_2}, c_t, c_f) or \ewhile([b]^{l_2}, c');\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{test} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_b'} 
+\]
+By operational semantics rule \rname{ssa-if} and \rname{ssa-while}, we have 
+\[
+  x_1 \in VAR(b)
+\]
+By $\eventdep^{test}(\event_b, \event_2, c, D)$, we have:
+\[
+\begin{array}{l}
+  \config{\eif([b]^{l_b}, c_t, c_f) or \ewhile([b]^{l_b}, c'); \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{\test}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_b} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{\asn} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_b \cdot \event_2} 
+ \end{array}
+\]
+and
+\[
+\begin{array}{l}
+  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_b'} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{\asn} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_b'} 
+ \end{array}\]
+%
+By $\flowsto$ definition, we have:
+\[
+\flowsto(x_1, x_2)
+\]
+%
+ \caseL{$m = 1$}
+ let $\vtrace_2 = \cdot \event'$, there are 2 cases:
+ \subcaseL{$\event' \in \eventset^{\test}$}
+\[
+  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event_2} 
+\]
+and
+\[
+   \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_2'} 
+\]
+By operational semantics rule \rname{ssa-assn} and \rname{ssa-query}, we have 
+\[
+  x_1 \in VAR(\expr_2) \lor x_1 \in VAR(\qexpr_2)
+\]
+By $\flowsto$ definition, we have:
+\[
+\flowsto(x_1, x_2)
+\]
+\subcaseL{$\event' \in \eventset^{\asn}$}
+\[
+  \flowsto(x_1, x_2) \lor \flowsto(x_1, z) \land \flowsto(z, x_2)
+\]
+this case is proved.
+
+\caseL{$m = n + 1, n \geq 0$}
+By induction hypothesis on $n$, we have $\exists y_1, \cdots, y_n$ s.t.:
+\[
+\begin{array}{ll}
+      & \flowsto(x_1, x_2) \\
+  \lor  & \flowsto(x_1, y_1) \land \flowsto(y_1, x_2)\\
+  \lor  & \flowsto(x_1, y_1) \land \flowsto(y_1, z) \land \flowsto(z, x_2) \\
+  \lor  & \flowsto(x_1, z) \land \flowsto(z, y_1) \land \flowsto(y_1, x_2) \\
+  \lor  & \cdots \\
+  \lor  & \flowsto(x_1, y_1) \land \cdots \land \flowsto(y_n, z) \land \flowsto(z, x_2) \\
+\end{array}
+\]
+This case is proved.
+\end{proof}
+
+\subsection{\todo{Soundness of the \THESYSTEM}}
+\jl{
+  \begin{thm}[Soundness of the \THESYSTEM].
+  Given a program $\ssa{c}$, we have:
+  %
+  \[
+  \progA(\ssa{c}) \geq A(\ssa{c}).
+  \]
+  \end{thm}
+}
+\begin{proof}
+Given a program $\ssa{c}$, 
+we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$
+by Definition~\ref{def:prog-based_graph}
+According to the Definition \ref{def:prog_adapt}, we have:
+%
+\[
+  \progA(\ssa{c}) 
+  := \max\left\{ \qlen(k)\ \mid \  k\in \walks(\progG(\ssa{c}))\right \}.
+\]
+%
+According to the Definition \ref{def:trace-based_adapt}, we have the trace-based adaptivity as follows:
+$$
+A(c) = \max \big 
+\{ \qlen(k) \mid D \in \dbdom , k \in \walks(\traceG(c, D) \big \} 
+$$
+%
+Then, we need to show:
+\[
+\max \big 
+\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
+\leq
+\max\left\{ \qlen(k) \ \mid \  k\in \walks(\progG(\ssa{c}))\right \}
+\]
+%
+It is sufficient to show that:
+\[
+  \forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
+  \exists k \in \walks(\progG(\ssa{c})) \land 
+  \len(p) \leq \qlen(k)
+\]
+%
+Taking an arbitrary starting memory $m$ and an arbitrary underlying database $D$,
+we construct a trace-based graph $\traceG(\ssa{c}, \text{D}, \ssa{m}) = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
+%
+\\
+%
+Let $\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$ be the intermediate graph by Definition~\ref{def:midgraph}.
+\\
+By Lemma~\ref{lem:bie_trace_to_mid}, we know:
+\[
+  \forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
+  \exists p' \in \paths(\midG(\ssa{c},\ssa{m},\text{D})) \land 
+  \len(p) = \len_q(p')
+\]
+%
+Then it is sufficient to show that:
+%
+\[
+  \forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
+  \exists k \in \walks(\progG(\ssa{c})) \land 
+  \qlen(p) \leq \qlen(k)
+\]
+%
+We prove a stronger statement instead:
+\[
+  \forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
+  \exists k \in \walks(\progG(\ssa{c})) \land 
+  \qlen(p) = \qlen(k) 
+\]
+%
+%
+By Lemma~\ref{lem:sujv_mid_to_prog}, let $g$ be the surjective function $g: \progV \to \midV$ s.t.:
+%
+$$
+\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) 
+\land |\kw{image}(f(\av))| \leq W(f(\av)).
+$$
+%
+%
+% \item(1) $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+% %
+% \item(2) $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+% %
+% \item(3) $\forall \av \in p_{\av_1 \to \av_2}. ~ 
+% \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}$
+%
+Let $\ssa{m}$ and $D$ be an arbitrary memory and database $D$,
+taking an arbitrary path $p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m})$ with:
+%
+\item Edge sequence: $(e, \ldots, e_{n-1})$
+%
+\item Vertices sequence: $(\av_1, \ldots, \av_n)$.
+\\
+By Lemma~\ref{lem:sujpathwalk_mid_to_prog}, let $h: \paths(\midG(\ssa{c}, \text{D}, \ssa{m})) \to \walks(\progG(\ssa{c}))$ be the surjective function satisfies:
+%
+\[
+  \forall p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
+  \text{ with }
+  \left\{
+  \begin{array}{ll}
+  \mbox{edge sequence:} & (e, \ldots, e_{n-1})
+  \\ 
+  \mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
+  \end{array}
+  \right.
+\]
+%
+\[
+  \exists k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))
+  \text{ with }
+  \left\{
+  \begin{array}{ll}
+  \mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
+  \\ 
+  \mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
+  \end{array}
+  \right.
+\]
+%
+We have the walk:
+$k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))$ with:
+%
+\item Edges sequence: $(g(e), \ldots, g(e_{n-1}) $
+%
+\item Vertices sequence: $(f(\av_1), \ldots, f(\av_{n}))$.
+\\
+It is sufficient to show 
+%
+\[
+  \qlen(p_{\av_1 \to \av_n}) = \qlen(k_{f(\av_1) \to f(\av_n)})
+\]
+%
+Unfold the definition of $\qlen$, it is suffice to show:
+\[
+\len \big( \av \mid \av \in (\av_1, \ldots, \av_n) \land \midF(\av) = 2 \big) 
+= \len \big(f(\av) \mid f(\av) \in (f(\av_1), \ldots, f(\av_{n})) \land \progF(f(\av)\big) = 2) 
+~ (a)
+\]
+%
+By Lemma~\ref{lem:sujv_mid_to_prog}, we know:
+%
+\[
+  \forall \av \in \midV. ~ \midF(\av) = \progF(f(\av)) ~(b)
+\]
+By rewriting $(b)$ in $(a)$, we have this case proved.
+
+\end{proof}
