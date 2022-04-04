@@ -1,0 +1,354 @@
+%
+\section{Dependency and Adpativity}
+\begin{defn}[Labeled Variables ($\lvar_{c} \subseteq \mathcal{VAR} \times \mathbb{N}$ or 
+$\lvar : c \to \mathcal{P}(\mathcal{VAR} \times \mathbb{N})$]
+$$
+  \lvar_{c} \triangleq
+  \left\{
+  \begin{array}{ll}
+      \{\ssa{x}^l\}                   
+      & \ssa{c} = [\ssa{\assign x e}]^{l} 
+      \\
+      \{\ssa{x}^l\}                   
+      & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{l} 
+      \\
+      \lvar_{\ssa{c_1}} \cup \lvar{(\ssa{c_2})}  
+      & \ssa{c} = \ssa{c_1};\ssa{c_2}
+      \\
+      \lvar_{\ssa{c}} \cup \lvar_{\ssa{c_2}} \cup \ssa{\{\bar{x}, \bar{y}, \bar{z}\}} 
+      & \ssa{c} =\eif([\sbexpr]^{l} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
+      [\bar{y}, \bar{y_2}, \bar{y_3}], 
+      [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
+      \\
+      \lvar_{\ssa{c}'} \cup \{\ssa{\bar{x}}\}
+      & \ssa{c}   = \ewhile ([\sbexpr]^{l}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
+\end{array}
+\right.
+$$
+\end{defn}
+%
+\begin{defn}[Query Variables ($\qvar_{c} \subseteq \mathcal{VAR} \times \mathbb{N}$)].
+\\
+Given a program $c$, its query variables $\qvar$ is a vector containing all variables newly assigned by a query in the programm, $\qvar \subset \mathcal{VAR}$.
+It is defined as follows:
+$$
+  \qvar_{\ssa{c}} \triangleq
+  \left\{
+  \begin{array}{ll}
+      \{\}                  
+      & \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
+      \\
+      \{\ssa{x}^l\}                  
+      & \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
+      \\
+      \qvar_{\ssa{c_1}} \cup \qvar_{\ssa{c_2}}  
+      & \ssa{c} = \ssa{c_1};\ssa{c_2}
+      \\
+      \qvar_{\ssa{c_1}} \cup \qvar_{\ssa{c_2}} 
+      & \ssa{c} =\eif([\sbexpr]^{l} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
+      [\bar{y}, \bar{y_2}, \bar{y_3}], 
+      [\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
+      \\
+      \qvar_{\ssa{c}'}
+      & \ssa{c}   = \ewhile ([\sbexpr]^{l}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
+\end{array}
+\right.
+$$
+\end{defn}
+%
+%
+%
+\subsection{Events Dependency}
+%
+%
+\begin{defn}
+[Value Dependency of Events]
+\label{def:event_valdep}.
+\\
+One event $\event_2$ may have a value dependency on an assignment event $\event_1$ or 
+in a program $\ssa{c}$
+with hidden database $D$, denoted as 
+%
+$\eventdep^{val}(\event_1, \event_2, c, D)$, where $\event_1 = (\ssa{x}_1, l_1, n_1, v_1) $ or 
+$\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1)$
+%
+\[
+\exists \vtrace_0,
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2, \event_2'.
+  \left(
+  \begin{array}{ll}   
+ & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+\config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2 } 
+  % 
+ \\ 
+ \bigwedge &
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2' } 
+\\
+\bigwedge &
+\event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
+\end{array}
+\right)
+ \]
+%
+\end{defn}
+%
+\begin{defn}
+[Testing Dependency of Events]
+\label{def:event_testdep}.
+\\
+One event $\event_2$ may have a testing dependency on a testing event $\event_1 = (\ssa{b}_1, l_1, n_1, v_1)$
+in a program $\ssa{c}$, with a hidden database $D$, 
+denoted as 
+%
+$\eventdep^{\test}(\event_1, \event_2, c, D)$, is defined as follows: 
+%
+\[
+\exists \event_1' \in \eventset^{\test}, \vtrace_0,
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1.
+  \left(
+  \begin{array}{ll}   
+  & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+    \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+    \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2} 
+  \\ 
+  \bigwedge &
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+  \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
+  \\
+  \bigwedge &
+  \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
+\end{array}
+\right)
+ \]
+%
+\end{defn}
+%
+%
+\begin{defn}[Event May Dependency].
+\label{def:event_dep}
+\\ 
+Given two events $\event_1, \event_2 \in \eventset^{\asn}$,
+$\event_2$ may depend on $\event_1$ in a program $\ssa{c}$ with a hidden database $D$, denoted as $\eventdep(\event_1, \event_2, c, D)$,
+if and only if
+%
+\[
+\eventdep^{val}(\event_1, \event_2, c, D) 
+\lor
+\Big(
+\exists \event_b \in \eventset^{\test}. ~ \eventdep^{val}(\event_1, \event_b, c, D) 
+\land \eventdep^{\test}(\event_b, \event_2, c, D) 
+\Big)
+\] 
+%
+%
+\end{defn}
+%
+\begin{defn}[Variable May Dependency].
+\label{def:var_dep}
+\\
+Given a program $\ssa{c}$, 
+one variable $\ssa{x}_2^{l_2} \in \lvar_{\ssa{c}}$ may depend on another variable 
+$\ssa{x}_1^{l_1} \in \lvar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
+%
+$\vardep(\ssa{x}_1^{l_1}, \ssa{x}_2^{l_2}, \ssa{c})$ is defined below.
+%
+\[
+\exists \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom. ~
+\projl{\event_1} = (\ssa{x}_1, l_1)
+\land
+\projl{\event_2} = (\ssa{x}_2, l_2)
+\land 
+\eventdep(\event_1, \event_2, c, D)
+\] 
+%
+%
+\end{defn}
+%
+%
+\begin{defn}[Execution Based Dependency Graph].
+\\
+Given a program $\ssa{c}$ with its assigned variables $\lvar_c$ 
+the dependency graph $\traceG(\ssa{c}, D) = (\vertxs, \edges, \weights, \qflag)$ is defined as:
+%
+\[
+\begin{array}{rlcl}
+  \text{Vertices} &
+  \vertxs & := & \left\{ 
+  x^l \in \mathcal{VAR} \times \mathbb{N}
+  ~ \middle\vert ~
+  x^l \in \lvar({\ssa{c}})
+  \right\}
+  \\
+  \text{Directed Edges} &
+  \edges & := & 
+  \left\{ 
+  (x^l, x'^{l'}) \in (\mathcal{VAR} \times \mathbb{N}) \times (\mathcal{VAR} \times \mathbb{N})
+  ~ \middle\vert ~
+  \vardep(x^l, x'^{l'}, c) \land
+  x^l, x'^{l'} \in \lvar({\ssa{c}})
+  \right\}
+  \\
+  \text{Weights} &
+  \weights & := & 
+  \left\{ 
+  (x^l, n) \in \mathcal{VAR} \times \mathbb{N}
+  ~ \middle\vert ~ 
+  x^l \in \lvar({\ssa{c}}) 
+  \forall \vtrace, s.t.,
+  \config{\ssa{c}, } \to^{*} \config{\eskip, \vtrace},
+  n = \max_{\vtrace}\vcounter(\vtrace)l; 
+  \right\}
+  \\
+  \text{Query Flags} &
+  \qflag & := & 
+  \left\{(x^l, n)  \in \vertxs \times \{0, 1\} 
+  ~ \middle\vert ~
+  \left\{
+  \begin{array}{ll}
+  n = 1 & x^l \in \qvar({\ssa{c}}) \\ 
+  n = 0 & o.w.
+  \end{array}
+  \right\};
+  x^l \in \lvar({\ssa{c}})
+  \right\}
+\end{array}
+\]
+\end{defn}
+%
+%
+\begin{defn}[Finite Walk ($k$)].
+\label{def:finitewalk}
+\\
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
+for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
+\begin{itemize}
+    \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
+    \item every vertex $v \in \vertxs$ appears in this vertices sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
+\end{itemize}
+$(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
+\\
+%
+Length of this finite walk $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = n$.
+\end{defn}
+%
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
+we use $\walks(G)$ to denote a set containing all finite walks $k$ in $G$;
+and $k_{v_1 \to v_2} \in \walks(G)$where $v_1, v_2 \in \vertxs$ denotes the walk from vertex $v_1$ to $v_2$ .
+%
+%
+\begin{defn}[Length of Finite Walk w.r.t. Query ($\qlen$)].
+\label{def:qlen}
+\\
+Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
+\[
+  \qlen(k) = \len\big(
+  v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \big)
+\]
+, where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \flag(v) = 1 \big)$ is a subsequence of $k$'s vertex sequence.
+\end{defn}
+%
+\subsection{Trace-based Adaptivity}
+Given a program $c$ with a database $D$, we generate its program-based graph 
+$\traceG(\ssa{c}, D) = (\vertxs, \edges, \weights, \qflag)$.
+%
+Then the adaptivity bound based on program analysis for $\ssa{c}$ is the number of query vertices on a finite walk in $\progG(\ssa{c})$. This finite walk satisfies:
+%
+\begin{itemize}
+\item the number of query vertices on this walk is maximum
+\item the visiting times of each vertex $v$ on this walk is bound by its weight $\weights(v)$.
+\end{itemize}
+%
+It is formally defined in \ref{def:trace_adapt}.
+%
+\begin{defn}
+[Adaptivity of A Program].
+\label{def:trace_adapt}
+\\
+Given a program $\ssa{c}$ in SSA language, 
+its adaptivity is defined for all possible starting SSA memory $\ssa{m}$ and database $D$ as follows:
+%
+$$
+A(c) = \max \big 
+\{ \qlen(k) \mid D \in \dbdom , k \in \walks(\traceG(c, D) \big \} 
+$$
+\end{defn}
+%
+%
+%
+%
+\todo{
+The following lemma describes a property of the trace-based dependency graph.
+For any program $c$ with a database $D$ and a starting memory $m$,
+the directed edges in its trace-based dependency graph can only be constructed from nodes representing 
+smaller annotated queries to annotated queries of greater order.
+There doesn't exist backward edges with direction from greater annotated queries to smaller ones.
+}
+\begin{lem}
+\label{lem:edgeforwarding}
+[Edges are Forwarding Only].
+\\
+%
+Given a program $c$, a database $D$, a starting memory $m$ and the corresponding trace-based dependency graph $G(c,D) = (\vertxs, \edges)$, 
+for any directed edge $(\event', \event) \in \edges$, 
+this is not the case that:
+%
+$$\event' \eventgeq \event$$
+%
+\end{lem}
+%
+\begin{proof}
+Proof in File: {\tt ``edge\_forward.tex''}.
+% \input{edge_forward}
+\end{proof}
+%
+%
+%
+\begin{lem}
+\label{lem:DAG}
+[Trace-based Dependency Graph is Directed Acyclic].
+\\
+%
+{
+Every trace-based dependency graph is a directed acyclic graph.
+}
+\end{lem}
+%
+{
+\begin{proof}
+Proof is obvious based on the Lemma \ref{lem:edgeforwarding}.
+\end{proof}
+}
+%
+\begin{lem}
+[Adaptivity is Bounded].
+\\
+{
+Given the program $c$ with a certain database $D$ and starting memory $m$, the $A(c)$ w.r.t. the $D$ and $m$ is bounded, i.e.,:
+%
+\[
+\config{m, c, [], []} 
+\rightarrow^{*} 
+\config{m', \eskip, t', w'} 
+\implies
+A_{D, m}(c) \leq |t'|
+\]
+}
+\end{lem}
+%
+\begin{proof}
+{
+Proof is obvious based on the Lemma \ref{lem:DAG}.
+}
+\end{proof}
+%
+%
+\clearpage
+%
+%
+% \subsection{SSA Transformation and Soundness of Transformation}
+% in File {\tt ``ssa\_transform\_sound.tex''}
+% \input{ssa_transform_sound}
+%
+\clearpage

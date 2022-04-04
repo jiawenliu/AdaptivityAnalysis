@@ -1,302 +1,170 @@
-\begin{example}
+\begin{example}[Execution Trace of a Program with While Command].
+\\
 \[
-\begin{array}{ll}
-& \sem{
-\ewhile {}^0 (x > 0) {}^1 x = x - 1;
-} \triangleq \\
-& \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\}
+\ewhile [(x > 0)]{}^0 \edo [x = x - 1]{}^1;
+\]
+Let $\trace_0 \in \mathbb{T}$ be the initial trace, 
+without loss of generalization, let $\env(\trace_0) x = 1$.
 \\
-\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \right> 
-\mid \pi_i^0 \in \mathbb{T^{+}} \land 
-\sem{(x > 0)}\env(\pi_1^0) = \etrue  \land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v \right\}
-\\
-\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_2} {}^0 \right> 
-\left \vert 
-\begin{array}{l}
-\pi_i^0 \in \mathbb{T^{+}} \\
-\land 
-\sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
-\land 
-\sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0) = \etrue \\
-\land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2
-\end{array}
-\right.
-\right\}
-\\
-\cup & \cdots 
-\\
-\cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0 \xrightarrow{\neg(x > 0)} {}^l \right>  
-\left \vert 
-\begin{array}{l}
-\pi_1^0 \in \mathbb{T^{+}}\\
-\land 
-\sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
-\land \cdots \\
-% \land
-% \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2\\
-\land 
-\sem{(x > 0)}\env(\pi_i{}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0) = \efalse \\
-\land l = \kw{aft}[\ewhile {}^0 (x > 0) {}^1 x = x - 1;]
-\end{array}
-\right.
-\right\}
-\end{array}
+By operational semantics rules, we have following evaluation:
+  \begin{mathpar}
+\inferrule
+  {
+   \vtrace_0, (x > 0) \barrow \etrue
+   \and 
+   \event = ((x > 0), 0, 1, \etrue)
+  }
+  {
+  \config{\ssa{\ewhile [(x > 0)]{}^0, 0 \edo [x = x - 1]{}^1;, \vtrace_0}}
+  \\
+  \xrightarrow{} 
+  \config{\ssa{[x = x - 1]{}^1; \ewhile [(x > 0)]{}^0, 0 \edo [x = x - 1]{}^1;, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue)}}
+  }
+  ~\textbf{while-t}
+\and
+\inferrule
+  {
+  \inferrule
+  {
+	\config{x - 1, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue)} \aarrow 0
+  }
+   {
+   \config{\ssa{[x = x - 1]{}^1;, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue)}}
+  \xrightarrow{} 
+  \config{\ssa{\eskip;, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue) \cdot (x, 1, 1, 0)}}
+   }~\textbf{asn}
+  }
+  {
+  \config{\ssa{[x = x - 1]{}^1; \ewhile [(x > 0)]{}^0, 0 \edo [x = x - 1]{}^1;, \vtrace_0 \cdot \event}}
+  \\
+  \xrightarrow{} 
+  \config{\ssa{\eskip; \ewhile [(x > 0)]{}^0, 0 \edo [x = x - 1]{}^1;, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue) \cdot (x, 1, 1, 0)}}
+  }
+  ~\textbf{seq1}
+\and
+\inferrule
+  {
+  \inferrule
+  {
+   \vtrace_0, (x > 0) \barrow \efalse
+   \and 
+   \event = ((x > 0), 0, 2, \efalse)
+  }
+   {
+   \config{\ssa{\ewhile [(x > 0)]{}^0, 1 \edo [x = x - 1]{}^1;, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue)}}
+  \\
+  \xrightarrow{} 
+  \config{\ssa{\eskip;, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue) \cdot (x, 1, 1, 0)\cdot ((x > 0), 0, 2, \efalse)}}
+   }~\textbf{while-f}
+  }
+  {
+  \config{\ssa{\eskip; \ewhile [(x > 0)]{}^0, 0 \edo [x = x - 1]{}^1;, \vtrace_0 \cdot ((x > 0), 0, 1, \etrue) \cdot (x, 1, 1, 0)}}
+  \\
+  \xrightarrow{} 
+  \config{\ssa{\eskip;, 
+  \vtrace_0 \cdot ((x > 0), 0, 1, \etrue) \cdot (x, 1, 1, 0) \cdot ((x > 0), 0, 2, \efalse)}}
+  }
+  ~\textbf{seq2}
+\end{mathpar}
+%
+Then we have following execution, where $\trace_0 \in \mathbb{T}$ and $\env(\trace_0) x = 1$.:
+\[
+\config{\ewhile [(x > 0)]{}^0 \edo [x = x - 1]{}^1;, \trace_0}
+	\rightarrow^{*}
+\config{\ssa{\eskip;, 
+  \vtrace_0 \cdot ((x > 0), 0, 1, \etrue) \cdot (x, 1, 1, 0) \cdot ((x > 0), 0, 2, \efalse)}}
 \]
 \end{example}
 %
-\begin{example}
-\[
-\begin{array}{ll}
-& \sem{ 
-\epsilon {}^0 x = 1; \ewhile {}^1  (x > 0) {}^2 x = x - 1 ; {}^3 }  \\
-\triangleq & 
-\sem{\epsilon {}^0 x = 1;} 
-\cup
-\left\{ \left< \pi_1{}^0, {}^0\pi_2^1\pi_3^3\right> 
-\left \vert 
-\begin{array}{l}
-\left< \pi_1^0, {}^0\pi_2^1 \right> \in \sem{\epsilon {}^0 x = 1;}
-\\
-\land \left< \pi_1{}^0\pi_2^1, {}^1\pi_3^3\right>  \in 
-\sem{\ewhile {}^1 (x > 0) {}^2 x = x - 1 ;} 
-\end{array}
-\right.
-\right\}
-\\
-\triangleq & 
-\sem{\epsilon}
-\cup
-\left\{ \left< \pi_1{}^0, {}^0 \pi_2 {}^1 \right> 
-\left \vert 
-\begin{array}{l}
-\left< \pi_1{}^0, {}^0 \right> \in \sem{\epsilon}  \land \\
- 
-\left< \pi_1{}^0, {}^0 \pi_2{}^1 \right> \in \sem{ {}^0 x = 1;}
-\end{array}
-\right.
-\right\}
-\cup
-\left\{ \left< \pi_1{}^0, {}^0\pi_2^1\pi_3 {}^3\right> 
-\left \vert 
-\begin{array}{l}
-\left< \pi_1{}^0, {}^0\pi_2^1 \right> \in \sem{\epsilon {}^0 x = 1;}\land
-\\
- \left< \pi_1 {}^0\pi_2 {}^1, {}^1 \pi_3 {}^3\right>  \in 
-\sem{\ewhile {}^1  (x > 0) {}^2 x = x - 1 ;} 
-\end{array}
-\right.
-\right\}
-\\
-\triangleq 
-& \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\} \\
-& \cup
-\left\{ \left< \pi_1{}^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1\right> 
-\vert 
-\pi_1^0 \in \mathbb{T^{+}}
-\land 
-\sem{1}\env(\pi_1^0) = 1
-\right\} \\
-& \cup
-\left\{ \left< \pi_1{}^0, {}^0\xrightarrow{(x = 1) = 1} {}^1\pi_3^3\right> 
-\left \vert 
-% \begin{array}{l}
-\pi_1^0 \in \mathbb{T^{+}}
-\land
-\left< \pi_1 {}^0\xrightarrow{(x = 1) = 1} {}^1, {}^1\pi_3^3\right>  \in 
-\sem{\ewhile {}^1  (x > 0) {}^2 x = x - 1 ; {}^3} 
-% \end{array}
-\right.
-\right\}
-\\
-\triangleq
-& \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\} \\
-& \cup
-\left\{ \left< \pi_1{}^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1\right> 
-\vert 
-\pi_1^0 \in \mathbb{T^{+}}
-\land 
-\sem{1}\env(\pi_1^0) = 1
-\right\} 
-\\
-& \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 \right> 
-\left \vert
-\begin{array}{l}
-\pi_i^0 \in \mathbb{T^{+}} \\
-\land 
-\sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2) = 0
-\end{array}
-\right.
-\right\}
-\\
-& \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 
-\xrightarrow{\neg(x > 0)} {}^3 \right> 
-\left \vert
-\begin{array}{l}
-\pi_i^0 \in \mathbb{T^{+}} \\
-\land 
-\sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2) = 0 \\
-\land 
-\sem{(x > 0 )}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1) = \efalse
-\end{array}
-\right.
-\right\}
-\\
-\triangleq
-& \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\} 
- \cup
-\left\{ \left< \pi_1{}^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1\right> 
-\vert 
-\pi_1^0 \in \mathbb{T^{+}}
-\right\} 
- \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 \right> 
-\vert \pi_i^0 \in \mathbb{T^{+}}
-\right\}
-\\
-& \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 
-\xrightarrow{\neg(x > 0)} {}^3 \right> 
-\vert \pi_i^0 \in \mathbb{T^{+}}
-\right\}
-\end{array}
-\]
-\end{example}
 %
 \clearpage
-\begin{example}[Formal Example for Exclusion of Timing Channel].
-\label{ex:excltiming}
+\begin{example}[Example of Timing Channel under Trace Semantics].
+\label{ex:timingdep}
 \\
-$\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) excludes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$). There is an example showing this exclusion: 
+Using the same example from Example.~\ref{ex:excltiming}
 \[
-	\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} 
+	\ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3
 \]
 In this example, $y$'s execution times relies on value of $x$. Under the adaptivity scenario, $y$ depends on $x$ (control dependency).
-However, according to value dependency defined in Definition~2 \cite{cousot2019abstract}, we can never derive :
+%
+This example shows we can derive by Definition.~\ref{def:var_dep}:
 \[
-	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
+	\vardep(x^2, y^3, {\ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3})
 \]
 %
 \begin{proof}
-By semantics definition, we have:
+Let $\trace_0 = \cdot (x, 0, 1, 2) \in \mathbb{T}$, by semantics definition, we have:
 %
 \begin{equation}
-\label{eq:sem_timingdep}
-	\begin{array}{ll}
-& \sem{
-\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} 
-} \triangleq \\
-& \left\{ \left< \pi_1^1, ^1\right> \mid \pi_1^1 \in \mathbb{T^{+}} \right\}
-\\
-\cup & \left\{ \left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \right> 
-\mid \pi_i^1 \in \mathbb{T^{+}} \land 
-\sem{(x > 0)}\env(\pi_1^1) = \etrue  \land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v\right\}
-\\
-\cup & \left\{ 
-\begin{array}{l}
-\left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_2} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \right> 
- \\
- \left \vert
-\begin{array}{l}
-\pi_i^1 \in \mathbb{T^{+}} \\
-\land 
-\sem{(x > 0)}\env(\pi_1^1) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v_1 \\
-\land 
-\sem{(x > 0)}\env(\pi_1{}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1) = \etrue \\
-\land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1}
- {}^1 \xrightarrow{(x > 0)} {}^2) = v_2
-\end{array}
-\right.
-\end{array}
-\right\}
-\\
-\cup & \cdots 
-\\
-\cup & \left\{ 
-\begin{array}{l}
-\left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2\xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1 \xrightarrow{\neg(x > 0)} {}^l \right>  
-\\
-\left \vert 
-\begin{array}{l}
-\pi_1^1 \in \mathbb{T^{+}}\\
-\land 
-\sem{(x > 0)}\env(\pi_1^1) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v_1 \\
-\land \cdots \\
-\land 
-\sem{(x > 0)}\env(\pi_i{}^1 \xrightarrow{(x > 0)} {}^2\xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1) = \efalse \\
-\land l = \kw{aft}[\ewhile {}^1 (x > 0) \{ {}^2 x = x - 1; {}^3 y = 1 \}]
-\end{array}
-\right.
-\end{array}
-\right\}
+\label{eq:os_timingdep}
+\begin{array}{ll}
+& \config{\ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3 , \trace_0} \\
+& \rightarrow^\rname{while-t}
+\config{[x = x - 1;]{}^2  [y = 1;]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue)} \\
+& \rightarrow^\rname{seq1}
+\config{[\eskip]{}^2  [y = 1;]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot(x, 2, 1, 1)} \\
+& \rightarrow^\rname{seq2}
+\config{[\eskip]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot(x, 2, 1, 1) \cdot(y, 3, 1, 1)} \\
+&\rightarrow^\rname{seq2}
+\config{[x = x - 1;]{}^2  [y = 1;]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot (x, 2, 1, 1) \\
+& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue)} \\
+& \rightarrow^\rname{seq1}
+\config{[\eskip]{}^2  [y = 1;]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot(x, 2, 1, 1) \\
+& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue) \cdot(x, 2, 2, 0)} \\
+& \rightarrow^\rname{seq2}
+\config{[\eskip]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot (x, 2, 1, 1) \\
+& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1)} \\
+& \rightarrow^\rname{seq2}
+\config{[\eskip]{}^1;, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot(x, 2, 1, 1) \\
+& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 1, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1) \cdot ((x > 0), 1, 3, \efalse)} \\
 \end{array}
 \end{equation}
 %
-%
-%
-Let $\pi_1^1, \pi_1'^1 \in \mathbb{T^{+}}$ be arbitrary traces s.t. 
-%
-$$\forall z \in \mathbb{V}\setminus \{x\}. ~ \env(\pi_1^1)(z) = \env(\pi_1'^1) $$ 
-%
-Let $v = \env(\pi_1^1)(x) $, $v' = \env(\pi_1'^1)(x')$, picking arbitrary $\pi_2, \pi_2'$ s.t.:
+Let $\event_1 = (x, 2, 1, 1)$,  $\event_1' = (x, 2, 1, 0)$ and $\event_b = ((x > 0), 1, 2, \etrue)$, then we have another execution as follows:
 \[
-	\left< \pi_1^1, \pi_2 \right>,  \left< \pi_1'^1, \pi'_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-\]
-%
-By Definition of $\mathsf{seqval}$, we have:
-\[
-	\mathsf{seqval}\sem{y}{}^2(\pi_1^1, \pi_2 ) = \underbrace{0 \cdots 1}_{0 \leq v}
-\]
-%
-\[
-	\mathsf{seqval}\sem{y}{}^2(\pi_1^1, \pi_2' ) = \underbrace{0 \cdots 1}_{0 \leq v'}
-\]
-%
- $\forall \omega_0, \omega_1', \omega_1, u, u' \st \underbrace{0 \cdots 1}_{0 \leq v} = \omega \cdot u \cdot \omega_1 \land \underbrace{0 \cdots 1}_{0 \leq v} = \omega \cdot u; \cdot \omega_1'$ we have:
-%
-\[
-	u = u' = 1
-\]
-%
-By $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2) ), we have:
-%
-\[
-	\neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )))
-\]
-%
-Then we have:
-\[
-\begin{array}{l}
-	\forall \left< \pi_1^1, \pi_2 \right>,  \left< \pi_1'^1, \pi'_2 \right> \in \mathcal{S}^{+\infty} \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} \st
-	\Big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1^1)(z) = \env(\pi_1'^1) \st \\
-	\land \neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )))\Big)
+\begin{array}{ll}
+& \config{[\eskip]{}^2  [y = 1;]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1'} \\
+& \rightarrow^\rname{seq2}
+\config{[\eskip]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1)} \\
+&\rightarrow^\rname{seq2}
+\config{[\eskip;]{}^1, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \efalse)} \\
 \end{array}
-\] 
-\\
-%
-By Definition~2 (in \cite{cousot2019abstract}), 
-\[
-	\mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} 
-\notin \mathcal{D}^1(z, y)
 \]
 %
-By Definition~(4) (in \cite{cousot2019abstract}), we cannot derive:
+Then, we have $\event_b' = ((x > 0), 1, 2, \efalse)$ where $\event_b \sigeq \event_b'$ and $\event_b \eventneq \event_b'$.
+\\
+By Definition~\ref{def:event_valdep}, we have:
+\\
 \[
-	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
+	\eventdep^{val}(\event_1, \event_b, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
+\]
+\\
+Let $\event_2 = (y, 3, 2, 1)$ then we have another execution as follows:
+\[
+\begin{array}{ll}
+\config{[\eskip;]{}^1, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \efalse)} \\
+\rightarrow^{*} 
+\config{[\eskip;]{}^1, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot \event_b'}
+\end{array}
+\]
+%
+where $\event_2 \notsigin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot \event_b'$
+\\
+By Definition~\ref{def:event_testdep}, we have:
+\\
+\[
+	\eventdep^{\test}(\event_b, \event_2, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
+\]
+\\
+
+By Definition~\ref{event_dep}, we have: 
+\[
+	\eventdep(\event_1, \event_2, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
+\]
+%
+By Definition~\ref{event_dep}, we have:
+\[
+	\vardep(x^2, y^3, {\ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3})
 \]
 %
 %
