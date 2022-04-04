@@ -29,10 +29,7 @@ Unfolding $\eventdep(\event_1, \event_2, c, D)$ by Definition~\ref{def:event_dep
 \[
 \eventdep^{val}(\event_1, \event_2, c, D) ~ (a) 
 \lor
-\Big(
-\exists \event_b \in \eventset^{\test}. ~ \eventdep^{val}(\event_1, \event_b, c, D) 
-\land \eventdep^{test}(\event_b, \event_2, c, D) ~ (b)
-\Big)
+\eventdep^{\ctl}(\event_1, \event_2, c, D) ~ (b)
 \]
 Prove by cases $(a)$ and $(b)$:
 \caseL{$(a)$}
@@ -59,71 +56,66 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
  %
  By inversion \todo{lemma-(Assignement Event --> Query / Assignment Command)} on $\event_1$, we know $\exists \expr_1 or \qexpr_1$, $\exists \expr_2 or \qexpr_2$
  \[
-\begin{array}{ll}
-\begin{array}{l}
-\forall \vtrace_0, \vcounter_0
-\\
-\exists \vcounter_1, \vcounter_2, \vcounter_3,
-\vcounter_1', \vcounter_2', \vcounter_3', 
-\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
-\\
-  \left(
   \begin{array}{l}   
 \config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
-\config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+\config{[\assign{\ssa{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} \\
   \qquad \rightarrow^{*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2} 
   \\
   \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2} 
   % 
- \\ 
- \bigwedge
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
-  \qquad \rightarrow^{*} 
-  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
+\end{array} ~ (1)
+ \]
+ and 
+  \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; \ssa{c}_2', \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
   \\
   \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2'} 
-\\
-\bigwedge
-\event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
-\end{array}
-\right)
-\end{array} 
-&
-\end{array}
+  \config{\ssa{c}_2',  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2'} 
+\end{array} ~(2)
  \]
- By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:
- \[\Big( \exists z_1, \cdots, z_m \in \lvar_{\ssa{c}}. ~ m \geq 0 \land
-  \flowsto(x_1^{l_1}, z_1) 
-  \land \cdots \land \flowsto(z_m, \ssa{x}_2^{l_2}) \Big)
+%
+By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:
+%
+ \[
+ \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}} \st (0 \leq n \leq m )
+ \land \flowsto(x_1^{l_1}, z_1) \land \cdots \land \flowsto(z_n, \ssa{x}_2^{l_2}) \Big)
   \]
  \caseL{$m = 0$}
+ By evaluation $(1)$ and $(2)$, we have:
 \[
-  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \begin{array}{l}   
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} \\
   \qquad \rightarrow^{\eskip^*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \config{[\assign{\ssa{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
   \vtrace_0 \vtrace_1 \cdot \event_1} 
   \\
   \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event_2} 
-\]
-and
-\[
-   \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
-  \qquad \rightarrow^{\eskip^*} 
-  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_2} 
+  % 
+\end{array}
+ \]
+ and 
+  \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; \ssa{c}_2', \vtrace_0 \vtrace_1 \cdot \event_1} 
   \\
   \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_2'} 
-\]
-By operational semantics rule \rname{ssa-assn} and \rname{ssa-query}, we have 
+  \config{\ssa{c}_2',  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_2'} 
+\end{array} ~(2)
+ \]
+%
+By operational semantics rule \rname{ssa-assn} and \rname{ssa-query} and \todo{inversion Lemma} of arithmetic expression evaluation, we have 
 \[
   x_1 \in VAR(\expr_2) \lor x_1 \in VAR(\qexpr_2)
 \]
@@ -133,33 +125,61 @@ By $\flowsto$ definition, we have:
 \]
 %
  \caseL{$m = 1$}
- let $\vtrace_2 = \cdot \event'$, there are 2 cases:
+ let $\vtrace_2 = \cdot \event'$,  where there are 2 cases: 
+ \[
+ \big(\event' \in \eventset^{\test}\big) \lor \big(\event' \in \eventset^{\asn}\big)
+ \]
+ Proved by splitting 2 cases.
  \subcaseL{$\event' \in \eventset^{\test}$}
+Let $\event' = (b, l_b, n_b, v_b)$, by evaluation $(1)$ and $(2)$, and \todo{inversion Lemma (test event --> if /  While command)}, we have:
 \[
-\begin{array}{l}
-  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \begin{array}{l}   
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} \\
   \qquad \rightarrow^{\eskip^*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \config{\eif ([b]^{l_b}, c^1, c^2) / \ewhile [b]^{l_b} \edo c_b;\ssa{c}_2, 
   \vtrace_0 \vtrace_1 \cdot \event_1} 
   \\
-  \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event_2} 
-\end{array}
-\]
-and
-\[
-\begin{array}{l}
-\config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
-  \qquad \rightarrow^{\eskip^*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \qquad \rightarrow^{if / while} 
+  \config{c_3, 
+  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event'} 
   \\
   \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_2'}
-\end{array} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
+  % 
+\end{array}
+ \]
+ and 
+  \[
+  \begin{array}{l}   
+  \config{\eif ([b]^{l_b}, c^1, c^2) / \ewhile [b]^{l_b} \edo c_b;\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \\
+  \qquad \rightarrow^{if / while} 
+  \config{c_3, 
+  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \\
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{\ssa{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event''} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_2',  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \event_2'} 
+\end{array} ~(2)
+ \]
+%
+By definition of environment, we have:
+\[
+  \forall z \in \lvar_c \setminus \{x_1^{l_1}\} ,
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event'') (z) =  
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event') (z) = 
 \]
-By operational semantics rule \rname{ssa-assn} and \rname{ssa-query}, we have 
+By operational semantics rule \rname{ssa-assn} and \rname{ssa-query} and \todo{inversion Lemma} of arithmetic expression evaluation, we have 
 \[
   x_1 \in VAR(\expr_2) \lor x_1 \in VAR(\qexpr_2)
 \]
@@ -167,12 +187,49 @@ By $\flowsto$ definition, we have:
 \[
 \flowsto(x_1, x_2)
 \]
+This case is proved.
 \subcaseL{$\event' \in \eventset^{\asn}$}
+Let $\event' = (z, l', n', v')$, there are 2 cases:
+$\eventdep^{val}(\event_1, \event', c, D)$ or $\neg \eventdep^{val}(\event_1, \event', c, D)$
+%
+\subsubcaseL{$\eventdep^{val}(\event_1, \event', c D)$}
+%
+By conclusion from \textbf{case: $\eventdep^{val}$}, we know
 \[
-  \flowsto(x_1, x_2) \lor \flowsto(x_1, z) \land \flowsto(z, x_2)
+  \flowsto(x_1, z)
+\]
+Then, we know by conclusion from the case $m = 0$:
+\[
+  x_1^{l_1} \in VAR(\expr_2) \lor z \in VAR(\expr_2)
+\]
+%
+By Definition of $\flowsto$, we know
+\[
+  \flowsto(x_1^{l_1}, x_2^{l_2}) \lor 
+  \big(\flowsto(x_1^{l_1}, z) \land \flowsto(z, x_2^{l_2}) \big)
 \]
 this case is proved.
-
+%
+\subsubcaseL{$\neg \eventdep^{val}(\event_1, \event', c D)$}
+Then, we know by conclusion from the case $m = 0$:
+\[
+  x_1^{l_1} \in VAR(\expr_2)
+\]
+%
+By Definition of $\flowsto$, we know
+\[
+  \flowsto(x_1^{l_1}, x_2^{l_2}) 
+\]
+this case is proved.
+%
+In conclusion, we have:
+\[
+  \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}}. ~ 0 \leq n \leq 1 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_n, x_2^{l_2}) \Big)
+\]
+The case $m = 1$ is proved.
+%
 \caseL{$m = n + 1, n \geq 0$}
 By induction hypothesis on $n$, we have $\exists y_1, \cdots, y_n$ s.t.:
 \[
@@ -268,9 +325,9 @@ and
 Induction on length of $m = |\vtrace_b|$, the following proposition is proved:
 %
  \[
- \Big( \exists z_1, \cdots, z_m \in \lvar_{\ssa{c}}. ~ m \geq 0 \land
+ \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}}. ~ 0 \leq n \leq m \land
   \flowsto(x_1^{l_1}, z_1) 
-  \land \cdots \land \flowsto(z_m, x_2^{l_2}) \Big)
+  \land \cdots \land \flowsto(z_n, x_2^{l_2}) \Big)
   \]
  \caseL{$m = 0$}
 \[
@@ -339,14 +396,50 @@ By using the conclusion from case $m = 0$, we know:
   This case is proved.
 %
 \subcaseL{$\event' \in \eventset^{\asn}$}
-By conclusion from 
+Let $\event' = (z, l', n', v')$
+There are 2 cases:
+$\eventdep^{val}(\event_1, \event', c D)$ or $\neg \eventdep^{val}(\event_1, \event', c D)$
+%
+\subsubcaseL{$\eventdep^{val}(\event_1, \event', c D)$}
+%
+By conclusion from \textbf{case: $\eventdep^{val}$}, we know
 \[
-  \flowsto(x_1, x_2) \lor \flowsto(x_1, z) \land \flowsto(z, x_2)
+  \flowsto(x_1, z)
+\]
+Then, we know by conclusion from the case $m = 0$:
+\[
+  x_1^{l_1} \in VAR(b) \lor z \in VAR(b)
+\]
+%
+By Definition of $\flowsto$, we know
+\[
+  \flowsto(x_1^{l_1}, x_2^{l_2}) \lor 
+  \big(\flowsto(x_1^{l_1}, z) \land \flowsto(z, x_2^{l_2}) \big)
 \]
 this case is proved.
-
+%
+\subsubcaseL{$\neg \eventdep^{val}(\event_1, \event', c D)$}
+Then, we know by conclusion from the case $m = 0$:
+\[
+  x_1^{l_1} \in VAR(b)
+\]
+%
+By Definition of $\flowsto$, we know
+\[
+  \flowsto(x_1^{l_1}, x_2^{l_2}) 
+\]
+this case is proved.
+%
+In conclusion, we have:
+\[
+  \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}}. ~ 0 \leq n \leq 1 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_n, x_2^{l_2}) \Big)
+\]
+The case $m = 1$ is proved.
+%
 \caseL{$m = n + 1, n \geq 0$}
-By induction hypothesis on $n$, we have $\exists y_1, \cdots, y_n$ s.t.:
+By induction hypothesis on $n$ and case of $m = 1$ we have $\exists y_1, \cdots, y_n$ s.t.:
 \[
 \begin{array}{ll}
       & \flowsto(x_1, x_2) \\
