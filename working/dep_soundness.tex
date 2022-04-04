@@ -1,3 +1,7 @@
+\section{Soundness}
+\input{dep_inversion}
+
+\subsection{Variable Dependency Soundness}
 \begin{thm}[$\vardep$ implies $\flowsto$]
 Given a program $\ssa{c}$, 
 \[
@@ -34,50 +38,26 @@ Prove by cases $(a)$ and $(b)$:
 \caseL{$(a)$}
 Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:event_valdep}, we have:
 \[
-\begin{array}{ll}
-\begin{array}{l}
-\forall \vtrace_0, \vcounter_0
-\\
-\exists \vcounter_1, \vcounter_2, \vcounter_3,
-\vcounter_1', \vcounter_2', \vcounter_3', 
-\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2.
-\\
+\exists \vtrace_0,
+\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2, \event_2'.
   \left(
-  \begin{array}{l}   
-\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
-\config{[\assign{\ssa{x}_1}{\expr_1}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1, \vcounter_1}  \rightarrow^{assn}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1, \vcounter_1'} 
-  \qquad \rightarrow^{*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2} 
-  \\
-  or
-  \eif([\sbexpr]^l_2, \cdots) 
-  or \ewhile [\sbexpr]^l_2 \cdots; \ssa{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1\vtrace_2, \vcounter_2} 
-  \\
-  \qquad \rightarrow^{assn/query/test} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2, \vcounter_3} 
+  \begin{array}{ll}   
+ & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+\config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_2 } 
   % 
  \\ 
- \bigwedge
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1', \vcounter_1} 
-  \qquad \rightarrow^{*} 
-  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2', \vcounter_2'} 
-  \\
-  \qquad \rightarrow^{assn/query/test} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2', \vcounter_3'} 
+ \bigwedge &
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2' } 
 \\
-\bigwedge
-\event_2 \neq_{v} \event_2'
+\bigwedge &
+\event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
 \end{array}
 \right)
-\end{array} 
-&
-\end{array}
  \]
  %
- By inversion lemma, we know $\exists \expr_1 or \qexpr_1$, $\exists \expr_2 or \qexpr_2$
+ By inversion \todo{lemma-(Assignement Event --> Query / Assignment Command)} on $\event_1$, we know $\exists \expr_1 or \qexpr_1$, $\exists \expr_2 or \qexpr_2$
  \[
 \begin{array}{ll}
 \begin{array}{l}
@@ -90,7 +70,7 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
   \left(
   \begin{array}{l}   
 \config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
-\config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
+\config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
 \\ 
  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
   \qquad \rightarrow^{*} 
@@ -106,11 +86,11 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
   \qquad \rightarrow^{*} 
   \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
   \\
-  \qquad \rightarrow^{assn/query/test} 
+  \qquad \rightarrow^{assn/query} 
   \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2'} 
 \\
 \bigwedge
-\event_2 \neq_{v} \event_2'
+\event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
 \end{array}
 \right)
 \end{array} 
@@ -208,107 +188,158 @@ By induction hypothesis on $n$, we have $\exists y_1, \cdots, y_n$ s.t.:
 This case is proved.
 
 \caseL{$(b)$}
-Unfolding $\eventdep^{val}(\event_1, \event_b, c, D)$ and $\eventdep^{test}(\event_b, \event_2, c, D)$, we have:
+Unfolding $\eventdep^{\ctl}(\event_1, \event_b, c, D)$, we have:
 \[
-  \ldots
-\]
-induction on length of $m = |\vtrace_2^v| + |\vtrace_2^b|$:
-it is sufficient to show:
- \[\Big( \exists z_1, \cdots, z_m \in \lvar_{\ssa{c}}. ~ m \geq 0 \land
+\exists \event_1' \in \eventset^{\asn}, \vtrace_0,
+\vtrace_1, \vtrace_2, \vtrace_2' \in \mathcal{T}, \ssa{c}_1.
+  \left(
+  \begin{array}{ll}   
+  & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+    \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+    \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2} 
+  \\ 
+  \bigwedge &
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+  \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
+  \\
+  \bigwedge &
+  \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
+\end{array}
+\right)
+ \]
+ %
+ By Inversion Lemma (Control -> testing event), we have:
+ \[
+   \exists \event_b\in \eventset^{\test} \st (\event_b \eventlt \event_2) \land \eventdep^{val}(\event_1, \event_b, c, D)
+ \]
+ \todo{And $\event_2$ in the body command of $\event_b$ By inversion Lemma (control -> event 2)}
+ %
+ Unfolding $\eventdep^{val}(\event_1, \event_b, c, D)$ by Definition~\ref{def:event_valdep}, we have:
+\[
+\exists \vtrace_0,
+\vtrace_1, \vtrace_b, \vtrace_b', \ssa{c}_1, \ssa{c}_2, \event_2'.
+  \left(
+  \begin{array}{ll}   
+ & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+\config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_b \cdot \event_b } 
+  % 
+ \\ 
+ \bigwedge &
+  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+  \config{\ssa{c}_2',  \vtrace_1 \cdot \event_1 \vtrace_b' \cdot \event_b' } 
+\\
+\bigwedge &
+\event_b \eventneq \event_b' \land \event_b \sigeq \event_b'
+\end{array}
+\right)
+ \]
+ Let $\event_b = (b, l_b, n_b, v_b)$, by Inversion Lemma (Testing Event -> If / While Command), we know $\exists \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2$
+ \[
+  \begin{array}{l}   
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
+\\ 
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \qquad \rightarrow^{*} 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_b} 
+  \\
+  \qquad \rightarrow^{assn/query} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2 \cdot \event_b} 
+\end{array}
+ \]
+and 
+ \[
+  \begin{array}{l}   
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \qquad \rightarrow^{*} 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
+  \\
+  \qquad \rightarrow^{if/while} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_b' \cdot \event_b'} 
+\\
+\bigwedge
+\event_b \eventneq \event_b' \land \event_b \sigeq \event_b'
+\end{array}
+ \]
+ %
+Induction on length of $m = |\vtrace_b|$, the following proposition is proved:
+%
+ \[
+ \Big( \exists z_1, \cdots, z_m \in \lvar_{\ssa{c}}. ~ m \geq 0 \land
   \flowsto(x_1^{l_1}, z_1) 
-  \land \cdots \land \flowsto(z_m, \ssa{x}_2^{l_2}) \Big)
+  \land \cdots \land \flowsto(z_m, x_2^{l_2}) \Big)
   \]
  \caseL{$m = 0$}
 \[
-\begin{array}{l}
-  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
+  \begin{array}{l}   
+\config{\ssa{c}, \vtrace_0, \vcounter_0} \rightarrow^{*} 
+\config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
 \\ 
  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
   \qquad \rightarrow^{\eskip^*} 
-  \config{\eif([b]^{l_2}, c_t, c_f) or \ewhile([b]^{l_2}, c');\ssa{c}_2, 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
   \vtrace_0 \vtrace_1 \cdot \event_1} 
   \\
-  \qquad \rightarrow^{test} 
+  \qquad \rightarrow^{if/while} 
   \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_b} 
- \end{array}
-\]
-and
-\[
-   \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+\end{array}
+ \]
+and 
+ \[
+  \begin{array}{l}   
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
   \qquad \rightarrow^{\eskip^*} 
-  \config{\eif([b]^{l_2}, c_t, c_f) or \ewhile([b]^{l_2}, c');\ssa{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1 \vtrace_2'} 
   \\
-  \qquad \rightarrow^{test} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_b'} 
-\]
-By operational semantics rule \rname{ssa-if} and \rname{ssa-while}, we have 
-\[
-  x_1 \in VAR(b)
-\]
-By $\eventdep^{test}(\event_b, \event_2, c, D)$, we have:
-\[
-\begin{array}{l}
-  \config{\eif([b]^{l_b}, c_t, c_f) or \ewhile([b]^{l_b}, c'); \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{\test}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_b} 
-  \qquad \rightarrow^{\eskip^*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1} 
-  \\
-  \qquad \rightarrow^{\asn} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_b \cdot \event_2} 
- \end{array}
-\]
-and
-\[
-\begin{array}{l}
-  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_b'} 
-  \qquad \rightarrow^{\eskip^*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1} 
-  \\
-  \qquad \rightarrow^{\asn} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_b'} 
- \end{array}\]
-%
-By $\flowsto$ definition, we have:
-\[
-\flowsto(x_1, x_2)
-\]
+  \qquad \rightarrow^{if/while} 
+  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_b'} 
+\\
+\bigwedge
+\event_b \eventneq \event_b' \land \event_b \sigeq \event_b'
+\end{array}
+ \]
+ \todo{inversion Lemma needed}, since $x$ is the only variable has different value, $x$ can only be in the $VAR(b)$ in order to change value of $\event_b$, i.e.,
+ \[
+ x_1^{l_1} \in VAR(b)
+ \]
+ %
+ By \todo{Inversion Lemma: Control DEP -> event 2}, we know $\event_2$ is generated from the either $c^1$, $c^2$ or $c'$.
+ By definition of $\flowsto$, we know
+ \[
+ \forall z \in VAR(b), \flowsto(z, x_2^{l2})
+ \]
+ Then, we have
+ \[
+ \flowsto(x_1^{l_1}, x_2^{l_2})
+ \]
+ This case is proved.
 %
  \caseL{$m = 1$}
  let $\vtrace_2 = \cdot \event'$, there are 2 cases:
  \subcaseL{$\event' \in \eventset^{\test}$}
-\[
-  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn}
-\\ 
- \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
-  \qquad \rightarrow^{\eskip^*} 
-  \config{[\assign{\ssa{x}_2}{\expr_2 ~ or ~ \query(\qexpr_2)}]^{l_2};\ssa{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1} 
-  \\
-  \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event_2} 
-\]
-and
-\[
-   \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
-  \qquad \rightarrow^{\eskip^*} 
-  \config{[\action]^{l_2} ; \ssa{c}_2, \vtrace_0 \vtrace_1 \cdot \event_1} 
-  \\
-  \qquad \rightarrow^{assn/query} 
-  \config{\ssa{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_2'} 
-\]
-By operational semantics rule \rname{ssa-assn} and \rname{ssa-query}, we have 
-\[
-  x_1 \in VAR(\expr_2) \lor x_1 \in VAR(\qexpr_2)
-\]
-By $\flowsto$ definition, we have:
-\[
-\flowsto(x_1, x_2)
-\]
+By using the conclusion from case $m = 0$, we know:
+\todo{inversion Lemma needed}, since $x$ is the only variable has different value, $x$ can only be in the $VAR(b)$ in order to change value of $\event_b$, i.e.,
+ \[
+ x_1^{l_1} \in VAR(b)
+ \]
+ %
+ By \todo{Inversion Lemma: Control DEP -> event 2}, we know $\event_2$ is generated from the either $c^1$, $c^2$ or $c'$.
+ By definition of $\flowsto$, we know
+ \[
+ \forall z \in VAR(b), \flowsto(z, x_2^{l2})
+ \]
+ Then, we have
+ \[
+ \flowsto(x_1^{l_1}, x_2^{l_2})
+ \]
+  This case is proved.
+%
 \subcaseL{$\event' \in \eventset^{\asn}$}
+By conclusion from 
 \[
   \flowsto(x_1, x_2) \lor \flowsto(x_1, z) \land \flowsto(z, x_2)
 \]
