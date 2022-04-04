@@ -1,430 +1,624 @@
-%
-\clearpage
-\begin{example}[Formal Example for Exclusion of Timing Channel].
-\label{ex:excltiming}
-\\
-$\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) excludes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$). There is an example showing this exclusion: 
-\[
-	\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} 
-\]
-In this example, $y$'s execution times relies on value of $x$. Under the adaptivity scenario, $y$ depends on $x$ (control dependency).
-However, according to value dependency defined in Definition~2 \cite{cousot2019abstract}, we can never derive :
-\[
-	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
-\]
-%
-\begin{proof}
-By semantics definition, we have:
-%
-\begin{equation}
-\label{eq:sem_timingdep}
-	\begin{array}{ll}
-& \sem{
-\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} 
-} \triangleq \\
-& \left\{ \left< \pi_1^1, ^1\right> \mid \pi_1^1 \in \mathbb{T^{+}} \right\}
-\\
-\cup & \left\{ \left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \right> 
-\mid \pi_i^1 \in \mathbb{T^{+}} \land 
-\sem{(x > 0)}\env(\pi_1^1) = \etrue  \land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v\right\}
-\\
-\cup & \left\{ 
-\begin{array}{l}
-\left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_2} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \right> 
+\begin{example}
+ \[
+ \begin{array}{ll}
+ & \sem{
+ \ewhile {}^0 (x > 0) {}^1 x = x - 1;
+ } \triangleq \\
+ & \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\}
  \\
+ \cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \right> 
+ \mid \pi_i^0 \in \mathbb{T^{+}} \land 
+ \sem{(x > 0)}\env(\pi_1^0) = \etrue  \land
+ \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v \right\}
+ \\
+ \cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_2} {}^0 \right> 
+ \left \vert 
+ \begin{array}{l}
+ \pi_i^0 \in \mathbb{T^{+}} \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
+ \land
+ \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0) = \etrue \\
+ \land
+ \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v_1} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2
+ \end{array}
+ \right.
+ \right\}
+ \\
+ \cup & \cdots 
+ \\
+ \cup & \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0 \xrightarrow{\neg(x > 0)} {}^l \right>  
+ \left \vert 
+ \begin{array}{l}
+ \pi_1^0 \in \mathbb{T^{+}}\\
+ \land 
+ \sem{(x > 0)}\env(\pi_1^0) = \etrue  \\
+ \land
+ \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1) = v_1 \\
+ \land \cdots \\
+ % \land
+ % \sem{(x - 1)}\env(\pi_1^0 \xrightarrow{(x > 0)} {}^1 \xrightarrow{(x = x - 1) = v} {}^0 \xrightarrow{(x > 0)} {}^1) = v_2\\
+ \land 
+ \sem{(x > 0)}\env(\pi_i{}^0 \xrightarrow{(x > 0)} {}^1\xrightarrow{(x = x - 1) = v_1} {}^0 \cdots  {}^0) = \efalse \\
+ \land l = \kw{aft}[\ewhile {}^0 (x > 0) {}^1 x = x - 1;]
+ \end{array}
+ \right.
+ \right\}
+ \end{array}
+ \]
+ \end{example}
+ %
+ \begin{example}
+ \[
+ \begin{array}{ll}
+ & \sem{ 
+ \epsilon {}^0 x = 1; \ewhile {}^1  (x > 0) {}^2 x = x - 1 ; {}^3 }  \\
+ \triangleq & 
+ \sem{\epsilon {}^0 x = 1;} 
+ \cup
+ \left\{ \left< \pi_1{}^0, {}^0\pi_2^1\pi_3^3\right> 
+ \left \vert 
+ \begin{array}{l}
+ \left< \pi_1^0, {}^0\pi_2^1 \right> \in \sem{\epsilon {}^0 x = 1;}
+ \\
+ \land \left< \pi_1{}^0\pi_2^1, {}^1\pi_3^3\right>  \in 
+ \sem{\ewhile {}^1 (x > 0) {}^2 x = x - 1 ;} 
+ \end{array}
+ \right.
+ \right\}
+ \\
+ \triangleq & 
+ \sem{\epsilon}
+ \cup
+ \left\{ \left< \pi_1{}^0, {}^0 \pi_2 {}^1 \right> 
+ \left \vert 
+ \begin{array}{l}
+ \left< \pi_1{}^0, {}^0 \right> \in \sem{\epsilon}  \land \\
+  
+ \left< \pi_1{}^0, {}^0 \pi_2{}^1 \right> \in \sem{ {}^0 x = 1;}
+ \end{array}
+ \right.
+ \right\}
+ \cup
+ \left\{ \left< \pi_1{}^0, {}^0\pi_2^1\pi_3 {}^3\right> 
+ \left \vert 
+ \begin{array}{l}
+ \left< \pi_1{}^0, {}^0\pi_2^1 \right> \in \sem{\epsilon {}^0 x = 1;}\land
+ \\
+  \left< \pi_1 {}^0\pi_2 {}^1, {}^1 \pi_3 {}^3\right>  \in 
+ \sem{\ewhile {}^1  (x > 0) {}^2 x = x - 1 ;} 
+ \end{array}
+ \right.
+ \right\}
+ \\
+ \triangleq 
+ & \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\} \\
+ & \cup
+ \left\{ \left< \pi_1{}^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1\right> 
+ \vert 
+ \pi_1^0 \in \mathbb{T^{+}}
+ \land 
+ \sem{1}\env(\pi_1^0) = 1
+ \right\} \\
+ & \cup
+ \left\{ \left< \pi_1{}^0, {}^0\xrightarrow{(x = 1) = 1} {}^1\pi_3^3\right> 
+ \left \vert 
+ % \begin{array}{l}
+ \pi_1^0 \in \mathbb{T^{+}}
+ \land
+ \left< \pi_1 {}^0\xrightarrow{(x = 1) = 1} {}^1, {}^1\pi_3^3\right>  \in 
+ \sem{\ewhile {}^1  (x > 0) {}^2 x = x - 1 ; {}^3} 
+ % \end{array}
+ \right.
+ \right\}
+ \\
+ \triangleq
+ & \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\} \\
+ & \cup
+ \left\{ \left< \pi_1{}^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1\right> 
+ \vert 
+ \pi_1^0 \in \mathbb{T^{+}}
+ \land 
+ \sem{1}\env(\pi_1^0) = 1
+ \right\} 
+ \\
+ & \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 \right> 
  \left \vert
-\begin{array}{l}
-\pi_i^1 \in \mathbb{T^{+}} \\
-\land 
-\sem{(x > 0)}\env(\pi_1^1) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v_1 \\
-\land 
-\sem{(x > 0)}\env(\pi_1{}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1) = \etrue \\
-\land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1}
- {}^1 \xrightarrow{(x > 0)} {}^2) = v_2
-\end{array}
-\right.
-\end{array}
-\right\}
-\\
-\cup & \cdots 
-\\
-\cup & \left\{ 
-\begin{array}{l}
-\left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2\xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1 \xrightarrow{\neg(x > 0)} {}^l \right>  
-\\
-\left \vert 
-\begin{array}{l}
-\pi_1^1 \in \mathbb{T^{+}}\\
-\land 
-\sem{(x > 0)}\env(\pi_1^1) = \etrue  \\
-\land
-\sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v_1 \\
-\land \cdots \\
-\land 
-\sem{(x > 0)}\env(\pi_i{}^1 \xrightarrow{(x > 0)} {}^2\xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1) = \efalse \\
-\land l = \kw{aft}[\ewhile {}^1 (x > 0) \{ {}^2 x = x - 1; {}^3 y = 1 \}]
-\end{array}
-\right.
-\end{array}
-\right\}
-\end{array}
-\end{equation}
-%
-%
-%
-Let $\pi_1^1, \pi_1'^1 \in \mathbb{T^{+}}$ be arbitrary traces s.t. 
-%
-$$\forall z \in \mathbb{V}\setminus \{x\}. ~ \env(\pi_1^1)(z) = \env(\pi_1'^1) $$ 
-%
-Let $v = \env(\pi_1^1)(x) $, $v' = \env(\pi_1'^1)(x')$, picking arbitrary $\pi_2, \pi_2'$ s.t.:
-\[
-	\left< \pi_1^1, \pi_2 \right>,  \left< \pi_1'^1, \pi'_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-\]
-%
-By Definition of $\mathsf{seqval}$, we have:
-\[
-	\mathsf{seqval}\sem{y}{}^2(\pi_1^1, \pi_2 ) = \underbrace{0 \cdots 1}_{0 \leq v}
-\]
-%
-\[
-	\mathsf{seqval}\sem{y}{}^2(\pi_1^1, \pi_2' ) = \underbrace{0 \cdots 1}_{0 \leq v'}
-\]
-%
- $\forall \omega_0, \omega_1', \omega_1, u, u' \st \underbrace{0 \cdots 1}_{0 \leq v} = \omega \cdot u \cdot \omega_1 \land \underbrace{0 \cdots 1}_{0 \leq v} = \omega \cdot u; \cdot \omega_1'$ we have:
-%
-\[
-	u = u' = 1
-\]
-%
-By $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2) ), we have:
-%
-\[
-	\neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )))
-\]
-%
-Then we have:
-\[
-\begin{array}{l}
-	\forall \left< \pi_1^1, \pi_2 \right>,  \left< \pi_1'^1, \pi'_2 \right> \in \mathcal{S}^{+\infty} \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} \st
-	\Big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1^1)(z) = \env(\pi_1'^1) \st \\
-	\land \neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )))\Big)
-\end{array}
-\] 
-\\
-%
-By Definition~2 (in \cite{cousot2019abstract}), 
-\[
-	\mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} 
-\notin \mathcal{D}^1(z, y)
-\]
-%
-By Definition~(4) (in \cite{cousot2019abstract}), we cannot derive:
-\[
-	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
-\]
-%
-%
-\end{proof}
-\end{example}
-%
-\clearpage
-\begin{example}[Counter Example of Including Timing Channel].
-\label{ex:overapp}
-\\
-If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) simply includes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$) as follows:
-\[
-	\mathsf{diff}(\omega, \omega') \triangleq \exists \omega_0, \omega_1, \omega_1', v, v' 
-	\st \bigvee \left\{
-	\begin{array}{lr}
-	(\omega = \omega_0 \cdot v \omega_1
-		\land \omega' = \omega_0 \cdot v' \omega_1' \land v \neq v') & \mbox{original definition} \\
-	(\omega = \omega' \cdot v \cdot \omega_1) & \mbox{including timing channel} \\
-	\end{array}
-	\right\}
-\] 
-then by Definition~2 (in \cite{cousot2019abstract}), there is a over approximation example:
-\[
-	\ewhile {}^2 (x > 0) {}^3 y = 1; 
-\]
-Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$,
-in this example, $y$ doesn't rely on $z$. 
-However, according to value dependency defined in Definition~2 \cite{cousot2019abstract} we can derive 
-\[
-	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
-\]
-%
-\begin{proof}
-By semantics definition, we have:
-%
-\begin{equation}
-\label{eq:sem_timingoverapp}
-\begin{array}{ll}
-& \sem{ \ewhile {}^2 (x > 0) {}^3 y = 1; } \triangleq \\
-& \left\{ \left< \pi_1^2, ^2\right> \mid \pi_1^2 \in \mathbb{T^{+}} \right\}
-\\
-\cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> 
-\mid \pi_i^2 \in \mathbb{T^{+}} \land 
-\sem{(x > 0)}\env(\pi_1^2) = \etrue  \land
-\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = 1 \right\}
-\\
-\cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> 
-\left \vert 
-\begin{array}{l}
-\pi_i^2 \in \mathbb{T^{+}} \\
-\land 
-\sem{(x > 0)}\env(\pi_1^2) = \etrue  \\
-\land
-\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = 1 \\
-\land 
-\sem{(x > 0)}\env(\pi_1{}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2) = \etrue \\
-\land
-\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3) = 1
-\end{array}
-\right.
-\right\}
-\\
-\cup & \cdots 
-\\
-\cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3\xrightarrow{(x = x - 1) = v_1} {}^2 \cdots  {}^2 \xrightarrow{\neg(x > 0)} {}^l \right>  
-\left \vert 
-\begin{array}{l}
-\pi_1^2 \in \mathbb{T^{+}}\\
-\land 
-\sem{(x > 0)}\env(\pi_1^2) = \etrue  \\
-\land
-\sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = v_1 \\
-\land \cdots \\
-% \land
-% \sem{(x - 1)}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(x = x - 1) = v} {}^2 \xrightarrow{(x > 0)} {}^3) = v_2\\
-\land 
-\sem{(x > 0)}\env(\pi_i{}^2 \xrightarrow{(x > 0)} {}^3\xrightarrow{(y = 1) = 1} {}^2 \cdots {}^2) = \efalse \\
-\land l = \kw{aft}[\ewhile {}^2 (x > 0) {}^3 y = 1;]
-\end{array}
-\right.
-\right\}
-\end{array}
-\end{equation}
-%
-%
-Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$,
-pick $\pi_0 = {}^0 \xrightarrow{z = 1} {}^1 \xrightarrow{x = 2} {}^2$, 
-$\pi_0' = {}^0 \xrightarrow{z = 2} {}^1 \xrightarrow{x = 2} {}^2$:
-\[
-	\left< \pi_0^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> \in \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;}
-\]
-%
-\[
-	\left< \pi_0'^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1}{}^2\right> \in \sem{\ewhile {}^2 (x > 0) {}^3 y = 1; }
-\]
-%
-By Definition of $\mathsf{seqval}$, we have:
-\[
-	\mathsf{seqval}\sem{y}{}^2(\pi_0^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 ) = 1 \cdot
-\]
-%
-\[
-	\mathsf{seqval}\sem{y}{}^2(\pi_0'^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1}{}^2 ) = 1 \cdot 1 \cdot
-\]
-%
-If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2) ) includes timing channel, i.e., 
-%
-\[
-	\mathsf{diff}(1 \cdot, 1 \cdot 1 \cdot) = \etrue
-\]
-%
-By Definition~2 (in \cite{cousot2019abstract}), 
-\[
-	\mathcal{S}^{+\infty}\sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} 
-\in \mathcal{D}^2(z, y)
-\].
-%
-By Definition~(4) (in \cite{cousot2019abstract}):
-\[
-	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
-\]
-%
-However, intuitively, the execution of $y$ doesn't relies on value of $z$ at all. This is a false positive example (or over approximation) of dependency.
-%
-\end{proof}
-\end{example}
-%
-\clearpage
-\begin{example}[Approach-2 of Including Timing Channel]
-The newly defined data dependency in Definition~\ref{def:event_dep} is capable to include the timing channel(control dependency) in Example~\ref{ex:excltiming},
-as well as exclude the over approximation in Example~\ref{ex:overapp}.
-%
-\begin{proof}
-\caseL{Including the Example~\ref{ex:excltiming}}
-By Example~\ref{ex:excltiming}, we have:
-%
-%
-Let $\pi_1^1, \pi_1'^1 \in \mathbb{T^{+}}$ be arbitrary traces s.t. 
-%
-$$\forall z \in \mathbb{V}\setminus \{x\}. ~ \env(\pi_1^1)(z) = \env(\pi_1'^1) $$ 
-%
-Let $v = \env(\pi_1^1)(x) $, $v' = \env(\pi_1'^1)(x')$, without lose of generalization, let $0 \leq v' < v$.
-\\
-Let 
-$t_i = {}^2 \xrightarrow{(x = x - 1) = v - i } {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1$, for $i = 1, \cdots, v$
-%
-$\pi_2 = {}^1 \xrightarrow{(x > 0)} {}^2 t_1 {}^1 \cdots   {}^2 t_v {}^1 \xrightarrow{\neg(x > 0)} {}^l $,
-%
+ \begin{array}{l}
+ \pi_i^0 \in \mathbb{T^{+}} \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1) = \etrue  \\
+ \land
+ \sem{(x - 1)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2) = 0
+ \end{array}
+ \right.
+ \right\}
+ \\
+ & \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 
+ \xrightarrow{\neg(x > 0)} {}^3 \right> 
+ \left \vert
+ \begin{array}{l}
+ \pi_i^0 \in \mathbb{T^{+}} \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1) = \etrue  \\
+ \land
+ \sem{(x - 1)}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2) = 0 \\
+ \land 
+ \sem{(x > 0 )}\env(\pi_1{}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1) = \efalse
+ \end{array}
+ \right.
+ \right\}
+ \\
+ \triangleq
+ & \left\{ \left< \pi_1^0, ^0\right> \mid \pi_1^0 \in \mathbb{T^{+}} \right\} 
+  \cup
+ \left\{ \left< \pi_1{}^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1\right> 
+ \vert 
+ \pi_1^0 \in \mathbb{T^{+}}
+ \right\} 
+  \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 \right> 
+ \vert \pi_i^0 \in \mathbb{T^{+}}
+ \right\}
+ \\
+ & \cup \left\{ \left< \pi_1^0, {}^0 \xrightarrow{(x = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = 0} {}^1 
+ \xrightarrow{\neg(x > 0)} {}^3 \right> 
+ \vert \pi_i^0 \in \mathbb{T^{+}}
+ \right\}
+ \end{array}
+ \]
+ \end{example}
+ %
+ \clearpage
+ \begin{example}[Formal Example for Exclusion of Timing Channel].
+ \label{ex:excltiming}
+ \\
+ $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) excludes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$). There is an example showing this exclusion: 
+ \[
+ 	\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} 
+ \]
+ In this example, $y$'s execution times relies on value of $x$. Under the adaptivity scenario, $y$ depends on $x$ (control dependency).
+ However, according to value dependency defined in Definition~2 \cite{cousot2019abstract}, we can never derive :
+ \[
+ 	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
+ \]
+ %
+ \begin{proof}
+ By semantics definition, we have:
+ %
+ \begin{equation}
+ \label{eq:sem_timingdep}
+ 	\begin{array}{ll}
+ & \sem{
+ \ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} 
+ } \triangleq \\
+ & \left\{ \left< \pi_1^1, ^1\right> \mid \pi_1^1 \in \mathbb{T^{+}} \right\}
+ \\
+ \cup & \left\{ \left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \right> 
+ \mid \pi_i^1 \in \mathbb{T^{+}} \land 
+ \sem{(x > 0)}\env(\pi_1^1) = \etrue  \land
+ \sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v\right\}
+ \\
+ \cup & \left\{ 
+ \begin{array}{l}
+ \left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_2} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \right> 
+  \\
+  \left \vert
+ \begin{array}{l}
+ \pi_i^1 \in \mathbb{T^{+}} \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1^1) = \etrue  \\
+ \land
+ \sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v_1 \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1{}^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1) = \etrue \\
+ \land
+ \sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2 \xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1}
+  {}^1 \xrightarrow{(x > 0)} {}^2) = v_2
+ \end{array}
+ \right.
+ \end{array}
+ \right\}
+ \\
+ \cup & \cdots 
+ \\
+ \cup & \left\{ 
+ \begin{array}{l}
+ \left< \pi_1^1, {}^1 \xrightarrow{(x > 0)} {}^2\xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1 \xrightarrow{\neg(x > 0)} {}^l \right>  
+ \\
+ \left \vert 
+ \begin{array}{l}
+ \pi_1^1 \in \mathbb{T^{+}}\\
+ \land 
+ \sem{(x > 0)}\env(\pi_1^1) = \etrue  \\
+ \land
+ \sem{(x - 1)}\env(\pi_1^1 \xrightarrow{(x > 0)} {}^2) = v_1 \\
+ \land \cdots \\
+ \land 
+ \sem{(x > 0)}\env(\pi_i{}^1 \xrightarrow{(x > 0)} {}^2\xrightarrow{(x = x - 1) = v_1} {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1) = \efalse \\
+ \land l = \kw{aft}[\ewhile {}^1 (x > 0) \{ {}^2 x = x - 1; {}^3 y = 1 \}]
+ \end{array}
+ \right.
+ \end{array}
+ \right\}
+ \end{array}
+ \end{equation}
+ %
+ %
+ %
+ Let $\pi_1^1, \pi_1'^1 \in \mathbb{T^{+}}$ be arbitrary traces s.t. 
+ %
+ $$\forall z \in \mathbb{V}\setminus \{x\}. ~ \env(\pi_1^1)(z) = \env(\pi_1'^1) $$ 
+ %
+ Let $v = \env(\pi_1^1)(x) $, $v' = \env(\pi_1'^1)(x')$, picking arbitrary $\pi_2, \pi_2'$ s.t.:
+ \[
+ 	\left< \pi_1^1, \pi_2 \right>,  \left< \pi_1'^1, \pi'_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
+ \]
+ %
+ By Definition of $\mathsf{seqval}$, we have:
+ \[
+ 	\mathsf{seqval}\sem{y}{}^2(\pi_1^1, \pi_2 ) = \underbrace{0 \cdots 1}_{0 \leq v}
+ \]
+ %
+ \[
+ 	\mathsf{seqval}\sem{y}{}^2(\pi_1^1, \pi_2' ) = \underbrace{0 \cdots 1}_{0 \leq v'}
+ \]
+ %
+  $\forall \omega_0, \omega_1', \omega_1, u, u' \st \underbrace{0 \cdots 1}_{0 \leq v} = \omega \cdot u \cdot \omega_1 \land \underbrace{0 \cdots 1}_{0 \leq v} = \omega \cdot u; \cdot \omega_1'$ we have:
+ %
+ \[
+ 	u = u' = 1
+ \]
+ %
+ By $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2) ), we have:
+ %
+ \[
+ 	\neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )))
+ \]
+ %
+ Then we have:
+ \[
+ \begin{array}{l}
+ 	\forall \left< \pi_1^1, \pi_2 \right>,  \left< \pi_1'^1, \pi'_2 \right> \in \mathcal{S}^{+\infty} \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} \st
+ 	\Big(
+ 	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1^1)(z) = \env(\pi_1'^1) \st \\
+ 	\land \neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )))\Big)
+ \end{array}
+ \] 
+ \\
+ %
+ By Definition~2 (in \cite{cousot2019abstract}), 
+ \[
+ 	\mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} 
+ \notin \mathcal{D}^1(z, y)
+ \]
+ %
+ By Definition~(4) (in \cite{cousot2019abstract}), we cannot derive:
+ \[
+ 	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
+ \]
+ %
+ %
+ \end{proof}
+ \end{example}
+ %
+ \clearpage
+ \begin{example}[Counter Example of Including Timing Channel].
+ \label{ex:overapp}
+ \\
+ If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) simply includes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$) as follows:
+ \[
+ 	\mathsf{diff}(\omega, \omega') \triangleq \exists \omega_0, \omega_1, \omega_1', v, v' 
+ 	\st \bigvee \left\{
+ 	\begin{array}{lr}
+ 	(\omega = \omega_0 \cdot v \omega_1
+ 		\land \omega' = \omega_0 \cdot v' \omega_1' \land v \neq v') & \mbox{original definition} \\
+ 	(\omega = \omega' \cdot v \cdot \omega_1) & \mbox{including timing channel} \\
+ 	\end{array}
+ 	\right\}
+ \] 
+ then by Definition~2 (in \cite{cousot2019abstract}), there is a over approximation example:
+ \[
+ 	\ewhile {}^2 (x > 0) {}^3 y = 1; 
+ \]
+ Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$,
+ in this example, $y$ doesn't rely on $z$. 
+ However, according to value dependency defined in Definition~2 \cite{cousot2019abstract} we can derive 
+ \[
+ 	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
+ \]
+ %
+ \begin{proof}
+ By semantics definition, we have:
+ %
+ \begin{equation}
+ \label{eq:sem_timingoverapp}
+ \begin{array}{ll}
+ & \sem{ \ewhile {}^2 (x > 0) {}^3 y = 1; } \triangleq \\
+ & \left\{ \left< \pi_1^2, ^2\right> \mid \pi_1^2 \in \mathbb{T^{+}} \right\}
+ \\
+ \cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> 
+ \mid \pi_i^2 \in \mathbb{T^{+}} \land 
+ \sem{(x > 0)}\env(\pi_1^2) = \etrue  \land
+ \sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = 1 \right\}
+ \\
+ \cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> 
+ \left \vert 
+ \begin{array}{l}
+ \pi_i^2 \in \mathbb{T^{+}} \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1^2) = \etrue  \\
+ \land
+ \sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = 1 \\
+ \land 
+ \sem{(x > 0)}\env(\pi_1{}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2) = \etrue \\
+ \land
+ \sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3) = 1
+ \end{array}
+ \right.
+ \right\}
+ \\
+ \cup & \cdots 
+ \\
+ \cup & \left\{ \left< \pi_1^2, {}^2 \xrightarrow{(x > 0)} {}^3\xrightarrow{(x = x - 1) = v_1} {}^2 \cdots  {}^2 \xrightarrow{\neg(x > 0)} {}^l \right>  
+ \left \vert 
+ \begin{array}{l}
+ \pi_1^2 \in \mathbb{T^{+}}\\
+ \land 
+ \sem{(x > 0)}\env(\pi_1^2) = \etrue  \\
+ \land
+ \sem{1}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3) = v_1 \\
+ \land \cdots \\
+ % \land
+ % \sem{(x - 1)}\env(\pi_1^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(x = x - 1) = v} {}^2 \xrightarrow{(x > 0)} {}^3) = v_2\\
+ \land 
+ \sem{(x > 0)}\env(\pi_i{}^2 \xrightarrow{(x > 0)} {}^3\xrightarrow{(y = 1) = 1} {}^2 \cdots {}^2) = \efalse \\
+ \land l = \kw{aft}[\ewhile {}^2 (x > 0) {}^3 y = 1;]
+ \end{array}
+ \right.
+ \right\}
+ \end{array}
+ \end{equation}
+ %
+ %
+ Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$,
+ pick $\pi_0 = {}^0 \xrightarrow{z = 1} {}^1 \xrightarrow{x = 2} {}^2$, 
+ $\pi_0' = {}^0 \xrightarrow{z = 2} {}^1 \xrightarrow{x = 2} {}^2$:
+ \[
+ 	\left< \pi_0^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \right> \in \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;}
+ \]
+ %
+ \[
+ 	\left< \pi_0'^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1}{}^2\right> \in \sem{\ewhile {}^2 (x > 0) {}^3 y = 1; }
+ \]
+ %
+ By Definition of $\mathsf{seqval}$, we have:
+ \[
+ 	\mathsf{seqval}\sem{y}{}^2(\pi_0^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 ) = 1 \cdot
+ \]
+ %
+ \[
+ 	\mathsf{seqval}\sem{y}{}^2(\pi_0'^2, {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1} {}^2 \xrightarrow{(x > 0)} {}^3 \xrightarrow{(y = 1) = 1}{}^2 ) = 1 \cdot 1 \cdot
+ \]
+ %
+ If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2) ) includes timing channel, i.e., 
+ %
+ \[
+ 	\mathsf{diff}(1 \cdot, 1 \cdot 1 \cdot) = \etrue
+ \]
+ %
+ By Definition~2 (in \cite{cousot2019abstract}), 
+ \[
+ 	\mathcal{S}^{+\infty}\sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} 
+ \in \mathcal{D}^2(z, y)
+ \].
+ %
+ By Definition~(4) (in \cite{cousot2019abstract}):
+ \[
+ 	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
+ \]
+ %
+ However, intuitively, the execution of $y$ doesn't relies on value of $z$ at all. This is a false positive example (or over approximation) of dependency.
+ %
+ \end{proof}
+ \end{example}
+ %
+ \clearpage
+ \clearpage
+ \begin{example}[Approach-1 of Including Timing Channel]
+ Modifying the Definition~2 (in \cite{cousot2019abstract}) as follows:
+ \begin{defn}[Modified Data Dependency].
+ \label{defn:mdfy_dep}
+ \[
+ 	\begin{array}{lll}
+ 	\mathcal{D}^l(x, y) & \triangleq &
+ 	\Big\{ 
+ 	\Pi \in (\mathbb{T}^{+} \times \mathbb{T}^{+\infty})
+ 	\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \Pi \st \\
+ 	&& \quad \big(
+ 	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
+ 	&& \quad  \quad \land \neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi'_1, \pi_2')))
+ 	\big) \Big\} \\
+ 	& \cup & \Big\{ \Pi \in (\mathbb{T}^{+} \times \mathbb{T}^{+\infty})
+ 	\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \Pi \st \forall \config{\pi_1', \pi_2''} \in \Pi\\
+ 	&& \quad \big(
+ 	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
+ 	&& \quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| \leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) \Big\}
+ 	\end{array}
+ \]
+ \end{defn}
+ This definition is capable to include the timing channel(control dependency) in Example~\ref{ex:excltiming},
+ as well as exclude the over approximation in Example~\ref{ex:overapp}.
+ %
+ \begin{proof}
+ \caseL{Including the Example~\ref{ex:excltiming}}
+ By Example~\ref{ex:excltiming}, we have its semantics in Equation~\ref{eq:sem_timingdep}.
+ %
+ %
+ Let $\pi_1^1, \pi_1'^1 \in \mathbb{T^{+}}$ be arbitrary traces s.t. 
+ %
+ $$\forall z \in \mathbb{V}\setminus \{x\}. ~ \env(\pi_1^1)(z) = \env(\pi_1'^1) $$ 
+ %
+ Let $v = \env(\pi_1^1)(x) $, $v' = \env(\pi_1'^1)(x')$, without lose of generalization, let $0 \leq v' < v$.
+ \\
+ Let 
+ $t_i = {}^2 \xrightarrow{(x = x - 1) = v - i } {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1$, for $i = 1, \cdots, v$
+ %
+ $\pi_2 = {}^1 \xrightarrow{(x > 0)} {}^2 t_1 {}^1 \cdots   {}^2 t_v {}^1 \xrightarrow{\neg(x > 0)} {}^l $,
+ %
+  By Equation~\ref{eq:sem_timingdep}, we know:
+ \[
+ 	\left< \pi_1^1, \pi_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
+ \]
+ %
+ Let 
+ $t_i' = {}^2 \xrightarrow{(x = x - 1) = v' - i } {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1$, for $i = 1, \cdots, v'$
+ %
+ $\pi_2' = {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{v'} {}^1 \xrightarrow{\neg(x > 0)} {}^l $,
+ %
+  By Equation~\ref{eq:sem_timingdep}, we know:
+ \[
+ 	\left< \pi_1'^1, \pi'_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
+ \]
+ %
+ \\
+ By Definition of $\mathsf{seqval}$, we have:
+ \[
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 )| = |\underbrace{0 \cdots 1}_{0 \leq v}| = v + 1
+ \]
+ %
+ \[
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )| = |\underbrace{0 \cdots 1}_{0 \leq v'}| = v' + 1
+ \]
+ %
+ Since, $v' < v $, we have: 
+ \[
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )| < |\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 )|
+ \]
+ %
+ Let $\Pi_2''$ defined as follows:
+ \[
+ 	\Pi''_2 \triangleq \{
+ 	\left< \pi_1'^1, \pi''_2 \right> \vert
+ 	\pi''_2 =  {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{j} {}^1, \forall j < v'\} 
+ \]
+ %
  By Equation~\ref{eq:sem_timingdep}, we know:
-\[
-	\left< \pi_1^1, \pi_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-\]
-%
-Let 
-$t_i' = {}^2 \xrightarrow{(x = x - 1) = v' - i } {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1$, for $i = 1, \cdots, v'$
-%
-$\pi_2' = {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{v'} {}^1 \xrightarrow{\neg(x > 0)} {}^l $,
-%
- By Equation~\ref{eq:sem_timingdep}, we know:
-\[
-	\left< \pi_1'^1, \pi'_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-\]
-%
-\\
-By Definition of $\mathsf{seqval}$, we have:
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 )| = |\underbrace{0 \cdots 1}_{0 \leq v}| = v + 1
-\]
-%
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )| = |\underbrace{0 \cdots 1}_{0 \leq v'}| = v' + 1
-\]
-%
-Since, $v' < v $, we have: 
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )| < |\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 )|
-\]
-%
-Let $\Pi_2''$ defined as follows:
-\[
-	\Pi''_2 \triangleq \{
-	\left< \pi_1'^1, \pi''_2 \right> \vert
-	\pi''_2 =  {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{j} {}^1, \forall j < v'\} 
-\]
-%
-By Equation~\ref{eq:sem_timingdep}, we know:
-%
-\[
-		\Pi''_2 \subseteq \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-		\land
-		\forall \left< \pi_1', \pi''_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} } 
-		\st \left< \pi_1', \pi''_2 \right> \in  \Pi''_2
-\]
-%
+ %
+ \[
+ 		\Pi''_2 \subseteq \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
+ 		\land
+ 		\forall \left< \pi_1', \pi''_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} } 
+ 		\st \left< \pi_1', \pi''_2 \right> \in  \Pi''_2
+ \]
+ %
 
-%
-%
-Then for arbitrary $\left< \pi_1', \pi''_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }$, we know:
-\[
-	\exists \st \pi''_2 =  {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{j} {}^1 \land j \leq v'
-\]
-%
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2'' )| = |\underbrace{0 \cdots 1}_{0 \leq j}| = j \leq v'
-\]
-%
-Then we have
-\[
-\begin{array}{l}
-	\forall \left< \pi_1'^1, \pi''_2 \right> \in \mathcal{S}^{+\infty} \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} \st
-	\Big(
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1'^1, \pi_2'' )| \leq v' < v))\Big)
-\end{array}
-\] 
-%
-i.e.,
-\[
-	\begin{array}{l}
-	\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \st \forall \config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
-	\quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| 
-	\leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) 	
-	\end{array}
-\]
-\\
-%
-By modified data dependency in Definition~\ref{defn:mdfy_dep} from Definition~2 (in \cite{cousot2019abstract}), we have:
-\[
-	\mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} 
-	\in \mathcal{D}^1(x, y)
-\]
-%
-By Definition~(4) (in \cite{cousot2019abstract}), we have:
-\[
-	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
-\]
-%
-\caseL{Excluding the Over Approximated Example~\ref{ex:overapp}}
-%
-Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$, it is sufficient to show,
-by the modified data dependency in Definition~\ref{defn:mdfy_dep}, the following dependency cannot be derived:
-\[
-	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
-\]
-Take arbitrary $\config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'}$ s.t.:
-\[
-	\config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;}  
-	\land \forall u \in \mathbb{V}\setminus \{z\} \st \env(\pi_1)(u) = \env(\pi_1')(u)
-	\]
-Then we know:
-\[
-	\env(\pi_1)(x) = \env(\pi_1')(x)
-\]
-Let $v = \env(\pi_1)(x) = \env(\pi_1')(x)$
-%
-By Definition of $\mathsf{seqval}$, we have:
-\[
-	|\mathsf{seqval}\sem{y}{}^2(\pi_1, \pi_2 )| = | 0 \cdot 1 \cdots| \leq v
-	\land
-	|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2' )| = | 0 \cdot 1 \cdots| \leq v
-\]
-%
-Without loss of generalization, let $\config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} $ s.t.
-\[
-|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2' )| = | 0 \cdot 1 \cdots 1| < v
-\]
-%
-There always exists $\config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;}$ s.t.:
-\[
-	|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2'' )| = | 0 \cdot 1 \cdots 1| = v
-\]
-%
-Then we have:
-\[
-	\begin{array}{l}
-	\not\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \st \forall \config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
-	\quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| 
-	\leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) 	
-	\end{array}
-\]
-%
-By modified data dependency in Definition~\ref{defn:mdfy_dep},
-\[
-	\mathcal{S}^{+\infty}\sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} 
-	\notin \mathcal{D}^2(z, y)
-\].
-%
-By Definition~(4) (in \cite{cousot2019abstract}), the following dependency cannot be derived.
-\[
-	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
-\]
-%
-%
-\end{proof}
-\end{example}
+ %
+ %
+ Then for arbitrary $\left< \pi_1', \pi''_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }$, we know:
+ \[
+ 	\exists \st \pi''_2 =  {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{j} {}^1 \land j \leq v'
+ \]
+ %
+ \[
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2'' )| = |\underbrace{0 \cdots 1}_{0 \leq j}| = j \leq v'
+ \]
+ %
+ Then we have
+ \[
+ \begin{array}{l}
+ 	\forall \left< \pi_1'^1, \pi''_2 \right> \in \mathcal{S}^{+\infty} \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} \st
+ 	\Big(
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1'^1, \pi_2'' )| \leq v' < v))\Big)
+ \end{array}
+ \] 
+ %
+ i.e.,
+ \[
+ 	\begin{array}{l}
+ 	\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
+ 	\quad \st \forall \config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
+ 	\quad \big(
+ 	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
+ 	\quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| 
+ 	\leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) 	
+ 	\end{array}
+ \]
+ \\
+ %
+ By modified data dependency in Definition~\ref{defn:mdfy_dep} from Definition~2 (in \cite{cousot2019abstract}), we have:
+ \[
+ 	\mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} 
+ 	\in \mathcal{D}^1(x, y)
+ \]
+ %
+ By Definition~(4) (in \cite{cousot2019abstract}), we have:
+ \[
+ 	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
+ \]
+ %
+ \caseL{Excluding the Over Approximated Example~\ref{ex:overapp}}
+ %
+ Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$, it is sufficient to show,
+ by the modified data dependency in Definition~\ref{defn:mdfy_dep}, the following dependency cannot be derived:
+ \[
+ 	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
+ \]
+ Take arbitrary $\config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'}$ s.t.:
+ \[
+ 	\config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;}  
+ 	\land \forall u \in \mathbb{V}\setminus \{z\} \st \env(\pi_1)(u) = \env(\pi_1')(u)
+ 	\]
+ Then we know:
+ \[
+ 	\env(\pi_1)(x) = \env(\pi_1')(x)
+ \]
+ Let $v = \env(\pi_1)(x) = \env(\pi_1')(x)$
+ %
+ By Definition of $\mathsf{seqval}$, we have:
+ \[
+ 	|\mathsf{seqval}\sem{y}{}^2(\pi_1, \pi_2 )| = | 0 \cdot 1 \cdots| \leq v
+ 	\land
+ 	|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2' )| = | 0 \cdot 1 \cdots| \leq v
+ \]
+ %
+ Without loss of generalization, let $\config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} $ s.t.
+ \[
+ |\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2' )| = | 0 \cdot 1 \cdots 1| < v
+ \]
+ %
+ There always exists $\config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;}$ s.t.:
+ \[
+ 	|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2'' )| = | 0 \cdot 1 \cdots 1| = v
+ \]
+ %
+ Then we have:
+ \[
+ 	\begin{array}{l}
+ 	\not\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
+ 	\quad \st \forall \config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
+ 	\quad \big(
+ 	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
+ 	\quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| 
+ 	\leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
+ 	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) 	
+ 	\end{array}
+ \]
+ %
+ By modified data dependency in Definition~\ref{defn:mdfy_dep},
+ \[
+ 	\mathcal{S}^{+\infty}\sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} 
+ 	\notin \mathcal{D}^2(z, y)
+ \].
+ %
+ By Definition~(4) (in \cite{cousot2019abstract}), the following dependency cannot be derived.
+ \[
+ 	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
+ \]
+ %
+ %
+ \end{proof}
+ \end{example}

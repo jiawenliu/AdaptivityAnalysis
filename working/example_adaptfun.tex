@@ -157,12 +157,12 @@ By Definition~\ref{def:event_testdep}, we have:
 \]
 \\
 
-By Definition~\ref{event_dep}, we have: 
+By Definition~\ref{def:event_dep}, we have: 
 \[
 	\eventdep(\event_1, \event_2, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
 \]
 %
-By Definition~\ref{event_dep}, we have:
+By Definition~\ref{def:event_dep}, we have:
 \[
 	\vardep(x^2, y^3, {\ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3})
 \]
@@ -172,8 +172,7 @@ By Definition~\ref{event_dep}, we have:
 \end{example}
 %
 \clearpage
-\begin{example}[Counter Example of Including Timing Channel].
-\label{ex:overapp}
+\begin{example}[Excluding the Over approximation in Example.~\ref{eq:sem_timingoverapp}].
 \\
 If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) simply includes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$) as follows:
 \[
@@ -292,201 +291,3 @@ However, intuitively, the execution of $y$ doesn't relies on value of $z$ at all
 \end{proof}
 \end{example}
 %
-\clearpage
-\clearpage
-\begin{example}[Approach-1 of Including Timing Channel]
-Modifying the Definition~2 (in \cite{cousot2019abstract}) as follows:
-\begin{defn}[Modified Data Dependency].
-\label{defn:mdfy_dep}
-\[
-	\begin{array}{lll}
-	\mathcal{D}^l(x, y) & \triangleq &
-	\Big\{ 
-	\Pi \in (\mathbb{T}^{+} \times \mathbb{T}^{+\infty})
-	\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \Pi \st \\
-	&& \quad \big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
-	&& \quad  \quad \land \neg(\mathsf{diff}(\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2 ), \mathsf{seqval}\sem{y}{}^1(\pi'_1, \pi_2')))
-	\big) \Big\} \\
-	& \cup & \Big\{ \Pi \in (\mathbb{T}^{+} \times \mathbb{T}^{+\infty})
-	\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \Pi \st \forall \config{\pi_1', \pi_2''} \in \Pi\\
-	&& \quad \big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
-	&& \quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| \leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) \Big\}
-	\end{array}
-\]
-\end{defn}
-This definition is capable to include the timing channel(control dependency) in Example~\ref{ex:excltiming},
-as well as exclude the over approximation in Example~\ref{ex:overapp}.
-%
-\begin{proof}
-\caseL{Including the Example~\ref{ex:excltiming}}
-By Example~\ref{ex:excltiming}, we have its semantics in Equation~\ref{eq:sem_timingdep}.
-%
-%
-Let $\pi_1^1, \pi_1'^1 \in \mathbb{T^{+}}$ be arbitrary traces s.t. 
-%
-$$\forall z \in \mathbb{V}\setminus \{x\}. ~ \env(\pi_1^1)(z) = \env(\pi_1'^1) $$ 
-%
-Let $v = \env(\pi_1^1)(x) $, $v' = \env(\pi_1'^1)(x')$, without lose of generalization, let $0 \leq v' < v$.
-\\
-Let 
-$t_i = {}^2 \xrightarrow{(x = x - 1) = v - i } {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1$, for $i = 1, \cdots, v$
-%
-$\pi_2 = {}^1 \xrightarrow{(x > 0)} {}^2 t_1 {}^1 \cdots   {}^2 t_v {}^1 \xrightarrow{\neg(x > 0)} {}^l $,
-%
- By Equation~\ref{eq:sem_timingdep}, we know:
-\[
-	\left< \pi_1^1, \pi_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-\]
-%
-Let 
-$t_i' = {}^2 \xrightarrow{(x = x - 1) = v' - i } {}^3 \xrightarrow{(y = 1) = 1} {}^1 \cdots  {}^1$, for $i = 1, \cdots, v'$
-%
-$\pi_2' = {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{v'} {}^1 \xrightarrow{\neg(x > 0)} {}^l $,
-%
- By Equation~\ref{eq:sem_timingdep}, we know:
-\[
-	\left< \pi_1'^1, \pi'_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-\]
-%
-\\
-By Definition of $\mathsf{seqval}$, we have:
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 )| = |\underbrace{0 \cdots 1}_{0 \leq v}| = v + 1
-\]
-%
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )| = |\underbrace{0 \cdots 1}_{0 \leq v'}| = v' + 1
-\]
-%
-Since, $v' < v $, we have: 
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2' )| < |\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2 )|
-\]
-%
-Let $\Pi_2''$ defined as follows:
-\[
-	\Pi''_2 \triangleq \{
-	\left< \pi_1'^1, \pi''_2 \right> \vert
-	\pi''_2 =  {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{j} {}^1, \forall j < v'\} 
-\]
-%
-By Equation~\ref{eq:sem_timingdep}, we know:
-%
-\[
-		\Pi''_2 \subseteq \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }
-		\land
-		\forall \left< \pi_1', \pi''_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} } 
-		\st \left< \pi_1', \pi''_2 \right> \in  \Pi''_2
-\]
-%
-
-%
-%
-Then for arbitrary $\left< \pi_1', \pi''_2 \right> \in \sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\} }$, we know:
-\[
-	\exists \st \pi''_2 =  {}^1 \xrightarrow{(x > 0)} {}^2 t'_1 {}^1 \cdots  {}^2 t'_{j} {}^1 \land j \leq v'
-\]
-%
-\[
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1^1, \pi_2'' )| = |\underbrace{0 \cdots 1}_{0 \leq j}| = j \leq v'
-\]
-%
-Then we have
-\[
-\begin{array}{l}
-	\forall \left< \pi_1'^1, \pi''_2 \right> \in \mathcal{S}^{+\infty} \sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} \st
-	\Big(
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1'^1, \pi_2'' )| \leq v' < v))\Big)
-\end{array}
-\] 
-%
-i.e.,
-\[
-	\begin{array}{l}
-	\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \st \forall \config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
-	\quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| 
-	\leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) 	
-	\end{array}
-\]
-\\
-%
-By modified data dependency in Definition~\ref{defn:mdfy_dep} from Definition~2 (in \cite{cousot2019abstract}), we have:
-\[
-	\mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} 
-	\in \mathcal{D}^1(x, y)
-\]
-%
-By Definition~(4) (in \cite{cousot2019abstract}), we have:
-\[
-	x \rightsquigarrow^{1}_{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;\}} y
-\]
-%
-\caseL{Excluding the Over Approximated Example~\ref{ex:overapp}}
-%
-Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$, it is sufficient to show,
-by the modified data dependency in Definition~\ref{defn:mdfy_dep}, the following dependency cannot be derived:
-\[
-	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
-\]
-Take arbitrary $\config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'}$ s.t.:
-\[
-	\config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;}  
-	\land \forall u \in \mathbb{V}\setminus \{z\} \st \env(\pi_1)(u) = \env(\pi_1')(u)
-	\]
-Then we know:
-\[
-	\env(\pi_1)(x) = \env(\pi_1')(x)
-\]
-Let $v = \env(\pi_1)(x) = \env(\pi_1')(x)$
-%
-By Definition of $\mathsf{seqval}$, we have:
-\[
-	|\mathsf{seqval}\sem{y}{}^2(\pi_1, \pi_2 )| = | 0 \cdot 1 \cdots| \leq v
-	\land
-	|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2' )| = | 0 \cdot 1 \cdots| \leq v
-\]
-%
-Without loss of generalization, let $\config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} $ s.t.
-\[
-|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2' )| = | 0 \cdot 1 \cdots 1| < v
-\]
-%
-There always exists $\config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;}$ s.t.:
-\[
-	|\mathsf{seqval}\sem{y}{}^2(\pi_1', \pi_2'' )| = | 0 \cdot 1 \cdots 1| = v
-\]
-%
-Then we have:
-\[
-	\begin{array}{l}
-	\not\exists \config{\pi_1, \pi_2}, \config{\pi_1', \pi_2'} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \st \forall \config{\pi_1', \pi_2''} \in \mathcal{S}^{+\infty}\sem{\ewhile {}^1 (x > 0) \{{}^2 x = x - 1; {}^3 y = 1;} \\
-	\quad \big(
-	\forall z \in \mathbb{V}\setminus \{x\} \st \env(\pi_1)(z) = \env(\pi_1') \st \\
-	\quad  \quad  \land |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2'')| 
-	\leq |\mathsf{seqval}\sem{y}{}^1(\pi_1', \pi_2')| <  
-	|\mathsf{seqval}\sem{y}{}^1(\pi_1, \pi_2)|\big) 	
-	\end{array}
-\]
-%
-By modified data dependency in Definition~\ref{defn:mdfy_dep},
-\[
-	\mathcal{S}^{+\infty}\sem{\ewhile {}^2 (x > 0) {}^3 y = 1;} 
-	\notin \mathcal{D}^2(z, y)
-\].
-%
-By Definition~(4) (in \cite{cousot2019abstract}), the following dependency cannot be derived.
-\[
-	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
-\]
-%
-%
-\end{proof}
-\end{example}
