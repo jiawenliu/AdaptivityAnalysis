@@ -71,13 +71,12 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 %
 \mbox{Event} 
 & \event & ::= & 
-      (\ssa{x}, l, n, v)   \mbox{Assignment Event} \\
-&&& | (\ssa{x}, l, n, \qval, v) \\
-&&& | (\sbexpr, l, n, v) \mbox{Testing Event}
+      (\ssa{x}, l, n, v) | (\ssa{x}, l, n, \qval, v)  ~~~~~~~ \mbox{Assignment Event} \\
+&&& | (\sbexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
 \\
 %
 \mbox{Trace} & \vtrace
-& ::= & | \vtrace \cdot \event
+& ::= & \cdot | \vtrace \event \cdot
 \\
 %
 \mbox{Event Signature} & \sig
@@ -112,52 +111,69 @@ We use following notations to represent the set of corresponding terms:
 \eventset^{\test}  & : & \mbox{Set of Testing Events}  
 \\
 %
-%
-\eventset  & : & \mbox{Set of Events}  
-\\
-%
+%%
 \dbdom  & : & \mbox{{Set of Databases}} 
 \\
 %
 \qdom = {[-1,1]} & : & \mbox{{Domain of Query Results}}
-\end{array}
-\]
-%
-%
-%
-Environment $ \env : \vtrace \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
-\[
-\begin{array}{ll}
-\env(\vtrace \cdot (x, l, n, v)) x \triangleq v
-&
-\env(\vtrace \cdot (x, l, n, \qval, v)) x \triangleq v
 \\
-\env(\vtrace \cdot (y, l, n, v)) x \triangleq \env(\vtrace) x
-&
-\env() x \triangleq \bot
+%
+\mathcal{T} & : & \mbox{Set of Well-formed Traces (in Definition~\ref{def:wf_trace})}
 \end{array}
 \]
 %
 %
-Query Environment $\qenv: \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
+%
+Environment $ \env : \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
 \[
-\begin{array}{ll}
-\qenv(\vtrace \cdot (x, l, n, v)) x \triangleq \qenv(\vtrace) x
+\begin{array}{lll}
+\env(\vtrace (x, l, n, v) \cdot ) x \triangleq v
 &
-\qenv(\vtrace \cdot (x, l, n, \qval, v)) x \triangleq \qval
+\env(\vtrace (x, l, n, \qval, v) \cdot) x \triangleq v
+&
+\env(\vtrace (y, l, n, v)\cdot ) x \triangleq \env(\vtrace) x
 \\
-\qenv(\vtrace \cdot (y, l, n, v)) x \triangleq \qenv(\vtrace) x
+\env(\vtrace (b, l, n, v)\cdot ) x \triangleq \env(\vtrace) x
 &
-\qenv() x \triangleq \bot
+\env(\cdot ) x \triangleq \bot
+&
 \end{array}
 \]
 %
-Counter $\vcounter : \trace \to \mathbb{N} \to \mathbb{N}$
+%
+Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
 \[
-\begin{array}{ll}
-\vcounter(\vtrace \cdot (x, l, n, v)) l \triangleq n
+\begin{array}{lll}
+\qenv(\vtrace (x, l, n, v) \cdot ) x \triangleq \qenv(\vtrace) x
 &
-\vcounter() l \triangleq 0
+\qenv(\vtrace (x, l, n, \qval, v) \cdot ) x \triangleq \qval
+&
+\qenv(\vtrace (y, l, n, v)\cdot ) x \triangleq \env(\vtrace) x
+\\
+\qenv(\vtrace (b, l, n, v)\cdot ) x \triangleq \env(\vtrace) x
+&
+\qenv(\cdot ) x \triangleq \bot
+&
+\end{array}
+\]
+%
+Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
+\[
+\begin{array}{lll}
+\vcounter(\vtrace (x, l, n, v) \cdot ) l \triangleq n
+&
+\vcounter(\vtrace (b, l, n, v) \cdot) l \triangleq n
+&
+\vcounter(\vtrace (x, l, n, \qval, v) \cdot) l \triangleq n
+\\
+\vcounter(\vtrace (x, l', n, v) \cdot ) l \triangleq \vcounter(\vtrace ) l
+&
+\vcounter(\vtrace (b, l', n, v) \cdot) l \triangleq \vcounter(\vtrace ) l
+&
+\vcounter(\vtrace (x, l', n, \qval, v) \cdot) l \triangleq \vcounter(\vtrace ) l
+\\
+\vcounter(\cdot) l \triangleq 0
+&&
 \end{array}
 \]
 %
@@ -213,7 +229,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
   \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace } 
   \xrightarrow{} 
-  \config{[\eskip]^{l}, \vtrace \cdot \event}
+  \config{[\eskip]^{l}, \vtrace \event\cdot }
   }
   ~\textbf{assn}
   %
@@ -231,7 +247,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \xrightarrow{} 
   \config{\ssa{
   c[\bar{x_i}/\bar{x'}]; \ewhile ~ [b]^{l}, (n + 1), [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c,  \eskip),
-  \vtrace\cdot \event}}
+  \vtrace\event \cdot }}
   }
   ~\textbf{ssa-while-t}
   %
@@ -250,7 +266,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \xrightarrow{} 
   \config{\ssa{
   [\eskip]^l ,
-  \vtrace \cdot \event}}
+  \vtrace \event \cdot}}
   }
   ~\textbf{ssa-while-f}
   %
@@ -268,7 +284,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
   \config{\ssa{[\assign{x}{\query(\qexpr)}]^l, \vtrace}}
   \xrightarrow{} 
-  \config{\ssa{\eskip,  \vtrace \cdot \event} }
+  \config{\ssa{\eskip,  \vtrace \event \cdot} }
   }
   ~\textbf{ssa-query}
   }
@@ -324,7 +340,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \cdot \event}}
+  \vtrace \event \cdot}}
   }
   ~\textbf{ssa-if-t}
   %
@@ -348,7 +364,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \cdot \event}}
+  \vtrace \event \cdot}}
   }
   ~\textbf{ssa-if-f}
   %

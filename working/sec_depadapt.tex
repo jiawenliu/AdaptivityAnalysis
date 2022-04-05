@@ -18,7 +18,7 @@ $\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1)$
 %
 \[
 \exists \vtrace_0,
-\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1, \ssa{c}_2, \event_2'.
+\vtrace_1, \vtrace_2, \vtrace_2' \in \mathcal{T}, \event_2', \event_1' \in \eventset, \ssa{c}_1, \ssa{c}_2,  \ssa{c}_2'.
   \left(
   \begin{array}{ll}   
  & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
@@ -28,7 +28,7 @@ $\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1)$
  \\ 
  \bigwedge &
   \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
-  \config{\ssa{c}_2,  \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2' } 
+  \config{\ssa{c}_2',  \vtrace_1 \cdot \event_1 \vtrace_2' \cdot \event_2' } 
 \\
 \bigwedge &
 \event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
@@ -38,36 +38,36 @@ $\event_1 = (\ssa{x}_1, \qval_1, v_1, l_1, n_1)$
 %
 \end{defn}
 %
-\begin{defn}
-[Testing Dependency of Events]
-\label{def:event_testdep}.
-\\
-One event $\event_2$ may have a testing dependency on a testing event $\event_1 = (\ssa{b}_1, l_1, n_1, v_1)$
-in a program $\ssa{c}$, with a hidden database $D$, 
-denoted as 
-%
-$\eventdep^{\ctl}(\event_1, \event_2, c, D)$, is defined as follows: 
-%
-\[
-\exists \event_1' \in \eventset^{\test}, \vtrace_0,
-\vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1.
-  \left(
-  \begin{array}{ll}   
-  & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
-    \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-    \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2} 
-  \\ 
-  \bigwedge &
-  \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
-  \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
-  \\
-  \bigwedge &
-  \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
-\end{array}
-\right)
- \]
-%
-\end{defn}
+% \begin{defn}
+% [Testing Dependency of Events]
+% \label{def:event_testdep}.
+% \\
+% One event $\event_2$ may have a testing dependency on a testing event $\event_1 = (\ssa{b}_1, l_1, n_1, v_1)$
+% in a program $\ssa{c}$, with a hidden database $D$, 
+% denoted as 
+% %
+% $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, is defined as follows: 
+% %
+% \[
+% \exists \event_1' \in \eventset^{\test}, \vtrace_0,
+% \vtrace_1, \vtrace_2, \vtrace_2', \ssa{c}_1.
+%   \left(
+%   \begin{array}{ll}   
+%   & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
+%     \config{\ssa{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+%     \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2} 
+%   \\ 
+%   \bigwedge &
+%   \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+%   \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
+%   \\
+%   \bigwedge &
+%   \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
+% \end{array}
+% \right)
+%  \]
+% %
+% \end{defn}
 %
 \begin{defn}
 [Control Dependency of Events]
@@ -108,15 +108,19 @@ Given two events $\event_1, \event_2 \in \eventset^{\asn}$,
 $\event_2$ may depend on $\event_1$ in a program $\ssa{c}$ with a hidden database $D$, denoted as $\eventdep(\event_1, \event_2, c, D)$,
 if and only if
 %
+% \[
+% \eventdep^{val}(\event_1, \event_2, c, D) 
+% \lor
+% \Big(
+% \exists \event_b \in \eventset^{\test}. ~ \eventdep^{val}(\event_1, \event_b, c, D) 
+% \land \eventdep^{\test}(\event_b, \event_2, c, D) 
+% \Big)
+% \] 
 \[
 \eventdep^{val}(\event_1, \event_2, c, D) 
 \lor
-\Big(
-\exists \event_b \in \eventset^{\test}. ~ \eventdep^{val}(\event_1, \event_b, c, D) 
-\land \eventdep^{\test}(\event_b, \event_2, c, D) 
-\Big)
-\] 
-%
+\eventdep^{\ctl}(\event_1, \event_2, c, D) 
+\] %
 %
 \end{defn}
 %
@@ -226,10 +230,8 @@ the dependency graph $\traceG(\ssa{c}, D) = (\vertxs, \edges, \weights, \qflag)$
   \left\{ 
   (x^l, n) \in \mathcal{VAR} \times \mathbb{N}
   ~ \middle\vert ~ 
-  x^l \in \lvar({\ssa{c}}) 
-  \forall \vtrace, s.t.,
-  \config{\ssa{c}, } \to^{*} \config{\eskip, \vtrace},
-  n = \max_{\vtrace}\vcounter(\vtrace)l; 
+  x^l \in \lvar({\ssa{c}}), 
+  n = \max \left\{ \vcounter(\vtrace)l | \vtrace \in \mathcal{T} \st  \config{\ssa{c}, } \to^{*} \config{\eskip, \vtrace}  \right\}
   \right\}
   \\
   \text{Query Flags} &
