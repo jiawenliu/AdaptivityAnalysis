@@ -1,11 +1,86 @@
 \subsection{Inversion Lemmas}
-\begin{lem}[Assignment Event -> (Assignment / Query Command)]
+\begin{lem}[Arithmetic Inversion]
+\[
+	\forall x \in \lvar, \expr \st 
+	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\}
+	\env(\trace) z = \env(\trace') z \st 
+	\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v \neq v'
+	\implies x \in VAR(\expr)\Big)
+\]
 \end{lem}
-
+%
+\begin{lem}[Boolean Inversion]
+\[
+	\forall x \in \lvar, \bexpr \st 
+	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\} \st
+	\env(\trace) z = \env(\trace') z \st 
+	\config{\trace, \bexpr} \barrow v \land \config{\trace', \bexpr} \barrow v' \land v \neq v'
+	\implies x \in VAR(\bexpr) \Big)
+\]
+\end{lem}
+%
+\begin{lem}[Query Inversion]
+\[
+	\forall x \in \lvar, \qexpr \st 
+	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\}
+	\env(\trace) z = \env(\trace') z \st 
+	\config{\trace, \qexpr} \qarrow \qval \land \config{\trace', \qexpr} \qarrow \qval' 
+	\land v \neq_{q} \qval'
+	\implies x \in VAR(\qexpr) \Big)
+\]
+\end{lem}
+%
+\begin{lem}[Assignment Event -> (Assignment / Query Command)]
+\[
+\begin{array}{l}
+	\forall c, \trace_0 \in \mathcal{T} \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
+	\land \exists \event = (x, l, n, v) \land \event \eventin \trace_1 \\
+	\implies 
+	\big( 
+		\exists \trace_1' \in \mathcal{T}, \expr, c_1 \st
+		\config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, [\assign{x}{\expr}]^l;c_1} \rightarrow^{assn}
+		\config{\trace_0\trace_1'\cdot \event \cdot, c_1} \rightarrow^{*}
+		\config{\trace_0\trace_1, \eskip}
+	\big)
+	\\ \qquad \lor
+	\big( 
+		\exists \trace_1' \in \mathcal{T}, \qexpr, c' \st
+		\config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, [\assign{x}{\query(\qexpr)}]^l;c'} \rightarrow^{query}
+		\config{\trace_0\trace_1' \cdot \event \cdot, c'} \rightarrow^{*}
+		\config{\trace_0\trace_1, \eskip}
+	\big)
+\end{array}
+\]
+%
+\end{lem}
+%
 \begin{lem}[Testing Event -> (If / While command)]
+\[
+\begin{array}{l}
+	\forall c, \trace_0 \in \mathcal{T}, \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
+	\land \exists \event = (x, l, n, v) \land \event \eventin \trace_1 \\
+	\implies 
+	\big( 
+		\exists \trace_1' \in \mathcal{T} \bexpr, c', c_1, c_2, c'' \st
+		\config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eif ([b]^l, c_1, c_2);c'} \rightarrow^{if-b}
+		\config{\trace_0\trace_1'\cdot \event \cdot, c''} \rightarrow^{*}
+		\config{\trace_0\trace_1, \eskip} 
+	\big)
+	\\ \qquad \lor
+	\big( 
+		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_w, c'' \st
+		\config{\trace_0, c} \rightarrow^* \config{\trace_0 \trace_1, \ewhile([b]^l, c_w);c'} \rightarrow^{while-b}
+		\config{\trace_0\trace_1'\cdot \event \cdot, c''} \rightarrow^{*}
+		\config{\trace_0\trace_1, \eskip}
+	\big)
+\end{array}
+\]
 \end{lem}
 
 \begin{lem}[Control Dependency -> Exists Testing Event]
+\[
+	\forall \event
+\]
 \end{lem}
 
 \begin{lem}[Control Dependency -> Event 2 in the Body Command of the Testing Event]

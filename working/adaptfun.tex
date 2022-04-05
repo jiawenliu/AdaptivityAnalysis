@@ -22,56 +22,6 @@ In the following subsections, we present the adaptivity analysis based on the \T
 %
 \label{subsec:alg_notation}
 %
-\begin{defn}[Assigned Variables ($\lvar$)]
-Given a program $\ssa{c}$, its assigned variables $\lvar$ is a vector containing all variables newly assigned in the program preserving the order. 
-It is defined as follows:
-$$
-  \lvar_{\ssa{c}} \triangleq
-  \left\{
-  \begin{array}{ll}
-   		[\ssa{x}] 									
-   		& \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
-   		\\
-     	\left[ \ssa{x} \right] 									
-     	& \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
-     	\\
-     	\lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}} 	
-     	& \ssa{c} = \ssa{c_1};\ssa{c_2}
-     	\\
-     	\lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
-     	& \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
-     	[\bar{y}, \bar{y_2}, \bar{y_3}], 
-     	[\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
-     	\\
-     	\lvar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
-     	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
-\end{array}
-\right.
-$$
-\end{defn}
-%
-\jl{
-We are abusing the notations and operators from list here. 
-The notation $[]$ represents an empty vector
-and $x::A$ represents add an element $x$ to the head of the vector $A$.
-The concatenation operation between 2 vectors $A_1$ and $A_2$, i.e., $A_1 ++ A_2$ is mimic the standard list concatenation operations as follows:
-%
-\begin{equation}
-		A_1 ++ A_2  
-		\triangleq \left\{
-		\begin{array}{ll} 
-			A_2 				& A_1 = []\\
-			x::(A_1' ++ A_2)	& A_1 = x::A_1'
-		\end{array}
-		\right.
-\end{equation}
-%
-We use index within parenthesis to denote the access to the element of corresponding location,
-$A(i)$ denotes the element at location $i$ in the vector $A$ and 
-$M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matrix $M$. 
-}
-%
-
 Consider the program $c$ below in the left hand side as an example, its assigned variables $\lvar$ (short for $\lvar(\ssa{c})$) is as in the right hand side is shown as follows:
 $$
 \ssa{c} = 
@@ -98,7 +48,7 @@ For any program $\ssa{c}$, every variable in $\lvar(\ssa{c})$ is distinct
  It is due to the SSA nature. We can prove it by induction on $\ssa{c}$.
 \end{proof}
 
-\jl{
+{
 \begin{defn}[Variable Flags ($\flag$)].
 \\
 Given a program  $\ssa{c}$ with its assigned variables $\lvar$, the $\flag$ is a vector of the same length as $\lvar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\lvar$ (i.e., $\ssa{x} = \lvar(i)$), 
@@ -355,7 +305,7 @@ The $\varCol$ algorithm shows how the assigned variables $\lvar$ are collected
 along with constructing the flag for each variable, i.e., $\flag$.
 The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
 It has the form: 
-\jl{$\ag{\lvar; \flag; \ssa{c}}{ \lvar'; \flag'} $}. 
+{$\ag{\lvar; \flag; \ssa{c}}{ \lvar'; \flag'} $}. 
 The input of $\varCol$ is a program $\ssa{c}$, 
 the assigned variables $\lvar$ collected before the program $\ssa{c}$ 
 as well as the flags $\flag$ for every corresponding variable .
@@ -364,7 +314,7 @@ The output of the algorithm is the updated assigned variables $\lvar'$ and flags
 % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\lvar; w; \ssa{c}}{\lvar';w'} $ as in Figure \ref{fig:var_col}. 
 %
 \begin{figure}
-\jl{
+{
 \begin{mathpar}
 \inferrule
 {
@@ -463,7 +413,7 @@ The assignment commands are the source of variables $\varCol$ collecting,
 Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
 %
 %
-\jl{
+{
 \begin{defn}[Valid Index (Remove?)]
 Given an assigned variable list $\lvar$, $\lvar; \vDash (\ssa{c},i_1,i_2)$ iff 
 $\lvar' = \lvar[0,\ldots, i_1-1], \lvar';\ssa{c} \to \lvar'' \land \lvar'' = \lvar[0, \ldots, i_2-1] $.  
@@ -478,12 +428,12 @@ We track the data flow relations between all these assigned variables. These inf
 % We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\lvar|$. 
 %
 The algorithm to fill in the matrix is of the form: 
-\jl{$\ad{\Gamma ; \ssa{c} ; \lvar}{\Mtrix}$}
+{$\ad{\Gamma ; \ssa{c} ; \lvar}{\Mtrix}$}
 $\ad{\Gamma ; \ssa{c} ; i_1, i_2}{\Mtrix; \flag}$. 
 $\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\lvar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 %
 %
-\jl{
+{
 \begin{defn}[Valid Gamma (Remove?)]
 $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
 \end{defn}
@@ -590,8 +540,8 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 }~\textbf{\graphGen-while}
 }
 \end{mathpar}
-\jl{Updated Flow Generation Algorithm}
-\jl{
+{Updated Flow Generation Algorithm}
+{
 \framebox{$ {\Gamma} 
 \vdash_{\Mtrix, \lvar} ~ \ssa{c} $}
 \begin{mathpar}
@@ -700,7 +650,7 @@ Below we define the valid data flow matrix, to have a clear understanding on the
 For a assigned variables $\lvar$, $\lvar \vDash (\Mtrix,\flag)$ iff the cardinality of $\lvar$ equals to the one of $\flag$, $|\lvar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
-\jl{
+{
 \begin{defn}[Valid Matrix]
 Given a program $\ssa{c}$ with its assigned variables $\lvar$, 
 $\lvar \vDash \Mtrix$ iff the cardinality of $\Mtrix$ equals to the product of  $\lvar$'s cardinality,
@@ -977,12 +927,12 @@ for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
 \end{itemize}
 $(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
 \\
-\jl{
+{
 Length of this finite walk $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = n$.
 }
 \end{defn}
 
-\jl{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
+{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
 we use $\walks(G)$ to denote a set containing all finite walks $k$ in $G$;
 and $k_{v_1 \to v_2} \in \walks(G)$where $v_1, v_2 \in \vertxs$ denotes the walk from vertex $v_1$ to $v_2$ .
 }
@@ -1061,7 +1011,7 @@ the program-based adaptivity for $c$ is defined as%
 %
 % \subsection{\todo{Soundness of the \THESYSTEM}}
 
-% \jl{
+% {
 % 	\begin{thm}[Soundness of the \THESYSTEM].
 % 	Given a program $\ssa{c}$, we have:
 % 	%
@@ -1070,7 +1020,7 @@ the program-based adaptivity for $c$ is defined as%
 % 	\]
 % 	\end{thm}
 % }
-% \jl{
+% {
 % \begin{proof}
 % Given a program $\ssa{c}$, 
 % we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$
