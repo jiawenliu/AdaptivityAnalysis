@@ -3,7 +3,7 @@
 \[
 \ewhile [(x > 0)]{}^0 \edo [x = x - 1]{}^1;
 \]
-Let $\trace_0 \in \mathbb{T}$ be the initial trace, 
+Let $\trace_0 \in \mathcal{T}$ be the initial trace, 
 without loss of generalization, let $\env(\trace_0) x = 1$.
 \\
 By operational semantics rules, we have following evaluation:
@@ -67,7 +67,7 @@ By operational semantics rules, we have following evaluation:
   ~\textbf{seq2}
 \end{mathpar}
 %
-Then we have following execution, where $\trace_0 \in \mathbb{T}$ and $\env(\trace_0) x = 1$.:
+Then we have following execution, where $\trace_0 \in \mathcal{T}$ and $\env(\trace_0) x = 1$.:
 \[
 \config{\ewhile [(x > 0)]{}^0 \edo [x = x - 1]{}^1;, \trace_0}
 	\rightarrow^{*}
@@ -116,11 +116,11 @@ Let $\trace_0 = \cdot (x, 0, 1, 2) \in \mathbb{T}$, by semantics definition, we 
 & \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1)} \\
 & \rightarrow^\rname{seq2}
 \config{[\eskip]{}^1;, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot(x, 2, 1, 1) \\
-& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 1, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1) \cdot ((x > 0), 1, 3, \efalse)} \\
+& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1) \cdot ((x > 0), 1, 3, \efalse)} \\
 \end{array}
 \end{equation}
 %
-Let $\event_1 = (x, 2, 1, 1)$,  $\event_1' = (x, 2, 1, 0)$ and $\event_b = ((x > 0), 1, 2, \etrue)$, then we have another execution as follows:
+Let $\event_1 = (x, 2, 1, 1)$,  $\event_1' = (x, 2, 1, 0)$ and $\event_2 = ((y, 3, 2, 1))$, then we have another execution as follows:
 \[
 \begin{array}{ll}
 & \config{[\eskip]{}^2  [y = 1;]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1'} \\
@@ -131,32 +131,21 @@ Let $\event_1 = (x, 2, 1, 1)$,  $\event_1' = (x, 2, 1, 0)$ and $\event_b = ((x >
 \end{array}
 \]
 %
-Then, we have $\event_b' = ((x > 0), 1, 2, \efalse)$ where $\event_b \sigeq \event_b'$ and $\event_b \eventneq \event_b'$.
-\\
-By Definition~\ref{def:event_valdep}, we have:
-\\
+Then, we have:
 \[
-	\eventdep^{val}(\event_1, \event_b, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
-\]
-\\
-Let $\event_2 = (y, 3, 2, 1)$ then we have another execution as follows:
-\[
-\begin{array}{ll}
-\config{[\eskip;]{}^1, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \efalse)} \\
-\rightarrow^{*} 
-\config{[\eskip;]{}^1, \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot \event_b'}
+\begin{array}{l}
+\event_2 \sigin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1) \cdot ((x > 0), 1, 3, \efalse)\\
+\land
+\event_2 \notsigin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \efalse)
 \end{array}
 \]
 %
-where $\event_2 \notsigin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot \event_b'$
-\\
-By Definition~\ref{def:event_testdep}, we have:
-\\
+By Definition~\ref{def:event_ctldep}, we have:
+%
 \[
-	\eventdep^{\test}(\event_b, \event_2, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
+	\eventdep^{\ctl}(\event_1, \event_2, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
 \]
-\\
-
+%
 By Definition~\ref{def:event_dep}, we have: 
 \[
 	\eventdep(\event_1, \event_2, \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, D)
@@ -167,39 +156,49 @@ By Definition~\ref{def:event_dep}, we have:
 	\vardep(x^2, y^3, {\ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3})
 \]
 %
-%
 \end{proof}
 \end{example}
 %
 \clearpage
 \begin{example}[Excluding the Over approximation in Example.~\ref{eq:sem_timingoverapp}].
 \\
-If $\mathsf{diff}(\omega, \omega')$ (in \cite{cousot2019abstract} Equation~(2)) simply includes timing channel,(i.e., $\omega$ is a strict prefix of $\omega'$) as follows:
+Consider the same example in Example.~\ref{eq:sem_timingoverapp}, where the dependency is over approximated by Definition~2 (in \cite{cousot2019abstract}):
 \[
-	\mathsf{diff}(\omega, \omega') \triangleq \exists \omega_0, \omega_1, \omega_1', v, v' 
-	\st \bigvee \left\{
-	\begin{array}{lr}
-	(\omega = \omega_0 \cdot v \omega_1
-		\land \omega' = \omega_0 \cdot v' \omega_1' \land v \neq v') & \mbox{original definition} \\
-	(\omega = \omega' \cdot v \cdot \omega_1) & \mbox{including timing channel} \\
-	\end{array}
-	\right\}
-\] 
-then by Definition~2 (in \cite{cousot2019abstract}), there is a over approximation example:
-\[
-	\ewhile {}^2 (x > 0) {}^3 y = 1; 
+	\ewhile [(x > 0)] {}^2 [ y = 1;]{}^3 
 \]
-Let $z \in \mathbb{V}\setminus \{x\}$ be arbitrary variable different from $x$,
+Let $z^i \in \lvar_{C} \setminus \{x^1\}$ be arbitrary variable different from $x$,
 in this example, $y$ doesn't rely on $z$. 
-However, according to value dependency defined in Definition~2 \cite{cousot2019abstract} we can derive 
-\[
-	z \rightsquigarrow^{2}_{\ewhile {}^2 (x > 0) {}^3 y = 1;} y
-\]
+This example shows by the modified data dependency in Definition~\ref{def:var_dep}, the dependency between $z^i$ and $y^3$ cannot be derived.
 %
 \begin{proof}
-By semantics definition, we have:
 %
+Without loss of generalization, 
+let $\trace_0 \in \mathcal{T}$ be arbitrary initial trace where $\env(\trace_0) x = v$ and $v > 0$.
+\\
+By operational semantics, we have:
+\[
+\label{eq:os_timingdep}
+\begin{array}{ll}
+& \config{\ewhile  [(x > 0)]{}^2 \edo [y = 1;]{}^3 , \trace_0} \\
+& \rightarrow^*
+\config{[\eskip]{}^1;, 
+\trace_0 \cdot ((x > 0), 2, 1, \etrue) \\
+& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 2, 2, \etrue) \cdot(y, 3, 2, 1) \cdots} \\
+\end{array}
+\]
 %
+For arbitrary initial trace $\trace_0 \in \mathcal{T}$, there doesn't exist an event $\event_1$ s.t. $\pi_1(\event_1) = (z, i)$ in this trace, i.e.,
+\[
+  \not\exists \event \st \pi_1(\event) = (z, i) \land
+ \event_i \sigin \cdot ((x > 0), 2, 1, \etrue) \cdot(y, 3, 1, 1) \cdot ((x > 0), 2, 2, \etrue) \cdot(y, 3, 2, 1) \cdots
+\]
+%
+Then, by definition of variable dependency, we know:
+\[ 
+\not\exists \event \st \pi_1(\event) = (z, i) \vardep(z^1, y^3, \ewhile  [(x > 0)]{}^2 \edo [y = 1;]{}^3, D)
+\]
+%
+i.e., there isn't dependency relations between $z^i$ and $y^3$ by Definition~\ref{def:var_dep}
 \end{proof}
 \end{example}
 %
