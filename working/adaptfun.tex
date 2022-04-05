@@ -1,13 +1,13 @@
-
-\section{\THESYSTEM}
+%
+%
 There are four steps to get the adaptivity of a program $\ssa{c}$ based on analyzing the program. 
 \begin{enumerate}
-    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable vector $\avar$. 
-    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\avar$.
+    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable vector $\lvar$. 
+    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
     %
-    \item Tracking the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\avar| \times |\avar|$. 
+    \item Tracking the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar| \times |\lvar|$. 
     %
-    \item Estimating the reachability bound of each variable in $\avar$.
+    \item Estimating the reachability bound of each variable in $\lvar$.
     %
     \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute the adaptivity bound.
 \end{enumerate}
@@ -22,11 +22,11 @@ In the following subsections, we present the adaptivity analysis based on the \T
 %
 \label{subsec:alg_notation}
 %
-\begin{defn}[Assigned Variables ($\avar$)]
-Given a program $\ssa{c}$, its assigned variables $\avar$ is a vector containing all variables newly assigned in the program preserving the order. 
+\begin{defn}[Assigned Variables ($\lvar$)]
+Given a program $\ssa{c}$, its assigned variables $\lvar$ is a vector containing all variables newly assigned in the program preserving the order. 
 It is defined as follows:
 $$
-  \avar_{\ssa{c}} \triangleq
+  \lvar_{\ssa{c}} \triangleq
   \left\{
   \begin{array}{ll}
    		[\ssa{x}] 									
@@ -35,15 +35,15 @@ $$
      	\left[ \ssa{x} \right] 									
      	& \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
      	\\
-     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} 	
+     	\lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}} 	
      	& \ssa{c} = \ssa{c_1};\ssa{c_2}
      	\\
-     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+     	\lvar_{\ssa{c_1}} ++ \lvar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
      	& \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
      	[\bar{y}, \bar{y_2}, \bar{y_3}], 
      	[\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
      	\\
-     	\avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+     	\lvar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
      	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
 \end{array}
 \right.
@@ -72,7 +72,7 @@ $M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matri
 }
 %
 
-Consider the program $c$ below in the left hand side as an example, its assigned variables $\avar$ (short for $\avar(\ssa{c})$) is as in the right hand side is shown as follows:
+Consider the program $c$ below in the left hand side as an example, its assigned variables $\lvar$ (short for $\lvar(\ssa{c})$) is as in the right hand side is shown as follows:
 $$
 \ssa{c} = 
 \begin{array}{l}
@@ -83,7 +83,7 @@ $$
 \left[\ssa{\assign {x_3} {x_2 + 2}}		\right]^3
 \end{array}
 ~~~~~~~~~~~~
-\avar = \left [ 
+\lvar = \left [ 
 \begin{matrix}
 \ssa{x_1} \\
 \ssa{x_2} \\
@@ -92,7 +92,7 @@ $$
 $$
 %
 \begin{lem}
-For any program $\ssa{c}$, every variable in $\avar(\ssa{c})$ is distinct
+For any program $\ssa{c}$, every variable in $\lvar(\ssa{c})$ is distinct
 \end{lem}
 \begin{proof}
  It is due to the SSA nature. We can prove it by induction on $\ssa{c}$.
@@ -101,7 +101,7 @@ For any program $\ssa{c}$, every variable in $\avar(\ssa{c})$ is distinct
 \jl{
 \begin{defn}[Variable Flags ($\flag$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\avar$, the $\flag$ is a vector of the same length as $\avar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\avar$ (i.e., $\ssa{x} = \avar(i)$), 
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$, the $\flag$ is a vector of the same length as $\lvar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\lvar$ (i.e., $\ssa{x} = \lvar(i)$), 
 $\flag(i) \in \{0, 1, 2\}$ is defined as follows:
 %
 %
@@ -110,12 +110,12 @@ $\flag(i) \in \{0, 1, 2\}$ is defined as follows:
 	\left\{
 	\begin{array}{ll}
 	2 & 
-	\ssa{x} = \avar(i) \land (\exists \ssa{\qexpr}. ~ s.t., ~
+	\ssa{x} = \lvar(i) \land (\exists \ssa{\qexpr}. ~ s.t., ~
 	[\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c})
 	\\
 	1 &  
 	\begin{array}{l}
-	\ssa{x} = \avar(i) \bigwedge \\
+	\ssa{x} = \lvar(i) \bigwedge \\
 	\left(
 	\begin{array}{l}
 	\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
@@ -162,9 +162,9 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 \end{equation}
 %
 \todo{
-Given a program  $\ssa{c}$ with its assigned variables $\avar$,
-and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\avar$ 
-(i.e., $\ssa{x} = \avar(i)$ and $\ssa{y} = \avar(j)$),
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$,
+and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\lvar$ 
+(i.e., $\ssa{x} = \lvar(i)$ and $\ssa{y} = \lvar(j)$),
 we say $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$ if and only if $j < i$ and 
 the value of $\ssa{y}$ directly or indirectly influence the evaluation of the value of $\ssa{x}$ as follows:
 %
@@ -187,8 +187,8 @@ expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ r
 \begin{defn}[Data Flows between Assigned Variables ($\flowsto$)].
 \label{def:flowsto}
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\avar$,
-and two variables $\ssa{x}$, $\ssa{y}$ s.t., $\ssa{x} = \avar(i)$ and $\ssa{y} = \avar(j)$,
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$,
+and two variables $\ssa{x}$, $\ssa{y}$ s.t., $\ssa{x} = \lvar(i)$ and $\ssa{y} = \lvar(j)$,
 $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is defined as:
 %
 \[
@@ -227,9 +227,9 @@ $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is de
 %
 %
 \begin{defn}[Data Flow Matrix ($\Mtrix$)]
-Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
 its data flow matrix $\Mtrix$ is a matrix of size $N \times N$ s.t.
-$\forall \ssa{x, y} \in \avar. ~ \ssa{x} = \avar(i), \ssa{y} = \avar(j)$:
+$\forall \ssa{x, y} \in \lvar. ~ \ssa{x} = \lvar(i), \ssa{y} = \lvar(j)$:
 %
 \[
 \Mtrix(i, j) \triangleq
@@ -239,7 +239,7 @@ $\forall \ssa{x, y} \in \avar. ~ \ssa{x} = \avar(i), \ssa{y} = \avar(j)$:
 0	& o.w.
 \end{array}
 \right.,
-\ssa{x} = \avar(i); \ssa{y} = \avar(j); i, j = 1, \ldots, N .
+\ssa{x} = \lvar(i); \ssa{y} = \lvar(j); i, j = 1, \ldots, N .
 \]
 %
 \end{defn}
@@ -278,13 +278,13 @@ $$
 %
 There are two special matrices used for generating the data flow matrix $\Mtrix$ in the analysis algorithm. They are the left matrix $\lMtrix_i$ and right matrix $\mathsf{R_{(e, i)}}$.
 
-Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
 the left matrix $\lMtrix_i$ generates a matrix of $1$ column, $N$ rows, 
 where the $i$-th row is $1$ and all the other rows are $0$.
 %
 \begin{defn}[Left Matrix ($\lMtrix_i$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$, 
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$, 
 the left matrix $\lMtrix_i$ is defined as follows:
 \[
 	\lMtrix_i(j) : = 
@@ -299,14 +299,14 @@ the left matrix $\lMtrix_i$ is defined as follows:
 \]
 \end{defn}
 %
-Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
 the right matrix $\rMtrix_{\expr, i}$ generates a matrix of one row and $N$ columns, 
 where the locations of free variables in $\expr$ is marked as $1$. 
 %
 %
 \begin{defn}[Right Matrix ($\rMtrix_{\expr}$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\avar$ of length $N$, 
+Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$, 
 the right matrix $\rMtrix_{\expr}$ is defined as follows:
 \[
 	\rMtrix_{\expr}(j) : = 
@@ -317,13 +317,13 @@ the right matrix $\rMtrix_{\expr}$ is defined as follows:
 	0 & o.w.
 	\end{array}
 	\right.,
-	\ssa{x} = \avar(j) ~ , ~ j = 1, \ldots, N.
+	\ssa{x} = \lvar(j) ~ , ~ j = 1, \ldots, N.
 \]
 %
 %
 \end{defn}
 %
-Using the same example program $\ssa{c}$ as above with assigned variables $\avar = [ \ssa{x_1 , x_2 , x_3} ] $,
+Using the same example program $\ssa{c}$ as above with assigned variables $\lvar = [ \ssa{x_1 , x_2 , x_3} ] $,
 the left and right matrices w.r.t. its $2$-nd command 
 $\left[\ssa{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 \[
@@ -344,24 +344,24 @@ $\left[\ssa{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 \subsection{Algorithmic Analysis Rules}
 %
 \paragraph{Variable Collection Algorithm, $\varCol$}
-% The $\varCol$ algorithm shows how the assigned variables $\avar$ are collected 
+% The $\varCol$ algorithm shows how the assigned variables $\lvar$ are collected 
 % (via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step.
 % The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
-% It has the form: $\ag{\avar; w; \ssa{c}}{ \avar'; w'} $. 
-% The input of $\varCol$ is the assigned variables $\avar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
-% The output of the algorithm is the updated assigned variables $\avar'$, along with the updated while map $w$ for next steps' collecting.   
-The $\varCol$ algorithm shows how the assigned variables $\avar$ are collected 
+% It has the form: $\ag{\lvar; w; \ssa{c}}{ \lvar'; w'} $. 
+% The input of $\varCol$ is the assigned variables $\lvar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
+% The output of the algorithm is the updated assigned variables $\lvar'$, along with the updated while map $w$ for next steps' collecting.   
+The $\varCol$ algorithm shows how the assigned variables $\lvar$ are collected 
 (via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step, 
 along with constructing the flag for each variable, i.e., $\flag$.
 The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
 It has the form: 
-\jl{$\ag{\avar; \flag; \ssa{c}}{ \avar'; \flag'} $}. 
+\jl{$\ag{\lvar; \flag; \ssa{c}}{ \lvar'; \flag'} $}. 
 The input of $\varCol$ is a program $\ssa{c}$, 
-the assigned variables $\avar$ collected before the program $\ssa{c}$ 
+the assigned variables $\lvar$ collected before the program $\ssa{c}$ 
 as well as the flags $\flag$ for every corresponding variable .
-The output of the algorithm is the updated assigned variables $\avar'$ and flags $\flag'$ thorough the program $\ssa{c}$
+The output of the algorithm is the updated assigned variables $\lvar'$ and flags $\flag'$ thorough the program $\ssa{c}$
 %
-% We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\avar; w; \ssa{c}}{\avar';w'} $ as in Figure \ref{fig:var_col}. 
+% We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\lvar; w; \ssa{c}}{\lvar';w'} $ as in Figure \ref{fig:var_col}. 
 %
 \begin{figure}
 \jl{
@@ -370,39 +370,39 @@ The output of the algorithm is the updated assigned variables $\avar'$ and flags
 {
 \empty
 }
-{ \ag{\avar ; \flag; \ssa{[\assign {x}{\expr}]^{l}}}
- {\avar ++ [\ssa{x}]; \flag++[0]}
+{ \ag{\lvar ; \flag; \ssa{[\assign {x}{\expr}]^{l}}}
+ {\lvar ++ [\ssa{x}]; \flag++[0]}
 }
 ~\textbf{\varCol-asgn}
 \and
 \inferrule
 {
 }
-{ \ag{\avar; \flag; [ \assign{\ssa{x}}{\query(\ssa{\qexpr})}]^{l}}
-{\avar ++ [\ssa{x}]; \flag ++ [2]} 
+{ \ag{\lvar; \flag; [ \assign{\ssa{x}}{\query(\ssa{\qexpr})}]^{l}}
+{\lvar ++ [\ssa{x}]; \flag ++ [2]} 
 }~\textbf{\varCol-query}
 %
 \and 
 %
 \inferrule
 {
-\ag{\avar; [];  \ssa{c_1}}{\avar_1; \flag_1}
+\ag{\lvar; [];  \ssa{c_1}}{\lvar_1; \flag_1}
 \and 
-\ag{\avar_1; []; \ssa{c_2}}{ \avar_2; \flag_2}
+\ag{\lvar_1; []; \ssa{c_2}}{ \lvar_2; \flag_2}
 \and 
-\avar' = [\bar{\ssa{x}}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]}
+\lvar' = [\bar{\ssa{x}}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]}
  \\
-k = \len(\avar')
+k = \len(\lvar')
 \and
-\avar_3 = \avar_2 ++ \avar'
+\lvar_3 = \lvar_2 ++ \lvar'
  \and
  \flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1) ++ ([1]^k)
  }
 {
-\ag{\avar; \flag;
+\ag{\lvar; \flag;
 [\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}],
 [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}], \ssa{ c_1, c_2)}]^{l} }
-{\avar_3; \flag_3}
+{\lvar_3; \flag_3}
 }~\textbf{\varCol-if}
 %
 %
@@ -411,13 +411,13 @@ k = \len(\avar')
 %
 \inferrule
 {
-\ag{\avar; \flag \ssa{c_1}}{\avar_1; \flag_1}
+\ag{\lvar; \flag \ssa{c_1}}{\lvar_1; \flag_1}
 \and 
-\ag{\avar_1; \flag_1 ; \ssa{c_2}}{\avar_2; \flag_2}
+\ag{\lvar_1; \flag_1 ; \ssa{c_2}}{\lvar_2; \flag_2}
 }
 {
-\ag{\avar; \flag;
-\ssa{(c_1 ; c_2)}}{\avar_2 ; \flag_2}
+\ag{\lvar; \flag;
+\ssa{(c_1 ; c_2)}}{\lvar_2 ; \flag_2}
 }
 ~\textbf{\varCol-seq}
 \and 
@@ -426,18 +426,18 @@ k = \len(\avar')
 {
 \inferrule
 {
-{ \ag{\avar; [] ; \ssa{c}}
-{\avar'; \flag' }  }
+{ \ag{\lvar; [] ; \ssa{c}}
+{\lvar'; \flag' }  }
 \\
-\avar'' = \avar'++ \ssa{[\bar{x}]}
+\lvar'' = \lvar'++ \ssa{[\bar{x}]}
 \and 
 \flag'' = \flag ++ (\flag' \uplus 1) ++ ([1]^{\len(\ssa{[\bar{x}]})})
 }
 {
-\ag{\avar; \flag;  
+\ag{\lvar; \flag;  
 \ewhile [\ssa{b}]^{l}, \ssa{n}, 
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-\edo  \ssa{c} }{\avar''; \flag''}
+\edo  \ssa{c} }{\lvar''; \flag''}
 }
 ~\textbf{\varCol-while}
  }
@@ -465,22 +465,22 @@ Below we present the definition for a valid index, to have a clear understanding
 %
 \jl{
 \begin{defn}[Valid Index (Remove?)]
-Given an assigned variable list $\avar$, $\avar; \vDash (\ssa{c},i_1,i_2)$ iff 
-$\avar' = \avar[0,\ldots, i_1-1], \avar';\ssa{c} \to \avar'' \land \avar'' = \avar[0, \ldots, i_2-1] $.  
+Given an assigned variable list $\lvar$, $\lvar; \vDash (\ssa{c},i_1,i_2)$ iff 
+$\lvar' = \lvar[0,\ldots, i_1-1], \lvar';\ssa{c} \to \lvar'' \land \lvar'' = \lvar[0, \ldots, i_2-1] $.  
 \end{defn}}
 %
 %
 \paragraph{Data Flow Matrix Generating Algorithm}
 %
-In this data flow matrix generating algorithm, we analyze the data flow information among all assigned variables $\avar$ collected via the the $\varCol$ algorithm of length $N$.
+In this data flow matrix generating algorithm, we analyze the data flow information among all assigned variables $\lvar$ collected via the the $\varCol$ algorithm of length $N$.
 %
 We track the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $N \times N$. 
-% We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\avar|$. 
+% We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\lvar|$. 
 %
 The algorithm to fill in the matrix is of the form: 
-\jl{$\ad{\Gamma ; \ssa{c} ; \avar}{\Mtrix}$}
+\jl{$\ad{\Gamma ; \ssa{c} ; \lvar}{\Mtrix}$}
 $\ad{\Gamma ; \ssa{c} ; i_1, i_2}{\Mtrix; \flag}$. 
-$\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\avar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
+$\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\lvar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 %
 %
 \jl{
@@ -593,16 +593,16 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 \jl{Updated Flow Generation Algorithm}
 \jl{
 \framebox{$ {\Gamma} 
-\vdash_{\Mtrix, \avar} ~ \ssa{c} $}
+\vdash_{\Mtrix, \lvar} ~ \ssa{c} $}
 \begin{mathpar}
 \inferrule
 {
-\ssa{x} = \avar(i)
+\ssa{x} = \lvar(i)
 \and 
 \Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr}} + \Gamma )
 }
 {
-\ad{\Gamma; [\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; \avar}
+\ad{\Gamma; [\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; \lvar}
  {\Mtrix}
 }
 ~\textbf{\graphGen-asgn}
@@ -610,12 +610,12 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 {
 \inferrule
 {
-\ssa{x} = \avar(i)
+\ssa{x} = \lvar(i)
 \and 
 \Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr}} + \Gamma )
 }
 { 
-\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} ; \avar }
+\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} ; \lvar }
 {\Mtrix}
 }~\textbf{\graphGen-query}}
 %
@@ -624,19 +624,19 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 {
 \inferrule
 {
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \avar }{ \Mtrix_1}}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \lvar }{ \Mtrix_1}}
 \and 
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_2}; \avar }{ \Mtrix_2}}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_2}; \lvar }{ \Mtrix_2}}
 \\
-\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{ \Mtrix_x}
-%
-\\
-%
-\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \avar }{ \Mtrix_y}
+\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \lvar }{ \Mtrix_x}
 %
 \\
 %
-\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \avar }{ \Mtrix_z}
+\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \lvar }{ \Mtrix_y}
+%
+\\
+%
+\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \lvar }{ \Mtrix_z}
 \\
 {\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
 }
@@ -656,13 +656,13 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 %
 \inferrule
 {
-{\ad{\Gamma; \ssa{c_1}; \avar }{ \Mtrix_1}  }
+{\ad{\Gamma; \ssa{c_1}; \lvar }{ \Mtrix_1}  }
 \and 
 {
-\ad{\Gamma;\ssa{c_2}; \avar}{ \Mtrix_2}}
+\ad{\Gamma;\ssa{c_2}; \lvar}{ \Mtrix_2}}
 }
 {
-\ad{\Gamma ; (\ssa{c_1 ; c_2} ); \avar}
+\ad{\Gamma ; (\ssa{c_1 ; c_2} ); \lvar}
 {( \Mtrix_1 {;} \Mtrix_2) }
 }
 ~\textbf{\graphGen-seq}
@@ -675,11 +675,11 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 \inferrule
 {
 {
-\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c}; \avar  }{ \Mtrix_{1}}
+\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c}; \lvar  }{ \Mtrix_{1}}
 }
 \\
 {
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \avar }{\Mtrix_2}
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \lvar }{\Mtrix_2}
 }
 % \and
 % { \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
@@ -688,7 +688,7 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 \ad{\Gamma;
 \ewhile [ \sbexpr ]^{l},\ssa{n},
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-\edo  \ssa{c}; \avar }
+\edo  \ssa{c}; \lvar }
 { \Mtrix_{1} + \Mtrix_{2}}
 }~\textbf{\graphGen-while}
 }
@@ -697,14 +697,14 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 %
 Below we define the valid data flow matrix, to have a clear understanding on the data flow generating algorithm:
 \begin{defn}[Valid Matrix]
-For a assigned variables $\avar$, $\avar \vDash (\Mtrix,\flag)$ iff the cardinality of $\avar$ equals to the one of $\flag$, $|\avar| = |\flag|$ 
+For a assigned variables $\lvar$, $\lvar \vDash (\Mtrix,\flag)$ iff the cardinality of $\lvar$ equals to the one of $\flag$, $|\lvar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
 \jl{
 \begin{defn}[Valid Matrix]
-Given a program $\ssa{c}$ with its assigned variables $\avar$, 
-$\avar \vDash \Mtrix$ iff the cardinality of $\Mtrix$ equals to the product of  $\avar$'s cardinality,
-i.e., $|\Mtrix| = |\avar| \times |\avar|$.
+Given a program $\ssa{c}$ with its assigned variables $\lvar$, 
+$\lvar \vDash \Mtrix$ iff the cardinality of $\Mtrix$ equals to the product of  $\lvar$'s cardinality,
+i.e., $|\Mtrix| = |\lvar| \times |\lvar|$.
 \end{defn}
 }%
 %
@@ -712,15 +712,15 @@ i.e., $|\Mtrix| = |\avar| \times |\avar|$.
 
 %
 \paragraph{Reachability Bounds}
-Given a program $c$ with its assigned variables $\avar$,
-we use the $\rb(\ssa{x}, \ssa{c})$ algorithm, from paper \cite{10.1145/1806596.1806630}, to estimate the reachability bound for each variable $\ssa{x} \in \avar$. 
+Given a program $c$ with its assigned variables $\lvar$,
+we use the $\rb(\ssa{x}, \ssa{c})$ algorithm, from paper \cite{10.1145/1806596.1806630}, to estimate the reachability bound for each variable $\ssa{x} \in \lvar$. 
 The input of $\rb$ is a program $\ssa{c}$ in SSA language and a variable $\ssa{x} $ from $\ssa{c}$.
 The output of $\rb(\ssa{x}, \ssa{c})$ is an integer representing the reachability bound of $\ssa{x}$ in $\ssa{c}$.
 %
 
 %
 The following example programs $\ssa{c}2$ and $\ssa{c}3$ with while loop illustrate how the algorithm works.
-The collected assigned variables, $\avar_{\ssa{c}2}$ and $\avar_{\ssa{c}3}$,
+The collected assigned variables, $\lvar_{\ssa{c}2}$ and $\lvar_{\ssa{c}3}$,
 data flow matrix $\Mtrix_{\ssa{c}2}$ and  $\Mtrix_{\ssa{c}3}$
 and variable flags $\flag_{\ssa{c}2}$ and $\flag_{\ssa{c}3}$
 for program $\ssa{c}2$ and $\ssa{c}3$
@@ -751,7 +751,7 @@ are presented in the right hand side.
 \end{array}
 ,
 ~~~~
-\avar_{\ssa{c}2} = \left [ \begin{matrix}
+\lvar_{\ssa{c}2} = \left [ \begin{matrix}
 \ssa{x}_1 \\
 \ssa{x}_3 \\
 \ssa{y}_1 \\
@@ -819,7 +819,7 @@ are presented in the right hand side.
     \left[ \ssa{\assign{z_1}{x_3}} + 2  \right]^{6}
 \end{array},
 ~~~~~~
-\avar_{\ssa{c}3} = \left [ \begin{matrix}
+\lvar_{\ssa{c}3} = \left [ \begin{matrix}
 \ssa{x}_1 \\
 \ssa{i}_1 \\
 \ssa{x}_3 \\
@@ -869,7 +869,7 @@ We can now look at the if statement.
 % \]
 % \[
 ~~~~~~
-\avar_{\ssa{c}4} =  \left[ \begin{matrix}
+\lvar_{\ssa{c}4} =  \left[ \begin{matrix}
 \ssa{x}_1 \\
 \ssa{y}_1 \\
 \ssa{x}_2 \\
@@ -912,7 +912,7 @@ We can now look at the if statement.
 [Program-Based Dependency Graph].
 \label{def:prog-based_graph}
 \\
-Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$, s.t.,
+Given a program $\ssa{c}$ with its assigned variables $\lvar$ of length $N$, s.t.,
 $\Gamma \vdash_{\Mtrix_c, \flag_c} \ssa{c}$, 
 its program-based graph 
 $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
@@ -922,16 +922,16 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 	\text{Vertices} &
 	\vertxs & := & \left\{ 
 	\ssa{x} \mid
-	\ssa{x} = \avar(i); ~ i = 1, \ldots, N
+	\ssa{x} = \lvar(i); ~ i = 1, \ldots, N
 	\right\}
 	\\
 	\text{Directed Edges} &
 	\edges & := & 
 	\left\{ 
 	(\ssa{x_1}, \ssa{x_2}) 
-	% \in \avar \times \avar 
+	% \in \lvar \times \lvar 
 	\mid
-		(\ssa{x_1} = \avar(i) \land \ssa{x_2} = \avar(j) \land
+		(\ssa{x_1} = \lvar(i) \land \ssa{x_2} = \lvar(j) \land
 		\Mtrix_c(i, j) \geq 1); ~ i,j = 1, \ldots, N
 	\right\}
 	\\
@@ -961,7 +961,7 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 	n = 0 & o.w.
 	\end{array}
 	\right\};
-	\ssa{x} = \avar(i); i = 1, \ldots, N
+	\ssa{x} = \lvar(i); i = 1, \ldots, N
 	\big\}
 \end{array}
 \]
@@ -1059,415 +1059,415 @@ the program-based adaptivity for $c$ is defined as%
 % \end{algorithm}
 %
 %
-\subsection{\todo{Soundness of the \THESYSTEM}}
+% \subsection{\todo{Soundness of the \THESYSTEM}}
 
-\jl{
-	\begin{thm}[Soundness of the \THESYSTEM].
-	Given a program $\ssa{c}$, we have:
-	%
-	\[
-	\progA(\ssa{c}) \geq A(\ssa{c}).
-	\]
-	\end{thm}
-}
-\jl{
-\begin{proof}
-Given a program $\ssa{c}$, 
-we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$
-by Definition~\ref{def:prog-based_graph}
-According to the Definition \ref{def:prog_adapt}, we have:
-%
-\[
-	\progA(\ssa{c}) 
-	:= \max\left\{ \qlen(k)\ \mid \  k\in \walks(\progG(\ssa{c}))\right \}.
-\]
-%
-According to the Definition \ref{def:trace-based_adapt}, we have the trace-based adaptivity as follows:
-$$
-A(\ssa{c}) = \max \big 
-\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
-$$
-%
-Then, we need to show:
-\[
-\max \big 
-\{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
-\leq
-\max\left\{ \qlen(k) \ \mid \  k\in \walks(\progG(\ssa{c}))\right \}
-\]
-%
-It is sufficient to show that:
-\[
-	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
-	\exists k \in \walks(\progG(\ssa{c})) \land 
-	\len(p) \leq \qlen(k)
-\]
-%
-Taking an arbitrary starting memory $m$ and an arbitrary underlying database $D$,
-we construct a trace-based graph $\traceG(\ssa{c}, \text{D}, \ssa{m}) = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
-%
-\\
-%
-Let $\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$ be the intermediate graph by Definition~\ref{def:midgraph}.
-\\
-By Lemma~\ref{lem:bie_trace_to_mid}, we know:
-\[
-	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
-	\exists p' \in \paths(\midG(\ssa{c},\ssa{m},\text{D})) \land 
-	\len(p) = \len_q(p')
-\]
-%
-Then it is sufficient to show that:
-%
-\[
-	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
-	\exists k \in \walks(\progG(\ssa{c})) \land 
-	\qlen(p) \leq \qlen(k)
-\]
-%
-We prove a stronger statement instead:
-\[
-	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
-	\exists k \in \walks(\progG(\ssa{c})) \land 
-	\qlen(p) = \qlen(k)	
-\]
-%
-%
-By Lemma~\ref{lem:sujv_mid_to_prog}, let $g$ be the surjective function $g: \progV \to \midV$ s.t.:
-%
-$$
-\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) 
-\land |\kw{image}(f(\av))| \leq W(f(\av)).
-$$
-%
-%
-% \item(1) $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+% \jl{
+% 	\begin{thm}[Soundness of the \THESYSTEM].
+% 	Given a program $\ssa{c}$, we have:
+% 	%
+% 	\[
+% 	\progA(\ssa{c}) \geq A(\ssa{c}).
+% 	\]
+% 	\end{thm}
+% }
+% \jl{
+% \begin{proof}
+% Given a program $\ssa{c}$, 
+% we construct its program-based graph $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$
+% by Definition~\ref{def:prog-based_graph}
+% According to the Definition \ref{def:prog_adapt}, we have:
 % %
-% \item(2) $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+% \[
+% 	\progA(\ssa{c}) 
+% 	:= \max\left\{ \qlen(k)\ \mid \  k\in \walks(\progG(\ssa{c}))\right \}.
+% \]
 % %
-% \item(3) $\forall \av \in p_{\av_1 \to \av_2}. ~ 
-% \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}$
-%
-Let $\ssa{m}$ and $D$ be an arbitrary memory and database $D$,
-taking an arbitrary path $p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m})$ with:
-%
-\item Edge sequence: $(e, \ldots, e_{n-1})$
-%
-\item Vertices sequence: $(\av_1, \ldots, \av_n)$.
-\\
-By Lemma~\ref{lem:sujpathwalk_mid_to_prog}, let $h: \paths(\midG(\ssa{c}, \text{D}, \ssa{m})) \to \walks(\progG(\ssa{c}))$ be the surjective function satisfies:
-%
-\[
-	\forall p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
-	\\ 
-	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
-	\end{array}
-	\right.
-\]
-%
-\[
-	\exists k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
-	\\ 
-	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
-	\end{array}
-	\right.
-\]
-%
-We have the walk:
-$k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))$ with:
-%
-\item Edges sequence: $(g(e), \ldots, g(e_{n-1}) $
-%
-\item Vertices sequence: $(f(\av_1), \ldots, f(\av_{n}))$.
-\\
-It is sufficient to show 
-%
-\[
-	\qlen(p_{\av_1 \to \av_n}) = \qlen(k_{f(\av_1) \to f(\av_n)})
-\]
-%
-Unfold the definition of $\qlen$, it is suffice to show:
-\[
-\len \big( \av \mid \av \in (\av_1, \ldots, \av_n) \land \midF(\av) = 2 \big) 
-= \len \big(f(\av) \mid f(\av) \in (f(\av_1), \ldots, f(\av_{n})) \land \progF(f(\av)\big) = 2)	
-~ (a)
-\]
-%
-By Lemma~\ref{lem:sujv_mid_to_prog}, we know:
-%
-\[
-	\forall \av \in \midV. ~ \midF(\av) = \progF(f(\av)) ~(b)
-\]
-By rewriting $(b)$ in $(a)$, we have this case proved.
-%
-\\
-\todo{
-\begin{defn}[Intermediate Graph $\midG$].
-	\label{def:midgraph}
-	\\
-	$\mathcal{AV}$ : Annotated Variables based on program execution
-	\\
-	Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$,
-	a database $D$, a starting memory $\ssa{m}$,
-	s.t., $\Gamma \vdash_{\Mtrix_c, \flag_c} \ssa{c}$,
-	the intermediate graph 
-	$\midG(\ssa{c},\ssa{m},\text{D}) = (\vertxs, \edges, \flag)$ is defined as:%
-\[
-\begin{array}{rlcl}
-	\text{Vertices} &
-	\vertxs & := & \left\{ 
-	\av \in \mathcal{AV} \middle\vert
-	\exists \ssa{m'},  w', \qtrace, \vtrace.  ~ s.t., ~  
-	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, \qtrace, \vtrace, w' }
-	\land \av \in \vtrace
-	\right\}
-	\\
-	\text{Directed Edges} &
-	\edges & := & 
-	\left\{ 
-	(\av, \av') \in \mathcal{AV} \times \mathcal{AV} 
-	~ \middle\vert ~
-	\flowsto(\av, \av', \ssa{c},\ssa{m},D) 
-	\right\}
-	\\
-	\text{Flags} &
-	\flag & := & 
-	\big\{ (\av, n)  \in \vertxs \times \{0, 1, 2\} 
-	\mid 
-	(\pi_1(\av) = \avar(i) \land n = \flag_c(i)); ~
-	i = 1, \ldots, N
-	\big\}
-\end{array}
-\]
-\end{defn}
-}
-%
-\\
-\todo{
-	\begin{lem}[$\vardep$ is Transitive].
-	\label{lem:vardep_trans}
-	\\
-	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
-	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
-	Then, $\forall \av_1, \av_2, \av_3 \in \vtrace$:
-\[
-	\Big(\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \land 
-	\vardep(\av_2, \av_3, \ssa{c}, \ssa{m}, D) \Big)
-	\implies
-	\vardep(\av_1, \av_3, \ssa{c}, \ssa{m}, D)
-\]
-	\end{lem}
-	\begin{subproof}[of Lemma~\ref{lem:vardep_trans}]
-	Proof by unfolding and rewriting the Definition~\ref{def:var_dep}.
-	\end{subproof}
-}
-\\
-%
-\todo{
-	\begin{lem}[$\flowsto$ is Transitive ??].
-	\label{lem:flowsto_trans}
-	\\
-	Given a program $\ssa{c}$ with its assigned variables $\avar$ of length $N$. 
-	Then $\forall x_1, x_2, x_3 \in \avar$
-\[
-	\Big(\flowsto(x_1, x_2) \land \flowsto(x_2, x_3) \Big)
-	\implies
-	\flowsto(x_1, x_3)
-\]
-	\end{lem}
-	\begin{subproof}[of Lemma~\ref{lem:flowsto_trans}]
-	Proof by unfolding the Definition~\ref{def:flowsto}.
-	\end{subproof}
-}
-\\
-%
-\todo{
-	\begin{lem}[$\qdep$ Implies $\vardep$].
-	\label{lem:querydep_vardep}
-	\\
-	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
-	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
-	Then, $\forall \av_1, \av_2 \in \qtrace$
-\[
-	\qdep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \implies 
-	\vardep(\pi_2(\av_1), \pi_2(\av_2), \ssa{c}, \ssa{m}, D)
-\]
-	\end{lem}
-	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
-	Proof by unfolding the Definition~\ref{def:var_dep} and Definition~\ref{def:query_dep}.
-	\end{subproof}
-}
-\\
-%
-\todo{
-	\begin{lem}[$\vardep$ Implies \flowsto].
-	\label{lem:vardep_flows}
-	\\
-	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
-	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
-	Then, $\forall \av_1, \av_2 \in \vtrace$
-\[
-	\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \implies 
-	\flowsto(\pi_1(\av_1), \pi_1(\av_2))
-\]
-	\end{lem}
-	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
-	Proof by showing contradiction based on the Definition~\ref{def:var_dep} and Definition~\ref{def:flowsto}.
-	Let $\av_1, \av_2 \in \vtrace$ be 2 arbitrary annotated variables in the variable trace $\vtrace$,
-	s.t., $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$.
-	\\
-	Unfolding the $\vardep$ definition, we have:	
-	\end{subproof}
-}
-\\
-%
-\todo{
-	\begin{lem}[Injective Mapping of vertices from $\traceG$ to $\midG$].
-	\label{lem:injv_trace_to_mid}
-	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
-\[
-	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
-	~ \forall \av \in \traceV. ~ 
-	f(\av) \in \midV \land \midF(f(\av)) = 2
-\]
-	\end{lem}
-\begin{subproof}
-Proving by Definition~\ref{def:midgraph} and Definition~\ref{def:prog_adapt}.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[One-on-One Mapping from $\edges$ of $\traceG$ to $\paths(\midG)$].
-	\label{lem:bie_trace_to_mid}
-	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
-	\\
-	An injective function $ f: \traceV \to \midV$ s.t.,
-	$\forall \av \in \traceV. ~ \midF(f(\av)) = 2$ 
-\[
-	\forall e = (\av_1, \av_2) \in \traceE. ~ 
-	\exists p_{f(\av_1) \to f(\av_2)} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
-\]
-	\end{lem}
-\begin{subproof}
-Proving by Lemma~\ref{lem:injv_trace_to_mid} and Definition~\ref{def:midgraph} and acyclic property of $\traceG$ and $\midG$.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[Surjective Mapping of Vertices from $\midG$ to $\progG$].
-	\label{lem:sujv_mid_to_prog}
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
-	\\
-	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
-	\\
-	$\exists ~ \kw{surjective} ~ f: \mathcal{AV} \to \mathcal{SVAR}.$
-	%
-\[
-	\forall \av \in \midV. ~ 
-	f(\av) \in \progV \land \progF(f(\av)) = \midF(\av) \land
-	|\kw{image}(f(\av))| \leq W(f(\av))
-\]
-\end{lem}
-\begin{subproof}
-Proving by Definition~\ref{def:midgraph}.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[Surjective Mapping from $\edges$ of $\midG)$ to $\edges$ of $\progG$].
-	\label{lem:suje_mid_to_prog}
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
-	\\
-	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
-	\\
-	A surjective function $f: \progV \to \midV$ s.t.,
-	$\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
-	%
-\[
-	\exists ~ \kw{surjective} ~ g: \midE \to \progE. ~
-	\forall e_{mid} = (\av_1, \av_2) \in \midE. 
-	\exists e_{prog} = ({f(\av_1), f(\av_2)}) \in \progE
-\]
-\end{lem}
-\begin{subproof}
-Proving by Lemma~\ref{lem:sujv_mid_to_prog}.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[Surjective Mapping from $\paths(\midG)$ to $\walks(\progG)$].
-	\label{lem:sujpathwalk_mid_to_prog}
-	\\
-	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
-	\\
-	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
-	\\
-	A surjective function $f: \progV \to \midV$ s.t.,
-	$\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
-	\\
-	A surjective function $g: \midE \to \progE$ s.t.,
-	$\forall e_{mid} = (\av_1, \av_2) \in \midE. 
-	\exists e_{prog} = ({f(\av_1) \to f(\av_2)}) \in \progE$
-	\\
-	$\exists ~ \kw{surjective} ~ h: \paths(\midG(\ssa{c},\ssa{m},\text{D})) \to \walks(\progG(\ssa{c}))$ s.t.:
-	%
-\[
-	\forall p_{\av_1 \to \av_2} \in \paths(\midG(\ssa{c},\ssa{m},\text{D}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
-	\\ 
-	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
-	\end{array}
-	\right.
-\]
-\[
-	\exists k_{f(\av_1) \to f(\av_2)} \in \walks(\progG(\ssa{c}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
-	\\ 
-	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
-	\end{array}
-	\right.
-\]
-% \item $(e, \ldots, e_{n-1})$, $(\av_1, \ldots, \av_n)$ are the edges sequence and vertices sequence of $p_{\av_1 \to \av_2}$.
-% then, 
-%  $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+% According to the Definition \ref{def:trace-based_adapt}, we have the trace-based adaptivity as follows:
+% $$
+% A(\ssa{c}) = \max \big 
+% \{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
+% $$
 % %
-% \item $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+% Then, we need to show:
+% \[
+% \max \big 
+% \{ \len(p) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom ,p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
+% \leq
+% \max\left\{ \qlen(k) \ \mid \  k\in \walks(\progG(\ssa{c}))\right \}
+% \]
 % %
-% \item $\forall \av \in p_{\av_1 \to \av_2}. ~ 
-% \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}
-% $
-\end{lem}
-%
-\begin{subproof}
-Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\midG(\ssa{c},\ssa{m},\text{D}))$, and Lemma~\ref{lem:suje_mid_to_prog} and Lemma~\ref{lem:sujv_mid_to_prog}.
-\caseL{ $l = 1$: }
-\caseL{ $l = l' + 1$, $l' \geq 1$: }
-\end{subproof}
-}
-\end{proof}
-%
+% It is sufficient to show that:
+% \[
+% 	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
+% 	\exists k \in \walks(\progG(\ssa{c})) \land 
+% 	\len(p) \leq \qlen(k)
+% \]
+% %
+% Taking an arbitrary starting memory $m$ and an arbitrary underlying database $D$,
+% we construct a trace-based graph $\traceG(\ssa{c}, \text{D}, \ssa{m}) = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
+% %
+% \\
+% %
+% Let $\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$ be the intermediate graph by Definition~\ref{def:midgraph}.
+% \\
+% By Lemma~\ref{lem:bie_trace_to_mid}, we know:
+% \[
+% 	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\traceG(\ssa{c}, \text{D}, \ssa{m}),
+% 	\exists p' \in \paths(\midG(\ssa{c},\ssa{m},\text{D})) \land 
+% 	\len(p) = \len_q(p')
+% \]
+% %
+% Then it is sufficient to show that:
+% %
+% \[
+% 	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
+% 	\exists k \in \walks(\progG(\ssa{c})) \land 
+% 	\qlen(p) \leq \qlen(k)
+% \]
+% %
+% We prove a stronger statement instead:
+% \[
+% 	\forall p, \ssa{m}, D, ~ s.t., ~ p \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}),
+% 	\exists k \in \walks(\progG(\ssa{c})) \land 
+% 	\qlen(p) = \qlen(k)	
+% \]
+% %
+% %
+% By Lemma~\ref{lem:sujv_mid_to_prog}, let $g$ be the surjective function $g: \progV \to \midV$ s.t.:
+% %
+% $$
+% \forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) 
+% \land |\kw{image}(f(\av))| \leq W(f(\av)).
+% $$
+% %
+% %
+% % \item(1) $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+% % %
+% % \item(2) $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+% % %
+% % \item(3) $\forall \av \in p_{\av_1 \to \av_2}. ~ 
+% % \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}$
+% %
+% Let $\ssa{m}$ and $D$ be an arbitrary memory and database $D$,
+% taking an arbitrary path $p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m})$ with:
+% %
+% \item Edge sequence: $(e, \ldots, e_{n-1})$
+% %
+% \item Vertices sequence: $(\av_1, \ldots, \av_n)$.
+% \\
+% By Lemma~\ref{lem:sujpathwalk_mid_to_prog}, let $h: \paths(\midG(\ssa{c}, \text{D}, \ssa{m})) \to \walks(\progG(\ssa{c}))$ be the surjective function satisfies:
+% %
+% \[
+% 	\forall p_{\av_1 \to \av_n} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
+% 	\text{ with }
+% 	\left\{
+% 	\begin{array}{ll}
+% 	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
+% 	\\ 
+% 	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
+% 	\end{array}
+% 	\right.
+% \]
+% %
+% \[
+% 	\exists k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))
+% 	\text{ with }
+% 	\left\{
+% 	\begin{array}{ll}
+% 	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
+% 	\\ 
+% 	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
+% 	\end{array}
+% 	\right.
+% \]
+% %
+% We have the walk:
+% $k_{f(\av_1) \to f(\av_n)} \in \walks(\progG(\ssa{c}))$ with:
+% %
+% \item Edges sequence: $(g(e), \ldots, g(e_{n-1}) $
+% %
+% \item Vertices sequence: $(f(\av_1), \ldots, f(\av_{n}))$.
+% \\
+% It is sufficient to show 
+% %
+% \[
+% 	\qlen(p_{\av_1 \to \av_n}) = \qlen(k_{f(\av_1) \to f(\av_n)})
+% \]
+% %
+% Unfold the definition of $\qlen$, it is suffice to show:
+% \[
+% \len \big( \av \mid \av \in (\av_1, \ldots, \av_n) \land \midF(\av) = 2 \big) 
+% = \len \big(f(\av) \mid f(\av) \in (f(\av_1), \ldots, f(\av_{n})) \land \progF(f(\av)\big) = 2)	
+% ~ (a)
+% \]
+% %
+% By Lemma~\ref{lem:sujv_mid_to_prog}, we know:
+% %
+% \[
+% 	\forall \av \in \midV. ~ \midF(\av) = \progF(f(\av)) ~(b)
+% \]
+% By rewriting $(b)$ in $(a)$, we have this case proved.
+% %
+% \\
+% \todo{
+% \begin{defn}[Intermediate Graph $\midG$].
+% 	\label{def:midgraph}
+% 	\\
+% 	$\mathcal{AV}$ : Annotated Variables based on program execution
+% 	\\
+% 	Given a program $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
+% 	a database $D$, a starting memory $\ssa{m}$,
+% 	s.t., $\Gamma \vdash_{\Mtrix_c, \flag_c} \ssa{c}$,
+% 	the intermediate graph 
+% 	$\midG(\ssa{c},\ssa{m},\text{D}) = (\vertxs, \edges, \flag)$ is defined as:%
+% \[
+% \begin{array}{rlcl}
+% 	\text{Vertices} &
+% 	\vertxs & := & \left\{ 
+% 	\av \in \mathcal{AV} \middle\vert
+% 	\exists \ssa{m'},  w', \qtrace, \vtrace.  ~ s.t., ~  
+% 	\config{\ssa{m} ,\ssa{c}, [], [], []}  \to^{*}  \config{\ssa{m'} , \eskip, \qtrace, \vtrace, w' }
+% 	\land \av \in \vtrace
+% 	\right\}
+% 	\\
+% 	\text{Directed Edges} &
+% 	\edges & := & 
+% 	\left\{ 
+% 	(\av, \av') \in \mathcal{AV} \times \mathcal{AV} 
+% 	~ \middle\vert ~
+% 	\flowsto(\av, \av', \ssa{c},\ssa{m},D) 
+% 	\right\}
+% 	\\
+% 	\text{Flags} &
+% 	\flag & := & 
+% 	\big\{ (\av, n)  \in \vertxs \times \{0, 1, 2\} 
+% 	\mid 
+% 	(\pi_1(\av) = \lvar(i) \land n = \flag_c(i)); ~
+% 	i = 1, \ldots, N
+% 	\big\}
+% \end{array}
+% \]
+% \end{defn}
+% }
+% %
+% \\
+% \todo{
+% 	\begin{lem}[$\vardep$ is Transitive].
+% 	\label{lem:vardep_trans}
+% 	\\
+% 	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
+% 	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
+% 	Then, $\forall \av_1, \av_2, \av_3 \in \vtrace$:
+% \[
+% 	\Big(\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \land 
+% 	\vardep(\av_2, \av_3, \ssa{c}, \ssa{m}, D) \Big)
+% 	\implies
+% 	\vardep(\av_1, \av_3, \ssa{c}, \ssa{m}, D)
+% \]
+% 	\end{lem}
+% 	\begin{subproof}[of Lemma~\ref{lem:vardep_trans}]
+% 	Proof by unfolding and rewriting the Definition~\ref{def:var_dep}.
+% 	\end{subproof}
+% }
+% \\
+% %
+% \todo{
+% 	\begin{lem}[$\flowsto$ is Transitive ??].
+% 	\label{lem:flowsto_trans}
+% 	\\
+% 	Given a program $\ssa{c}$ with its assigned variables $\lvar$ of length $N$. 
+% 	Then $\forall x_1, x_2, x_3 \in \lvar$
+% \[
+% 	\Big(\flowsto(x_1, x_2) \land \flowsto(x_2, x_3) \Big)
+% 	\implies
+% 	\flowsto(x_1, x_3)
+% \]
+% 	\end{lem}
+% 	\begin{subproof}[of Lemma~\ref{lem:flowsto_trans}]
+% 	Proof by unfolding the Definition~\ref{def:flowsto}.
+% 	\end{subproof}
+% }
+% \\
+% %
+% \todo{
+% 	\begin{lem}[$\qdep$ Implies $\vardep$].
+% 	\label{lem:querydep_vardep}
+% 	\\
+% 	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
+% 	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
+% 	Then, $\forall \av_1, \av_2 \in \qtrace$
+% \[
+% 	\qdep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \implies 
+% 	\vardep(\pi_2(\av_1), \pi_2(\av_2), \ssa{c}, \ssa{m}, D)
+% \]
+% 	\end{lem}
+% 	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
+% 	Proof by unfolding the Definition~\ref{def:var_dep} and Definition~\ref{def:query_dep}.
+% 	\end{subproof}
+% }
+% \\
+% %
+% \todo{
+% 	\begin{lem}[$\vardep$ Implies \flowsto].
+% 	\label{lem:vardep_flows}
+% 	\\
+% 	Given a program $\ssa{c}$, with a starting memory $\ssa{m}$ and a hidden database $D$, s.t., 
+% 	$\config{\ssa{m}, \ssa{c}, [], [], []} \rightarrow^{*} \config{\ssa{m}', \eskip, \qtrace, \vtrace, w} $.
+% 	Then, $\forall \av_1, \av_2 \in \vtrace$
+% \[
+% 	\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D) \implies 
+% 	\flowsto(\pi_1(\av_1), \pi_1(\av_2))
+% \]
+% 	\end{lem}
+% 	\begin{subproof}[of Lemma~\ref{lem:querydep_vardep}]
+% 	Proof by showing contradiction based on the Definition~\ref{def:var_dep} and Definition~\ref{def:flowsto}.
+% 	Let $\av_1, \av_2 \in \vtrace$ be 2 arbitrary annotated variables in the variable trace $\vtrace$,
+% 	s.t., $\vardep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$.
+% 	\\
+% 	Unfolding the $\vardep$ definition, we have:	
+% 	\end{subproof}
+% }
+% \\
+% %
+% \todo{
+% 	\begin{lem}[Injective Mapping of vertices from $\traceG$ to $\midG$].
+% 	\label{lem:injv_trace_to_mid}
+% 	\\
+% 	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+% 	\\
+% 	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+% \[
+% 	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
+% 	~ \forall \av \in \traceV. ~ 
+% 	f(\av) \in \midV \land \midF(f(\av)) = 2
+% \]
+% 	\end{lem}
+% \begin{subproof}
+% Proving by Definition~\ref{def:midgraph} and Definition~\ref{def:prog_adapt}.
+% \end{subproof}
+% }
+% \\
+% \todo{
+% 	\begin{lem}[One-on-One Mapping from $\edges$ of $\traceG$ to $\paths(\midG)$].
+% 	\label{lem:bie_trace_to_mid}
+% 	\\
+% 	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
+% 	\\
+% 	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+% 	\\
+% 	An injective function $ f: \traceV \to \midV$ s.t.,
+% 	$\forall \av \in \traceV. ~ \midF(f(\av)) = 2$ 
+% \[
+% 	\forall e = (\av_1, \av_2) \in \traceE. ~ 
+% 	\exists p_{f(\av_1) \to f(\av_2)} \in \paths(\midG(\ssa{c}, \text{D}, \ssa{m}))
+% \]
+% 	\end{lem}
+% \begin{subproof}
+% Proving by Lemma~\ref{lem:injv_trace_to_mid} and Definition~\ref{def:midgraph} and acyclic property of $\traceG$ and $\midG$.
+% \end{subproof}
+% }
+% \\
+% \todo{
+% 	\begin{lem}[Surjective Mapping of Vertices from $\midG$ to $\progG$].
+% 	\label{lem:sujv_mid_to_prog}
+% 	\\
+% 	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+% 	\\
+% 	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
+% 	\\
+% 	$\exists ~ \kw{surjective} ~ f: \mathcal{AV} \to \mathcal{SVAR}.$
+% 	%
+% \[
+% 	\forall \av \in \midV. ~ 
+% 	f(\av) \in \progV \land \progF(f(\av)) = \midF(\av) \land
+% 	|\kw{image}(f(\av))| \leq W(f(\av))
+% \]
+% \end{lem}
+% \begin{subproof}
+% Proving by Definition~\ref{def:midgraph}.
+% \end{subproof}
+% }
+% \\
+% \todo{
+% 	\begin{lem}[Surjective Mapping from $\edges$ of $\midG)$ to $\edges$ of $\progG$].
+% 	\label{lem:suje_mid_to_prog}
+% 	\\
+% 	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+% 	\\
+% 	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
+% 	\\
+% 	A surjective function $f: \progV \to \midV$ s.t.,
+% 	$\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
+% 	%
+% \[
+% 	\exists ~ \kw{surjective} ~ g: \midE \to \progE. ~
+% 	\forall e_{mid} = (\av_1, \av_2) \in \midE. 
+% 	\exists e_{prog} = ({f(\av_1), f(\av_2)}) \in \progE
+% \]
+% \end{lem}
+% \begin{subproof}
+% Proving by Lemma~\ref{lem:sujv_mid_to_prog}.
+% \end{subproof}
+% }
+% \\
+% \todo{
+% 	\begin{lem}[Surjective Mapping from $\paths(\midG)$ to $\walks(\progG)$].
+% 	\label{lem:sujpathwalk_mid_to_prog}
+% 	\\
+% 	$\midG(\ssa{c},\ssa{m},\text{D}) = \{\midV, \midE, \midF\}$
+% 	\\
+% 	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
+% 	\\
+% 	A surjective function $f: \progV \to \midV$ s.t.,
+% 	$\forall \av \in \midV. ~ \progF(f(\av)) = \midF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
+% 	\\
+% 	A surjective function $g: \midE \to \progE$ s.t.,
+% 	$\forall e_{mid} = (\av_1, \av_2) \in \midE. 
+% 	\exists e_{prog} = ({f(\av_1) \to f(\av_2)}) \in \progE$
+% 	\\
+% 	$\exists ~ \kw{surjective} ~ h: \paths(\midG(\ssa{c},\ssa{m},\text{D})) \to \walks(\progG(\ssa{c}))$ s.t.:
+% 	%
+% \[
+% 	\forall p_{\av_1 \to \av_2} \in \paths(\midG(\ssa{c},\ssa{m},\text{D}))
+% 	\text{ with }
+% 	\left\{
+% 	\begin{array}{ll}
+% 	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
+% 	\\ 
+% 	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
+% 	\end{array}
+% 	\right.
+% \]
+% \[
+% 	\exists k_{f(\av_1) \to f(\av_2)} \in \walks(\progG(\ssa{c}))
+% 	\text{ with }
+% 	\left\{
+% 	\begin{array}{ll}
+% 	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
+% 	\\ 
+% 	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
+% 	\end{array}
+% 	\right.
+% \]
+% % \item $(e, \ldots, e_{n-1})$, $(\av_1, \ldots, \av_n)$ are the edges sequence and vertices sequence of $p_{\av_1 \to \av_2}$.
+% % then, 
+% %  $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+% % %
+% % \item $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+% % %
+% % \item $\forall \av \in p_{\av_1 \to \av_2}. ~ 
+% % \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \mid f(\av) \in k_{f(\av_1) \to f(\av_2)}\}
+% % $
+% \end{lem}
+% %
+% \begin{subproof}
+% Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\midG(\ssa{c},\ssa{m},\text{D}))$, and Lemma~\ref{lem:suje_mid_to_prog} and Lemma~\ref{lem:sujv_mid_to_prog}.
+% \caseL{ $l = 1$: }
+% \caseL{ $l = l' + 1$, $l' \geq 1$: }
+% \end{subproof}
+% }
+% \end{proof}
+% %
 
-%
-}
+% %
+% }
