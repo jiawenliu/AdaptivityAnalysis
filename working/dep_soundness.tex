@@ -419,7 +419,7 @@ and
  \]
  By definition of environment, we have:
 \[
-  \forall u \in \lvar_c \setminus \{x_1^{l_1}, z^{l'}\} \st
+  \forall u \in \lvar_c \setminus \{x_1^{l_1}\} \st
   \env(\vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
   \env(\vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event') (u)
 \]
@@ -438,26 +438,76 @@ By \todo{inversion Lemma} of boolean expression evaluation, we have since $x$ is
  \[
  \flowsto(x_1^{l_1}, x_2^{l_2})
  \]
+ i.e.,
+ \[
+ \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}}. ~ 0 \leq n \leq 0 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_n, x_2^{l_2}) \Big)
+ \]
  This case is proved.
 %
  \caseL{$m = 1$}
  %
- Let $\vtrace_2 = \cdot \event' \cdot$, there are 2 sub cases: 
+ Let $\vtrace_2 = \cdot \event^2 \cdot$, there are 2 sub cases: 
  \[
  \event' \in \eventset^{\test} \lor \event' \in \eventset^{\asn}
  \]
  %
  This case is proved by splitting the 2 sub cases.
  %
- \subcaseL{$\event' \in \eventset^{\test}$}
+ \subcaseL{$\event^2 \in \eventset^{\test}$}
   %
-By using the conclusion from case $m = 0$, we know:
-  \todo{inversion Lemma needed}, since $x$ is the only variable has different value, $x$ can only be in the $VAR(b)$ in order to change value of $\event_b$, i.e.,
+By execution $(3)$ and $(4)$, and \todo{Inversion Lemma : test event -> if / While Command}, we have:
+\[
+  \begin{array}{l}   
+  \config{\ssa{c}, \vtrace_0} 
+  \rightarrow^{*} 
+  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\ 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{\eif([b_2]{}^{l_{b_2}}, c^3, c^4) / \ewhile [b_2]{}^{l_{b_2}} \edo c^5; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \rightarrow^{if / while} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event^2} 
+  \\ 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1\cdot \event^2} 
+  \rightarrow^{if / while} 
+  \config{\ssa{c}_4,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event^2 \cdot \event_b} 
+\end{array}
+ \]
+and 
  \[
- x_1^{l_1} \in VAR(b)
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+ \rightarrow^{\eskip^*} 
+  \config{\eif([b_2]{}^{l_{b_2}}, c^3, c^4) / \ewhile [b_2]{}^{l_{b_2}} \edo c^5; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{if / while} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event^3} 
+  \\ 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event^3} 
+  \rightarrow^{if / while} 
+  \config{\ssa{c}_4,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event^3 \cdot \event_b'} 
+\end{array}
+ \]
+ By definition of environment, we have:
+\[
+  \forall u \in \lvar_c \setminus \{x_1^{l_1}, z^{l'}\} \st
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event^3) (u) =  
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event^2) (u)
+\]
+%
+By \todo{inversion Lemma} of boolean expression evaluation, we have since $x$ is the only variable has different value, $x$ can only be in the $VAR(b)$ in order to change value of $\event_b$, i.e.,
+ \[
+  x_1^{l_1} \in VAR(b)
  \]
  %
- By \todo{Inversion Lemma: Control DEP -> event 2}, we know $\event_2$ is generated from the either $c^1$, $c^2$ or $c'$.
+ Since $\event_2$ is generated from the either $c^1$, $c^2$ or $c'$ by \todo{Inversion Lemma: Control DEP -> event 2}
  By definition of $\flowsto$, we know
  \[
  \forall z \in VAR(b), \flowsto(z, x_2^{l2})
@@ -466,32 +516,103 @@ By using the conclusion from case $m = 0$, we know:
  \[
  \flowsto(x_1^{l_1}, x_2^{l_2})
  \]
+ i.e.,
+ \[
+ \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}}. ~ 0 \leq n \leq 1 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_n, x_2^{l_2}) \Big)
+ \]
   This case is proved.
 %
-\subcaseL{$\event' \in \eventset^{\asn}$}
-Let $\event' = (z, l', n', v')$
-There are 2 cases:
+\subcaseL{$\event_3 \in \eventset^{\asn}$}
+Let $\event_3 = (z, l_3, n_3, v_3)$ or $\event_3 = (z, l_3, n_3, \qval_3, v_3)$, there are 2 cases:
 $\eventdep^{val}(\event_1, \event', c D)$ or $\neg \eventdep^{val}(\event_1, \event', c D)$
 %
 \subsubcaseL{$\eventdep^{val}(\event_1, \event', c D)$}
 %
-By conclusion from \textbf{case: $\eventdep^{val}$}, we know
+By conclusion from \textbf{case: $\eventdep^{val}(\event_1, \event_2, c, D)$ and $m = 0$}, we know
 \[
-  \flowsto(x_1, z)
-\]
-Then, we know by conclusion from the case $m = 0$:
-\[
-  x_1^{l_1} \in VAR(b) \lor z \in VAR(b)
+  \flowsto(x_1^{l_1}, z^{l_3})
 \]
 %
-By Definition of $\flowsto$, we know
+By execution $(3)$ and $(4)$, we have:
 \[
+  \begin{array}{l}   
+  \config{\ssa{c}, \vtrace_0} 
+  \rightarrow^{*} 
+  \config{[\assign{\ssa{x}_1}{\expr_1~ or ~ \query(\qexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_0 \vtrace_1}  \rightarrow^{assn/query}
+ \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \\ 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{z}{\expr_3~ or ~ \query(\qexpr_3)}]^{l_3}; \ssa{c}_2', 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \rightarrow^{assn / query} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_3} 
+  \\ 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_3} 
+  \rightarrow^{if / while} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_3 \cdot \event_b} 
+\end{array}
+ \]
+and 
+ \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{[\assign{z}{\expr_3~ or ~ \query(\qexpr_3)}]^{l_3}; \ssa{c}_2', 
+  \vtrace_0 \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{assn / query} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_3'} 
+  \\ 
+  \qquad \rightarrow^{\eskip^*} 
+  \config{\eif([b]{}^{l_b}, c^1, c^2) / \ewhile [b]{}^{l_b} \edo c'; \ssa{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_3'} 
+  \rightarrow^{if / while} 
+  \config{\ssa{c}_3,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_3' \cdot \event_b'} 
+\end{array}
+ \]
+ By definition of environment, we have:
+\[
+  \forall u \in \lvar_c \setminus \{x_1^{l_1}, z^{l'}\} \st
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_3 ) (u) =  
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_3') (u)
+\]
+%
+By \todo{inversion Lemma} of boolean expression evaluation, we have since $x$ is the only variable has different value, $x$ can only be in the $VAR(b)$ in order to change value of $\event_b$, i.e.,
+ \[
+  x_1^{l_1} \in VAR(b) \lor z \in VAR(b)
+ \]
+ %
+ By \todo{Inversion Lemma: Control DEP -> event 2}, we know $\event_2$ is generated from the either $c^1$, $c^2$ or $c'$.
+ By definition of $\flowsto$, we know
+ \[
+ \forall u \in VAR(b), \flowsto(u, x_2^{l2})
+ \]
+ Then, we have
+ \[
   \flowsto(x_1^{l_1}, x_2^{l_2}) \lor 
   \big(\flowsto(x_1^{l_1}, z) \land \flowsto(z, x_2^{l_2}) \big)
-\]
-this case is proved.
+ \]
+ i.e.,
+ \[
+ \Big( \exists z_1, \cdots, z_n \in \lvar_{\ssa{c}}. ~ 0 \leq n \leq 0 \land
+  \flowsto(x_1^{l_1}, z_1) 
+  \land \cdots \land \flowsto(z_n, x_2^{l_2}) \Big)
+ \]
+ This case is proved.
+%
 %
 \subsubcaseL{$\neg \eventdep^{val}(\event_1, \event', c D)$}
+By $\neg \eventdep^{val}(\event_1, \event', c D)$ and the definition of environment, we have:
+\[
+  \forall u \in \lvar_c \setminus \{x_1^{l_1}\} \st
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1 \cdot \event_3 ) (u) =  
+  \env(\vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_3') (u)
+\]
+in execution $(3)$ and $(4)$.
+%
 Then, we know by conclusion from the case $m = 0$:
 \[
   x_1^{l_1} \in VAR(b)
