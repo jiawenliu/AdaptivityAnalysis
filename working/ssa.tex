@@ -81,12 +81,6 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 & ::= & (x, l, n) | (x, l, n, \query) | (b, l, n)
 % \\
 % %
-% \mbox{Environment} 
-% & \env & ::= & \vtrace \to \mathcal{SVAR} \to v \cup \{\bot\}
-% \\
-% %
-% \mbox{Query Environment} 
-% & \qenv & ::= & \vtrace \to \mathcal{SVAR} \to \qval \cup \{\bot\}
 \end{array}
 \]
 We use following notations to represent the set of corresponding terms:
@@ -98,6 +92,11 @@ We use following notations to represent the set of corresponding terms:
 \mathcal{VAL} & : & \mbox{Set of Values} 
 \\ 
 %
+\mathcal{QVAL} & : & \mbox{Set of Query Values} 
+\\ 
+%
+\mathcal{SIG} & : & \mbox{Set of Event Signature} 
+\\ 
 %
 \eventset  & : & \mbox{Set of Events}  
 \\
@@ -139,7 +138,7 @@ Environment $ \env : \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\b
 \]
 %
 %
-Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \qval \cup \{\bot\}$
+Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{QVAL} \cup \{\bot\}$
 \[
 \begin{array}{lll}
 \qenv(\vtrace (x, l, n, v) \cdot ) x \triangleq \qenv(\vtrace) x
@@ -193,7 +192,7 @@ Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
     \config{m, \qexpr_2} \qarrow \qval_2
   }{
    \config{\trace,  \qexpr_1 \oplus_a \qexpr_2} 
-   \qarrow n'
+   \qarrow \qval_1 \oplus_a \qval_2
   }
   \and
   \inferrule{ 
@@ -201,7 +200,14 @@ Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
   }{
    \config{m,  \chi[\aexpr]} \qarrow \chi[v]
   }
-  \end{mathpar}
+  \and
+  \inferrule{ 
+    \config{m, n \oplus_a n} \aarrow n'
+  }{
+   \config{m,  n \oplus_a n} 
+   \qarrow n'
+  }
+    \end{mathpar}
 %
 The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 %
