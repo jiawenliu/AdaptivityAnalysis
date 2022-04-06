@@ -28,8 +28,7 @@ $\eventdep^{val}(\event_1, \event_2, c, D)$, if and only if
   \config{\ssa{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
   \config{\ssa{c}_2',  \vtrace_1 \cdot \event_1  \cdot \vtrace_2' \cdot \event_2' } 
 \\
-\bigwedge &
-\event_2 \eventneq \event_2' \land \event_2 \sigeq \event_2'
+\bigwedge & \event_2 \ismneq \event_2'
 \end{array}
 \right)
  \]
@@ -78,8 +77,8 @@ with hidden database $D$, denoted as
 $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, if and only if: 
 %
 \[
-\exists \vtrace_1, \vtrace_2, \vtrace_2' \in \mathcal{T}, 
-\event_1' \in \eventset^{\asn}, \vtrace_0, \ssa{c}_1.
+\exists \vtrace_1, \vtrace_2, \vtrace_2', \vtrace_0 \in \mathcal{T}, 
+\event_1' \in \eventset^{\asn}, \ssa{c}_1.
 \left(
 \begin{array}{ll}   
   & \config{\ssa{c}, \vtrace_0} \rightarrow^{*} 
@@ -91,7 +90,7 @@ $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, if and only if:
   \config{\eskip,  \vtrace_1 \cdot \event_1 \vtrace_2' } 
   \\
   \bigwedge &
-  \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
+  \event_2 \ismin \vtrace_2 \land \event_2 \notismin \vtrace_2'
 \end{array}
 \right)
  \]
@@ -116,9 +115,8 @@ if and only if
 \begin{defn}[Variable May Dependency].
 \label{def:var_dep}
 \\
-Given a program $\ssa{c}$, 
-one variable $\ssa{x}_2^{l_2} \in \lvar_{\ssa{c}}$ is in the \emph{may-dependency} relation with another
-variable $\ssa{x}_1^{l_1} \in \lvar_{\ssa{c}}$ in $\ssa{c}$, denoted as 
+An variable $\ssa{x}_2^{l_2} \in \lvar_{\ssa{c}}$ is in the \emph{variable may-dependency} relation with another
+variable $\ssa{x}_1^{l_1} \in \lvar_{\ssa{c}}$ in a program $\ssa{c}$, denoted as 
 %
 $\vardep(\ssa{x}_1^{l_1}, \ssa{x}_2^{l_2}, \ssa{c})$, if an only if.
 %
@@ -208,24 +206,26 @@ the dependency graph $\traceG(\ssa{c}, D) = (\vertxs, \edges, \weights, \qflag)$
   \text{Directed Edges} &
   \edges & := & 
   \left\{ 
-  (x^l, x'^{l'}) \in (\mathcal{VAR} \times \mathbb{N}) \times (\mathcal{VAR} \times \mathbb{N})
+  (\ssa{x}_1^{l_1}, \ssa{x}_2^{l_2}) \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})
   ~ \middle\vert ~
-  \vardep(x^l, x'^{l'}, c) \land
-  x^l, x'^{l'} \in \lvar({\ssa{c}})
+  \vardep(\ssa{x}_1^{l_1}, \ssa{x}_2^{l_2}, c) \land
+  \ssa{x}_1^{l_1}, \ssa{x}_2^{l_2} \in \lvar_{\ssa{c}}
   \right\}
   \\
   \text{Weights} &
   \weights & := & 
   \left\{ 
-  (x^l, n) \in \mathcal{VAR} \times \mathbb{N}
+  (x^l, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
   ~ \middle\vert ~ 
-  x^l \in \lvar({\ssa{c}}), 
-  n = \max \left\{ \vcounter(\vtrace)l | \vtrace \in \mathcal{T} \st  \config{\ssa{c}, } \to^{*} \config{\eskip, \vtrace}  \right\}
+  n = \max \left\{ \vcounter(\vtrace')l | \vtrace \in \mathcal{T} \st 
+   \config{\ssa{c}, \trace} \to^{*} \config{\eskip, \vtrace'}  
+   \land x^l \in \lvar({\ssa{c}}) 
+   \right\}
   \right\}
   \\
   \text{Query Flags} &
   \qflag & := & 
-  \left\{(x^l, n)  \in \vertxs \times \{0, 1\} 
+  \left\{(x^l, n)  \in \mathcal{VAR} \times \mathbb{N}  \times \{0, 1\} 
   ~ \middle\vert ~
   \left\{
   \begin{array}{ll}
@@ -275,4 +275,39 @@ Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$ and a \
 % \subsection{SSA Transformation and Soundness of Transformation}
 % in File {\tt ``ssa\_transform\_sound.tex''}
 % \input{ssa_transform_sound}
+%
+\todo{The following lemma describes a property of the trace-based dependency graph.
+For any program $c$ with a database $D$ and a initial trace $\trace$,
+the directed edges in its trace-based dependency graph can only be constructed from variable with  
+smaller labels variables of greater ones.
+There doesn't exist backward edges with direction from greater labeled variables to smaller ones.
+\begin{lem}
+\label{lem:edgeforwarding}
+[Edges are Forwarding Only].
+\\
+%
+%
+$$
+\forall \trace \in \mathcal{T}, D \in \dbdom \st G(c, D) =  (\vertxs, \edges, \weights, \qflag) 
+\implies
+\forall (\event', \event) \in \edges \st \event' \eventleq \event
+$$
+%
+\end{lem}
+%
+\begin{proof}
+Proof in File: {\tt ``edge\_forward.tex''}.
+% \input{edge_forward}
+\end{proof}
+%
+%
+%
+\begin{lem}
+\label{lem:DAG}
+[Trace-based Dependency Graph is Directed Acyclic].
+\\
+%
+$\forall \trace \in \mathcal{T}, D \in \dbdom $, $G(c, D)$ is a directed acyclic graph.
+\end{lem}
+}
 %

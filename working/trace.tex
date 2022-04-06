@@ -1,32 +1,55 @@
 %
 \subsection{Trace}
-Given an event $\event$, $\event$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
-    %
+Trace appending:
+\[
+  \trace \cdot \event \triangleq
+  \left\{
+  \begin{array}{ll} 
+    {} \cdot \event           & \trace =  \cdot \\
+    \trace \cdot \event    & \trace =  \trace' \cdot \event\\ 
+  \end{array}
+  \right.
+\]
+%
+Trace concatenation:
+\[
+  \trace_1 \cdot \trace_2 \triangleq
+  \left\{
+  \begin{array}{ll} 
+    \trace_1                                  & \trace_2 =  \cdot \\
+    (\trace_1 \cdot \event) \cdot \trace_2'    & \trace_2 =  {} \cdot \event \cdot \trace_2'\\ 
+  \end{array}
+  \right.
+\]
+%
+An $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
+%
 \begin{equation}
-    \event \eventin \trace  
-    \triangleq \left\{
-    \begin{array}{ll} 
-      \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \eventeq \event') \\
-      \event \eventin \trace' & \trace =  (\trace' \cdot \event') \land (\event \eventneq \event') \\ 
-      \efalse                 & o.w.
-    \end{array}
-    \right.
-  \end{equation}
+  \event \eventin \trace  
+  \triangleq \left\{
+  \begin{array}{ll} 
+    \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \eventeq \event') \\
+    \event \eventin \trace' & \trace =  (\trace' \cdot \event') \land (\event \eventneq \event') \\ 
+    \efalse                 & o.w.
+  \end{array}
+  \right.
+\end{equation}
+%
+An $\event \in \eventset$ isomorphically belongs to a trace $\trace$, i.e., $\event \ismin \trace$ are defined as follows:
   %
-Given an event $\event$, $\event$ signature belongs to a trace $\trace$, i.e., $\event \sigin \trace$ are defined as follows:
-    %
 \begin{equation}
-    \event \sigin \trace  
-    \triangleq \left\{
-    \begin{array}{ll} 
-      \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \sigeq \event') \\
-      \event \sigin \trace'   & \trace =  (\trace' \cdot \event') \land (\event \signeq \event') \\ 
-      \efalse                 & o.w.
-    \end{array}
-    \right.
-  \end{equation}
-  %
-  %
+  \event \ismin \trace  
+  \triangleq \left\{
+  \begin{array}{ll} 
+    \etrue                  & \trace =  (\trace' \cdot \event') 
+    \land (\pi_{\sig}(\event) = \pi_{\sig}(\event')) \\
+    \event \sigin \trace'   & \trace =  (\trace' \cdot \event') \land (\pi_{\sig}(\event) \neq \pi_{\sig}(\event') ) \\ 
+    \efalse                 & o.w.
+  \end{array}
+  \right.
+\end{equation}
+%
+%
 %
 \begin{defn}[Equivalence of Program]
 %
@@ -34,28 +57,28 @@ Given an event $\event$, $\event$ signature belongs to a trace $\trace$, i.e., $
 Given 2 programs $c_1$ and $c_2$:
 \[
 c_1 =_{c} c_2
- \triangleq 
- \left\{
-    \begin{array}{ll} 
-      \etrue        
-      & c_1 = \eskip \land c_2 = \eskip
-      \\ 
-      \forall m. \exists v. ~ \config{m, \expr_1} \aarrow^{*} v \land \config{m, \expr_1} \aarrow^{*} v     
-      & c_1 = \assign{x}{\expr_1} \land c_2 = \assign{x}{\expr_2} 
-      \\ 
-      \qexpr_1 =_{q} \qexpr_2       
-      & c_1 = \assign{x}{\query(\qexpr_1)} \land c_1 = \assign{x}{\query(\qexpr_2)} 
-      \\
-      c_1^f =_{c} c_2^f \land c_1^t =_{c} c_2^t
-      & c_1 = \eif(b, c_1^t, c_1^f) \land c_2 = \eif(b, c_2^t, c_2^f)
-      \\ 
-      c_1' =_{c} c_2'         
-      & c_1 = \ewhile b \edo c_1' \land c_2 = \ewhile b \edo c_2'
-      \\ 
-      c_1^h =_{c} c_2^h \land c_1^t =_{c} c_2^t
-      & c_1 = c_1^h;c_1^t \land c_2 = c_2^h;c_2^t 
-    \end{array}
-    \right.
+\triangleq 
+\left\{
+  \begin{array}{ll} 
+    \etrue        
+    & c_1 = \eskip \land c_2 = \eskip
+    \\ 
+    \forall m. \exists v. ~ \config{m, \expr_1} \aarrow^{*} v \land \config{m, \expr_1} \aarrow^{*} v     
+    & c_1 = \assign{x}{\expr_1} \land c_2 = \assign{x}{\expr_2} 
+    \\ 
+    \qexpr_1 =_{q} \qexpr_2       
+    & c_1 = \assign{x}{\query(\qexpr_1)} \land c_1 = \assign{x}{\query(\qexpr_2)} 
+    \\
+    c_1^f =_{c} c_2^f \land c_1^t =_{c} c_2^t
+    & c_1 = \eif(b, c_1^t, c_1^f) \land c_2 = \eif(b, c_2^t, c_2^f)
+    \\ 
+    c_1' =_{c} c_2'         
+    & c_1 = \ewhile b \edo c_1' \land c_2 = \ewhile b \edo c_2'
+    \\ 
+    c_1^h =_{c} c_2^h \land c_1^t =_{c} c_2^t
+    & c_1 = c_1^h;c_1^t \land c_2 = c_2^h;c_2^t 
+  \end{array}
+  \right.
 \]
 %
 $c_1 \neq_{c} c_2$  is defined vice versa.
@@ -68,112 +91,55 @@ c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
 c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
 %
-\todo{
-\begin{defn}[Well-formed Trace]
+\begin{defn}[Well-formed Trace $\mathcal{T}$]
 \label{def:wf_trace}
-A trace $\trace$ is well formed, i.e., $\trace \in \mathbb{T}$ if and only if it preserves the following two properties:
+A trace $\trace$ is well formed, i.e., $\trace \in \mathcal{T}$ if and only if it preserves the following two properties:
 \begin{itemize}
-  \item{\emph{(Uniqueness)}} $\forall \event_1, \event_2 \eventin \trace. ~ (\event_1 \eventneq \event_2)$
-  %
-  \item{\emph{(Ordering)}} $\forall \event_1, \event_2 \eventin \trace. ~ 
-  (\event_1 \eventlt \event_2) \Longleftrightarrow
-  \exists \trace_1, \trace_2, \trace_3 \in \mathbb{T},
-   \event_1', \event_2' \in \eventset. ~ s.t.,~ 
-  (\event_1 \eventeq \event_1') \land (\event_2 \eventeq \event_2') \land t_1 \cdot \event_1' \cdot t_2 \cdot \event_2' \cdot \trace_3 = \trace$
+\item{\emph{(Uniqueness)}} 
+$\forall \event_1, \event_2 \eventin \trace 
+\st (\pi_{\sig}(\event_1) \neq \pi_{\sig}(\event_2) )$
+%
+\item{\emph{(Ordering)}} $\forall \event_1, \event_2 \eventin \trace \st 
+(\event_1 \eventlt \event_2) \Longleftrightarrow
+\exists \trace_1, \trace_2, \trace_3 \in \mathbb{T},
+ \event_1', \event_2' \in \eventset \st
+(\event_1 \eventeq \event_1') \land (\event_2 \eventeq \event_2')
+\land \trace_1 \cdot \event_1' \cdot \trace_2 \cdot \event_2' \cdot \trace_3 = \trace$
 \end{itemize}
 \end{defn}
-}
-\\
-\todo{
-\begin{thm}[Trace Generated from Operational Semantics is Well-formed].
+%
+%
+\begin{thm}[Trace Generated from Operational Semantics is Well-formed $c \vDash \trace$].
 \label{thm:os_wf_trace}
 \\
-Given a program $c$ with arbitrary initial trace $\vtrace \in \mathbb{T}$,
-if $\config{c, \vtrace} \to^{*} 
-\config{m', \eskip, \vtrace'}$, then $(\vtrace' - \vtrace)$ is a well formed trace with respect to program $c$ and $w$, denoted as $c \vDash \vtrace' - \vtrace$.
-% \wq{ we call a trace $t$ satisfies the program $c$ in the memory $m$, denoted as $m, c \vDash t$, if
-% there exists the evaluation 
-% $\config{m, c, [], []} \to^{*} \config{m', \eskip, t, w}$, and
-% $t$ is well-formed. }
+\[
+\forall \trace \in \mathcal{T}, c \st
+\config{c, \vtrace} \to^{*} \config{\eskip, \trace \cdot \vtrace'}
+\implies
+\vtrace' \in \mathcal{T}
+\]
+%
 \end{thm}
 \begin{proof}
 Proof in File: {\tt ``thm\_os\_wf\_trace.tex''}.
 % \input{thm_os_wf_trace}
 \end{proof}
-}
 %
-% \\
-%
-%
-\todo{
-\begin{lem}[While Map Remains Unchanged (Invariant)]
-\label{lem:wunchange}
-Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
-$\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
-\[
-  w = w'
-\]
-\end{lem}
-\begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
-%
-Proof in File: {\tt ``lem\_wunchange.tex''}
-% \input{lem_wunchange}
-%
-\end{subproof}
-}
-%
-\todo{
-\begin{lem}[Trace is Written Only]
-\label{lem:twriteonly}
-Given a program $c$ with starting trace $t_1$ and $t_2$,
-for arbitrary starting memory $m$ and while map $w$,
-if there exist evaluations
-$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
-% 
-$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
-%
-then:
-%
-\[
-  m_1' = m_2' \land w_1' = w_2'
-\]
+\begin{lem}
+[Trace Non-Decreasing].
+\\
+$$
+\forall \trace \in \mathcal{T}, c \st
+\config{c, t} 
+\rightarrow
+\config{c', t'} \implies \exists ~ t'', ~ s.t., ~ t \cdot t'' = t'
+$$
 \end{lem}
 %
-\begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
-%
-Proof in File: {\tt ``lem\_twriteonly.tex''}
-% \input{lem_twriteonly}
-\end{subproof}
-}
-%
-\todo{
-\begin{lem}[Trace Uniqueness]
-\label{lem:tunique}
-Given a program $c$ with a starting memory $m$, \wq{a while map w,}
-for any starting trace $t_1$ and $t_2$, if there exist evaluations
-$$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
-% 
-$$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
-%
-then:
-%
-\[
-  t_1' - t_1 = t_2' - t_2
-\]
-\end{lem}
-%
-\begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
-%
-Proof in File: {\tt ``lem\_tunique.tex''}
-% \input{lem_tunique}
-\end{subproof}
-}
-%
-\todo{
 \begin{coro}
 \label{coro:aqintrace}
 \[
-\event \eventin t \implies \exists t_1, t_2, \event'. ~ s.t., ~ (\event \eventeq \event') \land t_1 \cdot [\event'] \cdot t_2 = t  
+\event \eventin t \implies \exists t_1, t_2, \event'. ~ s.t., ~ (\event \eventeq \event') \land t_1 \cdot \event' \cdot t_2 = t  
 \]
 \end{coro}
 \begin{subproof}
@@ -181,24 +147,79 @@ Proof in File: {\tt ``coro\_aqintrace.tex''}
 % \input{coro_aqintrace}
 %
 \end{subproof}
-%
-\begin{lem}
-[Trace Non-Decreasing].
-\\
-For any program $c$ with a starting memory $m$, trace $t$ and while map $w$: 
-$$
-\config{m, c, t, w} 
-\rightarrow
-\config{m, c', t', w'} \implies \exists ~ t'', ~ s.t., ~ t \cdot t'' = t'
-$$
-\end{lem}
-}
+% \\
 %
 %
-}
+% \todo{
+% \begin{lem}[While Map Remains Unchanged (Invariant)]
+% \label{lem:wunchange}
+% Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
+% $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
+% \[
+%   w = w'
+% \]
+% \end{lem}
+% \begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
+% %
+% Proof in File: {\tt ``lem\_wunchange.tex''}
+% % \input{lem_wunchange}
+% %
+% \end{subproof}
+% }
+%
+% \todo{
+% \begin{lem}[Trace is Written Only]
+% \label{lem:twriteonly}
+% Given a program $c$ with starting trace $t_1$ and $t_2$,
+% for arbitrary starting memory $m$ and while map $w$,
+% if there exist evaluations
+% $$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% % 
+% $$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+% %
+% then:
+% %
+% \[
+%   m_1' = m_2' \land w_1' = w_2'
+% \]
+% \end{lem}
+% %
+% \begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
+% %
+% Proof in File: {\tt ``lem\_twriteonly.tex''}
+% % \input{lem_twriteonly}
+% \end{subproof}
+% }
+%
+% \todo{
+% \begin{lem}[Trace Uniqueness]
+% \label{lem:tunique}
+% Given a program $c$ with a starting memory $m$, \wq{a while map w,}
+% for any starting trace $t_1$ and $t_2$, if there exist evaluations
+% $$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% % 
+% $$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+% %
+% then:
+% %
+% \[
+% t_1' - t_1 = t_2' - t_2
+% \]
+% \end{lem}
+% %
+% \begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
+% %
+% Proof in File: {\tt ``lem\_tunique.tex''}
+% % \input{lem_tunique}
+% \end{subproof}
+% }
+%
+
 %
 %
-\clearpage
+%
+%
+%
 %
 %
 % \subsection{SSA Transformation and Soundness of Transformation}

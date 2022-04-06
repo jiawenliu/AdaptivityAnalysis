@@ -14,7 +14,8 @@ Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
 \end{array}
 \]
 %
-Event Query Value : $\pi_{q} : \eventset \to \mathcal{QVAL}$
+%
+Event Distinguishable Value : $\pi_{q} : \eventset \to \mathcal{QVAL}$ 
 \[
 \begin{array}{ll}
 \pi_{q} (x, l, n, v) \triangleq v
@@ -37,29 +38,30 @@ Event Signature : $\pi_{\sig} : \eventset \to \mathcal{SIG}$
 &
 \end{array}
 \]
+
 %
-%
-\begin{defn}[Equivalence of Query].
+\begin{defn}[Equivalence of Query Expression].
 %
 \label{def:query_equal}
 Given a trace $\trace$ and 2 query expressions $\qexpr_1$, $\qexpr_2$:
 $$
 \qexpr_1 =_{q}^{\trace} \qexpr_2 \triangleq
 \left\{
-    \begin{array}{ll} 
-      \etrue      
-      & 
-    \exists \qval_1, \qval_2.
-    \begin{array}{l} 
-      (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
-      \\
-      \land (\forall D \in \dbdom, r \in D. \exists v. ~ s.t., ~ 
-            \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
-    \end{array}\\
-      \efalse         
-      & \text{o.w.} 
-    \end{array}
-    \right.
+  \begin{array}{ll} 
+    \etrue      
+    & 
+  \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st
+  \begin{array}{l} 
+    (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+    \\
+    \land (\forall D \in \dbdom, r \in D \st 
+    \exists v \in \mathcal{VAL} \st 
+          \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+  \end{array}\\
+    \efalse         
+    & \text{o.w.} 
+  \end{array}
+  \right.
 $$
 %
 , where $r \in D$ is a record in the database domain $D$, $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
@@ -68,49 +70,54 @@ $\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  is defined vice versa.
 We use $=_{q}$  and $\neq_{q}$ as the shorthands when $\trace$ is empty.
 \end{defn}
 %
-Equivalence of 2 events : $\event_1 \eventeq \event_2$
+\begin{defn}[Event Equivalence $\eventeq$]
+Two events $\event_1, \event_2 \in \eventset$ is in \emph{Equivalence} relation, denoted as $\event_1 \eventeq \event_2$ if and only if:
 \[
-\event_1 \eventeq \event_2 \triangleq
-\left\{
-\begin{array}{ll}
-\etrue & \event_1 = (x, l, n, v) \land \event_2 = (x, l, n, v) \\
-\etrue & \event_1 = (x, l, n, \qval_1, v) \land \event_2 = (x, l, n, \qval_2, v)  
-\land \qval_1 =_{q} \qval_2\\
-\etrue & \event_1 = (b, l, n, v) \land \event_2 = (b, l, n, v) \\
-\efalse & o.w.
-\end{array}
-\right.
+\pi_{\sig}(\event_1) = \pi_{\sig}(\event_2) 
+\land
+\pi_{q}(\event_1) = \pi_{q}(\event_2)
+\land
+\pi_{v}(\event_1) = \pi_{v}(\event_2)
 \]
 %
-Signature Equivalence of 2 events : $\event_1 \sigeq \event_2$
+The $\event_1 \eventneq \event_2$ is defined as vice versa.
+\end{defn}
+%
+%
+\todo{
+\begin{defn}[Event Isomorphism $\ismeq$]
+Two events $\event_1, \event_2 \in \eventset$ is in \emph{Isomorphism} relations, denoted as $\event_1 \ismeq \event_2$ if and only if:
 \[
-\event_1 \sigeq \event_2 \triangleq
-\left\{
-\begin{array}{ll}
-\etrue & \event_1 = (x, l, n, v) \land \event_2 = (x, l, n, v') \\
-\etrue & \event_1 = (x, l, n, \qval, v) \land \event_2 = (x, l, n, \qval', v') \\
-\etrue & \event_1 = (b, l, n, v) \land \event_2 = (b, l, n, v') \\
-\efalse & o.w.
-\end{array}
-\right.
+\pi_{\sig}(\event_1) = \pi_{\sig}(\event_2) 
 \]
+\end{defn}
+%
+\begin{defn}[Event Isomorphically Distinct $\ismneq$]
+Two events $\event_1, \event_2 \in \eventset$ is in \emph{Isomorphism Distinct} relation, denoted as $\event_1 \ismneq \event_2$ if and only if:
+\[
+\pi_{\sig}(\event_1) = \pi_{\sig}(\event_2) 
+\land 
+\pi_{q}(\event_1) \neq \pi_{q}(\event_2)
+\]
+\end{defn}
+}
 %
 \begin{defn}[Order of Events].
 \label{def:query_dir}
 \\
-Given 2 events 
-$\event_1 = (x_1, l_1, n_1), 
-\event_2 = (x_2, l_2, n_2)$
-:
+An event $\event_1 \in \eventset$, where $\pi_{\sig}(\event_1) = (x_1, l_1, n_1)$,
+has smaller order than another event $\event_2 \in \eventset$, 
+where 
+$ \pi_{\sig}(\event_2) = (x_2, l_2, n_2)$, defined as follows:
 %
 \[
 \event_1 \eventlt \event_2
- \triangleq 
- \left\{
- \begin{array}{ll}
-    l_1 < l_2 & n_1 = n_2
-    \\
-    n_1 < n_2  & o.w.
+\triangleq 
+\left\{
+\begin{array}{ll}
+  l_1 < l_2 & n_1 = n_2
+  \\
+  n_1 < n_2  & o.w.
 \end{array}  
 \right.
 \]

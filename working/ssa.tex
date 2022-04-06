@@ -32,22 +32,22 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 	~|~ \saexpr \sim \saexpr 
 	\\
 %
+\mbox{SSA Expression} & \sexpr & ::= & v ~|~ \saexpr \sep \sbexpr ~|~ [\expr, \dots, \expr]
+\\  
+%
+\mbox{Value} 
+& v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
+\\
+%
 \mbox{SSA Query Expression} 
 & \ssa{\qexpr} & ::= 
-& { \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr} 
+& { \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr ~|~ \chi[\aexpr]} 
 \\
 %
 \mbox{Query Value} & \qval & ::= 
 & {n ~|~ \chi[n] ~|~ \chi[n] \oplus_a  \chi[n] ~|~ n \oplus_a  \chi[n]
 ~|~ \chi[n] \oplus_a  n}
 \\
-%
-\mbox{Value} 
-& v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
-\\
-%
-\mbox{SSA Expression} & \sexpr & ::= & v ~|~ \saexpr \sep \sbexpr ~|~ [\expr, \dots, \expr]
-\\	
 %
 \mbox{Labeled SSA Command} 
 & \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
@@ -74,7 +74,7 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 \\
 %
 \mbox{Trace} & \vtrace
-& ::= & \cdot | \vtrace \event \cdot
+& ::= & \cdot | \vtrace \cdot \event
 \\
 %
 \mbox{Event Signature} & \sig
@@ -141,13 +141,13 @@ Environment $ \env : \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\b
 Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{QVAL} \cup \{\bot\}$
 \[
 \begin{array}{lll}
-\qenv(\vtrace (x, l, n, v) \cdot ) x \triangleq \qenv(\vtrace) x
+\qenv(\vtrace \cdot (x, l, n, v) ) x \triangleq \qenv(\vtrace) x
 &
-\qenv(\vtrace (x, l, n, \qval, v) \cdot ) x \triangleq \qval
+\qenv(\vtrace \cdot (x, l, n, \qval, v) ) x \triangleq \qval
 &
-\qenv(\vtrace (y, l, n, v)\cdot ) x \triangleq \env(\vtrace) x
+\qenv(\vtrace \cdot (y, l, n, v)) x \triangleq \env(\vtrace) x
 \\
-\qenv(\vtrace (b, l, n, v)\cdot ) x \triangleq \env(\vtrace) x
+\qenv(\vtrace \cdot (b, l, n, v)) x \triangleq \env(\vtrace) x
 &
 \qenv(\cdot ) x \triangleq \bot
 &
@@ -157,17 +157,17 @@ Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{QVAL} \cu
 Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
 \[
 \begin{array}{lll}
-\vcounter(\vtrace (x, l, n, v) \cdot ) l \triangleq n
+\vcounter(\vtrace \cdot (x, l, n, v) ) l \triangleq n
 &
-\vcounter(\vtrace (b, l, n, v) \cdot) l \triangleq n
+\vcounter(\vtrace \cdot (b, l, n, v)) l \triangleq n
 &
-\vcounter(\vtrace (x, l, n, \qval, v) \cdot) l \triangleq n
+\vcounter(\vtrace \cdot (x, l, n, \qval, v)) l \triangleq n
 \\
-\vcounter(\vtrace (x, l', n, v) \cdot ) l \triangleq \vcounter(\vtrace ) l
+\vcounter(\vtrace  \cdot (x, l', n, v)) l \triangleq \vcounter(\vtrace ) l
 &
-\vcounter(\vtrace (b, l', n, v) \cdot) l \triangleq \vcounter(\vtrace ) l
+\vcounter(\vtrace \cdot (b, l', n, v)) l \triangleq \vcounter(\vtrace ) l
 &
-\vcounter(\vtrace (x, l', n, \qval, v) \cdot) l \triangleq \vcounter(\vtrace ) l
+\vcounter(\vtrace \cdot (x, l', n, \qval, v)) l \triangleq \vcounter(\vtrace ) l
 \\
 \vcounter(\cdot) l \triangleq 0
 &&
@@ -180,34 +180,73 @@ Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
 %
 {
 \begin{mathpar}
-\boxed{ \config{\trace,\aexpr} \aarrow v \, : \, Trace  \times AExpr \Rightarrow Value }
+\boxed{ \config{\trace,\aexpr} \aarrow v \, : \, \mbox{Trace  $\times$ Arithmetic Expr $\Rightarrow$ Arithmetic Value} }
 \\
-\boxed{ \config{\trace, \bexpr} \barrow v \, : \, Trace \times BExpr \Rightarrow Value }
+\boxed{ \config{\trace, \bexpr} \barrow v \, : \, \mbox{Trace $\times$ Boolean Expr $\Rightarrow$ Boolean Value} }
 \\
-\boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, Trace  \times QExpr \qarrow QValue }
+\boxed{ \config{\trace, \expr} \earrow v \, : \, \mbox{Trace $\times$ Expression $\Rightarrow$ Value} }
+\\
+  \inferrule{ 
+    \config{\trace, \aexpr} \aarrow v
+  }{
+   \config{\trace,  \aexpr} 
+   \earrow v
+  }
+\and
+  \inferrule{ 
+    \config{\trace, \bexpr} \barrow v
+  }{
+   \config{\trace,  \bexpr} 
+   \earrow v
+  }
+\and
+  \inferrule{ 
+    \config{\trace, \expr_1} \earrow v_1
+    \cdots
+    \config{\trace, \expr_n} \earrow v_n
+  }{
+   \config{\trace,  [\expr_1, \cdots, \expr_n]} 
+   \earrow [v_1, \cdots, v_n]
+  }
+\and
+  \inferrule{ 
+    \empty
+  }{
+   \config{\trace,  v} 
+   \earrow v
+  }
   \\
+\boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, \mbox{Trace  $\times$ Query Expr $\qarrow$ Query Value} }
+  \\
+  \inferrule{ 
+    \config{\trace, \aexpr} \aarrow v
+  }{
+   \config{\trace,  \aexpr} 
+   \qarrow v
+  }
+  \and
   \inferrule{ 
     \config{\trace, \qexpr_1} \qarrow \qval_1
     \and
-    \config{m, \qexpr_2} \qarrow \qval_2
+    \config{\trace, \qexpr_2} \qarrow \qval_2
   }{
    \config{\trace,  \qexpr_1 \oplus_a \qexpr_2} 
    \qarrow \qval_1 \oplus_a \qval_2
   }
   \and
   \inferrule{ 
-    \config{m, \aexpr} \aarrow v
+    \config{\trace, \aexpr} \aarrow v
   }{
-   \config{m,  \chi[\aexpr]} \qarrow \chi[v]
+   \config{\trace, \chi[\aexpr]} \qarrow \chi[v]
   }
-  \and
+ \and
   \inferrule{ 
-    \config{m, n \oplus_a n} \aarrow n'
+    \empty
   }{
-   \config{m,  n \oplus_a n} 
-   \qarrow n'
+   \config{\trace,  \qval} 
+   \qarrow \qval
   }
-    \end{mathpar}
+   \end{mathpar}
 %
 The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 %
@@ -233,7 +272,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
   \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace } 
   \xrightarrow{} 
-  \config{[\eskip]^{l}, \vtrace \event\cdot }
+  \config{[\eskip]^{l}, \vtrace \cdot \event }
   }
   ~\textbf{assn}
   %
@@ -251,7 +290,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \xrightarrow{} 
   \config{\ssa{
   c[\bar{x_i}/\bar{x'}]; \ewhile ~ [b]^{l}, (n + 1), [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c,  \eskip),
-  \vtrace\event \cdot }}
+  \vtrace \cdot \event}}
   }
   ~\textbf{ssa-while-t}
   %
@@ -270,7 +309,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \xrightarrow{} 
   \config{\ssa{
   [\eskip]^l ,
-  \vtrace \event \cdot}}
+  \vtrace \cdot \event}}
   }
   ~\textbf{ssa-while-f}
   %
@@ -288,7 +327,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   {
   \config{\ssa{[\assign{x}{\query(\qexpr)}]^l, \vtrace}}
   \xrightarrow{} 
-  \config{\ssa{\eskip,  \vtrace \event \cdot} }
+  \config{\ssa{\eskip,  \vtrace \cdot \event} }
   }
   ~\textbf{ssa-query}
   }
@@ -344,7 +383,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \event \cdot}}
+  \vtrace \cdot \event}}
   }
   ~\textbf{ssa-if-t}
   %
@@ -368,7 +407,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
   \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
   \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
   \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \event \cdot}}
+  \vtrace \cdot \event}}
   }
   ~\textbf{ssa-if-f}
   %
@@ -397,9 +436,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 %
 %
 %
-%
-\clearpage
-%
+%%
 %
 % \subsection{SSA Transformation and Soundness of Transformation}
 % in File {\tt ``ssa\_transform\_sound.tex''}
