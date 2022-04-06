@@ -2,7 +2,7 @@
 %
 There are four steps to get the adaptivity of a program $\ssa{c}$ based on analyzing the program. 
 \begin{enumerate}
-    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an assigned variable vector $\lvar$. 
+    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an labeled variable vector $\lvar$. 
     We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
     %
     \item Tracking the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar| \times |\lvar|$. 
@@ -42,12 +42,9 @@ $$
 $$
 %
 \begin{lem}
-For any program $\ssa{c}$, every variable in $\lvar(\ssa{c})$ is distinct
+For any program $\ssa{c}$, every labeled variable in $\lvar(\ssa{c})$ is distinct
 \end{lem}
-\begin{proof}
- It is due to the SSA nature. We can prove it by induction on $\ssa{c}$.
-\end{proof}
-
+%
 {
 \begin{defn}[Variable Flags ($\flag$)].
 \\
@@ -60,12 +57,13 @@ $\flag(i) \in \{0, 1, 2\}$ is defined as follows:
 	\left\{
 	\begin{array}{ll}
 	2 & 
-	\ssa{x} = \lvar(i) \land (\exists \ssa{\qexpr}. ~ s.t., ~
+	\ssa{x^l} \in \lvar_{c} \land 
+	(\exists \ssa{\qexpr}. ~ s.t., ~
 	[\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c})
 	\\
 	1 &  
 	\begin{array}{l}
-	\ssa{x} = \lvar(i) \bigwedge \\
+	\ssa{x^l} \in \lvar_{c} \bigwedge \\
 	\left(
 	\begin{array}{l}
 	\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
@@ -111,7 +109,6 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 \end{array}
 \end{equation}
 %
-\todo{
 Given a program  $\ssa{c}$ with its assigned variables $\lvar$,
 and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\lvar$ 
 (i.e., $\ssa{x} = \lvar(i)$ and $\ssa{y} = \lvar(j)$),
@@ -119,12 +116,12 @@ we say $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$ if and only if $j < i$ and
 the value of $\ssa{y}$ directly or indirectly influence the evaluation of the value of $\ssa{x}$ as follows:
 %
 \begin{itemize}
-	\item (Directly Influence) The program $\ssa{c}$ contains either 
+	\item (Explicit Influence) The program $\ssa{c}$ contains either 
 	a command $\assign{\ssa{x}}{\sexpr}$ or $\assign{\ssa{x}}{\query(\ssa{\qexpr})}$,
 	such that $\ssa{y}$ shows up as a free variable in $\sexpr$ or $\ssa{\qexpr}$.
 	We use $\flowsto(\ssa{x, y, c})$ to denote $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$.
 %
-	\item (Indirectly Influence) The program $\ssa{c}$ contains either a while loop
+	\item (Implicit Influence) The program $\ssa{c}$ contains either a while loop
 	command
 	or if condition command, such that $\ssa{y}$ shows up in the guard
 	and $\ssa{x}$ shows up in the left hand of an assignment command in the body.
@@ -137,13 +134,13 @@ expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ r
 \begin{defn}[Data Flows between Assigned Variables ($\flowsto$)].
 \label{def:flowsto}
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$,
-and two variables $\ssa{x}$, $\ssa{y}$ s.t., $\ssa{x} = \lvar(i)$ and $\ssa{y} = \lvar(j)$,
-$\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is defined as:
+In a program  $\ssa{c}$,
+an variable $\ssa{x^i}  \in \lvar_c $ is in the \emph{flows to} relation with another variable $\ssa{y^j} \in \lvar_c$
+in $\ssa{c}$, denoted as $\flowsto(\ssa{x, y, c})$, is defined as follows:
 %
 \[
 	\begin{array}{l}
-	\flowsto(\ssa{x, y, c}) \triangleq 	(j < i) \land 
+	\flowsto(\ssa{x^i, y^j, c}) \triangleq 	(i < j) \land 
 	\\
 	\left( \bigvee
 	\begin{array}{l}
@@ -157,14 +154,14 @@ $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is de
 		\ewhile [\sbexpr]^l \edo \ssa{c'} \in_{c} \ssa{c}
 		\land 
 		[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
-		\land \ssa{y} \in FV(\sbexpr)
-	\big)
+	\big) \land \ssa{y} \in FV(\sbexpr)
 	\\
-	\big(\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
+	\big(
+	\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
 		\eif([\sbexpr]^l, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
 		([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
 		[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
-		\land \ssa{y} \in FV(\sbexpr)
+	\land \ssa{y} \in FV(\sbexpr)
 	\big)
 	\end{array}
 	\right).
@@ -172,7 +169,6 @@ $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$, i.e., $\flowsto(\ssa{x, y, c})$ is de
 \]
 %
 \end{defn}
-}
 }
 %
 %

@@ -43,7 +43,7 @@ An $\event \in \eventset$ isomorphically belongs to a trace $\trace$, i.e., $\ev
   \begin{array}{ll} 
     \etrue                  & \trace =  (\trace' \cdot \event') 
     \land (\pi_{\sig}(\event) = \pi_{\sig}(\event')) \\
-    \event \sigin \trace'   & \trace =  (\trace' \cdot \event') \land (\pi_{\sig}(\event) \neq \pi_{\sig}(\event') ) \\ 
+    \event \ismin \trace'   & \trace =  (\trace' \cdot \event') \land (\pi_{\sig}(\event) \neq \pi_{\sig}(\event') ) \\ 
     \efalse                 & o.w.
   \end{array}
   \right.
@@ -63,7 +63,8 @@ c_1 =_{c} c_2
     \etrue        
     & c_1 = \eskip \land c_2 = \eskip
     \\ 
-    \forall m. \exists v. ~ \config{m, \expr_1} \aarrow^{*} v \land \config{m, \expr_1} \aarrow^{*} v     
+    \forall \trace \in \mathcal{T} \st \exists v \in \mathcal{VAL}
+    \st \config{ \trace, \expr_1} \aarrow v \land \config{ \trace, \expr_1} \aarrow v     
     & c_1 = \assign{x}{\expr_1} \land c_2 = \assign{x}{\expr_2} 
     \\ 
     \qexpr_1 =_{q} \qexpr_2       
@@ -96,8 +97,7 @@ c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 A trace $\trace$ is well formed, i.e., $\trace \in \mathcal{T}$ if and only if it preserves the following two properties:
 \begin{itemize}
 \item{\emph{(Uniqueness)}} 
-$\forall \event_1, \event_2 \eventin \trace 
-\st (\pi_{\sig}(\event_1) \neq \pi_{\sig}(\event_2) )$
+$\forall \event_1, \event_2 \eventin \trace \st \event_1 \ismneq \event_2$
 %
 \item{\emph{(Ordering)}} $\forall \event_1, \event_2 \eventin \trace \st 
 (\event_1 \eventlt \event_2) \Longleftrightarrow
@@ -130,16 +130,16 @@ Proof in File: {\tt ``thm\_os\_wf\_trace.tex''}.
 \\
 $$
 \forall \trace \in \mathcal{T}, c \st
-\config{c, t} 
-\rightarrow
-\config{c', t'} \implies \exists ~ t'', ~ s.t., ~ t \cdot t'' = t'
+\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
+\implies \exists \trace'' \in \mathcal{T} \st \trace \cdot \trace'' = \trace'
 $$
 \end{lem}
 %
 \begin{coro}
 \label{coro:aqintrace}
 \[
-\event \eventin t \implies \exists t_1, t_2, \event'. ~ s.t., ~ (\event \eventeq \event') \land t_1 \cdot \event' \cdot t_2 = t  
+\event \eventin \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
+\event' \in \eventset \st (\event \eventeq \event') \land \trace_1 \cdot \event' \cdot \trace_2 = t  
 \]
 \end{coro}
 \begin{subproof}

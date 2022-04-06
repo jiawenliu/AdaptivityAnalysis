@@ -93,12 +93,12 @@ This example shows we can derive by Definition.~\ref{def:var_dep}:
 \]
 %
 \begin{proof}
-Let $\trace_0 = \cdot (x, 0, 1, 2) \in \mathbb{T}$, by semantics definition, we have:
+Let $\trace_0 = \cdot (x, 0, 1, 2) \in \mathcal{T}$, by semantics definition, we have:
 %
 \begin{equation}
 \label{eq:os_timingdep}
 \begin{array}{ll}
-& \config{\ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3 , \trace_0} \\
+& \config{\ewhile [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3 , \trace_0} \\
 & \rightarrow^\rname{while-t}
 \config{[x = x - 1;]{}^2  [y = 1;]{}^3; \ewhile  [(x > 0)]{}^1 \edo [x = x - 1;]{}^2  [y = 1;]{}^3, \trace_0 \cdot ((x > 0), 1, 1, \etrue)} \\
 & \rightarrow^\rname{seq1}
@@ -134,9 +134,9 @@ Let $\event_1 = (x, 2, 1, 1)$,  $\event_1' = (x, 2, 1, 0)$ and $\event_2 = ((y, 
 Then, we have:
 \[
 \begin{array}{l}
-\event_2 \sigin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1) \cdot ((x > 0), 1, 3, \efalse)\\
+\event_2 \ismin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \etrue) \cdot(x, 2, 2, 0) \cdot(y, 3, 2, 1) \cdot ((x > 0), 1, 3, \efalse)\\
 \land
-\event_2 \notsigin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \efalse)
+\event_2 \notismin \trace_0 \cdot ((x > 0), 1, 1, \etrue) \cdot \event_1' \cdot(y, 3, 1, 1) \cdot ((x > 0), 1, 2, \efalse)
 \end{array}
 \]
 %
@@ -175,30 +175,30 @@ This example shows by the modified data dependency in Definition~\ref{def:var_de
 Without loss of generalization, 
 let $\trace_0 \in \mathcal{T}$ be arbitrary initial trace where $\env(\trace_0) x = v$ and $v > 0$.
 \\
-By operational semantics, we have:
+By operational semantics, let $\trace_j = \cdot ((x > 0), 2, j, \etrue) \cdot(y, 3, j, 1)$ we have:
 \[
 \label{eq:os_timingdep}
-\begin{array}{ll}
-& \config{\ewhile  [(x > 0)]{}^2 \edo [y = 1;]{}^3 , \trace_0} \\
-& \rightarrow^*
-\config{[\eskip]{}^1;, 
-\trace_0 \cdot ((x > 0), 2, 1, \etrue) \\
-& \quad \cdot(y, 3, 1, 1) \cdot ((x > 0), 2, 2, \etrue) \cdot(y, 3, 2, 1) \cdots} \\
-\end{array}
+\config{\ewhile  [(x > 0)]{}^2 \edo [y = 1;]{}^3 , \trace_0} \rightarrow^*
+\config{[\eskip]{}^1;, \trace_0 \cdot \trace_1 \cdot \trace_2 \cdots}
 \]
 %
-For arbitrary initial trace $\trace_0 \in \mathcal{T}$, there doesn't exist an event $\event_1$ s.t. $\pi_1(\event_1) = (z, i)$ in this trace, i.e.,
+For arbitrary initial trace $\trace_0 \in \mathcal{T}$, there doesn't exist an event $\event$ s.t. 
+$(\pi_1(\event), \pi_2(\event)) = (z, i)$ in $\cdot \trace_1 \cdot \trace_2 \cdots$, i.e.,
 \[
-  \not\exists \event \st \pi_1(\event) = (z, i) \land
- \event_i \sigin \cdot ((x > 0), 2, 1, \etrue) \cdot(y, 3, 1, 1) \cdot ((x > 0), 2, 2, \etrue) \cdot(y, 3, 2, 1) \cdots
+  \not\exists \event \st (\pi_1(\event), \pi_2(\event)) = (z, i) \land
+ \event \ismin \cdot \trace_1 \cdot \trace_2 \cdots
 \]
 %
-Then, by definition of variable dependency, we know:
+Let $\event_y = (y, 3, j, 1)$ for arbitrary $j$, then, by definition of variable dependency, we know:
 \[ 
-\not\exists \event \st \pi_1(\event) = (z, i) \vardep(z^1, y^3, \ewhile  [(x > 0)]{}^2 \edo [y = 1;]{}^3, D)
+\forall  \event_2 \st (\pi_1(\event_2), \pi_2(\event_2)) = (y, 3) 
+\st \not\exists \event_1 \st \pi_1(\event_1) = (z, i) \land \eventdep(\event_z, \event_y)
 \]
 %
 i.e., there isn't dependency relations between $z^i$ and $y^3$ by Definition~\ref{def:var_dep}
+\[
+  \neg \vardep(z^1, y^3, \ewhile  [(x > 0)]{}^2 \edo [y = 1;]{}^3, D)
+\]
 \end{proof}
 \end{example}
 %
