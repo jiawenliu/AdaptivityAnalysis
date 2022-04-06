@@ -1,8 +1,9 @@
 \subsection{Inversion Lemmas}
-\begin{lem}[Arithmetic Inversion]
+\begin{lem}[Arithmetic Inversion].
+\label{lem:inv_a}
 \[
 	\forall x \in \lvar, \expr \st 
-	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\}
+	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\} \st 
 	\env(\trace) z = \env(\trace') z \st 
 	\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v \neq v'
 	\implies x \in VAR(\expr)\Big)
@@ -10,6 +11,7 @@
 \end{lem}
 %
 \begin{lem}[Boolean Inversion]
+\label{lem:inv_b}
 \[
 	\forall x \in \lvar, \bexpr \st 
 	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\} \st
@@ -20,9 +22,9 @@
 \end{lem}
 %
 \begin{lem}[Query Inversion]
+\label{lem:inv_q}
 \[
 	\forall x \in \lvar, \qexpr \st 
-	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\}
 	\env(\trace) z = \env(\trace') z \st 
 	\config{\trace, \qexpr} \qarrow \qval \land \config{\trace', \qexpr} \qarrow \qval' 
 	\land v \neq_{q} \qval'
@@ -31,6 +33,7 @@
 \end{lem}
 %
 \begin{lem}[Assignment Event -> (Assignment / Query Command)]
+\label{lem:inv_asn}
 \[
 \begin{array}{l}
 	\forall c, \trace_0 \in \mathcal{T} \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
@@ -55,6 +58,7 @@
 \end{lem}
 %
 \begin{lem}[Testing Event -> (If / While command)]
+\label{lem:inv_test}
 \[
 \begin{array}{l}
 	\forall c, \trace_0 \in \mathcal{T}, \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
@@ -78,10 +82,27 @@
 \end{lem}
 
 \begin{lem}[Control Dependency -> Exists Testing Event]
+\label{lem:inv_ctltotest}
 \[
-	\forall \event
+	\forall \event_1, \event_2 \in \eventset, c \st 
+	\eventdep^{\ctl}(\event_1, \event_2, c, D)
+	\implies
+	\exists \event_b \st \eventdep^{val}(\event_1, \event_b, c, D)
 \]
 \end{lem}
 
 \begin{lem}[Control Dependency -> Event 2 in the Body Command of the Testing Event]
+\label{lem:inv_ctltotest}
+\[
+\begin{array}{l}
+	\forall \event_1, \event_2 = (x_2, l_2, n_2, v_2) \in \eventset, c \st 
+	\eventdep^{\ctl}(\event_1, \event_2, c, D)
+	\implies
+	\exists \event_b = (b, l, n, v), \expr_2 \st \eventdep^{val}(\event_1, \event_b, c, D)
+	\land \Big(
+	\exists c_t, c_f \st (\eif ([b]{}^l, c_t, c_f)) =_{c} c \land ([\assign{x_2}{\expr_2}]^{l_2}) \in c_t;c_f
+	\lor  \exists c_w \st (\ewhile [b]{}^l \edo c_w) =_{c} c \land ([\assign{x_2}{\expr_2}]^{l_2}) \in c_w
+	\Big)
+\end{array}
+\]
 \end{lem}

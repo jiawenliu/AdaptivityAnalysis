@@ -5,7 +5,7 @@ There are four steps to get the adaptivity of a program $\ssa{c}$ based on analy
     \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an labeled variable vector $\lvar$. 
     We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
     %
-    \item Tracking the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar| \times |\lvar|$. 
+    \item Tracking the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar| \times |\lvar|$. 
     %
     \item Estimating the reachability bound of each variable in $\lvar$.
     %
@@ -22,7 +22,7 @@ In the following subsections, we present the adaptivity analysis based on the \T
 %
 \label{subsec:alg_notation}
 %
-Consider the program $c$ below in the left hand side as an example, its assigned variables $\lvar$ (short for $\lvar(\ssa{c})$) is as in the right hand side is shown as follows:
+Consider the program $c$ below in the left hand side as an example, its labeled variables $\lvar$ (short for $\lvar(\ssa{c})$) is as in the right hand side is shown as follows:
 $$
 \ssa{c} = 
 \begin{array}{l}
@@ -48,7 +48,7 @@ For any program $\ssa{c}$, every labeled variable in $\lvar(\ssa{c})$ is distinc
 {
 \begin{defn}[Variable Flags ($\flag$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$, the $\flag$ is a vector of the same length as $\lvar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\lvar$ (i.e., $\ssa{x} = \lvar(i)$), 
+Given a program  $\ssa{c}$ with its labeled variables $\lvar$, the $\flag$ is a vector of the same length as $\lvar$, s.t. for each variable $\ssa{x}$ showing up as the $i$-th element in $\lvar$ (i.e., $\ssa{x} = \lvar(i)$), 
 $\flag(i) \in \{0, 1, 2\}$ is defined as follows:
 %
 %
@@ -109,7 +109,7 @@ k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}}
 \end{array}
 \end{equation}
 %
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$,
+Given a program  $\ssa{c}$ with its labeled variables $\lvar$,
 and two variables $\ssa{x}$, $\ssa{y}$ showing up as $i$-th, $j$-th elements in $\lvar$ 
 (i.e., $\ssa{x} = \lvar(i)$ and $\ssa{y} = \lvar(j)$),
 we say $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$ if and only if $j < i$ and 
@@ -136,7 +136,7 @@ expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ r
 \\
 In a program  $\ssa{c}$,
 an variable $\ssa{x^i}  \in \lvar_c $ is in the \emph{flows to} relation with another variable $\ssa{y^j} \in \lvar_c$
-in $\ssa{c}$, denoted as $\flowsto(\ssa{x, y, c})$, is defined as follows:
+in $\ssa{c}$, denoted as $\flowsto(\ssa{x^i, y^j, c})$, is defined as follows:
 %
 \[
 	\begin{array}{l}
@@ -173,19 +173,17 @@ in $\ssa{c}$, denoted as $\flowsto(\ssa{x, y, c})$, is defined as follows:
 %
 %
 \begin{defn}[Data Flow Matrix ($\Mtrix$)]
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
-its data flow matrix $\Mtrix$ is a matrix of size $N \times N$ s.t.
-$\forall \ssa{x, y} \in \lvar. ~ \ssa{x} = \lvar(i), \ssa{y} = \lvar(j)$:
+The data flow matrix $\Mtrix$ of a program $c$ is a matrix of size $|\lvar_c| \times |\lvar_c|$ 
+s.t.,
 %
 \[
 \Mtrix(i, j) \triangleq
 \left\{
 \begin{array}{ll}
-1	&	\flowsto(\ssa{x, y, c}) \\
+1	&	\flowsto(\ssa{x^i, y^j, c}) \\
 0	& o.w.
 \end{array}
-\right.,
-\ssa{x} = \lvar(i); \ssa{y} = \lvar(j); i, j = 1, \ldots, N .
+\right., \ssa{x^i}, y^j  \in \lvar_c.
 \]
 %
 \end{defn}
@@ -224,13 +222,13 @@ $$
 %
 There are two special matrices used for generating the data flow matrix $\Mtrix$ in the analysis algorithm. They are the left matrix $\lMtrix_i$ and right matrix $\mathsf{R_{(e, i)}}$.
 
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
+Given a program  $\ssa{c}$ with its labeled variables $\lvar$ of length $N$,
 the left matrix $\lMtrix_i$ generates a matrix of $1$ column, $N$ rows, 
 where the $i$-th row is $1$ and all the other rows are $0$.
 %
 \begin{defn}[Left Matrix ($\lMtrix_i$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$, 
+Given a program  $\ssa{c}$ with its labeled variables $\lvar$ of size $N$, 
 the left matrix $\lMtrix_i$ is defined as follows:
 \[
 	\lMtrix_i(j) : = 
@@ -245,14 +243,14 @@ the left matrix $\lMtrix_i$ is defined as follows:
 \]
 \end{defn}
 %
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
+Given a program  $\ssa{c}$ with its labeled variables $\lvar$ of length $N$,
 the right matrix $\rMtrix_{\expr, i}$ generates a matrix of one row and $N$ columns, 
 where the locations of free variables in $\expr$ is marked as $1$. 
 %
 %
 \begin{defn}[Right Matrix ($\rMtrix_{\expr}$)].
 \\
-Given a program  $\ssa{c}$ with its assigned variables $\lvar$ of length $N$, 
+Given a program  $\ssa{c}$ with its labeled variables $\lvar$ of length $N$, 
 the right matrix $\rMtrix_{\expr}$ is defined as follows:
 \[
 	\rMtrix_{\expr}(j) : = 
@@ -269,7 +267,7 @@ the right matrix $\rMtrix_{\expr}$ is defined as follows:
 %
 \end{defn}
 %
-Using the same example program $\ssa{c}$ as above with assigned variables $\lvar = [ \ssa{x_1 , x_2 , x_3} ] $,
+Using the same example program $\ssa{c}$ as above with labeled variables $\lvar = [ \ssa{x_1 , x_2 , x_3} ] $,
 the left and right matrices w.r.t. its $2$-nd command 
 $\left[\ssa{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 \[
@@ -290,22 +288,22 @@ $\left[\ssa{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 \subsection{Algorithmic Analysis Rules}
 %
 \paragraph{Variable Collection Algorithm, $\varCol$}
-% The $\varCol$ algorithm shows how the assigned variables $\lvar$ are collected 
+% The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
 % (via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step.
 % The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
 % It has the form: $\ag{\lvar; w; \ssa{c}}{ \lvar'; w'} $. 
-% The input of $\varCol$ is the assigned variables $\lvar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
-% The output of the algorithm is the updated assigned variables $\lvar'$, along with the updated while map $w$ for next steps' collecting.   
-The $\varCol$ algorithm shows how the assigned variables $\lvar$ are collected 
+% The input of $\varCol$ is the labeled variables $\lvar$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. 
+% The output of the algorithm is the updated labeled variables $\lvar'$, along with the updated while map $w$ for next steps' collecting.   
+The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
 (via the command $\ssa{\assign{x}{\expr}}$ or $\ssa{\assign{x}{\query(\qexpr)}}$) from the program $\ssa{c}$ in the first step, 
 along with constructing the flag for each variable, i.e., $\flag$.
 The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
 It has the form: 
 {$\ag{\lvar; \flag; \ssa{c}}{ \lvar'; \flag'} $}. 
 The input of $\varCol$ is a program $\ssa{c}$, 
-the assigned variables $\lvar$ collected before the program $\ssa{c}$ 
+the labeled variables $\lvar$ collected before the program $\ssa{c}$ 
 as well as the flags $\flag$ for every corresponding variable .
-The output of the algorithm is the updated assigned variables $\lvar'$ and flags $\flag'$ thorough the program $\ssa{c}$
+The output of the algorithm is the updated labeled variables $\lvar'$ and flags $\flag'$ thorough the program $\ssa{c}$
 %
 % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\lvar; w; \ssa{c}}{\lvar';w'} $ as in Figure \ref{fig:var_col}. 
 %
@@ -396,14 +394,14 @@ k = \len(\lvar')
 %
 The assignment commands are the source of variables $\varCol$ collecting, 
 	in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
-	the output assigned variables are extended by $\ssa{x}$. 
+	the output labeled variables are extended by $\ssa{x}$. 
 \\
 	When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$.
 \\ 
 	The sequence command $\ssa{c_1;c_2}$ is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ preserving their order. 
 \\
 	The while command $\ewhile \ssa{\bexpr}, [\ssa{\bar{x}}] \ldots \edo \ssa{c}$ considers the newly generated variables by SSA transformation $\ssa{\bar{x}}$
-	as well and the newly assigned variables in its body $\ssa{c}$.
+	as well and the newly labeled variables in its body $\ssa{c}$.
 
 %
 Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
@@ -418,15 +416,15 @@ $\lvar' = \lvar[0,\ldots, i_1-1], \lvar';\ssa{c} \to \lvar'' \land \lvar'' = \lv
 %
 \paragraph{Data Flow Matrix Generating Algorithm}
 %
-In this data flow matrix generating algorithm, we analyze the data flow information among all assigned variables $\lvar$ collected via the the $\varCol$ algorithm of length $N$.
+In this data flow matrix generating algorithm, we analyze the data flow information among all labeled variables $\lvar$ collected via the the $\varCol$ algorithm of length $N$.
 %
-We track the data flow relations between all these assigned variables. These informations are stored in a matrix $\Mtrix$, whose size is $N \times N$. 
+We track the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $N \times N$. 
 % We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\lvar|$. 
 %
 The algorithm to fill in the matrix is of the form: 
 {$\ad{\Gamma ; \ssa{c} ; \lvar}{\Mtrix}$}
 $\ad{\Gamma ; \ssa{c} ; i_1, i_2}{\Mtrix; \flag}$. 
-$\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the assigned variables $\lvar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
+$\Gamma$ is a vector records the variables the current program $\ssa{c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in $\ssa{c}$ in the labeled variables $\lvar$, and $i_2$ points to the first new variable that is not in $\ssa{c}$ (if exists). 
 %
 %
 {
@@ -643,12 +641,12 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 %
 Below we define the valid data flow matrix, to have a clear understanding on the data flow generating algorithm:
 \begin{defn}[Valid Matrix]
-For a assigned variables $\lvar$, $\lvar \vDash (\Mtrix,\flag)$ iff the cardinality of $\lvar$ equals to the one of $\flag$, $|\lvar| = |\flag|$ 
+For a labeled variables $\lvar$, $\lvar \vDash (\Mtrix,\flag)$ iff the cardinality of $\lvar$ equals to the one of $\flag$, $|\lvar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
 {
 \begin{defn}[Valid Matrix]
-Given a program $\ssa{c}$ with its assigned variables $\lvar$, 
+Given a program $\ssa{c}$ with its labeled variables $\lvar$, 
 $\lvar \vDash \Mtrix$ iff the cardinality of $\Mtrix$ equals to the product of  $\lvar$'s cardinality,
 i.e., $|\Mtrix| = |\lvar| \times |\lvar|$.
 \end{defn}
@@ -658,7 +656,7 @@ i.e., $|\Mtrix| = |\lvar| \times |\lvar|$.
 
 %
 \paragraph{Reachability Bounds}
-Given a program $c$ with its assigned variables $\lvar$,
+Given a program $c$ with its labeled variables $\lvar$,
 we use the $\rb(\ssa{x}, \ssa{c})$ algorithm, from paper \cite{10.1145/1806596.1806630}, to estimate the reachability bound for each variable $\ssa{x} \in \lvar$. 
 The input of $\rb$ is a program $\ssa{c}$ in SSA language and a variable $\ssa{x} $ from $\ssa{c}$.
 The output of $\rb(\ssa{x}, \ssa{c})$ is an integer representing the reachability bound of $\ssa{x}$ in $\ssa{c}$.
@@ -666,7 +664,7 @@ The output of $\rb(\ssa{x}, \ssa{c})$ is an integer representing the reachabilit
 
 %
 The following example programs $\ssa{c}2$ and $\ssa{c}3$ with while loop illustrate how the algorithm works.
-The collected assigned variables, $\lvar_{\ssa{c}2}$ and $\lvar_{\ssa{c}3}$,
+The collected labeled variables, $\lvar_{\ssa{c}2}$ and $\lvar_{\ssa{c}3}$,
 data flow matrix $\Mtrix_{\ssa{c}2}$ and  $\Mtrix_{\ssa{c}3}$
 and variable flags $\flag_{\ssa{c}2}$ and $\flag_{\ssa{c}3}$
 for program $\ssa{c}2$ and $\ssa{c}3$
@@ -858,7 +856,7 @@ We can now look at the if statement.
 [Program-Based Dependency Graph].
 \label{def:prog-based_graph}
 \\
-Given a program $\ssa{c}$ with its assigned variables $\lvar$ of length $N$, s.t.,
+Given a program $\ssa{c}$ with its labeled variables $\lvar$ of length $N$, s.t.,
 $\Gamma \vdash_{\Mtrix_c, \flag_c} \ssa{c}$, 
 its program-based graph 
 $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
@@ -1161,7 +1159,7 @@ the program-based adaptivity for $c$ is defined as%
 % 	\\
 % 	$\mathcal{AV}$ : Annotated Variables based on program execution
 % 	\\
-% 	Given a program $\ssa{c}$ with its assigned variables $\lvar$ of length $N$,
+% 	Given a program $\ssa{c}$ with its labeled variables $\lvar$ of length $N$,
 % 	a database $D$, a starting memory $\ssa{m}$,
 % 	s.t., $\Gamma \vdash_{\Mtrix_c, \flag_c} \ssa{c}$,
 % 	the intermediate graph 
@@ -1221,7 +1219,7 @@ the program-based adaptivity for $c$ is defined as%
 % 	\begin{lem}[$\flowsto$ is Transitive ??].
 % 	\label{lem:flowsto_trans}
 % 	\\
-% 	Given a program $\ssa{c}$ with its assigned variables $\lvar$ of length $N$. 
+% 	Given a program $\ssa{c}$ with its labeled variables $\lvar$ of length $N$. 
 % 	Then $\forall x_1, x_2, x_3 \in \lvar$
 % \[
 % 	\Big(\flowsto(x_1, x_2) \land \flowsto(x_2, x_3) \Big)
