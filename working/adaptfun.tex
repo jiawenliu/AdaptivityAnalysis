@@ -2,14 +2,14 @@
 %
 There are four steps to get the adaptivity of a program $\ssa{c}$ based on analyzing the program. 
 \begin{enumerate}
-    \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an labeled variable vector $\lvar$. 
-    We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
-    %
-    \item Tracking the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar| \times |\lvar|$. 
-    %
-    \item Estimating the reachability bound of each variable in $\lvar$.
-    %
-    \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute the adaptivity bound.
+\item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an labeled variable vector $\lvar$. 
+We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
+%
+\item Tracking the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar| \times |\lvar|$. 
+%
+\item Estimating the reachability bound of each variable in $\lvar$.
+%
+\item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute the adaptivity bound.
 \end{enumerate}
 
 In the following subsections, 
@@ -53,37 +53,37 @@ $\flag(i) \in \{0, 1, 2\}$ is defined as follows:
 %
 %
 \[
-	\flag(i) := 
-	\left\{
-	\begin{array}{ll}
-	2 & 
-	\ssa{x^l} \in \lvar_{c} \land 
-	(\exists \ssa{\qexpr}. ~ s.t., ~
-	[\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c})
-	\\
-	1 &  
-	\begin{array}{l}
-	\ssa{x^l} \in \lvar_{c} \bigwedge \\
-	\left(
-	\begin{array}{l}
-	\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
-		\ewhile [\sbexpr]^l \edo \ssa{c'} \in_{c} \ssa{c}
-		\land 
-		[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
-	\big) \bigvee
-	\\
-	\big(\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
-		\eif([\sbexpr]^l, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
-		([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
-		[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
-	\big)
-	\end{array}
-	\right)
-	\end{array}
-	\\
-	0 & \text{o.w.}
-	\end{array}
-	\right\}. 
+\flag(i) := 
+\left\{
+\begin{array}{ll}
+2 & 
+\ssa{x^l} \in \lvar_{c} \land 
+(\exists \ssa{\qexpr}. ~ s.t., ~
+[\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c})
+\\
+1 &  
+\begin{array}{l}
+\ssa{x^l} \in \lvar_{c} \bigwedge \\
+\left(
+\begin{array}{l}
+\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
+	\ewhile [\sbexpr]^l \edo \ssa{c'} \in_{c} \ssa{c}
+	\land 
+	[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
+\big) \bigvee
+\\
+\big(\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
+	\eif([\sbexpr]^l, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
+	([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
+	[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
+\big)
+\end{array}
+\right)
+\end{array}
+\\
+0 & \text{o.w.}
+\end{array}
+\right\}. 
 \] 
 %
 \end{defn}
@@ -95,7 +95,7 @@ Operations on $\flag$ are defined as follows:
 \left\{
 \begin{array}{ll}
 k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}} 
-	\land |\flag_1| = |\flag_2|\\
+\land |\flag_1| = |\flag_2|\\
 0 & o.w.
 \end{array}\right.
 & i = 1, \cdots, |\flag_1|  
@@ -116,15 +116,15 @@ we say $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$ if and only if $j < i$ and
 the value of $\ssa{y}$ directly or indirectly influence the evaluation of the value of $\ssa{x}$ as follows:
 %
 \begin{itemize}
-	\item (Explicit Influence) The program $\ssa{c}$ contains either 
-	a command $\assign{\ssa{x}}{\sexpr}$ or $\assign{\ssa{x}}{\query(\ssa{\qexpr})}$,
-	such that $\ssa{y}$ shows up as a free variable in $\sexpr$ or $\ssa{\qexpr}$.
-	We use $\flowsto(\ssa{x, y, c})$ to denote $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$.
+\item (Explicit Influence) The program $\ssa{c}$ contains either 
+a command $\assign{\ssa{x}}{\sexpr}$ or $\assign{\ssa{x}}{\query(\ssa{\qexpr})}$,
+such that $\ssa{y}$ shows up as a free variable in $\sexpr$ or $\ssa{\qexpr}$.
+We use $\flowsto(\ssa{x, y, c})$ to denote $\ssa{y}$ flows to $\ssa{x}$ in $\ssa{c}$.
 %
-	\item (Implicit Influence) The program $\ssa{c}$ contains either a while loop
-	command
-	or if condition command, such that $\ssa{y}$ shows up in the guard
-	and $\ssa{x}$ shows up in the left hand of an assignment command in the body.
+\item (Implicit Influence) The program $\ssa{c}$ contains either a while loop
+command
+or if condition command, such that $\ssa{y}$ shows up in the guard
+and $\ssa{x}$ shows up in the left hand of an assignment command in the body.
 \end{itemize}
 %
 This is formally defined in \ref{def:flowsto}.
@@ -139,33 +139,33 @@ an variable $\ssa{x^i}  \in \lvar_c $ is in the \emph{flows to} relation with an
 in $\ssa{c}$, denoted as $\flowsto(\ssa{x^i, y^j, c})$, is defined as follows:
 %
 \[
-	\begin{array}{l}
-	\flowsto(\ssa{x^i, y^j, c}) \triangleq 	(i < j) \land 
-	\\
-	\left( \bigvee
-	\begin{array}{l}
-	(\exists \sexpr, l . ~ [\assign{\ssa{x}}{\sexpr}]^l \in_{c} \ssa{c} 
-	\land \ssa{y} \in FV(\sexpr))
-	\\
-	(\exists \ssa{\qexpr}, l. ~ [\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c} 
-	\land \ssa{y} \in FV(\ssa{\qexpr}))
-	\\
-	\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
-		\ewhile [\sbexpr]^l \edo \ssa{c'} \in_{c} \ssa{c}
-		\land 
-		[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
-	\big) \land \ssa{y} \in FV(\sbexpr)
-	\\
-	\big(
-	\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
-		\eif([\sbexpr]^l, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
-		([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
-		[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
-	\land \ssa{y} \in FV(\sbexpr)
-	\big)
-	\end{array}
-	\right).
-	\end{array}
+\begin{array}{l}
+\flowsto(\ssa{x^i, y^j, c}) \triangleq 	(i < j) \land 
+\\
+\left( \bigvee
+\begin{array}{l}
+(\exists \sexpr, l . ~ [\assign{\ssa{x}}{\sexpr}]^l \in_{c} \ssa{c} 
+\land \ssa{y} \in FV(\sexpr))
+\\
+(\exists \ssa{\qexpr}, l. ~ [\assign{\ssa{x}}{\query(\ssa{\qexpr})}]^l \in_{c} \ssa{c} 
+\land \ssa{y} \in FV(\ssa{\qexpr}))
+\\
+\big(\exists  ~ \ssa{c'}, \ssa{\expr}, \sbexpr, l, l'. ~
+	\ewhile [\sbexpr]^l \edo \ssa{c'} \in_{c} \ssa{c}
+	\land 
+	[\ssa{\assign{x}{\expr}}]^{l'} \in_{c}  \ssa{c'}
+\big) \land \ssa{y} \in FV(\sbexpr)
+\\
+\big(
+\exists ~ \sbexpr, l, l_1, l_2, \ssa{c_1}, \ssa{c_2}, \ssa{\expr}_1, \ssa{\expr}_2. ~
+	\eif([\sbexpr]^l, \ssa{c_1}, \ssa{c_2}) \in_{c} \ssa{c} \land
+	([\ssa{\assign{x}{\expr_1}}]^{l1} \in_{c} \ssa{c_1} \lor 
+	[\ssa{\assign{x}{\expr_2}}]^{l2} \in_{c} \ssa{c_2})
+\land \ssa{y} \in FV(\sbexpr)
+\big)
+\end{array}
+\right).
+\end{array}
 \]
 %
 \end{defn}
@@ -209,9 +209,9 @@ $$
 \Mtrix
 =  \left[ 
 \begin{matrix}
- 0 & 0 & 0 \\
- 1 & 0 & 0 \\
- 1 & 1 & 0 \\
+0 & 0 & 0 \\
+1 & 0 & 0 \\
+1 & 1 & 0 \\
 \end{matrix} \right] ~ , 
 \flag = \left [ \begin{matrix}
 1 \\
@@ -231,15 +231,15 @@ where the $i$-th row is $1$ and all the other rows are $0$.
 Given a program  $\ssa{c}$ with its labeled variables $\lvar$ of size $N$, 
 the left matrix $\lMtrix_i$ is defined as follows:
 \[
-	\lMtrix_i(j) : = 
-	\left
-	\{
-	\begin{array}{ll}
-	1 & j = i \\
-	0 & o.w.
-	\end{array}
-	\right.,
-	j = 1, \ldots, N.
+\lMtrix_i(j) : = 
+\left
+\{
+\begin{array}{ll}
+1 & j = i \\
+0 & o.w.
+\end{array}
+\right.,
+j = 1, \ldots, N.
 \]
 \end{defn}
 %
@@ -253,15 +253,15 @@ where the locations of free variables in $\expr$ is marked as $1$.
 Given a program  $\ssa{c}$ with its labeled variables $\lvar$ of length $N$, 
 the right matrix $\rMtrix_{\expr}$ is defined as follows:
 \[
-	\rMtrix_{\expr}(j) : = 
-	\left\{
-	\begin{array}{ll}
-	1 & \ssa{x} \in FV(\expr) 
-	\\
-	0 & o.w.
-	\end{array}
-	\right.,
-	\ssa{x} = \lvar(j) ~ , ~ j = 1, \ldots, N.
+\rMtrix_{\expr}(j) : = 
+\left\{
+\begin{array}{ll}
+1 & \ssa{x} \in FV(\expr) 
+\\
+0 & o.w.
+\end{array}
+\right.,
+\ssa{x} = \lvar(j) ~ , ~ j = 1, \ldots, N.
 \]
 %
 %
@@ -272,14 +272,14 @@ the left and right matrices w.r.t. its $2$-nd command
 $\left[\ssa{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 \[
 \lMtrix_1 = \left[ \begin{matrix}
- 0   \\
- 1 	 \\
- 0   \\
+0   \\
+1 	 \\
+0   \\
 \end{matrix}   \right ] 
 ~~~~~~~~~~~~~~
 \rMtrix_{\ssa{x}_1 + 1}
 = \left[ \begin{matrix} 
-   1 & 0 & 0 \\
+1 & 0 & 0 \\
 \end{matrix}  \right]
 \]
 %
@@ -315,7 +315,7 @@ The output of the algorithm is the updated labeled variables $\lvar'$ and flags 
 \empty
 }
 { \ag{\lvar ; \flag; \ssa{[\assign {x}{\expr}]^{l}}}
- {\lvar ++ [\ssa{x}]; \flag++[0]}
+{\lvar ++ [\ssa{x}]; \flag++[0]}
 }
 ~\textbf{\varCol-asgn}
 \and
@@ -335,13 +335,13 @@ The output of the algorithm is the updated labeled variables $\lvar'$ and flags 
 \ag{\lvar_1; []; \ssa{c_2}}{ \lvar_2; \flag_2}
 \and 
 \lvar' = [\bar{\ssa{x}}]++ \ssa{[\bar{y}]} ++ \ssa{[\bar{z}]}
- \\
+\\
 k = \len(\lvar')
 \and
 \lvar_3 = \lvar_2 ++ \lvar'
- \and
- \flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1) ++ ([1]^k)
- }
+\and
+\flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1) ++ ([1]^k)
+}
 {
 \ag{\lvar; \flag;
 [\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}],
@@ -384,24 +384,24 @@ k = \len(\lvar')
 \edo  \ssa{c} }{\lvar''; \flag''}
 }
 ~\textbf{\varCol-while}
- }
+}
 \end{mathpar}
 }
- \caption{The Algorithmic Rules of $\varCol$ }
-    \label{fig:var_col}
+\caption{The Algorithmic Rules of $\varCol$ }
+\label{fig:var_col}
 \end{figure}
 %
 %
 The assignment commands are the source of variables $\varCol$ collecting, 
-	in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
-	the output labeled variables are extended by $\ssa{x}$. 
+in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
+the output labeled variables are extended by $\ssa{x}$. 
 \\
-	When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$.
+When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$.
 \\ 
-	The sequence command $\ssa{c_1;c_2}$ is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ preserving their order. 
+The sequence command $\ssa{c_1;c_2}$ is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ preserving their order. 
 \\
-	The while command $\ewhile \ssa{\bexpr}, [\ssa{\bar{x}}] \ldots \edo \ssa{c}$ considers the newly generated variables by SSA transformation $\ssa{\bar{x}}$
-	as well and the newly labeled variables in its body $\ssa{c}$.
+The while command $\ewhile \ssa{\bexpr}, [\ssa{\bar{x}}] \ldots \edo \ssa{c}$ considers the newly generated variables by SSA transformation $\ssa{\bar{x}}$
+as well and the newly labeled variables in its body $\ssa{c}$.
 
 %
 Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
@@ -434,132 +434,130 @@ $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.
 }
 %%
 %
-\framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
+% \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
+% \begin{mathpar}
+% \inferrule
+% {\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
+% }
+% {
+%  \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{\Mtrix; \flag_{0}; i+1 }
+% }
+% ~\textbf{\graphGen-asgn}
+% \and
+% {
+% \inferrule
+% {\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
+% \\
+% \flag = \lMtrix_i \and \flag(i) = 1
+% }
+% { 
+% \ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
+% {\Mtrix;\flag;i+1}
+% }~\textbf{\graphGen-query}}
+% %
+% \and 
+% %
+% {
+% \inferrule
+% {
+% {\ad{\Gamma + \rMtrix_{\ssa{\bexpr}, i_1}; \ssa{c_1} ; i_1 }{ \Mtrix_1;\flag_1;i_2 }}
+% \and 
+% {\ad{\Gamma + \rMtrix_{\ssa{\bexpr}, i_1};\ssa{c_2} ; i_2 }{ \Mtrix_2; \flag_2 ;i_3}}
+% \\
+% {\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
+% %
+% \\
+% %
+% {\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
+% %
+% \\
+% %
+% {\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
+% \\
+% {\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
+% }
+% {
+% \ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
+% \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
+% [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
+% \ssa{ c_1, c_2)} ; i_1}{ \Mtrix ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
+% }
+% ~\textbf{\graphGen-if}
+% }
+% %
+% %
+% %
+% \and 
+% %
+% \inferrule
+% {
+% {\ad{\Gamma; \ssa{c_1} ; i_1 }{ \Mtrix_1 ; \flag_1; i_2 }  }
+% \and 
+% {
+% \ad{\Gamma;\ssa{c_2}; i_2}{ \Mtrix_2; \flag_2 ;i_3 }}
+% }
+% {
+% \ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{( \Mtrix_1 {;} \Mtrix_2) ; \flag_1 \uplus V_2 ; i_3  }
+% }
+% ~\textbf{\graphGen-seq}
+% %
+% \and 
+% %
+% \and 
+% %
+% { 
+% \inferrule
+% {
+% B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
+% \\
+% {\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{ \Mtrix_{1};V_{1}; i+B+(B+A) }}
+% \\
+% {
+% \ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{ \Mtrix_{2}; \flag_{2}; i+B+A+(B+A) }
+% }
+% \\
+% {
+% \ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{ \Mtrix; \flag ;i+(B+A)+B}
+% }
+% \\
+% { \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
+% \and
+% {
+% \flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
+% }
+% {
+% \ad{\Gamma;
+% \ewhile ~ [ b ]^{l} ~ \ssa{n} ~
+% [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
+% ~ \edo ~  c;
+% i }{ \Mtrix'; \flag' ;i+(B+A)+B }
+% }~\textbf{\graphGen-while}
+% }
+% \end{mathpar}
+{
+\framebox{$ \ad{\Gamma; c; \lvar_c}{\Mtrix}$}
 \begin{mathpar}
 \inferrule
-{\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
+{
+\ssa{x}^l \in \lvar_c
+\and 
+\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr}} + \Gamma )
 }
 {
- \ad{\Gamma;[\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; i }{\Mtrix; \flag_{0}; i+1 }
+\ad{\Gamma; [\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; \lvar_c}
+{\Mtrix}
 }
 ~\textbf{\graphGen-asgn}
 \and
 {
 \inferrule
-{\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr},i} + \Gamma )
-\\
-\flag = \lMtrix_i \and \flag(i) = 1
-}
-{ 
-\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\expr})} ]^{l} ; i }
-{\Mtrix;\flag;i+1}
-}~\textbf{\graphGen-query}}
-%
-\and 
-%
 {
-\inferrule
-{
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}, i_1}; \ssa{c_1} ; i_1 }{ \Mtrix_1;\flag_1;i_2 }}
-\and 
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}, i_1};\ssa{c_2} ; i_2 }{ \Mtrix_2; \flag_2 ;i_3}}
-\\
-{\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}| }}
-%
-\\
-%
-{\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; i_3+|\bar{\ssa{x}}| }{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| }}
-%
-\\
-%
-{\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
-\\
-{\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
-}
-{
-\ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}},
-\bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}], 
-[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}],
-\ssa{ c_1, c_2)} ; i_1}{ \Mtrix ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
-}
-~\textbf{\graphGen-if}
-}
-%
-%
-%
-\and 
-%
-\inferrule
-{
-{\ad{\Gamma; \ssa{c_1} ; i_1 }{ \Mtrix_1 ; \flag_1; i_2 }  }
-\and 
-{
-\ad{\Gamma;\ssa{c_2}; i_2}{ \Mtrix_2; \flag_2 ;i_3 }}
-}
-{
-\ad{\Gamma ; (\ssa{c_1 ; c_2} ) ; i_1}{( \Mtrix_1 {;} \Mtrix_2) ; \flag_1 \uplus V_2 ; i_3  }
-}
-~\textbf{\graphGen-seq}
-%
-\and 
-%
-\and 
-%
-{ 
-\inferrule
-{
-B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
-\\
-{\ad{\Gamma;[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; i+ (B+A) }{ \Mtrix_{1};V_{1}; i+B+(B+A) }}
-\\
-{
-\ad{\Gamma;\ssa{c} ; i+B+(B+A)  }{ \Mtrix_{2}; \flag_{2}; i+B+A+(B+A) }
-}
-\\
-{
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ; i+(B+A) }{ \Mtrix; \flag ;i+(B+A)+B}
-}
-\\
-{ \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
-\and
-{
-\flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
-}
-{
-\ad{\Gamma;
-\ewhile ~ [ b ]^{l} ~ \ssa{n} ~
-[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  c;
-i }{ \Mtrix'; \flag' ;i+(B+A)+B }
-}~\textbf{\graphGen-while}
-}
-\end{mathpar}
-{Updated Flow Generation Algorithm}
-{
-\framebox{$ {\Gamma} 
-\vdash_{\Mtrix, \lvar} ~ \ssa{c} $}
-\begin{mathpar}
-\inferrule
-{
-\ssa{x} = \lvar(i)
-\and 
-\Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr}} + \Gamma )
-}
-{
-\ad{\Gamma; [\assign {\ssa{x}}{\ssa{\expr}} ]^{l}; \lvar}
- {\Mtrix}
-}
-~\textbf{\graphGen-asgn}
-\and
-{
-\inferrule
-{
-\ssa{x} = \lvar(i)
+\ssa{x}^l \in \lvar_c
 \and 
 \Mtrix = \lMtrix_i * ( \rMtrix_{\ssa{\expr}} + \Gamma )
 }
 { 
-\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} ; \lvar }
+\ad{\Gamma;[ \assign{\ssa{x}}{\query(\ssa{\qexpr})} ]^{l} ; \lvar_c }
 {\Mtrix}
 }~\textbf{\graphGen-query}}
 %
@@ -568,19 +566,19 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 {
 \inferrule
 {
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \lvar }{ \Mtrix_1}}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_1} ; \lvar_c }{ \Mtrix_1}}
 \and 
-{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_2}; \lvar }{ \Mtrix_2}}
+{\ad{\Gamma + \rMtrix_{\ssa{\bexpr}}; \ssa{c_2}; \lvar_c }{ \Mtrix_2}}
 \\
-\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \lvar }{ \Mtrix_x}
-%
-\\
-%
-\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \lvar }{ \Mtrix_y}
+\ad{\Gamma; [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \lvar_c }{ \Mtrix_x}
 %
 \\
 %
-\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \lvar }{ \Mtrix_z}
+\ad{\Gamma; [ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}]; \lvar_c }{ \Mtrix_y}
+%
+\\
+%
+\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; \lvar_c }{ \Mtrix_z}
 \\
 {\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
 }
@@ -600,13 +598,13 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 %
 \inferrule
 {
-{\ad{\Gamma; \ssa{c_1}; \lvar }{ \Mtrix_1}  }
+{\ad{\Gamma; \ssa{c_1}; \lvar_c }{ \Mtrix_1}  }
 \and 
 {
-\ad{\Gamma;\ssa{c_2}; \lvar}{ \Mtrix_2}}
+\ad{\Gamma;\ssa{c_2}; \lvar_c }{ \Mtrix_2}}
 }
 {
-\ad{\Gamma ; (\ssa{c_1 ; c_2} ); \lvar}
+\ad{\Gamma ; (\ssa{c_1 ; c_2} ); \lvar_c}
 {( \Mtrix_1 {;} \Mtrix_2) }
 }
 ~\textbf{\graphGen-seq}
@@ -619,20 +617,18 @@ i }{ \Mtrix'; \flag' ;i+(B+A)+B }
 \inferrule
 {
 {
-\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c}; \lvar  }{ \Mtrix_{1}}
+\ad{\Gamma + \rMtrix_{\ssa{\bexpr}};\ssa{c}; \lvar_c  }{ \Mtrix_{1}}
 }
 \\
 {
-\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \lvar }{\Mtrix_2}
+\ad{\Gamma ; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]; \lvar_c }{\Mtrix_2}
 }
-% \and
-% { \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
 }
 {
 \ad{\Gamma;
 \ewhile [ \sbexpr ]^{l},\ssa{n},
 [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-\edo  \ssa{c}; \lvar }
+\edo  \ssa{c}; \lvar_c }
 { \Mtrix_{1} + \Mtrix_{2}}
 }~\textbf{\graphGen-while}
 }
@@ -673,25 +669,25 @@ are presented in the right hand side.
 \[
 {\ssa{c}2 \triangleq
 \begin{array}{l}
-    \left[\ssa{ x_1} \leftarrow \query(1)  \right]^1 ; 
-    \\
-    \left[\ssa{i_1} \leftarrow 0 \right]^2 ; 
-    \\
-    \ewhile
-    ~ [\ssa{i_1} < 2]^3
-  	\\
-    ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }
-    ~ \edo 
-    \\
-    ~ \Big( 
-    \left[\ssa{y}_1 \leftarrow \query(2) \right]^4;
-    \\
-    \left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5;
-    \\
-    \left[\ssa{i_2 \leftarrow 1  + i_3 } \right]^6
-    \Big) ; 
-    \\
-    \left[ \ssa{\assign{z_1}{x_3}} + 2  \right]^{7}
+\left[\ssa{ x_1} \leftarrow \query(1)  \right]^1 ; 
+\\
+\left[\ssa{i_1} \leftarrow 0 \right]^2 ; 
+\\
+\ewhile
+~ [\ssa{i_1} < 2]^3
+	\\
+~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }
+~ \edo 
+\\
+~ \Big( 
+\left[\ssa{y}_1 \leftarrow \query(2) \right]^4;
+\\
+\left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5;
+\\
+\left[\ssa{i_2 \leftarrow 1  + i_3 } \right]^6
+\Big) ; 
+\\
+\left[ \ssa{\assign{z_1}{x_3}} + 2  \right]^{7}
 \end{array}
 ,
 ~~~~
@@ -719,26 +715,26 @@ are presented in the right hand side.
 ,
 ~~~~~~
 \Mtrix_{\ssa{c}2} =  \left[ \begin{matrix}
- 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
- 0 & 1 & 0 & 1 & 0 & 1 & 1 & 1 \\
- 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
- 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 \\
- 1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 1 & 1 & 1 \\
+0 & 1 & 0 & 1 & 0 & 1 & 1 & 1 \\
+1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 \\
+1 & 0  & 1& 0 & 0 & 1 & 1 & 1 \\
 \end{matrix} \right]
 ,
 ~~~~
 \flag_{\ssa{c}2} = \left [ \begin{matrix}
- 1 \\
- 2 \\
- 1 \\
- 2 \\
- 0 \\
- 0 \\
- 2 \\
- 1 
+1 \\
+2 \\
+1 \\
+2 \\
+0 \\
+0 \\
+2 \\
+1 
 \end{matrix} \right ]
 }
 \]
@@ -747,20 +743,20 @@ are presented in the right hand side.
 \[
 {{\ssa{c}3}  \triangleq
 \begin{array}{l}
-    \left[\ssa{ x}_1 \leftarrow \query(1)  \right]^1 ;
-    \\
-    \left[\ssa{i_1} \leftarrow 1 \right]^2 ; 
-    \\
-    \ewhile ~ [i < 0]^{3} ,
-    \\
-    ~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }
-    ~ \edo
-    \\
-    ~ \Big( 
-    \left[\ssa{ y_1} \leftarrow \query(2) \right]^3; \\
-    \left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5
-    \Big) ; \\
-    \left[ \ssa{\assign{z_1}{x_3}} + 2  \right]^{6}
+\left[\ssa{ x}_1 \leftarrow \query(1)  \right]^1 ;
+\\
+\left[\ssa{i_1} \leftarrow 1 \right]^2 ; 
+\\
+\ewhile ~ [i < 0]^{3} ,
+\\
+~\ssa{[ x_3,x_1 ,x_2 ], [i_3, i_1, i_2] }
+~ \edo
+\\
+~ \Big( 
+\left[\ssa{ y_1} \leftarrow \query(2) \right]^3; \\
+\left[\ssa{x_2 \leftarrow y_1  + x_3 } \right]^5
+\Big) ; \\
+\left[ \ssa{\assign{z_1}{x_3}} + 2  \right]^{6}
 \end{array},
 ~~~~~~
 \lvar_{\ssa{c}3} = \left [ \begin{matrix}
@@ -772,19 +768,19 @@ are presented in the right hand side.
 \end{matrix} \right ]
 ,~~~~~~
 \Mtrix_{\ssa{c}3}  =  \left[ \begin{matrix}
- 0 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 \\
- 1 & 0 & 0 & 0 & 0 \\
- 0 & 1 & 0 & 0 & 0 \\
- 0 & 0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 \\
+1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 & 0 \\
 \end{matrix} \right]
 ,~~~~~~
 \flag_{\ssa{c}3} = \left [ \begin{matrix}
- 1 \\
- 0 \\
- 2 \\
- 2 \\
- 0 \\
+1 \\
+0 \\
+2 \\
+2 \\
+0 \\
 \end{matrix} \right ]
 }
 \]
@@ -792,23 +788,23 @@ are presented in the right hand side.
 We can now look at the if statement.
 \[ 
 %
- \ssa{c}4 \triangleq
+\ssa{c}4 \triangleq
 \begin{array}{l}
-   	\left[ \ssa{x}_1 \leftarrow \query(1) \right]^1; 
-   	\\
-   	\left[\ssa{y}_1 \leftarrow \query(2) \right]^2 ; 
-   	\\
-    \eif \;( \ssa{ x_1 + y_1 == 5} )^3,  \\
-    \ssa{[ x_4,x_2,x_3 ],[] ,[y_3,y_1,y_2 ]} 
-    \\
-    \mathsf{then} ~ \left[ 
-    \ssa{x}_2 \leftarrow \query(3) \right]^4 
-    \\
-    \mathsf{else} ~ \left[ 
-    \ssa{x}_3 \leftarrow \query(4) \right]^5 ; 
-    \\
-    \ssa{y}_2 \leftarrow 2 ) \\
-   \left[ \ssa{ z_1 \leftarrow x_4 +y_3 }\right]^6
+	\left[ \ssa{x}_1 \leftarrow \query(1) \right]^1; 
+	\\
+	\left[\ssa{y}_1 \leftarrow \query(2) \right]^2 ; 
+	\\
+\eif \;( \ssa{ x_1 + y_1 == 5} )^3,  \\
+\ssa{[ x_4,x_2,x_3 ],[] ,[y_3,y_1,y_2 ]} 
+\\
+\mathsf{then} ~ \left[ 
+\ssa{x}_2 \leftarrow \query(3) \right]^4 
+\\
+\mathsf{else} ~ \left[ 
+\ssa{x}_3 \leftarrow \query(4) \right]^5 ; 
+\\
+\ssa{y}_2 \leftarrow 2 ) \\
+\left[ \ssa{ z_1 \leftarrow x_4 +y_3 }\right]^6
 \end{array},
 % \]
 % \[
@@ -825,25 +821,25 @@ We can now look at the if statement.
 \end{matrix} \right], 
 ~~~~~ 
 \Mtrix_{\ssa{c}4} =  \left[ \begin{matrix}
- 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
- 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
- 0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
- 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 \\
 \end{matrix} \right], 
 ~~~~~ 
 \flag_{\ssa{c}4} = \left [ \begin{matrix}
- 1 \\
- 1 \\
- 1 \\
- 1 \\
- 0 \\
- 0 \\
- 0 \\
- 0 \\
+1 \\
+1 \\
+1 \\
+1 \\
+0 \\
+0 \\
+0 \\
+0 \\
 \end{matrix} \right ]
 \]
 %
@@ -852,7 +848,7 @@ We can now look at the if statement.
 %
 \subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
 %
- \begin{defn}
+\begin{defn}
 [Program-Based Dependency Graph].
 \label{def:prog-based_graph}
 \\
@@ -863,88 +859,53 @@ $G(\ssa{c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \\
 \[
 \begin{array}{rlcl}
-	\text{Vertices} &
-	\vertxs & := & \left\{ 
-	\ssa{x} \mid
-	\ssa{x} = \lvar(i); ~ i = 1, \ldots, N
-	\right\}
-	\\
-	\text{Directed Edges} &
-	\edges & := & 
-	\left\{ 
-	(\ssa{x_1}, \ssa{x_2}) 
-	% \in \lvar \times \lvar 
+\text{Vertices} &
+\vertxs & := & \left\{ 
+x^l \in \mathcal{VAR} \times \mathbb{N}
+~ \middle\vert ~
+x^l \in \lvar({\ssa{c}})
+\right\}
+\\
+\text{Directed Edges} &
+\edges & := & 
+\left\{ 
+  (\ssa{x}_1^{i}, \ssa{x}_2^{j}) \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})
+  ~ \middle\vert ~
+ 	\ssa{x}_1^{i}, \ssa{x}_2^{j} \in \lvar_{\ssa{c}}
+	\land \Mtrix_c(i, j) \geq 1
+\right\}
+\\
+\text{Weights} &
+\weights & := &
+\bigcup
+\begin{array}{l}
+	\big\{ (x^l, n) \in \mathcal{VAR} \times \mathbb{N} \times (\mathbb{N} \cup \expr)
 	\mid
-		(\ssa{x_1} = \lvar(i) \land \ssa{x_2} = \lvar(j) \land
-		\Mtrix_c(i, j) \geq 1); ~ i,j = 1, \ldots, N
-	\right\}
+	x^l \in \lvar_{\ssa{c}} \land \flag(x^l) > 0 \land w = \rb(x^l, c)
+	\big\} 
 	\\
-	\text{Weights} &
-	\weights & := &
-	\bigcup
-	\begin{array}{l}
-		\big\{ (v, w) \in \vertxs \times (\mathbb{N} \cup \expr)
-		\mid
-		v \in \vertxs \land \flag(v) > 0 \land w = \rb(v, c)
-		\big\} 
-		\\
-		\big\{(v, 1)  \in \vertxs \times \{1\} 
-		\mid
-		v \in \vertxs \land \flag(v) = 0
-		\big\}
-	\end{array} 
-	\\
-	\text{Query Flags} &
-	\qflag & := & 
-	\big\{(\ssa{x}, n)  \in \vertxs \times \{0, 1\} 
-	\mid 
-	\left\{
-	\begin{array} {ll}
-	n = 1 & \flag_c(i) = 2
-	\\  
-	n = 0 & o.w.
-	\end{array}
-	\right\};
-	\ssa{x} = \lvar(i); i = 1, \ldots, N
+	\big\{(x^l, 1)  \in \mathcal{VAR} \times \mathbb{N} \times \{1\} 
+	\mid
+	x^l \in \lvar_{\ssa{c}} \land \flag(x^l) = 0
 	\big\}
+\end{array} 
+\\
+\text{Query Flags} &
+\qflag & := & 
+\big\{(\ssa{x}, n)  \in \vertxs \times \{0, 1\} 
+\mid 
+\left\{
+\begin{array} {ll}
+n = 1 & \flag_c(i) = 2
+\\  
+n = 0 & o.w.
+\end{array}
+\right\};
+\ssa{x} = \lvar(i); i = 1, \ldots, N
+\big\}
 \end{array}
 \]
 \end{defn} 
-%
-\begin{defn}[Finite Walk ($k$)].
-\\
-Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, a \emph{finite walk} $k$ in $G$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
-for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
-\begin{itemize}
-    \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
-    \item every vertex $v \in \vertxs$ appears in this vertices sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
-\end{itemize}
-$(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
-\\
-{
-Length of this finite walk $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = n$.
-}
-\end{defn}
-
-{Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
-we use $\walks(G)$ to denote a set containing all finite walks $k$ in $G$;
-and $k_{v_1 \to v_2} \in \walks(G)$where $v_1, v_2 \in \vertxs$ denotes the walk from vertex $v_1$ to $v_2$ .
-}
-% \begin{defn}[walk set ($\walks$)].
-% \\
-% Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \flag)$, the walk set of $G$, ($\walks(G)$) is defined as a set containing all finite walks $k$ in $G$.
-% \end{defn}
-%
-%
-\begin{defn}[Length of Finite Walk w.r.t. Query ($\qlen$)].
-\\
-Given a labeled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$ and a \emph{finite walk} $k$ in $G$ with its vertex sequence $(v_1, \ldots, v_{n})$, the length of $k$ w.r.t query is defined as:
-\[
-	\qlen(k) = \len\big(
-	v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 2 \big)
-\]
-, where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 2 \big)$ is a subsequence of $k$'s vertex sequence.
-\end{defn}
 %
 Given a program $\ssa{c}$, we generate its program-based graph 
 $\progG(\ssa{c}) = (\vertxs, \edges, \weights, \qflag)$.
