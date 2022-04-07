@@ -1,16 +1,16 @@
 %
 %
-\subsection{SSA form Language}
+\subsection{Labeled Language}
 \[
 \begin{array}{llll}
- \mbox{Arithmetic Operators} 
+\mbox{Arithmetic Operators} 
 & \oplus_a & ::= & + ~|~ - ~|~ \times 
 %
 ~|~ \div \\  
 \mbox{Boolean Operators} 
 & \oplus_b & ::= & \lor ~|~ \land
 \\
-  %
+%
 \mbox{Relational Operators} 
 & \sim & ::= & < ~|~ \leq ~|~ == 
 \\  
@@ -19,29 +19,29 @@
 & l & := & \mathbb{N} 
 \\ 
 %
-\mbox{SSA Arithmetic Expression} 
-& \saexpr & ::= & 
-n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr  
+\mbox{Arithmetic Expression} 
+& \aexpr & ::= & 
+n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr  
 \\
 %
-\mbox{SSA Boolean Expression} & \sbexpr & ::= & 
-	%
-	\etrue ~|~ \efalse  ~|~ \neg \sbexpr
-	 ~|~ \sbexpr \oplus_b \sbexpr
-	%
-	~|~ \saexpr \sim \saexpr 
-	\\
+\mbox{Boolean Expression} & \bexpr & ::= & 
 %
-\mbox{SSA Expression} & \sexpr & ::= & v ~|~ \saexpr \sep \sbexpr ~|~ [\expr, \dots, \expr]
+\etrue ~|~ \efalse  ~|~ \neg \bexpr
+ ~|~ \bexpr \oplus_b \bexpr
+%
+~|~ \aexpr \sim \aexpr 
+\\
+%
+\mbox{Expression} & \expr & ::= & v ~|~ \aexpr \sep \bexpr ~|~ [\expr, \dots, \expr]
 \\  
 %
 \mbox{Value} 
 & v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
 \\
 %
-\mbox{SSA Query Expression} 
-& \ssa{\qexpr} & ::= 
-& { \qval ~|~ \saexpr ~|~ \qexpr \oplus_a \qexpr ~|~ \chi[\aexpr]} 
+\mbox{Query Expression} 
+& {\qexpr} & ::= 
+& { \qval ~|~ \aexpr ~|~ \qexpr \oplus_a \qexpr ~|~ \chi[\aexpr]} 
 \\
 %
 \mbox{Query Value} & \qval & ::= 
@@ -49,28 +49,20 @@ n ~|~ \ssa{x} ~|~ \saexpr \oplus_a \saexpr
 ~|~ \chi[n] \oplus_a  n}
 \\
 %
-\mbox{Labeled SSA Command} 
-& \ssa{c} & ::= &   [\assign {\ssa{x}}{ \ssa{\expr}}]^{l} ~|~  [\assign {\ssa{x} } {\ssa{\query(\qexpr)}}]^{l}
-%
-~|~  {{\eifvar(\bar{\ssa{x}}, \bar{\ssa{x}}')}} 
-%
-\\ 
-&&& 
-{\ewhile ~ [ \sbexpr ]^{l} , n,
-~ 
-[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] 
-~ \edo ~  \ssa{c} }
+\mbox{Labeled Command} 
+& {c} & ::= &   [\assign {{x}}{ {\expr}}]^{l} ~|~  [\assign {{x} } {{\query(\qexpr)}}]^{l}
+~|~ {\ewhile [ \bexpr ]^{l} \edo {c} }
 \\
 &&&
-~|~ \ssa{c};\ssa{c}  
-~|~ [\eif(\sbexpr, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] , \ssa{c}, \ssa{c})]^l 
+~|~ {c};{c}  
+~|~ \eif([\bexpr]{}^l , {c}, {c}) 
 ~|~ [\eskip]^{l} 
 \\
 %
 \mbox{Event} 
 & \event & ::= & 
-      (\ssa{x}, l, n, v) | (\ssa{x}, l, n, \qval, v)  ~~~~~~~ \mbox{Assignment Event} \\
-&&& | (\sbexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
+    ({x}, l, n, v) | ({x}, l, n, \qval, v)  ~~~~~~~ \mbox{Assignment Event} \\
+&&& | (\bexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
 \\
 %
 \mbox{Trace} & \vtrace
@@ -154,27 +146,9 @@ Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{QVAL} \cu
 \end{array}
 \]
 %
-Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
-\[
-\begin{array}{lll}
-\vcounter(\vtrace \cdot (x, l, n, v) ) l \triangleq n
-&
-\vcounter(\vtrace \cdot (b, l, n, v)) l \triangleq n
-&
-\vcounter(\vtrace \cdot (x, l, n, \qval, v)) l \triangleq n
-\\
-\vcounter(\vtrace  \cdot (x, l', n, v)) l \triangleq \vcounter(\vtrace ) l
-&
-\vcounter(\vtrace \cdot (b, l', n, v)) l \triangleq \vcounter(\vtrace ) l
-&
-\vcounter(\vtrace \cdot (x, l', n, \qval, v)) l \triangleq \vcounter(\vtrace ) l
-\\
-\vcounter(\cdot) l \triangleq 0
-&&
-\end{array}
-\]
+
 %
-\subsection{Trace-based Operational Semantics for SSA Language}
+\subsection{Trace-based Operational Semantics for Language}
 %
 %
 %
@@ -186,260 +160,226 @@ Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
 \\
 \boxed{ \config{\trace, \expr} \earrow v \, : \, \mbox{Trace $\times$ Expression $\Rightarrow$ Value} }
 \\
-  \inferrule{ 
-    \config{\trace, \aexpr} \aarrow v
-  }{
-   \config{\trace,  \aexpr} 
-   \earrow v
-  }
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow v
+}{
+ \config{\trace,  \aexpr} 
+ \earrow v
+}
 \and
-  \inferrule{ 
-    \config{\trace, \bexpr} \barrow v
-  }{
-   \config{\trace,  \bexpr} 
-   \earrow v
-  }
+\inferrule{ 
+  \config{\trace, \bexpr} \barrow v
+}{
+ \config{\trace,  \bexpr} 
+ \earrow v
+}
 \and
-  \inferrule{ 
-    \config{\trace, \expr_1} \earrow v_1
-    \cdots
-    \config{\trace, \expr_n} \earrow v_n
-  }{
-   \config{\trace,  [\expr_1, \cdots, \expr_n]} 
-   \earrow [v_1, \cdots, v_n]
-  }
+\inferrule{ 
+  \config{\trace, \expr_1} \earrow v_1
+  \cdots
+  \config{\trace, \expr_n} \earrow v_n
+}{
+ \config{\trace,  [\expr_1, \cdots, \expr_n]} 
+ \earrow [v_1, \cdots, v_n]
+}
 \and
-  \inferrule{ 
-    \empty
-  }{
-   \config{\trace,  v} 
-   \earrow v
-  }
-  \\
-\boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, \mbox{Trace  $\times$ Query Expr $\qarrow$ Query Value} }
-  \\
-  \inferrule{ 
-    \config{\trace, \aexpr} \aarrow n
-  }{
-   \config{\trace,  \aexpr} 
-   \qarrow n
-  }
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  v} 
+ \earrow v
+}
+\\
+\boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, \mbox{Trace  $\times$ Query Expr $\Rightarrow$ Query Value} }
+\\
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow n
+}{
+ \config{\trace,  \aexpr} 
+ \qarrow n
+}
+\and
+\inferrule{ 
+  \config{\trace, \qexpr_1} \qarrow \qval_1
   \and
-  \inferrule{ 
-    \config{\trace, \qexpr_1} \qarrow \qval_1
-    \and
-    \config{\trace, \qexpr_2} \qarrow \qval_2
-  }{
-   \config{\trace,  \qexpr_1 \oplus_a \qexpr_2} 
-   \qarrow \qval_1 \oplus_a \qval_2
-  }
-  \and
-  \inferrule{ 
-    \config{\trace, \aexpr} \aarrow n
-  }{
-   \config{\trace, \chi[\aexpr]} \qarrow \chi[n]
-  }
- \and
-  \inferrule{ 
-    \empty
-  }{
-   \config{\trace,  \qval} 
-   \qarrow \qval
-  }
-   \end{mathpar}
+  \config{\trace, \qexpr_2} \qarrow \qval_2
+}{
+ \config{\trace,  \qexpr_1 \oplus_a \qexpr_2} 
+ \qarrow \qval_1 \oplus_a \qval_2
+}
+\and
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow n
+}{
+ \config{\trace, \chi[\aexpr]} \qarrow \chi[n]
+}
+\and
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  \qval} 
+ \qarrow \qval
+}
+ \end{mathpar}
 %
 The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 %
 \begin{figure}
-\jl{
-  \begin{mathpar}
-  \boxed{
-  \mbox{Command $\times$ Trace}
-  \xrightarrow{}
-  \mbox{Command $\times$ Trace}
-  }
-  \\
-  \boxed{\config{\ssa{c, \vtrace}}
-  \xrightarrow{} 
-  \config{\ssa{c',  \vtrace'}}
-  }
-  \\
-  %
-  \inferrule
-  {
-  \event = (\ssa{x}, l, \vcounter(\vtrace) l + 1, v)
-  }
-  {
-  \config{[\assign{\ssa{x}}{\saexpr}]^{l},  \vtrace } 
-  \xrightarrow{} 
-  \config{[\eskip]^{l}, \vtrace \cdot \event }
-  }
-  ~\textbf{assn}
-  %
-  \and
-  %
-  \inferrule
-  {
-   \vtrace, b \barrow \etrue
-   \and 
-   \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
-  }
-  {
-  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace}}
-  \\
-  \xrightarrow{} 
-  \config{\ssa{
-  c[\bar{x_i}/\bar{x'}]; \ewhile ~ [b]^{l}, (n + 1), [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}]  ~ \edo ~ c,  \eskip),
-  \vtrace \cdot \event}}
-  }
-  ~\textbf{ssa-while-t}
-  %
-  %
-  \and
-  %
-  \inferrule
-  {
-   \vtrace, b \barrow \efalse
-   \and 
-   \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
-  }
-  {
-  \config{\ssa{\ewhile ~ [b]^{l}, n, [\bar{{x}}', \bar{{x_1}}, \bar{{x_2}}] ~ \edo ~ c, \vtrace}}
-  \\
-  \xrightarrow{} 
-  \config{\ssa{
-  [\eskip]^l ,
-  \vtrace \cdot \event}}
-  }
-  ~\textbf{ssa-while-f}
-  %
-  \and
-  %
-  {
-  \inferrule
-  {
-   \vtrace, \qexpr \qarrow \qval
-   \and 
-  \query(\qval) = v
-  \and 
-  \event = (\ssa{x}, l, \vcounter(\vtrace) l + 1, \qval, v)
-  }
-  {
-  \config{\ssa{[\assign{x}{\query(\qexpr)}]^l, \vtrace}}
-  \xrightarrow{} 
-  \config{\ssa{\eskip,  \vtrace \cdot \event} }
-  }
-  ~\textbf{ssa-query}
-  }
-  %
-  \and
-  %
-  %
-  \inferrule
-  {
-  \config{\ssa{c_1, \vtrace}}
-  \xrightarrow{}
-  \config{\ssa{c_1',  \vtrace'}}
-  }
-  {
-  \config{\ssa{c_1; c_2, \vtrace}} 
-  \xrightarrow{} 
-  \config{\ssa{c_1'; c_2, \vtrace'}}
-  }
-  ~\textbf{ssa-seq1}
-  %
-  ~~~~~~~
-  %
-  \inferrule
-  {
-    \config{\ssa{c_2, \vtrace}}
-  \xrightarrow{}
-  \config{\ssa{c_2',  \vtrace'}}
-  }
-  {
-  \config{\ssa{[\eskip]^{l} ; c_2, \vtrace}} \xrightarrow{} \config{\ssa{ c_2', \vtrace'}}
-  }
-  ~\textbf{ssa-seq2}
-  %
-  \and
-  %
-  %
-  \inferrule
-  {
-     \vtrace, b \barrow \etrue
-   \and 
-   \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
-  }
-  {
-  \config{\ssa{
-  \eif([\etrue]^{l}, [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
-  [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
-  [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), 
-  \vtrace}}
-  \\
-  \xrightarrow{} 
-  \config{\ssa{ 
-  c_1; 
-  \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
-  \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
-  \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \cdot \event}}
-  }
-  ~\textbf{ssa-if-t}
-  %
-  \and
-  %
-  \inferrule
-  {
-   \vtrace, b \barrow \efalse
-   \and 
-   \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
-  }
-  {
-  \config{\ssa{
-  \eif([\efalse]^{l},[\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}],
-  [\bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],
-  [\bar{\ssa{z}},\bar{\ssa{z_1}}, \bar{\ssa{z_2}}], c_1, c_2), \vtrace}}
-  \\
-  \xrightarrow{} 
-  \config{\ssa{
-  c_2;
-  \eifvar(\bar{\ssa{x}},\bar{\ssa{x_2}}); 
-  \eifvar(\bar{\ssa{y}},\bar{\ssa{y_1}});
-  \eifvar(\bar{\ssa{z}},\bar{\ssa{z_2}}), 
-  \vtrace \cdot \event}}
-  }
-  ~\textbf{ssa-if-f}
-  %
-  \and
-  %
-  \inferrule
-  {
-  }
-  {
-   \config{\eifvar(\ssa{\bar{x}, \bar{x}'}), \ssa{\vtrace}} 
-   \to 
-   \config{\ssa{\eskip, \vtrace}}
-  }~\textbf{ssa-\eifvar}
-  % %
-  %
-  %
-  \end{mathpar}
+{
+\begin{mathpar}
+\boxed{
+\mbox{Command $\times$ Trace}
+\xrightarrow{}
+\mbox{Command $\times$ Trace}
 }
-  % \end{subfigure}
-      \caption{Trace-based Operational Semantics for SSA Language.}
-      \label{fig:os_ssa}
-  \end{figure}
-  %
+\and
+\boxed{\config{{c, \vtrace}}
+\xrightarrow{} 
+\config{{c',  \vtrace'}}
+}
+\\
+%
+\inferrule
+{
+\event = ({x}, l, \vcounter(\vtrace) l + 1, v)
+}
+{
+\config{[\assign{{x}}{\aexpr}]^{l},  \vtrace } 
+\xrightarrow{} 
+\config{[\eskip]^{l}, \vtrace \cdot \event }
+}
+~\textbf{assn}
+%
+\and
+%
+{
+\inferrule
+{
+ \vtrace, \qexpr \qarrow \qval
+ \and 
+\query(\qval) = v
+\and 
+\event = ({x}, l, \vcounter(\vtrace) l + 1, \qval, v)
+}
+{
+\config{{[\assign{x}{\query(\qexpr)}]^l, \vtrace}}
+\xrightarrow{} 
+\config{{\eskip,  \vtrace \cdot \event} }
+}
+~\textbf{query}
+}
+%
+\and
+%
+\inferrule
+{
+ \vtrace, b \barrow \etrue
+ \and 
+ \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
+}
+{
+\config{{\ewhile [b]^{l} \edo c, \vtrace}}
+\xrightarrow{} 
+\config{{
+c[\bar{x_i}/\bar{x'}]; \ewhile [b]^{l} \edo c,  \eskip),
+\vtrace \cdot \event}}
+}
+~\textbf{while-t}
+%
+%
+\and
+%
+\inferrule
+{
+ \vtrace, b \barrow \efalse
+ \and 
+ \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
+}
+{
+\config{{\ewhile [b]^{l}, \edo c, \vtrace}}
+\xrightarrow{} 
+\config{{
+[\eskip]^l ,
+\vtrace \cdot \event}}
+}
+~\textbf{while-f}
+%
+%
+\and
+%
+%
+\inferrule
+{
+\config{{c_1, \vtrace}}
+\xrightarrow{}
+\config{{c_1',  \vtrace'}}
+}
+{
+\config{{c_1; c_2, \vtrace}} 
+\xrightarrow{} 
+\config{{c_1'; c_2, \vtrace'}}
+}
+~\textbf{seq1}
+%
+\and
+%
+\inferrule
+{
+  \config{{c_2, \vtrace}}
+  \xrightarrow{}
+  \config{{c_2',  \vtrace'}}
+}
+{
+\config{{[\eskip]^{l} ; c_2, \vtrace}} \xrightarrow{} \config{{ c_2', \vtrace'}}
+}
+~\textbf{seq2}
+%
+\and
+%
+%
+\inferrule
+{
+   \vtrace, b \barrow \etrue
+ \and 
+ \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
+}
+{
+\config{{
+\eif([\etrue]^{l}, c_1, c_2), 
+\vtrace}}
+\xrightarrow{} 
+\config{{c_1, \vtrace \cdot \event}}
+}
+~\textbf{if-t}
+%
+\and
+%
+\inferrule
+{
+ \vtrace, b \barrow \efalse
+ \and 
+ \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
+}
+{
+\config{{\eif([\efalse]^{l}, c_1, c_2), \vtrace}}
+\xrightarrow{} 
+\config{{c_2, \vtrace \cdot \event}}
+}
+~\textbf{if-f}
+% %
+%
+%
+\end{mathpar}
+}
+% \end{subfigure}
+    \caption{Trace-based Operational Semantics for Language.}
+    \label{fig:os_ssa}
+\end{figure}
 %
 %
 %
 %
 %
-%%
 %
-% \subsection{SSA Transformation and Soundness of Transformation}
-% in File {\tt ``ssa\_transform\_sound.tex''}
-% \input{ssa_transform_sound}
 %
 \clearpage
