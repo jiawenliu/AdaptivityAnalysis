@@ -17,9 +17,9 @@ Unfolding $\vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})$ by Definition~\ref{def:var_de
 we get:
 \[
 \exists \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
-(\pi_1{(\event_1)}, \pi_2(\event_1))= ({x}_1, l_1)
+\pi_{(1,2)}{(\event_1)} = ({x}_1, l_1)
 \land
-(\pi_1{(\event_2)}, \pi_2(\event_2)) = ({x}_2, l_2)
+\pi_{(1,2)}{(\event_2)} = ({x}_2, l_2)
 \land 
 \eventdep(\event_1, \event_2, c, D)
 \]
@@ -38,16 +38,16 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
 \[
 \exists \vtrace_0,
 \vtrace_1, \vtrace_2, \vtrace_2' \in \mathcal{T}, \event_2' \in \eventset, \event_1' \in \eventset^{\asn}, {c}_1, {c}_2,  {c}_2'.
-  \left(
+\left(
   \begin{array}{ll}   
  & \config{{c}, \vtrace_0} \rightarrow^{*} 
-\config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-  \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2 } ~(1)
+  \config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2}
   % 
  \\ 
  \bigwedge &
   \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
-  \config{{c}_2',  \vtrace_1 \cdot \event_1'  \cdot \vtrace_2' \cdot \event_2' } ~ (2)
+  \config{{c}_2',  \vtrace_1 \cdot \event_1'  \cdot \vtrace_2' \cdot \event_2'}
 \\
 \bigwedge & \event_1 \sigeq \event_1' \land \sigdiff(\event_2,\event_2')
 \end{array}
@@ -63,8 +63,9 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
   \]
 %
 By Inversion Lemma~\ref{lem:inv_asn} on 
- $\event_1$, $\event_2$ and execution $(1)$, we know $\exists \expr_1 or \qexpr_1$, $\exists \expr_2 or \qexpr_2$
- \[
+ $\event_1$, $\event_2$ and execution $(1)$, we know $\exists \expr_1$ or $\qexpr_1$, $\exists \expr_2$ or $\qexpr_2$
+\begin{equation}
+\label{eq:valdep_inv1}
   \begin{array}{l}   
 \config{{c}, \vtrace_0} \rightarrow^{*} 
 \config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \cdot \vtrace_1}  
@@ -76,17 +77,17 @@ By Inversion Lemma~\ref{lem:inv_asn} on
   \rightarrow^{assn/query} 
   \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2} 
   % 
-\end{array} ~ (\mbox{inv}_1)
- \]
+\end{array}
+\end{equation}
 %
 %
 By Inversion Lemma~\ref{lem:inv_asn} on 
- $\event_1'$, $\event_2'$ and execution $(2)$, we know $\exists \expr_1' or \qexpr_1'$, $\exists \expr_2' or \qexpr_2'$
+$\event_2'$ and execution $(2)$, we know $\exists \expr_2'$ or $\qexpr_2'$
  \[
   \begin{array}{l}   
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{*} 
-  \config{[\assign{{x}_2'}{\expr_2' / \query(\qexpr_2')}]^{l_2} ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2'} 
+  \config{[\assign{{x}_2'}{\expr_2' / \query(\qexpr_2')}]^{l_2'} ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2'} 
   \rightarrow^{assn/query} 
   \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2'} 
   % 
@@ -101,24 +102,32 @@ Unfolding $\sigdiff(\event_2,\event_2')$, we have:
 By $\event_2 \sigeq \event_2'$, 
 we know
 \[
-  x_2' = x_2 \land l_2' = l_2 \land 
+  x_2 = x_2' \land l_2 = l_2' \land 
   \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2) l_2 = 
-  \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2') l_2 ~ (\mbox{inv}_d)
+  \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2') l_2'
 \] 
+By $\event_1 \sigeq \event_1'$, we have:
+\begin{equation}
+\label{eq:valdep_invn}
+   \vcounter(\vtrace_2) l_2 = 
+  \vcounter(\vtrace_2') l_2'
+\end{equation}
+%
 Then, we have:
-  \[
+\begin{equation}
+\label{eq:valdep_inv2}
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2'} 
+  \config{[\assign{{x}_2}{\expr_2' / \query(\qexpr_2')}]^{l_2} ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2'} 
   \rightarrow^{assn/query} 
   \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2' \cdot \event_2'} 
- ~(\mbox{inv}_2)
- \]
+\end{equation}
+%
  %
-  \caseL{$m = 0$}
+\caseL{$m = 0$}
 %
 %
- By evaluation $(\mbox{inv}_1)$, we have:
+ By Evaluation~\ref{eq:valdep_inv1}, we have:
 \[
   \begin{array}{l}   
 \config{{c}, \vtrace_0} \rightarrow^{*} 
@@ -138,21 +147,67 @@ Then, we have:
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2, 
   \vtrace_0 \cdot \vtrace_1 \cdot \event_1} \]
  %
- We know:
+ we know by \todo{inversion Lemma}:
  \[
  c_1 =_c 
  [\eskip]{}^*;[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2
  \]
  %
- By substituting $c_1$ in the execution in $(\mbox{inv}_2)$, we have 
+ 
+ %
+There are two possible cases, where $[\assign{{x}_2}{\expr_2' / \query(\qexpr_2)}]^{l_2} \in_c c_2$ 
+or $[\assign{{x}_2}{\expr_2' / \query(\qexpr_2)}]^{l_2} \notin_c c_2$.
+\\
+If $[\assign{{x}_2}{\expr_2' / \query(\qexpr_2)}]^{l_2}\notin_c c_2$,
+by substituting $c_1$ in the execution in Evaluation~\ref{eq:valdep_inv2}, we have 
  %
   \[
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{\eskip^*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{assn/query} 
-  \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_2'} 
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_2'} 
  \]
+
+If $[\assign{{x}_2}{\expr_2' / \query(\qexpr_2)}]^{l_2} \in_c c_2$, \todo{inversion lemma}, it must be in a while body.
+\\
+ By substituting $c_1$ in the execution in Evaluation~\ref{eq:valdep_inv2}, we have following possible executions
+ %
+  \[
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot (x_2, l_2, n_2', v_2')} 
+ \]
+%
+  \[
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot (x_2, l_2, n_2', v_2')} 
+  \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot (x_2, l_2, v_2') \cdot \trace_3} 
+  \rightarrow^{assn/query} 
+  \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot (x_2, l_2, n_2', v_2') \cdot \trace_3 \cdot (x_2, l_2, n_2'', v_2'')} 
+ \]
+\[
+  \cdots
+\] 
+with iterations of the while body in $c_2$ $0$ or more times.
+%
+By Equation~\ref{eq:valdep_invn}, we know:
+%
+\[
+ \vcounter(\vtrace_2') l_2 = 0
+\]
+%
+Then, we know $\event_2' \notsigin \vtrace_2'$. 
+\\
+Only the first execution with 0 iteration of while body in $c_2$ satisfy this restriction, i.e., $\trace_2' = \cdot$ and $\event_2' = (x_2, l_2, n_2', v_2')$
+%
 %
 By $\event_1 \sigeq \event_1'$, and definition of environment, we have:
 \[
@@ -201,7 +256,7 @@ This sub-case is proved by splitting the 2 cases.
 %
 \subsubcaseL{$\eventdep^{val}(\event_1, \event', c, D)$}
 %
-By conclusion from \textbf{case: $m = 0$}, we have following execution based on $(\mbox{inv}_1)$:
+By conclusion from \textbf{case: $m = 0$}, we have following execution based on Evaluation~\ref{eq:valdep_inv1}:
 \[
   \begin{array}{l}   
 \config{{c}, \vtrace_0} \rightarrow^{*} 
@@ -227,7 +282,7 @@ and
  [\eskip]{}^*;[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};  [\eskip]{}^*; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2
  \]
  %
- By substituting $c_1$ in the execution in $(\mbox{inv}_2)$, we have 
+ By substituting $c_1$ in the execution in Evaluation~\ref{eq:valdep_inv2}, we have 
  %
   \[
   \begin{array}{l}   
@@ -313,7 +368,7 @@ This case is proved.
 %
 \subcaseL{$\event' \in \eventset^{\test}$}
  %
-Let $\event' = (b, l_b, n_b, v_b)$, by evaluation $\mbox{inv}_1$ and {Inversion Lemma~\ref{lem:inv_test}}, we have:
+Let $\event' = (b, l_b, n_b, v_b)$, by Evaluation~\ref{eq:valdep_inv1} and {Inversion Lemma~\ref{lem:inv_test}}, we have:
 \[
   \begin{array}{l}   
 \config{{c}, \vtrace_0} \rightarrow^{*} 
@@ -360,7 +415,7 @@ Let $\event' = (b, l_b, n_b, v_b)$, by evaluation $\mbox{inv}_1$ and {Inversion 
  c_3 =_c 
  [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
  \]
-By substituting $c_1$ in the execution in $(\mbox{inv}_2)$, we have 
+By substituting $c_1$ in the execution in Evaluation~\ref{eq:valdep_inv2}, we have 
  %
   \[
   \begin{array}{l}   
@@ -377,20 +432,10 @@ By substituting $c_1$ in the execution in $(\mbox{inv}_2)$, we have
   \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
 \end{array}
  \]
-By $(\mbox{inv}_d)$, we know:
- \[
- \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2) l_2 = 
-  \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2') l_2 
- \]
  %
- Unfolding the $\vcounter$, we have:
-  \[
- \vcounter(\vtrace_0 \cdot \vtrace_1) l_2 + (l_1 = l_2) + 1 = 
-  \vcounter(\vtrace_0 \cdot \vtrace_1) l_2 + (l_1 = l_2) + \vcounter(\vtrace_2') l_2  + 1
- \]
- %
- i.e.,
- \[
+By Equation~\ref{eq:valdep_invn}, we know:
+%
+\[
  \vcounter(\vtrace_2') l_2 = 0
  \]
 Consider the two subcases: $\eventdep^{val}(\event_1, \event', c, D)$ or $\neg\eventdep^{val}(\event_1, \event', c, D)$
@@ -484,7 +529,7 @@ and
   c_t;c_2 =_c [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
 \]
 %
-By execution $(\mbox{inv}_2)$ and $\event'' = (b, l_b, n_b, \efalse)$, we have:
+By execution in Evaluation~\ref{eq:valdep_inv2} and $\event'' = (b, l_b, n_b, \efalse)$, we have:
  %
   \[
   \begin{array}{l}   
@@ -661,7 +706,7 @@ and
   c_w;\ewhile [b]^{l_b} \edo c_w; c_2 =_c [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
 \]
 %
-By execution $(\mbox{inv}_2)$ and $\event'' = (b, l_b, n_b, \efalse)$, we have:
+By execution in Evaluation~\ref{eq:valdep_inv2} and $\event'' = (b, l_b, n_b, \efalse)$, we have:
  %
   \[
   \begin{array}{l}   
@@ -743,7 +788,7 @@ and
   [\eskip^*]; c_2 =_c [\eskip^*];[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
 \]
 %
-By execution $(\mbox{inv}_2)$ and $\event'' = (b, l_b, n_b, \etrue)$, we have:
+By execution in Evaluation~\ref{eq:valdep_inv2} and $\event'' = (b, l_b, n_b, \etrue)$, we have:
  %
   \[
   \begin{array}{l}   
