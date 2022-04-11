@@ -1,4 +1,4 @@
-\input{dep_inversion}
+{\input{dep_inversion}
 \clearpage
 \subsection{Variable Dependency Soundness}
 \begin{thm}[$\vardep$ implies $\flowsto$]
@@ -42,28 +42,28 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
   \begin{array}{ll}   
  & \config{{c}, \vtrace_0} \rightarrow^{*} 
 \config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-  \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2 } 
+  \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2 } ~(1)
   % 
  \\ 
  \bigwedge &
   \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
-  \config{{c}_2',  \vtrace_1 \cdot \event_1  \cdot \vtrace_2' \cdot \event_2' } 
+  \config{{c}_2',  \vtrace_1 \cdot \event_1'  \cdot \vtrace_2' \cdot \event_2' } ~ (2)
 \\
-\bigwedge & \ismdiff(\event_2,\event_2')
+\bigwedge & \event_1 \sigeq \event_1' \land \sigdiff(\event_2,\event_2')
 \end{array}
 \right)
  \]
+%
  %
  \textbf{By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:}
 %
  \[
- \Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st (0 \leq n \leq m )
+ \Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} 
  \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
   \]
- \caseL{$m = 0$}
 %
 By Inversion Lemma~\ref{lem:inv_asn} on 
- $\event_1$ and $\event_2$, we know $\exists \expr_1 or \qexpr_1$, $\exists \expr_2 or \qexpr_2$
+ $\event_1$, $\event_2$ and execution $(1)$, we know $\exists \expr_1 or \qexpr_1$, $\exists \expr_2 or \qexpr_2$
  \[
   \begin{array}{l}   
 \config{{c}, \vtrace_0} \rightarrow^{*} 
@@ -76,25 +76,55 @@ By Inversion Lemma~\ref{lem:inv_asn} on
   \rightarrow^{assn/query} 
   \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2} 
   % 
-\end{array} ~ (1)
+\end{array} ~ (\mbox{inv}_1)
  \]
- and 
+%
+%
+By Inversion Lemma~\ref{lem:inv_asn} on 
+ $\event_1'$, $\event_2'$ and execution $(2)$, we know $\exists \expr_1' or \qexpr_1'$, $\exists \expr_2' or \qexpr_2'$
+ \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{*} 
+  \config{[\assign{{x}_2'}{\expr_2' / \query(\qexpr_2')}]^{l_2} ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2'} 
+  % 
+\end{array}
+ \]
+%
+Unfolding $\sigdiff(\event_2,\event_2')$, we have:
+\[
+  \event_2 \sigeq \event_2'
+\] 
+%
+By $\event_2 \sigeq \event_2'$, 
+we know
+\[
+  x_2' = x_2 \land l_2' = l_2 \land 
+  \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2) l_2 = 
+  \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2') l_2 ~ (\mbox{inv}_d)
+\] 
+Then, we have:
   \[
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2'} 
   \rightarrow^{assn/query} 
   \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2' \cdot \event_2'} 
- ~(2)
+ ~(\mbox{inv}_2)
  \]
+ %
+  \caseL{$m = 0$}
 %
- By evaluation $(1)$ and $(2)$, we have:
+%
+ By evaluation $(\mbox{inv}_1)$, we have:
 \[
   \begin{array}{l}   
 \config{{c}, \vtrace_0} \rightarrow^{*} 
 \config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \cdot \vtrace_1}  \rightarrow^{assn/query}
  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} \\
-  \qquad \rightarrow^{\eskip^*} 
+  \qquad \rightarrow^{*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2, 
   \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
   \rightarrow^{assn/query} 
@@ -102,7 +132,20 @@ By Inversion Lemma~\ref{lem:inv_asn} on
   % 
 \end{array}
  \]
- and 
+ By Induction on the operational semantics rules on 
+ \[\config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1}
+  \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1} \]
+ %
+ We know:
+ \[
+ c_1 =_c 
+ [\eskip]{}^*;[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2
+ \]
+ %
+ By substituting $c_1$ in the execution in $(\mbox{inv}_2)$, we have 
+ %
   \[
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{\eskip^*} 
@@ -111,19 +154,16 @@ By Inversion Lemma~\ref{lem:inv_asn} on
   \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_2'} 
  \]
 %
-By definition of environment, we have:
+By $\event_1 \sigeq \event_1'$, and definition of environment, we have:
 \[
   \forall z^r \in \lvar_c \setminus \{x_1^{l_1}\} ,
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (z) =  
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event') (z)
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1) (z) =  
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1') (z)
 \]
 %
 By operational semantics rule \rname{ssa-assn} and \rname{ssa-query} and {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
 \[
-  x_1 \in VAR(\expr_2)
-\]
-or
-\[
+  x_1 \in VAR(\expr_2) ~ \mbox{or} ~
   x_1 \in VAR(\qexpr_2)
 \]
 %
@@ -151,79 +191,6 @@ Let $\vtrace_2 = \cdot \event'$, there are 2 sub-cases:
 %
 This case is proved by splitting the 2 sub-cases.
 %
-\subcaseL{$\event' \in \eventset^{\test}$}
- %
-Let $\event' = (b, l_b, n_b, v_b)$, by evaluation $(1)$ and $(2)$, and {Inversion Lemma~\ref{lem:inv_test}}, we have:
-\[
-  \begin{array}{l}   
-\config{{c}, \vtrace_0} \rightarrow^{*} 
-\config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \vtrace_1}  
-\rightarrow^{assn/query}
- \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
- \\
-  \qquad \rightarrow^{\eskip^*} 
-  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_2, 
-  \vtrace_0 \vtrace_1 \cdot \event_1} 
- \rightarrow^{if / while} 
-  \config{c_3, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
-  \\
-  \qquad   \rightarrow^{*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
-  \rightarrow^{assn/query} 
-  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
-  % 
-\end{array}
- \]
- and 
-  \[
-  \begin{array}{l}   
-  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
-  \rightarrow^{\eskip^*} 
-  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_2, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
-  \rightarrow^{if / while} 
-  \config{c_3, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
-  \\
-  \qquad \rightarrow^{\eskip^*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
-  \rightarrow^{assn/query} 
-  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \event_2'} 
-\end{array} ~(2)
- \]
-%
-By definition of environment, we have:
-\[
-  \forall z^r \in \lvar_c \setminus \{x_1^{l_1}\} \st
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (z) =  
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event') (z)
-\]
-By operational semantics rule \rname{ssa-assn} and \rname{ssa-query} and {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
-\[
-  x_1 \in VAR(\expr_2) 
-\]
-or
-\[
-  x_1 \in VAR(\qexpr_2)
-\]
-%
-By $\flowsto$ definition, we have:
-%
-\[
-\flowsto(x_1^{l_1}, {x}_2^{l_2})
-\]
-i.e.,
-%
-\[
-\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st (0 \leq n \leq 1 )
- \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
-\]
-%
-This case is proved.
-%
 \subcaseL{$\event' \in \eventset^{\asn}$}
 %
 Let $\event' = (z, l', n', v')$, there are 2 cases:
@@ -234,7 +201,51 @@ This sub-case is proved by splitting the 2 cases.
 %
 \subsubcaseL{$\eventdep^{val}(\event_1, \event', c, D)$}
 %
-By conclusion from \textbf{case: $m = 0$}, we know
+By conclusion from \textbf{case: $m = 0$}, we have following execution based on $(\mbox{inv}_1)$:
+\[
+  \begin{array}{l}   
+\config{{c}, \vtrace_0} \rightarrow^{*} 
+\config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \cdot \vtrace_1}  \rightarrow^{assn/query}
+ \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};{c}_2, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
+  \rightarrow^{assn/query} 
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'}  \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1\cdot \event'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
+  ~ (\mbox{m1asn}_1)
+  % 
+\end{array}
+ \]
+and
+ \[
+ c_1 =_c 
+ [\eskip]{}^*;[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};  [\eskip]{}^*; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2
+ \]
+ %
+ By substituting $c_1$ in the execution in $(\mbox{inv}_2)$, we have 
+ %
+  \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};{c}_2, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''}  \\
+  \qquad \rightarrow^{\eskip^*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1\cdot \event'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \event_2'} 
+\end{array}
+  ~(\mbox{m1asn}_2)
+ \]
+ By induction hypothesis on $\eventdep^{val}(\event_1, \event', c, D)$ in case $m = 0$, we also have:
 \[
   \flowsto(x_1^{l_1}, z^{l'})
 \]
@@ -245,19 +256,15 @@ By definition of environment, we have:
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event') (u)
 \]
-By operational semantics rule \rname{ssa-assn} and \rname{ssa-query} and {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
+By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
 \[
-  x_1 \in VAR(\expr_2) \lor z \in VAR(\expr_2)
-\]
-or
-\[
+  x_1 \in VAR(\expr_2) \lor z \in VAR(\expr_2) ~ \mbox{or} ~
   x_1 \in VAR(\qexpr_2) \lor z \in VAR(\qexpr_2)
 \]
 %
 By Definition of $\flowsto$, we know
 \[
-  \flowsto(x_1^{l_1}, x_2^{l_2}) \lor 
-  \big(\flowsto(x_1^{l_1}, z^{l'}) \land \flowsto(z^{l'}, x_2^{l_2}) \big)
+  \flowsto(x_1^{l_1}, x_2^{l_2}) \lor \flowsto(z^{l'}, x_2^{l_2}) \big)
 \]
 %
 i.e.,
@@ -270,7 +277,22 @@ i.e.,
 This case is proved.
 %
 \subsubcaseL{$\neg \eventdep^{val}(\event_1, \event', c, D)$}
-Then, we know by conclusion from the case $m = 0$:
+By subsubcase $\eventdep^{val}(\event_1, \event', c, D)$, 
+we have the same 2 executions as in $(\mbox{m1asn}_2)$ and $(\mbox{m1asn}_1)$.
+\\
+By $\neg \eventdep^{val}(\event_1, \event', c, D)$, we know:
+\[
+  \event' \eventeq \event''
+\]
+%
+Then by definition of environment, we have:
+\[
+  \forall u^r \in \lvar_c \setminus \{x_1^{l_1}\} \st
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event') (u)
+\]
+%
+By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
 \[
   x_1 \in VAR(\expr_2)
 \]
@@ -288,11 +310,540 @@ i.e.,
 \]
 This case is proved.
 %
+%
+\subcaseL{$\event' \in \eventset^{\test}$}
+ %
+Let $\event' = (b, l_b, n_b, v_b)$, by evaluation $\mbox{inv}_1$ and {Inversion Lemma~\ref{lem:inv_test}}, we have:
+\[
+  \begin{array}{l}   
+\config{{c}, \vtrace_0} \rightarrow^{*} 
+\config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \vtrace_1}  
+\rightarrow^{assn/query}
+ \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
+ \\
+  \qquad \rightarrow^{*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+ \rightarrow^{if / while} 
+  \config{c_3, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \\
+  \qquad   \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
+  % 
+\end{array}
+~(\mbox{m1test}_1)
+ \]
+ By induction on operational semantics rules and the evaluations:
+ \[
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
+  \rightarrow^{*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+ \]
+ \[
+ \config{c_3, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+ \]
+ we know:
+ \[
+ c_1 =_c 
+ [\eskip^*]; \eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_2
+ \]
+  \[
+ c_3 =_c 
+ [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+ \]
+By substituting $c_1$ in the execution in $(\mbox{inv}_2)$, we have 
+ %
+  \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{if / while} 
+  \config{c_3', \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \rightarrow^{assn/query} 
+  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
+\end{array}
+ \]
+By $(\mbox{inv}_d)$, we know:
+ \[
+ \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2) l_2 = 
+  \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2') l_2 
+ \]
+ %
+ Unfolding the $\vcounter$, we have:
+  \[
+ \vcounter(\vtrace_0 \cdot \vtrace_1) l_2 + (l_1 = l_2) + 1 = 
+  \vcounter(\vtrace_0 \cdot \vtrace_1) l_2 + (l_1 = l_2) + \vcounter(\vtrace_2') l_2  + 1
+ \]
+ %
+ i.e.,
+ \[
+ \vcounter(\vtrace_2') l_2 = 0
+ \]
+Consider the two subcases: $\eventdep^{val}(\event_1, \event', c, D)$ or $\neg\eventdep^{val}(\event_1, \event', c, D)$
+%
+\subsubcaseL{$\neg\eventdep^{val}(\event_1, \event', c, D)$}
+By execution in $(\mbox{m1test}_2)$ and $(\mbox{m1test}_1)$, since $\neg\eventdep^{val}(\event_1, \event', c, D)$, we have:
+\[
+  \event' \eventeq \event''
+\]
+By operational semantics rules $\rname{if-b}$ and $\rname{while-b}$ and $\event' =_q \event''$, we have:
+\[
+ c_3 =_c c_3'
+\]
+%
+Substituting $c_3'$ by $c_3$ in $(\mbox{m1test}_2)$, we have:
+\[
+  \config{c_3', \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \rightarrow^{\eskip*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''}
+  \rightarrow^{assn/query} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \event_2'} 
+\]
+By definition of environment, we have:
+\[
+  \forall z^r \in \lvar_c \setminus \{x_1^{l_1}\} \st
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (z) =  
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event') (z)
+\]
+By operational semantics rule \rname{ssa-assn} and \rname{ssa-query} and {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
+\[
+  x_1 \in VAR(\expr_2) ~ \mbox(or) ~  x_1 \in VAR(\qexpr_2)
+\]
+%
+By $\flowsto$ definition, we have:
+%
+\[
+\flowsto(x_1^{l_1}, {x}_2^{l_2})
+\]
+i.e.,
+%
+\[
+\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st (0 \leq n \leq 1 )
+ \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
+\]
+%
+This case is proved.
+%
+\subsubcaseL{$\eventdep^{val}(\event_1, \event', c, D)$}
+By execution in $(\mbox{m1test}_2)$ and $(\mbox{m1test}_1)$, since $\eventdep^{val}(\event_1, \event', c, D)$, we have:
+\[
+  \event' \eventeq \event'' \lor \sigdiff(\event', \event'')
+\]
+%
+Case of $\event' \eventeq \event''$ is proved in \textbf{subsubcase:} $\neg \eventdep^{val}(\event_1, \event', c, D)$.
+\\
+Case of $\sigdiff(\event', \event'')$ is proved by splitting two following cases:
+\[
+  c_1 =_c \eif ([b]^{l_b}, c_t, c_f);{c}_2
+  \lor
+  c_1 =_c \ewhile [b]^{l_b} \edo c_w;{c}_2
+\]
+\begin{subproof}[\textbf{Subsubsubcase}:] $c_1 =_c \eif ([b]^{l_b}, c_t, c_f);{c}_2$ 
+\\
+Without loss of generalization, let $\event' = (b, l_b, n_b, \etrue)$ and
+$\event'' = (b, l_b, n_b, \efalse)$,
+by execution $(\mbox{m1test}_1)$ and $\event' = (b, l_b, n_b, \etrue)$, we have:
+\[
+  \begin{array}{l}   
+  \config{{c}, \vtrace_0} \rightarrow^{\eskip^*} 
+  \config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \vtrace_1}  
+  \rightarrow^{assn/query}
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f);{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \rightarrow^{if-t} 
+  \config{c_t;c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
+  % 
+  \end{array}
+\]
+and 
+\[
+  c_t;c_2 =_c [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+%
+By execution $(\mbox{inv}_2)$ and $\event'' = (b, l_b, n_b, \efalse)$, we have:
+ %
+  \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f); {c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{if-f} 
+  \config{c_f;c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \rightarrow^{assn/query} 
+  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
+\end{array}
+~\mbox{(m1testif)}_2
+ \]
+ %
+ By uniqueness of label, we have three cases:
+ \begin{enumerate}
+ \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_t$:
+ By uniqueness of program label, we have:
+ \[
+ [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_f
+ \land
+ [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_2
+ \]
+ %
+ Then we know $\forall \trace, \trace' \in \mathcal{T}$, there doesn't exist execution
+ \[
+  \config{c_f;c_2, \vtrace} \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', \trace'}
+ \]
+ This is contradict to the existence of execution in $\mbox{(m1testif)}_2$.
+ \\
+  Then this case is proved.
+ \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_f$
+  By uniqueness of program label, we have:
+ \[
+ [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_t
+ \land
+ [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_2
+ \]
+  This is contradict to:
+ \[
+  c_t;c_2 =_c [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+\\
+ This case is proved.
+ \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$
+ By
+ \[
+  c_t;c_2 =_c [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+we know:
+\[
+  c_t = [\eskip^*]; \land c_2 = [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+Substituting $c_2$ in the execution in $\mbox{(m1testif)}_2$, we have:
+\[
+    \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f); {c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{if-f} 
+  \config{c_f;c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{c_2, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \\
+  \qquad \rightarrow^{\eskip*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \rightarrow^{assn/query} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
+\end{array}
+\]
+and
+\[
+  VAR{\trace_2'} \subseteq \lvar_{c_f}
+\]
+By Inversion Lemma~\ref{lem:inv_b} on evaluation of boolean expression $b$ and following: 
+\[
+  \forall z \in \lvar \setminus \{x_1^{l_1}\} \st
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1')(z) = \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1)(z)
+\]
+we know:
+\[
+  x_1^{l_1} \in VAR(b)
+\]
+%
+By $\flowsto$ definition, we also have:
+\[
+  \forall z_i^{r_i} \in \lvar_{c_f}, x_j^{l_j} \in VAR(b) \st
+  \flowsto(x_j^{l_j}, z_i^{r_i})
+\]
+i.e., 
+\[
+  \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}}
+  \flowsto(x_1^{l_1}, z_i^{r_i})
+\]
+%
+By Inversion Lemma~\ref{lem:inv_a} on evaluation of expression $\expr_2$ and following: 
+\[
+  \forall z \in \lvar \setminus \{x_1^{l_1}\} \cup VAR{\trace_2'} \st
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1'\cdot \event'' \cdot \trace_2')(z) 
+  = \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1\cdot \event')(z)
+\]
+%
+we have:
+\[
+  x_1^{l_1} \in VAR(\expr_2) \bigvee_{z_i^{r_i} \in VAR{\trace_2'}} z_i^{r_i} \in VAR(\expr_2)
+\]
+%
+By $\flowsto$ definition, we have:
+\[
+   \flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{\trace_2'}} \flowsto(z_i^{r_i}, x_2^{l_2})
+\]
+%
+By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $VAR{\trace_2'} \subseteq \lvar_{c_f}$, we have:
+\[
+\flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{\trace_2'}} 
+(\flowsto(x_1^{l_1}, z_i^{r_i}) \land \flowsto(z_i^{r_i}, x_2^{l_2}))
+\]
+%
+i.e.,
+\[
+\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}
+ \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
+\]
+%
+This case is proved.
+%
+\end{enumerate}
+%
+This case is proved.
+\end{subproof}
+%
+\begin{subproof}[\textbf{Subsubsubcase}:] $c_1 =_c \ewhile [b]^{l_b} \edo c_w;{c}_2$ 
+%
+\\
+There are 2 cases:
+$\event' = (b, l_b, n_b, \etrue) \land \event'' = (b, l_b, n_b, \efalse)$,
+or
+$\event' = (b, l_b, n_b, \efalse) \land \event'' = (b, l_b, n_b, \etrue)$.
+\\
+\textbf{subsubsubsubcase:} $\event' = (b, l_b, n_b, \etrue) \land \event'' = (b, l_b, n_b, \efalse)$
+\\
+By execution $(\mbox{m1test}_1)$ and $\event' = (b, l_b, n_b, \etrue)$, we have:
+\[
+  \begin{array}{l}   
+  \config{{c}, \vtrace_0} \rightarrow^{\eskip^*} 
+  \config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \vtrace_1}  
+  \rightarrow^{assn/query}
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{\ewhile [b]^{l_b} \edo c_w;{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \rightarrow^{while-t} 
+  \config{c_w;\ewhile [b]^{l_b} \edo c_w; c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \\
+  \qquad \rightarrow^{\eskip*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
+  % 
+  \end{array}
+\]
+and 
+\[
+  c_w;\ewhile [b]^{l_b} \edo c_w; c_2 =_c [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+%
+By execution $(\mbox{inv}_2)$ and $\event'' = (b, l_b, n_b, \efalse)$, we have:
+ %
+  \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{\ewhile [b]^{l_b} \edo c_w;{c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{while-f} 
+  \config{[\eskip]^{l_b};c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \rightarrow^{assn/query} 
+  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
+\end{array}
+~\mbox{(m1testif)}_2
+ \]
+ %
+ By uniqueness of label, we have 2 cases:
+ \begin{enumerate}
+ \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$:
+ By uniqueness of program label, we have:
+ \[
+ [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_2
+ \]
+ %
+ Then we know $\forall \trace, \trace' \in \mathcal{T}$, there doesn't exist execution
+ \[
+  \config{[\eskip]^{l_b};c_2, \vtrace} \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', \trace'}
+ \]
+ This is contradict to the existence of execution in $\mbox{(m1testif)}_2$.
+ \\
+  Then this case is proved.
+  %
+ \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$
+ By
+ \[
+  c_w;\ewhile [b]^{l_b} \edo c_w; c_2 =_c [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+we know:
+\[
+  c_w;\ewhile [b]^{l_b} \edo c_w; =_c [\eskip^*]; \land c_2 = [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+This is contradict to program equivalence definition, i.e.,
+\[
+  c_w;\ewhile [b]^{l_b} \edo c_w; \neq_c [\eskip^*]
+\]
+This case is proved.
+%
+ \end{enumerate}
+%
+\textbf{subsubsubsubcase:}$\event' = (b, l_b, n_b, \efalse) \land \event'' = (b, l_b, n_b, \etrue)$
+\\
+By execution $(\mbox{m1test}_1)$ and $\event' = (b, l_b, n_b, \etrue)$, we have:
+\[
+  \begin{array}{l}   
+  \config{{c}, \vtrace_0} \rightarrow^{\eskip^*} 
+  \config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_0 \vtrace_1}  
+  \rightarrow^{assn/query}
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{\ewhile [b]^{l_b} \edo c_w;{c}_2, 
+  \vtrace_0 \vtrace_1 \cdot \event_1} 
+  \rightarrow^{while-f} 
+  \config{[\eskip^*]; c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \\
+  \qquad \rightarrow^{\eskip*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
+  % 
+  \end{array}
+\]
+and 
+\[
+  [\eskip^*]; c_2 =_c [\eskip^*];[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
+\]
+%
+By execution $(\mbox{inv}_2)$ and $\event'' = (b, l_b, n_b, \etrue)$, we have:
+ %
+  \[
+  \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{\ewhile [b]^{l_b} \edo c_w;{c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{while-f} 
+  \config{c_w;\ewhile [b]^{l_b} \edo c_w;c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \rightarrow^{assn/query} 
+  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
+\end{array}
+~\mbox{(m1testif)}_2
+ \]
+Substituting $c_2$ in the execution in $\mbox{(m1testif)}_2$, we have:
+\[
+    \begin{array}{l}   
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{\ewhile [b]^{l_b} \edo c_w;{c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{if-f} 
+  \config{c_w;\ewhile [b]^{l_b} \edo c_w;c_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
+  \\
+  \qquad \rightarrow^{*} 
+  \config{c_2,\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \\
+  \qquad \rightarrow^{\eskip*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \rightarrow^{assn/query} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
+\end{array}
+\]
+and
+\[
+  VAR{\trace_2'} \subseteq \lvar_{c_w}
+\]
+By Inversion Lemma~\ref{lem:inv_b} on evaluation of boolean expression $b$ and following: 
+\[
+  \forall z \in \lvar \setminus \{x_1^{l_1}\} \st
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1')(z) = \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1)(z)
+\]
+we know:
+\[
+  x_1^{l_1} \in VAR(b)
+\]
+%
+By $\flowsto$ definition, we also have:
+\[
+  \forall z_i^{r_i} \in \lvar_{c_f}, x_j^{l_j} \in VAR(b) \st
+  \flowsto(x_j^{l_j}, z_i^{r_i})
+\]
+i.e., 
+\[
+  \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_w}}
+  \flowsto(x_1^{l_1}, z_i^{r_i})
+\]
+%
+By Inversion Lemma~\ref{lem:inv_a} on evaluation of expression $\expr_2$ and following: 
+\[
+  \forall z \in \lvar \setminus \{x_1^{l_1}\} \cup VAR{\trace_2'} \st
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1'\cdot \event'' \cdot \trace_2')(z) 
+  = \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1\cdot \event')(z)
+\]
+%
+we have:
+\[
+  x_1^{l_1} \in VAR(\expr_2) \bigvee_{z_i^{r_i} \in VAR{\trace_2'}} z_i^{r_i} \in VAR(\expr_2)
+\]
+%
+\item By $\flowsto$ definition, we have:
+\[
+   \flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{\trace_2'}} \flowsto(z_i^{r_i}, x_2^{l_2})
+\]
+%
+By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_w}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $VAR{\trace_2'} \subseteq \lvar_{c_f}$, we have:
+\[
+\flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{\trace_2'}} 
+(\flowsto(x_1^{l_1}, z_i^{r_i}) \land \flowsto(z_i^{r_i}, x_2^{l_2}))
+\]
+%
+i.e.,
+\[
+\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}
+ \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
+\]
+%
+This case is proved.
+\end{subproof}
+%
+This case is proved.
+%
 \\
 Then the case $m = 1$ is proved.
 %
 \caseL{$m = m' + 1, m' \geq 0$}
-By induction hypothesis on $n$ and $\vardep(x_1^{l_1}, x_2^{l_2}, c, D)$, 
+By induction hypothesis on $1$ and $\vardep(x_1^{l_1}, x_2^{l_2}, c, D)$, 
 $\vardep(x_1^{l_1}, z_1^{r_1}, c, D) \land \vardep(z^{l_z}, x_2^{l_2}, c, D)$ respectively, 
 we have $\exists z_2^{r_2}, \cdots, z_n^{r_2}, 1 \leq n \leq m'+1$ s.t.:
 \[
@@ -651,4 +1202,4 @@ we have $\exists z_2^{r_2}, \cdots, z_n^{r_2}, 1 \leq n \leq m'+1$ s.t.:
   \lor  & \flowsto(x_1^{l_1}, z_2^{r_2}) \land \cdots \land \flowsto(z_n^{r_n}, z_1^{r_1}) \land \flowsto(z_1^{r_1}, x_2^{l_2}) \\
 \end{array}
 \]This case is proved.
-\end{proof}
+\end{proof}}

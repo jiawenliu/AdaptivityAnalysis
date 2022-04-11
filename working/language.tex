@@ -61,12 +61,12 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 %
 \mbox{Event} 
 & \event & ::= & 
-    ({x}, l, n, v) | ({x}, l, n, \qval, v)  ~~~~~~~ \mbox{Assignment Event} \\
-&&& | (\bexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
+    ({x}, l, v) | ({x}, l, \qval, v)  ~~~~~~~ \mbox{Assignment Event} \\
+&&& | (\bexpr, l, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
 \\
 %
-\mbox{Trace} & \vtrace
-& ::= & \cdot | \vtrace \cdot \event
+\mbox{Trace} & \trace
+& ::= & \cdot | \trace \cdot \event
 % \\
 % %
 % \mbox{Event Signature} & \sig
@@ -87,12 +87,9 @@ We use following notations to represent the set of corresponding terms:
 \mathcal{QVAL} & : & \mbox{Set of Query Values} 
 \\ 
 %
-\mathcal{SIG} & : & \mbox{Set of Event Signature} 
-\\ 
 %
 \eventset  & : & \mbox{Set of Events}  
 \\
-%
 %
 \eventset^{\asn}  & : & \mbox{Set of Assignment Events}  
 \\
@@ -107,22 +104,22 @@ We use following notations to represent the set of corresponding terms:
 \qdom = {[-1,1]} & : & \mbox{{Domain of Query Results}}
 \\
 %
-\mathcal{T} & : & \mbox{Set of Well-formed Traces (in Definition~\ref{def:wf_trace})}
+{\mathcal{T}} & : & \mbox{Set of Traces}
 \end{array}
 \]
 %
 %
 %
-Environment $ \env : \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
+Environment $ \env : {\mathcal{T}}  \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
 \[
 \begin{array}{lll}
-\env(\vtrace  \cdot (x, l, n, v)) x \triangleq v
+\env(\trace  \cdot (x, l, v)) x \triangleq v
 &
-\env(\vtrace \cdot (x, l, n, \qval, v)) x \triangleq v
+\env(\trace \cdot (x, l, \qval, v)) x \triangleq v
 &
-\env(\vtrace \cdot (y, l, n, v)) x \triangleq \env(\vtrace) x
+\env(\trace \cdot (y, l, v)) x \triangleq \env(\trace) x
 \\
-\env(\vtrace \cdot (b, l, n, v)) x \triangleq \env(\vtrace) x
+\env(\trace \cdot (b, l, v)) x \triangleq \env(\trace) x
 &
 \env(\cdot ) x \triangleq \bot
 &
@@ -130,21 +127,21 @@ Environment $ \env : \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\b
 \]
 %
 %
-Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{QVAL} \cup \{\bot\}$
-\[
-\begin{array}{lll}
-\qenv(\vtrace \cdot (x, l, n, v) ) x \triangleq \qenv(\vtrace) x
-&
-\qenv(\vtrace \cdot (x, l, n, \qval, v) ) x \triangleq \qval
-&
-\qenv(\vtrace \cdot (y, l, n, v)) x \triangleq \env(\vtrace) x
-\\
-\qenv(\vtrace \cdot (b, l, n, v)) x \triangleq \env(\vtrace) x
-&
-\qenv(\cdot ) x \triangleq \bot
-&
-\end{array}
-\]
+% Query Environment $\qenv: \mathcal{T}  \to \mathcal{SVAR} \to \mathcal{QVAL} \cup \{\bot\}$
+% \[
+% \begin{array}{lll}
+% \qenv(\trace \cdot (x, l, n, v) ) x \triangleq \qenv(\trace) x
+% &
+% \qenv(\trace \cdot (x, l, n, \qval, v) ) x \triangleq \qval
+% &
+% \qenv(\trace \cdot (y, l, n, v)) x \triangleq \env(\trace) x
+% \\
+% \qenv(\trace \cdot (b, l, n, v)) x \triangleq \env(\trace) x
+% &
+% \qenv(\cdot ) x \triangleq \bot
+% &
+% \end{array}
+% \]
 %
 
 %
@@ -233,20 +230,20 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 \mbox{Command $\times$ Trace}
 }
 \and
-\boxed{\config{{c, \vtrace}}
+\boxed{\config{{c, \trace}}
 \xrightarrow{} 
-\config{{c',  \vtrace'}}
+\config{{c',  \trace'}}
 }
 \\
 %
 \inferrule
 {
-\event = ({x}, l, \vcounter(\vtrace) l + 1, v)
+\event = ({x}, l, v)
 }
 {
-\config{[\assign{{x}}{\aexpr}]^{l},  \vtrace } 
+\config{[\assign{{x}}{\aexpr}]^{l},  \trace } 
 \xrightarrow{} 
-\config{[\eskip]^{l}, \vtrace \cdot \event }
+\config{[\eskip]^{l}, \trace \cdot \event }
 }
 ~\textbf{assn}
 %
@@ -255,16 +252,16 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 {
 \inferrule
 {
- \vtrace, \qexpr \qarrow \qval
+ \trace, \qexpr \qarrow \qval
  \and 
 \query(\qval) = v
 \and 
-\event = ({x}, l, \vcounter(\vtrace) l + 1, \qval, v)
+\event = ({x}, l, \qval, v)
 }
 {
-\config{{[\assign{x}{\query(\qexpr)}]^l, \vtrace}}
+\config{{[\assign{x}{\query(\qexpr)}]^l, \trace}}
 \xrightarrow{} 
-\config{{\eskip,  \vtrace \cdot \event} }
+\config{{\eskip,  \trace \cdot \event} }
 }
 ~\textbf{query}
 }
@@ -273,16 +270,16 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 %
 \inferrule
 {
- \vtrace, b \barrow \etrue
+ \trace, b \barrow \etrue
  \and 
- \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
+ \event = (b, l, \etrue)
 }
 {
-\config{{\ewhile [b]^{l} \edo c, \vtrace}}
+\config{{\ewhile [b]^{l} \edo c, \trace}}
 \xrightarrow{} 
 \config{{
 c[\bar{x_i}/\bar{x'}]; \ewhile [b]^{l} \edo c,  \eskip),
-\vtrace \cdot \event}}
+\trace \cdot \event}}
 }
 ~\textbf{while-t}
 %
@@ -291,16 +288,16 @@ c[\bar{x_i}/\bar{x'}]; \ewhile [b]^{l} \edo c,  \eskip),
 %
 \inferrule
 {
- \vtrace, b \barrow \efalse
+ \trace, b \barrow \efalse
  \and 
- \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
+ \event = (b, l, \efalse)
 }
 {
-\config{{\ewhile [b]^{l}, \edo c, \vtrace}}
+\config{{\ewhile [b]^{l}, \edo c, \trace}}
 \xrightarrow{} 
 \config{{
 [\eskip]^l ,
-\vtrace \cdot \event}}
+\trace \cdot \event}}
 }
 ~\textbf{while-f}
 %
@@ -310,14 +307,14 @@ c[\bar{x_i}/\bar{x'}]; \ewhile [b]^{l} \edo c,  \eskip),
 %
 \inferrule
 {
-\config{{c_1, \vtrace}}
+\config{{c_1, \trace}}
 \xrightarrow{}
-\config{{c_1',  \vtrace'}}
+\config{{c_1',  \trace'}}
 }
 {
-\config{{c_1; c_2, \vtrace}} 
+\config{{c_1; c_2, \trace}} 
 \xrightarrow{} 
-\config{{c_1'; c_2, \vtrace'}}
+\config{{c_1'; c_2, \trace'}}
 }
 ~\textbf{seq1}
 %
@@ -325,12 +322,12 @@ c[\bar{x_i}/\bar{x'}]; \ewhile [b]^{l} \edo c,  \eskip),
 %
 \inferrule
 {
-  \config{{c_2, \vtrace}}
+  \config{{c_2, \trace}}
   \xrightarrow{}
-  \config{{c_2',  \vtrace'}}
+  \config{{c_2',  \trace'}}
 }
 {
-\config{{[\eskip]^{l} ; c_2, \vtrace}} \xrightarrow{} \config{{ c_2', \vtrace'}}
+\config{{[\eskip]^{l} ; c_2, \trace}} \xrightarrow{} \config{{ c_2', \trace'}}
 }
 ~\textbf{seq2}
 %
@@ -339,16 +336,16 @@ c[\bar{x_i}/\bar{x'}]; \ewhile [b]^{l} \edo c,  \eskip),
 %
 \inferrule
 {
-   \vtrace, b \barrow \etrue
+   \trace, b \barrow \etrue
  \and 
- \event = (b, l, \vcounter(\vtrace) l + 1, \etrue)
+ \event = (b, l, \etrue)
 }
 {
 \config{{
 \eif([\etrue]^{l}, c_1, c_2), 
-\vtrace}}
+\trace}}
 \xrightarrow{} 
-\config{{c_1, \vtrace \cdot \event}}
+\config{{c_1, \trace \cdot \event}}
 }
 ~\textbf{if-t}
 %
@@ -356,14 +353,14 @@ c[\bar{x_i}/\bar{x'}]; \ewhile [b]^{l} \edo c,  \eskip),
 %
 \inferrule
 {
- \vtrace, b \barrow \efalse
+ \trace, b \barrow \efalse
  \and 
- \event = (b, l, \vcounter(\vtrace) l + 1, \efalse)
+ \event = (b, l, \efalse)
 }
 {
-\config{{\eif([\efalse]^{l}, c_1, c_2), \vtrace}}
+\config{{\eif([\efalse]^{l}, c_1, c_2), \trace}}
 \xrightarrow{} 
-\config{{c_2, \vtrace \cdot \event}}
+\config{{c_2, \trace \cdot \event}}
 }
 ~\textbf{if-f}
 % %

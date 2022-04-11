@@ -1,68 +1,74 @@
 %
 %
-\subsection{Event and \todo{Post-Processed Event}}
+\subsection{Event}
 %
+\todo{
 \[
 \begin{array}{llll}
-  \mbox{Post-Processed Event} 
-& \event & ::= & 
-      ({x}, l, n, v) | ({x}, l, n, \qval, v)  ~~~~~~~ \mbox{Assignment Event} \\
-&&& | (\bexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
+\mbox{Post-Processed Event} & \event & ::= & 
+      (({x}, l, v), n) | (({x}, l, \qval, v), n)  ~~~~~~~ \mbox{Post-Processed Assignment Event} \\
+&&& | ((\bexpr, l, v), n)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Post-Processed Testing Event}
+\end{array}
+\]
+%
+\[
+\begin{array}{lll}
+%
+\eventset  & : & \mbox{Set of Post-Processed Events}  
 \\
 %
-\mbox{Post-Processed Trace} & \vtrace
-& ::= & \cdot | \vtrace \cdot \event
+\eventset^{\asn}  & : & \mbox{Set of Post-Processed Assignment Events}  
+\\
+%
+\eventset^{\test}  & : & \mbox{Set of Post-Processed Testing Events}  
+\end{array}
+\]
+}
 % %
-\end{array}
-\]
 %
-Counter $\vcounter : \mathcal{T}  \to \mathbb{N} \to \mathbb{N}$
-\[
-\begin{array}{lll}
-\vcounter(\vtrace \cdot (x, l, n, v) ) l \triangleq n
-&
-\vcounter(\vtrace \cdot (b, l, n, v)) l \triangleq n
-&
-\vcounter(\vtrace \cdot (x, l, n, \qval, v)) l \triangleq n
-\\
-\vcounter(\vtrace  \cdot (x, l', n, v)) l \triangleq \vcounter(\vtrace ) l
-&
-\vcounter(\vtrace \cdot (b, l', n, v)) l \triangleq \vcounter(\vtrace ) l
-&
-\vcounter(\vtrace \cdot (x, l', n, \qval, v)) l \triangleq \vcounter(\vtrace ) l
-\\
-\vcounter(\cdot) l \triangleq 0
-&&
-\end{array}
-\]
-
-\todo{
-Remove?
-\\
-Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
-\[
-\begin{array}{lll}
-\pi_v((x, l, n, v)) \triangleq v
-&
-\pi_v (x, l, n, \qval, v) \triangleq v
-&
-\pi_v (b, l, n, v)  \triangleq v
-\end{array}
-\]
+% Given a trace $\ostrace$ and $\osevent$, the corresponding well-formed event $\event$ 
+% \[
+%   \event \triangleq 
+%   \left\{
+%   \begin{array}{ll}
+%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
+%   (x, l, \vcounter(\ostrace) l, v, \qval) & \osevent = (x, l, v)\\
+%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
+%   \end{array}
+%   \right.
+% \]
 %
-%
-Event Distinguishable Value : $\pi_{q} : \eventset \to \mathcal{QVAL}$ 
-\[
-\begin{array}{lll}
-\pi_{q} (x, l, n, v) \triangleq v
-&
-\pi_{q} (x, l, n, \qval, v) \triangleq \qval
-&
-\pi_{q} (b, l, n, v)  \triangleq v
-\end{array}
-\]%
+% \\
+% Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
+% \[
+% \begin{array}{lll}
+% \pi_v((x, l, n, v)) \triangleq v
+% &
+% \pi_v (x, l, n, \qval, v) \triangleq v
+% &
+% \pi_v (b, l, n, v)  \triangleq v
+% \end{array}
+% \]
+% %
+% %
+% Event Distinguishable Value : $\pi_{q} : \eventset \to \mathcal{QVAL}$ 
+% \[
+% \begin{array}{lll}
+% \pi_{q} (x, l, n, v) \triangleq v
+% &
+% \pi_{q} (x, l, n, \qval, v) \triangleq \qval
+% &
+% \pi_{q} (b, l, n, v)  \triangleq v
+% \end{array}
+% \]%
 % 
-Event Signature : $\pi_{\sig} : \eventset \to \mathcal{SIG}$
+Event Projection Operator: $\pi_i : 
+\eventset \to \mathcal{VAR}\cup \mbox{Boolean Expression} \cup \mathbb{N} \cup \mathcal{VAL} \cup \mathcal{QVAL} $
+\\
+$\pi_i$ projects the $i$th element in an event.
+%
+\\
+Event Signature : $\pi_{\sig} : \eventset \to (\mathcal{VAR}\cup \mbox{Boolean Expression}) \times\mathbb{N}\times \mathbb{N}$
 \[
 \begin{array}{lll}
 \pi_{\sig} (x, l, n, v) \triangleq (x, l, n)
@@ -71,8 +77,8 @@ Event Signature : $\pi_{\sig} : \eventset \to \mathcal{SIG}$
 &
 \pi_{\sig} (b, l, n, v)  \triangleq (b, l, n)
 \end{array}
-\]}
-
+\]
+%
 %
 \begin{defn}[Equivalence of Query Expression].
 %
@@ -106,23 +112,21 @@ The $\event_1 \eventneq \event_2$ is defined as vice versa.
 \end{defn}
 %
 %
-\todo{
-\begin{defn}[Event Isomorphic $\ismeq$]
-Two events $\event_1, \event_2 \in \eventset$ is \emph{Isomorphic}, denoted as $\event_1 \ismeq \event_2$ if and only if:
+\begin{defn}[Signature Equivalence of Events $\sigeq$]
+Two events $\event_1, \event_2 \in \eventset$ is in \emph{signature equivalence} relation, denoted as $\event_1 \sigeq \event_2$ if and only if:
 \[
-\forall i \in \{1, 2, 3\} \st \pi_{i}(\event_1) = \pi_{i}(\event_2) 
+\forall i \in \{1, 2, 3\} \st \pi_{\sig}(\event_1) = \pi_{\sig}(\event_2) 
 \]
-The $\event_1 \ismneq \event_2$ is defined as vice versa.
+The $\event_1 \signeq \event_2$ is defined as vice versa.
 \end{defn}
 %
-\begin{defn}[Event Isomorphically Different $\ismdiff$]
-Two events $\event_1, \event_2 \in \eventset$ is \emph{Isomorphically Different}, 
-denoted as $\ismdiff(\event_1, \event_2)$ if and only if:
+\begin{defn}[Events Different up to Signature $\sigdiff$]
+Two events $\event_1, \event_2 \in \eventset$ is \emph{Different up to signature}, 
+denoted as $\sigdiff(\event_1, \event_2)$ if and only if:
 \[
-\event_1 \ismeq \event_2 \land  \pi_{4}(\event_1) \neq \pi_{4}(\event_2)
+\event_1 \sigeq \event_2 \land  \pi_{4}(\event_1) \neq_q \pi_{4}(\event_2)
 \]
 \end{defn}
-}
 %
 \begin{defn}[Order of Events].
 \label{def:query_dir}

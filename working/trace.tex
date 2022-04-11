@@ -1,5 +1,5 @@
 %
-\subsection{Trace and \todo{Post-Processed Trace}}
+\subsection{Trace}
 Trace appending:
 \[
   \trace \cdot \event \triangleq
@@ -22,7 +22,7 @@ Trace concatenation:
   \right.
 \]
 %
-An $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
+An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
 %
 \begin{equation}
   \event \eventin \trace  
@@ -35,14 +35,15 @@ An $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \t
   \right.
 \end{equation}
 %
-An $\event \in \eventset$ isomorphically belongs to a trace $\trace$, i.e., $\event \ismin \trace$ are defined as follows:
+A well-formed event $\event \in \eventset$ belongs to a trace $\trace$ in signature, 
+i.e., $\event \sigin \trace$ are defined as follows:
   %
 \begin{equation}
-  \event \ismin \trace  
+  \event \sigin \trace  
   \triangleq \left\{
   \begin{array}{ll} 
-    \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \ismeq \event') \\
-    \event \ismin \trace'   & \trace =  (\trace' \cdot \event') \land (\event \ismneq \event') \\ 
+    \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \sigeq \event') \\
+    \event \sigin \trace'   & \trace =  (\trace' \cdot \event') \land (\event \signeq \event') \\ 
     \efalse                 & o.w.
   \end{array}
   \right.
@@ -91,12 +92,84 @@ c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
 c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
 %
-\begin{defn}[Well-formed Trace $\mathcal{T}$]
+%
+\todo{
+\[
+\mbox{Post-Processed Trace} \qquad \posttrace \qquad ::= \qquad \cdot | \posttrace \cdot \event
+% %
+\]
+%
+Counter $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$
+\[
+\begin{array}{lll}
+\vcounter(\trace \cdot (x, l, v) ) l \triangleq \vcounter(\trace) l + 1
+&
+\vcounter(\trace \cdot (b, l, v)) l \triangleq \vcounter(\trace) l + 1
+&
+\vcounter(\trace \cdot (x, l, \qval, v)) l \triangleq \vcounter(\trace) l + 1
+\\
+\vcounter(\trace  \cdot (x, l', v)) l \triangleq \vcounter(\trace ) l
+&
+\vcounter(\trace \cdot (b, l', v)) l \triangleq \vcounter(\trace ) l
+&
+\vcounter(\trace \cdot (x, l', \qval, v)) l \triangleq \vcounter(\trace ) l
+\\
+\vcounter(\cdot) l \triangleq 0
+&&
+\end{array}
+\]
+%
+Given a trace $\trace$, its post-processed trace $\posttrace$ is computed by a function $p : \trace \to \posttrace$ as follows:
+\[
+  \posttrace \triangleq
+  \left\{
+  \begin{array}{ll} 
+  p(\trace' \cdot (x, l, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, v) \\
+  p(\trace' \cdot (b, l, v)) & = p(\trace') \cdot (b, l, \vcounter(\trace') l + 1, v) \\
+  p(\trace' \cdot (x, l, \qval, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, \qval, v) \\
+  p(\cdot) & = \cdot
+  \end{array}
+  \right.
+\]
+A post-processed event $\postevent \in \eventset$ belongs to a post-processed trace $\posttrace$, i.e., $\event \eventin \trace$ are defined as follows:
+%
+\begin{equation}
+  \postevent \eventin \posttrace  
+  \triangleq \left\{
+  \begin{array}{ll} 
+    \etrue                  & \posttrace =  (\posttrace' \cdot \event') \land (\postevent \eventeq \event') \\
+    \postevent \eventin \trace' & \posttrace =  (\posttrace' \cdot \event') \land (\postevent \eventneq \postevent') \\ 
+    \efalse                 & o.w.
+  \end{array}
+  \right.
+\end{equation}
+%
+A post-processed event $\event \in \eventset$ belongs to a post-processed trace $\trace$ in signature, 
+i.e., $\event \sigin \trace$ are defined as follows:
+  %
+\begin{equation}
+  \event \sigin \trace  
+  \triangleq \left\{
+  \begin{array}{ll} 
+    \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \sigeq \event') \\
+    \event \sigin \trace'   & \trace =  (\trace' \cdot \event') \land (\event \signeq \event') \\ 
+    \efalse                 & o.w.
+  \end{array}
+  \right.
+\end{equation}
+}
+%
+% $\mathcal{T}$ : Set of Well-formed Traces (in Definition~\ref{def:wf_trace})
+%
+%
+% \\
+%
+\begin{defn}[Well-formed Trace $\mathcal{T^{p}}$]
 \label{def:wf_trace}
-A trace $\trace$ is well formed, i.e., $\trace \in \mathcal{T}$ if and only if it preserves the following two properties:
+A post-processed trace $\posttrace$ is well formed, i.e., $\trace \in \mathcal{T}$ if and only if it preserves the following two properties:
 \begin{itemize}
 \item{\emph{(Uniqueness)}} 
-$\forall \event_1, \event_2 \eventin \trace \st \event_1 \ismneq \event_2$
+$\forall \event_1, \event_2 \eventin \trace \st \event_1 \signeq \event_2$
 %
 \item{\emph{(Ordering)}} $\forall \event_1, \event_2 \eventin \trace \st 
 (\event_1 \eventlt \event_2) \Longleftrightarrow
@@ -108,12 +181,12 @@ $\forall \event_1, \event_2 \eventin \trace \st \event_1 \ismneq \event_2$
 \end{defn}
 %
 %
-\begin{thm}[Trace Generated from Operational Semantics is Well-formed $c \vDash \trace$].
+\begin{thm}[Trace Generated from Operational Semantics after Post Processing is Well-formed $c \vDash \trace$].
 \label{thm:os_wf_trace}
 \\
 \[
 \forall \trace \in \mathcal{T}, c \st
-\config{c, \vtrace} \to^{*} \config{\eskip, \trace \cdot \vtrace'}
+\config{c, \vtrace} \to^{*} \config{\eskip, \trace \cdot \trace'} \land \trace' = p(\trace')
 \implies
 \vtrace' \in \mathcal{T}
 \]
