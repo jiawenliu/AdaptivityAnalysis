@@ -131,6 +131,10 @@ This is formally defined in \ref{def:flowsto}.
 We use $FV(\expr)$, $FV(\sbexpr)$ and $FV(\qexpr)$ denote the set of free variables in 
 expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ respectively.
 %
+\\
+\todo{$\live^l(c) \subseteq \lvar_c$ 
+is the set of labeled variables $x^l \in \lvar_c$ assumed to be live at the entry point of  executing the command of label $l$.}
+%
 \begin{defn}[Data Flows between Assigned Variables ($\flowsto$)].
 \label{def:flowsto}
 \\
@@ -145,23 +149,23 @@ in ${c}$, denoted as $\flowsto({x^i, y^j, c})$, is defined as follows:
 \left( \bigvee
 \begin{array}{l}
 (\exists \sexpr . ~ [\assign{y}{\sexpr}]^j \in_{c} {c} 
-\land {x} \in VAR(\sexpr) \land (i \in \live^j(c)))
+\land {x} \in VAR(\sexpr) \land (x^i \in \live^j(c)))
 \\
 (\exists {\qexpr}. ~ [\assign{y}{\query({\qexpr})}]^j \in_{c} {c} 
-\land x \in VAR({\qexpr}) \land (i \in \live^j(c))))
+\land x \in VAR({\qexpr}) \land (x^i \in \live^j(c))))
 \\
 \big(\exists  ~ {c_w}, {(\expr \lor \qexpr)}, \sbexpr, l \in \mathbb{N}. ~
 	\ewhile [\sbexpr]^l \edo {c_w} \in_{c} {c}
 	\land 
 	[{\assign{y}{\expr \lor \query(\qexpr)}}]^{j} \in_{c}  {c_w}
-\big) \land {x} \in VAR(\sbexpr) \land (i \in \live^l(c)))
+\big) \land {x} \in VAR(\sbexpr) \land (x^i \in \live^l(c)))
 \\
 \big(
 \exists ~ \sbexpr, l \in \mathbb{N}, {c_1}, {c_2}, {\expr}_1, {\expr}_2. ~
 	\eif([\sbexpr]^l, {c_1}, {c_2}) \in_{c} {c} \land
 	([{\assign{y}{\expr_1}}]^j \in_{c} {c_1} \lor 
 	[{\assign{y}{\expr_2}}]^j \in_{c} {c_2})
-\land {x} \in VAR(\sbexpr) \land (i \in \live^l(c)))
+\land {x} \in VAR(\sbexpr) \land (x^i \in \live^l(c)))
 \big)
 \end{array}
 \right).
