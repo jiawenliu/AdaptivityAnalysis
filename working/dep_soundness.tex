@@ -56,7 +56,7 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
  \]
 %
  %
- \textbf{By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:}
+ \todo{By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:}
 %
  \[
  \Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} 
@@ -155,11 +155,17 @@ By $\event_1 \sigeq \event_1'$, we have:
  \]
  %
  %
-There are two possible cases, where $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$ 
+The following subproof shows there is only 1 possible execution instance of Eq.~\ref{eq:valdep_inv2}.
+\begin{subproof}
+\label{pf:noiteration_inv2}
+\begin{enumerate}
+There are two possible cases, 
+where $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$ 
 or $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_2$.
 \\
-If $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}\notin_c c_2$,
-by substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have 
+\item{$[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}\notin_c c_2$}
+\\
+By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have 
 \todo{notation $\rightarrow^{\eskip^*}$ denotes evaluations of $\eskip$ command 0 for more times}
  %
   \[
@@ -170,9 +176,11 @@ by substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have
   \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_2'} 
  \]
 %
-If $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$, \todo{Inversion lemma}, it must be in a while body.
+\item{$[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$}
 \\
- By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have following possible executions
+\todo{Inversion lemma}, it must be in a while body.
+\\
+ By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have following possible execution instances:
  %
   \[
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
@@ -205,7 +213,7 @@ with iterations of the while body in $c_2$ $0$ or more times.
 %
 \\
 %
-For each possible execution, we have $\trace_2'$ and $\event_2'$ as follows:
+For each execution instance, we have the corresponding instance of $\trace_2'$ as follows:
 \\
   $\trace_2'  = \cdot$
 \\
@@ -224,7 +232,16 @@ By Eq.~\ref{eq:valdep_invn}, we know:
 %
 Only the first execution with 0 iteration of while body in $c_2$ satisfy this restriction, i.e., $\trace_2' = \cdot$ and $\event_2' = (x_2, l_2, n_2', v_2')$
 %
-\\
+\end{enumerate}
+In conclusion, we have the execution instance of \ref{eq:valdep_inv2}  as follows and $\trace_2' = \cdot$.
+  \[
+  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{\eskip^*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} ; {c}_2, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{assn/query} 
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot (x_2, l_2, n_2', v_2')} 
+ \]
+\end{subproof}
 %
 By $\event_1 \sigeq \event_1'$, and definition of environment, we have:
 \[
@@ -233,10 +250,10 @@ By $\event_1 \sigeq \event_1'$, and definition of environment, we have:
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1') (z)
 \]
 %
-By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
+By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, and Inversion Lemma~\ref{lem:inv_live}, we have 
 \[
-  x_1 \in VAR(\expr_2) ~ \mbox{or} ~
-  x_1 \in VAR(\qexpr_2)
+  x_1 \in VAR(\expr_2 / \qexpr_2) 
+  \land x_1^{l_1} \in \live^{l_2}(c)
 \]
 %
 By $\flowsto$ definition, we have:
@@ -265,17 +282,9 @@ This case is proved by splitting the 2 sub-cases.
 %
 \subcaseL{$\event' \in \eventset^{\asn}$}
 %
-Let $\event' = (z, l', n', v')$, there are 2 cases:
+Let $\event' = (z, l', n', v')$, 
 %
-\[
-\eventdep^{val}(\event_1, \event', c, D) \lor \neg \eventdep^{val}(\event_1, \event', c, D)
-\]
-%
-This sub-case is proved by splitting the 2 subsub-cases.
-%
-\subsubcaseL{$\eventdep^{val}(\event_1, \event', c, D)$}
-%
-By conclusion from \textbf{case: $m = 0$}, we have following execution based on Eq.~\ref{eq:valdep_inv1}:
+By Inversion Lemma~\ref{lem:inv_asn} on $\event_1$, $\event'$ and $\event_2$ in execution Eq.~\ref{eq:valdep_inv1}, we have following exeuction:
 \begin{equation}
 \label{eq:m1asn_inv1}
   \begin{array}{l}   
@@ -295,18 +304,18 @@ By conclusion from \textbf{case: $m = 0$}, we have following execution based on 
   % 
 \end{array}
  \end{equation}
-and
+By conclusion from \textbf{case: $m = 0$}, we know:
  \[
  c_1 =_c 
  [\eskip]{}^*;[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};  [\eskip]{}^*; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2
  \]
  %
- By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, and conclusion from \textbf{case: $m = 0$}, we know the only possible execution satisfying:
+ By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, and conclusion from Subproof~\ref{pf:noiteration_inv2}, we know the only possible execution satisfying:
  \[
-  \vcounter(\vtrace_2') l_2 = 0
+  \vcounter(\vtrace_2') l_2 = \vcounter(\event') l_2
 \]
 %
- is as follows:
+ is as follows, where $\trace_2' = \event''$.
  %
 \begin{equation}
 \label{eq:m1asn_inv2}
@@ -319,21 +328,27 @@ and
   \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''}  \\
   \qquad \rightarrow^{\eskip^*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1\cdot \event'} 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
   \rightarrow^{assn/query} 
   \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \event_2'} 
 \end{array}
  \end{equation}
  %
-By induction hypothesis on $\eventdep^{val}(\event_1, \event', c, D)$ in case $m = 0$, we also have:
+ There are 2 cases:
+%
 \[
-  \flowsto(x_1^{l_1}, z^{l'})
+\eventdep^{val}(\event_1, \event', c, D) \lor \neg \eventdep^{val}(\event_1, \event', c, D)
 \]
 %
+This sub-case is proved by splitting the 2 subsub-cases.
+%
+\subsubcaseL{$\eventdep^{val}(\event_1, \event', c, D)$}
+%
+ %
 By $\eventdep^{val}(\event_1, \event', c, D)$, we have:
 %
 \[
-  \sigdiff(\event, \event'')
+  \event' \eventeq \event'' \lor \sigdiff(\event', \event'')
 \]
 %
 By definition of environment, we have:
@@ -342,10 +357,24 @@ By definition of environment, we have:
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event') (u)
 \]
-By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
+%
+If $x_1 = z$, by {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
+%
 \[
-  x_1 \in VAR(\expr_2) \lor z \in VAR(\expr_2) ~ \mbox{or} ~
-  x_1 \in VAR(\qexpr_2) \lor z \in VAR(\qexpr_2)
+  z \in VAR(\expr_2 / \qexpr_2)
+  \land z^{l'}\in \live^{l_2}(c)
+\]
+%
+By Definition of $\flowsto$, we know
+\[
+  \flowsto(z^{l'}, x_2^{l_2}) \big)
+\]
+
+If $x_1 \neq z$, by {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
+%
+\[
+  x_1 \in VAR(\expr_2 / \qexpr_2) \lor z \in VAR(\expr_2 / \qexpr_2) 
+  \land x_1^{l_1}, z^{l'} \in \live^{l_2}(c)
 \]
 %
 By Definition of $\flowsto$, we know
@@ -353,11 +382,15 @@ By Definition of $\flowsto$, we know
   \flowsto(x_1^{l_1}, x_2^{l_2}) \lor \flowsto(z^{l'}, x_2^{l_2}) \big)
 \]
 %
+By induction hypothesis on $\eventdep^{val}(\event_1, \event', c, D)$ from case $m = 0$, we also have:
+\[
+  \flowsto(x_1^{l_1}, z^{l'})
+\]
+%
 Then we have:
 %
 \[
-  \flowsto(x_1^{l_1}, z^{l'}) \land 
-  \big( \flowsto(x_1^{l_1}, x_2^{l_2}) \lor \flowsto(z^{l'}, x_2^{l_2}) \big)
+  \flowsto(x_1^{l_1}, x_2^{l_2}) \lor  \big( \flowsto(x_1^{l_1}, z^{l'}) \land \flowsto(z^{l'}, x_2^{l_2}) \big)
 \]
 %
 i.e.,
@@ -370,8 +403,6 @@ i.e.,
 This case is proved.
 %
 \subsubcaseL{$\neg \eventdep^{val}(\event_1, \event', c, D)$}
-By subsubcase $\eventdep^{val}(\event_1, \event', c, D)$, 
-we have the same 2 executions as in Eq.\ref{eq:m1asn_inv2} and Eq.\ref{eq:m1asn_inv1}.
 \\
 By $\neg \eventdep^{val}(\event_1, \event', c, D)$, we know:
 \[
@@ -385,9 +416,21 @@ Then by definition of environment, we have:
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event') (u)
 \]
 %
-By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
+If $x_1 = z$, by definition of environment, we have:
 \[
-  x_1 \in VAR(\expr_2)
+    \forall u^r \in \lvar_c \st
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event') (u)
+\]
+By deterministic of the evaluation, we have $\event_2 \eventeq \event_2'$, which is contradict to $\sigdiff(\event_2, \event_2')$.
+%
+\\
+Then we know $x_1 \neq z$ and $\llabel(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') x_1 = l_1$.
+\\
+%
+By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
+\[
+  x_1 \in VAR(\expr_2) \land x_1^{l_1} \in \live^{l_2}(c)
 \]
 %
 By Definition of $\flowsto$, we know
@@ -467,20 +510,20 @@ By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have
   \\
   \qquad \rightarrow^{*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2'}
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_3}
   \rightarrow^{assn/query} 
-  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_2' \cdot \event_2'} 
+  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \trace_3 \cdot \event_2'} 
 \end{array}
 \end{equation}
  %
 By Eq.~\ref{eq:valdep_invn}, we know:
 %
 \[
- \vcounter({} \cdot {} \event') l_2 = \vcounter({} \cdot {} \event'' \cdot \vtrace_2') l_2
+\vcounter(\vtrace_2') l_2  = \vcounter({} \cdot {} \event'' \cdot \vtrace_3) l_2 = \vcounter({} \cdot {} \event') l_2 
  \]
 i.e., 
 \[
-  \vcounter(\vtrace_2') l_2 = 0
+  \vcounter(\vtrace_3) l_2 = 0
 \]
 Consider the two subsub-cases: 
 %
@@ -509,7 +552,9 @@ Substituting $c_3'$ by $c_3$ in Eq.~\ref{eq:m1test_inv2}, we have:
   \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \event_2'} 
 \]
 %
-or
+or the following exeuction instance, 
+if $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_4$ and 
+the execution instance involves 1 or more iterations of $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$:
 %
 \[
  \begin{array}{l}
@@ -522,19 +567,18 @@ or
   \\ \qquad 
   \rightarrow^{*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''\cdot (x_2, l_2, n_2', v_2') \cdot \trace_3}
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''\cdot (x_2, l_2, n_2', v_2') \cdot \trace_3'}
   \\ \qquad 
   \rightarrow^{assn/query} 
-  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot (x_2, l_2, n_2', v_2')\cdot \trace_3 \cdot \event_2'} 
+  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot (x_2, l_2, n_2', v_2')\cdot \trace_3' \cdot \event_2'} 
  \end{array} 
 \]
-if $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_4$ and 
-the execution involves 1 or more iterations of $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$.
 %
 \\
-By $\vcounter(\vtrace_2') l_2 = 0$ in Eq.~\ref{eq:m1test_inv2}, 
+By conclusion from Subproof~\ref{pf:noiteration_inv2} and the restriction $\vcounter(\vtrace_3) l_2 = 0$ in Eq.~\ref{eq:m1test_inv2}, 
+we know
 the first execution with no iteration of $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$ 
-is the only possible execution instance of Eq.~\ref{eq:m1test_inv2}, i.e., $\vtrace_2' = \cdot$.
+is the only possible execution instance of Eq.~\ref{eq:m1test_inv2}, i.e., $\vtrace_3 = \cdot$, i.e., $\vtrace_2' = \event''$.
 \\
 By $\event_1 \sigeq \event_1'$ and $\event' \eventeq \event''$, and definition of environment, we have:
 \[
@@ -544,7 +588,7 @@ By $\event_1 \sigeq \event_1'$ and $\event' \eventeq \event''$, and definition o
 \]
 By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
 \[
-  x_1 \in VAR(\expr_2) ~ \mbox(or) ~  x_1 \in VAR(\qexpr_2)
+  x_1 \in VAR(\expr_2 / \qexpr_2) \land x_1^{l_2} \in \live^{l_2}(c)
 \]
 %
 By $\flowsto$ definition, we have:
@@ -635,7 +679,7 @@ By Inversion Lemma~\ref{lem:inv_b} on evaluation of boolean expression $b$ and f
 \]
 we know:
 \[
-  x_1^{l_1} \in VAR(b)
+  x_1 \in VAR(b) \land x_1^{l_1} \in \live^{l_b}(c)
 \]
 %
  By uniqueness of label, we have following cases:
@@ -668,16 +712,16 @@ we know $\forall \trace, \trace' \in \mathcal{T}$, there doesn't exist execution
  %
 \\
 %
-i.e., 
+i.e., $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$ will only show up in $c_t$.
 \\
 %
 By $\flowsto$ definition, we have:
 \[
-  \forall z_i^{r_i} \in \lvar_{c_t}, x_j^{l_j} \in VAR(b) \st
+  \forall z_i^{r_i} \in \lvar_{c_t},  x_j^{l_j} \in \lvar_c \st x_j \in VAR(b) \land x_j^{l_j} \in \live^{l_b}(c) \implies
   \flowsto(x_j^{l_j}, z_i^{r_i})
 \]
 %
-Since $x_1^{l_1} \in VAR(b)$  and $x_2^{l_2} \in \lvar_{c_t}$, we know:
+Since $x_1 \in VAR(b)$ and $x_1^{l_1} \in \live^{l_b}(c)$, we know:
 %
 \[
 \flowsto(x_1^{l_1}, x_2^{l_2})
@@ -694,19 +738,7 @@ This case is proved.
 \begin{enumerate}
  \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_f$:
  \\
-  we have
-  \[
-    \forall z_i^{r_i} \in \lvar_{c_f}, x_j^{l_j} \in VAR(b) \st
-    \flowsto(x_j^{l_j}, z_i^{r_i})
-  \]
-  %
-  and
-  %
-  \[
-  \flowsto(x_1^{l_1}, x_2^{l_2})
-  \]
-  symmetrically as the case $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_t$.
-  This case is proved.
+ This case is symmetrical to the case $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_t$ and proved in the same way
  \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_f$:
  \\
  Then we know $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$.
@@ -721,9 +753,10 @@ we know:
 \]
 Substituting $c_2$ in the execution in Eq.\ref{eq:m1testif_inv2}, by the restriction:
 \[
-  \vcounter(\trace_2')l_2 = 0
+  \vcounter(\trace_3)l_2 = 0
 \]
-we have the following execution as the only possible instance of Eq.\ref{eq:m1testif_inv2}.
+we have the following execution as the only possible instance of Eq.~\ref{eq:m1testif_inv2} from the conclusion in Subproof~\ref{pf:noiteration_inv2}, where $\trace_3 = \trace_f$ 
+and $\trace_2' = {} \cdot {} \event'' \cdot \trace_f$ in Eq.~\ref{eq:valdep_inv2}.
 \[
     \begin{array}{l}   
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
@@ -750,10 +783,11 @@ and \todo{Inversion Lemma, notation $VAR{(\trace)}$ denotes the labeled variable
 %
 By $\flowsto$ definition, we also have:
 \[
-  \forall z_i^{r_i} \in \lvar_{c_f}, x_j^{l_j} \in VAR(b) \st
+  \forall z_i^{r_i} \in \lvar_{c_t},  x_j^{l_j} \in \lvar_c \st 
+  x_j \in VAR(b) \land x_j^{l_j} \in \live^{l_b}(c) \implies
   \flowsto(x_j^{l_j}, z_i^{r_i})
 \]
-i.e., 
+Since $x_1 \in VAR(b) \land x_1^{l_1} \in \live^{l_b}(c)$, we know: 
 \[
   \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}}
   \flowsto(x_1^{l_1}, z_i^{r_i})
@@ -768,15 +802,16 @@ By Inversion Lemma~\ref{lem:inv_a} on evaluation of expression $\expr_2$ and fol
 %
 we have:
 \[
-  x_1^{l_1} \in VAR(\expr_2) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} z_i^{r_i} \in VAR(\expr_2)
+  x_1 \in VAR(\expr_2) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} z_i \in VAR(\expr_2)
 \]
+%
+Let S be subset of = $S = \{x_1^{l_1}\} \cup VAR{(\trace_f)} /\ \live^{l_2}(c) $ where
 %
 By $\flowsto$ definition, we have:
 \[
-   \flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} \flowsto(z_i^{r_i}, x_2^{l_2})
+   \bigvee_{z_i^{r_i}} \in S \flowsto(z_i^{r_i}, x_2^{l_2})
 \]
-%
-By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $VAR{(\trace_f)} \subseteq \lvar_{c_f}$, we have:
+By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $S \subseteq VAR{(\trace_f)} \subseteq \lvar_{c_f}$, we have:
 \[
 \flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} 
 (\flowsto(x_1^{l_1}, z_i^{r_i}) \land \flowsto(z_i^{r_i}, x_2^{l_2}))
@@ -786,6 +821,16 @@ i.e.,
 \[
 \Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n 
  \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
+\]
+%
+\[
+   \flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} \flowsto(z_i^{r_i}, x_2^{l_2})
+\]
+%
+By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $VAR{(\trace_f)} \subseteq \lvar_{c_f}$, we have:
+\[
+\flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} 
+(\flowsto(x_1^{l_1}, z_i^{r_i}) \land \flowsto(z_i^{r_i}, x_2^{l_2}))
 \]
 %
 This case is proved.
