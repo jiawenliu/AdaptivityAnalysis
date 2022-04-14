@@ -4,37 +4,37 @@
 \subsection{Events Dependency}
 %
 %
-\begin{defn}
-[Value Dependency of Events \todo{Explicit Dependency}]
-\label{def:event_valdep}.
-\\
-An event $\event_2$ is in the \emph{value may-dependency} relation with an assignment
-event $\event_1 \in \eventset^{\asn}$ in a program ${c}$
-with hidden database $D$, denoted as 
-%
-$\eventdep^{val}(\event_1, \event_2, c, D)$, if and only if
-%
-\[
-\exists \vtrace_0,
-\vtrace_1, \vtrace_2, \vtrace_2' \in \mathcal{T}, \event_2' \in \eventset, \event_1' \in \eventset^{\asn}, {c}_1, {c}_2,  {c}_2'.
-  \left(
-  \begin{array}{ll}   
- & \config{{c}, \vtrace_0} \rightarrow^{*} 
-\config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-  \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2 } 
-  % 
- \\ 
- \bigwedge &
-  \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
-  \config{{c}_2',  \vtrace_1 \cdot \event_1'  \cdot \vtrace_2' \cdot \event_2' } 
-\\
-\bigwedge & \event_1 \sigeq \event_1' \land \sigdiff(\event_2,\event_2')
-\end{array}
-\right)
- \] 
- % \wq{$\forall \vtrace_0$? is there any requirement of $c_2$ and $c_2'$? For example, you go 2 steps to get $\event_2$ while $\event_2'$ can be empty if it just goes 0 steps. Shall we set some requirement on $\event_2'$, for example, both goes to the end of $c_2$ or certain line?}
-%
-\end{defn}
+% \begin{defn}
+% [Value Dependency of Events \todo{Explicit Dependency}]
+% \label{def:event_valdep}.
+% \\
+% An event $\event_2$ is in the \emph{value may-dependency} relation with an assignment
+% event $\event_1 \in \eventset^{\asn}$ in a program ${c}$
+% with hidden database $D$, denoted as 
+% %
+% $\eventdep^{val}(\event_1, \event_2, c, D)$, if and only if
+% %
+% \[
+% \exists \vtrace_0,
+% \vtrace_1, \vtrace_2, \vtrace_2' \in \mathcal{T}, \event_2' \in \eventset, \event_1' \in \eventset^{\asn}, {c}_1, {c}_2,  {c}_2'.
+%   \left(
+%   \begin{array}{ll}   
+%  & \config{{c}, \vtrace_0} \rightarrow^{*} 
+% \config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+%   \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2 } 
+%   % 
+%  \\ 
+%  \bigwedge &
+%   \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+%   \config{{c}_2',  \vtrace_1 \cdot \event_1'  \cdot \vtrace_2' \cdot \event_2' } 
+% \\
+% \bigwedge & \event_1 \sigeq \event_1' \land \diff(\event_2,\event_2')
+% \end{array}
+% \right)
+%  \] 
+%  % \wq{$\forall \vtrace_0$? is there any requirement of $c_2$ and $c_2'$? For example, you go 2 steps to get $\event_2$ while $\event_2'$ can be empty if it just goes 0 steps. Shall we set some requirement on $\event_2'$, for example, both goes to the end of $c_2$ or certain line?}
+% %
+% \end{defn}
 %
 \todo{
 \begin{defn}
@@ -61,12 +61,15 @@ $\eventdep^{val}(\event_1, \event_2, c, D)$, if and only if
   \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
   \config{{c}_2',  \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2' } 
 \\
-\bigwedge &  l_1 = \pi_2(\event_1) \land l_2 = \pi_2(\event_2) \\
-\bigwedge & (\event_1 \circ \vcounter(\vtrace_1 \cdot \event_1) l_1) \sigeq 
-(\event_1' \circ \vcounter(\vtrace_1 \cdot \event_1')l_1)\\
+\bigwedge &  \pi_1(\event_1) = \pi_1(\event_2) \land \pi_2(\event_1) = \pi_2(\event_2) \\
+\bigwedge & l_1 = \pi_2(\event_1) \land l_2 = \pi_2(\event_2)
+\land \vcounter(\vtrace_1 \cdot \event_1) l_1 = \vcounter(\vtrace_1 \cdot \event_1')l_1 
+\\
 \bigwedge & 
-\sigdiff((\event_2 \circ \vcounter(\vtrace_1 \cdot \event_1 \cdot \vtrace_2\cdot \event_2) l_2),
-(\event_2' \circ \vcounter(\vtrace_1 \cdot \event_1' \cdot \vtrace_2'\cdot \event_2') l_2))\\
+\diff(\event_2,\event_2' ) \land 
+\vcounter(\vtrace_1 \cdot \event_1 \cdot \vtrace_2\cdot \event_2) l_2
+= 
+\vcounter(\vtrace_1 \cdot \event_1' \cdot \vtrace_2'\cdot \event_2') l_2\\
 \end{array}
 \right)
  \]
@@ -104,36 +107,36 @@ $\eventdep^{val}(\event_1, \event_2, c, D)$, if and only if
 % %
 % \end{defn}
 %
-\begin{defn}
-[Control Dependency of Events \todo{Implicit Dependency}]
-\label{def:event_ctldep}.
-\\
-An event $\event_2$ is in the \emph{control may-dependency} relation with an assignment
-event $\event_1 \in \eventset^{\asn}$ in a program ${c}$
-with hidden database $D$, denoted as 
-%
-$\eventdep^{\ctl}(\event_1, \event_2, c, D)$, if and only if: 
-%
-\[
-\exists \vtrace_1, \vtrace_2, \vtrace_2', \vtrace_0 \in \mathcal{T}, 
-\event_1' \in \eventset^{\asn}, {c}_1.
-\left(
-\begin{array}{ll}   
-  & \config{{c}, \vtrace_0} \rightarrow^{*} 
-    \config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-    \config{\eskip,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2} 
-  \\ 
-  \bigwedge &
-  \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
-  \config{\eskip,  \vtrace_1 \cdot \event_1' \cdot \vtrace_2' } 
-  \\
-  \bigwedge & \event_1 \sigeq \event_1' \land 
-  \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
-\end{array}
-\right)
- \]
-%
-\end{defn}
+% \begin{defn}
+% [Control Dependency of Events \todo{Implicit Dependency}]
+% \label{def:event_ctldep}.
+% \\
+% An event $\event_2$ is in the \emph{control may-dependency} relation with an assignment
+% event $\event_1 \in \eventset^{\asn}$ in a program ${c}$
+% with hidden database $D$, denoted as 
+% %
+% $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, if and only if: 
+% %
+% \[
+% \exists \vtrace_1, \vtrace_2, \vtrace_2', \vtrace_0 \in \mathcal{T}, 
+% \event_1' \in \eventset^{\asn}, {c}_1.
+% \left(
+% \begin{array}{ll}   
+%   & \config{{c}, \vtrace_0} \rightarrow^{*} 
+%     \config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+%     \config{\eskip,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2} 
+%   \\ 
+%   \bigwedge &
+%   \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
+%   \config{\eskip,  \vtrace_1 \cdot \event_1' \cdot \vtrace_2' } 
+%   \\
+%   \bigwedge & \event_1 \sigeq \event_1' \land 
+%   \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
+% \end{array}
+% \right)
+%  \]
+% %
+% \end{defn}
 %
 \todo{
 \begin{defn}
@@ -159,12 +162,11 @@ $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, if and only if:
   \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
   \config{\eskip,  \vtrace_1 \cdot \event_1' \cdot \vtrace_2' } 
   \\
-\bigwedge &  l_1 = \pi_2(\event_1) \land l_2 = \pi_2(\event_2) \\
-  \bigwedge & (\event_1 \circ \vcounter(\vtrace_1 \cdot \event_1) l_1) \sigeq 
-(\event_1' \circ \vcounter(\vtrace_1 \cdot \event_1') l_1)\\
-\bigwedge & 
-  (\event_2 \circ \vcounter(\vtrace_1 \cdot \event_1 \cdot \vtrace_2) l_2) \sigin p(\vtrace_2)
-  \land 
+  \bigwedge &  \pi_1(\event_1) = \pi_1(\event_2) \land \pi_2(\event_1) = \pi_2(\event_2) \\
+  \bigwedge & l_1 = \pi_2(\event_1) \land l_2 = \pi_2(\event_2)
+  \land \vcounter(\vtrace_1 \cdot \event_1) l_1 = \vcounter(\vtrace_1 \cdot \event_1')l_1 
+  \\
+  \bigwedge &  
   (\event_2 \circ \vcounter(\vtrace_1 \cdot \event_1 \cdot \vtrace_2) l_2) \notsigin p(\vtrace_2')
 \end{array}
 \right)

@@ -39,29 +39,38 @@ Unfolding $\eventdep^{val}(\event_1, \event_2, c, D)$ by Definition~\ref{def:eve
 \[
 \exists \vtrace_0,
 \vtrace_1, \vtrace_2, \vtrace_2' \in \mathcal{T}, \event_2' \in \eventset, \event_1' \in \eventset^{\asn}, {c}_1, {c}_2,  {c}_2'.
-\left(
+  \left(
   \begin{array}{ll}   
  & \config{{c}, \vtrace_0} \rightarrow^{*} 
-  \config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
-  \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2}
+\config{{c}_1, \vtrace_1 \cdot \event_1}  \rightarrow^{*} 
+  \config{{c}_2,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2 } 
   % 
  \\ 
  \bigwedge &
   \config{{c}_1, \vtrace_1 \cdot \event_1'}  \rightarrow^{*} 
-  \config{{c}_2',  \vtrace_1 \cdot \event_1'  \cdot \vtrace_2' \cdot \event_2'}
+  \config{{c}_2',  \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2' } 
 \\
-\bigwedge & \event_1 \sigeq \event_1' \land \sigdiff(\event_2,\event_2')
+\bigwedge &  \pi_1(\event_1) = \pi_1(\event_2) \land \pi_2(\event_1) = \pi_2(\event_2) \\
+\bigwedge & l_1 = \pi_2(\event_1) \land l_2 = \pi_2(\event_2)
+\land \vcounter(\vtrace_1 \cdot \event_1) l_1 = \vcounter(\vtrace_1 \cdot \event_1')l_1 
+\\
+\bigwedge & 
+\diff(\event_2,\event_2' ) \land 
+\vcounter(\vtrace_1 \cdot \event_1 \cdot \vtrace_2\cdot \event_2) l_2
+= 
+\vcounter(\vtrace_1 \cdot \event_1' \cdot \vtrace_2'\cdot \event_2') l_2\\
 \end{array}
 \right)
- \]
+\]
 %
  %
- \todo{By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:}
+ \todo{By induction on length of $\vtrace_2$, $m = |\vtrace_2|$, it is sufficient to show:
 %
  \[
  \Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} 
  \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
   \]
+}
 %
 By Inversion Lemma~\ref{lem:inv_asn} on 
  $\event_1$, $\event_2$ we know $\exists \expr_1$ or $\qexpr_1$, $\exists \expr_2$ or $\qexpr_2$
@@ -96,9 +105,9 @@ $\event_2'$ and execution $(2)$, we know $\exists \expr_2'$ or $\qexpr_2'$
 \end{array}
  \]
 %
-Unfolding $\sigdiff(\event_2,\event_2')$, we have:
+Unfolding $\diff(\event_2,\event_2')$, we have:
 \[
-  \event_2 \sigeq \event_2'
+  x_2 = x_2' \land l_2 = l_2' 
 \] 
 %
 Then, we have:
@@ -111,13 +120,14 @@ Then, we have:
   \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2'} 
 \end{equation}
 %
-By $\event_2 \sigeq \event_2'$, we also know
+From the $\eventdep^{val}(\event_1, \event_2, c, D)$ definition, we aslo have:
 \[
-  x_2 = x_2' \land l_2 = l_2' \land 
   \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \vtrace_2 \cdot \event_2) l_2 = 
   \vcounter(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \vtrace_2' \cdot \event_2') l_2'
+  \land 
+  \pi_2(\event_1) = \pi_2(\event_1')
 \] 
-By $\event_1 \sigeq \event_1'$, we have:
+Then, we have:
 \begin{equation}
 \label{eq:valdep_invn}
    \vcounter(\vtrace_2) l_2 = 
@@ -243,7 +253,10 @@ In conclusion, we have the execution instance of \ref{eq:valdep_inv2}  as follow
  \]
 \end{subproof}
 %
-By $\event_1 \sigeq \event_1'$, and definition of environment, we have:
+By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
+the environment only able to obtain different values for variable $x_1$ 
+from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1$ and 
+$\vtrace_0 \cdot \vtrace_1 \cdot \event_1'$, i.e.,
 \[
   \forall z^r \in \lvar_c \setminus \{x_1^{l_1}\} ,
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1) (z) =  
@@ -348,10 +361,14 @@ This sub-case is proved by splitting the 2 subsub-cases.
 By $\eventdep^{val}(\event_1, \event', c, D)$, we have:
 %
 \[
-  \event' \eventeq \event'' \lor \sigdiff(\event', \event'')
+  \event' \eventeq \event'' \lor \diff(\event', \event'')
 \]
 %
-By definition of environment, we have:
+By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
+the environment only able to obtain different values for variable $x_1$ and $z$
+from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'$ and 
+$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''$, i.e.,
+%
 \[
   \forall u^r \in \lvar_c \setminus \{x_1^{l_1}, z^{l'}\} \st
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
@@ -409,7 +426,10 @@ By $\neg \eventdep^{val}(\event_1, \event', c, D)$, we know:
   \event' \eventeq \event''
 \]
 %
-Then by definition of environment, we have:
+By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
+the environment only able to obtain different values for variable $x_1$
+from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'$ and 
+$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''$, i.e.,
 \[
   \forall u^r \in \lvar_c \setminus \{x_1^{l_1}\} \st
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
@@ -422,7 +442,7 @@ If $x_1 = z$, by definition of environment, we have:
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event') (u)
 \]
-By deterministic of the evaluation, we have $\event_2 \eventeq \event_2'$, which is contradict to $\sigdiff(\event_2, \event_2')$.
+By deterministic of the evaluation, we have $\event_2 \eventeq \event_2'$, which is contradict to $\diff(\event_2, \event_2')$.
 %
 \\
 Then we know $x_1 \neq z$ and $\llabel(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') x_1 = l_1$.
@@ -580,7 +600,10 @@ we know
 the first execution with no iteration of $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$ 
 is the only possible execution instance of Eq.~\ref{eq:m1test_inv2}, i.e., $\vtrace_3 = \cdot$, i.e., $\vtrace_2' = \event''$.
 \\
-By $\event_1 \sigeq \event_1'$ and $\event' \eventeq \event''$, and definition of environment, we have:
+By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
+the environment only able to obtain different values for variable $x_1$ 
+from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'$ and 
+$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''$, i.e.,
 \[
   \forall z^r \in \lvar_c \setminus \{x_1^{l_1}\} \st
   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'') (z) =  
@@ -609,12 +632,12 @@ This case is proved.
 %
 By execution in Eq.~\ref{eq:m1test_inv2} and Eq.~\ref{eq:m1test_inv1}, since $\eventdep^{val}(\event_1, \event', c, D)$, we have:
 \[
-  \event' \eventeq \event'' \lor \sigdiff(\event', \event'')
+  \event' \eventeq \event'' \lor \diff(\event', \event'')
 \]
 %
 Case of $\event' \eventeq \event''$ is proved in the same way in \textbf{subsub-case:} $\neg \eventdep^{val}(\event_1, \event', c, D)$.
 \\
-Case of $\sigdiff(\event', \event'')$ is proved by splitting two following cases:
+Case of $\diff(\event', \event'')$ is proved by splitting two following cases:
 \[
   c_1 =_c \eif ([b]^{l_b}, c_t, c_f);{c}_2
   \lor
@@ -1175,7 +1198,7 @@ Unfolding $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, we have:
   \config{{c}_2',  \vtrace_1 \cdot \event_1' \vtrace_b' \cdot \event_b' } 
   \\
   \bigwedge &
-   \sigdiff(\event_b,\event_b')
+   \diff(\event_b,\event_b')
 \end{array}
 \right)
  \]
@@ -1239,7 +1262,10 @@ and
   \rightarrow^{if / while} 
   \config{{c}_2,  \vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event_b'} 
  \]
- By definition of environment, we have:
+By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
+the environment only able to obtain different values for variable $x_1$ 
+from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'$ and 
+$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''$, i.e.,
 \[
   \forall u \in \lvar_c \setminus \{x_1^{l_1}\} \st
   \env(\vtrace_0 \vtrace_1 \cdot \event_1' \cdot \event'') (u) =  

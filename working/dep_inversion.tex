@@ -3,7 +3,7 @@
 \label{lem:inv_a}
 \[
 	\forall x \in \lvar, \expr \st 
-	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\} \st 
+	\Big( \exists \trace, \trace' \in \mathcal{T} \st \forall z \in \lvar / \{x\} \st 
 	\env(\trace) z = \env(\trace') z \st 
 	\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v \neq v'
 	\implies x \in VAR(\expr)\Big)
@@ -14,7 +14,7 @@
 \label{lem:inv_b}
 \[
 	\forall x \in \lvar, \bexpr \st 
-	\Big( \exists \trace, \trace' \st \forall z \in \lvar / \{x\} \st
+	\Big( \exists \trace, \trace' \in \mathcal{T} \st \forall z \in \lvar / \{x\} \st
 	\env(\trace) z = \env(\trace') z \st 
 	\config{\trace, \bexpr} \barrow v \land \config{\trace', \bexpr} \barrow v' \land v \neq v'
 	\implies x \in VAR(\bexpr) \Big)
@@ -24,7 +24,7 @@
 \begin{lem}[Query Inversion]
 \label{lem:inv_q}
 \[
-	\forall x \in \lvar, \qexpr \st 
+	\forall x \in \lvar, \qexpr \st \exists \trace, \trace' \in \mathcal{T} \forall z \in \lvar / \{x\} \st
 	\env(\trace) z = \env(\trace') z \st 
 	\config{\trace, \qexpr} \qarrow \qval \land \config{\trace', \qexpr} \qarrow \qval' 
 	\land v \neq_{q} \qval'
@@ -47,13 +47,14 @@
 \label{lem:inv_asn}
 \[
 \begin{array}{l}
-	\forall c, \trace_0 \in \mathcal{T} \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
-	\land \exists \event = (x, l, n, v) \land \event \eventin \trace_1 \\
+	\forall \trace_0 \in \mathcal{T}, c \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
+	\land \exists \event = (x, l, n, v) \in \eventset^{\asn} \st
+	\land \event \eventin \trace_1 \\
 	\implies 
 	\big( 
-		\exists \trace_1' \in \mathcal{T}, \expr, c_1 \st
-		\config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, [\assign{x}{\expr}]^l;c_1} \rightarrow^{assn}
-		\config{\trace_0\trace_1'\cdot \event \cdot, c_1} \rightarrow^{*}
+		\exists \trace_1' \in \mathcal{T}, \expr, c' \st
+		\config{\trace_0, c} \rightarrow^* \config{\trace_0 \cdot \trace', [\assign{x}{\expr}]^l;c'} \rightarrow^{assn}
+		\config{\trace_0\trace_1'\cdot \event \cdot, c'} \rightarrow^{*}
 		\config{\trace_0\trace_1, \eskip}
 	\big)
 	\\ \qquad \lor
@@ -76,7 +77,7 @@
 	\land \exists \event = (x, l, n, v) \land \event \eventin \trace_1 \\
 	\implies 
 	\big( 
-		\exists \trace_1' \in \mathcal{T} \bexpr, c', c_1, c_2, c'' \st
+		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_1, c_2, c'' \st
 		\config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eif ([b]^l, c_1, c_2);c'} \rightarrow^{if-b}
 		\config{\trace_0\trace_1'\cdot \event \cdot, c''} \rightarrow^{*}
 		\config{\trace_0\trace_1, \eskip} 
