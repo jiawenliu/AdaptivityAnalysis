@@ -156,13 +156,13 @@ By $\event_1 \sigeq \event_1'$, we have:
  %
  %
 The following subproof shows there is only 1 possible execution instance of Eq.~\ref{eq:valdep_inv2}.
-\begin{subproof}
+\begin{subproof}[Subproof]
 \label{pf:noiteration_inv2}
-\begin{enumerate}
 There are two possible cases, 
 where $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_2$ 
 or $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_2$.
-\\
+%
+\begin{enumerate}
 \item{$[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}\notin_c c_2$}
 \\
 By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have 
@@ -805,15 +805,15 @@ we have:
   x_1 \in VAR(\expr_2) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} z_i \in VAR(\expr_2)
 \]
 %
-Let S be subset of = $S = \{x_1^{l_1}\} \cup VAR{(\trace_f)} /\ \live^{l_2}(c) $ where
+Let $S = (\{x_1^{l_1}\} \cup VAR{(\trace_f)}) \cap \live^{l_2}(c) $
 %
 By $\flowsto$ definition, we have:
 \[
-   \bigvee_{z_i^{r_i}} \in S \flowsto(z_i^{r_i}, x_2^{l_2})
+   \bigvee_{z_i^{r_i} \in S}  \flowsto(z_i^{r_i}, x_2^{l_2})
 \]
 By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $S \subseteq VAR{(\trace_f)} \subseteq \lvar_{c_f}$, we have:
 \[
-\flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} 
+\bigvee_{z_i^{r_i} \in S} 
 (\flowsto(x_1^{l_1}, z_i^{r_i}) \land \flowsto(z_i^{r_i}, x_2^{l_2}))
 \]
 %
@@ -821,16 +821,6 @@ i.e.,
 \[
 \Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n 
  \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
-\]
-%
-\[
-   \flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} \flowsto(z_i^{r_i}, x_2^{l_2})
-\]
-%
-By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $VAR{(\trace_f)} \subseteq \lvar_{c_f}$, we have:
-\[
-\flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_f)}} 
-(\flowsto(x_1^{l_1}, z_i^{r_i}) \land \flowsto(z_i^{r_i}, x_2^{l_2}))
 \]
 %
 This case is proved.
@@ -909,12 +899,13 @@ By Inversion Lemma~\ref{lem:inv_b} on evaluation of boolean expression $b$ and f
 \]
 we know:
 \[
-  x_1^{l_1} \in VAR(b)
+  x_1 \in VAR(b) \land x_1^{l_1} \in \live^{l_b}(c)
 \]
 %
  By uniqueness of label, we have 2 cases:
  \begin{enumerate}
  \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$:
+ \\
  If $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_2$,
  %
  Then we know $\forall \trace, \trace' \in \mathcal{T}$, there doesn't exist execution
@@ -936,7 +927,7 @@ we know:
     \flowsto(x_j^{l_j}, z_i^{r_i})
   \]
   %
-  Since $x_2^{l_2} \in \lvar_{c_w}$ by definition of $\lvar$ and $x_1^{l_1} \in VAR(b)$, we have: 
+  Since $x_2^{l_2} \in \lvar_{c_w}$ by $\flowsto$ definition, we have: 
   \[
     \flowsto(x_1^{l_1}, x_2^{l_2})
   \]
@@ -944,6 +935,7 @@ we know:
   This case is proved.
   %
  \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_w$
+ \\
  By
  \[
   c_w;\ewhile [b]^{l_b} \edo c_w; c_2 =_c [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
@@ -1016,9 +1008,21 @@ By substituting $c_1'$ with $c_1$ in execution in Eq.~\ref{eq:valdep_inv2} and $
 \end{array}
 \end{equation}
 %
-If $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$, by uniqueness of the program label, there must exist another while command in $c_2$, -- i.e., $\ewhile [b_2]^{l_{b2}} \edo c_{w2} \in_c c_2$ --
+Proof by cases of $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$ or 
+$[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_w$
+\begin{enumerate}
+  \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$.
+  \\
+  By uniqueness of the program label, there must exist another while command in $c_2$, -- i.e., $\ewhile [b_2]^{l_{b2}} \edo c_{w2} \in_c c_2$ --
     such that 
-  $\ewhile [b]^{l_b} \edo c_w \in c_{w2}$ and $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$.
+  $\ewhile [b]^{l_b} \edo c_w \in c_{w2}$ and $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$, i.e.,:
+  %
+  \[
+  \exists b_2, l_{b2} \in \mathbb{N}, c_{w2} \st 
+  \ewhile [b_2]^{l_{b2}} \edo c_{w2} \in_c c_2 
+  \land \ewhile [b]^{l_b} \edo c_w \in c_{w2}
+  \land [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w
+  \]
 %
 Then we know there exists $c_5$ and $c_6$ such that:
 \[
@@ -1027,11 +1031,11 @@ Then we know there exists $c_5$ and $c_6$ such that:
 Which is contradict to $c_2 =_c [\eskip^*];[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4$ by program equality definition.
 %
 %
-Then we know $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_w$.
+ \item $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \notin_c c_w$.
 %
 \\
 %
-Substituting $c_2$ in the execution in Eq.\ref{eq:m1testwhile_inv2}, we have the following execution be the only possible execution satisfying $\vcounter(\trace_2') l_2 = 0$ where $\trace_2' = \event'' \cdot \trace_w$:
+Substituting $c_2$ in the execution in Eq.\ref{eq:m1testwhile_inv2}, we have the following execution be the only possible execution satisfying $\vcounter(\trace_3) l_2 = 0$ where $\trace_2' = \event'' \cdot \trace_3 = \event'' \cdot \trace_w$:
 \[
     \begin{array}{l}   
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
@@ -1057,10 +1061,10 @@ and
 %
 By $\flowsto$ definition, we also have:
 \[
-  \forall z_i^{r_i} \in \lvar_{c_w}, x_j^{l_j} \in VAR(b) \st
+  \forall z_i^{r_i} \in \lvar_{c_w},  x_j^{l_j} \in \lvar_c \st x_j \in VAR(b) \land x_j^{l_j} \in \live^{l_b}(c) \implies
   \flowsto(x_j^{l_j}, z_i^{r_i})
 \]
-i.e., 
+Since $x_1 \in VAR(b) \land x_1^{l_1} \in \live^{l_b}(c)$ , we have:
 \[
   \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_w}}
   \flowsto(x_1^{l_1}, z_i^{r_i})
@@ -1075,17 +1079,18 @@ By Inversion Lemma~\ref{lem:inv_a} on evaluation of expression $\expr_2$ and fol
 %
 we have:
 \[
-  x_1^{l_1} \in VAR(\expr_2) \bigvee_{z_i^{r_i} \in VAR{(\trace_w)}} z_i^{r_i} \in VAR(\expr_2)
+  x_1 \in VAR(\expr_2) \bigvee_{z_i \in VAR{(\trace_w)}} z_i^{r_i} \in VAR(\expr_2)
 \]
 %
-\item By $\flowsto$ definition, we have:
-\[
-   \flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_w)}} \flowsto(z_i^{r_i}, x_2^{l_2})
-\]
+Let $S = (\{x_1^{l_1}\} \cup VAR{(\trace_f)}) \cap \live^{l_2}(c) $
 %
-By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_w}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $VAR{(\trace_w)} \subseteq \lvar_{c_w}$, we have:
+By $\flowsto$ definition, we have:
 \[
-\flowsto(x_1^{l_1}, x_2^{l_2}) \bigvee_{z_i^{r_i} \in VAR{(\trace_w)}} 
+   \bigvee_{z_i^{r_i} \in S}  \flowsto(z_i^{r_i}, x_2^{l_2})
+\]
+By $ \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_w}} \flowsto(x_1^{l_1}, z_i^{r_i})$ and $S \subseteq VAR{(\trace_w)} \subseteq \lvar_{c_w}$, we have:
+\[
+\bigvee_{z_i^{r_i} \in S} 
 (\flowsto(x_1^{l_1}, z_i^{r_i}) \land \flowsto(z_i^{r_i}, x_2^{l_2}))
 \]
 %
@@ -1096,6 +1101,7 @@ i.e.,
 \]
 %
 This case is proved.
+\end{enumerate}
 \end{subproof}
 %
 This case is proved.
@@ -1141,7 +1147,7 @@ Unfolding $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, we have:
   \config{\eskip,  \vtrace_1 \cdot \event_1 \cdot \vtrace_2' } 
   \\
   \bigwedge &
-  \event_2 \ismin \vtrace_2 \land \event_2 \notismin \vtrace_2'
+  \event_2 \sigin \vtrace_2 \land \event_2 \notsigin \vtrace_2'
 \end{array}
 \right)
  \]
@@ -1169,7 +1175,7 @@ Unfolding $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, we have:
   \config{{c}_2',  \vtrace_1 \cdot \event_1' \vtrace_b' \cdot \event_b' } 
   \\
   \bigwedge &
-   \ismdiff(\event_b,\event_b')
+   \sigdiff(\event_b,\event_b')
 \end{array}
 \right)
  \]
