@@ -132,7 +132,8 @@ We use $FV(\expr)$, $FV(\sbexpr)$ and $FV(\qexpr)$ denote the set of free variab
 expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ respectively.
 %
 \\
-\todo{$\live^l(c) \subseteq \lvar_c$ 
+\todo{Formal Definition needed:
+$\live^l(c) \subseteq \lvar_c$ 
 is the set of labeled variables $x^l \in \lvar_c$ assumed to be live at the entry point of  executing the command of label $l$.}
 %
 \begin{defn}[Data Flows between Assigned Variables ($\flowsto$)].
@@ -291,130 +292,134 @@ $\left[{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
 %
 \subsection{Algorithmic Analysis Rules}
 %
-\paragraph{Variable Collection Algorithm, $\varCol$}
+% \paragraph{Variable Collection Algorithm, $\varCol$}
+% % The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
+% % (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step.
+% % The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
+% % It has the form: $\ag{\lvar; w; {c}}{ \lvar'; w'} $. 
+% % The input of $\varCol$ is the labeled variables $\lvar$ collected before the program ${c}$, a while map $w$ consistent with previous estimation, a program ${c}$. 
+% % The output of the algorithm is the updated labeled variables $\lvar'$, along with the updated while map $w$ for next steps' collecting.   
 % The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
-% (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step.
+% (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step, 
+% along with constructing the flag for each variable, i.e., $\flag$.
 % The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
-% It has the form: $\ag{\lvar; w; {c}}{ \lvar'; w'} $. 
-% The input of $\varCol$ is the labeled variables $\lvar$ collected before the program ${c}$, a while map $w$ consistent with previous estimation, a program ${c}$. 
-% The output of the algorithm is the updated labeled variables $\lvar'$, along with the updated while map $w$ for next steps' collecting.   
-The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
-(via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step, 
-along with constructing the flag for each variable, i.e., $\flag$.
-The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
-It has the form: 
-{$\ag{\lvar; \flag; {c}}{ \lvar'; \flag'} $}. 
-The input of $\varCol$ is a program ${c}$, 
-the labeled variables $\lvar$ collected before the program ${c}$ 
-as well as the flags $\flag$ for every corresponding variable .
-The output of the algorithm is the updated labeled variables $\lvar'$ and flags $\flag'$ thorough the program ${c}$
-%
-% We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\lvar; w; {c}}{\lvar';w'} $ as in Figure \ref{fig:var_col}. 
-%
-\begin{figure}
-{
-\begin{mathpar}
-\inferrule
-{
-\empty
+% It has the form: 
+% {$\ag{\lvar; \flag; {c}}{ \lvar'; \flag'} $}. 
+% The input of $\varCol$ is a program ${c}$, 
+% the labeled variables $\lvar$ collected before the program ${c}$ 
+% as well as the flags $\flag$ for every corresponding variable .
+% The output of the algorithm is the updated labeled variables $\lvar'$ and flags $\flag'$ thorough the program ${c}$
+% %
+% % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\lvar; w; {c}}{\lvar';w'} $ as in Figure \ref{fig:var_col}. 
+% %
+% \begin{figure}
+% {
+% \begin{mathpar}
+% \inferrule
+% {
+% \empty
+% }
+% { \ag{\lvar ; \flag; {[\assign {x}{\expr}]^{l}}}
+% {\lvar ++ [{x}]; \flag++[0]}
+% }
+% ~\textbf{\varCol-asgn}
+% \and
+% \inferrule
+% {
+% }
+% { \ag{\lvar; \flag; [ \assign{{x}}{\query({\qexpr})}]^{l}}
+% {\lvar ++ [{x}]; \flag ++ [2]} 
+% }~\textbf{\varCol-query}
+% %
+% \and 
+% %
+% \inferrule
+% {
+% \ag{\lvar; [];  {c_1}}{\lvar_1; \flag_1}
+% \and 
+% \ag{\lvar_1; []; {c_2}}{ \lvar_2; \flag_2}
+% \and
+% \lvar_3 = \lvar_2 ++ \lvar'
+% \and
+% \flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1)
+% }
+% {
+% \ag{\lvar; \flag;
+% [\eif({\bexpr}, { c_1, c_2)}]^{l} }
+% {\lvar_3; \flag_3}
+% }~\textbf{\varCol-if}
+% %
+% %
+% %
+% \and 
+% %
+% \inferrule
+% {
+% \ag{\lvar; \flag {c_1}}{\lvar_1; \flag_1}
+% \and 
+% \ag{\lvar_1; \flag_1 ; {c_2}}{\lvar_2; \flag_2}
+% }
+% {
+% \ag{\lvar; \flag;
+% {(c_1 ; c_2)}}{\lvar_2 ; \flag_2}
+% }
+% ~\textbf{\varCol-seq}
+% \and 
+% %
+% %
+% {
+% \inferrule
+% {
+% { \ag{\lvar; [] ; {c}}
+% {\lvar'; \flag' }  }
+% \\
+% \lvar'' = \lvar'
+% \and 
+% \flag'' = \flag ++ (\flag' \uplus 1)
+% }
+% {
+% \ag{\lvar; \flag;  
+% \ewhile [{b}]^{l}
+% \edo  {c} }{\lvar''; \flag''}
+% }
+% ~\textbf{\varCol-while}
+% }
+% \end{mathpar}
+% }
+% \caption{The Algorithmic Rules of $\varCol$ }
+% \label{fig:var_col}
+% \end{figure}
+% %
+% %
+% The assignment commands are the source of variables $\varCol$ collecting, 
+% in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
+% the output labeled variables are extended by ${x}$. 
+% \\
+% \todo{
+% When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch ${c_1}$, as well as the variables assigned in the else branch ${c_2}$, and the new generated variables $\bar{{x}},\bar{{y}},\bar{{z}}$ in $ [ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ,[ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}],[ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}]$.
+% \\ 
+% The sequence command ${c_1;c_2}$ is standard by accumulating the predicted variables in the two commands ${c_1}$ and ${c_2}$ preserving their order. 
+% \\
+% The while command $\ewhile {\bexpr}, [{\bar{x}}] \ldots \edo {c}$ considers the newly generated variables by SSA transformation ${\bar{x}}$
+% as well and the newly labeled variables in its body ${c}$.
+% \\
+% %
+% Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
+% }
+% %
+% %
+% \todo{
+% \begin{defn}[Valid Index (Remove?)]
+% Given an assigned variable list $\lvar$, $\lvar; \vDash ({c},i_1,i_2)$ iff 
+% $\lvar' = \lvar[0,\ldots, i_1-1], \lvar';{c} \to \lvar'' \land \lvar'' = \lvar[0, \ldots, i_2-1] $.  
+% \end{defn}}
+% %
+% %
+\todo{Data Dependency Analysis Algorithm Needed: (Possibly modify based on existing one, or a different one) get the more precise dependency information. 
+i.e., instead of dependency on all the over-approximated variables, 
+but dependency on only the variables assumed to be live.
 }
-{ \ag{\lvar ; \flag; {[\assign {x}{\expr}]^{l}}}
-{\lvar ++ [{x}]; \flag++[0]}
-}
-~\textbf{\varCol-asgn}
-\and
-\inferrule
-{
-}
-{ \ag{\lvar; \flag; [ \assign{{x}}{\query({\qexpr})}]^{l}}
-{\lvar ++ [{x}]; \flag ++ [2]} 
-}~\textbf{\varCol-query}
-%
-\and 
-%
-\inferrule
-{
-\ag{\lvar; [];  {c_1}}{\lvar_1; \flag_1}
-\and 
-\ag{\lvar_1; []; {c_2}}{ \lvar_2; \flag_2}
-\and
-\lvar_3 = \lvar_2 ++ \lvar'
-\and
-\flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1)
-}
-{
-\ag{\lvar; \flag;
-[\eif({\bexpr}, { c_1, c_2)}]^{l} }
-{\lvar_3; \flag_3}
-}~\textbf{\varCol-if}
-%
-%
-%
-\and 
-%
-\inferrule
-{
-\ag{\lvar; \flag {c_1}}{\lvar_1; \flag_1}
-\and 
-\ag{\lvar_1; \flag_1 ; {c_2}}{\lvar_2; \flag_2}
-}
-{
-\ag{\lvar; \flag;
-{(c_1 ; c_2)}}{\lvar_2 ; \flag_2}
-}
-~\textbf{\varCol-seq}
-\and 
-%
-%
-{
-\inferrule
-{
-{ \ag{\lvar; [] ; {c}}
-{\lvar'; \flag' }  }
-\\
-\lvar'' = \lvar'
-\and 
-\flag'' = \flag ++ (\flag' \uplus 1)
-}
-{
-\ag{\lvar; \flag;  
-\ewhile [{b}]^{l}
-\edo  {c} }{\lvar''; \flag''}
-}
-~\textbf{\varCol-while}
-}
-\end{mathpar}
-}
-\caption{The Algorithmic Rules of $\varCol$ }
-\label{fig:var_col}
-\end{figure}
-%
-%
-The assignment commands are the source of variables $\varCol$ collecting, 
-in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
-the output labeled variables are extended by ${x}$. 
-\\
-\todo{
-When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch ${c_1}$, as well as the variables assigned in the else branch ${c_2}$, and the new generated variables $\bar{{x}},\bar{{y}},\bar{{z}}$ in $ [ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ,[ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}],[ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}]$.
-\\ 
-The sequence command ${c_1;c_2}$ is standard by accumulating the predicted variables in the two commands ${c_1}$ and ${c_2}$ preserving their order. 
-\\
-The while command $\ewhile {\bexpr}, [{\bar{x}}] \ldots \edo {c}$ considers the newly generated variables by SSA transformation ${\bar{x}}$
-as well and the newly labeled variables in its body ${c}$.
-\\
-%
-Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
-}
-%
-%
-\todo{
-\begin{defn}[Valid Index (Remove?)]
-Given an assigned variable list $\lvar$, $\lvar; \vDash ({c},i_1,i_2)$ iff 
-$\lvar' = \lvar[0,\ldots, i_1-1], \lvar';{c} \to \lvar'' \land \lvar'' = \lvar[0, \ldots, i_2-1] $.  
-\end{defn}}
-%
-%
-\paragraph{Data Flow Matrix Generating Algorithm}
+\paragraph{Data Dependency Analysis Algorithm}
 %
 In this data flow matrix generating algorithm, we analyze the data flow information among all labeled variables $\lvar$ collected via the the $\varCol$ algorithm of length $N$.
 %
@@ -425,13 +430,13 @@ The algorithm to fill in the matrix is of the form:
 {$\ad{\Gamma ; {c} ; \lvar}{\Mtrix}$}
 $\ad{\Gamma ; {c} ; i_1, i_2}{\Mtrix; \flag}$. 
 $\Gamma$ is a vector records the variables the current program ${c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in ${c}$ in the labeled variables $\lvar$, and $i_2$ points to the first new variable that is not in ${c}$ (if exists). 
-%
-%
-{
-\begin{defn}[Valid Gamma (Remove?)]
-$\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
-\end{defn}
-}
+% %
+% %
+% {
+% \begin{defn}[Valid Gamma (Remove?)]
+% $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
+% \end{defn}
+% }
 %%
 %
 % \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
@@ -620,16 +625,8 @@ Below we define the valid data flow matrix, to have a clear understanding on the
 For a labeled variables $\lvar$, $\lvar \vDash (\Mtrix,\flag)$ iff the cardinality of $\lvar$ equals to the one of $\flag$, $|\lvar| = |\flag|$ 
 and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
 \end{defn}
-{
-\begin{defn}[Valid Matrix]
-Given a program ${c}$ with its labeled variables $\lvar$, 
-$\lvar \vDash \Mtrix$ iff the cardinality of $\Mtrix$ equals to the product of  $\lvar$'s cardinality,
-i.e., $|\Mtrix| = |\lvar| \times |\lvar|$.
-\end{defn}
-}%
 %
-%
-
+\todo{Improvement if possible. Combine reachability bounds analysis into the static dependency analysis algorithm above, rather than adopt a external tool entirely.}
 %
 \paragraph{Reachability Bounds}
 Given a program $c$ with its labeled variables $\lvar$,
