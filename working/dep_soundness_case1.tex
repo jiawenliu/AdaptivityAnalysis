@@ -317,16 +317,6 @@ This case is proved.
 \label{case:valdep_ih}.
 \\
 %
-The induction hypothesis is as follows:
- $$
- P(\cdot \event_1 \tracecat \trace_3 \cdot \event \cdot \event_2)
- = P(\cdot \event_1 \tracecat \trace_3 \cdot \event_2)
- \lor 
- \big(P(\cdot \event_1 \tracecat \trace_3 \cdot \event) \land P(\event \cdot \event_2)\big)
-  \lor 
-\big( \exists \event_3 = (z, l, n, v) \in \trace_2' (P(\cdot \event_1 \tracecat \trace_3 \cdot \event_3) \land 
-  \flowsto(z^l, {x}_2^{l_2}, c))\big)
-  $$
 There are 2 sub-cases: 
 %
  \[
@@ -341,7 +331,7 @@ This case is proved by splitting the 2 sub-cases.
 \\
 Let $\event' = (z, l', n', v')$, 
 %
-By Inversion Lemma~\ref{lem:inv_asn} on $\event_1$, $\event_{ih}$ and $\event_2$ in execution Eq.~\ref{eq:valdep_inv1}, we have following execution:
+By Inversion Lemma~\ref{lem:inv_asn} on $\event_1$, $\event'$ and $\event_2$ in execution Eq.~\ref{eq:valdep_inv1}, we have following execution:
 \begin{equation}
 \label{eq:m1asn_inv1}
   \begin{array}{l}   
@@ -350,60 +340,57 @@ By Inversion Lemma~\ref{lem:inv_asn} on $\event_1$, $\event_{ih}$ and $\event_2$
  \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1} \\
   \qquad \rightarrow^{*} 
   \config{[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};{c}_2, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih}} 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1} 
   \rightarrow^{assn/query} 
-  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih} \cdot \event_{ih}}  \\
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event'}  \\
   \qquad \rightarrow^{*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1  \tracecat \trace_{ih} \cdot \event_{ih}} 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1\cdot \event'} 
   \rightarrow^{assn/query} 
-  \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1  \tracecat \trace_{ih} \cdot \event_{ih} \cdot \event_2} 
+  \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event' \cdot \event_2} 
   % 
 \end{array}
  \end{equation}
 By conclusion from Case.~\ref{case:valdep_base}, we know:
-\[
- c_2 =_c [\eskip]{}^*; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2
+ \[
+ c_1 =_c 
+ [\eskip]{}^*;[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};  [\eskip]{}^*; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_2
  \]
  %
- By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, 
-%  and conclusion from Subproof~\ref{pf:noiteration_inv2}, we know the only possible execution satisfying:
-%  \[
-%   \vcounter(\vtrace_2') l_2 = \vcounter(\event') l_2
-% \]
-% %
-%  is as follows, where $\trace_2' = \event''$.
-%  %
-we have following execution:
+ By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, and conclusion from Subproof~\ref{pf:noiteration_inv2}, we know the only possible execution satisfying:
+ \[
+  \vcounter(\vtrace_2') l_2 = \vcounter(\event') l_2
+\]
 %
+ is as follows, where $\trace_2' = \event''$.
+ %
 \begin{equation}
 \label{eq:m1asn_inv2}
   \begin{array}{l}   
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
-  \rightarrow^{*} 
+  \rightarrow^{\eskip^*} 
   \config{[\assign{z}{\expr_z / \query(\qexpr_z)}]^{l'};{c}_2, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}'} 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{assn/query} 
-  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}'}  \\
-  \qquad \rightarrow^{*} 
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''}  \\
+  \qquad \rightarrow^{\eskip^*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}'} 
+  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event''} 
   \rightarrow^{assn/query} 
-  \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}' \cdot \event_2'} 
+  \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event'' \cdot \event_2'} 
 \end{array}
  \end{equation}
  %
  There are 2 cases:
 %
 \[
-\eventdep^{val}(\event_1, \event_{ih}, c, D) \lor \neg \eventdep^{val}(\event_1, \event_{ih}, c, D)
+\eventdep^{val}(\event_1, \event', c, D) \lor \neg \eventdep^{val}(\event_1, \event', c, D)
 \]
 %
 This sub-case is proved by splitting the 2 subsub-cases.
 %
-\begin{subsubcase}[$\eventdep^{val}(\event_1, \event_{ih}, c, D)$]
-\label{case:valdep_ihasndep}.
-\\
+\subsubcaseL{$\eventdep^{val}(\event_1, \event', c, D)$}
+%
  %
 By $\eventdep^{val}(\event_1, \event', c, D)$, we have:
 %
@@ -465,9 +452,8 @@ i.e.,
 \]
 %
 This case is proved.
-\end{subsubcase}
 %
-\begin{subsubcase}[{$\neg \eventdep^{val}(\event_1, \event', c, D)$}].
+\subsubcaseL{$\neg \eventdep^{val}(\event_1, \event', c, D)$}
 \\
 By $\neg \eventdep^{val}(\event_1, \event', c, D)$, we know:
 \[
@@ -514,7 +500,6 @@ i.e.,
 \]
 This case is proved.
 %
-\end{subsubcase}
 \end{subcase}
 %
 \subcaseL{$\event' \in \eventset^{\test}$}
