@@ -126,7 +126,7 @@ $\trace_2 = \trace_{ih} \cdot \event_{ih}$
 %
 \\
 %
-The statements need to be proved for the 2 cases are as follows:
+By strong induction on structure of $\vtrace_2$, there are 2 cases and the statements need to be proved for the 2 cases are as follows:
 %
 $$
 \begin{array}{l}
@@ -150,7 +150,8 @@ $$
 \begin{array}{l}
 P(\trace_{ih} \cdot \event_{ih})
 \triangleq 
-\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}}, \trace_{ih}' \subseteq \trace_{ih},
+\forall \trace_{ih}', \trace_{ih}'' \in \mathcal{T} \st \trace_{ih} = \trace_{ih}' \tracecat \trace_{ih}'' \st
+\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}},
 \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
 \\ \quad
 (\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
@@ -202,9 +203,10 @@ $$
 %  then there exists a program $c'$ without generating $\event_{ih}$ such that
 %  $\flowsto$ relation from $x_1$ to $x_2$ in $c'$ is exactly the same as the $\flowsto$ relation from $x_1$ to $x_2$ in $c$.
 %   }
-\begin{case}[$P(\cdot)$]
+\begin{case}[$P(\cdot)$].
 \label{case:valdep_base}
 %
+\\
 We have $P(\cdot)$ as follows:
 %
 \[
@@ -465,6 +467,32 @@ This case is proved.
 %
 \begin{case}[$P(\trace_{ih} \cdot \event_{ih})$]
 \label{case:valdep_ih}.
+\begin{subcase}[$\neg \eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D) \land  \neg\eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D) $]
+\label{case:valdep_ihindep}.
+\end{subcase}
+\begin{subcase}[$\eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D) \lor \eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D) $]
+\label{case:valdep_ihdep}.
+\begin{subsubcase}[$\event_{ih} \in \eventset^{\asn}$].
+\label{case:valdep_ihdepasn}.
+\begin{subsubsubcase}[$\eventdep^{val}(\event_{ih}, \event_2, \cdot, c, D)$]
+ih
+\end{subsubsubcase}
+\begin{subsubsubcase}[$\neg\eventdep^{val}(\event_{ih}, \event_2, \cdot, c, D)$]
+Proved in the same way as Case.~\ref{case:valdep_ihindep}.
+\end{subsubsubcase}
+\end{subsubcase}
+\begin{subsubcase}[$\event_{ih} \in \eventset^{\test}$].
+\begin{subsubsubcase}[$\eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D)$]
+Proved in the same way as Case.~\ref{case:valdep_ihindep}.
+\end{subsubsubcase}
+\begin{subsubsubcase}[$\eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D)$]
+proved 
+\end{subsubsubcase}
+\end{subsubcase}
+\end{subcase}
+\end{case}
+\begin{case}[$P(\trace_{ih} \cdot \event_{ih})$]
+\label{case:valdep_ih}.
 \\
 %
 By $P(\trace_{ih} \cdot \event_{ih})$, the statement needed to be proved is:
@@ -496,17 +524,8 @@ $$
 \end{array}
 $$
 %
-There are 2 sub-cases: 
-%
- \[
- \big(\event_{ih} \in \eventset^{\test}\big) \lor \big(\event_{ih} \in \eventset^{\asn}\big)
- \]
-%
-This case is proved by splitting the 2 sub-cases.
-%
-\begin{subcase}[$\event_{ih} \in \eventset^{\asn}$].
-\label{case:valdep_ihasn}
-%
+\begin{subcase}[$\neg \eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D) \land  \neg\eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D) $]
+\label{case:valdep_ihindep}.
 \\
 Let $\event_{ih} = (z_{ih}, l_{ih}, n_{ih}, v_{ih})$, 
 %
@@ -535,95 +554,35 @@ By conclusion from Case.~\ref{case:valdep_base}, we know:
  c_2 =_c [\eskip]{}^*; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3
  \]
  %
- %
- There are 2 sub-cases:
 %
-\[
-\big(\eventdep^{val}(\event_1, \event_{ih}, c, D) \land 
-\eventdep^{val}(\event_{ih}, \event_2, c, D)\big) \lor 
-\big(\neg \eventdep^{val}(\event_1, \event_{ih}, c, D) 
-\lor \neg \eventdep^{val}(\event_{ih}, \event_2, c, D)\big)
-\]
-%
-This sub-case is proved by splitting the 2 subsub-cases.
-%
-\begin{subsubcase}[$\big(\eventdep^{val}(\event_1, \event_{ih}, c, D) \land 
-\eventdep^{val}(\event_{ih}, \event_2, c, D)\big)$]
-\label{case:valdep_ihasndep}.
+% \begin{subsubsubcase}[$\neg \eventdep^{val}(\event_1, \event_{ih}, c, D) $].
 \\
- %
-Consider trace $\trace_{ih} \subseteq \trace_{ih}$,  $\event_1, \event_{ih} \in \eventset$, 
-$\pi_1(\event_1), \pi_2(\event_1) = (x_1, l_1)$, $\pi_1(\event_{ih}), \pi_2(\event_{ih}) = (z_{ih}, l_{ih})$ and
-$\eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c,D)$, 
- %
-We have following induction hypothesis:
-%
-\[
-\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, z_{ih}^{l_{ih}}, c) \Big)
-\]
-%
-By induction hypothesis from Case.~\ref{case:valdep_base}, on trace $\event_{ih} \cdot \event_2$ and $\eventdep^{val}(\event_{ih}, \event_2, c, D)$,
- %
-we have:
-\[
-\Big( \flowsto(z_{ih}^{l_{ih}}, {x}_2^{l_2}, c) \Big)
-\]
-%
-Then, we have
-%
-\[
-\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st  0 \leq n \land
- \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, z_{ih}^{l_{ih}}, c)
-  \Big)\land \flowsto(z_{ih}^{l_{ih}}, {x}_2^{l_2}, c)
-\]
-%
-i.e.,
-\[
-\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 1 \leq n \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots 
-\land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c)
-% \land \flowsto(z_n^{r_n}, z_{ih}^{l_{ih}}, c)
-%  \land \flowsto(z_{ih}^{l_{ih}}, {x}_2^{l_2}, c) 
-\]
-%
-This case is proved.
-\end{subsubcase}
-%
-\begin{subsubcase}[{$\neg \eventdep^{val}(\event_1, \event_{ih}, c, D) 
-\lor \neg \eventdep^{val}(\event_{ih}, \event_2, c, D)$}].
-%
-\begin{subsubsubcase}[$\neg \eventdep^{val}(\event_1, \event_{ih}, c, D) $].
-\\
-By $\neg \eventdep^{val}(\event_1, \event_{ih}, c, D)$, and inversion on $\event_{ih}$, we have following execution from Eq.~\ref{eq:valdep_inv2}:
+By inversion on $\event_{ih}$ and $\neg \eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D) \land  \neg\eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D) $,
+we have following execution from Eq.~\ref{eq:valdep_inv2}:
 \begin{equation}
 \label{eq:m1asn_inv2}
   \begin{array}{l}   
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
   \rightarrow^{*} 
-  \config{[\assign{z_{ih}}{\expr_z / \query(\qexpr_z)}]^{l_{ih}};{c}_2', 
+  \config{[\assign{z_{ih}}{\expr_z / \query(\qexpr_z)}]^{l_{ih}};{c}_2, 
   \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}'} 
   \rightarrow^{assn/query} 
-  \config{{c}_2',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}'}  \\
+  \config{{c}_2,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}}  \\
   \qquad \rightarrow^{*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3', 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_3, 
   \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}} 
   \rightarrow^{assn/query} 
   \config{{c}_3,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2} \cdot \event_2'} 
 \end{array}
  \end{equation}
  %
- where $\event_{ih} \eventeq \event_{ih}'$ and
+and
  %
  \[
  \vcounter(\trace_{ih}) l_2 = \vcounter(\trace_{ih}'\tracecat \trace_{ih2}) l_2
  \]
  %
- By \todo{inversion Lemma of deterministic of the program evaluation}, we know:
- %
- \[
- c_2' =_c c_2 \land c_3' =_c c_3
- \]
- %
-By substituting $c_2'$ and $c_3'$ with $c_2$ and $c_3$ in execution above, 
+By substituting $c_2$  in execution above, 
 we have following instances of executions for Eq.~\ref{eq:valdep_inv2}, 
 %  and conclusion from Subproof~\ref{pf:noiteration_inv2}, we know the only possible execution satisfying:
 %  \[
@@ -696,103 +655,90 @@ we have following instances of executions for Eq.~\ref{eq:valdep_inv2},
  \]
 %
 %
-\todo{Let $\eventset_{diff} \subseteq \eventset $ be all the events differ in $\trace_{ih}$ and $\trace_{ih}'$.}
+Let $\eventset_{diff} \subseteq \eventset $ such that $\forall \event_i \in \eventset$, $\event_i \in \eventset_{diff}$ iff:
+\begin{equation}
+\label{eq:valdep_ihdiff}
+  \begin{array}{l}
+  \exists \trace_{ih1}, \trace_{ih2}, \trace_{ih1}', \trace_{ih2}' \in \mathcal{T},
+  \st 
+  \vcounter (\trace_{ih1} )\pi_2({\event_i}) = \vcounter(\trace_{ih1}') \pi_2(\event_i) \land
+  \vcounter (\trace_{ih2} )\pi_2({\event_i}) = \vcounter(\trace_{ih2}') \pi_2(\event_i) = 0
+  \land
+  \\ \quad \exists \event_i' \in \eventset^{\asn}  \st
+  \diff(\event_i, \event_i') \land 
+  \trace_{ih} = \trace_{ih1} \cdot \event_i \tracecat \trace_{ih2} 
+  \land 
+  \trace_{ih} = \trace_{ih1}' \cdot \event_i' \tracecat \trace_{ih2}'
+  \\ \qquad \lor 
+  \trace_{ih} = \trace_{ih1} \cdot \event_i \tracecat \trace_{ih2} 
+  \land 
+  \trace_{ih} = \trace_{ih1}' \tracecat \trace_{ih2}'
+  \\ \qquad \lor 
+  \trace_{ih} = \trace_{ih1} \tracecat \trace_{ih2} 
+  \land 
+  \trace_{ih} = \trace_{ih1}' \cdot \event_i \tracecat \trace_{ih2}'
+  \end{array}
+\end{equation}
 %
 \\
-Let $V_{diff} = VAR(\eventset_{diff} ) \subseteq \lvar_c$, i.e., 
+By Definition~\ref{def:event_valdep} and \todo{CLT definition needs to be modified \ref{def:event_ctldep}}, we know
 \[
-\begin{array}{l}
-  \big(\forall u^r \in \lvar_c \setminus V_{diff} \st
-    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) (u) =  
-    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih} \cdot \event_{ih}) (u)
-    \big)
-  \\ \quad \land
-  \big(\forall u^r \in V_{diff} \st \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) (u) \neq 
-    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih} \cdot \event_{ih}) (u) \big)
-    \\ \quad \land
-    \big(\forall u^r \in V_{diff} \st r = \llabel(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) u \big)
-  \end{array}
+  \forall \event_i \in \eventset_{diff} \st \exists \trace_{ihi} \in \mathcal{T} \st
+  \eventdep^{val}(\event_1, \event_i, \trace_{ihi}, c, D) 
+  \lor \eventdep^{\ctl}(\event_1, \event_i, \trace_{ihi}, c, D)
 \]
-%
-By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
-the environment only able to obtain different values for variables in $V_{diff}$
-from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}$ 
-and 
-$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih} \cdot \event_{ih}$, i.e.,
-%
-%
-% If $x_1 = z$, by {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
-% %
-% \[
-%   z \in VAR(\expr_2 / \qexpr_2)
-%   \land z^{l'}\in \live^{l_2}(c)
-% \]
-% %
-% By Definition of $\flowsto$, we know
-% \[
-%   \flowsto(z^{l'}, x_2^{l_2}, c) \big)
-% \]
-%
-% If $x_1 \neq z$, by {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
-% %
-% \[
-%   x_1 \in VAR(\expr_2 / \qexpr_2) \lor z \in VAR(\expr_2 / \qexpr_2) 
-%   \land x_1^{l_1}, z^{l'} \in \live^{l_2}(c)
-% \]
-% %
-% By Definition of $\flowsto$, we know
-% \[
-%   \flowsto(x_1^{l_1}, x_2^{l_2}, c) \lor \flowsto(z^{l'}, x_2^{l_2}, c) \big)
-% \]
-% %
-% %
-% Then we have:
-% %
-% \[
-%   \flowsto(x_1^{l_1}, x_2^{l_2}, c) \lor  \big( \flowsto(x_1^{l_1}, z^{l'}, c) \land \flowsto(z^{l'}, x_2^{l_2}, c) \big)
-% \]
-%
-By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
-%
+Let $V_{diff} = VAR(\eventset_{diff} \subseteq \lvar_c$ such that $\forall z_i^{r_i} \in \lvar_c$, $z_i^{r_i} \in V_{diff}$ iff:
 \[
-  \bigvee_{z_i^{r_i} \in V_{diff}} z_i \in VAR(\expr_2)
-  \bigwedge_{z_i^{r_i} \in V_{diff}} (z_i^{r_i} \in \live^{l_2}(c))
+  \exists \event_i \in \event_{diff} \st \pi_1(\event_i), \pi_2(\event_i) = z_i, r_i
 \]
-%
-%
-By Definition of $\flowsto$, we know
-\[
-   \bigvee_{z_i^{r_i} \in V_{diff}}  \flowsto(z_i^{r_i}, x_2^{l_2}, c)
-\]
-%
-From execution Eq.~\ref{eq:m1asn_inv1} and Eq.~\ref{eq:m1asn_inv2}, we also know:
-\[
-\begin{array}{l}
-  \bigwedge_{z_i^{r_i} \in V_{diff}}
-  \exists \event_i = (z_i, r_i, n_i, v_i) 
-  \in \eventset_{diff} 
-  \st 
-  \\ \qquad 
-  \eventdep(\event_1, \event_i, c) \land 
-  \config{c_1, \vtrace_1 \cdot \event_1} 
-  \rightarrow^{*}
-  \config{{c}_i,  \vtrace_1 \cdot \event_1 \tracecat \trace_{i} \cdot \event_{i}}
-  \\ \qquad 
-  \lor
-  \eventdep(\event_1', \event_i, c) \land 
-  \config{c_1, \vtrace_1 \cdot \event_1'} 
-  \rightarrow^{*} 
-  \config{{c}_i',  \vtrace_1 \cdot \event_1' \tracecat \trace_{i}' \cdot \event_{i}}
-\end{array}
-\]
-%
-By induction hypothesis for $z_i^{r_i} \in V_{diff}$ , we have:
+Then, by induction hypothesis, $\forall z_i^{r_i} \in V_{diff}$, we have:
 \[
   \bigwedge_{z_i^{r_i} \in V_{diff}}
   \exists y_1, \cdots, y_m \st 
   m \geq 0 \land
   \flowsto(x_1^{l_1}, y_1^{r_1}, c) \land \cdots \land \flowsto(y_m^{r_m}, z_i^{r_i}, c) \land 
 \]
+%
+%
+By Eq.~\ref{eq:valdep_ihdiff}, we know 
+the environment only able to obtain different values for variables in $V_{diff}$ or variable $x_1$
+from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}$ 
+and 
+$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih} \cdot \event_{ih}$, i.e.,
+ i.e., 
+\[
+\begin{array}{l}
+  \big(\forall u^r \in \lvar_c \setminus (V_{diff} \cup \{x_1^{l_1}\}) \st
+    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) (u) =  
+    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih} \cdot \event_{ih}) (u)
+    \big)
+  \end{array}
+\]
+%
+%
+By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have: 
+%
+\[
+  \bigvee_{z_i^{r_i} \in V_{diff}} z_i \in VAR(\expr_2)
+  \bigwedge_{z_i^{r_i} \in V_{diff}} (z_i^{r_i} \in \live^{l_2}(c))
+\]
+%
+By Eq.~\ref{eq:valdep_ihdiff}, we also have:
+\[
+   \forall u^r \in V_{diff} \st r = \llabel(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) u
+\]
+%
+Then by Inversion Lemma~\ref{lem:inv_live}, we have:
+\[
+  \bigwedge_{z_i^{r_i} \in V_{diff}} (z_i^{r_i} \in \live^{l_2}(c))
+\]
+%
+By Definition of $\flowsto$, we know
+\[
+   \bigvee_{z_i^{r_i} \in V_{diff}}  \flowsto(z_i^{r_i}, x_2^{l_2}, c)
+\]
+%
+%
 %
 Then, we have
 \[
@@ -808,187 +754,69 @@ i.e.,
  \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
 \]
 This case is proved.
-% i.e.,
-% %
-% \\
-% By $\neg \eventdep^{val}(\event_1, \event_{ih}, c, D)$, we know:
-% \[
-%   \event_{ih} \eventeq \event_{ih}'
-% \]
-% %
-% By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
-% the environment only able to obtain different values for variable $x_1$
-% from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event_{ih}$ and 
-% $\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'$, i.e.,
-% \[
-%   \forall u^r \in \lvar_c \setminus \{x_1^{l_1}\} \st
-%   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}') (u) =  
-%   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event_{ih}) (u)
-% \]
-% %
-% If $x_1 = z$, by definition of environment, we have:
-% \[
-%     \forall u^r \in \lvar_c \st
-%   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}') (u) =  
-%   \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event_{ih}) (u)
-% \]
-% By deterministic of the evaluation, we have $\event_2 \eventeq \event_2'$, which is contradict to $\diff(\event_2, \event_2')$.
-% %
-% \\
-% Then we know $x_1 \neq z$ and $\llabel(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}') x_1 = l_1$.
-% \\
-% %
-% By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
-% \[
-%   x_1 \in VAR(\expr_2) \land x_1^{l_1} \in \live^{l_2}(c)
-% \]
-% %
-% By Definition of $\flowsto$, we know
-% \[
-%   \flowsto(x_1^{l_1}, x_2^{l_2}, c) 
-% \]
-% %
-% i.e.,
-%
-%
-\end{subsubsubcase}
-\begin{subsubsubcase}[$\neg \eventdep^{val}(\event_{ih}, \event_2, c, D) $].
-\\
-By restriction from Eq.~\ref{eq:valdep_invn}, 
- %
- %
- \[
- \vcounter(\trace_{ih} \cdot \event_{ih}) l_2 = \vcounter(\trace_{2}') l_2
- \]
-%
-%
-\todo{Let $\eventset_{diff} \subseteq \eventset $ be all the events differ in $\trace_{ih}$ and $\trace_{ih}'$.}
-%
-\\
-Let $V_{diff} = VAR(\eventset_{diff} ) \subseteq \lvar_c$, i.e., 
-\[
-\begin{array}{l}
-  \big(\forall u^r \in \lvar_c \setminus V_{diff} \st
-    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) (u) =  
-    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih} \cdot \event_{ih}) (u)
-    \big)
-  \\ \quad \land
-  \big(\forall u^r \in V_{diff} \st \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) (u) \neq 
-    \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih} \cdot \event_{ih}) (u) \big)
-    \\ \quad \land
-    \big(\forall u^r \in V_{diff} \st r = \llabel(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) u \big)
-  \end{array}
-\]
-%
-By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
-the environment only able to obtain different values for variables in $V_{diff}$
-from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}$ 
-and 
-$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih} \cdot \event_{ih}$, i.e.,
-%
-%
-% If $x_1 = z$, by {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
-% %
-% \[
-%   z \in VAR(\expr_2 / \qexpr_2)
-%   \land z^{l'}\in \live^{l_2}(c)
-% \]
-% %
-% By Definition of $\flowsto$, we know
-% \[
-%   \flowsto(z^{l'}, x_2^{l_2}, c) \big)
-% \]
-%
-% If $x_1 \neq z$, by {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
-% %
-% \[
-%   x_1 \in VAR(\expr_2 / \qexpr_2) \lor z \in VAR(\expr_2 / \qexpr_2) 
-%   \land x_1^{l_1}, z^{l'} \in \live^{l_2}(c)
-% \]
-% %
-% By Definition of $\flowsto$, we know
-% \[
-%   \flowsto(x_1^{l_1}, x_2^{l_2}, c) \lor \flowsto(z^{l'}, x_2^{l_2}, c) \big)
-% \]
-% %
-% %
-% Then we have:
-% %
-% \[
-%   \flowsto(x_1^{l_1}, x_2^{l_2}, c) \lor  \big( \flowsto(x_1^{l_1}, z^{l'}, c) \land \flowsto(z^{l'}, x_2^{l_2}, c) \big)
-% \]
-%
-By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, Inversion Lemma~\ref{lem:inv_live}, we have 
-%
-\[
-  \bigvee_{z_i^{r_i} \in V_{diff}} z_i \in VAR(\expr_2)
-  \bigwedge_{z_i^{r_i} \in V_{diff}} (z_i^{r_i} \in \live^{l_2}(c))
-\]
-%
-%
-By Definition of $\flowsto$, we know
-\[
-   \bigvee_{z_i^{r_i} \in V_{diff}}  \flowsto(z_i^{r_i}, x_2^{l_2}, c)
-\]
-%
-From execution Eq.~\ref{eq:m1asn_inv1} and Eq.~\ref{eq:m1asn_inv2}, we also know:
-\[
-\begin{array}{l}
-  \bigwedge_{z_i^{r_i} \in V_{diff}}
-  \exists \event_i = (z_i, r_i, n_i, v_i) 
-  \in \eventset_{diff} 
-  \st 
-  \\ \qquad 
-  \eventdep(\event_1, \event_i, c) \land 
-  \config{c_1, \vtrace_1 \cdot \event_1} 
-  \rightarrow^{*}
-  \config{{c}_i,  \vtrace_1 \cdot \event_1 \tracecat \trace_{i} \cdot \event_{i}}
-  \\ \qquad 
-  \lor
-  \eventdep(\event_1', \event_i, c) \land 
-  \config{c_1, \vtrace_1 \cdot \event_1'} 
-  \rightarrow^{*} 
-  \config{{c}_i',  \vtrace_1 \cdot \event_1' \tracecat \trace_{i}' \cdot \event_{i}}
-\end{array}
-\]
-%
-By induction hypothesis for $z_i^{r_i} \in V_{diff}$ , we have:
-\[
-  \bigwedge_{z_i^{r_i} \in V_{diff}}
-  \exists y_1, \cdots, y_m \st 
-  m \geq 0 \land
-  \flowsto(x_1^{l_1}, y_1^{r_1}, c) \land \cdots \land \flowsto(y_m^{r_m}, z_i^{r_i}, c) \land 
-\]
-%
-Then, we have
-\[
-  \bigwedge_{z_i^{r_i} \in V_{diff}}
-  \exists y_1, \cdots, y_m \st 
-  m \geq 0 \land
-  \flowsto(x_1^{l_1}, y_1^{r_1}, c) \land \cdots \land \flowsto(y_m^{r_m}, z_i^{r_i}, c) \land 
-   \bigvee_{z_i^{r_i} \in V_{diff}}  \flowsto(z_i^{r_i}, x_2^{l_2}, c)
-\]
-i.e.,
-\[
-\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st (0 \leq n  )
- \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
-\]
-This case is proved.
-%
-%
-\end{subsubsubcase}
-\end{subsubcase}
 \end{subcase}
 %
-\todo{
-need to rewrite: 
-rewrite from proof of case $\trace_2 = \event_{ih}$  into proof of case
-$\trace_2 = \trace_{ih} \cdot \event_{ih}$ 
-}
-\begin{subcase}[{$\event_{ih} \in \eventset^{\test}$}].
-\label{case:valdep_ihtest}
+\begin{subcase}[$\eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D) \lor \eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D) $]
+\label{case:valdep_ihdep}.
+\\
+There are 2 sub-cases: 
+%
+ \[
+ \big(\event_{ih} \in \eventset^{\test}\big) \lor \big(\event_{ih} \in \eventset^{\asn}\big)
+ \]
+%
+This case is proved by splitting the 2 sub-cases.
+\begin{subsubcase}[$\event_{ih} \in \eventset^{\asn}$].
+\label{case:valdep_ihdepasn}.
+\begin{subsubsubcase}[$\eventdep^{val}(\event_{ih}, \event_2, \cdot, c, D)$].
+\\
+Consider trace $\trace_{ih} \subseteq \trace_{ih}$,  $\event_1, \event_{ih} \in \eventset$, 
+$\pi_1(\event_1), \pi_2(\event_1) = (x_1, l_1)$, $\pi_1(\event_{ih}), \pi_2(\event_{ih}) = (z_{ih}, l_{ih})$ and
+$\eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D) \lor \eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D) $, 
  %
- \\
+We have following conclusion from the induction hypothesis:
+%
+\[
+\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, z_{ih}^{l_{ih}}, c) \Big)
+\]
+%
+By induction hypothesis from Case.~\ref{case:valdep_base}, on trace $\event_{ih}$ and $\eventdep^{val}(\event_{ih}, \event_2, c, D)$,
+ %
+we also have:
+\[
+\Big( \flowsto(z_{ih}^{l_{ih}}, {x}_2^{l_2}, c) \Big)
+\]
+%
+Then, we have
+%
+\[
+\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st  0 \leq n \land
+ \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, z_{ih}^{l_{ih}}, c)
+  \Big)\land \flowsto(z_{ih}^{l_{ih}}, {x}_2^{l_2}, c)
+\]
+%
+i.e.,
+\[
+\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 1 \leq n \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots 
+\land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c)
+% \land \flowsto(z_n^{r_n}, z_{ih}^{l_{ih}}, c)
+%  \land \flowsto(z_{ih}^{l_{ih}}, {x}_2^{l_2}, c) 
+\]
+%
+This case is proved.
+\end{subsubsubcase}
+\begin{subsubsubcase}[$\neg\eventdep^{val}(\event_{ih}, \event_2, \cdot, c, D)$].
+\\
+Proved in the same way as Case.~\ref{case:valdep_ihindep}.
+\end{subsubsubcase}
+\end{subsubcase}
+\begin{subsubcase}[$\event_{ih} \in \eventset^{\test}$].
+\begin{subsubsubcase}[$\eventdep^{\ctl}(\event_1, \event_{ih}, \trace_{ih}, c, D)$].
+\\
+Proved in the same way as Case.~\ref{case:valdep_ihindep}.
+\end{subsubsubcase}
+\begin{subsubsubcase}[$\eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D)$].
+\\
 Let $\event_{ih} = (b, l_b, n_b, v_b)$, by Eq.~\ref{eq:valdep_inv1} and {Inversion Lemma~\ref{lem:inv_test}}, we have:
 \begin{equation}
 \label{eq:m1test_inv1}
@@ -1027,131 +855,50 @@ Let $\event_{ih} = (b, l_b, n_b, v_b)$, by Eq.~\ref{eq:valdep_inv1} and {Inversi
  c_3 =_c 
  [\eskip^*]; [\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4
  \]
-By substituting $c_1$ in the execution in Eq.~\ref{eq:valdep_inv2}, we have 
+\label{case:valdep_ihtestdep}
+\\
+%
+By induction hypothesis on $\eventdep^{val}(\event_1, \event_{ih}, \trace_{ih}, c, D)$, we know:
+%
+\begin{equation}
+\label{eq:valdep_ihtestb}
+  \bigvee_{\{y_i^{r_i} \vert y \in VAR(b) \land r_i = \llabel(\trace_{ih}) y_i\}}
+  \exists z_1^{j_1} \cdots z_m^{j_m}, m \in \mathbb{N} \st 
+  \flowsto(x_1^{l_1}, z_1^{j_1}) \cdots \flowsto(z_m^{j_m}, y_i^{r_i})
+\end{equation}
+%
+By execution Eq.~\ref{eq:m1test_inv1} and $\eventdep^{val}(\event_1, \event_{ih}, c, D)$ we have following execution instance of Eq.~\ref{eq:valdep_inv2},
  %
 \begin{equation}
 \label{eq:m1test_inv2}
   \begin{array}{l}   
   \config{c_1, \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
-  \rightarrow^{\eskip^*} 
-  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1'} 
+  \rightarrow^{*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w ; {c}_2', \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}'} 
   \rightarrow^{if / while} 
-  \config{c_3', \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'} 
+  \config{c_3', \vtrace_0 \cdot \vtrace_1 \cdot \event_1'  \tracecat \trace_{ih}' \cdot \event_{ih}'} 
   \\
   \qquad \rightarrow^{*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
   \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}' \cdot \trace_3}
   \rightarrow^{assn/query} 
-  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}' \tracecat \trace_{ih2} \cdot \event_2'} 
+  \config{{c}_4',  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2} \cdot \event_2'} 
 \end{array}
 \end{equation}
  %
-By Eq.~\ref{eq:valdep_invn}, we know:
-%
-\[
-\vcounter(\vtrace_2') l_2  = \vcounter({} \cdot {} \event_{ih}' \cdot \vtrace_3) l_2 = \vcounter({} \cdot {} \event_{ih}) l_2 
- \]
-i.e., 
-\[
-  \vcounter(\vtrace_3) l_2 = 0
-\]
-Consider the two subsub-cases: 
-%
-$$
-\eventdep^{val}(\event_1, \event_{ih}, c, D) \lor \neg\eventdep^{val}(\event_1, \event_{ih}, c, D)
-$$
-%
-\begin{subsubcase}
-[{$\neg\eventdep^{val}(\event_1, \event_{ih}, c, D)$}].
-\label{case:valdep_ihtestnodep}
-\\
-By execution in Eq.~\ref{eq:m1test_inv2} and Eq.~\ref{eq:m1test_inv1}, 
-since $\neg\eventdep^{val}(\event_1, \event_{ih}, c, D)$, we have:
-\[
-  \event_{ih} \eventeq \event_{ih}'
-\]
-By operational semantics rules $\rname{if-b}$ and $\rname{while-b}$ and $\event_{ih} =_q \event_{ih}'$, we have:
-\[
- c_3 =_c c_3'
-\]
-%
-Substituting $c_3'$ by $c_3$ in Eq.~\ref{eq:m1test_inv2}, we have:
-\[
-  \config{c_3', \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'} 
-  \rightarrow^{\eskip*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'}
-  \rightarrow^{assn/query} 
-  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}' \cdot \event_2'} 
-\]
-%
-or the following exeuction instance, 
-if $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_4$ and 
-the execution instance involves 1 or more iterations of $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$:
-%
-\[
- \begin{array}{l}
-  \config{c_3', \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'} 
-  \rightarrow^{\eskip*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4, 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'}
-  \rightarrow^{assn/query} 
-  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}' \cdot (x_2, l_2, n_2', v_2')} 
-  \\ \qquad 
-  \rightarrow^{*} 
-  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2};{c}_4', 
-  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'\cdot (x_2, l_2, n_2', v_2') \cdot \trace_3'}
-  \\ \qquad 
-  \rightarrow^{assn/query} 
-  \config{{c}_4,  \vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}' \cdot (x_2, l_2, n_2', v_2')\cdot \trace_3' \cdot \event_2'} 
- \end{array} 
-\]
-%
-\\
-By conclusion from Subproof~\ref{pf:noiteration_inv2} and the restriction $\vcounter(\vtrace_3) l_2 = 0$ in Eq.~\ref{eq:m1test_inv2}, 
-we know
-the first execution with no iteration of $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$ 
-is the only possible execution instance of Eq.~\ref{eq:m1test_inv2}, i.e., $\vtrace_3 = \cdot$, i.e., $\vtrace_2' = \event_{ih}'$.
-\\
-By $\eventdep^{val}(\event_1, \event_2, c)$, and definition of environment, 
-the environment only able to obtain different values for variable $x_1$ 
-from trace $\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event_{ih}$ and 
-$\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}'$, i.e.,
-\[
-  \forall z^r \in \lvar_c \setminus \{x_1^{l_1}\} \st
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \cdot \event_{ih}') (z) =  
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \cdot \event_{ih}) (z)
-\]
-By {Inversion Lemma~\ref{lem:inv_a}} of arithmetic expression evaluation, we have 
-\[
-  x_1 \in VAR(\expr_2 / \qexpr_2) \land x_1^{l_2} \in \live^{l_2}(c)
-\]
-%
-By $\flowsto$ definition, we have:
-%
-\[
-\flowsto(x_1^{l_1}, {x}_2^{l_2}, c)
-\]
-i.e.,
-%
-\[
-\Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st (0 \leq n \leq 1 )
- \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
-\]
-%
-This case is proved.
-\end{subsubcase}
-%
-\begin{subsubcase}[{$\eventdep^{val}(\event_1, \event_{ih}, c, D)$}].
-\label{case:valdep_ihtestdep}
-\\
-%
-By execution in Eq.~\ref{eq:m1test_inv2} and Eq.~\ref{eq:m1test_inv1}, since $\eventdep^{val}(\event_1, \event_{ih}, c, D)$, we have:
+where 
 \[
   \event_{ih} \eventeq \event_{ih}' \lor \diff(\event_{ih}, \event_{ih}')
 \]
 %
-Case of $\event_{ih} \eventeq \event_{ih}'$ is proved in the same way in \textbf{subsub-case:} $\neg \eventdep^{val}(\event_1, \event_{ih}, c, D)$.
+Case of $\event_{ih} \eventeq \event_{ih}'$ is proved in the same way in Case.~\ref{case:valdep_ihtestnodep}.
+%
+By Eq.~\ref{eq:valdep_invn}, we know:
+%
+\[
+\vcounter(\trace_{ih}' \cdot \event_{ih}' \tracecat \trace_{ih2}) l_2  = \vcounter(\trace_{ih}) l_2 
+ \]
+%
 \\
 Case of $\diff(\event_{ih}, \event_{ih}')$ is proved by splitting two following cases:
 \[
@@ -1211,15 +958,6 @@ By execution in Eq.~\ref{eq:valdep_inv2} and $\event_{ih}' = (b, l_b, n_b, \efal
 \end{array}
 \end{equation}
  %
-By Inversion Lemma~\ref{lem:inv_b} on evaluation of boolean expression $b$ and following: 
-\[
-  \forall z \in \lvar \setminus \{x_1^{l_1}\} \st
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1')(z) = \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1)(z)
-\]
-we know:
-\[
-  x_1 \in VAR(b) \land x_1^{l_1} \in \live^{l_b}(c)
-\]
 %
  By uniqueness of label, we have following cases:
  \begin{enumerate}
@@ -1256,14 +994,22 @@ i.e., $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$ will only show up in 
 %
 By $\flowsto$ definition, we have:
 \[
-  \forall z_i^{r_i} \in \lvar_{c_t},  x_j^{l_j} \in \lvar_c \st x_j \in VAR(b) \land x_j^{l_j} \in \live^{l_b}(c) \implies
+  \forall z_i^{r_i} \in \lvar_{c_t},  x_j^{l_j} \in \lvar_c \st x_j \in VAR(b) \land l_j = \llabel(\trace_{ih}) x_j \implies
   \flowsto(x_j^{l_j}, z_i^{r_i}, c)
 \]
+i.e.,
+\[
+  \bigwedge_{\{ x_j^{l_j} \in \lvar_c \vert x_j \in VAR(b) \land x_j^{l_j} \in \live^{l_b}(c)\}}
+  \flowsto(x_j^{l_j}, x_2^{l_2}, c)
+\]
 %
-Since $x_1 \in VAR(b)$ and $x_1^{l_1} \in \live^{l_b}(c)$, we know:
+Based on Eq.~\ref{eq:valdep_ihtestb}, we know:
 %
 \[
-\flowsto(x_1^{l_1}, x_2^{l_2}, c)
+  \bigvee_{\{y_i^{r_i} \vert y_i \in VAR(b) \land r_i = \llabel(\trace_{ih}) y_i\}}
+  \exists z_1^{j_1} \cdots z_m^{j_m}, m \in \mathbb{N} \st 
+  \flowsto(x_1^{l_1}, z_1^{j_1}) \land \cdots \land  \flowsto(z_m^{j_m}, y_i^{r_i})
+  \land \flowsto(y_i^{r_i}, x_2^{l_2}, c) 
 \]
 %
 i.e.,
@@ -1320,23 +1066,32 @@ and \todo{Inversion Lemma, notation $VAR{(\trace)}$ denotes the labeled variable
   VAR{(\trace_f)} \subseteq \lvar_{c_f}
 \]
 %
-By $\flowsto$ definition, we also have:
+By $\flowsto$ definition, we have:
 \[
-  \forall z_i^{r_i} \in \lvar_{c_t},  x_j^{l_j} \in \lvar_c \st 
-  x_j \in VAR(b) \land x_j^{l_j} \in \live^{l_b}(c) \implies
+  \forall z_i^{r_i} \in \lvar_{c_f},  x_j^{l_j} \in \lvar_c \st x_j \in VAR(b) \land l_j = \llabel(\trace_{ih}) x_j \implies
   \flowsto(x_j^{l_j}, z_i^{r_i}, c)
 \]
-Since $x_1 \in VAR(b) \land x_1^{l_1} \in \live^{l_b}(c)$, we know: 
+% i.e.,
+% \[
+%   \bigwedge_{\{ x_j^{l_j} \in \lvar_c \vert x_j \in VAR(b) \land x_j^{l_j} \in \live^{l_b}(c)\}}
+%   \flowsto(x_j^{l_j}, x_2^{l_2}, c)
+% \]
+%
+Based on Eq.~\ref{eq:valdep_ihtestb}, we know:
+%
 \[
-  \bigwedge_{\forall z_i^{r_i} \in \lvar_{c_f}}
-  \flowsto(x_1^{l_1}, z_i^{r_i}, c)
+  \bigvee_{\{y_i^{r_i} \vert y_i \in VAR(b) \land r_i = \llabel(\trace_{ih}) y_i\}}
+  \exists z_1^{j_1} \cdots z_m^{j_m}, m \in \mathbb{N} \st 
+  \flowsto(x_1^{l_1}, z_1^{j_1}) \land \cdots \land  \flowsto(z_m^{j_m}, y_i^{r_i})
+  \bigwedge_{z_i^{r_i} \in \lvar_{c_f}}
+    \flowsto(y_i^{r_i}, z_i^{r_i}, c) 
 \]
 %
 By Inversion Lemma~\ref{lem:inv_a} on evaluation of expression $\expr_2$ and following: 
 \[
   \forall z \in \lvar \setminus (\{x_1^{l_1}\} \cup VAR{(\trace_f)}) \st
-  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1'\cdot \event_{ih}' \cdot \trace_2')(z) 
-  = \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1\cdot \event_{ih})(z)
+  \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1' \tracecat \trace_{ih}' \cdot \event_{ih}' \cdot \trace_f)(z) 
+  = \env(\vtrace_0 \cdot \vtrace_1 \cdot \event_1 \tracecat \trace_{ih} \cdot \event_{ih})(z)
 \]
 %
 we have:
@@ -1644,44 +1399,11 @@ This case is proved.
 \end{subproof}
 %
 This case is proved.
+\end{subsubsubcase}
 \end{subsubcase}
-%
-Then the case $m = 1$ is proved.
 \end{subcase}
 \end{case}
 %
-% \caseL{$\trace_2 = \trace_3 \cdot \event$}
-% Let $P(\cdot \event_1 \tracecat \trace_2 \cdot \event_2) = \exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st (0 \leq n \leq m )
-%  \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2})$
-%  Then
-%  $$
-%  P(\cdot \event_1 \tracecat \trace_3 \cdot \event \cdot \event_2)
-%  = P(\cdot \event_1 \tracecat \trace_3 \cdot \event_2)
-%  \lor (P(\cdot \event_1 \tracecat \trace_3 \cdot \event) \land 
-%   P(\event \cdot \event_2))
-%   \lor \Big( \exists \event_3 = (z, l, n, v),\in \trace_2' (P(\cdot \event_1 \tracecat \trace_3 \cdot \event_3) \land 
-%   \flowsto(z^l, , {x}_2^{l_2}))\Big)$$
-% \todo{
-% By induction hypothesis on $1$ and $\vardep(x_1^{l_1}, x_2^{l_2}, c, D)$, 
-% $\vardep(x_1^{l_1}, z_1^{r_1}, c, D) \land \vardep(z^{l_z}, x_2^{l_2}, c, D)$ respectively, 
-% we have $\exists z_2^{r_2}, \cdots, z_n^{r_2}, 1 \leq n \leq m'+1$ s.t.:
-% \[
-% \begin{array}{ll}
-%       & \flowsto(x_1^{l_1}, x_2^{l_2}) \\
-%   \lor  & \flowsto(x_1^{l_1}, z_2^{r_2}) \land \flowsto(z_2^{r_2}, x_2^{l_2})\\
-%   \lor  & \flowsto(x_1^{l_1}, z_2^{r_2}) \land \flowsto(z_2^{r_2}, z_1^{r_1}) \land \flowsto(z_1^{r_1}, x_2^{l_2}) \\
-%   \lor  & \flowsto(x_1^{l_1}, z_1^{r_1}) \land \flowsto(z_1^{r_1}, z_2^{r_2}) \land \flowsto(z_2^{r_2}, x_2^{l_2}) \\
-%   \lor  & \cdots \\
-%   \lor  & \flowsto(x_1^{l_1}, z_2^{r_2}) \land \cdots \land \flowsto(z_n^{r_n}, z_1^{r_1}) \land \flowsto(z_1^{r_1}, x_2^{l_2}) \\
-% \end{array}
-% \]}
-% i.e.,
-% \[
-% \Big(\exists z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st (0 \leq n \leq m )
-%  \land \flowsto(x_1^{l_1}, z_1^{r_1}) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}) \Big)
-% \]
-% This case is proved.
-
 \caseL{$(b)~\eventdep^{\ctl}(\event_1, \event_2, c, D)$}
 Unfolding $\eventdep^{\ctl}(\event_1, \event_2, c, D)$, we have:
 %
@@ -2129,6 +1851,5 @@ we have $\exists z_2^{r_2}, \cdots, z_n^{r_2}, 1 \leq n \leq m'+1$ s.t.:
   \lor  & \cdots \\
   \lor  & \flowsto(x_1^{l_1}, z_2^{r_2}) \land \cdots \land \flowsto(z_n^{r_n}, z_1^{r_1}) \land \flowsto(z_1^{r_1}, x_2^{l_2}) \\
 \end{array}
-\]
-This case is proved.
+\]This case is proved.
 \end{proof}
