@@ -1,0 +1,190 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[table]{xcolor}
+
+
+
+\input{prelude}
+\input{ldefs}
+
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\newcommand{\THESYSTEM}{\textsf{AdaptFun}}
+
+% Define block styles
+\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+    text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
+\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+    text width=5em, text centered, rounded corners, minimum height=4em]
+\tikzstyle{line} = [draw, -latex']
+\tikzstyle{cloud} = [draw, ellipse,fill=red!20, node distance=3cm,
+    minimum height=2em]
+
+\begin{document}
+
+
+We first Proved following Inversion Lemmas.
+\input{thm_inversion}
+\clearpage
+
+\begin{thm}[Correctness]
+\label{thm:alg_correct}
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+\end{array}
+\]
+\end{thm}
+
+\begin{proof}[Proof of Theorem.~\ref{thm:alg_correct}].
+Inversion on $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$, get:
+\[
+  \exists \event_z, \event_y \in \eventset^{\asn}, l_h, l_t 
+  \st l_h ++ [\event_z, \event_y] ++ l_t \land 
+\]
+or
+\[
+    \exists \event_b \st l_h ++ [\event_z, \event_b, \event_y] ++ l_t
+\]
+\begin{case}[ $l_h ++ {[\event_z, \event_y]} ++ l_t$ ].
+\\
+inversion on  $l_h ++ {[\event_z, \event_y]} ++ l_t$, 
+\[
+  \exists l_{h}' ++ [\event_y] ++ l_t, \trace \st
+  \eventdep^{val}(\event_z, \event_y, \trace)
+  \land 
+  \neg \eventdep^{val} (\event_z, l_h')
+\]
+%
+By $\neg \eventdep^{val} (\event_z, l_h')$, 
+\[
+  \forall x \in l_h' \st
+  \env \app \trace x = \env \app \trace' x
+\]
+%
+$\forall \event \in \trace \land \event \notin l_h'$, by induction hypothesis on $l_{h}' ++ [\event_y] ++ l_t$, 
+\[
+  \neg \eventdep^{val} (\event, \event_y, c, D)
+\]
+%
+We know:
+\\
+%
+$\event_z$ is the only possible cause of difference in $\event_y$ and $\event_y'$.
+%
+\\
+By inversion Lemma.~\ref{lem:inv_a}, 
+\[
+  z \in VAR(y)
+\]
+%
+By $\flowsto$ definition:
+\[
+  \flowsto(z, y)
+\]
+%
+\end{case}
+%
+\begin{case}[ $l_h ++ {[\event_z, \event_b, \event_y]} ++ l_t$ ].
+\\
+inversion on  $l_h ++ {[\event_z,  \event_b, \event_y]} ++ l_t$, 
+\[
+  \exists l_{h}' ++ [ \event_b, \event_y] ++ l_t, \trace \st
+  \eventdep^{val}(\event_z, \event_b, \trace)
+  \land 
+  \neg \eventdep^{val} (\event_z, l_h')
+  \land 
+  \eventdep^{\ctl} (\event_b, \event_y)
+\]
+%
+By $\neg \eventdep^{val} (\event_z, l_h')$, 
+\[
+  \forall x \in l_h' \st
+  \env \app \trace x = \env \app \trace' x
+\]
+%
+$\forall \event \in \trace \land \event \notin l_h'$, by induction hypothesis on $l_{h}' ++ [\event_y] ++ l_t$, 
+\[
+  \neg \eventdep^{val} (\event, \event_y, c, D)
+\]
+%
+We know:
+\\
+%
+$\event_z$ is the only possible cause of difference in $\event_b$ and $\event_b'$.
+%
+By inversion Lemma.~\ref{lem:inv_b}, 
+\[
+  z \in VAR(b)
+\]
+%
+By $  \eventdep^{\ctl} (\event_b, \event_y)$:
+\[
+  \forall x \in VAR(b) \st \flowsto(x, y)
+\]
+i.e.,
+\[
+  \flowsto(z, y)
+\]
+%
+\end{case}
+%
+\begin{case}[ $l_h ++ {[\event_z, \event_{b_1}, \cdots, \event_{b_n}, \event_y]} ++ l_t$ ].
+\\
+inversion on  $l_h ++ {[\event_z,  \event_{b_1}, \cdots, \event_{b_n},\event_y]} ++ l_t$, 
+\[
+  \exists l_{h}' ++ [ \event_{b_1}, \cdots, \event_{b_n}, \event_y] ++ l_t, \trace \st
+  \eventdep^{val}(\event_z, \event_{b_1}, \trace)
+  \land 
+  \neg \eventdep^{val} (\event_z, l_h')
+  \land 
+  \eventdep^{\ctl} (\event_{b_1}, \event_{b_2})
+  \land 
+  \cdots
+  \land 
+  \eventdep^{\ctl} (\event_{b_n}, \event_y)
+\]
+%
+BBy $\neg \eventdep^{val} (\event_z, l_h')$, 
+\[
+  \forall x \in l_h' \st
+  \env \app \trace x = \env \app \trace' x
+\]
+%
+$\forall \event \in \trace \land \event \notin l_h'$, by induction hypothesis on $l_{h}' ++ [\event_y] ++ l_t$, 
+\[
+  \neg \eventdep^{val} (\event, \event_y, c, D)
+\]
+%
+We know:
+\\
+%
+$\event_z$ is the only possible cause of difference in $\event_{b_1}$ and $\event_{b_1}'$.
+%
+By inversion Lemma.~\ref{lem:inv_b}, 
+\[
+  z \in VAR(b_1)
+\]
+%
+%
+By transitivity of control dependency between testing events in Lemma.~\ref{lem:ctl_trans},
+we have:
+ $ \eventdep^{\ctl} (\event_{b_1}, \event_y)$:
+\[
+  \forall x \in VAR(b_1) \st \flowsto(x, y)
+\]
+i.e.,
+\[
+  \flowsto(z, y)
+\]
+%
+\end{case}
+%
+\end{proof}
+
+\end{document}
