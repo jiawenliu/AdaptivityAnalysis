@@ -1,15 +1,115 @@
+
 \input{dep_inversion}
 \clearpage
+
+\begin{thm}[$\vardep$ implies $\flowsto$]
+Given a program ${c}$, 
+% \[
+
+%   \forall \event_1, \event_2 \in \eventset^{\asn}, 
+%   (\pi_1(\event_1), \pi_2(\event_1) ),
+%     (\pi_1(\event_2), \pi_2(\event_2) ) \in \lvar_c \st
+%     \eventdep^{val}(\event_1, \event_2, c, D)
+% \]
+\[
+\begin{array}{l}
+\forall \trace \in \mathcal{T} \st
+  \forall \event_1, \event_2 \in \eventset^{\asn}, 
+  \pi_1(\event_1)^{\pi_2(\event_1)},
+    \pi_1(\event_2)^{ \pi_2(\event_2)} \in \lvar_c \st
+    \eventdep^{val}(\event_1, \event_2, \trace, c, D)
+  \\ \quad \implies 
+  \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+  \flowsto((\pi_1(\event_1)^{\pi_2(\event_1)} ), z_1^{r_1}, c) 
+  \land \cdots \land \flowsto(z_n^{r_n}, (\pi_1(\event_2)^{ \pi_2(\event_2)} ), c) \Big)
+\end{array}
+\]
+\end{thm}
+
+\[
+\begin{array}{l}
+  l \uplus \event
+  = 
+  \\ \quad
+  \ematch~  l ~ \ewith
+  \\ \qquad
+  | \enil => 
+  \{\}
+  \\ \qquad
+  | l' :: \event' =>  
+  \\ \quad \qquad
+  \eif \eventdep^{val}(\event', \event, c) 
+  \ethen \{l::\event\}
+  \eelse l' \uplus \event
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+  \kw{dfs}(\trace, c, D)
+  = 
+  \\ \quad
+  \ematch~  \trace ~ \ewith
+  \\ \qquad
+  | \event => 
+  \{[\event]\}
+  \\ \qquad
+  | \trace' \cdot \event =>  
+  \\ \quad \qquad
+  \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
+  l \uplus \event
+\end{array}
+\]
+
+\[
+\begin{array}{l}
+  \mathcal{A}(\event_1, \event_2, \trace, c, D)
+  = 
+  \bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l.end = \event_2}
+  \emap \event => \pi_1(\event)^{\pi_2(\event)} ~ l
+   \\ \qquad 
+   \ecase \event' \in \eventset^{\test} \land \event_2 \in body(\event'):
+   \\ \qquad \quad 
+    \bigcup\limits_{\event'', \trace_h, \trace_t \st 
+     \trace_h \cdot \event'' \tracecat \trace_t = \trace'
+     \land \pi_1(\event'') \in VAR(b)  \land 
+     \pi_2(\event'') = \llabel(\trace') \pi_1(\event'')}
+     \\ \qquad \qquad \qquad
+      \mathcal{A}(\event_1, \event'', \trace_h, c, D) \uplus [\pi_1(\event'')^{\pi_2(\event'')}, \pi_1(\event_2)^{\pi_2(\event_2)}]  \\ \qquad   
+   \ecase \event' \in \eventset^{\test}
+   \land \event_2 \notin body(\event'):
+   \\ \qquad \quad 
+   \bigcup_{\event_b, \trace_h', \trace_t' \st 
+   \trace_h' \cdot \event_b  \tracecat \trace_t' = \trace_2' \land 
+   \pi_1(\event_b)^{\pi_2(\event_b)} \in \lvar_{body}}
+   \\ \qquad \quad 
+   \bigcup_{\event'', \trace_h, \trace_t \vert 
+     \trace_h \cdot \event'' \tracecat \trace_t = \trace'
+     \land
+     \pi_1(\event'') \in VAR(b) 
+     \land 
+     \pi_2(\event'') = \llabel(\trace') \pi_1(\event'')}
+     \\ \qquad \qquad \qquad
+      \mathcal{A}(\event_1, \event'', \trace_h, c, D) \uplus [\pi_1(\event'')^{\pi_2(\event'')}, \pi_1(\event_b)^{\pi_2(\event_b)}] \uplus \mathcal{A}(\event_b, \event_2, \trace_t', c, D)
+     \\ \qquad \quad
+     
+     \bigcup_{\trace_h, \trace_t, \event'' \st \trace' = \trace_1 \cdot \event'' \tracecat \trace_t}
+     \mathcal{A}(\event_1, \event'', \trace_h, c, D) \uplus [\pi_1(\event'')^{\pi_2(\event'')}, \pi_1(\event_2)^{\pi_2(\event_2)}]
+\end{array}
+\]
+
 \subsection{Variable Dependency Soundness}
 \begin{thm}[$\vardep$ implies $\flowsto$]
 Given a program ${c}$, 
 \[
+\begin{array}{l}
   \forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}}.
   \vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})
-  \implies 
+  \\ \quad \implies 
   \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
   \flowsto(x_1^{l_1}, z_1^{r_1}, c) 
   \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
+\end{array}
 \]
 \end{thm}
 \begin{proof}
@@ -42,36 +142,16 @@ Then, it is sufficient to show
 \end{array}
 \]
 %
+%
+%
+%
+%
 Unfolding $\eventdep(\event_1, \event_2, c, D)$ by Definition~\ref{def:event_dep}, we have:
 \[
-  \forall \trace_2 \in \mathcal{T} \st \eventdep_{\trace}(\event_1, \event_2, \trace_2, c, D)
-\]
-%
-Then, it is sufficient to show
-%
-\[
-\begin{array}{l}
-\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}}, \trace_2 \in \mathcal{T}, 
-\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
-\\ \quad
-(\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
-\implies
-(\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
-\implies 
-\eventdep_{\trace}(\event_1, \event_2, \trace_2, c, D)
- \\ \qquad \implies
-   \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
- \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
-\end{array}
-\]
-%
-%
-%
-Unfolding $\eventdep_{\trace}(\event_1, \event_2, \trace_2, c, D)$ by Definition~\ref{def:event_dep}, we have:
-\[
+\forall \trace_2 \in \mathcal{T} \st
 \eventdep^{val}(\event_1, \event_2, \trace_2, c, D) ~ (a) 
 \lor
-\eventdep^{\ctl}(\event_1, \event_2, \trace_2, c, D) ~ (b)
+\eventdep^{\ctl}(\event_1, \event_2, c, D) ~ (b)
 \]
 %
 Then, it is sufficient to show
@@ -87,13 +167,70 @@ Then, it is sufficient to show
  \\ \qquad \implies 
 \eventdep^{val}(\event_1, \event_2, \trace_2, c, D) ~ (a)
 \lor
-\eventdep^{\ctl}(\event_1, \event_2, \trace_2, c, D)  ~ (b)
+\eventdep^{\ctl}(\event_1, \event_2, c, D)  ~ (b)
  \\ \qquad \implies
    \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
  \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
 \end{array}
 \]
 %
+%
+By strong induction on structure of $\vtrace_2$, there are 2 cases and the statements need to be proved for the 2 cases are as follows:
+%
+$$
+\begin{array}{l}
+P(\cdot)
+ \triangleq
+\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}},
+\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
+\\ \quad
+(\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
+\implies
+(\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
+ \\ \qquad \implies 
+\eventdep^{val}(\event_1, \event_2, \cdot, c, D)
+\lor
+\eventdep^{\ctl}(\event_1, \event_2, c, D)  ~ (b)
+  \\ \qquad \implies
+   \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
+ \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
+\end{array}
+$$
+%
+$$
+\begin{array}{l}
+P(\trace_{ih} \cdot \event_{ih})
+\triangleq 
+\forall \trace_{ih}', \trace_{ih}'' \in \mathcal{T} \st \trace_{ih} = \trace_{ih}' \tracecat \trace_{ih}'' \st
+\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}},
+\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
+\\ \quad
+(\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
+\implies
+(\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
+ \\ \qquad \implies 
+\eventdep^{val}(\event_1, \event_2, \trace_{ih}', c, D)
+\lor
+\eventdep^{\ctl}(\event_1, \event_2, c, D)  ~ (b)
+  \\ \qquad \implies
+   \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
+ \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
+\\ \quad \implies
+\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}},
+\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
+\\ \quad
+(\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
+\implies
+(\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
+ \\ \qquad \implies 
+\eventdep^{val}(\event_1, \event_2, \trace_{ih} \cdot \event_{ih}, c, D)
+\lor
+\eventdep^{\ctl}(\event_1, \event_2, c, D)  ~ (b)
+  \\ \qquad \implies
+   \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
+ \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
+\end{array}
+$$
 %
 It is proved by splitting the cases $(a)$ and $(b)$:
 %
@@ -117,65 +254,6 @@ In this case, it is sufficient to show
 \end{array}
 \]
 %
-By strong induction on structure of $\vtrace_2$, there are 2 cases:
- %
-\\
-$\trace_2 = \cdot$
-\\
-$\trace_2 = \trace_{ih} \cdot \event_{ih}$
-%
-\\
-%
-By strong induction on structure of $\vtrace_2$, there are 2 cases and the statements need to be proved for the 2 cases are as follows:
-%
-$$
-\begin{array}{l}
-P(\cdot)
- \triangleq
-\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}},
-\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
-\\ \quad
-(\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
-\implies
-(\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
- \\ \qquad \implies 
-\eventdep^{val}(\event_1, \event_2, \cdot, c, D)
- \\ \qquad \implies
-   \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
- \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
-\end{array}
-$$
-%
-$$
-\begin{array}{l}
-P(\trace_{ih} \cdot \event_{ih})
-\triangleq 
-\forall \trace_{ih}', \trace_{ih}'' \in \mathcal{T} \st \trace_{ih} = \trace_{ih}' \tracecat \trace_{ih}'' \st
-\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}},
-\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
-\\ \quad
-(\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
-\implies
-(\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
- \\ \qquad \implies 
-\eventdep^{val}(\event_1, \event_2, \trace_{ih}', c, D)
- \\ \qquad \implies
-   \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
- \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
-\\ \quad \implies
-\forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}},
-\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom \st
-\\ \quad
-(\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
-\implies
-(\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
- \\ \qquad \implies 
-\eventdep^{val}(\event_1, \event_2, \trace_{ih} \cdot \event_{ih}, c, D)
- \\ \qquad \implies
-   \Big(\exists  n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 0 \leq n
- \land \flowsto(x_1^{l_1}, z_1^{r_1}, c) \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
-\end{array}
-$$
 %   Or proved as follows:
 %  $$
 %    \begin{array}{l}
