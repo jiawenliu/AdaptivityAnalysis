@@ -1,118 +1,23 @@
 
-\input{dep_inversion}
+\begin{thm}[Correctness]
+\label{thm:alg_correct}
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+\end{array}
+\]
+\end{thm}
+
+We first Proved following Inversion Lemmas.
+\input{thm_inversion}
 \clearpage
-
-\begin{thm}[$\vardep$ implies $\flowsto$]
-Given a program ${c}$, 
-% \[
-
-%   \forall \event_1, \event_2 \in \eventset^{\asn}, 
-%   (\pi_1(\event_1), \pi_2(\event_1) ),
-%     (\pi_1(\event_2), \pi_2(\event_2) ) \in \lvar_c \st
-%     \eventdep^{val}(\event_1, \event_2, c, D)
-% \]
-\[
-\begin{array}{l}
-\forall \trace \in \mathcal{T} \st
-  \forall \event_1, \event_2 \in \eventset^{\asn}, 
-  \pi_1(\event_1)^{\pi_2(\event_1)},
-    \pi_1(\event_2)^{ \pi_2(\event_2)} \in \lvar_c \st
-    \eventdep^{val}(\event_1, \event_2, \trace, c, D)
-  \\ \quad \implies 
-  \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-  \flowsto((\pi_1(\event_1)^{\pi_2(\event_1)} ), z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n}, (\pi_1(\event_2)^{ \pi_2(\event_2)} ), c) \Big)
-\end{array}
-\]
-\end{thm}
-
-\[
-\begin{array}{l}
-  l \uplus \event
-  = 
-  \\ \quad
-  \ematch~  l ~ \ewith
-  \\ \qquad
-  | \enil => 
-  \{\}
-  \\ \qquad
-  | l' :: \event' =>  
-  \\ \quad \qquad
-  \eif \eventdep^{val}(\event', \event, c) 
-  \ethen \{l::\event\}
-  \eelse l' \uplus \event
-\end{array}
-\]
-
-\[
-\begin{array}{l}
-  \kw{dfs}(\trace, c, D)
-  = 
-  \\ \quad
-  \ematch~  \trace ~ \ewith
-  \\ \qquad
-  | \event => 
-  \{[\event]\}
-  \\ \qquad
-  | \trace' \cdot \event =>  
-  \\ \quad \qquad
-  \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
-  l \uplus \event
-\end{array}
-\]
-
-\[
-\begin{array}{l}
-  \mathcal{A}(\event_1, \event_2, \trace, c, D)
-  = 
-  \bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l.end = \event_2}
-  \emap \event => \pi_1(\event)^{\pi_2(\event)} ~ l
-   \\ \qquad 
-   \ecase \event' \in \eventset^{\test} \land \event_2 \in body(\event'):
-   \\ \qquad \quad 
-    \bigcup\limits_{\event'', \trace_h, \trace_t \st 
-     \trace_h \cdot \event'' \tracecat \trace_t = \trace'
-     \land \pi_1(\event'') \in VAR(b)  \land 
-     \pi_2(\event'') = \llabel(\trace') \pi_1(\event'')}
-     \\ \qquad \qquad \qquad
-      \mathcal{A}(\event_1, \event'', \trace_h, c, D) \uplus [\pi_1(\event'')^{\pi_2(\event'')}, \pi_1(\event_2)^{\pi_2(\event_2)}]  \\ \qquad   
-   \ecase \event' \in \eventset^{\test}
-   \land \event_2 \notin body(\event'):
-   \\ \qquad \quad 
-   \bigcup_{\event_b, \trace_h', \trace_t' \st 
-   \trace_h' \cdot \event_b  \tracecat \trace_t' = \trace_2' \land 
-   \pi_1(\event_b)^{\pi_2(\event_b)} \in \lvar_{body}}
-   \\ \qquad \quad 
-   \bigcup_{\event'', \trace_h, \trace_t \vert 
-     \trace_h \cdot \event'' \tracecat \trace_t = \trace'
-     \land
-     \pi_1(\event'') \in VAR(b) 
-     \land 
-     \pi_2(\event'') = \llabel(\trace') \pi_1(\event'')}
-     \\ \qquad \qquad \qquad
-      \mathcal{A}(\event_1, \event'', \trace_h, c, D) \uplus [\pi_1(\event'')^{\pi_2(\event'')}, \pi_1(\event_b)^{\pi_2(\event_b)}] \uplus \mathcal{A}(\event_b, \event_2, \trace_t', c, D)
-     \\ \qquad \quad
-     
-     \bigcup_{\trace_h, \trace_t, \event'' \st \trace' = \trace_1 \cdot \event'' \tracecat \trace_t}
-     \mathcal{A}(\event_1, \event'', \trace_h, c, D) \uplus [\pi_1(\event'')^{\pi_2(\event'')}, \pi_1(\event_2)^{\pi_2(\event_2)}]
-\end{array}
-\]
-
-\subsection{Variable Dependency Soundness}
-\begin{thm}[$\vardep$ implies $\flowsto$]
-Given a program ${c}$, 
-\[
-\begin{array}{l}
-  \forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}}.
-  \vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})
-  \\ \quad \implies 
-  \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-  \flowsto(x_1^{l_1}, z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n}, {x}_2^{l_2}, c) \Big)
-\end{array}
-\]
-\end{thm}
-\begin{proof}
+\begin{proof}[Proof of Theorem.~\ref{thm:alg_correct}].
 Unfolding $\vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})$ by Definition~\ref{def:var_dep},
 we get:
 \[
