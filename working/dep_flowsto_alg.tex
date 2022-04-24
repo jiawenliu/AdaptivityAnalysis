@@ -1,0 +1,98 @@
+\begin{defn}[The $\flowsto$ Searching Algorithm]
+\[
+\begin{array}{l}
+	\mathcal{A}(\event_1, \event_2, \trace, c, D)
+	= 
+	\bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l = \event_1 :: l'}
+	\emap 
+	\\ \qquad \qquad
+	(\efun : \event => \pi_1(\event)^{\pi_2(\event)})	
+	\\ \qquad \qquad
+	(\efilter 
+		(\efun : \event =>  \event' \in \eventset^{\asn}) ~ l)
+	\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+	\kw{dfs}(\trace, c, D)
+	= 
+	\\ \quad
+	\ematch~  \trace ~ \ewith
+	\\ \qquad
+	| \event => \{[\event]\}
+	\\ \qquad
+	|  \cdot \event \tracecat \trace' =>  
+	\\ \quad \qquad
+	\bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
+	\event \stackrel{\trace}{\uplus} l 
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+	\event \stackrel{\trace}{\uplus} l
+	= 
+	\\ \quad
+	\ematch~  l ~ \ewith
+	\\ \qquad
+	| \enil => 	\{\}
+	\\ \qquad
+	|  \event' :: l' =>  
+	\\ \quad \qquad 	
+	\ecase \event' \in \eventset^{\asn}  \land \eventdep^{val}(\event, \event', \trace[\event:\event'], c, D)
+	=> \{l::\event\}
+	\eelse \event \uplus l' 
+	\\ \quad \qquad 	
+	\ecase \event' \in \eventset^{\test} \land \eventdep^{\ctl}(\event, \event', \trace[\event:\event'], c, D)
+	=> \{\event :: l\} \cup \event \uplus l'
+	\\ \quad \qquad 	
+	\ecase \_ =>\event \uplus l' 
+\end{array}
+\]
+\end{defn}
+%
+\begin{thm}[Algorithm Correctness w.r.t. $\flowsto$]
+\label{thm:alg_correct}
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+\end{array}
+\]
+\end{thm}
+%
+\begin{thm}[Algorithm Completeness w.r.t. $\flowsto$]
+\label{thm:alg_complete}
+\[
+\begin{array}{l}
+  \forall c, z^i, y^j \in \lvar_c \st 
+   \flowsto(z^i, y^j)
+  \\ \quad 
+   \implies \exists \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom \st
+   l_h, l_t \st 
+   l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)
+\end{array}
+\]
+\end{thm}
+%
+\begin{thm}[Soundness of Algorithm w.r.t. $\eventdep$]
+\label{thm:algeventdep_sound}
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \st
+  \\ \quad 
+  \eventdep(\event_1, \event_2,\trace, {c}, D)
+   \implies
+   \mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset
+\end{array}
+\]
+\end{thm}
+%

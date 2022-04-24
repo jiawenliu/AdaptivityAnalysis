@@ -18,6 +18,265 @@ We first Proved following Inversion Lemmas.
 \input{thm_inversion}
 \clearpage
 \begin{proof}[Proof of Theorem.~\ref{thm:alg_correct}].
+Induction on $\trace$:
+\begin{case}
+[$\trace = \event_1 \cdot \event_2$]
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \mathcal{A}( \event_1, \event_2,  \event_1 \cdot \event_2, c, D) \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+\end{array}
+\]
+%
+Unfolding $\mathcal{A}(\event_1, \event_2, \trace, c, D)$
+$\eventdep^{val}(\event_1, \event_2, \trace, c) \implies [\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}]$.
+\\
+Proved by the base case of $\flowsto$
+\end{case}
+%
+\begin{case}
+[$\trace = \event_1 \tracecat \trace_{ih} \cdot \event_2$]
+by strong induction on $\trace$,
+\[
+\begin{array}{l}
+  \forall \event_{ih1}, \event_{ih2} \eventin \trace, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \mathcal{A}(\event_{ih1}, \event_{ih2}, \trace[\event_{ih1}:\event_{ih2}], c, D) \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+   \\
+   \implies
+   \forall D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)  
+\end{array}
+\]
+%
+Inversion on $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$, get:
+\[
+  \exists \event_z, \event_y \in \eventset^{\asn}, l_h, l_t 
+  \st l_h ++ [\event_z, \event_y] ++ l_t \land 
+\]
+or
+\[
+    \exists \event_b \st l_h ++ [\event_z, \event_b, \event_y] ++ l_t
+\]
+\begin{subcase}[ $l_h ++ {[\event_z, \event_y]} ++ l_t$ ].
+\\
+inversion on  $l_h ++ {[\event_z, \event_y]} ++ l_t$, 
+\[
+  \exists l_{h}' ++ [\event_y] ++ l_t, \trace \st
+  \eventdep^{val}(\event_z, \event_y, \trace[\event_z: \event_y], c, D)
+  \land 
+  \neg \eventdep^{val} (\event_z, l_h')
+\]
+%
+By $\eventdep^{val}(\event_z, \event_y, \trace[\event_z: \event_y], c, D)$, 
+we have
+\[
+  [\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)}] 
+  \in \mathcal{A}(\event_z, \event_y, \trace[\event_{z}:\event_{y}], c, D) 
+\]
+%
+By induction hypothesis on subtrace $\trace[\event_z: \event_y]$ and $\event_z, \event_y$ and conclusion above, we know:
+\[
+  \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+\]
+This case is proved.
+%
+\completeness{
+\\
+By $\neg \eventdep^{val} (\event_z, l_h')$, 
+\[
+  \forall x \in l_h' \st
+  \env \app \trace x = \env \app \trace' x
+\]
+%
+$\forall \event \in \trace \land \event \notin l_h'$, by induction hypothesis on $l_{h}' ++ [\event_y] ++ l_t$, 
+\[
+  \neg \eventdep^{val} (\event, \event_y, c, D)
+\]
+%
+We know:
+\\
+%
+$\event_z$ is the only possible cause of difference in $\event_y$ and $\event_y'$.
+%
+\\
+By inversion Lemma.~\ref{lem:inv_a}, 
+\[
+  z \in VAR(y)
+\]
+%
+By $\flowsto$ definition:
+\[
+  \flowsto(z, y)
+\]
+}
+%
+\end{subcase}
+%
+\begin{subcase}[ $l_h ++ {[\event_z, \event_b, \event_y]} ++ l_t$ ].
+\\
+by strong induction on $\trace$,
+\[
+\begin{array}{l}
+  \forall \event_{ih1}, \event_{ih2} \eventin \trace, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \kw{dfs}(\event_{ih1}, \trace[\event_{ih1}:\event_{ih2}], c, D) \st
+   \\ \quad 
+   \forall \event_b \in \eventin (\trace \cap \eventset^{\test}), \event_c \in \eventset, l_h, l_t \st 
+   l = l_h ++ [ \event_b, \event_c] ++ l_t 
+   \implies \forall z \in VAR(\pi_1(\event_b)) \implies \exists i \in \mathbb{N}, \flowsto(z^i, y^j)
+   \\
+   \implies
+   \forall D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \kw{dfs}(\event_1, \trace, c, D) \st
+   \\ \quad 
+   \forall \event_b \in \eventin (\trace \cap \eventset^{\test}), \event_c \in \eventset, l_h, l_t \st 
+   l = l_h ++ [ \event_b, \event_c] ++ l_t 
+   \implies \forall z \in VAR(\pi_1(\event_b)) \implies \exists i \in \mathbb{N}, \flowsto(z^i, y^j)
+\end{array}
+\]
+inversion on  $l_h ++ {[\event_z,  \event_b, \event_y]} ++ l_t \in \kw{dfs}(\event_1, \trace, c, D)$, 
+\[
+  \exists l_{h}' ++ [\event_b, \event_y] ++ l_t, \trace \st
+  \eventdep^{val}(\event_z, \event_b, \trace[\event_z: \event_b], c, D)
+  \land 
+  \neg \eventdep^{val} (\event_z, l_h', \trace[\event_z: l_h'], c, D)
+  \land 
+  \eventdep^{\ctl} (\event_b, \event_y, c, D)
+\]
+%
+By $\eventdep^{\ctl} (\event_b, \event_y) $, we have:
+\[
+  [\event_b, \event_y]\in \kw{dfs}(\event_{z}, \trace[\event_{z}:\event_{y}], c, D)
+\]
+%
+By induction hypothesis, we have:
+\begin{equation}
+\label{ih_ctl}
+  \forall z \in VAR(\pi_1(\event_b)) \implies \exists i \in \mathbb{N}, \flowsto(z^i, y^j)
+\end{equation}
+%
+By $\eventdep^{val}(\event_z, \event_b, \trace[\event_z: \event_b], c, D)$, we have:
+\[
+  [\event_z, \event_b]\in \kw{dfs}(\event_{z}, \trace[\event_{z}:\event_{b}], c, D)
+\]
+%
+By induction hypothesis, we have:
+\[
+  \pi_1(\event_z) \in VAR(b)
+\]
+%
+By $\flowsto$ definition, we have $\pi_2(\event_z)$ be the label in Eq.~\ref{ih_ctl} s.t.:
+\[
+  \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, y^j)
+\]
+%
+This case is proved
+%
+\completeness{
+\\
+By $\neg \eventdep^{val} (\event_z, l_h')$, 
+\[
+  \forall x \in l_h' \st
+  \env \app \trace x = \env \app \trace' x
+\]
+%
+$\forall \event \in \trace \land \event \notin l_h'$, by induction hypothesis on $l_{h}' ++ [\event_y] ++ l_t$, 
+\[
+  \neg \eventdep^{val} (\event, \event_y, c, D)
+\]
+%
+We know:
+\\
+%
+$\event_z$ is the only possible cause of difference in $\event_b$ and $\event_b'$.
+%
+By inversion Lemma.~\ref{lem:inv_b}, 
+\[
+  z \in VAR(b)
+\]
+%
+By $  \eventdep^{\ctl} (\event_b, \event_y)$:
+\[
+  \forall x \in VAR(b) \st \flowsto(x, y)
+\]
+i.e.,
+\[
+  \flowsto(z, y)
+\]
+}
+%
+\end{subcase}
+%
+\begin{subcase}[ $l_h ++ {[\event_z, \event_{b_1}, \cdots, \event_{b_n}, \event_y]} ++ l_t$ ].
+\\
+inversion on  $l_h ++ {[\event_z,  \event_{b_1}, \cdots, \event_{b_n},\event_y]} ++ l_t$, 
+\[
+  \exists l_{h}' ++ [ \event_{b_1}, \cdots, \event_{b_n}, \event_y] ++ l_t, \trace \st
+  \eventdep^{val}(\event_z, \event_{b_1}, \trace)
+  \land 
+  \neg \eventdep^{val} (\event_z, l_h')
+  \land 
+  \eventdep^{\ctl} (\event_{b_1}, \event_{b_2})
+  \land 
+  \cdots
+  \land 
+  \eventdep^{\ctl} (\event_{b_n}, \event_y)
+\]
+%
+By $\neg \eventdep^{val} (\event_z, l_h')$, 
+\[
+  \forall x \in l_h' \st
+  \env \app \trace x = \env \app \trace' x
+\]
+%
+$\forall \event \in \trace \land \event \notin l_h'$, by induction hypothesis on $l_{h}' ++ [\event_y] ++ l_t$, 
+\[
+  \neg \eventdep^{val} (\event, \event_y, c, D)
+\]
+%
+We know:
+\\
+%
+$\event_z$ is the only possible cause of difference in $\event_{b_1}$ and $\event_{b_1}'$.
+%
+By inversion Lemma.~\ref{lem:inv_b}, 
+\[
+  z \in VAR(b_1)
+\]
+%
+%
+By transitivity of control dependency between testing events in Lemma.~\ref{lem:ctl_trans},
+we have:
+ $ \eventdep^{\ctl} (\event_{b_1}, \event_y)$:
+\[
+  \forall x \in VAR(b_1) \st \flowsto(x, y)
+\]
+i.e.,
+\[
+  \flowsto(z, y)
+\]
+%
+\end{subcase}
+%
+\end{case}
+%
+%
 Unfolding $\vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})$ by Definition~\ref{def:var_dep},
 we get:
 \[
