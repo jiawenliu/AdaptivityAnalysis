@@ -58,13 +58,46 @@ Trace concatenation: $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$
   \right.
 \]
 %
+\todo{ need to consider the occurrence times }
+Trace subtraction: $[ : ] : \mathcal{{T} \to \eventset \to \eventset \to \mathcal{T}}$
+\[
+  \trace[\event_1 : \event_2] \triangleq
+  \left\{
+  \begin{array}{ll} 
+  \trace'[\event_1: \event_2]             & \trace = \event \tracecat \trace' \land \event \eventneq \event_1 \\
+  \cdot {} \event_1 \tracecat \trace'[:\event_2]  & \trace = \event \tracecat \trace' \land \event \eventeq \event_1 \\
+  \cdot {} & \trace = \cdot \\
+  \end{array}
+  \right.
+\]
+\[
+  \trace[:\event] \triangleq
+  \left\{
+  \begin{array}{ll} 
+  \cdot {} \event' \tracecat \trace'[: \event]             & \trace = \event' \tracecat \trace' \land \event' \eventneq \event \\
+  \cdot {} \event'  & \trace = \event' \tracecat \trace' \land \event' \eventeq \event \\
+  \cdot  & \trace = \cdot \\
+  \end{array}
+  \right.
+\]
+\[
+  \trace[\event_1 : ] \triangleq
+  \left\{
+  \begin{array}{ll} 
+  \trace'[\event_1: ] \cdot \event'     & \trace = \trace'\cdot \event' \land \event \eventneq \event' \\
+  \cdot {}\event'  & \trace = \trace' \cdot \event' \land \event \eventeq \event' \\
+  \cdot  & \trace = \cdot
+  \end{array}
+  \right.
+\]
+%
 An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
 %
 \begin{equation}
   \event \eventin \trace  
   \triangleq \left\{
   \begin{array}{ll} 
-    \etrue                  & \trace =  (\trace' \cdot \event') 
+    \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \eventeq \event')
                               \\
     \event \eventin \trace' & \trace =  (\trace' \cdot \event') \land (\event \eventneq \event') \\ 
     \efalse                 & o.w.
@@ -72,27 +105,26 @@ An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \even
   \right.
 \end{equation}
 %
-An event $\event \in \eventset$ belongs to a trace $\trace$ up to value, 
-i.e., $\event \sigin \trace$ are defined as follows:
-  %
-  \todo{relavent to $\eventdep^{\ctl}$}
-\begin{equation}
-  \event \sigin \trace  
-  \triangleq \left\{
-  \begin{array}{ll} 
-    \etrue                  & \trace =  (\trace' \cdot \event')                          \land \pi_1(\event_1) = \pi_1(\event_2) 
-                              \land  \pi_2(\event_1) = \pi_2(\event_2)  
-                              % \land \vcounter(\trace \event) = \vcounter()
-                              \\
-    \event \sigin \trace'   & \trace =  (\trace' \cdot \event') 
-                              \land 
-                              (\pi_1(\event_1) = \pi_1(\event_2) 
-                              \lor  \pi_2(\event_1) = \pi_2(\event_2)) 
-                              \\ 
-    \efalse                 & o.w.
-  \end{array}
-  \right.
-\end{equation}
+% An event $\event \in \eventset$ belongs to a trace $\trace$ up to value, 
+% i.e., $\event \sigin \trace$ are defined as follows:
+%   %
+% \begin{equation}
+%   \event \sigin \trace  
+%   \triangleq \left\{
+%   \begin{array}{ll} 
+%     \etrue                  & \trace =  (\trace' \cdot \event')                          \land \pi_1(\event_1) = \pi_1(\event_2) 
+%                               \land  \pi_2(\event_1) = \pi_2(\event_2)  
+%                               % \land \vcounter(\trace \event) = \vcounter()
+%                               \\
+%     \event \sigin \trace'   & \trace =  (\trace' \cdot \event') 
+%                               \land 
+%                               (\pi_1(\event_1) \neq \pi_1(\event_2) 
+%                               \lor  \pi_2(\event_1) \neq \pi_2(\event_2)) 
+%                               \\ 
+%     \efalse                 & o.w.
+%   \end{array}
+%   \right.
+% \end{equation}
 %
 Counter $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$
 \[
@@ -153,7 +185,7 @@ The label of the lastest assignment event which assigns value to variable $x$.
 %
 % \\
 %
-\todo{un-necessary}
+\todo{Need to Consider whether useful or not}
 \begin{defn}[Well-formed Trace $\mathcal{T}$]
 \label{def:wf_trace}
 A -processed trace $\trace$ is well formed, i.e., $\trace \in \mathcal{T}$ if and only if it preserves the following two properties:

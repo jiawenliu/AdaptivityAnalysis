@@ -42,8 +42,9 @@ We first Proved following Inversion Lemmas.
 \end{thm}
 
 \begin{proof}[Proof of Theorem.~\ref{thm:alg_correct}].
-Induction on $\trace$:
+By strong induction on $\trace$:
 \begin{case}
+\label{case:alg_correct_base}
 [$\trace = \event_1 \cdot \event_2$]
 \[
 \begin{array}{l}
@@ -57,18 +58,30 @@ Induction on $\trace$:
 \end{array}
 \]
 %
-Unfolding $\mathcal{A}(\event_1, \event_2, \trace, c, D)$
-$\eventdep^{val}(\event_1, \event_2, \trace, c) \implies [\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}]$.
-\\
-Proved by the base case of $\flowsto$
+Unfolding $\mathcal{A}(\event_1, \event_2,\event_1 \cdot \event_2, c, D)$, we have:
+%
+$$
+\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \implies (\mathcal{A}( \event_1, \event_2,  \event_1 \cdot \event_2, c, D) = \{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}]\} )
+$$.
+%
+Then it is sufficient to show:
+%
+\[
+  \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)})
+\]
+%
+% \input{alg_correct_base}
+Proved in Subproof~\ref{pf:alg_correct_base}.
+
 \end{case}
 %
 \begin{case}
-[$\trace = \event_1 \tracecat \trace_{ih} \cdot \event_2$]
-by strong induction on $\trace$,
+[$\trace = \event_1 \tracecat \trace_{ih} \cdot \event_2 \land \trace_{ih} \neq \cdot$]
+by strong induction, we have following induction hypothesis:
+%
 \[
 \begin{array}{l}
-  \forall \event_{ih1}, \event_{ih2} \eventin \trace, D \in \dbdom , c \st
+  \forall \event_{ih1}, \event_{ih2} \eventin \trace_{ih} \cdot \event_2, D \in \dbdom , c \st
   \\ \quad 
    \forall l \in \mathcal{A}(\event_{ih1}, \event_{ih2}, \trace[\event_{ih1}:\event_{ih2}], c, D) \st
    \\ \quad 
@@ -87,67 +100,161 @@ by strong induction on $\trace$,
 \end{array}
 \]
 %
-Inversion on $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$, get:
-\[
-  \exists \event_z, \event_y \in \eventset^{\asn}, l_h, l_t 
-  \st l_h ++ [\event_z, \event_y] ++ l_t \land 
-\]
-or
-\[
-    \exists \event_b \st l_h ++ [\event_z, \event_b, \event_y] ++ l_t
-\]
-\begin{subcase}[ $l_h ++ {[\event_z, \event_y]} ++ l_t$ ].
+Unfolding $\mathcal{A}(\event_{ih1}, \event_{2}, \trace[\event_{ih1}:], c, D)$ and $\mathcal{A}(\event_1, \event_2, \trace, c, D)$, there are 4 cases:
+\begin{equation}
+\begin{array}{l}
+  \forall \event_{ih1}, \event_{ih2} \eventin \trace_{ih} \cdot \event_2, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \kw{dfs}(\trace[\event_{ih1}:\event_{ih2}], c, D) \st
+   \\ \quad 
+   \forall \event_z, \event_y \in \eventset^{\asn}, l_h, l_t \st 
+   l = l_h ++ [\event_z, \event_y] ++ l_t 
+   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+   \\
+   \implies
+   \forall D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in \kw{dfs}(\trace, c, D) \st
+   \\ \quad 
+   \forall \event_z, \event_y \in \eventset^{\asn}, l_h, l_t \st 
+   l = l_h ++ [\event_z, \event_y] ++ l_t 
+   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+\end{array}
+\end{equation}
+%
+\begin{equation}
+  \event_z \in \eventset^{\asn}, \event_y \in \eventset^{\test}
+  \implies \pi_1(\event_z) \in VAR(\pi_1(\event_y))
+\end{equation}
+%
+\begin{equation}
+  \event_z \in \eventset^{\test}, \event_y \in \eventset^{\asn}
+  \implies \forall z \in VAR(\pi_1(\event_z)) \st \exists i \in\mathbb{N} \st
+  \flowsto(z^i, \pi_1(\event_y)^{\pi_2(\event_y)})
+\end{equation}
+%
+\begin{equation}
+  \event_z, \event_y \in \eventset^{\test}
+  \implies l_h ++ [\event_z, \event_y] ++ l_t \in \kw{dfs}(\trace, c, D)
+\end{equation}
+\begin{subcase}[ $\event_z, \event_y \in \eventset^{\asn}$ ].
 \\
-inversion on  $l_h ++ {[\event_z, \event_y]} ++ l_t$, 
+Unfolding $\kw{dfs}(\trace, c, D)$, let $l$ be arbitrary $l \in  \kw{dfs}(\trace, c, D)$, it is sufficient to show 
 \[
-  \exists l_{h}' ++ [\event_y] ++ l_t, \trace \st
-  \eventdep^{val}(\event_z, \event_y, \trace[\event_z: \event_y], c, D)
-  \land 
-  \neg \eventdep^{val} (\event_z, l_h')
+   \forall \event_z, \event_y \in \eventset^{\asn}, l_h, l_t \st 
+   l = l_h ++ [\event_z, \event_y] ++ l_t 
+   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+\] 
+%
+Proving by cases of $\event_z \eventeq \event_1 \lor \event_z \eventneq \event_1$.
+\begin{subsubcase}[$\event_z \eventneq \event_1$]
+Let $\event_z, \event_y \in \eventset^{\asn}, l_h, l_t$ be arbitrary events and lists such that:
+\[
+  l = l_h ++ [\event_z, \event_y] ++ l_t 
+\]
+Let $\trace_{tl}$ be a subtrace  of $\trace{ih} \cdot \event_2$, such that: 
+$\trace[\event_z:] = \cdot \event_z \tracecat \trace_{tl}$
+Then we have:
+\[
+\begin{array}{l}
+  \exists l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}( \trace_{tl}, c, D) \st
+  \eventdep^{val}(\event_z, \event_y, (\trace{ih} \cdot \event_2)[\event_z: \event_y], c, D)
+  \\ \quad \land 
+  (\forall \event_i \in l_{h}' \st \neg \eventdep^{val} (\event_z, \event_i, \trace[\event_z: \event_i], c, D))
+\end{array}
 \]
 %
-By $\eventdep^{val}(\event_z, \event_y, \trace[\event_z: \event_y], c, D)$, 
+Then
 we have
 \[
-  [\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)}] 
-  \in \mathcal{A}(\event_z, \event_y, \trace[\event_{z}:\event_{y}], c, D) 
+  [\event_z, \event_y] ++ l_t 
+  \in \kw{dfs}(\cdot \event_z \tracecat \trace_{tl}, c, D)
+\]
+i.e.,:
+\[
+  [\event_z, \event_y] ++ l_t 
+  \in \kw{dfs}(\trace[\event_z:], c, D)
 \]
 %
-By induction hypothesis on subtrace $\trace[\event_z: \event_y]$ and $\event_z, \event_y$ and conclusion above, we know:
+By $\event_z \neq \event_1$, we have:
+\[
+  \event_z \in (\trace{ih} \cdot \event_2)
+\]
+%
+By $l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}( \trace_{tl}, c, D)$, we also have:
+%
+\[
+  \event_y \in \trace_{tl} \subset (\trace{ih} \cdot \event_2)
+\]
+%
+By induction hypothesis with subtrace $\trace[\event_z:\event_y]$, we know:
 \[
   \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)})
 \]
 This case is proved.
 %
-\completeness{
+\end{subsubcase}
+%
+\begin{subsubcase}[$\event_z \eventeq \event_1$].
 \\
-By $\neg \eventdep^{val} (\event_z, l_h')$, 
+Let $\event_y \in \eventset^{\asn}, l_h, l_t$ be arbitrary events and lists such that:
 \[
-  \forall x \in l_h' \st
-  \env \app \trace x = \env \app \trace' x
+  l = l_h ++ [\event_1, \event_y] ++ l_t 
 \]
 %
-$\forall \event \in \trace \land \event \notin l_h'$, by induction hypothesis on $l_{h}' ++ [\event_y] ++ l_t$, 
+By $\event_z \eventeq \event_1$, we have:
+\[
+\begin{array}{l}
+  \exists l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}(\trace_{ih}\cdot \event_2, c, D) \st
+  \eventdep^{val}(\event_1, \event_y, \trace[\event_1:\event_y], c, D)
+  \\ \quad \land 
+  (\forall \event_i \in l_{h}' \st \neg \eventdep^{val} (\event_1, \event_i, \trace[\event_1: \event_i], c, D))
+\end{array}
+\]
+%
+To show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)})$, unfolding $\eventdep^{val}(\event_1, \event_y, \trace[\event_1:\event_y], c, D)$, we have:
+\[
+\exists \config{c_1, \trace_1 \cdot \event_1} \rightarrow^{*} \config{c_2, \trace_1 \tracecat \trace[\event_1:\event_y]} 
+\]
+and 
+\[
+\exists \config{c_1, \trace_1 \cdot \event_1'} \rightarrow^{*} \config{c_2, \trace_1 \tracecat \trace'[\event_1':\event_y']} 
+\]
+Since $l_{h}'$ is subset of $\trace[\event_1:\event_y] \setminus \{\event_1, \event_y\}$, and 
+%
+ by unfolding $\kw{dfs}(\kw{dfs}(\trace_{ih}\cdot \event_2, c, D) $, we have 
+ $\forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) 
+ \land \event \notin l_h'$,
 \[
   \neg \eventdep^{val} (\event, \event_y, c, D)
 \]
 %
-We know:
+Then we know:
+\[
+  \forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) \st
+  \neg \eventdep^{val} (\event_1, \event, c, D) \lor \neg \eventdep^{val} (\event, \event_y, c, D)
+\]
 \\
 %
-$\event_z$ is the only possible cause of difference in $\event_y$ and $\event_y'$.
+$\event_1$ is the only possible cause of difference in $\event_y$ and $\event_y'$.
 %
 \\
+%
+By inversion Lemma.~\ref{lem:inv_asn}, let $\expr$ or $\qexpr$ be the expression such that:
+\[
+\config{c_1, \trace_1 \cdot \event_1} \rightarrow^{*} \config{[\assign{\pi_1(\event_y)}{\expr / \query(\qexpr)}]{}^{\pi_2(\event_y)};c_2, \trace_1 \tracecat \trace'} \rightarrow^{asn / query} \config{c_2, \trace_1 \tracecat \trace[\event_1:\event_y]} 
+\]
 By inversion Lemma.~\ref{lem:inv_a}, 
 \[
-  z \in VAR(y)
+  \pi_1(\event_1) \in VAR(\expr)
 \]
 %
 By $\flowsto$ definition:
 \[
-  \flowsto(z, y)
+  \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)})
 \]
-}
+%
+\end{subsubcase}
 %
 \end{subcase}
 %
