@@ -46,6 +46,7 @@ By strong induction on $\trace$:
 \begin{case}
 \label{case:alg_correct_base}
 [$\trace = \event_1 \cdot \event_2$]
+To show:
 \[
 \begin{array}{l}
   \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
@@ -58,18 +59,70 @@ By strong induction on $\trace$:
 \end{array}
 \]
 %
-Unfolding $\mathcal{A}(\event_1, \event_2,\event_1 \cdot \event_2, c, D)$, we have:
+Unfolding $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D)$, it is sufficient to show:
 %
-$$
-\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \implies (\mathcal{A}( \event_1, \event_2,  \event_1 \cdot \event_2, c, D) = \{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}]\} )
-$$.
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in  \bigcup\limits_{l \in \kw{dfs}(\event_1 \cdot \event_2, c, D) \land l = \event_1 :: l'}
+  \emap 
+  % \\ \qquad \qquad
+  (\efun : \event \to \pi_1(\event)^{\pi_2(\event)})  
+  % \\ \qquad \qquad
+  (\efilter 
+    (\efun : \event \to  \event \in \eventset^{\asn}) ~ l)
+ \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+\end{array}
+\]
+%
+Unfolding $\kw{dfs}(\event_1 \cdot \event_2, c, D)$, and $\event_1 \stackrel{\event_1 \cdot \event_2}{\uplus} [\event_2] $ we have:
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in  \bigcup\limits_{l \in \{[\event_2]\} \cup
+   (\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \to
+       \{[\event_1, \event_2]\}) \land l = \event_1 :: l'}
+  \emap 
+  % \\ \qquad \qquad
+  (\efun : \event \to \pi_1(\event)^{\pi_2(\event)})  
+  % \\ \qquad \qquad
+  (\efilter 
+    (\efun : \event \to  \event \in \eventset^{\asn}) ~ l)
+ \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+\end{array}
+\]
+%
+Simplifying $\emap$ and $\efilter$, it is sufficient to show:
+\[
+\begin{array}{l}
+  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
+  \\ \quad 
+   \forall l \in 
+   (\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \to 
+       \{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}], [\pi_1(\event_2)^{\pi_2(\event_2)}]\})
+ \st
+   \\ \quad 
+   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j)
+\end{array}
+\]
 %
 Then it is sufficient to show:
 %
 \[
   \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)})
 \]
-%
 % \input{alg_correct_base}
 Proved in Subproof~\ref{pf:alg_correct_base}.
 
@@ -152,42 +205,35 @@ Let $\event_z, \event_y \in \eventset^{\asn}, l_h, l_t$ be arbitrary events and 
 \[
   l = l_h ++ [\event_z, \event_y] ++ l_t 
 \]
-Let $\trace_{tl}$ be a subtrace  of $\trace{ih} \cdot \event_2$, such that: 
-$\trace[\event_z:] = \cdot \event_z \tracecat \trace_{tl}$
-Then we have:
+%
+Then it is sufficient to show $\flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})$.
+\\
+By $\event_z \neq \event_1$, we have:
+\[
+  \event_z, \event_y \in (\trace_{ih} \cdot \event_2)
+\]
+%
+Let $\trace_{tl}$ be a subtrace  of $\trace$, such that: 
+$\trace[\event_z:] = \cdot \event_z \tracecat \trace_{tl}$, we know $\trace_{tl}$ is also a subtrace  of $\trace_{ih} \cdot \event_2$.
+\\
+Unfolding $\kw{dfs}(\trace, c, D)$, by $l_h ++ [\event_z, \event_y] ++ l_t  \in\kw{dfs}(\trace, c, D)$, we have:
 \[
 \begin{array}{l}
   \exists l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}( \trace_{tl}, c, D) \st
-  \eventdep^{val}(\event_z, \event_y, (\trace{ih} \cdot \event_2)[\event_z: \event_y], c, D)
-  \\ \quad \land 
-  (\forall \event_i \in l_{h}' \st \neg \eventdep^{val} (\event_z, \event_i, \trace[\event_z: \event_i], c, D))
-\end{array}
+  (\event_z \stackrel{\trace[\event_z:]}{\uplus} l_{h}' ++ [\event_y] ++ l_t) = \{[\event_z, \event_y] ++ l_t\} 
+  \end{array}
 \]
 %
 Then
 we have
 \[
   [\event_z, \event_y] ++ l_t 
-  \in \kw{dfs}(\cdot \event_z \tracecat \trace_{tl}, c, D)
-\]
-i.e.,:
-\[
-  [\event_z, \event_y] ++ l_t 
   \in \kw{dfs}(\trace[\event_z:], c, D)
 \]
 %
-By $\event_z \neq \event_1$, we have:
-\[
-  \event_z \in (\trace{ih} \cdot \event_2)
-\]
 %
-By $l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}( \trace_{tl}, c, D)$, we also have:
-%
-\[
-  \event_y \in \trace_{tl} \subset (\trace{ih} \cdot \event_2)
-\]
-%
-By induction hypothesis with subtrace $\trace[\event_z:\event_y]$, we know:
+By induction hypothesis with subtrace $\trace[\event_z:]$ and $[\event_z, \event_y] ++ l_t 
+  \in \kw{dfs}(\trace[\event_z:], c, D)$ we know:
 \[
   \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)})
 \]
@@ -199,13 +245,20 @@ This case is proved.
 \\
 Let $\event_y \in \eventset^{\asn}, l_h, l_t$ be arbitrary events and lists such that:
 \[
-  l = l_h ++ [\event_1, \event_y] ++ l_t 
+  l = l_h ++ [\event_z, \event_y] ++ l_t 
 \]
 %
-By $\event_z \eventeq \event_1$, we have:
+By $\event_z \eventeq \event_1$, we have $l_h = []$ and:
 \[
 \begin{array}{l}
   \exists l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}(\trace_{ih}\cdot \event_2, c, D) \st
+   (\event_1 \stackrel{\trace}{\uplus} l_{h}' ++ [\event_y] ++ l_t) = \{[\event_1, \event_y] ++ l_t\}
+\end{array}
+\]
+%
+Unfolding $(\event_1 \stackrel{\trace}{\uplus} l_{h}' ++ [\event_y] ++ l_t)$, we have:
+\[
+\begin{array}{l}
   \eventdep^{val}(\event_1, \event_y, \trace[\event_1:\event_y], c, D)
   \\ \quad \land 
   (\forall \event_i \in l_{h}' \st \neg \eventdep^{val} (\event_1, \event_i, \trace[\event_1: \event_i], c, D))
