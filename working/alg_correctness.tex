@@ -84,8 +84,8 @@ Simplifying $\emap$ and $\efilter$, it is sufficient to show:
   \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
   \\ \quad 
    \forall l \in 
-   (\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \to 
-       \{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}], [\pi_1(\event_2)^{\pi_2(\event_2)}]\})
+   \left(\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \to 
+       \left\{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}] \right \}\right )
  \st
    \\ \quad 
    \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
@@ -184,32 +184,39 @@ Let $\event_z, \event_y \in \eventset^{\asn}, l_h, l_t$ be arbitrary events and 
 %
 Then it is sufficient to show $\flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})$.
 \\
+Unfolding $\kw{dfs}(\trace, c, D)$, we have:
+%
+\[
+  l_h ++ [\event_z, \event_y] ++ l_t  \in 
+  \left( \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+  \event_1 \stackrel{\trace}{\uplus} l \right)
+\]
 By $\event_z \neq \event_1$, we have:
 \[
-  \event_z, \event_y \in (\trace_{ih} \cdot \event_2)
+  [\event_z, \event_y] ++ l_t \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)
 \]
 %
-Let $\trace_{tl}$ be a subtrace  of $\trace$, such that: 
-$\trace[\event_z:] = \cdot \event_z \tracecat \trace_{tl}$, we know $\trace_{tl}$ is also a subtrace  of $\trace_{ih} \cdot \event_2$.
-\\
-Unfolding $\kw{dfs}(\trace, c, D)$, by $l_h ++ [\event_z, \event_y] ++ l_t  \in\kw{dfs}(\trace, c, D)$, we have:
-\[
-\begin{array}{l}
-  \exists l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}( \trace_{tl}, c, D) \st
-  (\event_z \stackrel{\trace[\event_z:]}{\uplus} l_{h}' ++ [\event_y] ++ l_t) = \{[\event_z, \event_y] ++ l_t\} 
-  \end{array}
-\]
+% Let $\trace_{tl}$ be a subtrace  of $\trace$, such that: 
+% $\trace[\event_z:] = \cdot \event_z \tracecat \trace_{tl}$, we know $\trace_{tl}$ is also a subtrace  of $\trace_{ih} \cdot \event_2$.
+% \\
+% Unfolding $\kw{dfs}(\trace, c, D)$, by $l_h ++ [\event_z, \event_y] ++ l_t  \in\kw{dfs}(\trace, c, D)$, we have:
+% \[
+% \begin{array}{l}
+%   \exists l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}( \trace_{tl}, c, D) \st
+%   (\event_z \stackrel{\trace[\event_z:]}{\uplus} l_{h}' ++ [\event_y] ++ l_t) = \{[\event_z, \event_y] ++ l_t\} 
+%   \end{array}
+% \]
+% %
+% Then
+% we have
+% \[
+%   [\event_z, \event_y] ++ l_t 
+%   \in \kw{dfs}(\trace[\event_z:], c, D)
+% \]
 %
-Then
-we have
-\[
-  [\event_z, \event_y] ++ l_t 
-  \in \kw{dfs}(\trace[\event_z:], c, D)
-\]
 %
-%
-By induction hypothesis with subtrace $\trace[\event_z:]$ and $[\event_z, \event_y] ++ l_t 
-  \in \kw{dfs}(\trace[\event_z:], c, D)$ we know:
+By induction hypothesis on subtrace $\trace_{ih} \cdot \event_2$ and $[\event_z, \event_y] ++ l_t 
+  \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)$ we know:
 \[
   \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)})
 \]
@@ -220,60 +227,92 @@ This case is proved.
 \begin{subsubcase}[$\event_z \eventeq \event_1$].
 \\
 Let $\event_y \in \eventset^{\asn}, l_h, l_t$ be arbitrary events and lists such that:
-\[
+\[                                                                                                                                                                                                                                                                                                                                                                                                          
   l = l_h ++ [\event_z, \event_y] ++ l_t 
 \]
 %
-By $\event_z \eventeq \event_1$, we have $l_h = []$ and:
+Unfolding $\kw{dfs}(\trace, c, D)$, we have:
+%
+\[
+  l_h ++ [\event_z, \event_y] ++ l_t  \in 
+  \left( \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+  \event_1 \stackrel{\trace}{\uplus} l \right)
+\]
+By $\event_z \eventeq \event_1$, we know $l_h = []$ and 
+\[
+  [\event_1, \event_y] ++ l_t  \in 
+  \left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+  \event_1 \stackrel{\trace}{\uplus} l \right)
+\]
+%
+Then, we also know
+\[
+  \left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+  \event_1 \stackrel{\trace}{\uplus} l \right) \neq \emptyset
+\]
+%
+Unfolding $\left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+  \event_1 \stackrel{\trace}{\uplus} l \right)$, by $[\event_1, \event_y] ++ l_t $ belongs to this set, we have:
 \[
 \begin{array}{l}
-  \exists l_{h}' \st l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}(\trace_{ih}\cdot \event_2, c, D) \st
-   (\event_1 \stackrel{\trace}{\uplus} l_{h}' ++ [\event_y] ++ l_t) = \{[\event_1, \event_y] ++ l_t\}
+  \exists l' \in \kw{dfs}(\trace_{ih}\cdot \event_2, c, D) \st
+   (\event_1 \stackrel{\trace}{\uplus} l') = \{[\event_1, \event_y] ++ l_t\}
 \end{array}
 \]
 %
-Unfolding $(\event_1 \stackrel{\trace}{\uplus} l_{h}' ++ [\event_y] ++ l_t)$, we have:
+Unfolding $(\event_1 \stackrel{\trace}{\uplus} l') $, we have:
 \[
 \begin{array}{l}
+  \exists l_{h}' \st l' = l_{h}' ++ [\event_y] ++ l_t \in \kw{dfs}(\trace_{ih}\cdot \event_2, c, D) \st
   \eventdep^{val}(\event_1, \event_y, \trace[\event_1:\event_y], c, D)
   \\ \quad \land 
   (\forall \event_i \in l_{h}' \st \neg \eventdep^{val} (\event_1, \event_i, \trace[\event_1: \event_i], c, D))
 \end{array}
 \]
 %
-To show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)})$, unfolding $\eventdep^{val}(\event_1, \event_y, \trace[\event_1:\event_y], c, D)$, we have:
-\[
-\exists \config{c_1, \trace_1 \cdot \event_1} \rightarrow^{*} \config{c_2, \trace_1 \tracecat \trace[\event_1:\event_y]} 
-\]
-and 
-\[
-\exists \config{c_1, \trace_1 \cdot \event_1'} \rightarrow^{*} \config{c_2, \trace_1 \tracecat \trace'[\event_1':\event_y']} 
-\]
-Since $l_{h}'$ is subset of $\trace[\event_1:\event_y] \setminus \{\event_1, \event_y\}$, and 
 %
- by unfolding $\kw{dfs}(\kw{dfs}(\trace_{ih}\cdot \event_2, c, D) $, we have 
- $\forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) 
- \land \event \notin l_h'$,
+To show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)})$, 
+\todo{need to insert the detail of unfolding}
+%
+by unfolding $\kw{dfs}(\trace_{ih}\cdot \event_2, c, D) $, we have:
 \[
-  \neg \eventdep^{val} (\event, \event_y, c, D)
+  \forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) 
+ \land \event \notin l_h' 
+ \st 
+ \neg \eventdep^{val} (\event, \event_y, c, D)
 \]
 %
-Then we know:
+Since $l_{h}'$ is subset of $\trace[\event_1:\event_y] \setminus \{\event_1, \event_y\}$, and $(\forall \event_i \in l_{h}' \st \neg \eventdep^{val} (\event_1, \event_i, \trace[\event_1: \event_i], c, D))$,
+then we know:
 \[
   \forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) \st
   \neg \eventdep^{val} (\event_1, \event, c, D) \lor \neg \eventdep^{val} (\event, \event_y, c, D)
 \]
-\\
 %
-$\event_1$ is the only possible cause of difference in $\event_y$ and $\event_y'$.
+Unfolding $\eventdep^{val}(\event_1, \event_y, \trace[\event_1:\event_y], c, D)$, we have:
+\[
+  \exists \event_1', \event_y' \in \eventset^{\asn},
+  \trace' \in \mathcal{T}, c_1, c_2, c_2' \st
+\]
 %
-\\
+\[
+\config{c_1, \trace_1 \cdot \event_1} \rightarrow^{*} \config{c_2, \trace_1 \tracecat \trace[\event_1:\event_y]} 
+\land
+\config{c_1, \trace_1 \cdot \event_1'} \rightarrow^{*} \config{c_2', \trace_1 \tracecat \trace'[\event_1':\event_y']} 
+\]
 %
-By inversion Lemma.~\ref{lem:inv_asn}, let $\expr$ or $\qexpr$ be the expression such that:
+%
+By inversion Lemma.~\ref{lem:inv_asn}, we have exists an expression $\expr$ or $\qexpr$ such that:
 \[
 \config{c_1, \trace_1 \cdot \event_1} \rightarrow^{*} \config{[\assign{\pi_1(\event_y)}{\expr / \query(\qexpr)}]{}^{\pi_2(\event_y)};c_2, \trace_1 \tracecat \trace'} \rightarrow^{asn / query} \config{c_2, \trace_1 \tracecat \trace[\event_1:\event_y]} 
 \]
-By inversion Lemma.~\ref{lem:inv_a}, 
+%
+By $\forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) \st
+  \neg \eventdep^{val} (\event_1, \event, c, D) \lor \neg \eventdep^{val} (\event, \event_y, c, D)$,
+we know $\event_1$ is the only cause of the difference in $\event_y$ and $\event_y'$ when evaluating $[\assign{\pi_1(\event_y)}{\expr / \query(\qexpr)}]{}^{\pi_2(\event_y)}$.
+%
+\\
+By inversion Lemma.~\ref{lem:inv_a} and ~\ref{lem:inv_eval_asn}, 
 \[
   \pi_1(\event_1) \in VAR(\expr)
 \]
@@ -287,11 +326,15 @@ By $\flowsto$ definition:
 %
 \end{subcase}
 %
-\begin{subcase}[ $l_h ++ {[\event_z, \event_b, \event_y]} ++ l_t$ ].
+\begin{subcase}[ $l_h ++ {[\event_z, \event_b]} ++ l_t$ ].
 %
 \end{subcase}
 %
-\begin{subcase}[ $l_h ++ {[\event_z, \event_{b_1}, \cdots, \event_{b_n}, \event_y]} ++ l_t$ ].
+\begin{subcase}[ $l_h ++ {[\event_b, \event_y]} ++ l_t$ ].
+%
+\end{subcase}
+%
+\begin{subcase}[ $l_h ++ {[\event_{b_1}, \cdots, \event_{b_n}]} ++ l_t$ ].
 %
 \end{subcase}
 %

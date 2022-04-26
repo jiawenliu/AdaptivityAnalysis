@@ -5,11 +5,11 @@
 	= 
 	\bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l = \event_1 :: l'}
 	\emap 
-	\\ \qquad \qquad
-	(\efun : \event => \pi_1(\event)^{\pi_2(\event)})	
-	\\ \qquad \qquad
+	% \\ \qquad \qquad
+	(\efun : \event \to \pi_1(\event)^{\pi_2(\event)})	
+	% \\ \qquad \qquad
 	(\efilter 
-		(\efun : \event =>  \event' \in \eventset^{\asn}) ~ l)
+		(\efun : \event \to  \event \in \eventset^{\asn}) ~ l)
 	\end{array}
 \]
 %
@@ -18,15 +18,14 @@
 \begin{array}{l}
 	\kw{dfs}(\trace, c, D)
 	= 
-	\\ \quad
 	\ematch~  \trace ~ \ewith
 	\\ \qquad
-	| \event => \{[\event]\}
+	| \event \to \{[\event]\}
 	\\ \qquad
-	|  \cdot \event \tracecat \trace' =>  
-	\\ \quad \qquad
-	\bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
-	\event \stackrel{\trace}{\uplus} l 
+	|  \cdot \event \tracecat \trace' \to  
+	% \\ \quad \qquad
+	\left( \kw{dfs}(\trace', c, D) \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
+	\event \stackrel{\trace}{\uplus} l \right)
 \end{array}
 \]
 %
@@ -38,18 +37,17 @@
 	\\ \quad
 	\ematch~  l ~ \ewith
 	\\ \qquad
-	| \enil => 	\{\}
+	| \enil \to 	\{\}
 	\\ \qquad
-	|  \event' :: l' =>  
+	|  \event' :: l' \to  
 	\\ \quad \qquad 	
 	\ecase \event' \in \eventset^{\asn}  \land \eventdep^{val}(\event, \event', \trace[\event:\event'], c, D)
-	=> \{l::\event\}
-	\eelse \event \uplus l' 
+	\to \{\event::l\}
 	\\ \quad \qquad 	
-	\ecase \event' \in \eventset^{\test} \land \eventdep^{\ctl}(\event, \event', \trace[\event:\event'], c, D)
-	=> \{\event :: l\} \cup \event \uplus l'
+	\ecase \event' \in \eventset^{\test} \land \eventdep^{\ctl}(\event, \event', c, D)
+	\to \{\event :: l\} \cup \event \stackrel{\trace}{\uplus} l'
 	\\ \quad \qquad 	
-	\ecase \_ =>\event \uplus l' 
+	\ecase \_ \to \event \stackrel{\trace}{\uplus} l' 
 \end{array}
 \]
 \end{defn}
