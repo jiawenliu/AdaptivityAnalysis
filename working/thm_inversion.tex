@@ -174,7 +174,7 @@
   \\ \quad 
   \mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset
   \implies
-  \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st l = \pi_1(\event_1)^{\pi_2(\event_1)} :: l' ++ [\pi_1(\event_2)^{\pi_2(\event_2)}]
+  \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D), \exists l' \st l = \pi_1(\event_1)^{\pi_2(\event_1)} :: l' ++ [\pi_1(\event_2)^{\pi_2(\event_2)}]
 \end{array}
 \]
 \end{lem}
@@ -183,24 +183,13 @@
 \\
 Taking arbitrary $\event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom$,
 \\
-by definition of $\mathcal{A}$, 
-the $(\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D))$ operation 
-will only preserve the lists of events from results of $\kw{dfs}(\trace, c, D)$ satisfying:
-\[
-	l = \event_1 :: l' ++ [\event_2] 
-\]
-%
-Then we know either:
+by definition of $\mathcal{A}$, we know either:
 \\
 $(\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)) = \emptyset$, or 
 \\
-$(\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)) \neq \emptyset \implies$ 
+$(\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)) \neq \emptyset$
 %
-\[
-\forall l_e \in (\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D))
-\st l_e = \event_1 :: l_e' ++ [\event_2] 
-\]
-%
+\\
 In case of  $(\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)) = \emptyset$, 
 we have 
 \[
@@ -210,22 +199,44 @@ we have
 \\
 In case of $(\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)) \neq \emptyset$,
 \\
-by $\event_1, \event_2 \in \eventset^{\asn}$, 
-for every 
+by the filter function $\efun l \to l = \event_1 :: l' ++ [\event_2]$,
+we know only the lists of events from $\kw{dfs}(\trace, c, D)$ satisfying following restriction are preserved,
+\[
+	l = \event_1 :: l' ++ [\event_2] 
+\]
+%
+Then we know $(\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)) \neq \emptyset \implies$ 
+%
+\[
+\forall l_e \in (\kw{setfilter} ~(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)), \exists l_e'
+\st l_e = \event_1 :: l_e' ++ [\event_2] 
+\]
+%
+By $\event_1, \event_2 \in \eventset^{\asn}$, 
+we know the $(\efilter (\efun \event \to  \event \in \eventset^{\asn})) $ function preserves $\event_1$ and $\event_2$ for every 
 $l_e = \event_1 :: l_e' ++ [\event_2] 
-\in (\kw{setfilter} ~ (\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D))$
+\in (\kw{setfilter} ~ (\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D))$.
 \\
-the $(\efilter (\efun \event \to  \event \in \eventset^{\asn})) $ function preserves $\event_1$ and $\event_2$ in $l_e$.
-\\
+Let $l_{ef} = (\efilter (\efun \event \to  \event \in \eventset^{\asn})) l_e$ for every $l_e = \event_1 :: l_e' ++ [\event_2] 
+\in (\kw{setfilter} ~ (\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D))$, 
+we know for every $l_{ef}$:
+\[
+	\exists l_{ef}' \st l_{ef} = \event_1 :: l_{ef}' ++ [\event_2]
+\]
 Then, by applying the function
-$\emap (\efun  \event \to \pi_1(\event)^{\pi_2(\event)})$ to every filtered $l_e$, it is transformed into $l$ as follows:
+$\emap (\efun  \event \to \pi_1(\event)^{\pi_2(\event)})$ to every 
+$l_{ef}$, it is transformed into $l$ as follows:
 \[
 	l = \pi_1(\event_1)^{\pi_2(\event_1)} :: l' ++ [\pi_1(\event_2)^{\pi_2(\event_2)}]
 \]
 %
-Then we know $\mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset$ and every $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$ is a transformed and filtered $l_e$ satisfying:
+and $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$.
+%
+\\
+%
+Then we know $\mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset$ and every $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$ satisfies:
 \[
-	l = \pi_1(\event_1)^{\pi_2(\event_1)} :: l' ++ [\pi_1(\event_2)^{\pi_2(\event_2)}]
+	\exists l' \st l = \pi_1(\event_1)^{\pi_2(\event_1)} :: l' ++ [\pi_1(\event_2)^{\pi_2(\event_2)}]
 \]
 %
 This lemma is proved.

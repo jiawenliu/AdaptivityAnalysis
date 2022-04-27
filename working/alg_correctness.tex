@@ -6,63 +6,68 @@ We first Proved following Inversion Lemmas.
 \label{thm:alg_correct}
 \[
 \begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom \st
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace, \in \mathcal{T}, D \in \dbdom , c \in \cdom \st
   \\ \quad 
-   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
-   \\ \quad 
-   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D), z^i, y^j \in \lvar_c, l_h, l_t \st 
+  \\ \qquad 
+   \exists \trace' \in \mathcal{T} \st \trace = \event_1 \tracecat \trace' \cdot \event_2
+   \implies 
    l = l_h ++ [z^i, y^j] ++ l_t 
-   \implies \flowsto(z^i, y^j)
+   \implies \flowsto(z^i, y^j, c)
 \end{array}
 \]
 \end{thm}
 
 \begin{proof}[Proof of Theorem.~\ref{thm:alg_correct}].
-\\
-Take arbitrary $\event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom$,
+Taking arbitrary $\event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom$,
 by strong induction on $\trace$, we have following cases.
-\begin{case}[$\trace = \cdot$].
+\begin{case}($\trace = \cdot$)
 \\
-By definition of $\mathcal{A}$, we have:
+By definition of $\mathcal{A}$, we have
 $\mathcal{A}(\event_1, \event_2, \cdot, c, D) = \{\}$.
 \\
 Since $\not\exists l \in \{\}$, the theorem is vacuously true.
 \end{case}
 %
-\begin{case}[$\trace = \cdot \event$].
+\begin{case}($\trace = \cdot \event$)
 \\
-By definition of $\mathcal{A}$, we have:
+By definition of $\mathcal{A}$, we have
 $\mathcal{A}(\event_1, \event_2, \cdot \event, c, D) = \{\}$.
 \\
 Since $\not\exists l \in \{\}$, the theorem is vacuously true.
 \end{case}
 %
-\begin{case}[$\trace = \event_1' \tracecat \trace_{ih} \land \trace_{ih} = \trace_{ih}' \cdot \event_2' \land 
-(\event_1 \eventneq \event_1' \lor \event_2 \eventneq \event_2')$].
+\begin{case}($\trace = \event_1' \tracecat \trace_{ih} \land \trace_{ih} = \trace_{ih}' \cdot \event_2' \land 
+(\event_1 \eventneq \event_1' \lor \event_2 \eventneq \event_2')$)
 \\
-By definition of $\mathcal{A}$, we have:
-$\mathcal{A}(\event_1, \event_2, \event_1' \tracecat \trace_{ih}, c, D) = \{\}$.
+By $(\event_1 \eventneq \event_1' \lor \event_2 \eventneq \event_2')$,
+we know $\not\exists \trace' \in \mathcal{T}$ satisfies $
+\event_1' \tracecat \trace_{ih}' \cdot \event_2' = \event_1 \tracecat \trace' \cdot \event_2$.
 \\
-Since $\not\exists l \in \{\}$, the theorem is vacuously true.
+The theorem is vacuously true.
 \end{case}
 %
 %
 \begin{case}
 \label{case:alg_correct_base}
-[$\trace = \event_1 \tracecat \trace_{ih} \land \trace_{ih} = {} \cdot {} \event_2$]
+($\trace = \event_1 \tracecat \trace_{ih} \land \trace_{ih} = {} \cdot {} \event_2$)
+\\
 To show:
 \[
 \begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
-  \\ \quad 
-   \forall l \in \mathcal{A}( \event_1, \event_2,  \event_1 \cdot \event_2, c, D) \st
-   \\ \quad 
-   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
+   \forall l \in \mathcal{A}(\event_1, \event_1  {} \cdot {} \event_2, \trace, c, D), z^i, y^j \in \lvar_c, l_h, l_t \st 
+  \\ \qquad 
+   \exists \trace' \in \mathcal{T} \st 
+   \event_1  {} \cdot {} \event_2 = \event_1 \tracecat \trace' \cdot \event_2
+   \implies 
    l = l_h ++ [z^i, y^j] ++ l_t 
-   \implies \flowsto(z^i, y^j)
+   \implies \flowsto(z^i, y^j, c)
 \end{array}
 \]
 %
+Let $\trace' = \cdot$, we know $\exists \trace' \in \mathcal{T}$ satisfying 
+$\event_1  {} \cdot {} \event_2 = \event_1 \tracecat \trace' \cdot \event_2$.
+\\
 By Inversion Lemma~\ref{lem:inv_alg2}, we have either one of the two following cases:
 \begin{enumerate}
   \item $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = 
@@ -79,7 +84,7 @@ since $\not\exists l \in \{\}$, the theorem is vacuously true.
 Then it is sufficient to show:
 %
 \[
-  \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)})
+  \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
 \]
 % \input{alg_correct_base}
 Proved in Subproof~\ref{pf:alg_correct_base}.
@@ -87,74 +92,98 @@ Proved in Subproof~\ref{pf:alg_correct_base}.
 \end{case}
 %
 \begin{case}
-[$\trace = \event_1 \tracecat \trace_{ih} \cdot \event_2 \land \trace_{ih} \neq \cdot$]
-by strong induction, we have following induction hypothesis:
+[$\trace = \event_1 \tracecat \trace_{ih} \cdot \event_2 \land \trace_{ih} \neq \cdot$].
+By strong induction, we have following induction hypothesis:
 %
 \[
 \begin{array}{l}
-  \forall \event_{ih1}, \event_{ih2} \eventin \trace_{ih} \cdot \event_2, D \in \dbdom , c \st
+  \forall \event_{ih1}, \event_{ih2} \eventin \trace_{ih} \cdot \event_2 \st
   \\ \quad 
-   \forall l \in \mathcal{A}(\event_{ih1}, \event_{ih2}, \trace[\event_{ih1}:\event_{ih2}], c, D) \st
-   \\ \quad 
-   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
-   l = l_h ++ [z^i, y^j] ++ l_t 
-   \implies \flowsto(z^i, y^j)
-   \\
-   \implies
-   \forall D \in \dbdom , c \st
-  \\ \quad 
-   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
-   \\ \quad 
-   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
-   l = l_h ++ [z^i, y^j] ++ l_t 
-   \implies \flowsto(z^i, y^j)  
+   \forall l \in \mathcal{A}(\event_{ih1}, \event_{ih2}, \trace[\event_{ih1}:\event_{ih2}], c, D),  z^i, y^j \in \lvar_c, l_h, l_t \st 
+   \\ \qquad
+   \exists \trace_{m}' \in \mathcal{T} \st 
+   \trace[\event_{ih1}:\event{ih2}] = \event_{ih1} \tracecat \trace_{m}' \cdot \event_{ih2}
+   \implies l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j, c)
+   % \\
+   % \implies
+   % \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)  z^i, y^j \in \lvar_c, l_h, l_t \st
+   % \\ \quad \qquad 
+   % \exists \trace' \in \mathcal{T} \st \trace = \event_1 \tracecat \trace' \cdot \event_2
+   % \implies l = l_h ++ [z^i, y^j] ++ l_t 
+   % \implies \flowsto(z^i, y^j, c)  
 \end{array}
 \]
 %
-Unfolding $\mathcal{A}(\event_{ih1}, \event_{2}, \trace[\event_{ih1}:], c, D)$ and $\mathcal{A}(\event_1, \event_2, \trace, c, D)$, there are 4 cases:
-\begin{equation}
+To show:
+\[
 \begin{array}{l}
-  \forall \event_{ih1}, \event_{ih2} \eventin \trace_{ih} \cdot \event_2, D \in \dbdom , c \st
+  \forall \event_{ih1}, \event_{ih2} \eventin \trace_{ih} \cdot \event_2 \st
   \\ \quad 
-   \forall l \in \kw{dfs}(\trace[\event_{ih1}:\event_{ih2}], c, D) \st
-   \\ \quad 
-   \forall \event_z, \event_y \in \eventset^{\asn}, l_h, l_t \st 
-   l = l_h ++ [\event_z, \event_y] ++ l_t 
-   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+   \forall l \in \mathcal{A}(\event_{ih1}, \event_{ih2}, \trace[\event_{ih1}:\event_{ih2}], c, D), z^i, y^j \in \lvar_c, l_h, l_t \st 
+   \\ \qquad
+   \exists \trace_{m}' \in \mathcal{T} \st 
+   \trace[\event_{ih1}:\event{ih2}] = \event_{ih1} \tracecat \trace_{m}' \cdot \event_{ih2}
+   \implies l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j, c)
    \\
    \implies
-   \forall D \in \dbdom , c \st
-  \\ \quad 
-   \forall l \in \kw{dfs}(\trace, c, D) \st
+   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D),  z^i, y^j \in \lvar_c, l_h, l_t \st
+   \\ \quad \qquad 
+   \exists \trace' \in \mathcal{T} \st \trace = \event_1 \tracecat \trace' \cdot \event_2
+   \implies l = l_h ++ [z^i, y^j] ++ l_t 
+   \implies \flowsto(z^i, y^j, c)  
+\end{array}
+\]
+%
+Let $\trace' = \trace_{ih}$, we know $\exists \trace' \in \mathcal{T}$ satisfying 
+$\event_1  {}\tracecat \trace_{ih} \cdot {} \event_2 = \event_1 \tracecat \trace' \cdot \event_2$.
+\\
+Unfolding $\mathcal{A}(\event_1, \event_2, \trace, c, D)$, it is sufficient to show following 4 cases:
+\begin{equation}
+\begin{array}{l}
+   \forall l \in \kw{dfs}(\trace, c, D), \event_z, \event_y \in \eventset^{\asn}, l_h, l_t \st 
    \\ \quad 
-   \forall \event_z, \event_y \in \eventset^{\asn}, l_h, l_t \st 
    l = l_h ++ [\event_z, \event_y] ++ l_t 
-   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
 \end{array}
 \end{equation}
 %
 \begin{equation}
-  \event_z \in \eventset^{\asn}, \event_y \in \eventset^{\test}
+\begin{array}{l}
+  \forall l \in \kw{dfs}(\trace, c, D), \event_z \in \eventset^{\asn}, \event_y \in \eventset^{\test}, l_h, l_t \st
+   \\ \quad 
+   l = l_h ++ [\event_z, \event_y] ++ l_t 
   \implies \pi_1(\event_z) \in VAR(\pi_1(\event_y))
+\end{array}
 \end{equation}
 %
 \begin{equation}
-  \event_z \in \eventset^{\test}, \event_y \in \eventset^{\asn}
+\begin{array}{l}
+  \forall l \in \kw{dfs}(\trace, c, D), \event_z \in \eventset^{\test}, \event_y \in \eventset^{\asn}, l_h, l_t \st
+   \\ \quad 
+   l = l_h ++ [\event_z, \event_y] ++ l_t 
   \implies \forall z \in VAR(\pi_1(\event_z)) \st \exists i \in\mathbb{N} \st
-  \flowsto(z^i, \pi_1(\event_y)^{\pi_2(\event_y)})
+  \flowsto(z^i, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
+\end{array}
 \end{equation}
 %
 \begin{equation}
-  \event_z, \event_y \in \eventset^{\test}
-  \implies l_h ++ [\event_z, \event_y] ++ l_t \in \kw{dfs}(\trace, c, D)
+\begin{array}{l}
+  \forall l \in \kw{dfs}(\trace, c, D), \event_z, \event_y \in \eventset^{\test}, l_h, l_t \st
+   \\ \quad 
+   l = l_h ++ [\event_z, \event_y] ++ l_t 
+  \implies l_h ++ [\event_z] ++ l_t \in \kw{dfs}(\trace, c, D)
+\end{array}
 \end{equation}
-\begin{subcase}[ $\event_z, \event_y \in \eventset^{\asn}$ ].
+%
+\begin{subcase}($\event_z, \event_y \in \eventset^{\asn}$)
 \\
 Unfolding $\kw{dfs}(\trace, c, D)$, let $l$ be arbitrary $l \in  \kw{dfs}(\trace, c, D)$, it is sufficient to show 
 \[
    \forall \event_z, \event_y \in \eventset^{\asn}, l_h, l_t \st 
    l = l_h ++ [\event_z, \event_y] ++ l_t 
-   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+   \implies \flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
 \] 
 %
 Proving by cases of $\event_z \eventeq \event_1 \lor \event_z \eventneq \event_1$.
@@ -164,7 +193,7 @@ Let $\event_z, \event_y \in \eventset^{\asn}, l_h, l_t$ be arbitrary events and 
   l = l_h ++ [\event_z, \event_y] ++ l_t 
 \]
 %
-Then it is sufficient to show $\flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)})$.
+Then it is sufficient to show $\flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)$.
 \\
 Unfolding $\kw{dfs}(\trace, c, D)$, we have:
 %
@@ -210,7 +239,7 @@ By $\event_z \neq \event_1$, we have:
 By induction hypothesis on subtrace $\trace_{ih} \cdot \event_2$ and $[\event_z, \event_y] ++ l_t 
   \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)$ we know:
 \[
-  \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+  \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
 \]
 This case is proved.
 %
@@ -272,7 +301,7 @@ Unfolding $(\event_1 \stackrel{\trace}{\uplus} l') $, we have:
 \]
 %
 %
-To show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)})$, 
+To show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)$, 
 \todo{need to insert the detail of unfolding}
 %
 by unfolding $\kw{dfs}(\trace_{ih}\cdot \event_2, c, D) $, we have:
@@ -320,12 +349,13 @@ By inversion Lemma.~\ref{lem:inv_a} and ~\ref{lem:inv_eval_asn},
 %
 By $\flowsto$ definition:
 \[
-  \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)})
+  \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
 \]
 %
 \end{subsubcase}
 %
 \end{subcase}
+%
 %
 \begin{subcase}[ $l_h ++ {[\event_z, \event_b]} ++ l_t$ ].
 %
