@@ -30,7 +30,7 @@ We first Proved following Inversion Lemmas.
 \label{thm:alg_correct}
 \[
 \begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \st
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom \st
   \\ \quad 
    \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
    \\ \quad 
@@ -42,10 +42,38 @@ We first Proved following Inversion Lemmas.
 \end{thm}
 
 \begin{proof}[Proof of Theorem.~\ref{thm:alg_correct}].
-By strong induction on $\trace$:
+\\
+Take arbitrary $\event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom$,
+by strong induction on $\trace$, we have following cases.
+\begin{case}[$\trace = \cdot$].
+\\
+By definition of $\mathcal{A}$, we have:
+$\mathcal{A}(\event_1, \event_2, \cdot, c, D) = \{\}$.
+\\
+Since $\not\exists l \in \{\}$, the theorem is vacuously true.
+\end{case}
+%
+\begin{case}[$\trace = \cdot \event$].
+\\
+By definition of $\mathcal{A}$, we have:
+$\mathcal{A}(\event_1, \event_2, \cdot \event, c, D) = \{\}$.
+\\
+Since $\not\exists l \in \{\}$, the theorem is vacuously true.
+\end{case}
+%
+\begin{case}[$\trace = \event_1' \tracecat \trace_{ih} \land \trace_{ih} = \trace_{ih}' \cdot \event_2' \land 
+(\event_1 \eventneq \event_1' \lor \event_2 \eventneq \event_2')$].
+\\
+By definition of $\mathcal{A}$, we have:
+$\mathcal{A}(\event_1, \event_2, \event_1' \tracecat \trace_{ih}, c, D) = \{\}$.
+\\
+Since $\not\exists l \in \{\}$, the theorem is vacuously true.
+\end{case}
+%
+%
 \begin{case}
 \label{case:alg_correct_base}
-[$\trace = \event_1 \cdot \event_2$]
+[$\trace = \event_1 \tracecat \trace_{ih} \land \trace_{ih} = {} \cdot {} \event_2$]
 To show:
 \[
 \begin{array}{l}
@@ -59,65 +87,19 @@ To show:
 \end{array}
 \]
 %
-Unfolding $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D)$, it is sufficient to show:
+By Inversion Lemma~\ref{lem:inv_alg2}, we have either one of the two following cases:
+\begin{enumerate}
+  \item $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = 
+  \left\{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}] \right \}$ 
+  and $\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c)$.
+  \item  $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = \{\}$ 
+  and $\neg \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c)$;
+\end{enumerate}
 %
-\[
-\begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
-  \\ \quad 
-   \forall l \in  \bigcup\limits_{l \in \kw{dfs}(\event_1 \cdot \event_2, c, D) \land l = \event_1 :: l'}
-  \emap 
-  % \\ \qquad \qquad
-  (\efun : \event \to \pi_1(\event)^{\pi_2(\event)})  
-  % \\ \qquad \qquad
-  (\efilter 
-    (\efun : \event \to  \event \in \eventset^{\asn}) ~ l)
- \st
-   \\ \quad 
-   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
-   l = l_h ++ [z^i, y^j] ++ l_t 
-   \implies \flowsto(z^i, y^j)
-\end{array}
-\]
+In case of $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = \{\}$,
+since $\not\exists l \in \{\}$, the theorem is vacuously true.
 %
-Unfolding $\kw{dfs}(\event_1 \cdot \event_2, c, D)$, and $\event_1 \stackrel{\event_1 \cdot \event_2}{\uplus} [\event_2] $ we have:
-\[
-\begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
-  \\ \quad 
-   \forall l \in  \bigcup\limits_{l \in \{[\event_2]\} \cup
-   (\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \to
-       \{[\event_1, \event_2]\}) \land l = \event_1 :: l'}
-  \emap 
-  % \\ \qquad \qquad
-  (\efun : \event \to \pi_1(\event)^{\pi_2(\event)})  
-  % \\ \qquad \qquad
-  (\efilter 
-    (\efun : \event \to  \event \in \eventset^{\asn}) ~ l)
- \st
-   \\ \quad 
-   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
-   l = l_h ++ [z^i, y^j] ++ l_t 
-   \implies \flowsto(z^i, y^j)
-\end{array}
-\]
-%
-Simplifying $\emap$ and $\efilter$, it is sufficient to show:
-\[
-\begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \st
-  \\ \quad 
-   \forall l \in 
-   \left(\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \to 
-       \left\{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}] \right \}\right )
- \st
-   \\ \quad 
-   \forall z^i, y^j \in \lvar_c, l_h, l_t \st 
-   l = l_h ++ [z^i, y^j] ++ l_t 
-   \implies \flowsto(z^i, y^j)
-\end{array}
-\]
-%
+\\
 Then it is sufficient to show:
 %
 \[
@@ -212,9 +194,19 @@ Unfolding $\kw{dfs}(\trace, c, D)$, we have:
 %
 \[
   l_h ++ [\event_z, \event_y] ++ l_t  \in 
-  \left( \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
-  \event_1 \stackrel{\trace}{\uplus} l \right)
+     \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) }
+  \left(  \eif \event_1 \stackrel{\trace}{\uplus} l \neq [] 
+  \ethen \left\{ \event_1 \stackrel{\trace}{\uplus} l \right\} \eelse \left\{ l \right\}
+  \right)
 \]
+%
+\todo{which is sound and correct and easy to prove}
+\[
+  l_h ++ [\event_z, \event_y] ++ l_t  \in 
+  \left(  \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) } \event_1 \stackrel{\trace}{\uplus} l 
+  \right)
+\]
+%
 By $\event_z \neq \event_1$, we have:
 \[
   [\event_z, \event_y] ++ l_t \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)
@@ -259,27 +251,36 @@ Unfolding $\kw{dfs}(\trace, c, D)$, we have:
 %
 \[
   l_h ++ [\event_z, \event_y] ++ l_t  \in 
-  \left( \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
-  \event_1 \stackrel{\trace}{\uplus} l \right)
-\]
+     \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) }
+  \left(  \eif \event_1 \stackrel{\trace}{\uplus} l \neq [] 
+  \ethen \left\{ \event_1 \stackrel{\trace}{\uplus} l \right\} \eelse \left\{ l \right\}
+  \right)
+  \]
 By $\event_z \eventeq \event_1$, we know $l_h = []$ and 
-\[
-  [\event_1, \event_y] ++ l_t  \in 
-  \left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
-  \event_1 \stackrel{\trace}{\uplus} l \right)
-\]
+% \[
+%   [\event_1, \event_y] ++ l_t  \in 
+%   \left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+%   \event_1 \stackrel{\trace}{\uplus} l \right)
+% \]
+% %
+% Then, we also know
+% \[
+%   \left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+%   \event_1 \stackrel{\trace}{\uplus} l \right) \neq \emptyset
+% \]
 %
-Then, we also know
-\[
-  \left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
-  \event_1 \stackrel{\trace}{\uplus} l \right) \neq \emptyset
-\]
-%
-Unfolding $\left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
-  \event_1 \stackrel{\trace}{\uplus} l \right)$, by $[\event_1, \event_y] ++ l_t $ belongs to this set, we have:
 \[
 \begin{array}{l}
   \exists l' \in \kw{dfs}(\trace_{ih}\cdot \event_2, c, D) \st
+   (\event_1 \stackrel{\trace}{\uplus} l') \neq []
+\end{array}
+\]
+%
+% Unfolding $\left( \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)} 
+%   \event_1 \stackrel{\trace}{\uplus} l \right)$, by 
+Since $[\event_1, \event_y] ++ l_t $ belongs to this set, let $l' \in \kw{dfs}(\trace_{ih}\cdot \event_2, c, D)$ be the list such that:
+\[
+\begin{array}{l}
    (\event_1 \stackrel{\trace}{\uplus} l') = \{[\event_1, \event_y] ++ l_t\}
 \end{array}
 \]

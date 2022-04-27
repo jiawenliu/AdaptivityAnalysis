@@ -3,16 +3,37 @@
 \begin{array}{l}
 	\mathcal{A}(\event_1, \event_2, \trace, c, D)
 	= 
-	\bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l = \event_1 :: l'}
-	\emap 
-	% \\ \qquad \qquad
-	(\efun : \event \to \pi_1(\event)^{\pi_2(\event)})	
-	% \\ \qquad \qquad
+	\kw{setmap} ~
+	% \bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l = \event_1 :: l'}
+	\\ \qquad \qquad
+	\left(\emap 
+		(\efun  \event \to \pi_1(\event)^{\pi_2(\event)})	
+	~
 	(\efilter 
-		(\efun : \event \to  \event \in \eventset^{\asn}) ~ l)
+		(\efun \event \to  \event \in \eventset^{\asn}) ~ l) \right)
+	\\ \qquad \qquad
+	(\kw{setfilter} ~
+		(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D))
 	\end{array}
 \]
 %
+% %
+% \[
+% \begin{array}{l}
+% 	\kw{dfs}(\trace, c, D)
+% 	= 
+% 	\ematch~  \trace ~ \ewith
+% 	\\ \qquad
+% 	| \event \to \{[\event]\}
+% 	\\ \qquad
+% 	|  \cdot \event \tracecat \trace' \to  
+% 	% \\ \quad \qquad
+% 	 \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
+% 	\left(  \eif \event \stackrel{\trace}{\uplus} l \neq [] 
+% 	\ethen \left\{ \event \stackrel{\trace}{\uplus} l \right\} \eelse \left\{ l \right\}
+% 	\right)
+% \end{array}
+% \]
 %
 \[
 \begin{array}{l}
@@ -24,8 +45,13 @@
 	\\ \qquad
 	|  \cdot \event \tracecat \trace' \to  
 	% \\ \quad \qquad
-	\left( \kw{dfs}(\trace', c, D) \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
-	\event \stackrel{\trace}{\uplus} l \right)
+	\kw{dfs}(\trace', c, D)
+	\cup 
+	\left(   \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
+	\event \stackrel{\trace}{\uplus} l 
+	\right)
+	\\ \qquad
+	| \cdot \to \{\}
 \end{array}
 \]
 %
@@ -37,15 +63,15 @@
 	\\ \quad
 	\ematch~  l ~ \ewith
 	\\ \qquad
-	| \enil \to 	\{\}
+	| [] \to \{\}
 	\\ \qquad
 	|  \event' :: l' \to  
 	\\ \quad \qquad 	
 	\ecase \event' \in \eventset^{\asn}  \land \eventdep^{val}(\event, \event', \trace[\event:\event'], c, D)
-	\to \{\event::l\}
+	\to \left\{ \event::(\event' :: l') \right\}
 	\\ \quad \qquad 	
 	\ecase \event' \in \eventset^{\test} \land \eventdep^{\ctl}(\event, \event', c, D)
-	\to \{\event :: l\} \cup \event \stackrel{\trace}{\uplus} l'
+	\to (\event::(\event' :: l')) \cup \left( \event \stackrel{\trace}{\uplus} l' \right)
 	\\ \quad \qquad 	
 	\ecase \_ \to \event \stackrel{\trace}{\uplus} l' 
 \end{array}
@@ -56,7 +82,7 @@
 \label{thm:alg_correct}
 \[
 \begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \st
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom \st
   \\ \quad 
    \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st
    \\ \quad 
@@ -67,25 +93,25 @@
 \]
 \end{thm}
 %
-\begin{thm}[Algorithm Completeness w.r.t. $\flowsto$]
-\label{thm:alg_complete}
-\[
-\begin{array}{l}
-  \forall c, z^i, y^j \in \lvar_c \st 
-   \flowsto(z^i, y^j)
-  \\ \quad 
-   \implies \exists \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom \st
-   l_h, l_t \st 
-   l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)
-\end{array}
-\]
-\end{thm}
+% \begin{thm}[Algorithm Completeness w.r.t. $\flowsto$]
+% \label{thm:alg_complete}
+% \[
+% \begin{array}{l}
+%   \forall c, z^i, y^j \in \lvar_c \st 
+%    \flowsto(z^i, y^j)
+%   \\ \quad 
+%    \implies \exists \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom \st
+%    l_h, l_t \st 
+%    l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)
+% \end{array}
+% \]
+% \end{thm}
 %
 \begin{thm}[Soundness of Algorithm w.r.t. $\eventdep$]
 \label{thm:algeventdep_sound}
 \[
 \begin{array}{l}
-  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \st
+  \forall \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom \st
   \\ \quad 
   \eventdep(\event_1, \event_2,\trace, {c}, D)
    \implies
