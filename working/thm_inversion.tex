@@ -166,15 +166,15 @@
 %
 \begin{lem}
 \label{lem:inv_skip}
-(Only $\eskip$ Command doesn't Produce Event)
+[Only $\eskip$ Command doesn't Produce Event]
 \\
 \[
 	\forall \trace\in \mathcal{T}, c, c' \in \cdom \st
 	\config{c, \trace} \rightarrow^* \config{c', \trace}
 	\implies 
 	c = ([\eskip];)^*c'
-\]
 \footnote{$([\eskip];){}^*$ denotes a sequence command only composed of $[\eskip]$ commands.}
+\]
 \end{lem}
 %
 \begin{lem}
@@ -201,7 +201,7 @@
   \\ \quad 
   \mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset
   \implies
-  \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D), \exists l' \st l = \pi_1(\event_1)^{\pi_2(\event_1)} :: l' ++ [\pi_1(\event_2)^{\pi_2(\event_2)}]
+  \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D) \st \exists l' \st l = \pi_1(\event_1)^{\pi_2(\event_1)} :: l' ++ [\pi_1(\event_2)^{\pi_2(\event_2)}]
 \end{array}
 \]
 \end{lem}
@@ -269,11 +269,11 @@ This lemma is proved.
 \label{lem:inv_alg2}
 For every $\event_1, \event_2 \in \eventset^{\asn}, D \in \dbdom , c \in \cdom$, we have either one of the two following cases:
 \begin{enumerate}
-  \item $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = 
+  \item $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = 
   \left\{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}] \right \}$ 
-  and $\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c)$.
-  \item  $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = \{\}$ 
-  and $\neg \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c)$;
+  and $\eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c)$.
+  \item  $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = \{\}$ 
+  and $\neg \eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c)$;
 \end{enumerate}
 \end{lem}
 \begin{proof}
@@ -281,7 +281,7 @@ By definition of $A$, we know:
 %
 \[
 	\begin{array}{l}
-	\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D)
+	\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D)
 	= 
 	\kw{setmap} ~
 	% \bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l = \event_1 :: l'}
@@ -290,20 +290,20 @@ By definition of $A$, we know:
 		(\efun  \event \to \pi_1(\event)^{\pi_2(\event)})	
 	~
 	(\efilter 
-		(\efun \event \to  \event \in \eventset^{\asn}) ~ l) \right)
+		(\efun \event \to  \event \in \eventset^{\asn})) \right)
 	\\ \qquad \qquad
 	(\kw{setfilter} ~
-		(\efun l \to l = \event_1 :: l' ++ [\event_2]) ~ 
-		\left\{[\event_2], \event_1 \stackrel{\trace}{\uplus} [\event_2] \right\})
+		(\efun l \to \exists l' \st l = \event_1 :: l' ++ [\event_2]) ~ 
+		\left(\left\{[\event_2]\right\} \cup \left\{ \event_1 \stackrel{\cdot \event_1 \cdot \event_2}{\uplus} [\event_2] \right\} \right))
 	\end{array}
 \]
-by definition of $ \event_1 \stackrel{\trace}{\uplus} [\event_2] $, we know 
+by definition of $ \event_1 \stackrel{\cdot \event_1 \cdot \event_2}{\uplus} [\event_2] $, we know 
 \[
 	\begin{array}{l}
-	\event_1 \stackrel{\trace}{\uplus} [\event_2]
+	\event_1 \stackrel{\cdot \event_1 \cdot \event_2}{\uplus} [\event_2]
 	=   
 	\\ \quad \qquad 	
-	\ecase \eventdep^{val}(\event, \event', \event_1 \cdot \event_2, c, D)
+	\ecase \eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D)
 	\to \left\{ [\event_1, \event_2] \right\}
 	\\ \quad \qquad 	
 	\ecase \_
@@ -313,16 +313,16 @@ by definition of $ \event_1 \stackrel{\trace}{\uplus} [\event_2] $, we know
 %
 By simplification of the $\kw{setfilter}$, $\emap$, $\efilter$ and $\kw{setmap}$ functions, we know
 \\
-in the case of $\eventdep^{val}(\event, \event', \event_1 \cdot \event_2, c, D)$:
+in the case of $\eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D)$:
 % \\
-$\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = 
+$\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = 
   \left\{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}] \right \}$
 \\
 (1) is proved.
 \\
-And in the case of $\neg \eventdep^{val}(\event, \event', \event_1 \cdot \event_2, c, D)$: 
+And in the case of $\neg \eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D)$: 
 % \\
-$\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = 
+$\mathcal{A}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c, D) = 
   \left\{ \right \}$
 \\
 (2) is proved.
