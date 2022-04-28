@@ -164,7 +164,34 @@
 \]
 \end{lem}
 %
+\begin{lem}
+\label{lem:inv_skip}
+(Only $\eskip$ Command doesn't Produce Event)
+\\
+\[
+	\forall \trace\in \mathcal{T}, c, c' \in \cdom \st
+	\config{c, \trace} \rightarrow^* \config{c', \trace}
+	\implies 
+	c = ([\eskip];)^*c'
+\]
+\footnote{$([\eskip];){}^*$ denotes a sequence command only composed of $[\eskip]$ commands.}
+\end{lem}
 %
+\begin{lem}
+\label{lem:inv_while}
+\[
+\begin{array}{l}
+\forall \trace, \trace' \in \mathcal{T}, c, c_1, c_2 \in \cdom \st
+	\\ \quad
+	\config{c, \trace} \rightarrow^* \config{c_1; c_2, \trace'}
+	\implies
+	c_1 \in_c c_2
+	\implies
+	\exists l \in \mathbb{N}, b \in \mathcal{B}, c_w \in \cdom \st 
+	(\ewhile [b]^l \edo c_w) \in_c c_2 \land c_1 \in_c c_w
+\end{array}
+\]
+\end{lem}
 %
 \begin{lem}[Flow Search Algorithm ($\mathcal{A}$) Inversion 1]
 \label{lem:inv_alg1}
@@ -181,11 +208,13 @@
 %
 \begin{proof}.
 \\
-Taking arbitrary $\event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom$,
+Taking arbitrary $\event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom , c \in \cdom$.
 \\
-By $\mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset$, we take arbitrary $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$.
+By $\mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset$, we take an arbitrary $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$.
 \\
-By the (**) property of $\kw{map}$ function, we know there exists a preimage of $l$ in 
+By definition of $\mathcal{A}$, we know $l$ is an output of the $\emap (\efun  \event \to \pi_1(\event)^{\pi_2(\event)}) (\efilter (\efun \event \to  \event \in \eventset^{\asn}))$ function.
+\\
+Then we know there exists a preimage for $l$ in 
 $(\kw{setfilter} ~(\efun l \to \exists l' \st l = \event_1 :: l' ++ [\event_2]) ~ \kw{dfs}(\trace, c, D)) $. 
 \\
 Let $l_e$ be this preimage, such that
