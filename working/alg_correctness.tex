@@ -1,17 +1,16 @@
 We first Proved following Inversion Lemmas.
 \input{thm_inversion}
 \clearpage
-
 \begin{thm}[Correctness]
 \label{thm:alg_correct}
 \[
 \begin{array}{l}
   \forall \event_1, \event_2 \in \eventset^{\asn}, \trace, \in \mathcal{T}, D \in \dbdom , c \in \cdom \st
   \\ \quad 
-   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D), z^i, y^j \in \lvar_c, l_h, l_t \st 
-  \\ \qquad 
-   \exists \trace' \in \mathcal{T} \st \trace = \event_1 \tracecat \trace' \cdot \event_2
+   \exists \trace' \in \mathcal{T} \st \trace = \cdot \event_1 \tracecat \trace' \cdot \event_2
    \implies 
+  \\ \qquad 
+   \forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D), z^i, y^j \in \lvar_c, l_h, l_t \st 
    l = l_h ++ [z^i, y^j] ++ l_t 
    \implies \flowsto(z^i, y^j, c)
 \end{array}
@@ -24,26 +23,23 @@ Taking arbitrary $\event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T
 by strong induction on $\trace$, we have following cases.
 \begin{case}($\trace = \cdot$)
 \\
-By definition of $\mathcal{A}$, we have
-$\mathcal{A}(\event_1, \event_2, \cdot, c, D) = \{\}$.
-\\
-Since $\not\exists l \in \{\}$, the theorem is vacuously true.
+Since $\not\exists \trace' \in \mathcal{T}$,satisfies $
+\cdot  = \cdot {} \event_1 \tracecat \trace' \cdot \event_2$, the theorem is vacuously true.
 \end{case}
 %
-\begin{case}($\trace = \cdot \event$)
+\begin{case}($\event \in \eventset, \trace = \cdot \event$)
 \\
-By definition of $\mathcal{A}$, we have
-$\mathcal{A}(\event_1, \event_2, \cdot \event, c, D) = \{\}$.
-\\
-Since $\not\exists l \in \{\}$, the theorem is vacuously true.
+Since $\not\exists \trace' \in \mathcal{T}$,satisfies $
+\cdot  \event = \cdot \event_1 \tracecat \trace' \cdot \event_2$, the theorem is vacuously true.
 \end{case}
 %
-\begin{case}($\trace = \event_1' \tracecat \trace_{ih} \land \trace_{ih} = \trace_{ih}' \cdot \event_2' \land 
+\begin{case}($\event_1', \event_2' \in \eventset, \trace_{ih} \in \mathcal{T}, 
+\trace = \cdot \event_1' \tracecat \trace_{ih} \cdot \event_2' \land 
 (\event_1 \eventneq \event_1' \lor \event_2 \eventneq \event_2')$)
 \\
 By $(\event_1 \eventneq \event_1' \lor \event_2 \eventneq \event_2')$,
 we know $\not\exists \trace' \in \mathcal{T}$ satisfies $
-\event_1' \tracecat \trace_{ih}' \cdot \event_2' = \event_1 \tracecat \trace' \cdot \event_2$.
+\cdot \event_1' \tracecat \trace_{ih} \cdot \event_2' = \cdot \event_1 \tracecat \trace' \cdot \event_2$.
 \\
 The theorem is vacuously true.
 \end{case}
@@ -51,15 +47,15 @@ The theorem is vacuously true.
 %
 \begin{case}
 \label{case:alg_correct_base}
-($\trace = \event_1 \tracecat \trace_{ih} \land \trace_{ih} = {} \cdot {} \event_2$)
+($\trace = \cdot {} \event_1 \cdot {} \event_2$)
 \\
 To show:
 \[
 \begin{array}{l}
-   \forall l \in \mathcal{A}(\event_1, \event_1  {} \cdot {} \event_2, \trace, c, D), z^i, y^j \in \lvar_c, l_h, l_t \st 
+   \forall l \in \mathcal{A}(\event_1, \cdot  \event_1  {} \cdot {} \event_2, \trace, c, D), z^i, y^j \in \lvar_c, l_h, l_t \st 
   \\ \qquad 
    \exists \trace' \in \mathcal{T} \st 
-   \event_1  {} \cdot {} \event_2 = \event_1 \tracecat \trace' \cdot \event_2
+   \cdot \event_1  {} \cdot {} \event_2 = \cdot \event_1 \tracecat \trace' \cdot \event_2
    \implies 
    l = l_h ++ [z^i, y^j] ++ l_t 
    \implies \flowsto(z^i, y^j, c)
@@ -67,25 +63,25 @@ To show:
 \]
 %
 Let $\trace' = \cdot$, we know $\exists \trace' \in \mathcal{T}$ satisfying 
-$\event_1  {} \cdot {} \event_2 = \event_1 \tracecat \trace' \cdot \event_2$.
+$\cdot {} \event_1  {} \cdot {} \event_2 = \cdot {} \event_1 \tracecat \trace' \cdot \event_2$.
 \\
 By Inversion Lemma~\ref{lem:inv_alg2}, we have either one of the two following cases:
 \begin{enumerate}
-  \item $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = 
+  \item $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = 
   \left\{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}] \right \}$ 
-  and $\eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c)$.
-  \item  $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = \{\}$ 
-  and $\neg \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c)$;
+  and $\eventdep^{val}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c)$.
+  \item  $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = \{\}$ 
+  and $\neg \eventdep^{val}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c)$;
 \end{enumerate}
 %
-In case of $\mathcal{A}(\event_1, \event_2, \event_1 \cdot \event_2, c, D) = \{\}$,
+In case of $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = \{\}$,
 since $\not\exists l \in \{\}$, the theorem is vacuously true.
 %
 \\
 Then it is sufficient to show:
 %
 \[
-  \eventdep^{val}(\event_1, \event_2, \event_1 \cdot \event_2, c) \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
+  \eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c) \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
 \]
 %
 \input{alg_correct_base}
@@ -94,7 +90,8 @@ Proved in Subproof~\ref{pf:alg_correct_base}.
 \end{case}
 %
 \begin{case}
-[$\trace = \event_1 \tracecat \trace_{ih} \cdot \event_2 \land \trace_{ih} \neq \cdot$].
+($\trace_{ih} \in \mathcal{T}, \trace = \event_1 \tracecat \trace_{ih} \cdot \event_2 \land \trace_{ih} \neq \cdot$)
+\\
 By strong induction, we have following induction hypothesis:
 %
 \[
@@ -201,8 +198,16 @@ Unfolding $\kw{dfs}(\trace, c, D)$, we have:
 %
 \[
   l_h ++ [\event_z, \event_y] ++ l_t  \in 
-  \left(  \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)
-  \cup \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) } \event_1 \stackrel{\trace}{\uplus} l 
+     \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) }
+  \left(  \eif \event_1 \stackrel{\trace}{\uplus} l \neq [] 
+  \ethen \left\{ \event_1 \stackrel{\trace}{\uplus} l \right\} \eelse \left\{ l \right\}
+  \right)
+\]
+%
+\todo{which is sound and correct and easy to prove}
+\[
+  l_h ++ [\event_z, \event_y] ++ l_t  \in 
+  \left(  \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) \bigcup\limits_{l \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) } \event_1 \stackrel{\trace}{\uplus} l 
   \right)
 \]
 %
