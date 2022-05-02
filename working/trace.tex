@@ -59,7 +59,8 @@ Trace concatenation: $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$
 \]
 %
 \todo{ need to consider the occurrence times }
-Trace subtraction: $[ : ] : \mathcal{{T} \to \eventset \to \eventset \to \mathcal{T}}$ \wqside{Confusing, I can not understand the subtraction, it takes a trace, and two events, and this operator is used to subtract these two events?}
+Subtrace: $[ : ] : \mathcal{{T} \to \eventset \to \eventset \to \mathcal{T}}$ 
+% \wqside{Confusing, I can not understand the subtraction, it takes a trace, and two events, and this operator is used to subtract these two events?}
 \[
   \trace[\event_1 : \event_2] \triangleq
   \left\{
@@ -126,7 +127,8 @@ An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \even
 %   \right.
 % \end{equation}
 %
-Counter $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$ \wq{The operator counter actually provides the number of times a specific label appears in a trace. Only a number, the position of label is ignored.}
+Counter $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$ 
+% \wq{The operator counter actually provides the number of times a specific label appears in a trace. Only a number, the position of label is ignored.}
 \[
 \begin{array}{lll}
 \vcounter(\trace \cdot (x, l, v) ) l \triangleq \vcounter(\trace) l + 1
@@ -178,72 +180,13 @@ The label of the lastest assignment event which assigns value to variable $x$.
 %   \right.
 % \]
 %
-
 %
 % $\mathcal{T}$ : Set of Well-formed Traces (in Definition~\ref{def:wf_trace})
 %
 %
 % \\
 %
-\todo{Need to Consider whether useful or not}
-\begin{defn}[Well-formed Trace $\mathcal{T}$]
-\label{def:wf_trace}
-A -processed trace $\trace$ is well formed, i.e., $\trace \in \mathcal{T}$ if and only if it preserves the following two properties:
-\begin{itemize}
-\item{\emph{(Uniqueness)}} 
-$\forall \event_1, \event_2 \eventin \trace \st \event_1 \signeq \event_2$
-%
-\item{\emph{(Ordering)}} $\forall \event_1, \event_2 \eventin \trace \st 
-(\event_1 \eventlt \event_2) \Longleftrightarrow
-\exists \trace_1, \trace_2, \trace_3 \in \mathbb{T},
- \event_1', \event_2' \in \eventset \st
-(\event_1 \eventeq \event_1') \land (\event_2 \eventeq \event_2')
-\land \trace_1 \cdot \event_1' \cdot \trace_2 \cdot \event_2' \cdot \trace_3 = \trace$
-\end{itemize}
-\end{defn}
-%
-%
-\begin{thm}[Trace Generated from Operational Semantics after Post Processing is Well-formed $c \vDash \trace$].
-\label{thm:os_wf_trace}
-\\
-\[
-\forall \trace \in \mathcal{T}, c \st
-\config{c, \vtrace} \to^{*} \config{\eskip, \trace \cdot \trace'} \land \trace' = p(\trace')
-\implies
-\vtrace' \in \mathcal{T}
-\] \wqside{ is $p(\tau)$ defined some where? I guess it means post-processing.}
-%
-\end{thm}
-\begin{proof}
-Proof in File: {\tt ``thm\_os\_wf\_trace.tex''}.
-% \input{thm_os_wf_trace}
-\end{proof}
-%
-\begin{lem}
-[Trace Non-Decreasing].
-\\
-$$
-\forall \trace \in \mathcal{T}, c \st
-\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
-\implies \exists \trace'' \in \mathcal{T} \st \trace \cdot \trace'' = \trace'
-$$
-\end{lem}
-%
-\begin{coro}
-\label{coro:aqintrace}
-\[
-\event \eventin \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
-\event' \in \eventset \st (\event \eventeq \event') \land \trace_1 \cdot \event' \cdot \trace_2 = t  
-\]
-\end{coro}
-\begin{subproof}
-Proof in File: {\tt ``coro\_aqintrace.tex''}
-% \input{coro_aqintrace}
-%
-\end{subproof}
-% \\
-%
-Program entry label: $\entry_c : \mbox{Command} \to \mathbb{N}$ 
+Program Entry Point: $\entry_c : \mbox{Command} \to \mathbb{N}$ 
 \[
   \entry_c \triangleq 
 \left\{
@@ -308,6 +251,81 @@ Given 2 programs $c$ and $c'$, $c'$ is a sub-program of$c$, i.e., $c' \in_{c} c$
 c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
 c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 \end{equation} 
+%
+\begin{lem}
+[Trace Non-Decreasing].
+\\
+$$
+\forall \trace \in \mathcal{T}, c \st
+\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
+\implies \exists \trace'' \in \mathcal{T} \st \trace \cdot \trace'' = \trace'
+$$
+\end{lem}
+%
+\begin{coro}
+\label{coro:aqintrace}
+\[
+\event \eventin \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
+\event' \in \eventset \st (\event \eventeq \event') \land \trace_1 \cdot \event' \cdot \trace_2 = \trace  
+\]
+\end{coro}
+\begin{subproof}
+Proof in File: {\tt ``coro\_aqintrace.tex''}
+% \input{coro_aqintrace}
+%
+\end{subproof}
+% \\
+%
+%
+\todo{Need to Consider Necessary}
+\\
+Given a trace $\trace$, its post-processed trace $\trace_p$ is computed by a function $p : \trace \to \trace_p$ as follows:
+\[
+  p(\trace) \triangleq
+  \left\{
+  \begin{array}{ll} 
+  p(\trace' \cdot (x, l, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, v) \\
+  p(\trace' \cdot (b, l, v)) & = p(\trace') \cdot (b, l, \vcounter(\trace') l + 1, v) \\
+  p(\trace' \cdot (x, l, \qval, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, \qval, v) \\
+  p(\cdot) & = \cdot
+  \end{array}
+  \right.
+\]
+\\
+\begin{defn}[Well-formed Post-Processed Trace $\mathcal{T_p}$]
+\label{def:wf_trace}
+A post-processed trace $\trace_p$ is well formed, i.e., $\trace_p \in \mathcal{T_p}$ if and only if it preserves the following two properties:
+\begin{itemize}
+\item{\emph{(Uniqueness)}} 
+$\forall \event_1, \event_2 \eventin \trace_p \st \event_1 \signeq \event_2$
+%
+\item{\emph{(Ordering)}} $\forall \event_1, \event_2 \eventin \trace_p \st 
+(\event_1 \eventlt \event_2) \Longleftrightarrow
+\exists \trace_1, \trace_2, \trace_3 \in \mathbb{T_p},
+ \event_1', \event_2' \in \eventset \st
+(\event_1 \eventeq \event_1') \land (\event_2 \eventeq \event_2')
+\land \trace_1 \cdot \event_1' \cdot \trace_2 \cdot \event_2' \cdot \trace_3 = \trace_p$
+\end{itemize}
+\end{defn}
+%
+%
+\begin{thm}[Trace Generated from Operational Semantics after Post Processing is Well-formed $c \vDash \trace$].
+\label{thm:os_wf_trace}
+\\
+\[
+\forall \trace \in \mathcal{T}, c \st
+\config{c, \vtrace} \to^{*} \config{\eskip, \trace \cdot \trace'} \land \trace_p = p(\trace')
+\implies
+\trace_p\in \mathcal{T}
+\] 
+% \wqside{ is $p(\tau)$ defined some where? I guess it means post-processing.}
+%
+\end{thm}
+\begin{proof}
+Proof in File: {\tt ``thm\_os\_wf\_trace.tex''}.
+% \input{thm_os_wf_trace}
+\end{proof}
+%
 %
 % \todo{
 % \begin{lem}[While Map Remains Unchanged (Invariant)]
