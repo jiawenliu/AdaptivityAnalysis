@@ -1,7 +1,9 @@
 \begin{defn}[The $\flowsto$ Searching Algorithm]
 \[
 \begin{array}{l}
-	\mathcal{A}(\event_1, \event_2, \trace, c, D)
+	\mathcal{A}:(\eventset \times \eventset \times \mathcal{T} \times \cdom \times \dbdom )\to \mathcal{P}(List(\eventset))
+	\\
+	\mathcal{A}(\event_1, \event_2, \trace, c, D) 
 	= 
 	\kw{setmap} ~
 	% \bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l = \event_1 :: l'}
@@ -36,7 +38,9 @@
 %
 \[
 \begin{array}{l}
-	\kw{dfs}(\trace, c, D)
+	\kw{dfs} : \mathcal{T} \to \cdom \to \dbdom \to \mathcal{P}(List(\eventset))
+	\\
+	\kw{dfs} \eapp \trace \eapp c \eapp  D
 	= 
 	\ematch~  \trace ~ \ewith
 	\\ \qquad
@@ -46,8 +50,8 @@
 	% \\ \quad \qquad
 	\kw{dfs}(\trace', c, D)
 	\cup 
-	\left(   \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
-	\event \stackrel{\trace}{\uplus} l 
+	\left(   \bigcup\limits_{l \in \kw{dfs} \eapp \trace' \eapp c \eapp  D }
+	\left( \uplus \eapp  \event  \eapp \trace  \eapp l \right)
 	\right)
 	\\ \qquad
 	| \cdot \to \{\}
@@ -57,9 +61,11 @@
 %
 \[
 \begin{array}{l}
-	\event \stackrel{\trace}{\uplus} l
+	\uplus : \eventset \to \mathcal{T} \to List(\eventset) \to \mathcal{P}(List(\eventset))
+	\\
+	% \event \stackrel{\trace}{\uplus} 
+	\uplus \eapp  \event  \eapp \trace  \eapp l
 	= 
-	\\ \quad
 	\ematch~  l ~ \ewith
 	\\ \qquad
 	| [] \to \{\}
@@ -70,9 +76,12 @@
 	\to \left\{ \event::(\event' :: l') \right\}
 	\\ \quad \qquad 	
 	\ecase \event' \in \eventset^{\test} \land \eventdep^{\ctl}(\event, \event', c, D)
-	\to \left\{ \event::(\event' :: l') \right\}\cup \left( \event \stackrel{\trace}{\uplus} l' \right)
+	\to \left\{ \event::(\event' :: l') \right\}\cup 
+	% \left( \event \stackrel{\trace}{\uplus} l' \right)
+	\left( \uplus \eapp  \event  \eapp \trace  \eapp l' \right)
 	\\ \quad \qquad 	
-	\ecase \_ \to \event \stackrel{\trace}{\uplus} l' 
+	% \ecase \_ \to \event \stackrel{\trace}{\uplus} l' 
+	\ecase \_ \to \uplus \eapp  \event  \eapp \trace  \eapp l'  
 \end{array}
 \]
 \end{defn}
