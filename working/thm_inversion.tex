@@ -1,11 +1,11 @@
 \begin{lem}[Arithmetic Inversion].
 \label{lem:inv_a}
 \[
-	\forall x \in \lvar, \expr \st 
-	\Big( \exists \trace, \trace' \in \mathcal{T} \st \forall z \in \lvar / \{x\} \st 
-	\env(\trace) z = \env(\trace') z \st 
-	\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v \neq v'
-	\implies x \in VAR(\expr)\Big)
+	\forall x \in \lvar, \trace, \trace' \in \mathcal{T}, \expr \st 
+	\Big( \forall z \in \lvar / \{x\} \st 
+	\env(\trace) z = \env(\trace') z\Big) \implies 
+	\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \implies v \neq v'
+	\implies x \in VAR(\expr)
 \]
 \end{lem}
 %
@@ -13,22 +13,23 @@
 \begin{lem}[Boolean Inversion]
 \label{lem:inv_b}
 \[
-	\forall x \in \lvar, \bexpr \st 
-	\Big( \exists \trace, \trace' \in \mathcal{T} \st \forall z \in \lvar / \{x\} \st
-	\env(\trace) z = \env(\trace') z \st 
+	\forall x \in \lvar, \trace, \trace' \in \mathcal{T}, \bexpr \st 
+	\Big(\forall z \in \lvar / \{x\} \st
+	\env(\trace) z = \env(\trace') z\Big) \implies 
 	\config{\trace, \bexpr} \barrow v \land \config{\trace', \bexpr} \barrow v' \land v \neq v'
-	\implies x \in VAR(\bexpr) \Big)
+	\implies x \in VAR(\bexpr) 
 \]
 \end{lem}
 %
 \begin{lem}[Query Inversion]
 \label{lem:inv_q}
 \[
-	\forall x \in \lvar, \qexpr \st \exists \trace, \trace' \in \mathcal{T} \forall z \in \lvar / \{x\} \st
-	\env(\trace) z = \env(\trace') z \st 
+	\forall x \in \lvar, \trace, \trace' \in \mathcal{T}, \qexpr \st 
+	\left(\forall z \in \lvar / \{x\} \st
+	\env(\trace) z = \env(\trace') z \right) \implies 
 	\config{\trace, \qexpr} \qarrow \qval \land \config{\trace', \qexpr} \qarrow \qval' 
-	\land v \neq_{q} \qval'
-	\implies x \in VAR(\qexpr) \Big)
+	\implies v \neq_{q} \qval'
+	\implies x \in VAR(\qexpr) 
 \]
 \end{lem}
 %
@@ -47,22 +48,24 @@
 \label{lem:inv_asn}
 \[
 \begin{array}{l}
-	\forall \trace_0 \in \mathcal{T}, c \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
-	\land \exists \event = (x, l, n, v) \in \eventset^{\asn} \st
-	\land \event \eventin \trace_1 \\
+	\forall \trace_0 \in \mathcal{T}, c \in \cdom,
+	\event \in \eventset^{\asn} \st
+	\config{c, \trace_0} \rightarrow^* \config{\eskip, \trace_0 \tracecat \trace_1} \implies
+	(\event \eventin \trace_1 \land	x = \pi_1(\event) \land l = \pi_2(\event))
+	\\ 
 	\implies 
 	\big( 
 		\exists \trace_1' \in \mathcal{T}, \expr, c' \st
-		\config{\trace_0, c} \rightarrow^* \config{\trace_0 \cdot \trace', [\assign{x}{\expr}]^l;c'} \rightarrow^{assn}
-		\config{\trace_0\trace_1'\cdot \event \cdot, c'} \rightarrow^{*}
-		\config{\trace_0\trace_1, \eskip}
+		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^{assn}
+		\config{c', \trace_0 \tracecat \trace_1'\cdot \event} \rightarrow^{*}
+		\config{\eskip, \trace_0  \tracecat  \trace_1}
 	\big)
 	\\ \qquad \lor
 	\big( 
 		\exists \trace_1' \in \mathcal{T}, \qexpr, c' \st
-		\config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, [\assign{x}{\query(\qexpr)}]^l;c'} \rightarrow^{query}
-		\config{\trace_0\trace_1' \cdot \event \cdot, c'} \rightarrow^{*}
-		\config{\trace_0\trace_1, \eskip}
+		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\query(\qexpr)}]^l;c', \trace_0 \tracecat \trace_1'} \rightarrow^{query}
+		\config{c', \trace_0  \tracecat  \trace_1' \cdot \event } \rightarrow^{*}
+		\config{ \eskip, \trace_0\trace_1}
 	\big)
 \end{array}
 \]
@@ -73,21 +76,22 @@
 \label{lem:inv_test}
 \[
 \begin{array}{l}
-	\forall c, \trace_0 \in \mathcal{T}, \st \config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eskip}
-	\land \exists \event = (x, l, n, v) \land \event \eventin \trace_1 \\
+	\forall c\in \cdom, \trace_0 \in \mathcal{T}, \event = (b, l, n, v) \in \eventset^{\test} \st
+	 \config{c, \trace_0} \rightarrow^* \config{\eskip, \trace_0 \tracecat \trace_1}
+	\implies  \event \eventin \trace_1 \\
 	\implies 
 	\big( 
-		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_1, c_2, c'' \st
-		\config{\trace_0, c} \rightarrow^* \config{\trace_0\trace_1, \eif ([b]^l, c_1, c_2);c'} \rightarrow^{if-b}
-		\config{\trace_0\trace_1'\cdot \event \cdot, c''} \rightarrow^{*}
-		\config{\trace_0\trace_1, \eskip} 
+		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_t, c_f, c'' \in \cdom \st
+		\config{c, \trace_0} \rightarrow^* \config{\eif ([b]^l, c_t, c_f);c', \trace_0 \tracecat \trace_1'} \rightarrow^{if-b}
+		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+		\config{\eskip, \trace_0 \tracecat \trace_1} 
 	\big)
 	\\ \qquad \lor
 	\big( 
-		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_w, c'' \st
-		\config{\trace_0, c} \rightarrow^* \config{\trace_0 \trace_1, \ewhile([b]^l, c_w);c'} \rightarrow^{while-b}
-		\config{\trace_0\trace_1'\cdot \event \cdot, c''} \rightarrow^{*}
-		\config{\trace_0\trace_1, \eskip}
+		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_w, c'' \in \cdom \st
+		\config{c, \trace_0} \rightarrow^* \config{ \ewhile([b]^l, c_w);c', \trace_0 \tracecat  \trace_1'} \rightarrow^{while-b}
+		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+		\config{\eskip, \trace_0  \tracecat \trace_1}
 	\big)
 \end{array}
 \]
@@ -340,15 +344,15 @@ $\mathcal{A}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c, D) =
 			\eventdep^{val}(\event_1, \event_2, \trace, c, D) 
 			\\ \quad 
 			\implies 
-			\left( \forall \event \in \trace \st \neg \eventdep^{val}(\event_1, \event, \trace[:\event], c, D)
-			\lor \neg \eventdep^{val}(\event, \event_2, \trace[\event:], c, D) 
+			\left( \forall \event \in \trace \st \neg \eventdep^{val}(\event_1, \event, \trace[\event_1:\event], c, D)
+			\lor \neg \eventdep^{val}(\event, \event_2, \trace[\event:\event_2], c, D) 
 			\right) 
 			\\ \quad 
 			\implies 
-			\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
+			\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
 		\end{array}
 		\]
-		\end{lem}
+\end{lem}
 %
 \begin{proof}
 
@@ -385,6 +389,24 @@ By $\flowsto$ definition:
   \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
 \]
 \end{proof}
+%
+\begin{lem}[Dependency with Empty Trace Implies $\flowsto$ ].
+	\label{lem:emptytrace_dep}
+	\[
+	\begin{array}{l}
+		\forall \event_1, \event_2 \in \eventset^{\asn}, c \in \cdom, D \in \dbdom 
+		\st 
+		\eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2,  c, D) 
+		\\ \quad 
+		\implies 
+		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
+	\end{array}
+	\]
+\end{lem}
+\begin{proof}
+	This lemma is a special case of Lemma~\ref{lem:inv_indepevents} and proved in Subproof~\ref{pf:alg_correct_base}.
+\end{proof}
+%
 \begin{lem}[$\eventdep^{\ctl}$ Transitivity]
 \label{lem:ctl_trans}
 \[
