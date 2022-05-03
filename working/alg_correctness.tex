@@ -206,13 +206,13 @@ $\flowsto(\pi_1(\event_z)^{\pi_2(\event_y)}, \pi_1(\event_y)^{\pi_2(\event_y)}, 
 \\
 %
 In case of $l_{he} ++ [\event_z, \event_y] ++ l_{te}  \in  
-\bigcup\limits_{l \in \kw{dfs} \eapp {\trace_{ih} \cdot \event_2} \eapp c \eapp D } (\uplus \eapp \event_1 \eapp \trace \eapp l)$,
+\bigcup\limits_{l \in (\kw{dfs} \eapp {\trace_{ih} \cdot \event_2} \eapp c \eapp D) } (\uplus \eapp \event_1 \eapp \trace \eapp l)$,
 by definition of $\uplus$, we know there exists $l^{ih}_{he}$ such that:
 \[
 \begin{array}{l}
   l^{ih}_{he} ++ [\event_y] ++ l_{te} \in (\kw{dfs} \eapp {\trace_{ih} \cdot \event_2} \eapp c \eapp D )
   \land
-  (\uplus \eapp \event_1 \eapp \trace \eapp  l^{ih}_{he} ++ [\event_y] ++ l_{te}) 
+  \left(\uplus \eapp \event_1 \eapp \trace \eapp ( l^{ih}_{he} ++ [\event_y] ++ l_{te}) \right) 
   = \{l_{he} ++ [\event_z, \event_y] ++ l_{te}\}
 \end{array}
 \]
@@ -242,7 +242,7 @@ Since $\event_z \neq \event_1$, we know $\event_z, \event_y \in \trace_{ih} \cdo
 \\
 By definition of $\kw{dfs}$ and $\uplus$,  we also have:
 \[
-  [\event_z, \event_y] ++ l_{te} \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D) 
+  [\event_z, \event_y] ++ l_{te} \in (\kw{dfs} \eapp {\trace_{ih} \cdot \event_2} \eapp c \eapp D)
 \]
 %
 % Let $\trace_{tl}$ be a subtrace  of $\trace$, such that: 
@@ -264,7 +264,7 @@ By definition of $\kw{dfs}$ and $\uplus$,  we also have:
 % \]
 %
 %
-By induction hypothesis on subtrace $\trace_{ih} \cdot \event_2$ and $[\event_z, \event_y] ++ l_t 
+By induction hypothesis on the subtrace $\trace_{ih} \cdot \event_2$ and $[\event_z, \event_y] ++ l_t 
   \in \kw{dfs}(\trace_{ih} \cdot \event_2, c, D)$ we know:
 \[
   \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
@@ -290,7 +290,7 @@ This case is proved.
 %   \right)
 %   \]
 By $\event_z \eventeq \event_1$, we know $l_{he} = []$ and 
-$(\uplus \eapp \event_1 \eapp \trace \eapp  l^{ih}_{he} ++ [\event_y] ++ l_{te}) 
+$\uplus \eapp \event_1 \eapp \trace \eapp  (l^{ih}_{he} ++ [\event_y] ++ l_{te}) 
 = \{[\event_1, \event_y] ++ l_{te}\}$.
 % \[
 %   [\event_1, \event_y] ++ l_t  \in 
@@ -333,28 +333,90 @@ By definition of $\uplus$, we have:
 %
 To show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)$, 
 %
-by unfolding $\kw{dfs}(\trace_{ih}\cdot \event_2, c, D)$, we have:(\todo{Proved by showing contrdiction: if $\eventdep^{val} (\event_i, \event_y, \trace[\event_i:\event_y], c, D)$, then $\event_i$ shows up 
-in $l_{ih-h}$.})
-\[
-  \forall \event_i \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) 
- \land \event \notin l_{ih-h} 
- \st 
- \neg \eventdep^{val} (\event_i, \event_y, \trace[\event_i:\event_y], c, D)
-\]
+unfolding $ (\kw{dfs} \eapp {\trace_{ih} \cdot \event_2} \eapp c \eapp D)$, by law of excluded middle,   there are two cases:
+\\
+$H_f =  \forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) 
+ \land \event \notin l^{ih}_{he} \st
+\neg \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D) \lor \neg \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D)$.
+\\
+$H_t = \exists \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) 
+\land \event \notin l^{ih}_{he} \st
+\eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D) \land \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D)$.
+\\
+We show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event)^{\pi_2(\event)}, c)$ for both of the 2 cases,
+ in Subproof~\ref{pf:midevents_indep}.
+% we have the following proposition proved in Subproof~\ref{pf:midevents_indep}.
+% \[
+%   \forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) 
+%  \land \event \notin l^{ih}_{he} 
+%  \st 
+%  \neg \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D)
+% \]
 %
+\begin{subproof}
+  \label{pf:midevents_indep}
+%   (\todo{Proved by showing contradiction: if $\eventdep^{val} (\event_i, \event_y, \trace[\event_i:\event_y], c, D)$, then $\event_i$ shows up 
+%   in $l_{ih-h}$.})
+%   \\
+%   Taking arbitrary 
+%   $\event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) \land \event \notin l^{ih}_{he}$, by law of excluded middle, 
+%   there are two cases:
+%   \\
+%   $H_f = \neg \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D) \lor \neg \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D)$.
+% \\
+%   $H_t = \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D) \land \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D)$.
+%   \\
+  In the case of $H_f$, since $(\forall \event \in l^{ih}_{he} \st \neg \eventdep(\event_1, \event, \trace[\event_1, \event], c, D))$,
+  we know:
+  \[
+      \forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) \st
+      \neg \eventdep^{val} (\event_1, \event, \trace[\event_1: \event], c, D) 
+      \lor \neg \eventdep^{val} (\event, \event_y,\trace[\event:\event_y], c, D)
+    \]
+    %
+    By Inversion Lemma~\ref{lem:inv_indepevents}, we have
+    \[
+      \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
+    \]
+%  \\
+  In the case of $H_t$, without loss of generalization, let $\event$ be the left most event in $\trace$ such that 
+  $\eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D) \land \eventdep^{val} (\event, \event_y, \trace[\event:\event_y], c, D)$.
+  \\
+ Then we know:
+  \[
+    \forall \event' \in (\trace[\event_1:\event]\setminus \{\event_1, \event\}) 
+    \st 
+    (\neg \eventdep^{val} (\event', \event, \trace[\event':\event], c, D)
+    \lor 
+    \neg \eventdep^{val} (\event_1, \event', \trace[\event_1: \event'], c, D))
+  \]
+  %
+Then by Lemma~\ref{lem:inv_indepevents}, we know  $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event)^{\pi_2(\event)}, c)$.
+\\
+  By definition of $\kw{dfs}$ and $\uplus$, we also know 
+  \[ 
+    [\event, \event_y] ++ l_{te} \in (\kw{dfs} \eapp {\trace_{ih} \cdot \event_2} \eapp c \eapp D )
+  \]
+  %
+  Then we know $\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)$.
+%
+\\
+By the $\flowsto$ Definition~\ref{def:flowsto}'s transitivity item, we know $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)$.
+
+\end{subproof}
 %
 % Since $l_{h}'$ is subset of $\trace[\event_1:\event_y] \setminus \{\event_1, \event_y\}$, and $(\forall \event_i \in l_{h}' \st \neg \eventdep^{val} (\event_1, \event_i, \trace[\event_1: \event_i], c, D))$,
-then we know:
-\[
-  \forall \event_i \in \trace[\event_1:\event_y] \st
-  \neg \eventdep^{val} (\event_1, \event_i, \trace[\event_1: \event_i], c, D) 
-  \lor \neg \eventdep^{val} (\event_i, \event_y,\trace[\event_i:\event_y], c, D)
-\]
-%
-By Inversion Lemma~\ref{lem:inv_indepevents}, we have
-\[
-  \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
-\]
+% then we know:
+% \[
+%   \forall \event_i \in \trace[\event_1:\event_y] \st
+%   \neg \eventdep^{val} (\event_1, \event_i, \trace[\event_1: \event_i], c, D) 
+%   \lor \neg \eventdep^{val} (\event_i, \event_y,\trace[\event_i:\event_y], c, D)
+% \]
+% %
+% By Inversion Lemma~\ref{lem:inv_indepevents}, we have
+% \[
+%   \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
+% \]
 %
 This case is proved.
 %
