@@ -119,12 +119,12 @@ proved in Subproof~\ref{pf:alg_correct_base}.
 \begin{case}
 ($\event_1', \event_2' \in \eventset$, $\trace_{ih} \in \mathcal{T}, \trace = \event_1' \tracecat \trace_{ih} \cdot \event_2' \land \trace_{ih} \neq \cdot$)
 \\
-The induction hypothesis is as follow:
+The induction hypothesis is as follows:
 %
 \[
 \begin{array}{l}
   \forall \event_{ih1}, \event_{ih2} \eventin \trace_{ih} \cdot \event_2 \st
-   \\ \quad
+  %  \\ \quad
    \exists \trace' \in \mathcal{T} \st 
    \trace[\event_{ih1}:\event_{ih2}] = \event_{ih1} \tracecat \trace' \cdot \event_{ih2}
    \implies 
@@ -168,30 +168,35 @@ $\neg(\event_1 = \event_1' \land  \event_2 = \event_2')$
 \\
 In case of $\neg(\event_1 = \event_1' \land  \event_2 = \event_2')$, since 
 $\not\exists \trace' \in \mathcal{T}$,satisfies $
-\cdot {} \event_1' \cdot {} \event_2'  = \cdot {} \event_1 \tracecat \trace' \cdot \event_2$, 
+\cdot {} \event_1' {}\tracecat \trace_{ih} \cdot {} \event_2'  = \cdot {} \event_1 \tracecat \trace' \cdot \event_2$, 
 the theorem is vacuously true.
 \\
 %
 In case of $\event_1 = \event_1' \land  \event_2 = \event_2'$,
 let $\trace' = \trace_{ih}$, we know $\exists \trace' \in \mathcal{T}$ satisfying 
-$\event_1  {}\tracecat \trace_{ih} \cdot {} \event_2 = \event_1 \tracecat \trace' \cdot \event_2$.
+$\event_1'  {}\tracecat \trace_{ih} \cdot {} \event_2' = \event_1 \tracecat \trace' \cdot \event_2$.
 \\
 Taking arbitrary $z^i, y^j \in \lvar_c, l_h, l_t$ such that 
 $l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$.
 \\
-By definition of $\mathcal{A}(\event_1, \event_2, \trace, c, D)$, 
-we know there exists a preimage $l_e \in (\kw{dfs} \eapp \trace \eapp c \eapp  D )$ 
-and two assignment events
-$\event_z, \event_y \in \eventset^{\asn}$ such that $ \pi_1(\event_z)^{\pi_2(\event_y)} = z^i \land \pi_1(\event_y)^{\pi_2(\event_y)} = y^j$
-and $l_e$ in following forms:
+By definition of $\mathcal{A}(\event_1, \event_2, \trace, c, D)$,
+we know there exists a preimage $l_e \in (\kw{dfs} \eapp \trace \eapp c \eapp  D )$.
+\\
+By and definition of the 
+$\kw{setfilter}$ function,
+having the form $l_e = [\event_1, \cdots, \event_2]$. 
+\\
+By definition of the $\emap$ and $\kw{setmap}$ function, we know there exist 
+two assignment events
+$\event_z, \event_y \in \eventset^{\asn}$ in $l_e$,
+such that $ \pi_1(\event_z)^{\pi_2(\event_y)} = z^i \land \pi_1(\event_y)^{\pi_2(\event_y)} = y^j$
+and $l_e$ having the form:
 \\
 \[
-  l_e = [\event_1, \cdots, \event_2] 
-  \land 
-  \exists l_{he}, l_{te} \in List(\eventset) \st 
-  l_e = l_{he} ++ [\event_z, \cdots, \event_y] ++ l_{te}
+ \exists  n \in \mathbb{N}, \event_{b_1}, \cdots, \event_{b_n} \in \eventset^{\test}, l_{he}, l_{te} \in List(\eventset) \st 
+  n \geq 0 \land l_e = l_{he} ++ [\event_z, \event_{b_1}, \cdots, \event_{b_n}, \event_y] ++ l_{te}
 \]
-, where $ \cdots $ between $\event_z, \event_y$ in $l_e$ represents $0$ or more testing events.
+, with $0$ or more testing events between $\event_z, \event_y$ in $l_e$.
 \\
 % Unfolding $\mathcal{A}(\event_1, \event_2, \trace, c, D)$, it is sufficient to show following 4 cases:
 By number of testing events between $\event_z, \event_y$ in $l_e$, it is sufficient to show following 3 cases:
@@ -218,7 +223,7 @@ By number of testing events between $\event_z, \event_y$ in $l_e$, it is suffici
 %
 \begin{equation}
 \begin{array}{l}
-  \forall n \in \mathbb{N}, \event_{b_1}, \cdots, \event_{b_n} \in \eventset^{\test}, l_h, l_t \st
+  \forall n \in \mathbb{N}, \event_{b_1}, \cdots, \event_{b_n} \in \eventset^{\test}\st
   %  \\ \quad 
    n > 1 \implies
    l_e = l_{he} ++ {[\event_z, \event_{b_1}, \cdots, \event_{b_n}, \event_y]} ++ l_{te}
@@ -229,7 +234,7 @@ By number of testing events between $\event_z, \event_y$ in $l_e$, it is suffici
 \end{array}
 \end{equation}
 %
-\begin{subcase}($l_e = l_{he} ++ [\event_z, \event_y] ++ l_{te}$)
+\begin{subcase}(No testing event : $l_e = l_{he} ++ [\event_z, \event_y] ++ l_{te}$)
 \\
 % Unfolding $\kw{dfs}(\trace, c, D)$, let $l$ be arbitrary $l \in  \kw{dfs}(\trace, c, D)$, it is sufficient to show 
 % \[
@@ -275,15 +280,25 @@ To show:
 % \land 
 \eventdep(\event_1, \event_2, \event_1 \tracecat \trace_{ih} \cdot \event_2, {c}, D) 
 \]
-Since $l_e$ has the form $l_e = [\event_1, \cdots, \event_2] $, let $l_e = [\event_1, \event_{ih}] ++ l^{ih}_e ++ [\event_2]$ 
-for some $l^{ih}_e \in List(\eventset)$.
+Since $l_e$ has the form $l_e = [\event_1, \cdots, \event_2] $, 
+we know there exist a list $l^{ih}_e \in List(\eventset)$
+where $l_e = [\event_1] ++ l^{ih}_e ++ [\event_2]$.
 \\
-By definition of $\uplus$, we know $\eventdep^{val}(\event_1, \event_{ih}, \trace[\event_1:\event_{ih}], c, D)$.
+In case of $l^{ih}_e = []$, by definition of $\uplus$, we know $\eventdep^{val}(\event_1, \event_{2}, \trace[\event_1:\event_{2}], c, D)$.
+This case is proved.
 \\
-By induction hypothesis on $[\event_{ih}] ++ l^{ih}_e ++ [\event_2] \in \kw{dfs}(\trace[\event_{ih}:\event_2], c, D)$, we know:
-$\eventdep^{val}(\event_1, \event_{ih}, \trace[\event_1:\event_{ih}], c, D)$.
+in case of $l^{ih}_e =  \event_{ih}::l'^{ih}_e$, we have
+ $l_e = \event_1::\event_{ih}::l'^{ih}_e ++ [\event_2]$.
 \\
-Then by the \emph{Value May-Dependent} Definition~\ref{def:event_valdep} and \emph{Event May-Dependent} Definition~\ref{def:event_dep}, we know:
+By definition of $\uplus$, we know $\eventdep^{val}(\event_1, \event_{ih}, \trace[\event_1:\event_{ih}], c, D)$ and 
+$\event_{ih}::l'^{ih}_e ++ [\event_2] \in \kw{dfs}(\trace[\event_{ih}:\event_2], c, D)$.
+\\
+Then we know $\pi_1(\event_{ih})^{\pi_2(\event_{ih})}:: 
+(\emap \cdots l'^{ih}_e) ++ [\pi_1(\event_{2})^{\pi_2(\event_{2})}] \in \mathcal{A}(\event_{ih}, \event_2, \trace[\event_{ih}:\event_2], c, D)$ by definition of $\mathcal{A}$.
+\\
+And $\eventdep^{val}(\event_{ih}, \event_2, \trace[\event_{ih}:\event_2], c, D)$ by the induction hypothesis.
+\\
+By the \emph{Value May-Dependent} Definition~\ref{def:event_valdep} and \emph{Event May-Dependent} Definition~\ref{def:event_dep}, we know:
 \[
   \eventdep(\event_1, \event_2, \event_1 \tracecat \trace_{ih} \cdot \event_2, {c}, D) 
   \]
