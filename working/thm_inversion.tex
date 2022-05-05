@@ -61,26 +61,59 @@ $\config{\trace', \qexpr} \qarrow \qval' $ with $\qval \neq_{q} \qval'$, then $ 
 		\\ \quad
 		\forall z^j \in \lvar \setminus \diff, \trace, \trace' \in \mathcal{T}, v, v' \st 
 		\env(\trace) z = \env(\trace') z \land 
-		\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v = v'
+		\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v = v'
 		\\ \quad
 		\implies 
 		\forall z^j \in \lvar / (\diff \cup \{x^i\} ) \st 
 		 \exists \trace, \trace' \in \mathcal{T}, v, v'\st 
 		\env(\trace) z = \env(\trace') z \land 
-		\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v \neq v'
-		\\ \quad
-		\implies x \in VAR(\expr)
+		\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v \neq v'
+		\\ \qquad
+		\implies x \in VAR(\aexpr) \land i = \llabel(\trace) x
 		\end{array}
 	\]
 	\end{lem}
-%
+\begin{proof}.
+	\\
+	To show $x \in VAR(\aexpr)$, by showing contradiction ($\forall \trace, \trace'$ in second hypothesis  $v = v'$)
+	 if $x \notin VAR(\aexpr)$.
+	 \\
+	To show $i = \llabel(\trace)$, by showing contradiction ($\forall \trace, \trace'$ in second hypothesis  $v = v'$ ) 
+	if $j = \llabel(\trace) x$ and $i \neq j$.
+\end{proof}
+	%
+\begin{lem}[Boolean Inversion Generalization]
+		\label{lem:inv_b_gnl}
+		% For all {$ x^i \in \lvar$, and $\trace, \trace' \in \mathcal{T}$,  and arithmetic expression $\aexpr$}, if
+		% $ \forall z^j \in \lvar / \{x^i\} \st 
+		% \env(\trace) z = \env(\trace') z $ and $\config{\trace, \aexpr} \aarrow v $ and 
+		% $\config{\trace', \aexpr} \aarrow v' $ with $v' \neq v$, then $ x $ is in the free variables of $\aexpr$, i.e., $x \in VAR(\aexpr)$.
+		%
+		\[
+			\begin{array}{l}
+			\forall \diff \subset \lvar,  x^i \in (\lvar \setminus \diff), \bexpr \st
+			\\ \quad
+			\forall z^j \in \lvar \setminus \diff, \trace, \trace' \in \mathcal{T}, v, v' \st 
+			\env(\trace) z = \env(\trace') z \land 
+			\config{\trace, \bexpr} \barrow v \land \config{\trace', \bexpr} \barrow v' \land v = v'
+			\\ \quad
+			\implies 
+			\forall z^j \in \lvar / (\diff \cup \{x^i\} ) \st 
+			 \exists \trace, \trace' \in \mathcal{T}, v, v'\st 
+			\env(\trace) z = \env(\trace') z \land 
+			\config{\trace, \bexpr} \barrow v \land \config{\trace', \bexpr} \barrow v' \land v \neq v'
+			\\ \qquad
+			\implies x \in VAR(\bexpr) \land i = \llabel(\trace)
+			\end{array}
+		\]
+\end{lem}%
 % \begin{lem}[Assignment Inversion].
 % \label{lem:inv_a}
 % \[
 % 	\forall x \in \lvar, \expr \st 
 % 	\Big( \exists \trace, \trace' \st \forall z^i \in \lvar / \{x^l\} \st 
 % 	\env(\trace) z = \env(\trace') z \st 
-% 	\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v \neq v'
+% 	\config{\trace, \expr} \aarrow v \land \config{\trace', \expr} \aarrow v' \land v  \neq v'
 % 	\implies x \in VAR(\expr) \land x^l \in \Big)
 % \]
 % \end{lem}
@@ -437,18 +470,36 @@ since $\diff(\event_2, \event_2)$ we know there exists an expression $\expr_2$ o
 \rightarrow^{asn / query} \config{c_2, \trace_1 \cdot \event_1' \tracecat \trace_2' \cdot \event_2'}  
 \]
 %
-Let $\diff_{\eventset}$ be a subset of the events in $\trace_2$, satisfying: \todo{refine the notation}
+Let $\diff_{\eventset}$ be a subset of the events in $\trace_2$, satisfying: 
+% \todo{refine the notation}
 \[
-	\forall \event_z \in \eventset^{\asn} \st 
-	\event \in \diff_{\eventset} \Leftrightarrow \env(\trace_2) (\pi_1(\event)) \neq \env(\trace_2') (\pi_1(\event))
+	\begin{array}{l}
+		\forall \event_z \in \eventset^{\asn} \st 
+	\event_z \in \diff_{\eventset} \Leftrightarrow 
+	\exists \trace_2^h, \trace'^h_2, \trace_2^t, \trace'^t_2, \event_z' \in \trace_2' \st 
+	\trace_2 = \trace_2^h \cdot \event_z \tracecat \trace_2^t
+	\\ \quad
+	\land 
+	\trace_2' = \trace'^h_2 \cdot \event_z' \tracecat \trace'^t_2
+	\land 
+	\diff(\event_z, \event_z')
+	\land 
+	\vcounter(\trace_2^h) \pi_1(\event_z) = \vcounter(\trace'^h_2)(\event_z)
+\end{array}		
 \]
 %
-Taking arbitrary $\event_z \in \diff_{\eventset}$, we know
-\todo{$\eventdep^{val}(\event_1, \event_z, \trace[\event_1:\event_z], c, D)$}.
+Then we know for all $\event_z \in  \diff_{\eventset}$,
+ $\eventdep^{val}(\event_1, \event_z, \trace[\event_1:\event_z], c, D)$;
 \\
-From the hypothesis, we know $\neg \eventdep^{val}(\event_z, \event_2, \trace[\event_z:\event_2], c, D) $.
+and $\forall z^j \in (\lvar \setminus (\mathbb{LV}_{\diff_{\eventset}} \cup\{\pi_1(\event_1)^{\pi_2(\event_2)}\}) ) \st 
+\env(\trace_1 \cdot \event_1 \tracecat \trace_2) z = \env(\trace_1 \cdot \event_1' \tracecat \trace_2') z $,
 \\
-Then by $\eventdep^{val}$ definition, $\forall \event_z', \event_2'', \trace_z',\trace_z,  \trace_1', c_z$ satisfying following two executions, we have $\event_2 \eventeq \event_2''$.
+where $\mathbb{LV}_{\diff_{\eventset}}$ is the set of labelled variables of every event in $\diff_{\eventset}$.
+\\
+From the hypothesis, we know for all $\event_z \in  \diff_{\eventset}$, $\neg \eventdep^{val}(\event_z, \event_2, \trace[\event_z:\event_2], c, D) $.
+\\
+Then by $\eventdep^{val}$ definition, we know 
+$\forall \event_z', \event_2'' \in \eventset^{\asn}, \trace_z',\trace_z,  \trace_1' \in \mathcal{T}, c_z \in \cdom$ satisfying following two executions, we have $\event_2 \eventeq \event_2''$.
 \[
 	\begin{array}{l}
 		\config{c, \trace_0} \rightarrow^{*}
@@ -459,9 +510,10 @@ Then by $\eventdep^{val}$ definition, $\forall \event_z', \event_2'', \trace_z',
 		\end{array}		
 \]
 %
-Then we know \todo{type correctness}
+Then we know 
+% \todo{type correctness}
 \[
-	\forall z^j \in (\lvar \setminus \diff_{\eventset} ), \trace, \trace' \in \mathcal{T}, v, v' \st 
+	\forall z^j \in (\lvar \setminus \mathbb{LV}_{\diff_{\eventset}} ), \trace, \trace' \in \mathcal{T}, v, v' \st 
 	\env(\trace) z = \env(\trace') z 
 	\land 
 	\config{\trace, \expr_2} \aarrow v 
@@ -471,7 +523,7 @@ Then we know \todo{type correctness}
 	v = v' 
 \]
 %
-Since $\diff(\event_2, \event_2')$, we know:
+Since $\diff(\event_2, \event_2')$, we also know:
 %
 \[	
 \config{\trace_1 \cdot \event_1 \tracecat \trace_2, \expr_2} \aarrow \pi_3(\event_2)
@@ -481,11 +533,11 @@ Since $\diff(\event_2, \event_2')$, we know:
 \pi_3(\event_2) \neq \pi_3(\event_2')
 \]
 %
-By construction of $\diff_{\eventset}$, we also have:
-\\
-$\forall z^j \in (\lvar \setminus \diff_{\eventset} \cup\{\event_1\} ) \st 
-\env(\trace_1 \cdot \event_1 \tracecat \trace_2) z = \env(\trace_1 \cdot \event_1' \tracecat \trace_2') z $.
-\\
+% By construction of $\diff_{\eventset}$, we also have:
+% \\
+% $\forall z^j \in (\lvar \setminus \diff_{\eventset} \cup\{\event_1\} ) \st 
+% \env(\trace_1 \cdot \event_1 \tracecat \trace_2) z = \env(\trace_1 \cdot \event_1' \tracecat \trace_2') z $.
+% \\
 % By $\forall \event \in (\trace[\event_1:\event_y]\setminus \{\event_1, \event_y\}) \st
 %   \neg \eventdep^{val} (\event_1, \event, c, D) \lor \neg \eventdep^{val} (\event, \event_y, c, D)$,
 Then, we know $\event_1$ is the only cause of the difference in $\event_y$ and $\event_y'$ when evaluating 
@@ -494,10 +546,11 @@ $[\assign{\pi_1(\event_2)}{\expr_2 / \query(\qexpr_2)}]{}^{\pi_2(\event_2)}$.
 \\
 By inversion Lemma.~\ref{lem:inv_a_gnl}, we know
 \[
-  \pi_1(\event_1) \in VAR(\expr)
+  \pi_1(\event_1) \in VAR(\expr) \land {\pi_2(\event_1)} = \llabel(\trace_1 \cdot \event_1 \tracecat \trace_2) \pi_1(\event_1) 
 \]
 %
 By $\flowsto$ definition:
+% \todo{add the Liveness inversion}
 \[
   \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
 \]
@@ -519,6 +572,27 @@ By $\flowsto$ definition:
 \begin{proof}
 	This lemma is a special case of Lemma~\ref{lem:inv_indepevents} and proved in Subproof~\ref{pf:alg_correct_base}.
 \end{proof}
+%
+\begin{lem}[Independent Events Doesn't Block $\flowsto$ for Testing Event].
+	\label{lem:inv_indepeventstest}
+	\[
+	\begin{array}{l}
+		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1,\in \eventset^{\asn}, \event_2 \in \eventset^{\test} \st
+		 \exists \trace' \in \mathcal{T} \st \trace = \cdot \event_1 \tracecat \trace' \cdot \event_2
+		\implies
+		\eventdep^{val}(\event_1, \event_2, \trace, c, D) 
+		\\ \quad 
+		\implies 
+		\left( \forall \event \in \trace' \st \neg \eventdep^{val}(\event_1, \event, \trace[\event_1:\event], c, D)
+		\lor \neg \eventdep^{val}(\event, \event_2, \trace[\event:\event_2], c, D) 
+		\right) 
+		\\ \quad 
+		\implies 
+		\pi_1(\event_1) \in VAR(\pi_1(\event_2)) \land {\pi_2(\event_1)} = \llabel(\trace)
+	\end{array}
+	\]
+\end{lem}
+%
 %
 \begin{lem}[$\eventdep^{\ctl}$ Transitivity]
 \label{lem:ctl_trans}
