@@ -1,49 +1,32 @@
 %
 %
-There are four steps to get the adaptivity of a program ${c}$ based on analyzing the program. 
+% There are four steps to get the adaptivity of a program ${c}$ based on analyzing the program. 
+% \begin{enumerate}
+% \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an labeled variable vector $\lvar$. 
+% We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
+% %
+% % \item Tracking the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar_c| \times |\lvar_c|$. 
+% %
+% \item Estimating the reachability bound of each variable in $\lvar$.
+% %
+% \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute the adaptivity bound.
+% \end{enumerate}
+
+% In the following subsections, 
+% we first define the notations and symbols being used in \THESYSTEM  with a simple example for understanding these definitions. 
+% Then we present the algorithmic analysis rules, which is the core of the \THESYSTEM, with
+% 3 examples illustrating how \THESYSTEM  works.
+% In the following subsections, we present the adaptivity analysis based on the \THESYSTEM's analyzing results, and the soundness w.r.t. the trace-based analyzing results in previous sections.
+{\THESYSTEM} consists of three phases: 
 \begin{enumerate}
-\item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an labeled variable vector $\lvar$. 
-We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
-%
-\item Tracking the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar_c| \times |\lvar_c|$. 
-%
-\item Estimating the reachability bound of each variable in $\lvar$.
-%
-\item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute the adaptivity bound.
+    \item An algorithm to generate a precise data control flow graph
+    \item An algorithm to perform a Reachability number analysis to calculate the weight of each node in the graph generated in phase 1.
+    \item An algorithm to find the appropriate path in the weighted data control flow graph
 \end{enumerate}
-
-In the following subsections, 
-we first define the notations and symbols being used in \THESYSTEM  with a simple example for understanding these definitions. 
-Then we present the algorithmic analysis rules, which is the core of the \THESYSTEM, with
-3 examples illustrating how \THESYSTEM  works.
-In the following subsections, we present the adaptivity analysis based on the \THESYSTEM's analyzing results, and the soundness w.r.t. the trace-based analyzing results in previous sections.
-
 \subsection{Notations}
 %
 \label{subsec:alg_notation}
 %
-Consider the program $c$ below in the left hand side as an example, its labeled variables $\lvar$ (short for $\lvar({c})$) is as in the right hand side is shown as follows:
-$$
-{c} = 
-\begin{array}{l}
-\left[{\assign {x_1} {\query(0)}}		\right]^1;
-\\
-\left[{\assign {x_2} {x_1 + 1}}		\right]^2;
-\\
-\left[{\assign {x_3} {x_2 + 2}}		\right]^3
-\end{array}
-~~~~~~~~~~~~
-\lvar_c = \left [ 
-\begin{matrix}
-{x_1} \\
-{x_2} \\
-{x_3} \\
-\end{matrix} \right ]
-$$
-%
-\begin{lem}
-For any program ${c}$, every labeled variable in $\lvar_{c}$ is distinct
-\end{lem}
 %
 {
 \begin{defn}[Variable Flags ($\flag$)].
@@ -168,8 +151,8 @@ in ${c}$, denoted as $\flowsto({x^i, y^j, c})$, is defined as follows:
 	[{\assign{y}{\expr_2}}]^j \in_{c} {c_2})
 \land {x} \in VAR(\sbexpr) \land (x^i \in \live^l(c)))
 \big)
-\\
-(\exists z^r \in \lvar_c \st \flowsto(x^i, z^r, c) \land \flowsto(z^r, y^j, c))
+% \\
+% (\exists z^r \in \lvar_c \st \flowsto(x^i, z^r, c) \land \flowsto(z^r, y^j, c))
 \end{array}
 \right).
 \end{array}
@@ -179,287 +162,393 @@ in ${c}$, denoted as $\flowsto({x^i, y^j, c})$, is defined as follows:
 }
 %
 %
-\begin{defn}[Data Flow Matrix ($\Mtrix$)]
-The data flow matrix $\Mtrix$ of a program $c$ is a matrix of size $|\lvar_c| \times |\lvar_c|$ 
-s.t.,
-%
-\[
-\Mtrix(i, j) \triangleq
-\left\{
-\begin{array}{ll}
-1	&	\flowsto({x^i, y^j, c}) \\
-0	& o.w.
-\end{array}
-\right., {x^i}, y^j  \in \lvar_c.
-\]
-%
-\end{defn}
-%
-Operations on the data flow matrices are defined as follows:
-%
-\begin{equation}
-\Mtrix_1 ; \Mtrix_2 
-:= \Mtrix_2 \cdot \Mtrix_1 + \Mtrix_1 + \Mtrix_2
-\end{equation}
-%
-Consider the same program $c$ as above, its data flow matrix $\Mtrix$ and $\flag$ for the program $c$ is as follows:
-$$
-{c} = 
-\begin{array}{l}
-\left[{\assign {x_1} {\query(0)}}	\right]^1;
-\\
-\left[{\assign {x_2} {x_1 + 1}}		\right]^2;
-\\
-\left[{\assign {x_3} {x_2 + 2}}		\right]^3
-\end{array}
-~~~~~~~~~~~~
-\Mtrix
-=  \left[ 
-\begin{matrix}
-0 & 0 & 0 \\
-1 & 0 & 0 \\
-1 & 1 & 0 \\
-\end{matrix} \right] ~ , 
-\flag = \left [ \begin{matrix}
-1 \\
-0 \\
-0 \\
-\end{matrix} \right ]
-$$
-%
-% There are two special matrices used for generating the data flow matrix $\Mtrix$ in the analysis algorithm. They are the left matrix $\lMtrix_i$ and right matrix $\mathsf{R_{(e, i)}}$.
-
-% Given a program  ${c}$ with its labeled variables $\lvar$ of length $N$,
-% the left matrix $\lMtrix_i$ generates a matrix of $1$ column, $N$ rows, 
-% where the $i$-th row is $1$ and all the other rows are $0$.
+% \begin{defn}[Data Flow Matrix ($\Mtrix$)]
+% The data flow matrix $\Mtrix$ of a program $c$ is a matrix of size $|\lvar_c| \times |\lvar_c|$ 
+% s.t.,
 % %
-% \begin{defn}[Left Matrix ($\lMtrix_i$)].
-% \\
-% Given a program  ${c}$ with its labeled variables $\lvar$ of size $N$, 
-% the left matrix $\lMtrix_i$ is defined as follows:
 % \[
-% \lMtrix_i(j) : = 
-% \left
-% \{
-% \begin{array}{ll}
-% 1 & j = i \\
-% 0 & o.w.
-% \end{array}
-% \right.,
-% j = 1, \ldots, N.
-% \]
-% \end{defn}
-% %
-% Given a program  ${c}$ with its labeled variables $\lvar$ of length $N$,
-% the right matrix $\rMtrix_{\expr, i}$ generates a matrix of one row and $N$ columns, 
-% where the locations of free variables in $\expr$ is marked as $1$. 
-% %
-% %
-% \begin{defn}[Right Matrix ($\rMtrix_{\expr}$)].
-% \\
-% Given a program  ${c}$ with its labeled variables $\lvar$ of length $N$, 
-% the right matrix $\rMtrix_{\expr}$ is defined as follows:
-% \[
-% \rMtrix_{\expr}(j) : = 
+% \Mtrix(i, j) \triangleq
 % \left\{
 % \begin{array}{ll}
-% 1 & {x} \in FV(\expr) 
-% \\
-% 0 & o.w.
+% 1	&	\flowsto({x^i, y^j, c}) \\
+% 0	& o.w.
 % \end{array}
-% \right.,
-% {x} = \lvar(j) ~ , ~ j = 1, \ldots, N.
+% \right., {x^i}, y^j  \in \lvar_c.
 % \]
-% %
 % %
 % \end{defn}
 % %
-% Using the same example program ${c}$ as above with labeled variables $\lvar = [ {x_1 , x_2 , x_3} ] $,
-% the left and right matrices w.r.t. its $2$-nd command 
-% $\left[{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
-% \[
-% \lMtrix_1 = \left[ \begin{matrix}
-% 0   \\
-% 1 	 \\
-% 0   \\
-% \end{matrix}   \right ] 
-% ~~~~~~~~~~~~~~
-% \rMtrix_{{x}_1 + 1}
-% = \left[ \begin{matrix} 
+% Operations on the data flow matrices are defined as follows:
+% %
+% \begin{equation}
+% \Mtrix_1 ; \Mtrix_2 
+% := \Mtrix_2 \cdot \Mtrix_1 + \Mtrix_1 + \Mtrix_2
+% \end{equation}
+% %
+% Consider the same program $c$ as above, its data flow matrix $\Mtrix$ and $\flag$ for the program $c$ is as follows:
+% $$
+% {c} = 
+% \begin{array}{l}
+% \left[{\assign {x_1} {\query(0)}}	\right]^1;
+% \\
+% \left[{\assign {x_2} {x_1 + 1}}		\right]^2;
+% \\
+% \left[{\assign {x_3} {x_2 + 2}}		\right]^3
+% \end{array}
+% ~~~~~~~~~~~~
+% \Mtrix
+% =  \left[ 
+% \begin{matrix}
+% 0 & 0 & 0 \\
 % 1 & 0 & 0 \\
-% \end{matrix}  \right]
-% \]
-%
-%
-%
-\subsection{Algorithmic Analysis Rules}
-%
-% \paragraph{Variable Collection Algorithm, $\varCol$}
+% 1 & 1 & 0 \\
+% \end{matrix} \right] ~ , 
+% \flag = \left [ \begin{matrix}
+% 1 \\
+% 0 \\
+% 0 \\
+% \end{matrix} \right ]
+% $$
+% %
+% % There are two special matrices used for generating the data flow matrix $\Mtrix$ in the analysis algorithm. They are the left matrix $\lMtrix_i$ and right matrix $\mathsf{R_{(e, i)}}$.
+
+% % Given a program  ${c}$ with its labeled variables $\lvar$ of length $N$,
+% % the left matrix $\lMtrix_i$ generates a matrix of $1$ column, $N$ rows, 
+% % where the $i$-th row is $1$ and all the other rows are $0$.
+% % %
+% % \begin{defn}[Left Matrix ($\lMtrix_i$)].
+% % \\
+% % Given a program  ${c}$ with its labeled variables $\lvar$ of size $N$, 
+% % the left matrix $\lMtrix_i$ is defined as follows:
+% % \[
+% % \lMtrix_i(j) : = 
+% % \left
+% % \{
+% % \begin{array}{ll}
+% % 1 & j = i \\
+% % 0 & o.w.
+% % \end{array}
+% % \right.,
+% % j = 1, \ldots, N.
+% % \]
+% % \end{defn}
+% % %
+% % Given a program  ${c}$ with its labeled variables $\lvar$ of length $N$,
+% % the right matrix $\rMtrix_{\expr, i}$ generates a matrix of one row and $N$ columns, 
+% % where the locations of free variables in $\expr$ is marked as $1$. 
+% % %
+% % %
+% % \begin{defn}[Right Matrix ($\rMtrix_{\expr}$)].
+% % \\
+% % Given a program  ${c}$ with its labeled variables $\lvar$ of length $N$, 
+% % the right matrix $\rMtrix_{\expr}$ is defined as follows:
+% % \[
+% % \rMtrix_{\expr}(j) : = 
+% % \left\{
+% % \begin{array}{ll}
+% % 1 & {x} \in FV(\expr) 
+% % \\
+% % 0 & o.w.
+% % \end{array}
+% % \right.,
+% % {x} = \lvar(j) ~ , ~ j = 1, \ldots, N.
+% % \]
+% % %
+% % %
+% % \end{defn}
+% % %
+% % Using the same example program ${c}$ as above with labeled variables $\lvar = [ {x_1 , x_2 , x_3} ] $,
+% % the left and right matrices w.r.t. its $2$-nd command 
+% % $\left[{\assign {x_2} {x_1 + 1}}\right]^2$  are as follows:
+% % \[
+% % \lMtrix_1 = \left[ \begin{matrix}
+% % 0   \\
+% % 1 	 \\
+% % 0   \\
+% % \end{matrix}   \right ] 
+% % ~~~~~~~~~~~~~~
+% % \rMtrix_{{x}_1 + 1}
+% % = \left[ \begin{matrix} 
+% % 1 & 0 & 0 \\
+% % \end{matrix}  \right]
+% % \]
+% %
+% %
+% %
+\subsection{Analysis Algorithm}
+% %
+% % \paragraph{Variable Collection Algorithm, $\varCol$}
+% % % The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
+% % % (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step.
+% % % The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
+% % % It has the form: $\ag{\lvar; w; {c}}{ \lvar'; w'} $. 
+% % % The input of $\varCol$ is the labeled variables $\lvar$ collected before the program ${c}$, a while map $w$ consistent with previous estimation, a program ${c}$. 
+% % % The output of the algorithm is the updated labeled variables $\lvar'$, along with the updated while map $w$ for next steps' collecting.   
 % % The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
-% % (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step.
+% % (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step, 
+% % along with constructing the flag for each variable, i.e., $\flag$.
 % % The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
-% % It has the form: $\ag{\lvar; w; {c}}{ \lvar'; w'} $. 
-% % The input of $\varCol$ is the labeled variables $\lvar$ collected before the program ${c}$, a while map $w$ consistent with previous estimation, a program ${c}$. 
-% % The output of the algorithm is the updated labeled variables $\lvar'$, along with the updated while map $w$ for next steps' collecting.   
-% The $\varCol$ algorithm shows how the labeled variables $\lvar$ are collected 
-% (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step, 
-% along with constructing the flag for each variable, i.e., $\flag$.
-% The algorithmic rules for $\varCol$ algorithm is defined in Figure~\ref{fig:var_col}. 
-% It has the form: 
-% {$\ag{\lvar; \flag; {c}}{ \lvar'; \flag'} $}. 
-% The input of $\varCol$ is a program ${c}$, 
-% the labeled variables $\lvar$ collected before the program ${c}$ 
-% as well as the flags $\flag$ for every corresponding variable .
-% The output of the algorithm is the updated labeled variables $\lvar'$ and flags $\flag'$ thorough the program ${c}$
+% % It has the form: 
+% % {$\ag{\lvar; \flag; {c}}{ \lvar'; \flag'} $}. 
+% % The input of $\varCol$ is a program ${c}$, 
+% % the labeled variables $\lvar$ collected before the program ${c}$ 
+% % as well as the flags $\flag$ for every corresponding variable .
+% % The output of the algorithm is the updated labeled variables $\lvar'$ and flags $\flag'$ thorough the program ${c}$
+% % %
+% % % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\lvar; w; {c}}{\lvar';w'} $ as in Figure \ref{fig:var_col}. 
+% % %
+% % \begin{figure}
+% % {
+% % \begin{mathpar}
+% % \inferrule
+% % {
+% % \empty
+% % }
+% % { \ag{\lvar ; \flag; {[\assign {x}{\expr}]^{l}}}
+% % {\lvar ++ [{x}]; \flag++[0]}
+% % }
+% % ~\textbf{\varCol-asgn}
+% % \and
+% % \inferrule
+% % {
+% % }
+% % { \ag{\lvar; \flag; [ \assign{{x}}{\query({\qexpr})}]^{l}}
+% % {\lvar ++ [{x}]; \flag ++ [2]} 
+% % }~\textbf{\varCol-query}
+% % %
+% % \and 
+% % %
+% % \inferrule
+% % {
+% % \ag{\lvar; [];  {c_1}}{\lvar_1; \flag_1}
+% % \and 
+% % \ag{\lvar_1; []; {c_2}}{ \lvar_2; \flag_2}
+% % \and
+% % \lvar_3 = \lvar_2 ++ \lvar'
+% % \and
+% % \flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1)
+% % }
+% % {
+% % \ag{\lvar; \flag;
+% % [\eif({\bexpr}, { c_1, c_2)}]^{l} }
+% % {\lvar_3; \flag_3}
+% % }~\textbf{\varCol-if}
+% % %
+% % %
+% % %
+% % \and 
+% % %
+% % \inferrule
+% % {
+% % \ag{\lvar; \flag {c_1}}{\lvar_1; \flag_1}
+% % \and 
+% % \ag{\lvar_1; \flag_1 ; {c_2}}{\lvar_2; \flag_2}
+% % }
+% % {
+% % \ag{\lvar; \flag;
+% % {(c_1 ; c_2)}}{\lvar_2 ; \flag_2}
+% % }
+% % ~\textbf{\varCol-seq}
+% % \and 
+% % %
+% % %
+% % {
+% % \inferrule
+% % {
+% % { \ag{\lvar; [] ; {c}}
+% % {\lvar'; \flag' }  }
+% % \\
+% % \lvar'' = \lvar'
+% % \and 
+% % \flag'' = \flag ++ (\flag' \uplus 1)
+% % }
+% % {
+% % \ag{\lvar; \flag;  
+% % \ewhile [{b}]^{l}
+% % \edo  {c} }{\lvar''; \flag''}
+% % }
+% % ~\textbf{\varCol-while}
+% % }
+% % \end{mathpar}
+% % }
+% % \caption{The Algorithmic Rules of $\varCol$ }
+% % \label{fig:var_col}
+% % \end{figure}
+% % %
+% % %
+% % The assignment commands are the source of variables $\varCol$ collecting, 
+% % in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
+% % the output labeled variables are extended by ${x}$. 
+% % \\
+% % \todo{
+% % When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch ${c_1}$, as well as the variables assigned in the else branch ${c_2}$, and the new generated variables $\bar{{x}},\bar{{y}},\bar{{z}}$ in $ [ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ,[ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}],[ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}]$.
+% % \\ 
+% % The sequence command ${c_1;c_2}$ is standard by accumulating the predicted variables in the two commands ${c_1}$ and ${c_2}$ preserving their order. 
+% % \\
+% % The while command $\ewhile {\bexpr}, [{\bar{x}}] \ldots \edo {c}$ considers the newly generated variables by SSA transformation ${\bar{x}}$
+% % as well and the newly labeled variables in its body ${c}$.
+% % \\
+% % %
+% % Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
+% % }
+% % %
+% % %
+% % \todo{
+% % \begin{defn}[Valid Index (Remove?)]
+% % Given an assigned variable list $\lvar$, $\lvar; \vDash ({c},i_1,i_2)$ iff 
+% % $\lvar' = \lvar[0,\ldots, i_1-1], \lvar';{c} \to \lvar'' \land \lvar'' = \lvar[0, \ldots, i_2-1] $.  
+% % \end{defn}}
+% % %
+% % %
+% \todo{Data Dependency Analysis Algorithm Needed: (Possibly modify based on existing one, or a different one) get the more precise dependency information. 
+% i.e., instead of dependency on all the over-approximated variables, 
+% but dependency on only the variables assumed to be live.
+% }
+% \paragraph{Data Dependency Analysis Algorithm}
 % %
-% % We have the algorithmic rules for $\varCol$ algorithm of the form: $\ag{\lvar; w; {c}}{\lvar';w'} $ as in Figure \ref{fig:var_col}. 
+% In this data flow matrix generating algorithm, we analyze the data flow information among all labeled variables $\lvar$ collected via the the $\varCol$ algorithm of length $N$.
 % %
-% \begin{figure}
+% We track the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $N \times N$. 
+% % We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\lvar|$. 
+% %
+% The algorithm to fill in the matrix is of the form: 
+% {$\ad{\Gamma ; {c} ; \lvar}{\Mtrix}$}
+% $\ad{\Gamma ; {c} ; i_1, i_2}{\Mtrix; \flag}$. 
+% $\Gamma$ is a vector records the variables the current program ${c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in ${c}$ in the labeled variables $\lvar$, and $i_2$ points to the first new variable that is not in ${c}$ (if exists). 
+% % %
+% % %
+% % {
+% % \begin{defn}[Valid Gamma (Remove?)]
+% % $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
+% % \end{defn}
+% % }
+% %%
+% %
+% % \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
+% % \begin{mathpar}
+% % \inferrule
+% % {\Mtrix = \lMtrix_i * ( \rMtrix_{{\expr},i} + \Gamma )
+% % }
+% % {
+% %  \ad{\Gamma;[\assign {{x}}{{\expr}} ]^{l}; i }{\Mtrix; \flag_{0}; i+1 }
+% % }
+% % ~\textbf{\graphGen-asgn}
+% % \and
+% % {
+% % \inferrule
+% % {\Mtrix = \lMtrix_i * ( \rMtrix_{{\expr},i} + \Gamma )
+% % \\
+% % \flag = \lMtrix_i \and \flag(i) = 1
+% % }
+% % { 
+% % \ad{\Gamma;[ \assign{{x}}{\query({\expr})} ]^{l} ; i }
+% % {\Mtrix;\flag;i+1}
+% % }~\textbf{\graphGen-query}}
+% % %
+% % \and 
+% % %
+% % {
+% % \inferrule
+% % {
+% % {\ad{\Gamma + \rMtrix_{{\bexpr}, i_1}; {c_1} ; i_1 }{ \Mtrix_1;\flag_1;i_2 }}
+% % \and 
+% % {\ad{\Gamma + \rMtrix_{{\bexpr}, i_1};{c_2} ; i_2 }{ \Mtrix_2; \flag_2 ;i_3}}
+% % \\
+% % {\ad{\Gamma; [ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{{x}}| }}
+% % %
+% % \\
+% % %
+% % {\ad{\Gamma; [ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}]; i_3+|\bar{{x}}| }{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{{x}}|+|\bar{{y}}| }}
+% % %
+% % \\
+% % %
+% % {\ad{\Gamma; [ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}]; i_3+|\bar{{x}}|+ |\bar{{y}}|}{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{{x}}|+|\bar{{y}}| + |\bar{{z}}| }}
+% % \\
+% % {\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
+% % }
+% % {
+% % \ad{\Gamma ; \eif([{\bexpr}]^{l},[ \bar{{x}}, \bar{{x_1}},
+% % \bar{{x_2}}] ,[ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}], 
+% % [ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}],
+% % { c_1, c_2)} ; i_1}{ \Mtrix ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
+% % }
+% % ~\textbf{\graphGen-if}
+% % }
+% % %
+% % %
+% % %
+% % \and 
+% % %
+% % \inferrule
+% % {
+% % {\ad{\Gamma; {c_1} ; i_1 }{ \Mtrix_1 ; \flag_1; i_2 }  }
+% % \and 
+% % {
+% % \ad{\Gamma;{c_2}; i_2}{ \Mtrix_2; \flag_2 ;i_3 }}
+% % }
+% % {
+% % \ad{\Gamma ; ({c_1 ; c_2} ) ; i_1}{( \Mtrix_1 {;} \Mtrix_2) ; \flag_1 \uplus V_2 ; i_3  }
+% % }
+% % ~\textbf{\graphGen-seq}
+% % %
+% % \and 
+% % %
+% % \and 
+% % %
+% % { 
+% % \inferrule
+% % {
+% % B= |{\bar{x}}| \and {A = |{c}|}
+% % \\
+% % {\ad{\Gamma;[\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}]; i+ (B+A) }{ \Mtrix_{1};V_{1}; i+B+(B+A) }}
+% % \\
+% % {
+% % \ad{\Gamma;{c} ; i+B+(B+A)  }{ \Mtrix_{2}; \flag_{2}; i+B+A+(B+A) }
+% % }
+% % \\
+% % {
+% % \ad{\Gamma ; [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ; i+(B+A) }{ \Mtrix; \flag ;i+(B+A)+B}
+% % }
+% % \\
+% % { \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
+% % \and
+% % {
+% % \flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
+% % }
+% % {
+% % \ad{\Gamma;
+% % \ewhile ~ [ b ]^{l} ~ {n} ~
+% % [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] 
+% % ~ \edo ~  c;
+% % i }{ \Mtrix'; \flag' ;i+(B+A)+B }
+% % }~\textbf{\graphGen-while}
+% % }
+% % \end{mathpar}
 % {
+% \framebox{$ \ad{\Gamma; c; \lvar_c}{\Mtrix}$}
 % \begin{mathpar}
 % \inferrule
 % {
-% \empty
-% }
-% { \ag{\lvar ; \flag; {[\assign {x}{\expr}]^{l}}}
-% {\lvar ++ [{x}]; \flag++[0]}
-% }
-% ~\textbf{\varCol-asgn}
-% \and
-% \inferrule
-% {
-% }
-% { \ag{\lvar; \flag; [ \assign{{x}}{\query({\qexpr})}]^{l}}
-% {\lvar ++ [{x}]; \flag ++ [2]} 
-% }~\textbf{\varCol-query}
-% %
+% {x}^l \in \lvar_c
 % \and 
-% %
-% \inferrule
-% {
-% \ag{\lvar; [];  {c_1}}{\lvar_1; \flag_1}
-% \and 
-% \ag{\lvar_1; []; {c_2}}{ \lvar_2; \flag_2}
-% \and
-% \lvar_3 = \lvar_2 ++ \lvar'
-% \and
-% \flag_3 = \flag ++ ((\flag_1 ++ \flag_2) \uplus 1)
+% \Mtrix = \lMtrix_i * ( \rMtrix_{{\expr}} + \Gamma )
 % }
 % {
-% \ag{\lvar; \flag;
-% [\eif({\bexpr}, { c_1, c_2)}]^{l} }
-% {\lvar_3; \flag_3}
-% }~\textbf{\varCol-if}
-% %
-% %
-% %
-% \and 
-% %
-% \inferrule
-% {
-% \ag{\lvar; \flag {c_1}}{\lvar_1; \flag_1}
-% \and 
-% \ag{\lvar_1; \flag_1 ; {c_2}}{\lvar_2; \flag_2}
-% }
-% {
-% \ag{\lvar; \flag;
-% {(c_1 ; c_2)}}{\lvar_2 ; \flag_2}
-% }
-% ~\textbf{\varCol-seq}
-% \and 
-% %
-% %
-% {
-% \inferrule
-% {
-% { \ag{\lvar; [] ; {c}}
-% {\lvar'; \flag' }  }
-% \\
-% \lvar'' = \lvar'
-% \and 
-% \flag'' = \flag ++ (\flag' \uplus 1)
-% }
-% {
-% \ag{\lvar; \flag;  
-% \ewhile [{b}]^{l}
-% \edo  {c} }{\lvar''; \flag''}
-% }
-% ~\textbf{\varCol-while}
-% }
-% \end{mathpar}
-% }
-% \caption{The Algorithmic Rules of $\varCol$ }
-% \label{fig:var_col}
-% \end{figure}
-% %
-% %
-% The assignment commands are the source of variables $\varCol$ collecting, 
-% in the case $\textbf{\varCol-asgn}$ and $\textbf{\varCol-query}$, 
-% the output labeled variables are extended by ${x}$. 
-% \\
-% \todo{
-% When it comes to the $\eif \ldots \ethen \ldots \eelse$ command in the rule $\textbf{\varCol-if}$, variables assigned in the then branch ${c_1}$, as well as the variables assigned in the else branch ${c_2}$, and the new generated variables $\bar{{x}},\bar{{y}},\bar{{z}}$ in $ [ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ,[ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}],[ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}]$.
-% \\ 
-% The sequence command ${c_1;c_2}$ is standard by accumulating the predicted variables in the two commands ${c_1}$ and ${c_2}$ preserving their order. 
-% \\
-% The while command $\ewhile {\bexpr}, [{\bar{x}}] \ldots \edo {c}$ considers the newly generated variables by SSA transformation ${\bar{x}}$
-% as well and the newly labeled variables in its body ${c}$.
-% \\
-% %
-% Below we present the definition for a valid index, to have a clear understanding on the variable collecting algorithm:
-% }
-% %
-% %
-% \todo{
-% \begin{defn}[Valid Index (Remove?)]
-% Given an assigned variable list $\lvar$, $\lvar; \vDash ({c},i_1,i_2)$ iff 
-% $\lvar' = \lvar[0,\ldots, i_1-1], \lvar';{c} \to \lvar'' \land \lvar'' = \lvar[0, \ldots, i_2-1] $.  
-% \end{defn}}
-% %
-% %
-\todo{Data Dependency Analysis Algorithm Needed: (Possibly modify based on existing one, or a different one) get the more precise dependency information. 
-i.e., instead of dependency on all the over-approximated variables, 
-but dependency on only the variables assumed to be live.
-}
-\paragraph{Data Dependency Analysis Algorithm}
-%
-In this data flow matrix generating algorithm, we analyze the data flow information among all labeled variables $\lvar$ collected via the the $\varCol$ algorithm of length $N$.
-%
-We track the data flow relations between all these labeled variables. These informations are stored in a matrix $\Mtrix$, whose size is $N \times N$. 
-% We also track whether arbitrary variable is assigned with a query result in a vector $\flag$ with size $|\lvar|$. 
-%
-The algorithm to fill in the matrix is of the form: 
-{$\ad{\Gamma ; {c} ; \lvar}{\Mtrix}$}
-$\ad{\Gamma ; {c} ; i_1, i_2}{\Mtrix; \flag}$. 
-$\Gamma$ is a vector records the variables the current program ${c}$ depends on, the index $i_1$ is a pointer which refers to the position of the first new-generated variable in ${c}$ in the labeled variables $\lvar$, and $i_2$ points to the first new variable that is not in ${c}$ (if exists). 
-% %
-% %
-% {
-% \begin{defn}[Valid Gamma (Remove?)]
-% $\Gamma \vDash i_1$ iff $\forall i \geq i_1, \Gamma(i_1)=0 $.  
-% \end{defn}
-% }
-%%
-%
-% \framebox{$ {\Gamma} \vdash^{i_1, i_2}_{\Mtrix, \flag} ~ c $}
-% \begin{mathpar}
-% \inferrule
-% {\Mtrix = \lMtrix_i * ( \rMtrix_{{\expr},i} + \Gamma )
-% }
-% {
-%  \ad{\Gamma;[\assign {{x}}{{\expr}} ]^{l}; i }{\Mtrix; \flag_{0}; i+1 }
+% \ad{\Gamma; [\assign {{x}}{{\expr}} ]^{l}; \lvar_c}
+% {\Mtrix}
 % }
 % ~\textbf{\graphGen-asgn}
 % \and
 % {
 % \inferrule
-% {\Mtrix = \lMtrix_i * ( \rMtrix_{{\expr},i} + \Gamma )
-% \\
-% \flag = \lMtrix_i \and \flag(i) = 1
+% {
+% {x}^l \in \lvar_c
+% \and 
+% \Mtrix = \lMtrix_i * ( \rMtrix_{{\expr}} + \Gamma )
 % }
 % { 
-% \ad{\Gamma;[ \assign{{x}}{\query({\expr})} ]^{l} ; i }
-% {\Mtrix;\flag;i+1}
+% \ad{\Gamma;[ \assign{{x}}{\query({\qexpr})} ]^{l} ; \lvar_c }
+% {\Mtrix}
 % }~\textbf{\graphGen-query}}
 % %
 % \and 
@@ -467,27 +556,15 @@ $\Gamma$ is a vector records the variables the current program ${c}$ depends on,
 % {
 % \inferrule
 % {
-% {\ad{\Gamma + \rMtrix_{{\bexpr}, i_1}; {c_1} ; i_1 }{ \Mtrix_1;\flag_1;i_2 }}
+% {\ad{\Gamma + \rMtrix_{{\bexpr}}; {c_1} ; \lvar_c }{ \Mtrix_1}}
 % \and 
-% {\ad{\Gamma + \rMtrix_{{\bexpr}, i_1};{c_2} ; i_2 }{ \Mtrix_2; \flag_2 ;i_3}}
-% \\
-% {\ad{\Gamma; [ \bar{{x}}, \bar{{x_1}}, \bar{{x_2}}]; i_3 }{ M_x; \flag_{\emptyset}; i_3+|\bar{{x}}| }}
-% %
-% \\
-% %
-% {\ad{\Gamma; [ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}]; i_3+|\bar{{x}}| }{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{{x}}|+|\bar{{y}}| }}
-% %
-% \\
-% %
-% {\ad{\Gamma; [ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}]; i_3+|\bar{{x}}|+ |\bar{{y}}|}{ \Mtrix_y; \flag_{\emptyset}; i_3+|\bar{{x}}|+|\bar{{y}}| + |\bar{{z}}| }}
-% \\
-% {\Mtrix = (\Mtrix_1 + \Mtrix_2)+ \Mtrix_x+ \Mtrix_y + \Mtrix_z }
+% {\ad{\Gamma + \rMtrix_{{\bexpr}}; {c_2}; \lvar_c }{ \Mtrix_2}}
+% \and
+% {\Mtrix = (\Mtrix_1 + \Mtrix_2)}
 % }
 % {
-% \ad{\Gamma ; \eif([{\bexpr}]^{l},[ \bar{{x}}, \bar{{x_1}},
-% \bar{{x_2}}] ,[ \bar{{y}}, \bar{{y_1}}, \bar{{y_2}}], 
-% [ \bar{{z}}, \bar{{z_1}}, \bar{{z_2}}],
-% { c_1, c_2)} ; i_1}{ \Mtrix ; \flag_1 \uplus \flag_2 \uplus 2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
+% \ad{\Gamma ; \eif([{\bexpr}]^{l},{ c_1, c_2)}}
+% { \Mtrix }
 % }
 % ~\textbf{\graphGen-if}
 % }
@@ -498,13 +575,14 @@ $\Gamma$ is a vector records the variables the current program ${c}$ depends on,
 % %
 % \inferrule
 % {
-% {\ad{\Gamma; {c_1} ; i_1 }{ \Mtrix_1 ; \flag_1; i_2 }  }
+% {\ad{\Gamma; {c_1}; \lvar_c }{ \Mtrix_1}  }
 % \and 
 % {
-% \ad{\Gamma;{c_2}; i_2}{ \Mtrix_2; \flag_2 ;i_3 }}
+% \ad{\Gamma;{c_2}; \lvar_c }{ \Mtrix_2}}
 % }
 % {
-% \ad{\Gamma ; ({c_1 ; c_2} ) ; i_1}{( \Mtrix_1 {;} \Mtrix_2) ; \flag_1 \uplus V_2 ; i_3  }
+% \ad{\Gamma ; ({c_1 ; c_2} ); \lvar_c}
+% {( \Mtrix_1 {;} \Mtrix_2) }
 % }
 % ~\textbf{\graphGen-seq}
 % %
@@ -515,135 +593,40 @@ $\Gamma$ is a vector records the variables the current program ${c}$ depends on,
 % { 
 % \inferrule
 % {
-% B= |{\bar{x}}| \and {A = |{c}|}
-% \\
-% {\ad{\Gamma;[\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}]; i+ (B+A) }{ \Mtrix_{1};V_{1}; i+B+(B+A) }}
-% \\
 % {
-% \ad{\Gamma;{c} ; i+B+(B+A)  }{ \Mtrix_{2}; \flag_{2}; i+B+A+(B+A) }
+% \ad{\Gamma + \rMtrix_{{\bexpr}};{c}; \lvar_c  }{ \Mtrix'}
 % }
-% \\
-% {
-% \ad{\Gamma ; [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] ; i+(B+A) }{ \Mtrix; \flag ;i+(B+A)+B}
-% }
-% \\
-% { \Mtrix' = \Mtrix + ( \Mtrix_{1} + \Mtrix_{2}) }
-% \and
-% {
-% \flag' = \flag \uplus (( \flag_{1} \uplus \flag_{2}) \uplus 2)  }
 % }
 % {
 % \ad{\Gamma;
-% \ewhile ~ [ b ]^{l} ~ {n} ~
-% [\bar{{x}}, \bar{{x_1}}, \bar{{x_2}}] 
-% ~ \edo ~  c;
-% i }{ \Mtrix'; \flag' ;i+(B+A)+B }
+% \ewhile [ \sbexpr ]^{l} \edo  {c}; \lvar_c }{\Mtrix'}
 % }~\textbf{\graphGen-while}
 % }
 % \end{mathpar}
-{
-\framebox{$ \ad{\Gamma; c; \lvar_c}{\Mtrix}$}
-\begin{mathpar}
-\inferrule
-{
-{x}^l \in \lvar_c
-\and 
-\Mtrix = \lMtrix_i * ( \rMtrix_{{\expr}} + \Gamma )
-}
-{
-\ad{\Gamma; [\assign {{x}}{{\expr}} ]^{l}; \lvar_c}
-{\Mtrix}
-}
-~\textbf{\graphGen-asgn}
-\and
-{
-\inferrule
-{
-{x}^l \in \lvar_c
-\and 
-\Mtrix = \lMtrix_i * ( \rMtrix_{{\expr}} + \Gamma )
-}
-{ 
-\ad{\Gamma;[ \assign{{x}}{\query({\qexpr})} ]^{l} ; \lvar_c }
-{\Mtrix}
-}~\textbf{\graphGen-query}}
-%
-\and 
-%
-{
-\inferrule
-{
-{\ad{\Gamma + \rMtrix_{{\bexpr}}; {c_1} ; \lvar_c }{ \Mtrix_1}}
-\and 
-{\ad{\Gamma + \rMtrix_{{\bexpr}}; {c_2}; \lvar_c }{ \Mtrix_2}}
-\and
-{\Mtrix = (\Mtrix_1 + \Mtrix_2)}
-}
-{
-\ad{\Gamma ; \eif([{\bexpr}]^{l},{ c_1, c_2)}}
-{ \Mtrix }
-}
-~\textbf{\graphGen-if}
-}
-%
-%
-%
-\and 
-%
-\inferrule
-{
-{\ad{\Gamma; {c_1}; \lvar_c }{ \Mtrix_1}  }
-\and 
-{
-\ad{\Gamma;{c_2}; \lvar_c }{ \Mtrix_2}}
-}
-{
-\ad{\Gamma ; ({c_1 ; c_2} ); \lvar_c}
-{( \Mtrix_1 {;} \Mtrix_2) }
-}
-~\textbf{\graphGen-seq}
-%
-\and 
-%
-\and 
-%
-{ 
-\inferrule
-{
-{
-\ad{\Gamma + \rMtrix_{{\bexpr}};{c}; \lvar_c  }{ \Mtrix'}
-}
-}
-{
-\ad{\Gamma;
-\ewhile [ \sbexpr ]^{l} \edo  {c}; \lvar_c }{\Mtrix'}
-}~\textbf{\graphGen-while}
-}
-\end{mathpar}
-}
-%
-Below we define the valid data flow matrix, to have a clear understanding on the data flow generating algorithm:
-\begin{defn}[Valid Matrix]
-For a labeled variables $\lvar$, $\lvar \vDash (\Mtrix,\flag)$ iff the cardinality of $\lvar$ equals to the one of $\flag$, $|\lvar| = |\flag|$ 
-and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
-\end{defn}
-%
-\todo{Improvement if possible: Combining reachability bounds analysis into the static dependency analysis algorithm above, rather than adopting an external tool entirely.}
-%
-\paragraph{Reachability Bounds}
-Given a program $c$ with its labeled variables $\lvar$,
-we use the $\rb({x}, {c})$ algorithm, from paper \cite{10.1145/1806596.1806630}, to estimate the reachability bound for each variable ${x} \in \lvar$. 
-The input of $\rb$ is a program ${c}$ in SSA language and a variable ${x} $ from ${c}$.
-The output of $\rb({x}, {c})$ is an integer representing the reachability bound of ${x}$ in ${c}$.
-%
+% }
+% %
+% Below we define the valid data flow matrix, to have a clear understanding on the data flow generating algorithm:
+% \begin{defn}[Valid Matrix]
+% For a labeled variables $\lvar$, $\lvar \vDash (\Mtrix,\flag)$ iff the cardinality of $\lvar$ equals to the one of $\flag$, $|\lvar| = |\flag|$ 
+% and the matrix $\Mtrix$ is of size $|\flag| \times |\flag|$.
+% \end{defn}
+% %
+% \todo{Improvement if possible: Combining reachability bounds analysis into the static dependency analysis algorithm above, rather than adopting an external tool entirely.}
+% %
+% \paragraph{Reachability Bounds}
+% Given a program $c$ with its labeled variables $\lvar$,
+% we use the $\rb({x}, {c})$ algorithm, from paper \cite{10.1145/1806596.1806630}, to estimate the reachability bound for each variable ${x} \in \lvar$. 
+% The input of $\rb$ is a program ${c}$ in SSA language and a variable ${x} $ from ${c}$.
+% The output of $\rb({x}, {c})$ is an integer representing the reachability bound of ${x}$ in ${c}$.
+% %
 
-%
-The following example programs ${c}2$ and ${c}3$ with while loop illustrate how the algorithm works.
-The collected labeled variables, $\lvar_{{c}2}$ and $\lvar_{{c}3}$,
-data flow matrix $\Mtrix_{{c}2}$ and  $\Mtrix_{{c}3}$
-and variable flags $\flag_{{c}2}$ and $\flag_{{c}3}$
-for program ${c}2$ and ${c}3$
-are presented in the right hand side.
+% %
+% The following example programs ${c}2$ and ${c}3$ with while loop illustrate how the algorithm works.
+% The collected labeled variables, $\lvar_{{c}2}$ and $\lvar_{{c}3}$,
+% data flow matrix $\Mtrix_{{c}2}$ and  $\Mtrix_{{c}3}$
+% and variable flags $\flag_{{c}2}$ and $\flag_{{c}3}$
+% for program ${c}2$ and ${c}3$
+% are presented in the right hand side.
 %
 % \[
 % {{c}2 \triangleq

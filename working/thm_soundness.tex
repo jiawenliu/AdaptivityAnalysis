@@ -25,7 +25,13 @@
 %
 \begin{thm}[$\vardep$ implies $\flowsto$]
 \label{thm:flowstovardep_sound}
-Given a program ${c}$, 
+Given a program ${c}$, for all  $ x^i, y^j \in \lvar_{{c}}$, if $\vardep(x^i, y^j, {c})$,
+then either $\flowsto(x^i, y^j, c)$ 
+or 
+exist $z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
+$\flowsto(x^i,  z_1^{r_1}, c) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$
+%
 \[
 \begin{array}{l}
   \forall x^i, y^j \in \lvar_{{c}}.
@@ -38,24 +44,26 @@ Given a program ${c}$,
 \]
 \end{thm}
 \begin{proof}
-Proved by applying Theorem.~\ref{thm:algvardep_sound} and Correctness of $\mathcal{A}$ in Theorem.~\ref{thm:alg_correct}.
-\caseL{Case 1} $\flowsto( x^i, y^j, c)$
-By definition of $\vardep(x^i, y^j, {c})$, let $\event_x, \event_y$ be the two event satisfying the definition.
-\\
-Let $[\assign{y}{\expr_y}]^j$ be the assignment event corresp
+% Proved by applying Theorem.~\ref{thm:algvardep_sound} and Correctness of $\mathcal{A}$ in Theorem.~\ref{thm:alg_correct}.
+\caseL{Case 1: ($\flowsto(x^i, y^j, c)$)} 
+Let $[\assign{y}{\expr_y}]^j$ be the assignment command associated to $y^j$ in $c$,
+by definition of $\vardep(x^i, y^j, {c})$, let $D \in \dbdom$ be the dataset,
+and $\event_x, \event_y$ be the two events satisfying the definition,
+it is sufficient to show following statement:
     $$
-    {x}_1^{l_1} \in VAR({x}_2^{l_2})
+    x^i \in VAR(\expr_y)
     \lor 
-    \exists b \st {x}_1^{l_1} \in VAR(b) \land {x}_2^{l_2} \in GuardedBody(b)
+    (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+    \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
     $$
-\caseL{Case 2}
-    $$
-    \exists z^i \in \lvar_c \st 
-    \vardep({x}_1^{l_1}, z^i, {c})
+Otherwise, it can only be the case 2.
+\caseL{Case 2: 
+    ($\exists z^r
+    \st 
+    \vardep(x^i, z^r, {c})
     \land 
-    Case 1 (z^i, {x}_2^{l_2})
-    $$
-
+    \flowsto(z^r, y^j, c)$)
+    }
 \end{proof}
 
 \subsection{$\THESYSTEM$ Soundness}
@@ -71,7 +79,7 @@ Let $[\assign{y}{\expr_y}]^j$ be the assignment event corresp
 
 \wq{To do: Add $\THESYSTEM$, a data flow analysis algorithm to scan the program and give a graph.}
 
-\jl{In the $\THESYSTEM$ section, Section~\ref{sec:adpfun}?}
+\jl{In the $\THESYSTEM$ section, Section~\ref{sec:adpfun}.2?}
 
 {\THESYSTEM} consists of three phases: 
 \begin{enumerate}
