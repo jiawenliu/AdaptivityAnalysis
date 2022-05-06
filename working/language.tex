@@ -61,13 +61,16 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 %
 \mbox{Event} 
 & \event & ::= & 
-    ({x}, l, v) | ({x}, l, \qval, v)  ~~~~~~~~~~~ \mbox{Assignment Event} \\
-&&& | (\bexpr, l, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
+    ({x}, l, v) ~|~ ({x}, l, \qval, v)  ~~~~~~~~~~~ \mbox{Assignment Event} \\
+&&& ~|~(\bexpr, l, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
 \\
 %
-\mbox{Trace} & \trace
-& ::= & \cdot | \trace \cdot \event 
+% \mbox{Trace} & \trace
+% & ::= & \cdot | \trace \cdot \event | \trace \tracecat \trace 
 % \\
+%
+\mbox{Trace} & \trace
+& ::= & [] ~|~ \event:: \trace ~|~ \trace \tracecat \trace  % \\
 % %
 % \mbox{Event Signature} & \sig
 % & ::= & (x, l, n) | (x, l, n, \query) | (b, l, n)
@@ -75,6 +78,8 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 % %
 \end{array}
 \]
+\todo{change trace notation into list, and update corresponding operator nations}
+\\
 % \wqside{"$\cdot$" has two meanings? empty, delimit. Trace is list of event?}
 We use following notations to represent the set of corresponding terms:
 \[
@@ -116,15 +121,15 @@ We use following notations to represent the set of corresponding terms:
 Environment $ \env : {\mathcal{T}}  \to \mathcal{SVAR} \to \mathcal{VAL} \cup \{\bot\}$
 \[
 \begin{array}{lll}
-\env(\trace  \cdot (x, l, v)) x \triangleq v
+\env(\trace  \tracecat [(x, l, v)]) x \triangleq v
 &
-\env(\trace \cdot (x, l, \qval, v)) x \triangleq v
+\env(\trace \tracecat [(x, l, \qval, v)]) x \triangleq v
 &
-\env(\trace \cdot (y, l, v)) x \triangleq \env(\trace) x
+\env(\trace \tracecat [(y, l, v)]) x \triangleq \env(\trace) x
 \\
-\env(\trace \cdot (b, l, v)) x \triangleq \env(\trace) x
+\env(\trace \tracecat [(b, l, v)]) x \triangleq \env(\trace) x
 &
-\env(\cdot ) x \triangleq \bot
+\env({[]} ) x \triangleq \bot
 &
 \end{array}
 \]
@@ -246,7 +251,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 {
 \config{[\assign{{x}}{\aexpr}]^{l},  \trace } 
 \xrightarrow{} 
-\config{[\eskip]^{l}, \trace \cdot \event }
+\config{[\eskip]^{l}, \trace \tracecat [\event ]}
 }
 ~\textbf{assn}
 %
@@ -264,7 +269,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 {
 \config{{[\assign{x}{\query(\qexpr)}]^l, \trace}}
 \xrightarrow{} 
-\config{{\eskip,  \trace \cdot \event} }
+\config{{\eskip,  \trace \tracecat[ \event]} }
 }
 ~\textbf{query}
 }
@@ -282,7 +287,7 @@ The trace based operational semantics are defined in Figure \ref{fig:os_ssa}.
 \xrightarrow{} 
 \config{{
 c; \ewhile [b]^{l} \edo c,  \eskip),
-\trace \cdot \event}}
+\trace \tracecat [\event]}}
 }
 ~\textbf{while-t}
 %
@@ -300,7 +305,7 @@ c; \ewhile [b]^{l} \edo c,  \eskip),
 \xrightarrow{} 
 \config{{
 [\eskip]^l ,
-\trace \cdot \event}}
+\trace \tracecat [\event]}}
 }
 ~\textbf{while-f}
 %
@@ -348,7 +353,7 @@ c; \ewhile [b]^{l} \edo c,  \eskip),
 \eif([b]^{l}, c_1, c_2), 
 \trace}}
 \xrightarrow{} 
-\config{{c_1, \trace \cdot \event}}
+\config{{c_1, \trace \tracecat [\event]}}
 }
 ~\textbf{if-t}
 %
@@ -363,7 +368,7 @@ c; \ewhile [b]^{l} \edo c,  \eskip),
 {
 \config{{\eif([b]^{l}, c_1, c_2), \trace}}
 \xrightarrow{} 
-\config{{c_2, \trace \cdot \event}}
+\config{{c_2, \trace \tracecat [\event]}}
 }
 ~\textbf{if-f}
 % %

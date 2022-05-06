@@ -1,5 +1,7 @@
 %
 \subsection{Trace}
+\todo{update notations}
+\\
 %
 % An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
 % %
@@ -52,42 +54,48 @@ Trace concatenation: $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$
   \trace_1 \tracecat \trace_2 \triangleq
   \left\{
   \begin{array}{ll} 
-    \trace_1                                      & \trace_2 =  \cdot \\
-    (\trace_1 \cdot \event) \tracecat \trace_2'   & \trace_2 =  {} \cdot \event \cdot \trace_2'\\ 
+    \trace_2                                      & \trace_1 =  [] \\
+    \event ::  (\trace_1'  \tracecat \trace_2 )   & \trace_1 =  \event :: \trace_1'\\ 
   \end{array}
   \right.
 \]
 %
 \todo{ need to consider the occurrence times }
+\\
 Subtrace: $[ : ] : \mathcal{{T} \to \eventset \to \eventset \to \mathcal{T}}$ 
 % \wqside{Confusing, I can not understand the subtraction, it takes a trace, and two events, and this operator is used to subtract these two events?}
 \[
   \trace[\event_1 : \event_2] \triangleq
   \left\{
   \begin{array}{ll} 
-  \trace'[\event_1: \event_2]             & \trace = \event \tracecat \trace' \land \event \eventneq \event_1 \\
-  \cdot {} \event_1 \tracecat \trace'[:\event_2]  & \trace = \event \tracecat \trace' \land \event \eventeq \event_1 \\
-  \cdot {} & \trace = \cdot \\
+  \trace'[\event_1: \event_2]             & \trace = \event :: \trace' \land \event \eventneq \event_1 \\
+  \event_1 :: \trace'[:\event_2]  & \trace = \event :: \trace' \land \event \eventeq \event_1 \\
+  {[]} & \trace = [] \\
   \end{array}
   \right.
 \]
+For any trace $\trace$ and two events $\event_1, \event_2 \in \eventset$,
+$\trace[\event_1 : \event_2]$ takes the subtrace of $\trace$ starting with $\event_1$ and ending with $\event_2$ including $\event_1$ and $\event_2$.
+\\
+We use $\trace[:\event_2] $ as the shorthand of subtrace starting from head and ending with $\event_2$, and similary for $\trace[\event_1:]$.
 \[
   \trace[:\event] \triangleq
   \left\{
   \begin{array}{ll} 
-  \cdot {} \event' \tracecat \trace'[: \event]             & \trace = \event' \tracecat \trace' \land \event' \eventneq \event \\
-  \cdot {} \event'  & \trace = \event' \tracecat \trace' \land \event' \eventeq \event \\
-  \cdot  & \trace = \cdot \\
+ \event' :: \trace'[: \event]             & \trace = \event' :: \trace' \land \event' \eventneq \event \\
+  \event'  & \trace = \event' :: \trace' \land \event' \eventeq \event \\
+  {[]}  & \trace = [] 
   \end{array}
   \right.
-\]
-\[
-  \trace[\event_1 : ] \triangleq
+% \]
+% \[
+  \quad
+  \trace[\event: ] \triangleq
   \left\{
   \begin{array}{ll} 
-  \trace'[\event_1: ] \cdot \event'     & \trace = \trace'\cdot \event' \land \event \eventneq \event' \\
-  \cdot {}\event'  & \trace = \trace' \cdot \event' \land \event \eventeq \event' \\
-  \cdot  & \trace = \cdot
+  \trace'[\event: ]     & \trace =  \event' :: \trace' \land \event \eventneq \event' \\
+  \event' :: \trace'  & \trace = \event' :: \trace' \land \event \eventeq \event' \\
+  {[ ] } & \trace = []
   \end{array}
   \right.
 \]
@@ -98,9 +106,9 @@ An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \even
   \event \eventin \trace  
   \triangleq \left\{
   \begin{array}{ll} 
-    \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \eventeq \event')
+    \etrue                  & \trace =  (\event' :: \trace') \land (\event \eventeq \event')
                               \\
-    \event \eventin \trace' & \trace =  (\trace' \cdot \event') \land (\event \eventneq \event') \\ 
+    \event \eventin \trace' & \trace =  (\event' :: \trace') \land (\event \eventneq \event') \\ 
     \efalse                 & o.w.
   \end{array}
   \right.
@@ -129,58 +137,94 @@ An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \even
 %
 Counter $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$ 
 % \wq{The operator counter actually provides the number of times a specific label appears in a trace. Only a number, the position of label is ignored.}
+% \[
+% \begin{array}{lll}
+% \vcounter((x, l, v) :: \trace ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter((b, l, v):: \trace ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter((x, l, \qval, v):: \trace ) l \triangleq \vcounter(\trace) l + 1
+% \\
+% \vcounter((x, l', v):: \trace ) l \triangleq \vcounter(\trace ) l
+% &
+% \vcounter((b, l', v):: \trace ) l \triangleq \vcounter(\trace ) l
+% &
+% \vcounter((x, l', \qval, v):: \trace ) l \triangleq \vcounter(\trace ) l
+% \\
+% \vcounter({[]}) l \triangleq 0
+% &&
+% \end{array}
+% \]
 \[
 \begin{array}{lll}
-\vcounter(\trace \cdot (x, l, v) ) l \triangleq \vcounter(\trace) l + 1
+\vcounter(\trace  \tracecat [(x, l, v)] ) l \triangleq \vcounter(\trace) l + 1
 &
-\vcounter(\trace \cdot (b, l, v)) l \triangleq \vcounter(\trace) l + 1
+\vcounter(\trace  \tracecat [(b, l, v)] ) l \triangleq \vcounter(\trace) l + 1
 &
-\vcounter(\trace \cdot (x, l, \qval, v)) l \triangleq \vcounter(\trace) l + 1
+\vcounter(\trace  \tracecat [(x, l, \qval, v)] ) l \triangleq \vcounter(\trace) l + 1
 \\
-\vcounter(\trace  \cdot (x, l', v)) l \triangleq \vcounter(\trace ) l
+\vcounter(\trace  \tracecat [(x, l', v)] ) l \triangleq \vcounter(\trace ) l
 &
-\vcounter(\trace \cdot (b, l', v)) l \triangleq \vcounter(\trace ) l
+\vcounter(\trace  \tracecat [(b, l', v)] ) l \triangleq \vcounter(\trace ) l
 &
-\vcounter(\trace \cdot (x, l', \qval, v)) l \triangleq \vcounter(\trace ) l
+\vcounter(\trace  \tracecat [(x, l', \qval, v)]) l \triangleq \vcounter(\trace ) l
 \\
-\vcounter(\cdot) l \triangleq 0
+\vcounter({[]}) l \triangleq 0
 &&
 \end{array}
 \]
 %
-Latest Label $\llabel : \mathcal{T} \to \mathcal{VAR} \to \mathbb{N}$ 
-The label of the lastest assignment event which assigns value to variable $x$.
+% The Latest Label $\llabel : \mathcal{T} \to \mathcal{VAR} \to \mathbb{N}$ 
+% The label of the latest assignment event which assigns value to variable $x$.
+% \[
+%   \begin{array}{lll}
+% \llabel((x, l, v):: \trace) x \triangleq l
+% &
+% \llabel((b, l, v)):: \trace x \triangleq \llabel(\trace) x
+% &
+% \llabel((x, l, \qval, v):: \trace) x \triangleq l
+% \\
+% \llabel((y, l, v):: \trace) x \triangleq \llabel(\trace ) x
+% &
+% \llabel((y, l, \qval, v):: \trace) x \triangleq \llabel(\trace ) x
+% \\
+% \llabel({[]}) x \triangleq \bot
+% &&
+% \end{array}
+% \]
+%
+The Latest Label $\llabel : \mathcal{T} \to \mathcal{VAR} \to \mathbb{N}$ 
+The label of the latest assignment event which assigns value to variable $x$.
 \[
   \begin{array}{lll}
-\llabel(\trace' \cdot (x, l, v) ) x \triangleq l
+\llabel(\trace  \tracecat [(x, l, v)]) x \triangleq l
 &
-\llabel(\trace' \cdot (b, l, v)) x \triangleq \llabel(\trace') x
+\llabel(\trace  \tracecat [(b, l, v)]) x \triangleq \llabel(\trace) x
 &
-\llabel(\trace' \cdot (x, l, \qval, v)) x \triangleq l
+\llabel(\trace  \tracecat [(x, l, \qval, v)]) x \triangleq l
 \\
-\llabel(\trace'  \cdot (y, l, v)) x \triangleq \llabel(\trace' ) x
+\llabel(\trace  \tracecat [(y, l, v)]) x \triangleq \llabel(\trace ) x
 &
-\llabel(\trace' \cdot (y, l, \qval, v)) x \triangleq \llabel(\trace' ) x
+\llabel(\trace  \tracecat [(y, l, \qval, v)]) x \triangleq \llabel(\trace ) x
 \\
-\llabel(\cdot) x \triangleq \bot
+\llabel({[]}) x \triangleq \bot
 &&
 \end{array}
 \]
 %
-Trace Label Set $\tlabel : \mathcal{T} \to \mathcal{P}{(\mathbb{N})}$ 
-The label of the lastest assignment event which assigns value to variable $x$.
+The Trace Label Set $\tlabel : \mathcal{T} \to \mathcal{P}{(\mathbb{N})}$ 
+The label of the latest assignment event which assigns value to variable $x$.
 \[
   \begin{array}{llll}
-\tlabel_{(\trace' \cdot (x, l, v) )} \triangleq \{l\} \cup \tlabel_{(\trace' )}
+\tlabel_{(\trace  \tracecat [(x, l, v)])} \triangleq \{l\} \cup \tlabel_{(\trace )}
 &
-\tlabel_{(\trace' \cdot (b, l, v))} \triangleq \{l\} \cup \tlabel_{(\trace' )}
+\tlabel_{(\trace  \tracecat [(b, l, v)])} \triangleq \{l\} \cup \tlabel_{(\trace)}
 &
-\tlabel_{(\trace' \cdot (x, l, \qval, v))} \triangleq \{l\} \cup \tlabel_{(\trace' )}
+\tlabel_{(\trace  \tracecat [(x, l, \qval, v)])} \triangleq \{l\} \cup \tlabel_{(\trace)}
 &
-\tlabel_{(\cdot)} \triangleq \{\}
+\tlabel_{[]} \triangleq \{\}
 \end{array}
 \]
-
 %
 % Given a trace $\trace$, its -processed trace $\trace$ is computed by a function $p : \trace \to \trace$ as follows:
 % \[
@@ -273,7 +317,7 @@ c =_{c} c_1; c''; c_2 \land c' =_{c} c''
 $$
 \forall \trace \in \mathcal{T}, c \st
 \config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
-\implies \exists \trace'' \in \mathcal{T} \st \trace \cdot \trace'' = \trace'
+\implies \exists \trace'' \in \mathcal{T} \st \trace \tracecat \trace'' = \trace'
 $$
 \end{lem}
 %
@@ -299,10 +343,10 @@ Given a trace $\trace$, its post-processed trace $\trace_p$ is computed by a fun
   p(\trace) \triangleq
   \left\{
   \begin{array}{ll} 
-  p(\trace' \cdot (x, l, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, v) \\
-  p(\trace' \cdot (b, l, v)) & = p(\trace') \cdot (b, l, \vcounter(\trace') l + 1, v) \\
-  p(\trace' \cdot (x, l, \qval, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, \qval, v) \\
-  p(\cdot) & = \cdot
+  p(\trace' \tracecat [(x, l, v)]) & = p(\trace') \tracecat [(x, l, \vcounter(\trace') l + 1, v)] \\
+  p(\trace' \tracecat [(b, l, v)]) & = p(\trace') \tracecat [(b, l, \vcounter(\trace') l + 1, v)] \\
+  p(\trace' \tracecat [(x, l, \qval, v)]) & = p(\trace') \tracecat [(x, l, \vcounter(\trace') l + 1, \qval, v)] \\
+  p({[]}) & = \cdot
   \end{array}
   \right.
 \]
@@ -319,7 +363,7 @@ $\forall \event_1, \event_2 \eventin \trace_p \st \event_1 \signeq \event_2$
 \exists \trace_1, \trace_2, \trace_3 \in \mathbb{T_p},
  \event_1', \event_2' \in \eventset \st
 (\event_1 \eventeq \event_1') \land (\event_2 \eventeq \event_2')
-\land \trace_1 \cdot \event_1' \cdot \trace_2 \cdot \event_2' \cdot \trace_3 = \trace_p$
+\land \trace_1 \tracecat [\event_1'] \tracecat \trace_2 \tracecat [\event_2'] \tracecat \trace_3 = \trace_p$
 \end{itemize}
 \end{defn}
 %
@@ -329,7 +373,7 @@ $\forall \event_1, \event_2 \eventin \trace_p \st \event_1 \signeq \event_2$
 \\
 \[
 \forall \trace \in \mathcal{T}, c \st
-\config{c, \vtrace} \to^{*} \config{\eskip, \trace \cdot \trace'} \land \trace_p = p(\trace')
+\config{c, \vtrace} \to^{*} \config{\eskip, \trace \tracecat \trace'} \land \trace_p = p(\trace')
 \implies
 \trace_p\in \mathcal{T}
 \] 

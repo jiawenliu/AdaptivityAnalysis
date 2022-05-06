@@ -9,7 +9,7 @@ We first Proved following Inversion Lemmas.
   \begin{array}{l}
     \forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
     \\ \quad 
-     \exists \trace' \in \mathcal{T} \st \trace = \cdot \event_1 \tracecat \trace' \cdot \event_2
+     \exists \trace' \in \mathcal{T} \st \trace = \cdot [\event_1] \tracecat \trace' \tracecat [\event_2]
      \implies    \forall  z^i, y^j \in \lvar_c, l_h, l_t \st 
     \\ \qquad 
      l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)
@@ -23,18 +23,18 @@ We first Proved following Inversion Lemmas.
 \\
 Taking arbitrary $ D \in \dbdom , c \in \cdom$,
 by strong induction on $\trace \in \mathcal{T}$, we have the following cases.
-\begin{case}($\trace = \cdot$)
+\begin{case}($\trace = {[]}$)
 \\
 Since for all $\event_1, \event_2 \in \eventset^{\asn}$,
  $\not\exists \trace' \in \mathcal{T}$,satisfies $
-\cdot  = \cdot {} \event_1 \tracecat \trace' \cdot \event_2$, the theorem is vacuously true.
+{[]}  = [\event_1] \tracecat \trace' \tracecat [\event_2]$, the theorem is vacuously true.
 \end{case}
 %
-\begin{case}($\event \in \eventset, \trace = \cdot \event$)
+\begin{case}($\event \in \eventset, \trace = [\event]$)
 \\
 Since for all $\event_1, \event_2 \in \eventset^{\asn}$,
  $\not\exists \trace' \in \mathcal{T}$,satisfies $
-\cdot  \event = \cdot \event_1 \tracecat \trace' \cdot \event_2$, the theorem is vacuously true.
+{[]} = [\event_1] \tracecat \trace' \tracecat [\event_2]$, the theorem is vacuously true.
 \end{case}
 % %
 % \begin{case}($\event_1', \event_2' \in \eventset, \trace_{ih} \in \mathcal{T}, 
@@ -51,7 +51,7 @@ Since for all $\event_1, \event_2 \in \eventset^{\asn}$,
 %
 \begin{case}
 \label{case:alg_correct_base}
-($\event_1', \event_2' \in \eventset $, $\trace = \cdot {} \event_1' \cdot {} \event_2'$)
+($\event_1', \event_2' \in \eventset $, $\trace = [\event_1'; \event_2']$)
 \\
 To show:
 % \wq{$\forall l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$ below?}
@@ -59,7 +59,7 @@ To show:
 \[
 \begin{array}{l}
   \forall \event_1, \event_2 \in \eventset^{\asn} \st
-  \exists \trace' \in \mathcal{T} \st \cdot {} \event_1' \cdot {} \event_2' = \cdot \event_1 \tracecat \trace' \cdot \event_2
+  \exists \trace' \in \mathcal{T} \st [\event_1'; \event_2'] = [\event_1] \tracecat \trace' \tracecat [\event_2]
   \implies    
   \forall  z^i, y^j \in \lvar_c, l_h, l_t \st 
     \\ \qquad 
@@ -82,18 +82,18 @@ the theorem is vacuously true.
 %
 In case of $\event_1 = \event_1' \land  \event_2 = \event_2'$,
 let $\trace' = \cdot$, we know $\exists \trace' \in \mathcal{T}$ satisfying 
-$\cdot {} \event_1  {} \cdot {} \event_2 = \cdot {} \event_1 \tracecat \trace' \cdot \event_2$.
+$[\event_1; \event_2] = [\event_1] \tracecat \trace' \tracecat [\event_2]$.
 \\
 By Inversion Lemma~\ref{lem:inv_alg2}, we have either one of the two following cases:
 \begin{enumerate}
-  \item $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = 
+  \item $\mathcal{A}(\event_1, \event_2, [\event_1; \event_2], c, D) = 
   \left\{[\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}] \right \}$ 
   and $\eventdep^{val}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c, D)$.
-  \item  $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = \{\}$ 
+  \item  $\mathcal{A}(\event_1, \event_2, [\event_1; \event_2], c, D) = \{\}$ 
   and $\neg \eventdep^{val}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c, D)$;
 \end{enumerate}
 %
-In case of $\mathcal{A}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) = \{\}$,
+In case of $\mathcal{A}(\event_1, \event_2, [\event_1; \event_2], c, D) = \{\}$,
 since $\not\exists  z^i, y^j \in \lvar_c, l_h, l_t \st l_h ++ [z^i, y^j] ++ l_t \in \{\}$, the theorem is vacuously true.
 %
 \\
@@ -101,15 +101,15 @@ Then in the case 1., it is sufficient to show:
 % \wq{Because $l \in A \implies DEP$ }
 % \jl{yes}
 \[
-  \eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) 
+  \eventdep^{val}(\event_1, \event_2, [\event_1; \event_2], c, D) 
   \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
   \land \eventdep^{val}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c, D)
 \]
 %
-$\eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) 
+$\eventdep^{val}(\event_1, \event_2, [\event_1; \event_2], c, D) 
 \implies \eventdep^{val}(\event_1, \event_2, \cdot  \event_1 \cdot \event_2, c, D)$ is trivially true.
 \\
-$ \eventdep^{val}(\event_1, \event_2, \cdot \event_1 \cdot \event_2, c, D) 
+$ \eventdep^{val}(\event_1, \event_2, [\event_1; \event_2], c, D) 
 \implies \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)$ is
 proved in Subproof~\ref{pf:alg_correct_base}.
 \input{alg_correct_base}
@@ -117,7 +117,7 @@ proved in Subproof~\ref{pf:alg_correct_base}.
 \end{case}
 %
 \begin{case}
-($\event_1', \event_2' \in \eventset$, $\trace_{ih} \in \mathcal{T}, \trace = \event_1' \tracecat \trace_{ih} \cdot \event_2' \land \trace_{ih} \neq \cdot$)
+($\event_1', \event_2' \in \eventset$, $\trace_{ih} \in \mathcal{T}, \trace = [\event_1'] \tracecat \trace_{ih} \tracecat [\event_2'] \land \trace_{ih} \neq {[]}$)
 \\
 The induction hypothesis is as follows:
 %
@@ -195,27 +195,30 @@ having the form $l_e = [\event_1, \cdots, \event_2]$.
 Since $l_e$ has the form $l_e = [\event_1, \cdots, \event_2] $, 
 we know there exist a list $l^{ih}_e \in List(\eventset)$
 where $l_e = [\event_1] ++ l^{ih}_e ++ [\event_2]$.
-There are following 4 cases:
+\\
+By the form of $l^{ih}_e$, there are following 4 cases:
 
 % \begin{case}
   ($\not\exists \event \in \eventset^{\asn} \st \event \in l^{ih}_e $)
   \begin{subsubcase}($l^{ih}_e = []$)
-    In case of $l^{ih}_e = []$, by definition of $\uplus$, we know $\eventdep^{val}(\event_1, \event_{2}, \trace[\event_1:\event_{2}], c, D)$.
+    \\
+    By definition of $\uplus$, we know $\eventdep^{val}(\event_1, \event_{2}, \trace[\event_1:\event_{2}], c, D)$.
     This case is proved.
       \end{subsubcase}
-  \begin{subsubcase}($l^{ih}_e =[\event_z, \event_{b_1}, \cdots, \event_{b_n}]$, $ n \in \mathbb{N}, \event_{b_1}, \cdots, \event_{b_n} \in \eventset^{\test}$)
+  \begin{subsubcase}
+    \label{case:dep_0asn_ntest}
+    ($l^{ih}_e =[\event_{b_1}, \cdots, \event_{b_n}]$, $ n \in \mathbb{N}, \event_{b_1}, \cdots, \event_{b_n} \in \eventset^{\test}$)
+    \\
+    This case is proved by definition of $\uplus$, the Control Dependency Transitivity Lemma~\ref{lem:ctl_trans} and the \emph{Event May-Dependency} Definition~\ref{def:var_dep}.
   \end{subsubcase}
 % \end{case}
 % \begin{case}
   ($\exists \event_{ih} \in \eventset^{\asn} \st \event_{ih} \in l^{ih}_e $)
-  \begin{subsubcase}($l^{ih}_e = \event_{ih}::l'^{ih}_e$)
-  \end{subsubcase}
-  \begin{subsubcase}($l^{ih}_e =[\event_{b_1}, \cdots, \event_{b_n}]++ \event_{ih}::l'^{ih}_e$, $ n \in \mathbb{N}, \event_{b_1}, \cdots, \event_{b_n} \in \eventset^{\test}$)
-  \end{subsubcase}
-% \end{case}
-
-in case of $l^{ih}_e =  \event_{ih}::l'^{ih}_e$, we have
- $l_e = \event_1::\event_{ih}::l'^{ih}_e ++ [\event_2]$.
+  \begin{subsubcase}
+    \label{case:dep_asn_0test}
+    ($l^{ih}_e = \event_{ih}::l'^{ih}_e$)
+    \\
+    In this case, we have $l_e = \event_1::\event_{ih}::l'^{ih}_e ++ [\event_2]$.
 \\
 By definition of $\uplus$, we know $\eventdep^{val}(\event_1, \event_{ih}, \trace[\event_1:\event_{ih}], c, D)$ and 
 $\event_{ih}::l'^{ih}_e ++ [\event_2] \in \kw{dfs}(\trace[\event_{ih}:\event_2], c, D)$.
@@ -225,11 +228,17 @@ Then we know $\pi_1(\event_{ih})^{\pi_2(\event_{ih})}::
 \\
 And $\eventdep^{val}(\event_{ih}, \event_2, \trace[\event_{ih}:\event_2], c, D)$ by the induction hypothesis.
 \\
-By the \emph{Value May-Dependent} Definition~\ref{def:event_valdep} and \emph{Event May-Dependent} Definition~\ref{def:event_dep}, we know:
+By the \emph{Value May-Dependent} Definition~\ref{def:event_valdep} and \emph{Event May-Dependent} Definition~\ref{def:var_dep}, we know:
 \[
   \eventdep(\event_1, \event_2, \event_1 \tracecat \trace_{ih} \cdot \event_2, {c}, D) 
   \]
 This sub-goal is proved.
+  \end{subsubcase}
+  %
+  \begin{subsubcase}($l^{ih}_e =[\event_{b_1}, \cdots, \event_{b_n}]++ \event_{ih}::l'^{ih}_e$, $ n \in \mathbb{N}, \event_{b_1}, \cdots, \event_{b_n} \in \eventset^{\test}$)
+    This case is roved by the Control Dependency Transitivity Lemma~\ref{lem:ctl_trans} and the conclusion from Case~\ref{case:dep_0asn_ntest} and Case.~\ref{case:dep_asn_0test}.
+  \end{subsubcase}
+% \end{case} 
 \end{subproof}
 To show:
 \[  
@@ -553,7 +562,9 @@ This case is proved.
 \end{subcase}
 %
 %
-\begin{subcase}[One Testing Event: $l_e = {[\event_1, \event_b, \event_y]} ++ l_t$ ].
+\begin{subcase}
+  \label{case:flowsto_1test}
+  (One Testing Event: $l_e = {[\event_1, \event_b, \event_y]} ++ l_t$).
 \\
 To show $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c) $,
 we prove following two propositions first.
@@ -569,7 +580,7 @@ we prove following two propositions first.
 %   \end{array}
 %   \end{equation}
   %
-This proposition is proved by Lemma~\ref{lem:inv_indepeventstest} and the Boolean Expression Inversion Generalization Lemma~\ref{lem:inv_b_gnl}.
+This proposition is proved by Lemma~\ref{lem:inv_indepeventstest} and the Boolean Expression Inversion Generalization Lemma~\ref{lem:inv_expr_gnl}.
 %
   \begin{equation}
   \begin{array}{l}
@@ -578,7 +589,18 @@ This proposition is proved by Lemma~\ref{lem:inv_indepeventstest} and the Boolea
   \end{array}
   \end{equation}
 %
-This proposition is proved by Inversion Lemma~\ref{lem:inv_test} and the Control Dependency Definition~\ref{def:event_ctldep}.
+\todo{add Proof main steps, Or a general Lemma}
+\[
+  \begin{array}{l}
+  \forall c \in \cdom, D \in \dbdom, \event_b \in \eventset^{\test}, \event \in \eventset^{\asn} \st 
+  \eventdep^{\ctl}(\event_b, \event, c, D) 
+  \\ \quad 
+  \implies
+  \forall z \in VAR(\pi_1(\event_b)) \st \exists i \in \mathbb{N} \st
+  \flowsto(z^i, \pi_1(\event)^{\pi_2(\event)}, c)
+  \end{array}
+  \]
+This proposition is proved by Inversion Lemma~\ref{lem:inv_event} and the Control Dependency Definition~\ref{def:event_ctldep}.
 %
 \\
 Then by the $\flowsto$ definition~\ref{def:flowsto}, we know $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c) $.
@@ -604,8 +626,7 @@ Then, we know:
 \[
   {[\event_1, \event_{b_1}, \event_y]} ++ l_t \in \kw{dfs}(\trace, c, D)
 \]
-Then we know $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c) $ from the case of 
-$l_e = [\event_1, \event_{b}, \event_y] ++ l_t$.
+Then we know $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_y)^{\pi_2(\event_y)}, c) $ from the conclusion of Case~\ref{case:flowsto_1test}.
 \end{subcase}
 %
 \end{case}
