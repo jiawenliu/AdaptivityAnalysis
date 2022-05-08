@@ -26,9 +26,10 @@
 \begin{thm}[$\vardep$ implies $\flowsto$]
 \label{thm:flowstovardep_sound}
 Given a program ${c}$, for all  $ x^i, y^j \in \lvar_{{c}}$, if $\vardep(x^i, y^j, {c})$,
-then either $\flowsto(x^i, y^j, c)$ 
-or 
-exist $z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
+then
+%  either $\flowsto(x^i, y^j, c)$ 
+% or 
+there exist $z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
 $\flowsto(x^i,  z_1^{r_1}, c) 
 \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$
 %
@@ -44,26 +45,61 @@ $\flowsto(x^i,  z_1^{r_1}, c)
 \]
 \end{thm}
 \begin{proof}
+    By definition of $\vardep(x^i, y^j, {c})$, let $D \in \dbdom$ be the dataset,
+and $\event_x, \event_y$ be the two events satisfying the definition, 
+with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$;
+then it is sufficient to show 2 following cases:
+    \[
+        (\exists \trace \in \mathcal{T} \st 
+        \eventdep^{val}(\event_x, \event_y, \trace, c, D)) )
+        \implies
+  \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+  \flowsto(x^i,  z_1^{r_1}, c) 
+  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
+    \]
+    \[
+        (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+        \land \eventdep^{\ctl}(\event_b, \event_y, c, D))    
+    \implies
+  \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+  \flowsto(x^i,  z_1^{r_1}, c) 
+  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
+\]
 % Proved by applying Theorem.~\ref{thm:algvardep_sound} and Correctness of $\mathcal{A}$ in Theorem.~\ref{thm:alg_correct}.
-\caseL{Case 1: ($\flowsto(x^i, y^j, c)$)} 
+\caseL{Case 1: ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)} 
 Let $[\assign{y}{\expr_y}]^j$ be the assignment command associated to $y^j$ in $c$,
-by definition of $\vardep(x^i, y^j, {c})$, let $D \in \dbdom$ be the dataset,
-and $\event_x, \event_y$ be the two events satisfying the definition,
 it is sufficient to show following statement:
+    $$
+    \begin{array}{l}
+    x^i \in VAR(\expr_y)
+    \\ \quad 
+    \lor 
+    (\exists \event_z \in \eventset^{val}, \trace_z \in \mathcal{T} \st 
+        \eventdep^{val}(\event_x, \event_z, \trace_z, c, D)
+        \\ \qquad 
+        \implies 
+        \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+  \flowsto(x^i,  z_1^{r_1}, c) 
+  \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
+        )
+        \\ \quad
+        \land 
+   ( \pi_1(\event_z)^{\pi_2(\event_z)} \in VAR(\expr_y)) 
+    \lor  \exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+    \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
+    \end{array}
+    $$
+Otherwise, it can only be the case 2.
+\caseL{Case 2: 
+    ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)}
+
     $$
     x^i \in VAR(\expr_y)
     \lor 
     (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
     \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
     $$
-Otherwise, it can only be the case 2.
-\caseL{Case 2: 
-    ($\exists z^r
-    \st 
-    \vardep(x^i, z^r, {c})
-    \land 
-    \flowsto(z^r, y^j, c)$)
-    }
+
 \end{proof}
 
 \subsection{$\THESYSTEM$ Soundness}
