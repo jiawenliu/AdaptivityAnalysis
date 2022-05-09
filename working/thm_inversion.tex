@@ -109,7 +109,7 @@
 % 	% \env(\trace) z = \env(\trace') z $ and $\config{\trace, \aexpr} \aarrow v $ and 
 % 	% $\config{\trace', \aexpr} \aarrow v' $ with $v' \neq v$, then $ x $ is in the free variables of $\aexpr$, i.e., $x \in VAR(\aexpr)$.
 % 	%
-% 	For all subset of the labeled variables $\diff \subset \lvar$, and $x^i \in (\lvar \setminus \diff)$,
+% 	For all subset of the labelled variables $\diff \subset \lvar$, and $x^i \in (\lvar \setminus \diff)$,
 % 	and an arithmetic expression $\aexpr$,
 % 	if for all $z^j \in \lvar \setminus \diff, \trace, \trace' \in \mathcal{T}, v, v'$ such that 
 % 	$\env(\trace) z = \env(\trace') z$, and 
@@ -175,7 +175,7 @@
 % \end{lem}%
 \begin{lem}[Expression Inversion Generalization]
 	\label{lem:inv_expr_gnl}
-	For all subset of the labeled variables $\diff \subset \lvar$, and $x^i \in (\lvar \setminus \diff)$,
+	For all subset of the labelled variables $\diff \subset \lvar$, and $x^i \in (\lvar \setminus \diff)$,
 	and an expression $\expr$, if 
 	\begin{itemize}
 		\item $\expr$ is an arithmetic expression $\aexpr$,
@@ -817,8 +817,16 @@ $\left(
 	\]
 \end{lem}
 %
-\begin{lem}[Independent Events Doesn't Block $\flowsto$ ].
+\begin{lem}[Independent Events Doesn't Block $\flowsto$ ]
 		\label{lem:inv_indepevents}
+		For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}$, and two assignment events 
+		$\event_1, \event_2 \in \eventset^{\asn}$,
+		if the trace $trace$ has the form $\trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$ with $\trace' \in \mathcal{T}$, and $\eventdep(\event_1, \event_2, \trace, c, D)$,
+		and every $\event \in \trace'$ doesn't have the dependency relations both on $\event_1$ and to $\event_2$,
+		then 
+		the labelled variable $\pi_1(\event_1)^{\pi_2(\event_1)}$ directly flows to the other one $\pi_1(\event_2)^{\pi_2(\event_2)}$, i.e., 
+		$\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)$.
+		%
 		\[
 		\begin{array}{l}
 			\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
@@ -963,8 +971,12 @@ By $\flowsto$ definition:
 \]
 \end{proof}
 %
-\begin{lem}[Dependency with Empty Trace Implies $\flowsto$ ].
+\begin{lem}[Dependency with Empty Trace Implies $\flowsto$ ]
 	\label{lem:emptytrace_dep}
+	For every $ c \in \cdom, D \in \dbdom$ and two assignment events $\event_1, \event_2 \in \eventset^{\asn}$,
+	if $\eventdep^{val}(\event_1, \event_2, [\event_1; \event_2],  c, D) $,
+	then, $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)$.
+	%
 	\[
 	\begin{array}{l}
 		\forall \event_1, \event_2 \in \eventset^{\asn}, c \in \cdom, D \in \dbdom 
@@ -980,8 +992,17 @@ By $\flowsto$ definition:
 	This lemma is a special case of Lemma~\ref{lem:inv_indepevents} and proved in Subproof~\ref{pf:alg_correct_base}.
 \end{proof}
 %
-\begin{lem}[Independent Events Doesn't Block $\flowsto$ for Testing Event].
+\begin{lem}[Independent Events Doesn't Block $\flowsto$ for Testing Event]
 	\label{lem:inv_indepeventstest}
+	%
+	For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}$, an assignment event
+	$\event_1 \in \eventset^{\asn}$ and a test event $\event_2 \in \eventset^{\test}$,
+	if the trace $trace$ has the form $\trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$ with $\trace' \in \mathcal{T}$, 
+	and $\eventdep(\event_1, \event_2, \trace, c, D)$,
+	and every $\event \in \trace'$ doesn't have the \emph{May-Dependency} relations both on $\event_1$ and to $\event_2$,
+	then 
+	$\pi_1(\event_1) \in VAR(\pi_1(\event_2))$, and $ {\pi_2(\event_1)} = \llabel(\trace)$
+	%
 	\[
 	\begin{array}{l}
 		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1,\in \eventset^{\asn}, \event_2 \in \eventset^{\test} \st
@@ -1000,16 +1021,20 @@ By $\flowsto$ definition:
 	\]
 \end{lem}
 %
-\todo{Event Dependency Transitivity}
+% \todo{Event Dependency Transitivity}
 \begin{thm}
 	\label{lem:valdep_trans}
 (Value Dependency Transitivity)
+For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}$, and $\event_1, \event_2, \event_3 \in \eventset^{\asn}, \trace_{12}, \trace_{23} \in \mathcal{T}$,
+if $\eventdep^{val}(\event_1, \event_2, \trace_{12}, c, D)$
+and $\eventdep^{val}(\event_2, \event_3, \trace_{23}, c, D) $,
+then $\eventdep^{val}(\event_1, \event_3, \trace_{12}\tracecat\trace_{23}, c, D)$.
   % An event $\event_2 \in \eventset^{\asn}$ is in the \emph{may-dependency} relation with another
   % event $\event_1 \in \eventset^{\asn}$ in a program ${c}$ with a hidden database $D$, denoted as $\eventdep(\event_1, \event_2, c, D)$,
   % if and only if
   \[
 	  \begin{array}{l}
-  \forall \event_1, \event_2, \event_3 \in \eventset^{\asn}, \trace_{12}, \trace_{23} \in \mathcal{T} \st 
+  \forall D \in \dbdom , c \in \cdom, \event_1, \event_2, \event_3 \in \eventset^{\asn}, \trace_{12}, \trace_{23} \in \mathcal{T} \st 
   \eventdep^{val}(\event_1, \event_2, \trace_{12}, c, D) 
   \land
   \eventdep^{val}(\event_2, \event_3, \trace_{23}, c, D) 
@@ -1023,29 +1048,55 @@ By $\flowsto$ definition:
 %
 \begin{lem}(Control Dependency Transitivity)
 \label{lem:ctl_trans}
+For every $D \in \dbdom , c \in \cdom, \event_1, \event_2 \in \eventset^{\test}, \event_3 \in \eventset$
+if $\eventdep^{\ctl}(\event_1, \event_2, c, D)$ and $\eventdep^{\ctl}(\event_2, \event_3, c, D)$,
+then $\eventdep^{\ctl}(\event_1, \event_3, c, D)$.
+%
 \[
-  \forall \event_1, \event_2 \in \eventset^{\test}, \event_3 \in \eventset \st
+  \forall D \in \dbdom , c \in \cdom, \event_1, \event_2 \in \eventset^{\test}, \event_3 \in \eventset \st
   \eventdep^{\ctl}(\event_1, \event_2, c, D) 
   \land \eventdep^{\ctl}(\event_2, \event_3, c, D)
   \implies \eventdep^{\ctl}(\event_1, \event_3, c, D)
 \]
 \end{lem}
 %
-\begin{lem}
-	\label{lem:eventdep_trans}
-(Event Dependency Transitivity)
+% \begin{lem}
+% 	\label{lem:eventdep_trans}
+% (\emph{Variable May-Dependency} Transitivity)
+% 	\[
+% 	\forall c \in \cdom, D \in \dbdom , \event_1, \event_2, \event_3 \in \eventset^{\asn}\st 
+% 	\eventdep(\event_1, \event_2, c, D) 
+% 	\land
+% 	\eventdep(\event_2, \event_3, c, D) 
+% 	\implies
+% 	\eventdep(\event_1, \event_3, c, D)
+% 	\]
+%   \end{lem}
+%
+\begin{lem}[\emph{Variable May-Dependency} Transitivity]
+	\label{lem:vardep_trans}
+For every $c \in \cdom, x^i, y^j, z^l \in \lvar_c$, 
+if $\vardep(x^i, y^j, c)$ and 
+$\vardep(y^j, z^l, c)$, then $\vardep(x^i, z^l, c)$.
 	\[
-	\forall \event_1, \event_2, \event_3 \in \eventset^{\asn}\st 
-	\eventdep(\event_1, \event_2, c, D) 
+	\forall c \in \cdom, x^i, y^j, z^l \in \lvar_c \st 
+	\vardep(x^i, y^j, c) 
 	\land
-	\eventdep(\event_2, \event_3, c, D) 
+	\vardep(y^j, z^l, c) 
 	\implies
-	\eventdep(\event_1, \event_3, c, D)
+	\vardep(x^i, z^l, c)
 	\]
   \end{lem}
-%
-\begin{lem}[While Loop Inversion].
+  %
+\begin{lem}[While Loop Inversion]
 \label{lem:inv_while}
+For every $\trace, \trace' \in \mathcal{T}, c, c_1, c_2 \in \cdom$ 
+if $ \config{c, \trace} \rightarrow^* \config{c_1; c_2, \trace'}$ and 
+$c_1 \in_c c_2$, 
+then there must exist a $\ewhile$ command in $c_2$ and $c_1$ must shows up in the body of that $\ewhile$ command,
+ i.e., $\exists l \in \mathbb{N}, b \in \mathcal{B}, c_w \in \cdom \st 
+(\ewhile [b]^l \edo c_w) \in_c c_2 \land c_1 \in_c c_w$.
+%
 \[
 \begin{array}{l}
 \forall \trace, \trace' \in \mathcal{T}, c, c_1, c_2 \in \cdom \st
