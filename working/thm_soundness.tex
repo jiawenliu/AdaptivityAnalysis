@@ -45,60 +45,145 @@ $\flowsto(x^i,  z_1^{r_1}, c)
 \]
 \end{thm}
 \begin{proof}
-    By definition of $\vardep(x^i, y^j, {c})$, let $D \in \dbdom$ be the dataset,
-and $\event_x, \event_y$ be the two events satisfying the definition, 
-with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$;
-then it is sufficient to show 2 following cases:
-    \[
-        (\exists \trace \in \mathcal{T} \st 
-        \eventdep^{val}(\event_x, \event_y, \trace, c, D)) )
-        \implies
-  \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+  It is sufficient to show:
+  \\
+  1. $x^i$ is directly used in the expression of the assignment command associated to $y^j$, or a boolean
+  expression of the guard for a $\eif$ or $\ewhile$ command with the assignment command associated to $y^j$ shows up in the body of that command, 
+  we call it, $x^i$ directly flows to $y^j$;
+  \\
+  2. otherwise, there exists another labelled variable $z^l$ with \emph{variable May-Dependency} relation on $x^i$ and 
+  $z^i$ directly flows to $y^j$.
+%
+  \[
+\begin{array}{l}
+  \flowsto(x^i, y^j, {c})
+  \lor 
+  \Big(
+    \exists z^l \in \lvar_{{c}}.
+  \vardep(x^i, z^l, {c})   
+  \\ \quad 
+\implies
+   \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
   \flowsto(x^i,  z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
-    \]
-    \[
-        (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
-        \land \eventdep^{\ctl}(\event_b, \event_y, c, D))    
-    \implies
-  \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-  \flowsto(x^i,  z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
+  \land \cdots \land \flowsto(z_n^{r_n}, z^l, c) 
+  \land  \flowsto(z^l, y^j, {c})
+  \Big)
+\end{array}
 \]
+%
+Without induction hypothesis, the existence of $z^l$, and the conclusion that there is a "flows to" chain from $x^i$ to $z^l$ in case 2 is not proved in previous soundness proof.
+\\
+%
+So, I introduced the way of induction on trace.
+By restricting the domain of $z^l$ on the variables "showing up" in the 
+trace between evaluating $x^i$ and $y^j$, I showed the existence of this $z^l$ and get the conclusion from induction hypothesis. 
+\\
+    By definition of $\vardep(x^i, y^j, {c})$, 
+let $D \in \dbdom$ be the dataset,
+and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the trace and two events satisfying the definition, 
+with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$,
+% then it is sufficient to show:
+%     \[
+%       \begin{array}{l}
+%       \Big(
+%          \exists \trace \in \mathcal{T} \st 
+%         \eventdep^{val}(\event_x, \event_y, \trace, c, D) \lor 
+%         (\exists \event_b \in \eventset^{\test} \st 
+%         \eventdep^{val}(\event_x, \event_b, \trace, c, D)
+%         \land \eventdep^{\ctl}(\event_b, \event_y, c, D))  
+%         \Big)
+%         \\ \quad \implies
+%   \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+%   \flowsto(x^i,  z_1^{r_1}, c) 
+%   \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
+%       \end{array}
+%     \]
+%     \[
+%         (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+%         \land \eventdep^{\ctl}(\event_b, \event_y, c, D))    
+%     \implies
+%   \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+%   \flowsto(x^i,  z_1^{r_1}, c) 
+%   \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
+% \]
 % Proved by applying Theorem.~\ref{thm:algvardep_sound} and Correctness of $\mathcal{A}$ in Theorem.~\ref{thm:alg_correct}.
-\caseL{Case 1: ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)} 
-Let $[\assign{y}{\expr_y}]^j$ be the assignment command associated to $y^j$ in $c$,
-it is sufficient to show following statement:
-    $$
-    \begin{array}{l}
-    x^i \in VAR(\expr_y)
-    \\ \quad 
-    \lor 
-    (\exists \event_z \in \eventset^{val}, \trace_z \in \mathcal{T} \st 
-        \eventdep^{val}(\event_x, \event_z, \trace_z, c, D)
-        \\ \qquad 
-        \implies 
-        \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-  \flowsto(x^i,  z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
-        )
-        \\ \quad
-        \land 
-   ( \pi_1(\event_z)^{\pi_2(\event_z)} \in VAR(\expr_y)) 
-    \lor  \exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
-    \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
-    \end{array}
-    $$
-Otherwise, it can only be the case 2.
-\caseL{Case 2: 
-    ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)}
+% \[
+% 	\begin{array}{l}
+% 		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+% 		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+% 		\implies
+% 		\eventdep(\event_1, \event_2, \trace, c, D) 
+% 		\\ \quad 
+% 		\implies 
+% 		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+% 		\\ \qquad \quad \lor
+% 		\exists \event \in \trace' \st 
+% 		\left( 		
+% 			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
+% 		\land 
+% 		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+% 	\right) 
+% 		% \\ \qquad \qquad \lor
+% 		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+% 	\end{array}
+% 	\]
+then by Lemma~\ref{lem:dep_inv} and \ref{lem:indepevents_inv_gnl}, it is sufficient to show:
+$$
+\begin{array}{l}
+(x^i \in VAR(\expr_y)\lor 
+(\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+\land \eventdep^{\ctl}(\event_b, \event_y, c, D)))
+\\ \quad 
+\lor 
+(\exists \event_z \in \trace' \st 
+    \eventdep^{val}(\event_x, \event_z, \trace_z, c, D)
+    \\ \qquad 
+    \implies 
+    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c) 
+\land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
+    )
+    \\ \quad
+    \land 
+( \pi_1(\event_z)^{\pi_2(\event_z)} \in VAR(\expr_y)) 
+\lor  \exists \event_b \in \eventset^{\test} \st\pi_1(\event_z) \in VAR(\pi_1(\event_b)) 
+\land \eventdep^{\ctl}(\event_b, \event_y, c, D))
+\end{array}
+$$
+%
+% \caseL{Case 1: ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)} 
+% Let $[\assign{y}{\expr_y}]^j$ be the assignment command associated to $y^j$ in $c$,
+% it is sufficient to show following statement:
+%     $$
+%     \begin{array}{l}
+%     x^i \in VAR(\expr_y)
+%     \\ \quad 
+%     \lor 
+%     (\exists \event_z \in \eventset^{val}, \trace_z \in \mathcal{T} \st 
+%         \eventdep^{val}(\event_x, \event_z, \trace_z, c, D)
+%         \\ \qquad 
+%         \implies 
+%         \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+%   \flowsto(x^i,  z_1^{r_1}, c) 
+%   \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
+%         )
+%         \\ \quad
+%         \land 
+%    ( \pi_1(\event_z)^{\pi_2(\event_z)} \in VAR(\expr_y)) 
+%     \lor  \exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+%     \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
+%     \end{array}
+%     $$
+% Otherwise, it can only be the case 2.
+% \caseL{Case 2: 
+%     ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)}
 
-    $$
-    x^i \in VAR(\expr_y)
-    \lor 
-    (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
-    \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
-    $$
+%     $$
+%     x^i \in VAR(\expr_y)
+%     \lor 
+%     (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+%     \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
+%     $$
 
 \end{proof}
 

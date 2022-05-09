@@ -566,9 +566,32 @@ $\flowsto(z^i, \pi_1(\event)^{\pi_2(\event)}, c)$
 \]
 \end{lem}
 %
-\todo{rewrite into description}
+\begin{lem}[General Dependency Inversion]
+	\label{lem:dep_inv}
+For all $ c \in \cdom, D \in \dbdom, x^i \in \lvar_c$, and $\event_y \in \eventset^{\asn}$, 
+if $x^i \in VAR(\expr_y)$, 
+or there exists $\event_b \in \eventset^{\test}$ such that 
+$x^i \in VAR(\pi_1(\event_b)$ and 
+$\eventdep^{\ctl}(\event_b, \event_y, c, D)$, then $\flowsto(x^i, \pi_1(\event_y)^{\pi_2(\event_y)}, c)$.
+%
+	\[
+	\begin{array}{l}
+		\forall c \in \cdom, D \in \dbdom, x^i \in \lvar_c, \event_y \in \eventset^{\asn}
+		\st
+		\\ \quad
+		(x^i \in VAR(\expr_y)\lor 
+		(\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
+		\land \eventdep^{\ctl}(\event_b, \event_y, c, D)))
+		\implies \flowsto(x^i, \pi_1(\event_y)^{\pi_2(\event_y)}, c)
+	\end{array}
+\]
+\end{lem}
+%
 \begin{lem}[Flow Search Algorithm ($\mathcal{A}$) Inversion 1]
 \label{lem:inv_alg1}
+For all $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}, \event_1, \event_2 \in \eventset^{\asn}$, and a list $l$,
+if $l \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$,
+then l must have the form $[\pi_1(\event_1)^{\pi_2(\event_1)},\ldots, \pi_1(\event_2)^{\pi_2(\event_2)}]$.
 \[
 \begin{array}{l}
     \forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}, l \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
@@ -757,6 +780,42 @@ $\mathcal{A}(\event_1, \event_2, \cdot  \event_1 \tracecat [\event_2], c, D) =
 % 	\end{array}
 % 	\]
 % 	\end{lem}	
+%
+\begin{lem}[Generalized Dependency Implies $\flowsto$ ]
+	\label{lem:indepevents_inv_gnl}
+For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}$, and two assignment events 
+$\event_1, \event_2 \in \eventset^{\asn}$,
+if the trace $trace$ has the form $\trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$ with $\trace' \in \mathcal{T}$, and $\eventdep(\event_1, \event_2, \trace, c, D)$
+then $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) $,
+or otherwise there exists
+$\event \in \trace'$ such that
+$\left( 		
+   \eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
+\land 
+\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+\right)$.
+%
+	\[
+	\begin{array}{l}
+		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+		\implies
+		\eventdep(\event_1, \event_2, \trace, c, D) 
+		\\ \quad 
+		\implies 
+		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+		\\ \qquad \quad \lor
+		\exists \event \in \trace' \st 
+		\left( 		
+			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
+		\land 
+		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+	\right) 
+		% \\ \qquad \qquad \lor
+		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+	\end{array}
+	\]
+\end{lem}
 %
 \begin{lem}[Independent Events Doesn't Block $\flowsto$ ].
 		\label{lem:inv_indepevents}
