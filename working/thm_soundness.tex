@@ -1,5 +1,4 @@
 %
-\clearpage
 \subsection{Variable Dependency Soundness}
 % \begin{thm}[$\vardep$ Soudness]
 % \label{thm:algvardep_sound}
@@ -59,11 +58,12 @@ $\flowsto(x^i,  z_1^{r_1}, c)
   \\
   $\Big(
     \exists z^l \in \lvar_{{c}}.
-  \vardep(x^i, z^l, {c})   
+  \left(\vardep(x^i, z^l, {c})   
   \implies
    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
   \flowsto(x^i,  z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n}, z^l, c) 
+  \land \cdots \land \flowsto(z_n^{r_n}, z^l, c)
+  \right)
   \land  \flowsto(z^l, y^j, {c})
   \Big)$.
 %
@@ -71,18 +71,18 @@ $\flowsto(x^i,  z_1^{r_1}, c)
 \[
   \begin{array}{l}
     \flowsto(x^i, y^j, {c})
-    \\
     \lor 
+      \exists z^l \in \lvar_{{c}} \st
+    \\
     \Big(
-      \exists z^l \in \lvar_{{c}}.
     \vardep(x^i, z^l, {c})   
   \implies
      \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
     \flowsto(x^i,  z_1^{r_1}, c) 
     \\ \qquad \qquad 
     \land \cdots  \land \flowsto(z_n^{r_n}, z^l, c) 
-    \land  \flowsto(z^l, y^j, {c})
     \Big)
+    \land  \flowsto(z^l, y^j, {c})
   \end{array}
   \]
 \\
@@ -143,16 +143,14 @@ with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$,
 % 		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
 % 	\end{array}
 % 	\]
-then by Lemma~\ref{lem:dep_inv} and \ref{lem:indepevents_inv_gnl}, it is sufficient to show:
+%
 $$
 \begin{array}{l}
-(x^i \in VAR(\expr_y)\lor 
-(\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
-\land \eventdep^{\ctl}(\event_b, \event_y, c, D)))
+(\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
 \\ \quad 
 \lor 
 (\exists \event_z \in \trace' \st 
-    \eventdep^{val}(\event_x, \event_z, \trace_z, c, D)
+    \eventdep^{val}(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
     \\ \qquad 
     \implies 
     \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
@@ -161,11 +159,89 @@ $$
     )
     \\ \quad
     \land 
-( \pi_1(\event_z)^{\pi_2(\event_z)} \in VAR(\expr_y)) 
-\lor  \exists \event_b \in \eventset^{\test} \st\pi_1(\event_z) \in VAR(\pi_1(\event_b)) 
-\land \eventdep^{\ctl}(\event_b, \event_y, c, D))
+    \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
 \end{array}
 $$
+%
+It is clearer to show it in two lemmas:
+\\
+1. Existence:
+\[
+	\begin{array}{l}
+		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+		\implies
+		\eventdep(\event_1, \event_2, \trace, c, D) 
+		\\ \quad 
+		\implies 
+		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+		\\ \qquad \quad \lor
+		\exists \event \in \trace' \st 
+		\left( 		
+			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
+		\land 
+		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+	\right) 
+		% \\ \qquad \qquad \lor
+		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+	\end{array}
+\]
+Proved by showing a contradiction, with detail in Lemma~\ref{lem:depevents_exist}.
+%
+\\
+2. sub-trace implies a sub-flowsto chain.
+%
+\[
+  \begin{array}{l}
+    \eventdep^{val}(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
+    \\ \qquad 
+    \implies 
+    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c) 
+\land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
+\end{array}
+\]
+%
+Proved by induction on the trace $\trace$, with detail in Theorem~\ref{thm:alg_correct}.
+%
+\[
+  \begin{array}{l}
+		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+		\implies
+		\eventdep(\event_1, \event_2, \trace, c, D) 
+		\\ \quad 
+		\implies 
+    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)},  z_1^{r_1}, c) 
+    \land \cdots \land \flowsto(z_n^{r_n}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+	\end{array}
+\]
+and the induction hypothesis:
+\[
+  \begin{array}{l}
+    \forall \event_{ih1}, \event_{ih2} \in \trace \st
+		 \exists \trace' \in \mathcal{T} \st 
+     \trace[\event_{ih1}:\event_{ih2}] = [\event_{ih1}] \tracecat \trace' \tracecat [\event_{ih2}]
+		\implies
+		\eventdep(\event_{ih1}, \event_{ih2} \trace[\event_{ih1}:\event_{ih2}], c, D) 
+		\\ \quad 
+		\implies 
+    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+		\flowsto(\pi_1(\event_{ih1})^{\pi_2(\event_{ih1})},  z_1^{r_1}, c) 
+    \land \cdots \land \flowsto(z_n^{r_n}, \pi_1(\event_{ih2})^{\pi_2(\event_{ih2})}, c) 
+  \end{array}
+  \]
+%
+Prove by:
+\\
+(1). obtaining the existence of $\event_z$ with dependency on $\event_x$, and a direct flowsto relation from $\event_z$ to $\event_y$
+ from step 1;
+ \\
+(2). from the dependency of the $\event_z$ with $\event_x$ on the subtrace,
+ obtaining a sub-flowsto chain from induction  hypothesis;
+ \\
+(3). compose the sub-flowsto chain from (2) with the  direct flows to relation from (1) and get the complete flowsto chain.
 %
 % \caseL{Case 1: ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)} 
 % Let $[\assign{y}{\expr_y}]^j$ be the assignment command associated to $y^j$ in $c$,
