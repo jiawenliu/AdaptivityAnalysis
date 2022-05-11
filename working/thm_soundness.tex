@@ -45,7 +45,8 @@ $\flowsto(x^i,  z_1^{r_1}, c)
 \]
 \end{thm}
 \begin{proof}
-  It is sufficient to show:
+  Taking arbitrary $x^i, y^j \in \lvar_c$,
+  it is sufficient to show:
   \\
   1. $x^i$ is directly used in the expression of the assignment command associated to $y^j$, or a boolean
   expression of the guard for a $\eif$ or $\ewhile$ command with the assignment command associated to $y^j$ shows up in the body of that command, 
@@ -54,7 +55,9 @@ $\flowsto(x^i,  z_1^{r_1}, c)
   $ \flowsto(x^i, y^j, {c})$;
   \\
   2. otherwise, there exists another labelled variable $z^l$ with \emph{variable May-Dependency} relation on $x^i$ and 
-  $z^l$ directly flows to $y^j$, i.e., 
+  $z^l$ directly flows to $y^j$, where the \emph{variable May-Dependency} relation between $x^i$ and $z^l$
+   implies a "sub flowsto-chain" from $z^i$ to $z^l$, 
+  i.e., 
   \\
   $\Big(
     \exists z^l \in \lvar_{{c}}.
@@ -87,17 +90,20 @@ $\flowsto(x^i,  z_1^{r_1}, c)
   \]
 \\
 %
-Without induction hypothesis, the existence of $z^l$, and the conclusion that there is a "flows to" chain from $x^i$ to $z^l$ in case 2 is not proved in previous soundness proof.
+Without induction hypothesis, the existence of $z^l$, and the conclusion that there is a "sub flowsto-chain" from $x^i$ to $z^l$ in step 2 
+is not proved in previous soundness proof.
 \\
 %
-So, I adopt the way of induction on trace.
+So, I involved trace in the proof and adopt the way of induction on trace.
 By restricting the domain of $z^l$ on the variables "showing up" in the 
-trace between evaluating $x^i$ and $y^j$, I show the existence of this $z^l$ and get the conclusion from induction hypothesis. 
+trace between evaluating $x^i$ and $y^j$, 
+I firstly show the existence of this $z^l$, and then get the conclusion of the  "sub flowsto-chain" from induction hypothesis. 
 \\
-    By definition of $\vardep(x^i, y^j, {c})$, 
+%
+By definition of $\vardep(x^i, y^j, {c})$, 
 let $D \in \dbdom$ be the dataset,
 and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the trace and two events satisfying the definition, 
-with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$,
+with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$, then informally it is sufficient to show:
 % then it is sufficient to show:
 %     \[
 %       \begin{array}{l}
@@ -149,8 +155,8 @@ $$
 (\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
 \\ \quad 
 \lor 
-(\exists \event_z \in \trace' \st 
-    \eventdep^{val}(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
+(\exists \event_z \in \trace' \st \event_z \in \eventset^{\asn} \land 
+    \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
     \\ \qquad 
     \implies 
     \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
@@ -165,7 +171,7 @@ $$
 %
 It is clearer to show it in two lemmas:
 \\
-1. Existence:
+1. Existence of a middle event:
 \[
 	\begin{array}{l}
 		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
@@ -177,7 +183,7 @@ It is clearer to show it in two lemmas:
 		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
 		\\ \qquad \quad \lor
 		\exists \event \in \trace' \st 
-		\left( 		
+		\left( 		\event_z \in \eventset^{\asn} \land 
 			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
 		\land 
 		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
@@ -189,11 +195,11 @@ It is clearer to show it in two lemmas:
 Proved by showing a contradiction, with detail in Lemma~\ref{lem:depevents_exist}.
 %
 \\
-2. sub-trace implies a sub-flowsto chain.
+2. The middle event with a sub-trace implies a "sub flowsto-chain", informally:
 %
 \[
   \begin{array}{l}
-    \eventdep^{val}(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
+    \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
     \\ \qquad 
     \implies 
     \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
@@ -202,11 +208,12 @@ Proved by showing a contradiction, with detail in Lemma~\ref{lem:depevents_exist
 \end{array}
 \]
 %
-Proved by induction on the trace $\trace$, with detail in Theorem~\ref{thm:alg_correct}.
+Proved formally as follows with detail in Theorem~\ref{thm:alg_correct}, by induction on the trace $\trace$
 %
 \[
   \begin{array}{l}
-		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset \st
+    \event_1, \event_2 \in \eventset^{\asn} \land 
 		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
 		\implies
 		\eventdep(\event_1, \event_2, \trace, c, D) 
@@ -217,14 +224,15 @@ Proved by induction on the trace $\trace$, with detail in Theorem~\ref{thm:alg_c
     \land \cdots \land \flowsto(z_n^{r_n}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
 	\end{array}
 \]
-and the induction hypothesis:
+with the induction hypothesis:
 \[
   \begin{array}{l}
-    \forall \event_{ih1}, \event_{ih2} \in \trace \st
+    \forall \event_{ih1}, \event_{ih2} \in \trace \st \event_{ih1}, \event_{ih2} \in \eventset^{\asn} 
+    \land
 		 \exists \trace' \in \mathcal{T} \st 
      \trace[\event_{ih1}:\event_{ih2}] = [\event_{ih1}] \tracecat \trace' \tracecat [\event_{ih2}]
 		\implies
-		\eventdep(\event_{ih1}, \event_{ih2} \trace[\event_{ih1}:\event_{ih2}], c, D) 
+		\eventdep(\event_{ih1}, \event_{ih2}, \trace[\event_{ih1}:\event_{ih2}], c, D) 
 		\\ \quad 
 		\implies 
     \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
@@ -233,15 +241,16 @@ and the induction hypothesis:
   \end{array}
   \]
 %
-Prove by:
+Main proof logic:
 \\
-(1). obtaining the existence of $\event_z$ with dependency on $\event_x$, and a direct flowsto relation from $\event_z$ to $\event_y$
+(1). obtaining the existence of $\event_z \in \eventset^{\asn} $ with dependency on $\event_x$, and a "direct flowsto" from $\event_z$ to $\event_y$
  from step 1;
  \\
 (2). from the dependency of the $\event_z$ with $\event_x$ on the subtrace,
- obtaining a sub-flowsto chain from induction  hypothesis;
+ obtaining a "sub flowsto-chain" by induction  hypothesis;
  \\
-(3). compose the sub-flowsto chain from (2) with the  direct flows to relation from (1) and get the complete flowsto chain.
+(3). composing the "sub flowsto-chain" from (2) with the  "direct flowsto" from (1), and getting the conclusion of
+ the complete "flowsto chain".
 %
 % \caseL{Case 1: ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)} 
 % Let $[\assign{y}{\expr_y}]^j$ be the assignment command associated to $y^j$ in $c$,
@@ -281,7 +290,8 @@ Prove by:
 
 \subsection{$\THESYSTEM$ Soundness}
 {
-  \begin{thm}[Soundness of the \THESYSTEM].
+  \begin{thm}[Soundness of the \THESYSTEM]
+    \label{thm:adaptfun_soundness}
   Given a program $\ssa{c}$, we have:
   %
   \[

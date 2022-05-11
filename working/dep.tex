@@ -265,20 +265,66 @@ $\eventdep^{\ctl}(\event_b, \event, c, D)$, if and only if:
  %
 \end{defn}
 %
-% \begin{defn}[Event May Dependency].
-% \label{def:event_dep}
-% \\ 
-% An event $\event_2 \in \eventset^{\asn}$ is in the \emph{may-dependency} relation with another
-% event $\event_1 \in \eventset^{\asn}$ in a program ${c}$ with a hidden database $D$, denoted as $\eventdep(\event_1, \event_2, c, D)$,
-% if and only if
-% \[
-% \exists \trace \in \mathcal{T} \st 
-% \eventdep^{val}(\event_1, \event_2, \trace, c, D) 
-% \lor
-% \left( \exists \event_b \in \eventset^{\test} \st \eventdep^{val}(\event_1, \event_b, \trace, c, D) \land \eventdep^{\ctl}(\event_b, \event_2, c, D)  \right)
-% \] %
-% %
-% \end{defn}
+\begin{defn}[Event May Dependency].
+\label{def:event_dep}
+\\ 
+  An event $\event_2$ is in the \emph{event may-dependency} relation with an assignment
+  event $\event_1 \in \eventset^{\asn}$ in a program ${c}$
+  with hidden database $D$ and a trace $\trace \in \mathcal{T}$ denoted as 
+  %
+  $\eventdep(\event_1, \event_2, [\event_1 ] \tracecat \trace \tracecat [\event_2], c, D)$, if and only if
+  %
+  \[
+    \begin{array}{l}
+  \exists \vtrace_0,
+  \vtrace_1, \vtrace' \in \mathcal{T},\event_1' \in \eventset^{\asn}, {c}_1, {c}_2  \in \cdom  \st
+  \diff(\event_1, \event_1') \land 
+      \\ \quad
+      (
+        \exists  \event_2' \in \eventset \st 
+    \left(
+    \begin{array}{ll}   
+   & \config{{c}, \vtrace_0} \rightarrow^{*} 
+  \config{{c}_1, \vtrace_1 \tracecat [\event_1]}  \rightarrow^{*} 
+    \config{{c}_2,  \vtrace_1 \tracecat [\event_1] \tracecat \vtrace \tracecat [\event_2] } 
+    % 
+   \\ 
+   \bigwedge &
+    \config{{c}_1, \vtrace_1 \tracecat [\event_1']}  \rightarrow^{*} 
+    \config{{c}_2,  \vtrace_1 \tracecat[ \event_1'] \tracecat \vtrace' \tracecat [\event_2'] } 
+  \\
+  \bigwedge & 
+  \diff(\event_2,\event_2' ) \land 
+  \vcounter(\vtrace) ~ \pi_2(\event_2)
+  = 
+  \vcounter(\vtrace') ~ \pi_2(\event_2)\\
+  \end{array}
+  \right)
+  \\ \quad
+  \lor 
+  \exists \vtrace_3, \vtrace_3'  \in \mathcal{T}, \event_b \in \eventset^{\test} \st 
+  \left(
+  \begin{array}{ll}   
+    & \config{{c}, \vtrace_0} \rightarrow^{*} 
+      \config{{c}_1, \vtrace_1 \tracecat [\event_1]}  \rightarrow^{*} 
+      \config{c_2,  \vtrace_1 \tracecat [\event_1] \tracecat \trace \tracecat [\event_b] \tracecat  \trace_3} 
+    \\ 
+    \bigwedge &
+    \config{{c}_1, \vtrace_1 \tracecat [\event_1']}  \rightarrow^{*} 
+    \config{c_2,  \vtrace_1 \tracecat [\event_1'] \tracecat \trace' \tracecat [(\neg \event_b)] \tracecat \trace_3'} 
+    \\
+    \bigwedge &  \tlabel_{\trace_3} \cap \tlabel_{\trace_3'} = \emptyset
+     \land \vcounter(\trace') ~  \pi_2(\event_b) = \vcounter(\trace) ~  \pi_2(\event_b)
+      \land \event_2 \eventin \trace_3
+    \land \event_2 \not\eventin \trace_3'
+  \end{array}
+  \right)
+  )
+\end{array}
+   \]
+  %  
+%
+\end{defn}
 %
 
 %
