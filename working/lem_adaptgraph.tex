@@ -1,142 +1,193 @@
-\todo{
 	\begin{lem}[One-on-One Mapping of vertices from $\traceG$ to $\progG$].
-	\label{lem:v_trace_to_prog}
-	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\progG(\ssa{c}) = \{\progV, \progE, \progF\}$
-\[
-	\exists ~ \kw{injective} ~ f: \mathcal{AQ} \to \mathcal{AV}. 
-	~ \forall \aq \in \traceV. ~ 
-	f(\aq) \in \progV \land \progF(f(\aq)) = 2
-\]
-	\end{lem}
-\begin{subproof}
-Proving by Definition~\ref{def:proggraph} and Definition~\ref{def:prog_adapt}.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[One-on-One Mapping from $\edges$ of $\traceG$ to $\paths(\progG)$].
-	\label{lem:bie_trace_to_prog}
-	\\
-	$\traceG(\ssa{c}) = \{\traceV, \traceE\}$
-	\\
-	$\progG(\ssa{c},\ssa{m},\text{D}) = \{\progV, \progE, \progF\}$
-	\\
-	An injective function $ f: \traceV \to \progV$ s.t.,
-	$\forall \aq \in \traceV. ~ \progF(f(\aq)) = 2$ 
-\[
-	\forall e = (\aq_1, \aq_2) \in \traceE. ~ 
-	\exists p_{f(\aq_1) \to f(\aq_2)} \in \paths(\progG(\ssa{c}, \text{D}, \ssa{m}))
-\]
-	\end{lem}
-\begin{subproof}
-Proving by Lemma~\ref{lem:injv_trace_to_prog} and Definition~\ref{def:proggraph} and acyclic property of $\traceG$ and $\progG$.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[Surjective Mapping of Vertices from $\progG$ to $\progG$].
-	\label{lem:sujv_prog_to_prog}
-	\\
-	$\progG(\ssa{c},\ssa{m},\text{D}) = \{\progV, \progE, \progF\}$
-	\\
-	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
-	\\
-	$\exists ~ \kw{surjective} ~ f: \mathcal{AV} \to \mathcal{SVAR}.$
-	%
-\[
-	\forall \av \in \progV. ~ 
-	f(\av) \in \progV \land \progF(f(\av)) = \progF(\av) \land
-	|\kw{image}(f(\av))| \leq W(f(\av))
-\]
-\end{lem}
-\begin{subproof}
-Proving by Definition~\ref{def:proggraph}.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[Surjective Mapping from $\edges$ of $\progG)$ to $\edges$ of $\progG$].
-	\label{lem:suje_prog_to_prog}
-	\\
-	$\progG(\ssa{c},\ssa{m},\text{D}) = \{\progV, \progE, \progF\}$
-	\\
-	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
-	\\
-	A surjective function $f: \progV \to \progV$ s.t.,
-	$\forall \av \in \progV. ~ \progF(f(\av)) = \progF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
-	%
-\[
-	\exists ~ \kw{surjective} ~ g: \progE \to \progE. ~
-	\forall e_{prog} = (\av_1, \av_2) \in \progE. 
-	\exists e_{prog} = ({f(\av_1), f(\av_2)}) \in \progE
-\]
-\end{lem}
-\begin{subproof}
-Proving by Lemma~\ref{lem:sujv_prog_to_prog}.
-\end{subproof}
-}
-\\
-\todo{
-	\begin{lem}[Surjective Mapping from $\paths(\progG)$ to $\walks(\progG)$].
-	\label{lem:sujpathwalk_prog_to_prog}
-	\\
-	$\progG(\ssa{c},\ssa{m},\text{D}) = \{\progV, \progE, \progF\}$
-	\\
-	$\progG(\ssa{c}) = \{\progV, \progE, \progF, \progW\}$
-	\\
-	A surjective function $f: \progV \to \progV$ s.t.,
-	$\forall \av \in \progV. ~ \progF(f(\av)) = \progF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
-	\\
-	A surjective function $g: \progE \to \progE$ s.t.,
-	$\forall e_{prog} = (\av_1, \av_2) \in \progE. 
-	\exists e_{prog} = ({f(\av_1) \to f(\av_2)}) \in \progE$
-	\\
-	$\exists ~ \kw{surjective} ~ h: \paths(\progG(\ssa{c},\ssa{m},\text{D})) \to \walks(\progG(\ssa{c}))$ s.t.:
-	%
-\[
-	\forall p_{\av_1 \to \av_2} \in \paths(\progG(\ssa{c},\ssa{m},\text{D}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
-	\\ 
-	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
+	\label{lem:vertex_map}
+	Given a program $c$ with its
+	program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$
+	and 
+	trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$,
+	then for every $v \in \mathcal{VAR} \times \mathbb{N}$,
+	$v \in \progV$ if and only if $v \in \traceG$.
+	\[
+	\begin{array}{l}
+	\forall c \in \cdom , v \in \mathcal{VAR} \times \mathbb{N} \st 
+	\progG({c}) = (\progV, \progE, \progW, \progF)
+	\implies 
+	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
+	\\ \quad
+	\implies
+	v \in \progV \Longleftrightarrow v \in \traceV
 	\end{array}
-	\right.
-\]
-\[
-	\exists k_{f(\av_1) \to f(\av_2)} \in \walks(\progG(\ssa{c}))
-	\text{ with }
-	\left\{
-	\begin{array}{ll}
-	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
-	\\ 
-	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
-	\end{array}
-	\right.
-\]
-% \item $(e, \ldots, e_{n-1})$, $(\av_1, \ldots, \av_n)$ are the edges sequence and vertices sequence of $p_{\av_1 \to \av_2}$.
-% then, 
-%  $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
-% %
-% \item $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
-% %
-% \item $\forall \av \in p_{\av_1 \to \av_2}. ~ 
-% \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \prog f(\av) \in k_{f(\av_1) \to f(\av_2)}\}
-% $
-\end{lem}
-%
-\begin{subproof}
-Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\progG(\ssa{c},\ssa{m},\text{D}))$, and Lemma~\ref{lem:suje_prog_to_prog} and Lemma~\ref{lem:sujv_prog_to_prog}.
-\caseL{ $l = 1$: }
-\caseL{ $l = l' + 1$, $l' \geq 1$: }
-\end{subproof}
-}
+	\]
+	%
+	\end{lem}
+\begin{proof}
+Proving by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}.
 \end{proof}
 %
+	\begin{lem}[Mapping from $\edges$ of $\traceG$ to $\progG$]
+	\label{lem:edge_map}
+	Given a program $c$ with its
+	program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$
+	and 
+	trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$,
+	then for every $e = (v_1, v_2) \in \traceE$, there exists an edge 
+	$e' = (v_1', v_2') \in \progE$ with 
+	$v_1 = v_1' \land v_2 = v_2'$.
+	\[
+	\begin{array}{l}
+	\forall c \in \cdom , e = (v_1, v_2) \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})
+	 \st 
+	 \\ \quad
+	 \progG({c}) = (\progV, \progE, \progW, \progF)
+	\implies 
+	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
+	\\ \quad
+	\implies
+	e \in \traceE
+	\implies 
+	\exists e' \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})\st 
+	e' = (v_1, v_2) \land e' \in \progE
+	\end{array}
+	\]
+	\end{lem}
+\begin{proof}
+Proving by Lemma~\ref{lem:vertex_map}, Lemma~\ref{thm:flowstovardep_sound} Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}
+\end{proof}
 %
+\begin{lem}[Weights are bounded]
+	\label{lem:weights_map}
+	Given a program $c$ with its
+	program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$
+	and 
+	trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$,
+	then for every $(v, n) \in \traceW$, 
+	there exists $(v, n') \in \progW$ with $n \leq n'$.
+	\[
+	\begin{array}{l}
+	\forall c \in \cdom , (v, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
+	 \st 
+	 \\ \quad
+	 \progG({c}) = (\progV, \progE, \progW, \progF)
+	\implies 
+	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
+	\\ \quad
+	\implies
+	(v, n) \in \traceW
+	\implies 
+	\exists n' \in \mathbb{N}\st 
+	(v, n') \in \progW  \land n \leq n'
+	\end{array}
+	\]
+	\end{lem}
+\begin{proof}
+Proving by Definition~\ref{def:prog_graph}, Definition~\ref{def:trace_graph} and relaying on the soundness of Reachability Bound 
+Analysis.
+\end{proof}
 %
-}
+\begin{lem}[One-on-One Mapping for Query Vertices]
+	\label{lem:queryvertex_map}
+	Given a program $c$ with its
+	program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$
+	and 
+	trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$,
+	then for every $(v, n) \in \mathcal{VAR} \times \mathbb{N}  \times \{0, 1\} $,
+	 $(v, n) \in \traceF$ if and only if $ (v, n) \in \progF$.
+	\[
+	\begin{array}{l}
+	\forall c \in \cdom , (v, n) \in \mathcal{VAR} \times \mathbb{N}  \times \{0, 1\} 
+	 \st 
+	 \\ \quad
+	 \progG({c}) = (\progV, \progE, \progW, \progF)
+	\implies 
+	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
+	\\ \quad
+	\implies
+	(v, n) \in \traceF \Longleftrightarrow  (v, n) \in \progF
+	\end{array}
+	\]
+	\end{lem}
+\begin{subproof}
+Proving by Definition~\ref{def:prog_graph}, Definition~\ref{def:trace_graph} and relaying on the soundness of Reachability Bound 
+Analysis.
+\end{subproof}
+% \todo{
+% 	\begin{lem}[Surjective Mapping from $\edges$ of $\progG)$ to $\edges$ of $\progG$].
+% 	\label{lem:suje_prog_to_prog}
+% 	\\
+% 	$\progG({c},{m},\text{D}) = \{\progV, \progE, \progF\}$
+% 	\\
+% 	$\progG({c}) = \{\progV, \progE, \progF, \progW\}$
+% 	\\
+% 	A surjective function $f: \progV \to \progV$ s.t.,
+% 	$\forall \av \in \progV. ~ \progF(f(\av)) = \progF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
+% 	%
+% \[
+% 	\exists ~ \kw{surjective} ~ g: \progE \to \progE. ~
+% 	\forall e_{prog} = (\av_1, \av_2) \in \progE. 
+% 	\exists e_{prog} = ({f(\av_1), f(\av_2)}) \in \progE
+% \]
+% \end{lem}
+% \begin{subproof}
+% Proving by Lemma~\ref{lem:sujv_prog_to_prog}.
+% \end{subproof}
+% }
+% \\
+% \todo{
+% 	\begin{lem}[Surjective Mapping from $\paths(\progG)$ to $\walks(\progG)$].
+% 	\label{lem:sujpathwalk_prog_to_prog}
+% 	\\
+% 	$\progG({c},{m},\text{D}) = \{\progV, \progE, \progF\}$
+% 	\\
+% 	$\progG({c}) = \{\progV, \progE, \progF, \progW\}$
+% 	\\
+% 	A surjective function $f: \progV \to \progV$ s.t.,
+% 	$\forall \av \in \progV. ~ \progF(f(\av)) = \progF(\av) \land |\kw{image}(f(\av))| \leq W(f(\av))$
+% 	\\
+% 	A surjective function $g: \progE \to \progE$ s.t.,
+% 	$\forall e_{prog} = (\av_1, \av_2) \in \progE. 
+% 	\exists e_{prog} = ({f(\av_1) \to f(\av_2)}) \in \progE$
+% 	\\
+% 	$\exists ~ \kw{surjective} ~ h: \paths(\progG({c},{m},\text{D})) \to \walks(\progG({c}))$ s.t.:
+% 	%
+% \[
+% 	\forall p_{\av_1 \to \av_2} \in \paths(\progG({c},{m},\text{D}))
+% 	\text{ with }
+% 	\left\{
+% 	\begin{array}{ll}
+% 	\mbox{edge sequence:} & (e, \ldots, e_{n-1})
+% 	\\ 
+% 	\mbox{vertices sequence:} & (\av_1, \ldots, \av_n)
+% 	\end{array}
+% 	\right.
+% \]
+% \[
+% 	\exists k_{f(\av_1) \to f(\av_2)} \in \walks(\progG({c}))
+% 	\text{ with }
+% 	\left\{
+% 	\begin{array}{ll}
+% 	\mbox{edge sequence:} & (g(e), \ldots, g(e_{n-1}) 
+% 	\\ 
+% 	\mbox{vertices sequence:} & (f(\av_1), \ldots, f(\av_{n}))
+% 	\end{array}
+% 	\right.
+% \]
+% % \item $(e, \ldots, e_{n-1})$, $(\av_1, \ldots, \av_n)$ are the edges sequence and vertices sequence of $p_{\av_1 \to \av_2}$.
+% % then, 
+% %  $\len(p_{\av_1 \to \av_2}) = \len(k_{f(\av_1) \to f(\av_2)})$
+% % %
+% % \item $\forall \av \in p_{\av_1 \to \av_2}. ~ f(\av) \in k_{f(\av_1) \to f(\av_2)}$
+% % %
+% % \item $\forall \av \in p_{\av_1 \to \av_2}. ~ 
+% % \kw{image}(f(\av)) \cap {p_{\av_1 \to \av_2}}| = \# \{f(\av) \prog f(\av) \in k_{f(\av_1) \to f(\av_2)}\}
+% % $
+% \end{lem}
+% %
+% \begin{subproof}
+% Proving by induction on the length of $l = p_{\av_1 \to \av_2} \in \paths(\progG({c},{m},\text{D}))$, and Lemma~\ref{lem:suje_prog_to_prog} and Lemma~\ref{lem:sujv_prog_to_prog}.
+% \caseL{ $l = 1$: }
+% \caseL{ $l = l' + 1$, $l' \geq 1$: }
+% \end{subproof}
+% % \end{proof}
+% %
+% %
+% %
+% }
