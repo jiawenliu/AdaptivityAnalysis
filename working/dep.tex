@@ -406,16 +406,17 @@ the dependency graph $\traceG({c}) = (\vertxs, \edges, \weights, \qflag)$ is def
   \text{Weights} &
   \weights & := & 
   \left\{ 
-  (x^l, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
+  (x^l, n) \in (\mathcal{VAR} \times \mathbb{N}) \times \mathbb{N}
   ~ \middle\vert ~ 
-  n = \max \left\{ \vcounter(\vtrace') l ~ \middle\vert ~ x^l \in \lvar_{c},
+  x^l \in \lvar_{c},
+  n = \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
   \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\cdot\vtrace'} 
    \right\}
   \right\}
   \\
   \text{Query Flags} &
   \qflag & := & 
-  \left\{(x^l, n)  \in \mathcal{VAR} \times \mathbb{N}  \times \{0, 1\} 
+  \left\{(x^l, n)  \in( \mathcal{VAR} \times \mathbb{N} ) \times \{0, 1\} 
   ~ \middle\vert ~
    x^l \in \lvar_{c},
    \left\{
@@ -429,6 +430,8 @@ the dependency graph $\traceG({c}) = (\vertxs, \edges, \weights, \qflag)$ is def
 \]
 \end{defn}
 %
+For any program, from the injectivity of $\weights$ in its dependency graph, $\traceG({c}) = (\vertxs, \edges, \weights, \qflag)$, 
+it forms a function. We use $\weights(v)$ to indicate the image of $v$ in $\weights$.
 %
 \begin{defn}[Finite Walk ($k$)].
 \label{def:finitewalk}
@@ -437,9 +440,19 @@ Given a labelled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, a \em
 for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
 \begin{itemize}
     \item $e_i = (v_{i},v_{i + 1})$ for every $1 \leq i < n$.
-    \item every vertex $v \in \vertxs$ appears in this vertices sequence $(v_1, \ldots, v_{n})$ of $k$ at most $W(v)$ times.  
+    \item every vertex $v \in \vertxs$ appears in this vertices sequence $(v_1, \ldots, v_{n})$ of $k$ at most 
+    $\weights(v)$ times.  
+    \[
+      \forall v \in (v_1, \ldots, v_{n}), (v, n) \in \weights \st 
+      \visit((v_1, \ldots, v_{n}), v) \leq n
+      \]
+      \[
+        \forall v \in (v_1, \ldots, v_{n})\st 
+        \visit((v_1, \ldots, v_{n}), v) \leq \weights(v)
+      \]
 \end{itemize}
-$(v_1, \ldots, v_{n})$ is the vertex sequence of this walk.
+$(v_1, \ldots, v_{n})$ is the vertex sequence of this walk, and $\visit((v_1, \ldots, v_{n}), v) $ counts the visiting times of
+$v$ in sequence $(v_1, \ldots, v_{n})$.
 \\
 %
 Length of this finite walk $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = n$.

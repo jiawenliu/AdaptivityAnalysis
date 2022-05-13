@@ -10,7 +10,7 @@
 	\begin{array}{l}
 	\forall c \in \cdom , v \in \mathcal{VAR} \times \mathbb{N} \st 
 	\progG({c}) = (\progV, \progE, \progW, \progF)
-	\implies 
+	\land 
 	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
 	\\ \quad
 	\implies
@@ -20,7 +20,22 @@
 	%
 	\end{lem}
 \begin{proof}
-Proving by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}.
+Proof Summary: Proving by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}.
+\\
+Taking arbitrary program $c$,
+by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}, 
+we have   
+\\
+its program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$ 
+\\
+and 
+trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$.
+\\
+By the two definitions, we also know 
+$\traceV  = \lvar_c$ and $\progV = \lvar_c$.
+\\
+Then we know $\traceV  = \progV$, i.e., 
+for arbitrary $v \in \mathcal{VAR} \times \mathbb{N}$, $v \in \progV \Longleftrightarrow v \in \traceV$.
 \end{proof}
 %
 	\begin{lem}[Mapping from $\edges$ of $\traceG$ to $\progG$]
@@ -34,23 +49,43 @@ Proving by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}.
 	$v_1 = v_1' \land v_2 = v_2'$.
 	\[
 	\begin{array}{l}
-	\forall c \in \cdom , e = (v_1, v_2) \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})
-	 \st 
-	 \\ \quad
+	\forall c \in \cdom \st
 	 \progG({c}) = (\progV, \progE, \progW, \progF)
-	\implies 
+	\land 
 	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
 	\\ \quad
 	\implies
-	e \in \traceE
-	\implies 
-	\exists e' \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})\st 
-	e' = (v_1, v_2) \land e' \in \progE
+	\forall e = (v_1, v_2) \in \traceE
+	\st 
+	% \exists e' \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})\st 
+	\exists e' \in \progE \st e' = (v_1, v_2)
 	\end{array}
 	\]
 	\end{lem}
 \begin{proof}
-Proving by Lemma~\ref{lem:vertex_map}, Lemma~\ref{thm:flowstovardep_sound} Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}
+Proof Summary: Proving by Lemma~\ref{lem:vertex_map}, Lemma~\ref{thm:flowsto_soundness} Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}
+\\
+Taking arbitrary program $c$,
+by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}, 
+we have   
+\\
+its program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$ 
+\\
+and 
+trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$.
+\\
+Taking arbitrary edge $e = (x^i, y^j) \in \traceE$, it is sufficient to show $(x^i, y^j) \in \progE$.
+\\
+By Lemma~\ref{lem:vertex_map}, we know $x^i, y^j \in \progV$.
+\\
+By definition of $\traceE$, we know $\vardep(x^i, y^j, c)$.
+\\
+By Theorem~\ref{thm:flowsto_soundness}, we know $ \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
+n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c) $.
+\\
+Then by definition of $\progE$, we know $(x^i, y^j) \in \progE$. The Lemma is proved.
 \end{proof}
 %
 \begin{lem}[Weights are bounded]
@@ -59,28 +94,60 @@ Proving by Lemma~\ref{lem:vertex_map}, Lemma~\ref{thm:flowstovardep_sound} Defin
 	program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$
 	and 
 	trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$,
-	then for every $(v, n) \in \traceW$, 
-	there exists $(v, n') \in \progW$ with $n \leq n'$.
-	\[
+	for every $v \in \traceV$, there is $v \in \progV$ and $\traceW(v) \leq \progW(v)$.
+%
+	% then for every $(v, n) \in \traceW$, 
+	% there exists $(v, n') \in \progW$ with $n \leq n'$.
+	% \[
+	% \begin{array}{l}
+	% \forall c \in \cdom , (v, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
+	%  \st 
+	%  \\ \quad
+	%  \progG({c}) = (\progV, \progE, \progW, \progF)
+	% \implies 
+	% \traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
+	% \\ \quad
+	% \implies
+	% (v, n) \in \traceW
+	% \implies 
+	% \exists n' \in \mathbb{N}\st 
+	% (v, n') \in \progW  \land n \leq n'
+	% \end{array}
+	% \]
+%
+\[
 	\begin{array}{l}
-	\forall c \in \cdom , (v, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
+	\forall c \in \cdom 
+	% , (v, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
 	 \st 
-	 \\ \quad
+	%  \\ \quad
 	 \progG({c}) = (\progV, \progE, \progW, \progF)
-	\implies 
+	\land 
 	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
 	\\ \quad
 	\implies
-	(v, n) \in \traceW
-	\implies 
-	\exists n' \in \mathbb{N}\st 
-	(v, n') \in \progW  \land n \leq n'
+	\forall v \in \traceV \st 
+	v \in \progV \land
+	\traceW(v) \leq \progW(v)
 	\end{array}
 	\]
 	\end{lem}
 \begin{proof}
-Proving by Definition~\ref{def:prog_graph}, Definition~\ref{def:trace_graph} and relaying on the soundness of Reachability Bound 
+Proof Summary: Proving by Definition~\ref{def:prog_graph}, Definition~\ref{def:trace_graph} and relaying on the soundness of Reachability Bound 
 Analysis.
+\\
+Taking arbitrary program $c$,
+by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}, 
+we have   
+\\
+its program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$ 
+\\
+and 
+trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$.
+\\
+Taking arbitrary $v \in \traceV$, by Lemma~\ref{lem:vertex_map}, we know $v \in \progV$.
+\\
+By soundness of reachability bound analysis in Theorem~\ref{thm:reachability_soundness}, we know $\traceW(v) \leq \progW(v)$. This lemma is proved.
 \end{proof}
 %
 \begin{lem}[One-on-One Mapping for Query Vertices]
@@ -97,7 +164,7 @@ Analysis.
 	 \st 
 	 \\ \quad
 	 \progG({c}) = (\progV, \progE, \progW, \progF)
-	\implies 
+	\land 
 	\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)
 	\\ \quad
 	\implies
@@ -106,8 +173,23 @@ Analysis.
 	\]
 	\end{lem}
 \begin{subproof}
-Proving by Definition~\ref{def:prog_graph}, Definition~\ref{def:trace_graph} and relaying on the soundness of Reachability Bound 
-Analysis.
+Proving by Definition~\ref{def:prog_graph}, Definition~\ref{def:trace_graph}.
+\\
+Taking arbitrary program $c$,
+by Definition~\ref{def:prog_graph} and Definition~\ref{def:trace_graph}, 
+we have   
+\\
+its program-based graph $\progG({c}) = (\progV, \progE, \progW, \progF)$ 
+\\
+and 
+trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$.
+\\
+By the two definitions, we also know $\traceF  = \progF$, 
+i.e., 
+for arbitrary $ (v, n) \in \mathcal{VAR} \times \mathbb{N}  \times \{0, 1\} $,
+ $(v, n) \in \traceF \Longleftrightarrow  (v, n) \in \progF$.
+ \\
+ This lemma is proved.
 \end{subproof}
 % \todo{
 % 	\begin{lem}[Surjective Mapping from $\edges$ of $\progG)$ to $\edges$ of $\progG$].
