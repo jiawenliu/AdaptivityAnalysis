@@ -1,26 +1,3 @@
-% \begin{thm}[$\vardep$ Soudness]
-% \label{thm:algvardep_sound}
-% Given a program ${c}$, 
-% \[
-% \begin{array}{l}
-%   \forall {x}_1^{l_1}, {x}_2^{l_2} \in \lvar_{{c}}.
-%   \vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})
-%   \\ \quad \implies \exists \event_1, \event_2 \in \eventset^{\asn}, \trace, \trace'  \in \mathcal{T}, D \in \dbdom , c \in \cdom \st
-%   \\ \qquad
-%  \trace = \event_1 \tracecat \trace' \cdot \event_2
-%    \implies 
-%   (\pi_{1}{(\event_1)}, \pi_{2}{(\event_1)}) = ({x}_1, l_1)
-% \implies
-% (\pi_{1}{(\event_2)}, \pi_{2}{(\event_2)}) = ({x}_2, l_2)
-% \implies
-%   \mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset
-% \end{array}
-% \]
-% \end{thm}
-% \begin{proof}
-% Proved by unfolding the $\vardep$ and apply Theorem.~\ref{thm:algeventdep_sound}.
-% \end{proof}
-%
 \begin{thm}[$\vardep$ implies $\flowsto$]
 \label{thm:flowsto_soundness}
 Given a program ${c}$, for all  $ x^i, y^j \in \lvar_{{c}}$, if $\vardep(x^i, y^j, {c})$,
@@ -42,8 +19,9 @@ $\flowsto(x^i,  z_1^{r_1}, c)
 \end{array}
 \]
 \end{thm}
-\begin{proof}
-  Taking arbitrary $x^i, y^j \in \lvar_c$,
+Proof Summary:
+\\
+Taking arbitrary $x^i, y^j \in \lvar_c$,
   it is sufficient to show:
   \\
   1. $x^i$ is directly used in the expression of the assignment command associated to $y^j$, or a boolean
@@ -250,39 +228,24 @@ Main proof logic:
 (3). composing the "sub flowsto-chain" from (2) with the  "direct flowsto" from (1), and getting the conclusion of
  the complete "flowsto chain".
 %
-% \caseL{Case 1: ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)} 
-% Let $[\assign{y}{\expr_y}]^j$ be the assignment command associated to $y^j$ in $c$,
-% it is sufficient to show following statement:
-%     $$
-%     \begin{array}{l}
-%     x^i \in VAR(\expr_y)
-%     \\ \quad 
-%     \lor 
-%     (\exists \event_z \in \eventset^{val}, \trace_z \in \mathcal{T} \st 
-%         \eventdep^{val}(\event_x, \event_z, \trace_z, c, D)
-%         \\ \qquad 
-%         \implies 
-%         \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-%   \flowsto(x^i,  z_1^{r_1}, c) 
-%   \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
-%         )
-%         \\ \quad
-%         \land 
-%    ( \pi_1(\event_z)^{\pi_2(\event_z)} \in VAR(\expr_y)) 
-%     \lor  \exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
-%     \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
-%     \end{array}
-%     $$
-% Otherwise, it can only be the case 2.
-% \caseL{Case 2: 
-%     ($\eventdep^{val}(\event_x, \event_y, \trace, c, D)) $)}
-
-%     $$
-%     x^i \in VAR(\expr_y)
-%     \lor 
-%     (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
-%     \land \eventdep^{\ctl}(\event_b, \event_y, c, D))
-%     $$
-
+\begin{proof}
+  Taking arbitrary $x^i, y^j \in \lvar_c$,
+%
+%
+by definition of $\vardep(x^i, y^j, {c})$, 
+let $D \in \dbdom$ be the dataset,
+and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the trace and two events satisfying the definition, 
+with $\pi_1(\event_x)^{\pi_2(\event_x)} = x^i$ and $\pi_1(\event_y)^{\pi_2(\event_y)} = y^j$,  it is sufficient to show:
+$$
+\begin{array}{l}
+  \eventdep(\event_x, \event_y, \trace, c, D) 
+  \\ \quad 
+  \implies 
+  \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+  \flowsto(x^i,  z_1^{r_1}, c) 
+  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
+\end{array}
+$$
+%
+By Theorem~\ref{thm:flowsto_event_soundness}, we have this theorem proved.
 \end{proof}
-
