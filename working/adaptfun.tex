@@ -28,86 +28,89 @@
 \label{subsec:alg_notation}
 %
 %
-{
-\begin{defn}[Variable Flags ($\flag$)].
-\\
-Given a program  ${c}$ with its labelled variables $\lvar$, the $\flag$ is a vector of the same length as $\lvar$, s.t. for each variable ${x}$ showing up as the $i$-th element in $\lvar$ (i.e., ${x} = \lvar(i)$), 
-$\flag(i) \in \{0, 1, 2\}$ is defined as follows:
+% {
+% \begin{defn}[Variable Flags ($\flag$)].
+% \\
+% Given a program  ${c}$ with its labelled variables $\lvar$, the $\flag$ is a vector of the same length as $\lvar$, s.t. for each variable ${x}$ showing up as the $i$-th element in $\lvar$ (i.e., ${x} = \lvar(i)$), 
+% $\flag(i) \in \{0, 1, 2\}$ is defined as follows:
+% %
+% %
+% \[
+% \flag(i) := 
+% \left\{
+% \begin{array}{ll}
+% 2 & 
+% {x^l} \in \lvar_{c} \land 
+% (\exists {\qexpr}. ~ s.t., ~
+% [\assign{{x}}{\query({\qexpr})}]^l \in_{c} {c})
+% \\
+% 1 &  
+% \begin{array}{l}
+% {x^l} \in \lvar_{c} \bigwedge \\
+% \left(
+% \begin{array}{l}
+% \big(\exists  ~ {c'}, {\expr}, \sbexpr, l, l'. ~
+% 	\ewhile [\sbexpr]^l \edo {c'} \in_{c} {c}
+% 	\land 
+% 	[{\assign{x}{\expr}}]^{l'} \in_{c}  {c'}
+% \big) \bigvee
+% \\
+% \big(\exists ~ \sbexpr, l, l_1, l_2, {c_1}, {c_2}, {\expr}_1, {\expr}_2. ~
+% 	\eif([\sbexpr]^l, {c_1}, {c_2}) \in_{c} {c} \land
+% 	([{\assign{x}{\expr_1}}]^{l1} \in_{c} {c_1} \lor 
+% 	[{\assign{x}{\expr_2}}]^{l2} \in_{c} {c_2})
+% \big)
+% \end{array}
+% \right)
+% \end{array}
+% \\
+% 0 & \text{o.w.}
+% \end{array}
+% \right\}. 
+% \] 
+% %
+% \end{defn}
 %
+% Operations on $\flag$ are defined as follows:
+% \begin{equation}
+% \begin{array}{llll}
+% {\flag_1 \uplus \flag_2}(i) & := &
+% \left\{
+% \begin{array}{ll}
+% k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}} 
+% \land |\flag_1| = |\flag_2|\\
+% 0 & o.w.
+% \end{array}\right.
+% & i = 1, \cdots, |\flag_1|  
+% \\
+% {\flag \uplus n}(i) & := & 
+% \max\big\{ \flag(i), n \big\} 
+% & i = 1, \ldots, |\flag|    
+% \\
+% \left[ n \right]^k (i) & := &  n
+% & i = 1, \ldots, k ~ \land ~ |\left[ n \right]^k| = k
+% \end{array}
+% \end{equation}
 %
-\[
-\flag(i) := 
-\left\{
-\begin{array}{ll}
-2 & 
-{x^l} \in \lvar_{c} \land 
-(\exists {\qexpr}. ~ s.t., ~
-[\assign{{x}}{\query({\qexpr})}]^l \in_{c} {c})
-\\
-1 &  
-\begin{array}{l}
-{x^l} \in \lvar_{c} \bigwedge \\
-\left(
-\begin{array}{l}
-\big(\exists  ~ {c'}, {\expr}, \sbexpr, l, l'. ~
-	\ewhile [\sbexpr]^l \edo {c'} \in_{c} {c}
-	\land 
-	[{\assign{x}{\expr}}]^{l'} \in_{c}  {c'}
-\big) \bigvee
-\\
-\big(\exists ~ \sbexpr, l, l_1, l_2, {c_1}, {c_2}, {\expr}_1, {\expr}_2. ~
-	\eif([\sbexpr]^l, {c_1}, {c_2}) \in_{c} {c} \land
-	([{\assign{x}{\expr_1}}]^{l1} \in_{c} {c_1} \lor 
-	[{\assign{x}{\expr_2}}]^{l2} \in_{c} {c_2})
-\big)
-\end{array}
-\right)
-\end{array}
-\\
-0 & \text{o.w.}
-\end{array}
-\right\}. 
-\] 
-%
-\end{defn}
-%
-Operations on $\flag$ are defined as follows:
-\begin{equation}
-\begin{array}{llll}
-{\flag_1 \uplus \flag_2}(i) & := &
-\left\{
-\begin{array}{ll}
-k & k = \max{\big\{\flag_1(i), \flag_2(i)\big\}} 
-\land |\flag_1| = |\flag_2|\\
-0 & o.w.
-\end{array}\right.
-& i = 1, \cdots, |\flag_1|  
-\\
-{\flag \uplus n}(i) & := & 
-\max\big\{ \flag(i), n \big\} 
-& i = 1, \ldots, |\flag|    
-\\
-\left[ n \right]^k (i) & := &  n
-& i = 1, \ldots, k ~ \land ~ |\left[ n \right]^k| = k
-\end{array}
-\end{equation}
-%
-Given a program  ${c}$ with its labelled variables $\lvar$,
-and two variables ${x}$, ${y}$ showing up as $i$-th, $j$-th elements in $\lvar$ 
-(i.e., ${x} = \lvar(i)$ and ${y} = \lvar(j)$),
-we say ${y}$ flows to ${x}$ in ${c}$ if and only if $j < i$ and 
-the value of ${y}$ directly or indirectly influence the evaluation of the value of ${x}$ as follows:
+Given a program  ${c}$ with its labelled variables $\lvar_c$,
+and two variables ${x^i}, y^j  \in \lvar_c $ 
+% showing up as $i$-th, $j$-th elements in $\lvar$ 
+% (i.e., ${x} = \lvar(i)$ and ${y} = \lvar(j)$),
+we say $y^j$ flows to ${x^i}$ in ${c}$ if and only if 
+the value of $y^j$ directly or indirectly influence the evaluation of the value of ${x}$ as follows:
 %
 \begin{itemize}
 \item (Explicit Influence) The program ${c}$ contains either 
-a command $\assign{{x}}{\sexpr}$ or $\assign{{x}}{\query({\qexpr})}$,
+a command $[\assign{{x}}{\aexpr}]^i$ or $[\assign{{x}}{\query({\qexpr})}]^i$,
 such that ${y}$ shows up as a free variable in $\sexpr$ or ${\qexpr}$.
-We use $\flowsto({x, y, c})$ to denote ${y}$ flows to ${x}$ in ${c}$.
+We use $\flowsto({x^i, y^j, c})$ to denote $y^j$ flows to $x^i$ in ${c}$.
 %
 \item (Implicit Influence) The program ${c}$ contains either a while loop
 command
-or if condition command, such that ${y}$ shows up in the guard
-and ${x}$ shows up in the left hand of an assignment command in the body.
+or if condition command, 
+such that $x$ shows up in the guard
+and $y$ shows up in the left hand of an assignment command, and this assignment command shows up
+ in the body associated to that condition command.
 \end{itemize}
 %
 This is formally defined in \ref{def:flowsto}.
@@ -982,18 +985,18 @@ x^l \in \lvar({{c}})
 \\
 \text{Weights} &
 \weights & := &
-\bigcup
-\begin{array}{l}
-	\big\{ (x^l, n) \in \mathcal{VAR} \times \mathbb{N} \times (\mathbb{N} \cup \expr)
+% \bigcup
+% \begin{array}{l}
+	\big\{ (x^l, w) \in \mathcal{VAR} \times \mathbb{N} \times (\mathbb{N} \cup \aexpr)
 	\mid
-	x^l \in \lvar_{{c}} \land \flag(x^l) > 0 \land w = \rb(x^l, c)
+	x^l \in \lvar_{{c}} \land w = \rb(x^l, c)
 	\big\} 
-	\\
-	\big\{(x^l, 1)  \in \mathcal{VAR} \times \mathbb{N} \times \{1\} 
-	\mid
-	x^l \in \lvar_{{c}} \land \flag(x^l) = 0
+	% \\
+	% \big\{(x^l, 1)  \in \mathcal{VAR} \times \mathbb{N} \times \{1\} 
+	% \mid
+	% x^l \in \lvar_{{c}} \land \flag(x^l) = 0
 	\big\}
-\end{array} 
+% \end{array} 
 \\
 \text{Query Flags} &
 \qflag & := & 
