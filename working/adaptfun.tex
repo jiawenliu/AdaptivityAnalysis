@@ -411,24 +411,49 @@ The Reaching definition is calculated by the Worklist algorithm as below.
  
 
 \subsubsection{Phase 2, reachability number analysis}
+In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the visit times (how many times this block is exeucted). To be precise, we use static analysis method from \wq{cite}, which is able to "provide the symbolic worst case bound on the number of times a block is reached", let us call it reachability bound analysis. 
+
+This analysis only works to find the symbolic bound of one block (in our graph, it corresponds to one node). The high level idea as follows.
+\begin{enumerate}
+    \item Build a transition system which describes the relation between variables in this target block and these variables in the successive visit to this block. There are defined translate functions which translate the statement to transition system and the corresponding operations such as the composition of transition systems, merging two transition systems from two control branches and so on. It is worth to mention that it calculates the transitive closure of the transition system obtained from a loop body, which can be analogy to computing the invariant of a loop.  
+    \item Use Ranking function which takes the transition system and outputs the bound
+\end{enumerate}
+
 \begin{algorithm}
 \caption{
 {Reachability Bound Analysis ($\rb$)}
-\label{alg:adpt_alg}
+\label{alg:rb}
 }
 \begin{algorithmic}
-\REQUIRE $...$.
-\STATE  {\bf {bfs $(G, s, t)$}:}  
-\STATE \qquad {\bf init} 
-Transitive Closure
-\STATE \qquad {\bf while} $\cdots$
-\STATE \qquad \qquad $\cdots$
-\STATE \qquad \qquad $\cdots$
-\STATE \qquad \qquad $\cdots$
-\STATE \qquad \qquad $\cdots$
-\RETURN $r$
+\REQUIRE the program $C$, the target block label $l$.
+\STATE  T  = GenerateTransitionSystem(C,l) 
+\STATE B = 1 +ComputeBound(T)
+\RETURN B
 \end{algorithmic}
 \end{algorithm}
+
+The algorithm $GenerateTransitionSystem(C,l)$ can be described as follows. It uses the control flow graph generated from the program $C$, and splits the node marked by $l$ into two nodes $l_1$ and $l_2$ to generate a new control flow graph from the $l_1$ to $l_2$. It translates the node in the graph into a transition systems by the its translate function and replaces node with transition systems. For loops in the graph, the loop itself is replaced by the transitive closure of the transition systems of its body. Finally, the new generated control flow graph can be transformed to a transition system. The transition system is a disjunction of transitions, and every transition is expressed as a conjuction of formulas over program variables $x,y,z$ in the target block (l) and its successive visits $x',y',z'$ in the same block.
+
+The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a trasition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
+
+\paragraph{Preprocessing} Actually, we do not need to do $\rb$ on every node of the graph from phase 1. Only the node associated with a loop is necessary. We will have an preprocessing algorithms to go through the programs and returns the list of labels that needs {$\rb$}. 
+
+\begin{algorithm}
+\caption{
+{Add weights to dependency graph (the main algorithm of phase 2)}
+\label{alg:rb}
+}
+\begin{algorithmic}
+\REQUIRE the program $C$, the dependency graph $G$ from phase 1
+\STATE  RBLABELS = PREPROCESSING(C) 
+\STATE FOR l $\in$ RBLABELS
+\STATE w = $\rb$ (C, l)
+\STATE Add weight (G, l, w)
+\RETURN G
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Add Weight} we also need to take care about the situation when a bound can not be predicted by {$\rb$}, we need to use another loose analysis to get a loose bound.
 
 \subsubsection{Phase 3, path finding algorithm in weighted graph (graph in phase 1 with weights predicted in phase 2) }
 The Standard DFS Algorithm searching for longest path.
