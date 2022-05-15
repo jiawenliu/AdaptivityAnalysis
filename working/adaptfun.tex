@@ -1,31 +1,181 @@
-%
-%
-% There are four steps to get the adaptivity of a program ${c}$ based on analyzing the program. 
-% \begin{enumerate}
-% \item Collecting the variables that are newly assigned in the program (via assignment expressions). These variables are stored in an labelled variable vector $\lvar$. 
-% We also track extra information of each assigned variable (whether it is assigned by a query result, or showing up in loop, or showing up in $\eif$ expression or o.w.) and store it in a vector $\flag$ of the same size as $\lvar$.
-% %
-% % \item Tracking the data flow relations between all these labelled variables. These informations are stored in a matrix $\Mtrix$, whose size is $|\lvar_c| \times |\lvar_c|$. 
-% %
-% \item Estimating the reachability bound of each variable in $\lvar$.
-% %
-% \item With all these informations from previous steps, generating a program-based dependency graph $\progG$ and compute the adaptivity bound.
-% \end{enumerate}
-
-% In the following subsections, 
-% we first define the notations and symbols being used in \THESYSTEM  with a simple example for understanding these definitions. 
-% Then we present the algorithmic analysis rules, which is the core of the \THESYSTEM, with
-% 3 examples illustrating how \THESYSTEM  works.
-% In the following subsections, we present the adaptivity analysis based on the \THESYSTEM's analyzing results, and the soundness w.r.t. the trace-based analyzing results in previous sections.
+The adaptivity from the static program analysis result is defined firstly. 
+Then the algorithms for {\THESYSTEM}.
 {\THESYSTEM} consists of three phases: 
 \begin{enumerate}
     \item An algorithm to generate a precise data control flow graph
     \item An algorithm to perform a Reachability number analysis to calculate the weight of each node in the graph generated in phase 1.
     \item An algorithm to find the appropriate path in the weighted data control flow graph
 \end{enumerate}
-\subsection{Notations}
 %
-\label{subsec:alg_notation}
+\subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
+%
+\subsubsection{$\flowsto$}
+Given a program  ${c}$ with its labelled variables $\lvar_c$,
+and two variables ${x^i}, y^j  \in \lvar_c $ 
+% showing up as $i$-th, $j$-th elements in $\lvar$ 
+% (i.e., ${x} = \lvar(i)$ and ${y} = \lvar(j)$),
+we say $y^j$ flows to ${x^i}$ in ${c}$ if and only if 
+the value of $y^j$ directly or indirectly influence the evaluation of the value of ${x}$ as follows:
+%
+\begin{itemize}
+\item (Explicit Influence) The program ${c}$ contains either 
+a command $[\assign{{x}}{\aexpr}]^i$ or $[\assign{{x}}{\query({\qexpr})}]^i$,
+such that ${y}$ shows up as a free variable in $\sexpr$ or ${\qexpr}$.
+We use $\flowsto({x^i, y^j, c})$ to denote $y^j$ flows to $x^i$ in ${c}$.
+%
+\item (Implicit Influence) The program ${c}$ contains either a while loop
+command
+or if condition command, 
+such that $x$ shows up in the guard
+and $y$ shows up in the left hand of an assignment command, and this assignment command shows up
+ in the body associated to that condition command.
+\end{itemize}
+%
+This is formally defined in \ref{def:flowsto}.
+We use $FV(\expr)$, $FV(\sbexpr)$ and $FV(\qexpr)$ denote the set of free variables in 
+expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ respectively.
+%
+\\
+\todo{Formal Definition Needed:
+$\live^l(c) \subseteq \lvar_c$ 
+is the set of labelled variables $x^l \in \lvar_c$ assumed to be live at the entry point of  executing the command of label $l$.
+}
+%
+\begin{defn}[Data Flows between Assigned Variables ($\flowsto$)].
+\label{def:flowsto}
+\\
+In a program  ${c}$,
+an variable ${x^i}  \in \lvar_c $ is in the \emph{flows to} relation with another variable ${y^j} \in \lvar_c$
+in ${c}$, denoted as $\flowsto({x^i, y^j, c})$, is defined as follows:
+%
+\[
+\begin{array}{l}
+\flowsto({x^i, y^j, c}) \triangleq 
+\\
+\left( \bigvee
+\begin{array}{l}
+(\exists \sexpr . ~ [\assign{y}{\sexpr}]^j \in_{c} {c} 
+\land {x} \in VAR(\sexpr) \land (x^i \in \live^j(c)))
+\\
+(\exists {\qexpr}. ~ [\assign{y}{\query({\qexpr})}]^j \in_{c} {c} 
+\land x \in VAR({\qexpr}) \land (x^i \in \live^j(c))))
+\\
+\big(\exists  ~ {c_w}, {(\expr \lor \qexpr)}, \sbexpr, l \in \mathbb{N}. ~
+	\ewhile [\sbexpr]^l \edo {c_w} \in_{c} {c}
+	\land 
+	[{\assign{y}{\expr \lor \query(\qexpr)}}]^{j} \in_{c}  {c_w}
+\big) \land {x} \in VAR(\sbexpr) \land (x^i \in \live^l(c)))
+\\
+\big(
+\exists ~ \sbexpr, l \in \mathbb{N}, {c_1}, {c_2}, {\expr}_1, {\expr}_2. ~
+	\eif([\sbexpr]^l, {c_1}, {c_2}) \in_{c} {c} \land
+	([{\assign{y}{\expr_1}}]^j \in_{c} {c_1} \lor 
+	[{\assign{y}{\expr_2}}]^j \in_{c} {c_2})
+\land {x} \in VAR(\sbexpr) \land (x^i \in \live^l(c)))
+\big)
+% \\
+% (\exists z^r \in \lvar_c \st \flowsto(x^i, z^r, c) \land \flowsto(z^r, y^j, c))
+\end{array}
+\right).
+\end{array}
+\]
+%
+\end{defn}
+%
+\subsubsection{Program Analysis Based Dependency Graph}
+\begin{defn}
+    [Program-Based Dependency Graph].
+    \label{def:prog_graph}
+    \\
+Given a program ${c}$ with its labelled variables $\lvar$ of length $N$, s.t.,
+$\Gamma \vdash_{\Mtrix_c, \flag_c} {c}$, 
+its program-based graph 
+$G({c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
+\\
+\[
+\begin{array}{rlcl}
+\text{Vertices} &
+\vertxs & := & \left\{ 
+x^l \in \mathcal{VAR} \times \mathbb{N}
+~ \middle\vert ~
+x^l \in \lvar({{c}})
+\right\}
+\\
+\text{Directed Edges} &
+\edges & := & 
+\left\{ 
+  ({x}_1^{i}, {x}_2^{j}) \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})
+  ~ \middle\vert ~
+  \begin{array}{l}
+    {x}_1^{i}, {x}_2^{j} \in \vertxs
+	\land
+    \\
+    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
+    n \geq 0 \land
+    \\
+    \flowsto(x^i,  z_1^{r_1}, c) 
+    \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
+  \end{array}
+\right\}
+\\
+\text{Weights} &
+\weights & := &
+% \bigcup
+% \begin{array}{l}
+	\big\{ (x^l, w) \in \mathcal{VAR} \times \mathbb{N} \times (\mathbb{N} \cup \aexpr)
+	\mid
+	x^l \in \lvar_{{c}} \land w = \rb(x^l, c)
+	\big\} 
+	% \\
+	% \big\{(x^l, 1)  \in \mathcal{VAR} \times \mathbb{N} \times \{1\} 
+	% \mid
+	% x^l \in \lvar_{{c}} \land \flag(x^l) = 0
+	\big\}
+% \end{array} 
+\\
+\text{Query Flags} &
+\qflag & := & 
+\left\{(x^l, n)  \in \mathcal{VAR} \times \mathbb{N}  \times \{0, 1\} 
+~ \middle\vert ~
+ x^l \in \lvar_{c},
+ \left\{
+\begin{array}{ll}
+n = 1 & x^l \in \qvar_{c} \\ 
+n = 0 & o.w.
+\end{array}
+\right\}
+\right\}
+\end{array}
+\]
+\end{defn} 
+%
+Given a program ${c}$, we generate its program-based graph 
+$\progG({c}) = (\vertxs, \edges, \weights, \qflag)$.
+%
+Then the adaptivity bound based on program analysis for ${c}$ is the number of query vertices on a finite walk in $\progG({c})$. This finite walk satisfies:
+\begin{itemize}
+\item the number of query vertices on this walk is maximum
+\item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
+\end{itemize}
+It is formally defined in \ref{def:prog_adapt}.
+%
+%
+\begin{defn}
+[{Program-Based Adaptivity}].
+\label{def:prog_adapt}
+\\
+{
+Given a program ${c}$ and its program-based graph 
+$\progG({c}) = (\vertxs, \edges, \weights, \qflag)$,
+%
+the program-based adaptivity for $c$ is defined as%
+\[
+\progA({c}) 
+:= \max
+\left\{ \qlen(k)\ \mid \  k\in \walks(\progG({c}))\right \}.
+\]
+}
+\end{defn}  
 %
 %
 % {
@@ -92,77 +242,6 @@
 % \end{array}
 % \end{equation}
 %
-Given a program  ${c}$ with its labelled variables $\lvar_c$,
-and two variables ${x^i}, y^j  \in \lvar_c $ 
-% showing up as $i$-th, $j$-th elements in $\lvar$ 
-% (i.e., ${x} = \lvar(i)$ and ${y} = \lvar(j)$),
-we say $y^j$ flows to ${x^i}$ in ${c}$ if and only if 
-the value of $y^j$ directly or indirectly influence the evaluation of the value of ${x}$ as follows:
-%
-\begin{itemize}
-\item (Explicit Influence) The program ${c}$ contains either 
-a command $[\assign{{x}}{\aexpr}]^i$ or $[\assign{{x}}{\query({\qexpr})}]^i$,
-such that ${y}$ shows up as a free variable in $\sexpr$ or ${\qexpr}$.
-We use $\flowsto({x^i, y^j, c})$ to denote $y^j$ flows to $x^i$ in ${c}$.
-%
-\item (Implicit Influence) The program ${c}$ contains either a while loop
-command
-or if condition command, 
-such that $x$ shows up in the guard
-and $y$ shows up in the left hand of an assignment command, and this assignment command shows up
- in the body associated to that condition command.
-\end{itemize}
-%
-This is formally defined in \ref{def:flowsto}.
-We use $FV(\expr)$, $FV(\sbexpr)$ and $FV(\qexpr)$ denote the set of free variables in 
-expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ respectively.
-%
-\\
-\todo{Formal Definition Needed:
-$\live^l(c) \subseteq \lvar_c$ 
-is the set of labelled variables $x^l \in \lvar_c$ assumed to be live at the entry point of  executing the command of label $l$.}
-%
-\begin{defn}[Data Flows between Assigned Variables ($\flowsto$)].
-\label{def:flowsto}
-\\
-In a program  ${c}$,
-an variable ${x^i}  \in \lvar_c $ is in the \emph{flows to} relation with another variable ${y^j} \in \lvar_c$
-in ${c}$, denoted as $\flowsto({x^i, y^j, c})$, is defined as follows:
-%
-\[
-\begin{array}{l}
-\flowsto({x^i, y^j, c}) \triangleq 
-\\
-\left( \bigvee
-\begin{array}{l}
-(\exists \sexpr . ~ [\assign{y}{\sexpr}]^j \in_{c} {c} 
-\land {x} \in VAR(\sexpr) \land (x^i \in \live^j(c)))
-\\
-(\exists {\qexpr}. ~ [\assign{y}{\query({\qexpr})}]^j \in_{c} {c} 
-\land x \in VAR({\qexpr}) \land (x^i \in \live^j(c))))
-\\
-\big(\exists  ~ {c_w}, {(\expr \lor \qexpr)}, \sbexpr, l \in \mathbb{N}. ~
-	\ewhile [\sbexpr]^l \edo {c_w} \in_{c} {c}
-	\land 
-	[{\assign{y}{\expr \lor \query(\qexpr)}}]^{j} \in_{c}  {c_w}
-\big) \land {x} \in VAR(\sbexpr) \land (x^i \in \live^l(c)))
-\\
-\big(
-\exists ~ \sbexpr, l \in \mathbb{N}, {c_1}, {c_2}, {\expr}_1, {\expr}_2. ~
-	\eif([\sbexpr]^l, {c_1}, {c_2}) \in_{c} {c} \land
-	([{\assign{y}{\expr_1}}]^j \in_{c} {c_1} \lor 
-	[{\assign{y}{\expr_2}}]^j \in_{c} {c_2})
-\land {x} \in VAR(\sbexpr) \land (x^i \in \live^l(c)))
-\big)
-% \\
-% (\exists z^r \in \lvar_c \st \flowsto(x^i, z^r, c) \land \flowsto(z^r, y^j, c))
-\end{array}
-\right).
-\end{array}
-\]
-%
-\end{defn}
-}
 %
 %
 % \begin{defn}[Data Flow Matrix ($\Mtrix$)]
@@ -278,7 +357,7 @@ in ${c}$, denoted as $\flowsto({x^i, y^j, c})$, is defined as follows:
 % %
 % %
 % %
-\subsection{Analysis Algorithm}
+\subsection{ $\THESYSTEM$ Analysis Algorithm}
 \wq{To do: Add $\THESYSTEM$, a data flow analysis algorithm to scan the program and give a graph.}
 {\THESYSTEM} consists of three phases: 
 \begin{enumerate}
@@ -1012,101 +1091,7 @@ The Standard DFS Algorithm searching for longest path.
 %
 %
 %
-\subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
-%
-\begin{defn}
-[Program-Based Dependency Graph].
-\label{def:prog_graph}
-\\
-Given a program ${c}$ with its labelled variables $\lvar$ of length $N$, s.t.,
-$\Gamma \vdash_{\Mtrix_c, \flag_c} {c}$, 
-its program-based graph 
-$G({c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
-\\
-\[
-\begin{array}{rlcl}
-\text{Vertices} &
-\vertxs & := & \left\{ 
-x^l \in \mathcal{VAR} \times \mathbb{N}
-~ \middle\vert ~
-x^l \in \lvar({{c}})
-\right\}
-\\
-\text{Directed Edges} &
-\edges & := & 
-\left\{ 
-  ({x}_1^{i}, {x}_2^{j}) \in \mathcal{VAR} \times \mathbb{N} \times (\mathcal{VAR} \times \mathbb{N})
-  ~ \middle\vert ~
-  \begin{array}{l}
-    {x}_1^{i}, {x}_2^{j} \in \vertxs
-	\land
-    \\
-    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
-    n \geq 0 \land
-    \\
-    \flowsto(x^i,  z_1^{r_1}, c) 
-    \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
-  \end{array}
-\right\}
-\\
-\text{Weights} &
-\weights & := &
-% \bigcup
-% \begin{array}{l}
-	\big\{ (x^l, w) \in \mathcal{VAR} \times \mathbb{N} \times (\mathbb{N} \cup \aexpr)
-	\mid
-	x^l \in \lvar_{{c}} \land w = \rb(x^l, c)
-	\big\} 
-	% \\
-	% \big\{(x^l, 1)  \in \mathcal{VAR} \times \mathbb{N} \times \{1\} 
-	% \mid
-	% x^l \in \lvar_{{c}} \land \flag(x^l) = 0
-	\big\}
-% \end{array} 
-\\
-\text{Query Flags} &
-\qflag & := & 
-\left\{(x^l, n)  \in \mathcal{VAR} \times \mathbb{N}  \times \{0, 1\} 
-~ \middle\vert ~
- x^l \in \lvar_{c},
- \left\{
-\begin{array}{ll}
-n = 1 & x^l \in \qvar_{c} \\ 
-n = 0 & o.w.
-\end{array}
-\right\}
-\right\}
-\end{array}
-\]
-\end{defn} 
-%
-Given a program ${c}$, we generate its program-based graph 
-$\progG({c}) = (\vertxs, \edges, \weights, \qflag)$.
-%
-Then the adaptivity bound based on program analysis for ${c}$ is the number of query vertices on a finite walk in $\progG({c})$. This finite walk satisfies:
-\begin{itemize}
-\item the number of query vertices on this walk is maximum
-\item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
-\end{itemize}
-It is formally defined in \ref{def:prog_adapt}.
-%
-%
-\begin{defn}
-[{Program-Based Adaptivity}].
-\label{def:prog_adapt}
-\\
-{
-Given a program ${c}$ and its program-based graph 
-$\progG({c}) = (\vertxs, \edges, \weights, \qflag)$,
-%
-the program-based adaptivity for $c$ is defined as%
-\[
-\progA({c}) 
-:= \max
-\left\{ \qlen(k)\ \mid \  k\in \walks(\progG({c}))\right \}.
-\]
-}
-\end{defn}  
+
 
 % By specifying the departure and destination vertices $s$ and $t$, the $\pathssearch(\progG, s, t)$ algorithm will 
 % give the number of query vertices on a finite walk from $s$ to $t$, which contains the maximum number of query vertices.

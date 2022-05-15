@@ -19,10 +19,8 @@ $\flowsto(x^i,  z_1^{r_1}, c)
 \end{array}
 \]
 \end{thm}
-Proof Summary:
-\\
-Taking arbitrary $x^i, y^j \in \lvar_c$,
-  it is sufficient to show:
+Proof Summary, for  arbitrary two $x^i, y^j \in \lvar_c$, with \emph{Variable May-Dependency} relation, in order to show there exists a 
+"flows-to chain" relation from the static analysis results from $x^i$ to $y^j$, it is sufficient to show:
   \\
   1. $x^i$ is directly used in the expression of the assignment command associated to $y^j$, or a boolean
   expression of the guard for a $\eif$ or $\ewhile$ command with the assignment command associated to $y^j$ showing up in the body of that command, 
@@ -46,40 +44,41 @@ Taking arbitrary $x^i, y^j \in \lvar_c$,
   \land  \flowsto(z^l, y^j, {c})
   \Big)$.
 %
-\\ Formally as follows:
-\[
-  \begin{array}{l}
-    \flowsto(x^i, y^j, {c})
-    \lor 
-      \exists z^l \in \lvar_{{c}} \st
-    \\
-    \Big(
-    \vardep(x^i, z^l, {c})   
-  \implies
-     \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-    \flowsto(x^i,  z_1^{r_1}, c) 
-    \\ \qquad \qquad 
-    \land \cdots  \land \flowsto(z_n^{r_n}, z^l, c) 
-    \Big)
-    \land  \flowsto(z^l, y^j, {c})
-  \end{array}
-  \]
-\\
-%
-Without induction hypothesis, the existence of $z^l$, and the conclusion that there is a "sub flowsto-chain" from $x^i$ to $z^l$ in step 2 
-is not proved in previous soundness proof.
-\\
-%
-So, I involved trace in the proof and adopt the way of induction on trace.
-By restricting the domain of $z^l$ on the variables "showing up" in the 
-trace between evaluating $x^i$ and $y^j$, 
-I firstly show the existence of this $z^l$, and then get the conclusion of the  "sub flowsto-chain" from induction hypothesis. 
+% \\ Formally as follows:
+% \[
+%   \begin{array}{l}
+%     \flowsto(x^i, y^j, {c})
+%     \lor 
+%       \exists z^l \in \lvar_{{c}} \st
+%     \\
+%     \Big(
+%     \vardep(x^i, z^l, {c})   
+%   \implies
+%      \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+%     \flowsto(x^i,  z_1^{r_1}, c) 
+%     \\ \qquad \qquad 
+%     \land \cdots  \land \flowsto(z_n^{r_n}, z^l, c) 
+%     \Big)
+%     \land  \flowsto(z^l, y^j, {c})
+%   \end{array}
+%   \]
+% \\
+% %
+% Without induction hypothesis, the existence of $z^l$, and the conclusion that there is a "sub flowsto-chain" from $x^i$ to $z^l$ in step 2 
+% is not proved in previous soundness proof.
+% \\
+% %
+% So, I involved trace in the proof and adopt the way of induction on trace.
+% By restricting the domain of $z^l$ on the variables "showing up" in the 
+% trace between evaluating $x^i$ and $y^j$, 
+% I firstly show the existence of this $z^l$, and then get the conclusion of the  "sub flowsto-chain" from induction hypothesis. 
 \\
 %
 By definition of $\vardep(x^i, y^j, {c})$, 
 let $D \in \dbdom$ be the dataset,
 and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the trace and two events satisfying the definition, 
-with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$, then informally it is sufficient to show:
+with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$,
+%  then informally it is sufficient to show:
 % then it is sufficient to show:
 %     \[
 %       \begin{array}{l}
@@ -148,43 +147,46 @@ $$
 It is clearer to show it in two lemmas:
 \\
 1. Existence of a middle event:
-\[
-	\begin{array}{l}
-		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
-		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
-		\implies
-		\eventdep(\event_1, \event_2, \trace, c, D) 
-		\\ \quad 
-		\implies 
-		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-		\\ \qquad \quad \lor
-		\exists \event \in \trace' \st 
-		\left( 		\event_z \in \eventset^{\asn} \land 
-			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
-		\land 
-		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-	\right) 
-		% \\ \qquad \qquad \lor
-		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-	\end{array}
-\]
-Proved by showing a contradiction, with detail in Lemma~\ref{lem:depevents_exist}.
+% \[
+% 	\begin{array}{l}
+% 		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+% 		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+% 		\implies
+% 		\eventdep(\event_1, \event_2, \trace, c, D) 
+% 		\\ \quad 
+% 		\implies 
+% 		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+% 		\\ \qquad \quad \lor
+% 		\exists \event \in \trace' \st 
+% 		\left( 		\event_z \in \eventset^{\asn} \land 
+% 			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
+% 		\land 
+% 		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+% 	\right) 
+% 		% \\ \qquad \qquad \lor
+% 		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+% 	\end{array}
+% \]
+% Proved by showing a contradiction, with detail 
+in Lemma~\ref{lem:depevents_exist}.
 %
 \\
-2. The middle event with a sub-trace implies a "sub flowsto-chain", informally:
-%
-\[
-  \begin{array}{l}
-    \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
-    \\ \qquad 
-    \implies 
-    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-\flowsto(x^i,  z_1^{r_1}, c) 
-\land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
-\end{array}
-\]
-%
-Proved formally as follows with detail in Theorem~\ref{thm:alg_correct}, by induction on the trace $\trace$
+2. The middle event with a sub-trace implies a "sub flowsto-chain", 
+% informally:
+% %
+% \[
+%   \begin{array}{l}
+%     \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
+%     \\ \qquad 
+%     \implies 
+%     \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+% \flowsto(x^i,  z_1^{r_1}, c) 
+% \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
+% \end{array}
+% \]
+% %
+% Proved formally as follows with detail in Theorem~\ref{thm:alg_correct},
+ by induction on the trace $\trace$
 %
 \[
   \begin{array}{l}
@@ -217,7 +219,7 @@ with the induction hypothesis:
   \end{array}
   \]
 %
-Main proof logic:
+Proved in Theorem~\ref{thm:flowsto_event_soundness} with the main proof logic:
 \\
 (1). obtaining the existence of $\event_z \in \eventset^{\asn} $ with dependency on $\event_x$, and a "direct flowsto" from $\event_z$ to $\event_y$
  from step 1;
