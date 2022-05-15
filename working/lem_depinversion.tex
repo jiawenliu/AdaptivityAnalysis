@@ -65,12 +65,29 @@ show x is directly used by the boolean expression for a conditional command and 
 	$\flowsto(z^i, \pi_1(\event)^{\pi_2(\event)}, c)$
 	\[		
 		\begin{array}{l}
-			\forall c \in \cdom, D \in \dbdom, \event_b \in \eventset^{\test}, \event \in \eventset^{\asn} \st 
-			\eventdep^{\ctl}(\event_b, \event, c, D) 
-			\\ \quad 
-			\implies
-			\forall z \in VAR(\pi_1(\event_b)) \st \exists i \in \mathbb{N} \st
-			\flowsto(z^i, \pi_1(\event)^{\pi_2(\event)}, c)
+			\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T},
+			\event_1, \event_2 \in \eventset^{\asn} \st 
+			\\ 
+			\exists \vtrace_0,
+			\vtrace_1, \vtrace', \vtrace_3, \vtrace_3' \in \mathcal{T},\event_1' \in \eventset^{\asn}, {c}_1, {c}_2  \in \cdom, 
+			\event_b \in \eventset^{\test},
+			\trace_{ih} \in \mathcal{T} \st 
+		\trace = [\event_1] \tracecat \trace_{ih} \tracecat [\event_2]
+		\\ \quad \implies	  
+			  \config{{c}, \vtrace_0} \rightarrow^{*} 
+				\config{{c}_1, \vtrace_1 \tracecat [\event_1]}  \rightarrow^{*} 
+				\config{c_2,  \vtrace_1 \tracecat [\event_1] \tracecat \trace \tracecat [\event_b] \tracecat  \trace_3} 
+			  \\ \qquad \land
+			  \config{{c}_1, \vtrace_1 \tracecat [\event_1']}  \rightarrow^{*} 
+			  \config{c_2,  \vtrace_1 \tracecat [\event_1'] \tracecat \trace' \tracecat [(\neg \event_b)] \tracecat \trace_3'} 
+			  \\ \qquad \land
+			\tlabel_{\trace_3} \cap \tlabel_{\trace_3'} = \emptyset
+			   \land \vcounter(\trace') ~  \pi_2(\event_b) = \vcounter(\trace) ~  \pi_2(\event_b)
+				\land \event_2 \eventin \trace_3
+			  \land \event_2 \not\eventin \trace_3'
+		\\ \quad \implies	
+		\forall z \in VAR(\pi_1(\event_b)) \st \exists l \in \mathbb{N} \st 
+		\flowsto(z^l, \pi_1(\event_2)^{\pi_2(\event_2)},)
 	\end{array}
 	\]
 	\end{lem}
@@ -80,6 +97,90 @@ show x is directly used by the boolean expression for a conditional command and 
 	\ref{lem:inv_event}, and \ref{lem:inv_live}, and control dependency definition.
 %
 	\begin{proof}
+		Take arbitrary $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T},
+		\event_1, \event_2 \in \eventset^{\asn} $,
+%
+let $\vtrace_0,
+\vtrace_1, \vtrace', \vtrace_3, \vtrace_3' \in \mathcal{T}, 
+\event_2' \in \eventset, \event_1' \in \eventset^{\asn}, \event_b, {c}_1, {c}_2$ be the traces, 
+events and commands satisfying the executions,
+by Inversion Lemma~\ref{lem:inv_event} on 
+$\event_2$, and $\event_b$,
+we have the following instance of the first execution in Eq.~\ref{eq:eventdep_def_base_ctl},
+ %
+%
+% Let $\event_{ih} = (b, l_b, n_b, v_b)$, by Eq.~\ref{eq:ctldep_inv1} and {Inversion Lemma~\ref{lem:inv_test}}, we have:
+\begin{equation}
+% \label{eq:ctldep_inv1}
+  \begin{array}{l}   
+\config{{c}, \vtrace_0} \rightarrow^{*} 
+% \config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_1}  
+% \rightarrow^{\rname{assn/query}}
+%  \config{c_1, \vtrace_1 \tracecat [\event_1]} 
+%  \\ \qquad 
+%  \rightarrow^{*} 
+  \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_3', 
+  \vtrace_1 \tracecat [\event_1] \tracecat \trace} 
+  \\
+  \qquad 
+   \rightarrow^{\rname{if-b / while-b}} 
+  \config{(c_t;c_3' / c_f;c_3') /(c_3' / c_w; \ewhile [b]^{l_b} \edo c_w;{c}_3'), 
+  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b]} 
+  \\
+  \qquad  \rightarrow^{*} 
+  \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}; c_{3b}', 
+  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b] \tracecat  \trace_{3a}}
+  \\ \qquad \rightarrow^{\rname{assn/query}}
+  \config{ c_{3b}', 
+  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b] \tracecat  \trace_{3a} \tracecat [\event_2]}
+  \rightarrow^{*} 
+  \config{c_3, 
+  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b] \tracecat  \trace_{3a} \tracecat [\event_2] \tracecat \trace_{3b}}
+  % 
+\end{array}
+\end{equation}
+%  %
+, where $\trace_3 = \trace_{3a} \tracecat [\event_2] \tracecat trace_{3b}$,
+% $x_1 = \pi_1(\event_1)$, $l_1 = {\pi_2(\event_1)}$, 
+$x_2 = \pi_1(\event_2)$, $l_2 = \pi_2(\event_2)$, 
+and $\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w$ 
+is the conditional command of the assignment commands associated to the 
+$\event_b$ from Inversion Lemma~\ref{lem:inv_event} of testing event.
+\\
+%
+By the command label consistency,
+we also have the instance of second execution as follows:
+\begin{equation}
+\label{eq:ctldep_inv2}
+\begin{array}{l}   
+  \config{{c}, \vtrace_0} \rightarrow^{*} 
+%   \config{[\assign{{x}_1}{\expr_1 / \query(\qexpr_1)}]^{l_1} ; {c}_1, \vtrace_1}  
+%   \rightarrow^{\rname{\rname{assn/query}}}
+%    \config{c_1, \vtrace_1 \tracecat [\event_1]} 
+%    \\
+%     \qquad \rightarrow^{*} 
+    \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_3', 
+    \vtrace_1 \tracecat [\event_1] \tracecat \trace'} 
+    \\
+    \qquad 
+     \rightarrow^{\rname{if-b / while-b}} 
+    \config{(c_f;c_3' / c_t;c_3') /(c_w; \ewhile [b]^{l_b} \edo c_w;{c}_3' / c_3'), 
+    \trace_1 \tracecat [\event_1]  \tracecat \trace' \tracecat [\neg \event_b]} 
+    \\
+    \qquad   \rightarrow^{*} 
+    \config{c_3, 
+    \trace_1 \tracecat [\event_1]  \tracecat \trace' \tracecat [\neg \event_b] \tracecat  \trace_3'}
+    % 
+  \end{array}
+\end{equation}
+%
+By the label consistency, and $\tlabel_{\trace_3} \cap \tlabel_{\trace_3'} = \emptyset$
+we know:
+\\
+in case of $\eif ([b]^{l_b}, c_t, c_f)$, $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$ can only be in 
+$c_t$ or $c_f$.
+\\
+In case of 
 	\end{proof}
 	%
 	% \begin{lem}[One Step Dependency Inversion]
