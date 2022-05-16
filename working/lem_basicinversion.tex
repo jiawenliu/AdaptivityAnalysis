@@ -57,19 +57,19 @@
 		and $\config{\trace, \aexpr} \aarrow v $ and 
 	$\config{\trace', \aexpr} \aarrow v' $ with $v' \neq v$, 
 	then $ x $ is in the free variables of $\aexpr$ and $i$ is the latest label for $x$ 
-    in $\trace$, i.e., $x \in VAR(\aexpr)$ and $i = \llabel(\trace)$.
+    in $\trace$, i.e., $x \in VAR(\aexpr)$ and $i = \llabel(\trace) x$.
 %
 	\item $\expr$ is a boolean expression $\bexpr$,
 	% \\
   and $\config{\trace, \bexpr} \barrow v $ and 
  $\config{\trace', \bexpr} \barrow v' $ with $v' \neq v$, then $ x $ is in the free variables of $\bexpr$ and $i$ is the latest label for $x$ 
- in $\trace$, i.e., $x \in VAR(\bexpr)$ and $i = \llabel(\trace)$.
+ in $\trace$, i.e., $x \in VAR(\bexpr)$ and $i = \llabel(\trace) x$.
 % 
 	\item $\expr$ is a query expression $\qexpr$,
 	% \\
 	and $\config{\trace, \qexpr} \qarrow \qval $ and 
 	$\config{\trace', \qexpr} \qarrow \qval' $ with $\qval \neq_{q} \qval'$, then $ x $ is in the free variables of $\qexpr$ and $i$ is the latest label for $x$ 
-    in $\trace$, i.e., $x \in VAR(\qexpr)$ and $i = \llabel(\trace)$.
+    in $\trace$, i.e., $x \in VAR(\qexpr)$ and $i = \llabel(\trace) x$.
 \end{itemize}	%
 	\end{lem}
     Proof Summary:
@@ -79,9 +79,48 @@
      \\
     To show $i = \llabel(\trace)$, by showing contradiction ($\forall \trace, \trace'$ in second hypothesis  $v = v'$ ) 
     if $j = \llabel(\trace) x$ and $i \neq j$.
-    \begin{proof}.
-    
-    \end{proof}
+    \begin{proof}
+		Take two arbitrary traces $\trace, \trace' \in \mathcal{T}$, and an expression $\expr$ satisfying
+		$ \forall z^j \in \lvar / \{x^i\} \st 
+		\env(\trace) z = \env(\trace') z $, we have the following three cases.
+    \caseL{$\expr$ is an arithmetic expression $\aexpr$}
+	We have $\config{\trace, \bexpr} \barrow v $ and 
+	$\config{\trace', \bexpr} \barrow v' $ with $v' \neq v$ from the lemma hypothesis.
+	\\
+	To show $x \in VAR(\qexpr)$ and $i = \llabel(\trace) x$: 
+	\\
+	Assuming $x \notin VAR(\aexpr)$,
+	% by $\config{\trace, \aexpr} \aarrow v $	and $\config{\trace', \aexpr} \aarrow v'$, 
+	since
+	%  $x \notin VAR(\aexpr)$ and 
+	$ \forall z^j \in \lvar / \{x^i\} \st 
+		\env(\trace) z = \env(\trace') z $,
+	we know $v = v'$, which is contradicted to $v' \neq v$.
+	\\
+	Then we know $x \in VAR(\qexpr)$.
+	\\
+	Assuming $j = \llabel(\trace) x \land i \neq j$,
+	by 
+	% $\config{\trace, \aexpr} \aarrow v $	and $\config{\trace', \aexpr} \aarrow v'$, 
+	% since $x \notin VAR(\aexpr)$ and 
+	$ \forall z^j \in \lvar / \{x^i\} \st 
+		\env(\trace) z = \env(\trace') z $, we know 
+		$\env(\trace) x = \env(\trace') x$, i.e., 
+	\\
+	$\forall z^j \in \lvar \st \env(\trace) z = \env(\trace') z$.
+	\\
+	Then by the determination of the evaluation, 
+	% and 
+	% $\config{\trace, \aexpr} \aarrow v $ and $\config{\trace', \aexpr} \aarrow v'$, 
+	we know $v = v'$, which is contradicted to $v' \neq v$.
+	\\
+	Then we know $i = \llabel(\trace) x$.
+
+    \caseL{$\expr$ is a boolean expression $\bexpr$}
+	This case is proved trivially in the same way as the case of the arithmetic expression.
+	\caseL{$\expr$ is a query expression $\qexpr$}
+	This case is proved trivially in the same way as the case of the arithmetic expression.
+\end{proof}
 	%
 	%
 	% \begin{lem}[Boolean Inversion]
@@ -230,7 +269,7 @@
 	\env(\trace) z = \env(\trace') z \land 
 	\config{\trace, \bexpr} \barrow v \land \config{\trace', \bexpr} \barrow v' \land v \neq v'$
 	then 
-	 $x \in VAR(\bexpr) \land i = \llabel(\trace)$
+	 $x \in VAR(\bexpr) \land i = \llabel(\trace) x$
 	% \\
 	\[
 		\begin{array}{l}
@@ -246,7 +285,7 @@
 		\env(\trace) z = \env(\trace') z \land 
 		\config{\trace, \bexpr} \barrow v \land \config{\trace', \bexpr} \barrow v' \land v \neq v'
 		\\ \qquad
-		\implies x \in VAR(\bexpr) \land i = \llabel(\trace)
+		\implies x \in VAR(\bexpr) \land i = \llabel(\trace) x
 		\end{array}
 	\]
 % 
@@ -260,7 +299,7 @@
   \exists \trace, \trace' \in \mathcal{T}, \qval, \qval'\st 
  \env(\trace) z = \env(\trace') z \land 
  \config{\trace, \qexpr} \qarrow \qval \land \config{\trace', \qexpr} \qarrow \qval' \land \qval \neq_{q} \qval'$,
- then  $x \in VAR(\qexpr) \land i = \llabel(\trace)$.
+ then  $x \in VAR(\qexpr) \land i = \llabel(\trace) x$.
 	% \\
 	\[
 		\begin{array}{l}
@@ -276,7 +315,7 @@
 		\env(\trace) z = \env(\trace') z \land 
 		\config{\trace, \qexpr} \qarrow \qval \land \config{\trace', \qexpr} \qarrow \qval' \land \qval \neq_{q} \qval'
 		\\ \qquad
-		\implies x \in VAR(\qexpr) \land i = \llabel(\trace)
+		\implies x \in VAR(\qexpr) \land i = \llabel(\trace) x
 		\end{array}
 	\]
 	\end{itemize}
@@ -289,8 +328,79 @@ To show $x \in VAR(\aexpr)$, by showing contradiction ($\forall \trace, \trace'$
  \\
 To show $i = \llabel(\trace)$, by showing contradiction ($\forall \trace, \trace'$ in second hypothesis  $v = v'$ ) 
 if $j = \llabel(\trace) x$ and $i \neq j$.
-\begin{proof}.
+\begin{proof}
+	Taking an arbitrary expression $\expr$,
+	 we have the following three cases.
+\caseL{$\expr$ is an arithmetic expression $\aexpr$}
+Taking an arbitrary set of labelled variables 
+	$\diff \subset \lvar$, $x^i \in (\lvar \setminus \diff)$ satisfies:
+	\\
+	$\forall z^j \in \lvar \setminus \diff, \trace, \trace' \in \mathcal{T}, v, v' \st 
+	\env(\trace) z = \env(\trace') z \land 
+	\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v = v' ~ (1)
+	$
+	\\
+	and 
+	$\forall z^j \in \lvar \setminus (\diff \cup \{x^i\} ) \st 
+	\exists \trace, \trace' \in \mathcal{T}, v, v'\st 
+	\env(\trace) z = \env(\trace') z \land 
+	\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v \neq v' ~ (2) 
+	$,
+	\\
+	Let $\trace, \trace' \in \mathcal{T}, v, v'$ be the two traces and values satisfies hypothesis $(2)$.
+	\\
+	To show: $x \in VAR(\aexpr) \land i = \llabel(\trace) x$:
+	\\
+% \[
+% 	\begin{array}{l}
+% 	\forall \diff \subset \lvar,  x^i \in (\lvar \setminus \diff), \aexpr \st
+% 	\\ \quad
+% 	\forall z^j \in \lvar \setminus \diff, \trace, \trace' \in \mathcal{T}, v, v' \st 
+% 	\env(\trace) z = \env(\trace') z \land 
+% 	\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v = v'
+% 	\\ \quad
+% 	\implies 
+% 	\forall z^j \in \lvar / (\diff \cup \{x^i\} ) \st 
+% 	\exists \trace, \trace' \in \mathcal{T}, v, v'\st 
+% 	\env(\trace) z = \env(\trace') z \land 
+% 	\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v \neq v'
+% 	\\ \qquad
+% 	\implies x \in VAR(\aexpr) \land i = \llabel(\trace) x
+% 	\end{array}
+% \] 
+Assuming $x \notin VAR(\aexpr)$, we know from the Inversion Lemma~\ref{lem:inv_expr} of the arithmetic expression case,
+\\
+$\forall z^j \in \lvar \setminus \{x^i\}, \trace, \trace' \in \mathcal{T}, v, v' \st 
+\env(\trace) z = \env(\trace') z \land 
+\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v = v'$.
+\\
+Then with the hypothesis $(1)$, we know:
+\\
+$\forall z^j \in \lvar \setminus (\diff \cup \{x^i\} ), \trace, \trace' \in \mathcal{T}, v, v'\st 
+\env(\trace) z = \env(\trace') z \land 
+\config{\trace, \aexpr} \aarrow v \land \config{\trace', \aexpr} \aarrow v' \land v = v'$
+\\
+This is contradicted to the hypothesis $(2)$.
+\\
+Then we know $x \in VAR(\expr)$.
+\\
+Assuming $j = \llabel(\trace) x \land i \neq j$,
+by hypothesis $(2)$ where 
+% $\config{\trace, \aexpr} \aarrow v $	and $\config{\trace', \aexpr} \aarrow v'$, 
+% since $x \notin VAR(\aexpr)$ and 
+$ \forall z^j \in \lvar \setminus (\diff \cup \{x^i\} )  \st\env(\trace) z = \env(\trace') z $, 
+we know $\env(\trace) x = \env(\trace') x$, i.e., 
+\\
+$\forall z^j \in  \lvar \setminus (\diff  ) \st \env(\trace) z = \env(\trace') z$.
+\\
+Then we have $v' = v$ by hypothesis $(1)$, which is contradicted to $v' \neq v$.
+\\
+Then we know $i = \llabel(\trace) x $.
 
+\caseL{$\expr$ is a boolean expression $\bexpr$}
+This case is proved trivially in the same way as the case of the arithmetic expression.
+\caseL{$\expr$ is a query expression $\qexpr$}
+This case is proved trivially in the same way as the case of the arithmetic expression.
 \end{proof}
 	%
 % \begin{lem}[Boolean Inversion Generalization]
@@ -342,15 +452,15 @@ if $j = \llabel(\trace) x$ and $i \neq j$.
 % 	\implies 
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \expr, c' \st
-% 		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^{assn}
-% 		\config{c', \trace_0 \tracecat \trace_1'\cdot \event} \rightarrow^{*}
+% 		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^\rname{assn}
+% 		\config{c', \trace_0 \tracecat \trace_1'\tracecat [\event]} \rightarrow^{*}
 % 		\config{\eskip, \trace_0  \tracecat  \trace_1}
 % 	\big)
 % 	\\ \qquad \lor
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \qexpr, c' \st
 % 		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\query(\qexpr)}]^l;c', \trace_0 \tracecat \trace_1'} \rightarrow^{query}
-% 		\config{c', \trace_0  \tracecat  \trace_1' \cdot \event } \rightarrow^{*}
+% 		\config{c', \trace_0  \tracecat  \trace_1' \tracecat [\event] } \rightarrow^{*}
 % 		\config{ \eskip, \trace_0\trace_1}
 % 	\big)
 % \end{array}
@@ -369,14 +479,14 @@ if $j = \llabel(\trace) x$ and $i \neq j$.
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_t, c_f, c'' \in \cdom \st
 % 		\config{c, \trace_0} \rightarrow^* \config{\eif ([b]^l, c_t, c_f);c', \trace_0 \tracecat \trace_1'} \rightarrow^{if-b}
-% 		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+% 		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 % 		\config{\eskip, \trace_0 \tracecat \trace_1} 
 % 	\big)
 % 	\\ \qquad \lor
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_w, c'' \in \cdom \st
 % 		\config{c, \trace_0} \rightarrow^* \config{ \ewhile([b]^l, c_w);c', \trace_0 \tracecat  \trace_1'} \rightarrow^{while-b}
-% 		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+% 		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 % 		\config{\eskip, \trace_0  \tracecat \trace_1}
 % 	\big)
 % \end{array}
@@ -384,13 +494,12 @@ if $j = \llabel(\trace) x$ and $i \neq j$.
 % \end{lem}
 \begin{lem}[Event Inversion]
 \label{lem:inv_event}
-For all $\forall c\in \cdom, \trace_0 \in \mathcal{T}, \event \in \eventset$such that 
+For all $c\in \cdom, \trace_0 \in \mathcal{T}, \event \in \eventset$such that 
 $\config{c, \trace_0} \rightarrow^* \config{\eskip, \trace_0 \tracecat \trace_1}$, 
 and $\event \eventin \trace_1$, if 
 \begin{itemize}
 	\item $\event \in \eventset^{\asn}$, then either
 	\begin{itemize}
-
 	 \item there exists $\trace_1' \in \mathcal{T}, c' \in \cdom, \expr$ such that
 \[
 \begin{array}{l}
@@ -402,15 +511,15 @@ and $\event \eventin \trace_1$, if
 	% \implies 
 	% \big( 
 		% \exists \trace_1' \in \mathcal{T}, \expr, c' \st
-		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^{assn}
-		\config{c', \trace_0 \tracecat \trace_1'\cdot \event} \rightarrow^{*}
+		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^\rname{assn}
+		\config{c', \trace_0 \tracecat \trace_1'\tracecat [\event]} \rightarrow^{*}
 		\config{\eskip, \trace_0  \tracecat  \trace_1}
 	% \big)
 	% \\  \lor
 	% \big( 
 	% 	\exists \trace_1' \in \mathcal{T}, \qexpr, c' \st
 	% 	\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\query(\qexpr)}]^l;c', \trace_0 \tracecat \trace_1'} \rightarrow^{query}
-	% 	\config{c', \trace_0  \tracecat  \trace_1' \cdot \event } \rightarrow^{*}
+	% 	\config{c', \trace_0  \tracecat  \trace_1' \tracecat [\event] } \rightarrow^{*}
 	% 	\config{ \eskip, \trace_0\trace_1}
 	% \big)
 \end{array}
@@ -426,16 +535,16 @@ and $\event \eventin \trace_1$, if
 	% \implies 
 	% \big( 
 	% 	\exists \trace_1' \in \mathcal{T}, \expr, c' \st
-	% 	\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^{assn}
-	% 	\config{c', \trace_0 \tracecat \trace_1'\cdot \event} \rightarrow^{*}
+	% 	\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^\rname{assn}
+	% 	\config{c', \trace_0 \tracecat \trace_1'\tracecat [\event]} \rightarrow^{*}
 	% 	\config{\eskip, \trace_0  \tracecat  \trace_1}
 	% \big)
 	% \\  \lor
 	% \big( 
 		% \exists \trace_1' \in \mathcal{T}, \qexpr, c' \st
 		\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\query(\qexpr)}]^l;c', \trace_0 \tracecat \trace_1'} \rightarrow^{query}
-		\config{c', \trace_0  \tracecat  \trace_1' \cdot \event } \rightarrow^{*}
-		\config{ \eskip, \trace_0\trace_1}
+		\config{c', \trace_0  \tracecat  \trace_1' \tracecat [\event] } \rightarrow^{*}
+		\config{ \eskip, \trace_0 \tracecat \trace_1}
 	% \big)
 \end{array}
 \]
@@ -449,14 +558,14 @@ and $\event \eventin \trace_1$, if
 	% \big( 
 	% 	\exists \trace_1' \in \mathcal{T}, c', c_t, c_f, c'' \in \cdom, \bexpr \st
 		\config{c, \trace_0} \rightarrow^* \config{\eif ([b]^l, c_t, c_f);c', \trace_0 \tracecat \trace_1'} \rightarrow^{if-b}
-		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 		\config{\eskip, \trace_0 \tracecat \trace_1} 
 	% \big)
 	% \\  \lor
 	% \big( 
 	% 	\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_w, c'' \in \cdom \st
 	% 	\config{c, \trace_0} \rightarrow^* \config{ \ewhile([b]^l, c_w);c', \trace_0 \tracecat  \trace_1'} \rightarrow^{while-b}
-	% 	\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+	% 	\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 	% 	\config{\eskip, \trace_0  \tracecat \trace_1}
 	% \big)
 \end{array}
@@ -467,14 +576,14 @@ and $\event \eventin \trace_1$, if
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_t, c_f, c'' \in \cdom \st
 % 		\config{c, \trace_0} \rightarrow^* \config{\eif ([b]^l, c_t, c_f);c', \trace_0 \tracecat \trace_1'} \rightarrow^{if-b}
-% 		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+% 		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 % 		\config{\eskip, \trace_0 \tracecat \trace_1} 
 % 	\big)
 % 	\\  \lor
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_w, c'' \in \cdom \st
 		\config{c, \trace_0} \rightarrow^* \config{ \ewhile([b]^l, c_w);c', \trace_0 \tracecat  \trace_1'} \rightarrow^{while-b}
-		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 		\config{\eskip, \trace_0  \tracecat \trace_1}
 % 	\big)
 % \end{array}
@@ -483,6 +592,86 @@ and $\event \eventin \trace_1$, if
 \end{itemize}
 %
 \end{lem}
+Proof Summary: trivially by induction on $c$ and enumerate all operational semantic rules.
+\begin{proof}
+	Take arbitrary $\trace_0 \in \mathcal{T}$, by induction on $c$, we have following cases:
+		\caseL{$c = [\assign{x}{\expr}]^l$}
+		By the evaluation rule $\rname{assn}$, we have
+		$
+		{
+		\config{[\assign{{x}}{\aexpr}]^{l},  \trace } 
+		\xrightarrow{} 
+		\config{\eskip, \trace \tracecat [({x}, l, v) ]}
+		}$.
+		\\
+		Then we know $\trace_1 = [({x}, l, v)]$ and there is only 1 event $(x, l, v) \in \trace_1$.
+		\\
+		Then we have $\trace_1' = []$ and $c' = \eskip$ satisfying
+		\\
+		$\config{c, \trace_0} \rightarrow^* \config{ [\assign{x}{\expr}]^l;c', \trace_0  \tracecat  \trace'} \rightarrow^\rname{assn}
+		\config{c', \trace_0 \tracecat \trace_1'\tracecat [\event]} \rightarrow^{*}
+		\config{\eskip, \trace_0  \tracecat  \trace_1}$.
+		\\
+		This case is proved.
+		\caseL{$c = [\assign{x}{\query(\qexpr)}]^l$}
+		This case is proved trivially in the same way as \textbf{case: $c = [\assign{x}{\expr}]^l$}.
+		\caseL{$c = c_{s1};c_{s2}$}
+		This case is proved trivially by the induction hypothesis on $c_{s1}$ and $c_{s2}$ separately, we have this case proved.
+		\caseL{$\ewhile [b]^{l} \edo c$}
+		If the rule applied to is $\rname{while-t}$, we have:
+		\\
+		$\config{{\ewhile [b]^{l} \edo c_w, \trace}}
+			\xrightarrow{} 
+			\config{{
+			c_w; \ewhile [b]^{l} \edo c_w,
+			\trace \tracecat [(b, l, \etrue)]}}
+			\xrightarrow{*} 
+			\config{{
+			\eskip,
+			\trace \tracecat \trace_1}}
+		$,
+		\\
+		%
+		$(b, l, \etrue) \in \event^{\test}$ and $(b, l, \etrue) \in \trace_1$.
+		\\
+		Let $\trace' = []$, $c' = \eskip$ and $c'' = c_w; \ewhile [b]^{l} \edo c_w$, we know that they satisfy
+		\\
+		$\config{c, \trace_0} \rightarrow^* \config{ \ewhile([b]^l, c_w);c', \trace_0 \tracecat  \trace_1'} \rightarrow^{while-b}
+		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
+		\config{\eskip, \trace_0  \tracecat \trace_1}$
+		\\
+		% And we also have the existence of $l = l_b, b$ and $c_w$, and $\ewhile [b]^{l} \edo c_w \in_c c_2$ and  $c_1 \in c_w$.
+		% \\
+		% If $c_w$ isn't a sequence command, let $c_1 = c_w$, then we have $c_2 = \ewhile [b]^{l} \edo c_w,  \eskip)$ 
+		% and $c_1 \in_c c_2$.
+		% \\
+		% And we also have the existence of $l = l_b, b$ and $c_w$, and $\ewhile [b]^{l} \edo c_w \in_c c_2$ and  $c_1 \in c_w$.
+		% \\
+		This case is proved.
+		\\
+		If the rule applied to is $\rname{while-f}$, we have
+		\\
+		$
+		{
+			\config{{\ewhile [b]^{l} \edo c_w, \trace}}
+			\xrightarrow{}^\rname{while-f}
+			\config{{
+			\eskip,
+			\trace \tracecat [((b, l, \efalse))]}}
+		}$,
+		$(b, l, \etrue) \in \event^{\test}$, and $(b, l, \etrue) \in \trace_1$.
+		\\
+		Let $\trace' = []$, $c' = \eskip$ and $c'' = \eskip$, we know that they satisfy
+		\\
+		$\config{c, \trace_0} \rightarrow^* \config{ \ewhile([b]^l, c_w);c', \trace_0 \tracecat  \trace_1'} 
+		\rightarrow^\rname{while-f}
+		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [(b, l, \efalse)] } \rightarrow^{*}
+		\config{\eskip, \trace_0  \tracecat \trace_1}$
+		\\
+		This case is proved.
+		\caseL{$\eif([b]^l, c_t, c_f)$}
+		This case is proved in the same way as \textbf{case: $c = [\assign{x}{\query(\qexpr)}]^l$}.
+	\end{proof}
 %
 % \begin{lem}[Testing Event Inversion]
 % \label{lem:inv_test}
@@ -495,14 +684,14 @@ and $\event \eventin \trace_1$, if
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_t, c_f, c'' \in \cdom \st
 % 		\config{c, \trace_0} \rightarrow^* \config{\eif ([b]^l, c_t, c_f);c', \trace_0 \tracecat \trace_1'} \rightarrow^{if-b}
-% 		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+% 		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 % 		\config{\eskip, \trace_0 \tracecat \trace_1} 
 % 	\big)
 % 	\\ \qquad \lor
 % 	\big( 
 % 		\exists \trace_1' \in \mathcal{T}, \bexpr, c', c_w, c'' \in \cdom \st
 % 		\config{c, \trace_0} \rightarrow^* \config{ \ewhile([b]^l, c_w);c', \trace_0 \tracecat  \trace_1'} \rightarrow^{while-b}
-% 		\config{c'', \trace_0 \tracecat \trace_1'\cdot \event } \rightarrow^{*}
+% 		\config{c'', \trace_0 \tracecat \trace_1'\tracecat [\event] } \rightarrow^{*}
 % 		\config{\eskip, \trace_0  \tracecat \trace_1}
 % 	\big)
 % \end{array}
@@ -549,3 +738,26 @@ $\llabel(\trace') x = l $, then $(x^l \in \live^{\entry_{c'}}(c))$.
 	\forall x^l \in \lvar_c \st \llabel(\trace') x = l \implies (x^l \in \live^{\entry_{c'}}(c))
 \]
 \end{lem}
+Proof Summary: 
+If a variable with the label which is the latest one in the trace,
+Then by the environment definition, the value associated to this labelled variable is read from the trace.
+\\
+Then this labelled variable must be reachable at the point of $\entry_{c'}$, i.e., $x^l \in \live^{\entry_{c'}}(c)$.
+\begin{proof}
+	Take arbitrary $c \in \cdom , \trace, \trace' \in \mathcal{T}$ satisfying 
+	$\config{c, \trace} \xrightarrow{}^* \config{c', \trace'}$, 
+	and an arbitrary $x^l \in \lvar_c$ satisfying $\llabel(\trace') x = l$.
+	\\
+	By definition of $\llabel$, we know $\trace'$ has the form $\trace'_{a} \tracecat [(x, l, v)] \tracecat \trace_{b}'$
+	for some $\trace'_{a} , \trace_{b}' \in \mathcal{T}$ and $v$.
+	\\
+	And the variable $x$ doesn't show up in all the events in $\trace_b'$.
+%
+\\
+	Then, by the environment definition, we know:
+	$\env(\trace') x = v$, i.e., $x^l$ is reachable at the point of $\entry_{c'}$.
+	\\
+	By the $\live$ definition, we know $x^l \in \live^{\entry_{c'}}(c)$.
+	\\
+	This lemma is proved.
+\end{proof}
