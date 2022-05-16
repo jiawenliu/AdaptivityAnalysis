@@ -27,12 +27,12 @@ show x is directly used by the boolean expression for a conditional command and 
 	By the Definition~\ref{def:event_dep} for $\eventdep(\event_1, \event_2, [\event_1; \event_2], c, D)$, 
 	we know there are 2 cases:
 	%
-	\caseL{}
+	\caseL{1}
 		\bf{(the labelled unique assignment command associated to the $\event_2$ 
 		is executed but the value assigned to the variable in this event is changed in second execution).}
 	\input{base_case_val}
 	% \end{case}
-	\caseL{}
+	\caseL{2}
 		\bf{(the labelled unique assignment command associated to the $\event_2$ isn't executed in second execution).}
 		\\
 		Proof Summary:
@@ -86,8 +86,9 @@ show x is directly used by the boolean expression for a conditional command and 
 				\land \event_2 \eventin \trace_3
 			  \land \event_2 \not\eventin \trace_3'
 		\\ \quad \implies	
-		\forall z \in VAR(\pi_1(\event_b)) \st \exists l \in \mathbb{N} \st 
-		\flowsto(z^l, \pi_1(\event_2)^{\pi_2(\event_2)},)
+		\forall z \in VAR(\pi_1(\event_b)) \st 
+		\exists l \in \mathbb{N} \st 
+		\flowsto(z^l, \pi_1(\event_2)^{\pi_2(\event_2)},c)
 	\end{array}
 	\]
 	\end{lem}
@@ -125,17 +126,17 @@ we have the following instance of the first execution in Eq.~\ref{eq:eventdep_de
   \qquad 
    \rightarrow^{\rname{if-b / while-b}} 
   \config{(c_t;c_3' / c_f;c_3') /(c_3' / c_w; \ewhile [b]^{l_b} \edo c_w;{c}_3'), 
-  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b]} 
+  \trace_1 \tracecat [\event_1] \tracecat \trace \tracecat [\event_b]} 
   \\
   \qquad  \rightarrow^{*} 
   \config{[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}; c_{3b}', 
-  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b] \tracecat  \trace_{3a}}
+  \trace_1 \tracecat [\event_1] \tracecat \trace \tracecat [\event_b] \tracecat  \trace_{3a}}
   \\ \qquad \rightarrow^{\rname{assn/query}}
   \config{ c_{3b}', 
-  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b] \tracecat  \trace_{3a} \tracecat [\event_2]}
+  \trace_1 \tracecat [\event_1] \tracecat \trace \tracecat [\event_b] \tracecat  \trace_{3a} \tracecat [\event_2]}
   \rightarrow^{*} 
   \config{c_3, 
-  \trace_1 \tracecat [\event_1] \tracecat \trace [\event_b] \tracecat  \trace_{3a} \tracecat [\event_2] \tracecat \trace_{3b}}
+  \trace_1 \tracecat [\event_1] \tracecat \trace \tracecat [\event_b] \tracecat  \trace_{3a} \tracecat [\event_2] \tracecat \trace_{3b}}
   % 
 \end{array}
 \end{equation}
@@ -174,13 +175,25 @@ we also have the instance of second execution as follows:
   \end{array}
 \end{equation}
 %
-By the label consistency, and $\tlabel_{\trace_3} \cap \tlabel_{\trace_3'} = \emptyset$
-we know:
+By the label consistency, and $\tlabel_{\trace_3} \cap \tlabel_{\trace_3'} = \emptyset$, 
+% i.e., 
+% $ \trace_{3a} \tracecat [\event_2] \tracecat \trace_{3b} \cap \tlabel_{\trace_3'} = \emptyset$
+we know $\trace_3$ and $\trace_3'$ doesn't contain any event of evaluating the commands in $c_3'$.
+Otherwise, $\tlabel_{\trace_3} \cap \tlabel_{\trace_3'} \neq \emptyset$, which is a contradiction.
 \\
-in case of $\eif ([b]^{l_b}, c_t, c_f)$, $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2}$ can only be in 
-$c_t$ or $c_f$.
+Since $\trace_3= \trace_{3a} \tracecat [\event_2] \tracecat \trace_{3b} $, we know:
 \\
-In case of 
+In the case of $\eif ([b]^{l_b}, c_t, c_f)$, $\event_2$ comes from the evaluation of $c_t$ or $c_f$,
+i.e., $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_t$ or $c_f$;
+\\
+and in the case of $\ewhile [b]^{l_b} \edo c_w$, $\event_2$ comes from the evaluation of $c_w$,
+i.e., $[\assign{{x}_2}{\expr_2 / \query(\qexpr_2)}]^{l_2} \in_c c_w$.
+\\
+In both of the two cases, we know $\forall z \in VAR(\pi_1(\event_b)) $ there is a label $l \in \mathbb{N}$ for this variable,
+and by the $\flowsto$ definition, 
+$\flowsto(z^l, \pi_1(\event_2)^{\pi_2(\event_2)},c)$.
+\\
+This lemma is proved.
 	\end{proof}
 	%
 	% \begin{lem}[One Step Dependency Inversion]
@@ -1015,7 +1028,109 @@ Following lemmas are for the inductive proof of the flowsto chain.
 		c = [\eskip];c'
 	% \footnote{$([\eskip];){}^*$ denotes a sequence command only composed of $[\eskip]$ commands.}
 	\]
+	\end{lem}
+\begin{proof}
+	Proved trivially by induction on $c$ and enumerate all operational semantic rules.
+\end{proof}
+%
+\begin{lem}[While Loop Inversion]
+	\label{lem:inv_while}
+	For every $\trace, \trace' \in \mathcal{T}, c, c_1, c_2 \in \cdom$ 
+	if $ \config{c, \trace} \rightarrow^* \config{c_1; c_2, \trace'}$ and 
+	$c_1 \in_c c_2$, 
+	then there must exist a $\ewhile$ command in $c_2$ and $c_1$ must shows up in the body of that $\ewhile$ command,
+	 i.e., $\exists l \in \mathbb{N}, b \in \mathcal{B}, c_w \in \cdom \st 
+	(\ewhile [b]^l \edo c_w) \in_c c_2 \land c_1 \in_c c_w$.
+	%
+	\[
+	\begin{array}{l}
+	\forall \trace, \trace' \in \mathcal{T}, c, c_1, c_2 \in \cdom \st
+		\\ \quad
+		\config{c, \trace} \rightarrow^* \config{c_1; c_2, \trace'}
+		\implies
+		c_1 \in_c c_2
+		\implies
+		\exists l \in \mathbb{N}, b \in \mathcal{B}, c_w \in \cdom \st 
+		(\ewhile [b]^l \edo c_w) \in_c c_2 \land c_1 \in_c c_w
+	\end{array}
+	\]
 	\end{lem}	
+	Proof Summary: trivially by induction on $c$ and enumerate all operational semantic rules.
+\begin{proof}
+	Take arbitrary $\trace \in \mathcal{T}$, by induction on $c$, we have following cases:
+		\caseL{$c = [\assign{x}{\expr}]^l$}
+		By the evaluation rule $\rname{assn}$, we have
+		$
+		{
+		\config{[\assign{{x}}{\aexpr}]^{l},  \trace } 
+		\xrightarrow{} 
+		\config{\eskip, \trace \tracecat [({x}, l, v) ]}
+		}$.
+		\\
+		Since there doesn't exist $c_1, c_2 \in \cdom$ satisfying $\eskip = c_1; c_2$, this theorem is vacuously true.
+		\caseL{$c = [\assign{x}{\query(\qexpr)}]^l$}
+		By the evaluation rule $\rname{query}$, we have
+		$
+		{
+		\config{[\assign{{x}}{\query(\qexpr)}]^{l},  \trace } 
+		\xrightarrow{} 
+		\config{\eskip, \trace \tracecat [({x}, l, \qval, v) ]}
+		}$.
+		\\
+		Since there doesn't exist $c_1, c_2 \in \cdom$ satisfying $\eskip = c_1; c_2$, this theorem is vacuously true.
+		\caseL{$c = \eif([b]^{l}, c_1, c_2)$}
+		By the evaluation rule $\rname{query}$ and $\rname{if-f}$, and the label consistency, we know:
+		\\
+		for all possible $c_{t1}$ and $c_{t2}$ 
+		such that $c_t$ has the form $c_t = c_{t1};c_{t2}$;
+		\\
+		all possible $c_{f1}$ and $c_{f2}$ 
+		such that $c_f$ has the form $c_f = c_{f1};c_{f2}$,
+		\\
+		$c_{t1} \notin c_{t1}$ and $c_{f1} \notin c_{f2}$.
+		\\
+		Then this theorem is vacuously true.
+		\caseL{$c = c_{s1};c_{s2}$}
+		By label consistency, we know for every $c_1' \in_c c_{s1}$, $c_1' \notin c_{s2}$.
+		\\
+		Then by the induction hypothesis on $c_{s1}$ and $c_{s2}$ separately, we have this case proved.
+		\caseL{$\ewhile [b]^{l} \edo c$}
+		By rule $\rname{while-t}$, we have:
+		\[
+			\config{{\ewhile [b]^{l} \edo c_w, \trace}}
+			\xrightarrow{} 
+			\config{{
+			c_w; \ewhile [b]^{l} \edo c_w,  \eskip),
+			\trace \tracecat [\event]}}
+		\]
+		%
+		If $c_w$ is a sequence command,
+		let $c_1 = c_{w1}$ be the any possible command in this sequence, for all possible $c_{w1}$ and $c_{w2}$ 
+		such that $c_w$ has the form $c_w = c_{w1};c_{w2}$.
+		\\
+		Then we have $c_2 = c_{w2};\ewhile [b]^{l} \edo c_w,  \eskip)$ and $c_1 \in_c c_2$.
+		\\
+		And we also have the existence of $l = l_b, b$ and $c_w$, and $\ewhile [b]^{l} \edo c_w \in_c c_2$ and  $c_1 \in c_w$.
+		\\
+		If $c_w$ isn't a sequence command, let $c_1 = c_w$, then we have $c_2 = \ewhile [b]^{l} \edo c_w,  \eskip)$ 
+		and $c_1 \in_c c_2$.
+		\\
+		And we also have the existence of $l = l_b, b$ and $c_w$, and $\ewhile [b]^{l} \edo c_w \in_c c_2$ and  $c_1 \in c_w$.
+		\\
+		This case is proved.
+		\\
+		By the evaluation rule $\rname{while-f}$, we have
+		$
+		{
+			\config{{\ewhile [b]^{l}, \edo c_w, \trace}}
+			\xrightarrow{} 
+			\config{{
+			[\eskip]^l ,
+			\trace \tracecat [((b, l, \efalse))]}}
+		}$.
+		\\
+		Since there doesn't exist $c_1, c_2 \in \cdom$ satisfying $\eskip = c_1; c_2$, this theorem is vacuously true.
+	\end{proof}
 %
 % \begin{lem}[Independent Events Doesn't Block $\flowsto$ for Testing Event]
 % 	\label{lem:inv_indepeventstest}
@@ -1308,26 +1423,4 @@ $\vardep(y^j, z^l, c)$, then $\vardep(x^i, z^l, c)$.
 	\]
   \end{lem}
   %
-\begin{lem}[While Loop Inversion]
-\label{lem:inv_while}
-For every $\trace, \trace' \in \mathcal{T}, c, c_1, c_2 \in \cdom$ 
-if $ \config{c, \trace} \rightarrow^* \config{c_1; c_2, \trace'}$ and 
-$c_1 \in_c c_2$, 
-then there must exist a $\ewhile$ command in $c_2$ and $c_1$ must shows up in the body of that $\ewhile$ command,
- i.e., $\exists l \in \mathbb{N}, b \in \mathcal{B}, c_w \in \cdom \st 
-(\ewhile [b]^l \edo c_w) \in_c c_2 \land c_1 \in_c c_w$.
-%
-\[
-\begin{array}{l}
-\forall \trace, \trace' \in \mathcal{T}, c, c_1, c_2 \in \cdom \st
-	\\ \quad
-	\config{c, \trace} \rightarrow^* \config{c_1; c_2, \trace'}
-	\implies
-	c_1 \in_c c_2
-	\implies
-	\exists l \in \mathbb{N}, b \in \mathcal{B}, c_w \in \cdom \st 
-	(\ewhile [b]^l \edo c_w) \in_c c_2 \land c_1 \in_c c_w
-\end{array}
-\]
-\end{lem}
 %
