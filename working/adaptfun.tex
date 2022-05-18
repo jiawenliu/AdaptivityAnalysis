@@ -597,25 +597,42 @@ The function $computeBound$ takes into a transition system (a disjuction of tran
 The Standard DFS Algorithm searching for longest path.
 \begin{algorithm}
     \caption{
-    {Walk Search Algorithm ($\pathsearch$)}
+    {Max-flow Walk Search Algorithm ($\pathsearch$)}
     \label{alg:adpt_alg}
     }
     \begin{algorithmic}
     \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
-    \STATE  {\bf {bfs $(G, s, t)$}:}  
-    \STATE \qquad {\bf init} 
-    current node: $c = s$, 
-    queue: $q = [c]$, 
-    vector recoding if the vertex is visited: 
-    visited$ = [0]*|\vertxs|$,
-    result: $r$
+    \STATE  {\bf {bfs $(G)$}:}  
+    \STATE {\bf init} 
+    \\
+    current node: $c$, 
+    \\
+    queue: $q$ : List, add into $a$ an arbitrary v from $\vertxs$. 
+    \\
+    visited: List of length $|\vertxs|$, initialize with $\efalse$.
+    \\
+    results: $r$ : List of length $|\vertxs|$, initialize with -1.
+    \\
+    currMinFlow: INT, initialize MAXINT.
+    \\
+    queries: INT, initialize 0. \#\{To count the query numbers when we are walking inside a cycle\}
+    \\
     \STATE \qquad {\bf while} $q$ isn't empty:
-    \STATE \qquad \qquad take the vertex from beginning $c= q.pop()$
-    \STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$
-    \STATE \qquad \qquad currMinFlow = min($\weights$(c), currMinFlow).
-    \STATE \qquad \qquad put all unvisited vertex $v$ having directed edge from c into $q$. 
-    \STATE \qquad \qquad if $v$ is visited, then there is a circle in the graph, we update the result $r = r + $currMinFlow
-    \RETURN $r$
+    \STATE \qquad \qquad take the vertex from head $c= q.pop()$
+    \STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$.
+    \STATE \qquad \qquad {\bf if} $\kw{cycle}(c)$  \#\{we are inside a cycle\}
+    \STATE \qquad \qquad \qquad currMinFlow = min($\weights$(c), currMinFlow).
+    \STATE \qquad \qquad \qquad queries += $\flag(c)$.
+    \STATE \qquad \qquad  \qquad for all unvisited vertex $v$ having directed edge from c:
+    \STATE \qquad \qquad \qquad \qquad r[v] = r[c]; q.add(v)
+    \STATE \qquad \qquad \qquad  {\bf if}  $v$ is visited, then the circle finished
+    \STATE \qquad \qquad \qquad \qquad update the result $r[v] =  \max(r[v], r[c] + $currMinFlow*queries)
+    \STATE \qquad \qquad \qquad \qquad currMinFlow = MAXINT
+    \STATE \qquad \qquad \qquad \qquad queries = 0.  
+    \STATE \qquad \qquad {\bf else} 
+    \STATE \qquad \qquad \qquad for all unvisited vertex $v$ having directed edge from c:
+    \STATE \qquad \qquad \qquad  \qquad $r[v] = \max(r[v], r[c] + \flag(c))$; q.add(v)
+    \RETURN max($r$)
     \end{algorithmic}
     \end{algorithm}
 % %
