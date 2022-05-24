@@ -73,7 +73,7 @@ class TestUnits:
 
 
     # the example with Nested loop and nested val Dep,  
-    # Expected Adaptivity: 1 + k + k!
+    # Expected Adaptivity: 2 + k!
     # Ouput Adaptivity: 1 + k + k!
     def test_while_nested(self):
         weights = [AdaptType(1), AdaptType("k"), AdaptType("k!")]
@@ -81,7 +81,7 @@ class TestUnits:
         edges = [(0, 1), (0,2), (2, 1), (2, 2)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
-        print("The Adaptivity Expected for This Graph is: 1 + k + k! ")
+        print("The Adaptivity Expected for This Graph is: 2 + k! ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with Nested loop and nested val Dep of multi-ath from nested loop,  
@@ -165,3 +165,4 @@ class TestUnits:
 
 test_refined = TestUnits(AdaptSearchAlgRefined)
 test_refined.run_tests()
+test_refined.test_while_multivar_nested()
