@@ -17,7 +17,8 @@ class TestUnits:
 
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
-        print("The Adaptivity Calculated from Refined-Adaptivity Search Algorithm for This Graph is: ", adapt_search.get_adapt())
+        print("The Adaptivity Expected for This Graph is: 4 ")
+        print("The Adaptivity Calculated for This Graph is: ", adapt_search.get_adapt())
 
 
 
@@ -30,6 +31,7 @@ class TestUnits:
         edges = [(0, 2), (1, 2), (1, 3)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 2 ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example in if branch with both value and control dependency, 
@@ -41,6 +43,7 @@ class TestUnits:
         edges = [(0, 2), (0, 1)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 2 ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the two-round example, 
@@ -52,6 +55,7 @@ class TestUnits:
         edges = [(0, 1), (1, 2), (2,2), (2, 3)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 2 ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with while loop of multi-path from if branch (multi-path loop will result in different visiting times for
@@ -64,6 +68,7 @@ class TestUnits:
         edges = [(0, 1), (1, 2), (2, 1)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 1 + k ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
 
@@ -76,6 +81,7 @@ class TestUnits:
         edges = [(0, 1), (0,2), (2, 1), (2, 2)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 1 + k + k! ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with Nested loop and nested val Dep of multi-ath from nested loop,  
@@ -87,6 +93,7 @@ class TestUnits:
         edges = [(0, 1), (1, 2), (2, 1)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 1 + 2 * k ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with Loop multi-varible Dependency  
@@ -98,6 +105,7 @@ class TestUnits:
         edges = [(0, 2), (1, 2), (2, 3), (2, 4), (3, 2), (4, 2)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 1 + 2 * k ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
 
@@ -110,10 +118,11 @@ class TestUnits:
         edges = [(0, 2), (0,3), (1, 2), (2, 2), (2, 3),(3, 2), (3, 3)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 1 + k + k! ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with While loop and overlapped (or not overlapped, they produce the same graph) control and val Dep  Dependency 
-    # Expected Adaptivity: 1 +  k + k
+    # Expected Adaptivity: 1 +  2 * x
     # Ouput Adaptivity: 1 + k + k
     def test_while_val_ctl(self):
         weights = [AdaptType(1), AdaptType(1), AdaptType("x"), AdaptType("x")]
@@ -121,6 +130,7 @@ class TestUnits:
         edges = [(0, 2), (0,3), (1, 2), (2, 2), (3, 2), (3, 3)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 1 + 2 * x")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with While loop,  Expected Adaptivity: 6
@@ -130,6 +140,7 @@ class TestUnits:
         edges = [(0, 1), (1, 2), (2, 3), (3, 2), (2, 2)]
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: 6 ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
     
     def run_tests(self):
@@ -153,4 +164,4 @@ class TestUnits:
 
 
 test_refined = TestUnits(AdaptSearchAlgRefined)
-test_refined.test_seq()
+test_refined.run_tests()

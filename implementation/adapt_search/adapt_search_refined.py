@@ -14,13 +14,8 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
         AdaptSearchAlg.__init__(self, graph)
         self.flow_capacity = [AdaptType(0)] * (self.vertex_no + 1)
         self.query_num = [0] * (self.vertex_no + 1)
-
-    def create_edges (self):
-        for e in self.graph.edges:
-            self.edges.append(self.Edge(e[1], self.head[e[0]]))
-            # print(self.edges[-1].to, self.edges[-1].next)
-            self.head[e[0]] = len(self.edges) - 1
-            # print(self.head)
+        self.refined_adapt = [AdaptType(1) if self.graph.query[v] else AdaptType(0) for v in range(self.vertex_no)]
+        self.refined_adapt_visited = [False] * (self.vertex_no + 1)
 
     def two_direction_dfs (self, u: int):
         self.dfs_clock += 1
@@ -51,7 +46,9 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
                 x = self.scc_stack.pop()
                 # print(x)
                 self.scc_no[x] = self.scc_cnt
-                # self.scc_adapt[self.scc_cnt] = (self.scc_adapt[self.scc_cnt] + self.graph.weights[x]) if self.graph.query[x] else self.scc_adapt[self.scc_cnt]
+                self.refined_adapt_visited[x] = True
+                self.refined_adapt_calculation_dfs(x)
+                self.scc_adapt[self.scc_cnt] = self.scc_adapt[self.scc_cnt].adapt_max(self.refined_adapt[x])
                 # print(self.scc_adapt)
                 if x == u:
                     break
@@ -66,13 +63,14 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
             v = self.edges[i].to
             self.flow_capacity[v] = self.flow_capacity[u].adapt_min(self.graph.weights[v])
             self.query_num[v] = self.query_num[u] + self.graph.query[v]
-            if not self.visited[v]:
-                self.visited[v] = True
+            self.refined_adapt[v] = self.refined_adapt[u]
+            if not self.refined_adapt_visited[v]:
+                self.refined_adapt_visited[v] = True
                 self.refined_adapt_calculation_dfs(v)
                 # print("in the visiting #: ", self.dfs_clock, ". after visit vertex ", v, "the first visit is: ", self.first_visit[v], 
                 #     "the last visit is: ", self.last_visit[v])
             else:
-                self.adapt[v] = self.adapt[v].adapt_max(self.flow_capacity[v] * self.query_num[v])
+                self.refined_adapt[v] = self.refined_adapt[v].adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
                 self.flow_capacity[v] = self.graph.weights[v]
                 self.query_num[v] = self.graph.query[v]
                 # print("in the visiting #: ", self.dfs_clock, "the visited vertex ", v, ", whoes first visit is: ", self.first_visit[v], 
@@ -81,33 +79,4 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
         
 
 
-    def bfs_adapt(self):
-        bfs_q = []
-        self.visited = [False]*(self.vertex_no + 1)
-        self.adapt = [AdaptType(0)]* (self.scc_cnt+2)
-        # for i in range(1, self.scc_cnt+1):
-        #     self.adapt[i] = self.scc_adapt[i] if self.scc_no[0] == i  else AdaptType(0)
-        bfs_q.append(self.scc_no[0])
-        while bfs_q != []:
-            u = bfs_q.pop(0)
-            # print(u)
-            # self.visited[u] = False
-            self.refined_adapt_calculation_dfs(u)
-            for v in self.scc_graph[u]:
-                # self.adapt[v] = (self.adapt[v].adapt_max(self.adapt[u] + self.scc_adapt[v]))
-                if not self.visited[v]:
-                    self.visited[v] = True 
-                    bfs_q.append(v)
-
-    def get_adapt(self):
-        adaptivity = AdaptType(0)
-        for adapt_value in self.adapt:
-            adaptivity = adaptivity.adapt_max(adapt_value)
-        return adaptivity.value
-    
-    def search_adapt(self):
-        self.create_edges()
-        self.find_scc()
-        self.build_scc()
-        self.bfs_adapt()
 

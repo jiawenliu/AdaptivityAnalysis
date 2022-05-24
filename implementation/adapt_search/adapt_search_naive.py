@@ -18,6 +18,13 @@ class AdaptType:
             # print(self.value, other.value, " both are int")
             return AdaptType(self.value + other.value)
     
+    def __mul__(self, other):
+        if (isinstance(self.value, str)) or isinstance(other.value, str):
+            return AdaptType(str(other.value) + " * " + str(self.value))
+        else:
+            # print(self.value, other.value, " both are int")
+            return AdaptType(self.value * other.value)
+
     def adapt_max(self, other):
         if (isinstance(self.value, str)) and isinstance(other.value, str):
             return AdaptType("max(" + str(self.value) + ", " + str(other.value) + ")")
@@ -28,6 +35,17 @@ class AdaptType:
         #     return other
         else:
             return AdaptType(max(self.value, other.value))
+
+    def adapt_min(self, other):
+        if (isinstance(self.value, str)) and isinstance(other.value, str):
+            return AdaptType("min(" + str(self.value) + ", " + str(other.value) + ")")
+        elif (isinstance(self.value, str)) or (isinstance(other.value, str)):
+            return self  if other.value == 0 else other if self.value == 0 else AdaptType("min(" + str(self.value) + ", " + str(other.value) + ")")
+            # if other.value == 0:
+        # elif (isinstance(other.value, str)) and self.value == 0:
+        #     return other
+        else:
+            return AdaptType(min(self.value, other.value))
 
     # def __lt__(self, other):
     #     if (self.value is int) and (other.value is int):
@@ -72,17 +90,8 @@ class AdaptSearchAlg:
         def __init__(self, to = -1, next = -1):
             self.to = to 
             self.next = next        
-    # vertex_no = 100000
 
-    # edges = list[edge]
 
-    # head = [-1]*10000
-    # scc_cnt = 0
-    # scc_no = [-1]*100000
-    # dfs_clock = 0
-    # first_visit = [-1]*10000
-    # last_visit = [-1]*10000
-    # adapt = [0]*100000
     def __init__(self, graph = Graph()):
         self.graph = graph
         self.vertex_no =graph.get_vertice_num()
@@ -196,16 +205,16 @@ class AdaptSearchAlg:
         self.bfs_adapt()
 
 
-# the example with only sequence, 
-# Expected Adaptivity: 4
-# Ouput Adaptivity: 4
-def test_seq():
-    weights = [AdaptType(1), AdaptType(1), AdaptType(1), AdaptType(1)]
-    query = [1, 1, 1, 1]
-    edges = [(0, 1), (1, 2), (2, 3)]
-    adapt_search = AdaptSearchAlg(Graph(edges, weights, query))
-    adapt_search.search_adapt()
-    print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
+# # the example with only sequence, 
+# # Expected Adaptivity: 4
+# # Ouput Adaptivity: 4
+# def test_seq():
+#     weights = [AdaptType(1), AdaptType(1), AdaptType(1), AdaptType(1)]
+#     query = [1, 1, 1, 1]
+#     edges = [(0, 1), (1, 2), (2, 3)]
+#     adapt_search = AdaptSearchAlg(Graph(edges, weights, query))
+#     adapt_search.search_adapt()
+#     print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
 
 
