@@ -768,6 +768,53 @@ A combination of DFS and BFS Algorithm:
         \end{algorithm}%
         %
     \begin{algorithm}
+            \caption{
+            {Adaptivity on $\kw{SCC}$}
+            \label{alg:dfscycle_alg}
+            }
+            \begin{algorithmic}
+            \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \qflag)$ with a start vertex $s$ and destination vertex $t$ .
+            \STATE  {\bf {$\kw{\pathsearch_{scc}(G, c, visited)}$}:}  
+            \STATE {\bf init} 
+            \\
+            current node: $c$, 
+            % \\
+            % visited: List of length $|\vertxs|$, initialize with $\efalse$.
+            \\
+            results: $r$ : INT List of length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex.
+            \\
+            flowcapacity: INT List of length $|\vertxs|$, initialize MAXINT. 
+            \#\{For every vertex, recording the minimum weight when the walk reaching 
+            that vertex, inside a cycle\}
+            \\
+            querynum: INT List of length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex. 
+            \#\{For every vertex, recording the query numbers when the walk reaching 
+            that vertex, inside a cycle\}
+            \\
+            % \STATE {\bf if} $c = s$:
+            % \STATE \qquad update the length of the longest path reaching this vertex
+            % $r[s] =  r[s] + $flowcapacity[s] * querynum[s].
+            % \RETURN  \qquad $r[s]$.      
+            \STATE {\bf for}  all vertex $v$ having directed edge from $c$:
+            \STATE \qquad \qquad flowcapacity[v] = min($\weights(v)$, flowcapacity[c]);
+            \STATE \qquad \qquad querynum[v] = querynum[c] + $\qflag(v)$;
+            \STATE \qquad \qquad \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
+            \STATE \qquad \qquad $r[v] =  r[c] $;
+            \STATE \qquad {\bf if}  $v$ is unvisited:
+            \STATE \qquad \qquad \#\{mark $v$ as visited\} $\kw{visited}[v] = 1$;
+            \STATE \qquad \qquad $\kw{dfs_{refine}(G, v, visited)}$;
+            \STATE \qquad {\bf else}: \#\{There is a cycle finished\}
+            \STATE \qquad \qquad \#\{update the length of the longest path reaching this vertex\}
+            \STATE \qquad \qquad 
+             $r[v] =  \max(r[v], r[c] + $flowcapacity[v] * querynum[v]);
+             \STATE \qquad \qquad \#\{Recover the flowcapacity and querynumber to previous state, for different loops\}
+             \STATE \qquad \qquad flowcapacity[v] = flowcapacity[c];
+             \STATE \qquad \qquad querynum[v] = querynum[c];
+            \RETURN  $r[c]$
+            \end{algorithmic}
+            \end{algorithm}
+
+            \begin{algorithm}
         \caption{
         {Refined Adaptivity on $\kw{SCC}$}
         \label{alg:dfscycle_alg}
@@ -812,7 +859,14 @@ A combination of DFS and BFS Algorithm:
          \STATE \qquad \qquad querynum[v] = querynum[c];
         \RETURN  $r[c]$
         \end{algorithmic}
-        \end{algorithm}% %
+        \end{algorithm}
+        % %
+
+\begin{thm}[Soundness of $\pathsearch$]
+    \label{thm:sound_adaptalg}
+    For every program $c$, given its \emph{Program-Based Dependency Graph} $\progG$,
+     $$\pathsearch(\progG) \geq \progA(\progG).$$
+\end{thm}
 % % \paragraph{Variable Collection Algorithm, $\varCol$}
 % % % The $\varCol$ algorithm shows how the labelled variables $\lvar$ are collected 
 % % % (via the command ${\assign{x}{\expr}}$ or ${\assign{x}{\query(\qexpr)}}$) from the program ${c}$ in the first step.
