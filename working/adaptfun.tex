@@ -593,6 +593,7 @@ The function $computeBound$ takes into a transition system (a disjuction of tran
 
 \paragraph{Add Weight} we also need to take care about the situation when a bound can not be predicted by {$\rb$}, we need to use another loose analysis to get a loose bound.
 
+\clearpage
 \subsubsection{Phase 3, path finding algorithm in weighted graph (graph in phase 1 with weights predicted in phase 2) }
 A combination of DFS and BFS Algorithm:
 \begin{algorithm}
@@ -601,28 +602,31 @@ A combination of DFS and BFS Algorithm:
     \label{alg:adpt_alg}
     }
     \begin{algorithmic}
-    \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
+    \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \qflag)$ with a start vertex $s$ and destination vertex $t$ .
     \STATE {\bf init} 
     \\
     current node: $c$, 
     \\
-    queue: $q$ : List, add into $a$ an arbitrary v from $\vertxs$. 
+    queue: $q$ : List, add into the first vertex $x^1$ from $\vertxs$. 
     \\
     visited: List of length $|\vertxs|$, initialize with $\efalse$.
     \\
-    results: $r$ : List of length $|\vertxs|$, initialize with -1.
+    results: $r$ : List of length $|\vertxs|$, initialize with $\qflag(v)$.
     \\
+    \STATE Find all Strong Connected Components $\kw{SCC}$ in $G$, and assign each vertex $x^i$ with a SCC number $\kw{SCC}(x^i)$
     \STATE {\bf while} $q$ isn't empty:
-    \STATE \qquad take the vertex from head $c= q.pop()$
-    \STATE \qquad mark $c$ as visited, visited $[c] = 1$. 
+    \STATE \qquad \#\{take the vertex from head of queue\} $c= q.pop()$;
+    \STATE \qquad  \#\{mark $c$ as visited\} $\kw{visited}[c] = 1$;
     % initialize cycle-adapt = 0.
-    \STATE \qquad for all unvisited vertex $v$ having directed edge from c and $\kw{cycle}(v)$:
+    \STATE \qquad Iterate all unvisited vertex $v$ having directed edge from c:
     % \STATE \qquad \qquad   cycle-adapt$ = \max($cycle-adapt, $\kw{dfs_{refine}(G, v, v)})$;
-    \STATE \qquad \qquad $ r[v] = r[c] + \kw{dfs_{refine}(G, v, v)})$; \#\{update r[v] with the cycle-adapt\}
+    \STATE \qquad \qquad \#\{compute the adaptivity on $\kw{SCC}(v)$, and update r[v] with the SCC-adapt\}
+    \STATE \qquad \qquad $ r[v] = r[c] + \kw{dfs_{refine}(G, v, visited)})$; 
     % \STATE \qquad   $r[c] = r[c] + $cycle-adapt;
-    \STATE \qquad for all unvisited vertex $v$ having directed edge from c and $! \kw{cycle}(c)$:
-    \STATE \qquad \qquad $r[v] = r[c] + \flag(v)$; 
-    $q.add(v)$
+    % \STATE \qquad for all unvisited vertex $v$ having directed edge from c and $! \kw{cycle}(c)$:
+    % \STATE \qquad \qquad $r[v] = r[c] + \flag(v)$; 
+    \STATE \qquad \qquad \#\{append the unvisited vertex to the rear of the queue\}
+    \STATE \qquad \qquad $q.append(v)$;
     \RETURN max($r$)
     \end{algorithmic}
     \end{algorithm}
@@ -646,22 +650,22 @@ A combination of DFS and BFS Algorithm:
     % \\
     % results: $r$ : List of length $|\vertxs|$, initialize with -1.
     % \\
-    % currMinFlow: INT, initialize MAXINT.
+    % currflowcapacity: INT, initialize MAXINT.
     % \\
-    % queries: INT, initialize 0. \#\{To count the query numbers when we are walking inside a cycle\}
+    % querynum: INT, initialize 0. \#\{To count the query numbers when we are walking inside a cycle\}
     % \\
     % \STATE \qquad {\bf while} $q$ isn't empty:
     % \STATE \qquad \qquad take the vertex from head $c= q.pop()$
     % \STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$.
     % \STATE \qquad \qquad {\bf if} $\kw{cycle}(c)$  \#\{we are inside a cycle\}
-    % \STATE \qquad \qquad \qquad currMinFlow = min($\weights$(c), currMinFlow).
-    % \STATE \qquad \qquad \qquad queries += $\flag(c)$.
+    % \STATE \qquad \qquad \qquad currflowcapacity = min($\weights$(c), currflowcapacity).
+    % \STATE \qquad \qquad \qquad querynum += $\flag(c)$.
     % \STATE \qquad \qquad  \qquad for all unvisited vertex $v$ having directed edge from c:
     % \STATE \qquad \qquad \qquad \qquad r[v] = r[c]; q.add(v)
     % \STATE \qquad \qquad \qquad  {\bf if}  $v$ is visited, then the circle finished
-    % \STATE \qquad \qquad \qquad \qquad update the result $r[v] =  \max(r[v], r[c] + $currMinFlow*queries)
-    % \STATE \qquad \qquad \qquad \qquad currMinFlow = MAXINT
-    % \STATE \qquad \qquad \qquad \qquad queries = 0.  
+    % \STATE \qquad \qquad \qquad \qquad update the result $r[v] =  \max(r[v], r[c] + $currflowcapacity*querynum)
+    % \STATE \qquad \qquad \qquad \qquad currflowcapacity = MAXINT
+    % \STATE \qquad \qquad \qquad \qquad querynum = 0.  
     % \STATE \qquad \qquad {\bf else} 
     % \STATE \qquad \qquad \qquad for all unvisited vertex $v$ having directed edge from c:
     % \STATE \qquad \qquad \qquad  \qquad $r[v] = \max(r[v], r[c] + \flag(c))$; q.add(v)
@@ -671,68 +675,75 @@ A combination of DFS and BFS Algorithm:
     %
     \begin{algorithm}
         \caption{
-        {Over-Approximated Adaptivity on Cycle}
+        {Over-Approximated Adaptivity on SCC}
         \label{alg:overadp_alg}
         }
         \begin{algorithmic}
-        \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
-        \STATE  {\bf {$\kw{dfs_{naive}(G, c, s)}$}:}  
-        \STATE {\bf init} 
-        \\
-        current node: $c$, 
-        \\
-        visited: List of length $|\vertxs|$, initialize with $\efalse$.
-        \\
-        \STATE {\bf if} $c = s$:
-        \RETURN \qquad  $\weights(s)*\flag(s) $.
+        \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \qflag)$ with a start vertex $s$ and destination vertex $t$ .
+        \STATE  {\bf {$\kw{dfs_{naive}(G, c,visited)}$}:}  
+        % \STATE {\bf init} 
+        % \\
+        % current node: $c$, 
+        % \\
+        % visited: List of length $|\vertxs|$, initialize with $\efalse$.
+        % \\
+        % \STATE {\bf if} $c = s$:
+        % \RETURN \qquad  $\weights(s)*\flag(s) $.
+        \STATE $r[c] = \weights(c)*\qflag(c) $
         \STATE {\bf for}  all vertex $v$ having directed edge from $c$:
         \STATE \qquad {\bf if}  $v$ is unvisited:
-        \STATE \qquad \qquad mark $v$ as visited, visited $[v] = 1$.
-        \RETURN \qquad \qquad $\kw{dfs_{naive}(G, v, s)} +\weights(v)*\flag(v) $.
-        \STATE \qquad {\bf else}: \#\{There is a cycle finished\}
-        \RETURN \qquad \qquad $\weights(v)*\flag(v) $.
+        \STATE \qquad \qquad  \#\{mark $v$ as visited\} $\kw{visited}[v] = 1$;
+        \STATE \qquad \qquad $r[c] += \kw{dfs_{naive}(G, v, visited)}$;
+        % \STATE \qquad {\bf else}: \#\{There is a cycle finished\}
+        % \RETURN \qquad \qquad $\weights(v)*\flag(v) $.
+        \RETURN $r[c]$
         \end{algorithmic}
         \end{algorithm}%
         %
     \begin{algorithm}
         \caption{
-        {Refined Adaptivity on Cycle}
+        {Refined Adaptivity on $\kw{SCC}$}
         \label{alg:dfscycle_alg}
         }
         \begin{algorithmic}
-        \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
-        \STATE  {\bf {$\kw{dfs_{refine}(G, c, s)}$}:}  
+        \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \qflag)$ with a start vertex $s$ and destination vertex $t$ .
+        \STATE  {\bf {$\kw{dfs_{refine}(G, c, visited)}$}:}  
         \STATE {\bf init} 
         \\
         current node: $c$, 
+        % \\
+        % visited: List of length $|\vertxs|$, initialize with $\efalse$.
         \\
-        visited: List of length $|\vertxs|$, initialize with $\efalse$.
+        results: $r$ : INT List of length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex.
         \\
-        results: $r$ : INT List of length $|\vertxs|$, initialize with -1.
-        \\
-        MinFlow: INT List of length $|\vertxs|$, initialize MAXINT. 
+        flowcapacity: INT List of length $|\vertxs|$, initialize MAXINT. 
         \#\{For every vertex, recording the minimum weight when the walk reaching 
         that vertex, inside a cycle\}
         \\
-        queries: INT List of length $|\vertxs|$, initialize 0. \#\{For every vertex, recording the query numbers when the walk reaching 
+        querynum: INT List of length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex. 
+        \#\{For every vertex, recording the query numbers when the walk reaching 
         that vertex, inside a cycle\}
         \\
-        \STATE {\bf if} $c = s$:
-        \STATE \qquad update the length of the longest path reaching this vertex
-        $r[s] =  r[s] + $MinFlow[s] * queries[s].
-        \RETURN  \qquad $r[s]$.      
-        \STATE {\bf for}  all vertex $v$ having directed edge from s:
+        % \STATE {\bf if} $c = s$:
+        % \STATE \qquad update the length of the longest path reaching this vertex
+        % $r[s] =  r[s] + $flowcapacity[s] * querynum[s].
+        % \RETURN  \qquad $r[s]$.      
+        \STATE {\bf for}  all vertex $v$ having directed edge from $c$:
+        \STATE \qquad \qquad flowcapacity[v] = min($\weights(v)$, flowcapacity[c]);
+        \STATE \qquad \qquad querynum[v] = querynum[c] + $\qflag(v)$;
+        \STATE \qquad \qquad \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
+        \STATE \qquad \qquad $r[v] =  r[c] $;
         \STATE \qquad {\bf if}  $v$ is unvisited:
-        \STATE \qquad \qquad mark $v$ as visited, visited $[v] = 1$.
-        \STATE \qquad \qquad MinFlow[v] = min($\weights(v)$, MinFlow[c]).
-        \STATE \qquad \qquad queries[v] += $\flag(v)$.
-        \STATE \qquad \qquad do not update the length of the longest path reaching this vertex before the cycle is finished
-        $r[v] =  r[c] $
-        \RETURN \qquad \qquad $\kw{dfs_{refine}(G, v, s)}$.
+        \STATE \qquad \qquad \#\{mark $v$ as visited\} $\kw{visited}[v] = 1$;
+        \STATE \qquad \qquad $\kw{dfs_{refine}(G, v, visited)}$;
         \STATE \qquad {\bf else}: \#\{There is a cycle finished\}
-        \STATE \qquad \qquad update the length of the longest path reaching this vertex
-         $r[v] =  \max(r[v], r[c] + $MinFlow[c] * queries[c]).
-        \RETURN  \qquad \qquad  $r[v]$
+        \STATE \qquad \qquad \#\{update the length of the longest path reaching this vertex\}
+        \STATE \qquad \qquad 
+         $r[v] =  \max(r[v], r[c] + $flowcapacity[v] * querynum[v]);
+         \STATE \qquad \qquad \#\{Recover the flowcapacity and querynumber to previous state, for different loops\}
+         \STATE \qquad \qquad flowcapacity[v] = flowcapacity[c];
+         \STATE \qquad \qquad querynum[v] = querynum[c];
+        \RETURN  $r[c]$
         \end{algorithmic}
         \end{algorithm}% %
 % % \paragraph{Variable Collection Algorithm, $\varCol$}
@@ -1289,9 +1300,9 @@ A combination of DFS and BFS Algorithm:
 % \STATE \qquad {\bf while} $q$ isn't empty:
 % \STATE \qquad \qquad take the vertex from beginning $c= q.pop()$
 % \STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$
-% \STATE \qquad \qquad currMinFlow = min($\weights$(c), currMinFlow).
+% \STATE \qquad \qquad currflowcapacity = min($\weights$(c), currflowcapacity).
 % \STATE \qquad \qquad put all unvisited vertex $v$ having directed edge from c into $q$. 
-% \STATE \qquad \qquad if $v$ is visited, then there is a circle in the graph, we update the result $r = r + $currMinFlow
+% \STATE \qquad \qquad if $v$ is visited, then there is a circle in the graph, we update the result $r = r + $currflowcapacity
 % \RETURN $r$
 % \end{algorithmic}
 % \end{algorithm}
