@@ -1,14 +1,7 @@
 from adapt_search_naive import AdaptSearchAlg, AdaptType, Graph
 
 
-class AdaptSearchAlgRefined(AdaptSearchAlg):
-    class Edge:
-        to = -1
-        next = -1
-
-        def __init__(self, to = -1, next = -1):
-            self.to = to 
-            self.next = next        
+class AdaptSearchAlgRefined(AdaptSearchAlg):       
 
     def __init__(self, graph = Graph()):
         AdaptSearchAlg.__init__(self, graph)
@@ -60,10 +53,15 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
             # print(self.scc_no)
             print(scc_nodes)
 
-            for x in scc_nodes:
-                self.refined_adapt_visited[x] = True
-                self.refined_adapt_calculation_dfs(x)
-                self.scc_adapt[self.scc_cnt] = self.scc_adapt[self.scc_cnt].adapt_max(self.refined_adapt[x])
+            # for x in scc_nodes:
+            #     self.refined_adapt_visited[x] = True
+            #     self.refined_adapt_calculation_dfs(x)
+            #     self.scc_adapt[self.scc_cnt] = self.scc_adapt[self.scc_cnt].adapt_max(self.refined_adapt[x])
+
+            self.refined_adapt_visited[min(scc_nodes)] = True
+            # self.flow_capacity[min(scc_nodes)] = self.graph.weights[min(scc_nodes)]
+            self.refined_adapt_calculation_dfs(min(scc_nodes))
+            self.scc_adapt[self.scc_cnt] = self.refined_adapt[min(scc_nodes)]
 
 
     def refined_adapt_calculation_dfs (self, u: int):
@@ -81,6 +79,7 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
             else:
                 self.refined_adapt[v] = self.refined_adapt[v].adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
                 self.flow_capacity[v] = self.graph.weights[v]
+                # self.flow_capacity[v] = AdaptType("MAX")
                 self.query_num[v] = 0
                 # self.flow_capacity[v] = self.flow_capacity[u]
                 # self.query_num[v] = self.query_num[u]

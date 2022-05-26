@@ -37,7 +37,7 @@ expression $\expr$, boolean expression $\sbexpr$ and query expression $\qexpr$ r
 %
 \\
 $\live^l(c) \subseteq \lvar_c$ 
-is the set of labelled variables.
+is a subset of program $c$'s labelled variables.
 For every labelled variable $x^l$ in this set, 
 the value assigned to that variable
 in the assignment command associated to that label is reachable at the entry point of  executing the command of label $l$.
@@ -84,15 +84,81 @@ in ${c}$, denoted as $\flowsto({x^i, y^j, c})$, is defined as follows:
 %
 \end{defn}
 %
+Program Entry Point: $\entry_c : \mbox{Command} \to \mathbb{N}$ 
+\[
+  \entry_c \triangleq 
+\left\{
+  \begin{array}{ll} 
+     l       
+    & c = [\eskip]{}^l
+    \\ 
+    l    & c = [\assign{x}{\expr_1}]{}^l
+    \\ 
+    l      
+    & c = [\assign{x}{\query(\qexpr_1)}]{}^l
+    \\
+   l
+    & c_1 = \eif([b]{}^l, c_t, c_f)
+    \\ 
+    l         
+    & c = \ewhile [b]^l \edo c'
+    \\ 
+    \entry_{c1}
+    & c = c1;c2
+  \end{array}
+  \right.
+\]
+%
+\begin{defn}[Equivalence of Program]
+%
+\label{def:aq_prog}
+Given 2 programs $c_1$ and $c_2$:
+\[
+c_1 =_{c} c_2
+\triangleq 
+\left\{
+  \begin{array}{ll} 
+    \etrue        
+    & c_1 = \eskip \land c_2 = \eskip
+    \\ 
+    \forall \trace \in \mathcal{T} \st \exists v \in \mathcal{VAL}
+    \st \config{ \trace, \expr_1} \aarrow v \land \config{ \trace, \expr_1} \aarrow v     
+    & c_1 = \assign{x}{\expr_1} \land c_2 = \assign{x}{\expr_2} 
+    \\ 
+    \qexpr_1 =_{q} \qexpr_2       
+    & c_1 = \assign{x}{\query(\qexpr_1)} \land c_1 = \assign{x}{\query(\qexpr_2)} 
+    \\
+    c_1^f =_{c} c_2^f \land c_1^t =_{c} c_2^t
+    & c_1 = \eif(b, c_1^t, c_1^f) \land c_2 = \eif(b, c_2^t, c_2^f)
+    \\ 
+    c_1' =_{c} c_2'         
+    & c_1 = \ewhile b \edo c_1' \land c_2 = \ewhile b \edo c_2'
+    \\ 
+    c_1^h =_{c} c_2^h \land c_1^t =_{c} c_2^t
+    & c_1 = c_1^h;c_1^t \land c_2 = c_2^h;c_2^t 
+  \end{array}
+  \right.
+\]
+%
+$c_1 \neq_{c} c_2$  is defined vice versa.
+%
+\end{defn}
+%
+Given 2 programs $c$ and $c'$, $c'$ is a sub-program of$c$, i.e., $c' \in_{c} c$ is defined as:
+\begin{equation}
+c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
+c =_{c} c_1; c''; c_2 \land c' =_{c} c''
+\end{equation} 
+%
+
 \subsubsection{Program Analysis Based Dependency Graph}
 \begin{defn}
     [Program-Based Dependency Graph].
     \label{def:prog_graph}
     \\
-Given a program ${c}$ with its labelled variables $\lvar$ of length $N$, s.t.,
-$\Gamma \vdash_{\Mtrix_c, \flag_c} {c}$, 
+Given a program ${c}$
 its program-based graph 
-$G({c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
+$\progG({c}) = (\vertxs, \edges, \weights, \flag)$ is. defined as:
 \\
 \[
 \begin{array}{rlcl}
@@ -603,25 +669,26 @@ A combination of DFS and BFS Algorithm:
     }
     \begin{algorithmic}
     \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \qflag)$ with a start vertex $s$ and destination vertex $t$ .
+    \STATE  {\bf {$\kw{\pathsearch(G)}$}:}  
     \STATE {\bf init} 
     \\
     current node: $c$, 
     \\
-    queue: $q$ : List, add into the first vertex $x^1$ from $\vertxs$. 
+    $q$: empty queue, append into the first vertex $x^1$ from $\vertxs$. 
     \\
-    visited: List of length $|\vertxs|$, initialize with $\efalse$.
+    $\kw{visited}$: List of length $|\vertxs|$, initialize with $\efalse$.
     \\
     results: $r$ : List of length $|\vertxs|$, initialize with $\qflag(v)$.
     \\
     \STATE Find all Strong Connected Components $\kw{SCC}$ in $G$, and assign each vertex $x^i$ with a SCC number $\kw{SCC}(x^i)$
     \STATE {\bf while} $q$ isn't empty:
-    \STATE \qquad \#\{take the vertex from head of queue\} $c= q.pop()$;
-    \STATE \qquad  \#\{mark $c$ as visited\} $\kw{visited}[c] = 1$;
+    \STATE \qquad \#\{take the vertex from head of queue\} $s= q.pop()$;
+    \STATE \qquad  \#\{mark $c$ as visited\} $\kw{visited}[s] = 1$;
     % initialize cycle-adapt = 0.
-    \STATE \qquad Iterate all unvisited vertex $v$ having directed edge from c:
+    \STATE \qquad Iterate all unvisited vertex $v$ having directed edge from $s$:
     % \STATE \qquad \qquad   cycle-adapt$ = \max($cycle-adapt, $\kw{dfs_{refine}(G, v, v)})$;
     \STATE \qquad \qquad \#\{compute the adaptivity on $\kw{SCC}(v)$, and update r[v] with the SCC-adapt\}
-    \STATE \qquad \qquad $ r[v] = r[c] + \kw{dfs_{refine}(G, v, visited)})$; 
+    \STATE \qquad \qquad $ r[v] = r[s] + \kw{dfs_{refine}(G, v, visited)})$; 
     % \STATE \qquad   $r[c] = r[c] + $cycle-adapt;
     % \STATE \qquad for all unvisited vertex $v$ having directed edge from c and $! \kw{cycle}(c)$:
     % \STATE \qquad \qquad $r[v] = r[c] + \flag(v)$; 

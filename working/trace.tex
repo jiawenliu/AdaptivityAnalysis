@@ -7,8 +7,8 @@
 %   \event \eventin \trace  
 %   \triangleq \left\{
 %   \begin{array}{ll} 
-%     \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \eventeq \event') \\
-%     \event \eventin \trace' & \trace =  (\trace' \cdot \event') \land (\event \eventneq \event') \\ 
+%     \etrue                  & \trace =  (\trace' \tracecate \event') \land (\event \eventeq \event') \\
+%     \event \eventin \trace' & \trace =  (\trace' \tracecate \event') \land (\event \eventneq \event') \\ 
 %     \efalse                 & o.w.
 %   \end{array}
 %   \right.
@@ -21,8 +21,8 @@
 %   \event \sigin \trace  
 %   \triangleq \left\{
 %   \begin{array}{ll} 
-%     \etrue                  & \trace =  (\trace' \cdot \event') \land (\event \sigeq \event') \\
-%     \event \sigin \trace'   & \trace =  (\trace' \cdot \event') \land (\event \signeq \event') \\ 
+%     \etrue                  & \trace =  (\trace' \tracecate \event') \land (\event \sigeq \event') \\
+%     \event \sigin \trace'   & \trace =  (\trace' \tracecate \event') \land (\event \signeq \event') \\ 
 %     \efalse                 & o.w.
 %   \end{array}
 %   \right.
@@ -33,16 +33,16 @@
 %
 % \todo{
 % \[
-% \mbox{Post-Processed Trace} \qquad \trace \qquad ::= \qquad \cdot | \trace \cdot \event
+% \mbox{Post-Processed Trace} \qquad \trace \qquad ::= \qquad \tracecate | \trace \tracecate \event
 % % %
 % \]
-% Trace appending: $\cdot: \mathcal{T} \to \eventset \to \mathcal{T}$
+% Trace appending: $\tracecate: \mathcal{T} \to \eventset \to \mathcal{T}$
 % \[
-%   \trace \cdot \event \triangleq
+%   \trace \tracecate \event \triangleq
 %   \left\{
 %   \begin{array}{ll} 
-%     {} \cdot \event           & \trace =  \cdot \\
-%     \trace \cdot \event    & \trace =  \trace' \cdot \event\\ 
+%     {} \tracecate \event           & \trace =  \tracecate \\
+%     \trace \tracecate \event    & \trace =  \trace' \tracecate \event\\ 
 %   \end{array}
 %   \right.
 % \]
@@ -119,11 +119,11 @@ An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \even
 %   \event \sigin \trace  
 %   \triangleq \left\{
 %   \begin{array}{ll} 
-%     \etrue                  & \trace =  (\trace' \cdot \event')                          \land \pi_1(\event_1) = \pi_1(\event_2) 
+%     \etrue                  & \trace =  (\trace' \tracecate \event')                          \land \pi_1(\event_1) = \pi_1(\event_2) 
 %                               \land  \pi_2(\event_1) = \pi_2(\event_2)  
 %                               % \land \vcounter(\trace \event) = \vcounter()
 %                               \\
-%     \event \sigin \trace'   & \trace =  (\trace' \cdot \event') 
+%     \event \sigin \trace'   & \trace =  (\trace' \tracecate \event') 
 %                               \land 
 %                               (\pi_1(\event_1) \neq \pi_1(\event_2) 
 %                               \lor  \pi_2(\event_1) \neq \pi_2(\event_2)) 
@@ -229,10 +229,10 @@ The label of the latest assignment event which assigns value to variable $x$.
 %   \trace \triangleq
 %   \left\{
 %   \begin{array}{ll} 
-%   p(\trace' \cdot (x, l, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, v) \\
-%   p(\trace' \cdot (b, l, v)) & = p(\trace') \cdot (b, l, \vcounter(\trace') l + 1, v) \\
-%   p(\trace' \cdot (x, l, \qval, v)) & = p(\trace') \cdot (x, l, \vcounter(\trace') l + 1, \qval, v) \\
-%   p(\cdot) & = \cdot
+%   p(\trace' \tracecate (x, l, v)) & = p(\trace') \tracecate (x, l, \vcounter(\trace') l + 1, v) \\
+%   p(\trace' \tracecate (b, l, v)) & = p(\trace') \tracecate (b, l, \vcounter(\trace') l + 1, v) \\
+%   p(\trace' \tracecate (x, l, \qval, v)) & = p(\trace') \tracecate (x, l, \vcounter(\trace') l + 1, \qval, v) \\
+%   p([]) & = []
 %   \end{array}
 %   \right.
 % \]
@@ -243,77 +243,13 @@ The label of the latest assignment event which assigns value to variable $x$.
 %
 % \\
 %
-Program Entry Point: $\entry_c : \mbox{Command} \to \mathbb{N}$ 
-\[
-  \entry_c \triangleq 
-\left\{
-  \begin{array}{ll} 
-     l       
-    & c = [\eskip]{}^l
-    \\ 
-    l    & c = [\assign{x}{\expr_1}]{}^l
-    \\ 
-    l      
-    & c = [\assign{x}{\query(\qexpr_1)}]{}^l
-    \\
-   l
-    & c_1 = \eif([b]{}^l, c_t, c_f)
-    \\ 
-    l         
-    & c = \ewhile [b]^l \edo c'
-    \\ 
-    \entry_{c1}
-    & c = c1;c2
-  \end{array}
-  \right.
-\]
-%
-\begin{defn}[Equivalence of Program]
-%
-\label{def:aq_prog}
-Given 2 programs $c_1$ and $c_2$:
-\[
-c_1 =_{c} c_2
-\triangleq 
-\left\{
-  \begin{array}{ll} 
-    \etrue        
-    & c_1 = \eskip \land c_2 = \eskip
-    \\ 
-    \forall \trace \in \mathcal{T} \st \exists v \in \mathcal{VAL}
-    \st \config{ \trace, \expr_1} \aarrow v \land \config{ \trace, \expr_1} \aarrow v     
-    & c_1 = \assign{x}{\expr_1} \land c_2 = \assign{x}{\expr_2} 
-    \\ 
-    \qexpr_1 =_{q} \qexpr_2       
-    & c_1 = \assign{x}{\query(\qexpr_1)} \land c_1 = \assign{x}{\query(\qexpr_2)} 
-    \\
-    c_1^f =_{c} c_2^f \land c_1^t =_{c} c_2^t
-    & c_1 = \eif(b, c_1^t, c_1^f) \land c_2 = \eif(b, c_2^t, c_2^f)
-    \\ 
-    c_1' =_{c} c_2'         
-    & c_1 = \ewhile b \edo c_1' \land c_2 = \ewhile b \edo c_2'
-    \\ 
-    c_1^h =_{c} c_2^h \land c_1^t =_{c} c_2^t
-    & c_1 = c_1^h;c_1^t \land c_2 = c_2^h;c_2^t 
-  \end{array}
-  \right.
-\]
-%
-$c_1 \neq_{c} c_2$  is defined vice versa.
-%
-\end{defn}
-%
-Given 2 programs $c$ and $c'$, $c'$ is a sub-program of$c$, i.e., $c' \in_{c} c$ is defined as:
-\begin{equation}
-c' \in_{c} c \triangleq \exists c_1, c_2, c''. ~ s.t.,~
-c =_{c} c_1; c''; c_2 \land c' =_{c} c''
-\end{equation} 
+
 %
 \begin{lem}
 [Trace Non-Decreasing].
 \\
 $$
-\forall \trace \in \mathcal{T}, c \st
+\forall \trace, \trace' \in \mathcal{T}, c \st
 \config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
 \implies \exists \trace'' \in \mathcal{T} \st \trace \tracecat \trace'' = \trace'
 $$
@@ -322,8 +258,9 @@ $$
 \begin{coro}
 \label{coro:aqintrace}
 \[
+  \forall \event \in \eventset, \trace \in \mathcal{T} \st
 \event \eventin \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
-\event' \in \eventset \st (\event \eventeq \event') \land \trace_1 \cdot \event' \cdot \trace_2 = \trace  
+\event' \in \eventset \st (\event \eventeq \event') \land \trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace  
 \]
 \end{coro}
 \begin{subproof}
@@ -344,7 +281,7 @@ Given a trace $\trace$, its post-processed trace $\trace_p$ is computed by a fun
   p(\trace' \tracecat [(x, l, v)]) & = p(\trace') \tracecat [(x, l, \vcounter(\trace') l + 1, v)] \\
   p(\trace' \tracecat [(b, l, v)]) & = p(\trace') \tracecat [(b, l, \vcounter(\trace') l + 1, v)] \\
   p(\trace' \tracecat [(x, l, \qval, v)]) & = p(\trace') \tracecat [(x, l, \vcounter(\trace') l + 1, \qval, v)] \\
-  p({[]}) & = \cdot
+  p({[]}) & = []
   \end{array}
   \right.
 \]
