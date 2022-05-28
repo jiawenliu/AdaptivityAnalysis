@@ -629,15 +629,21 @@ This analysis only works to find the symbolic bound of one block (in our graph, 
 \label{alg:rb}
 }
 \begin{algorithmic}
-\REQUIRE the program $C$, the target block label $l$.
+\REQUIRE the program $C$, the target while loop with label $l$.
 \STATE  T  = GenerateTransitionSystem(C,l) 
-\STATE B = 1 +ComputeBound(T)
+\STATE B = 1 + ComputeBound(T)
 \RETURN B
 \end{algorithmic}
 \end{algorithm}
 
 The algorithm $GenerateTransitionSystem(C,l)$ can be described as follows. It uses the control flow graph generated from the program $C$, and splits the node marked by $l$ into two nodes $l_1$ and $l_2$ to generate a new control flow graph from the $l_1$ to $l_2$. It translates the node in the graph into a transition systems by the its translate function and replaces node with transition systems. For loops in the graph, the loop itself is replaced by the transitive closure of the transition systems of its body. Finally, the new generated control flow graph can be transformed to a transition system. The transition system is a disjunction of transitions, and every transition is expressed as a conjuction of formulas over program variables $x,y,z$ in the target block (l) and its successive visits $x',y',z'$ in the same block.
-
+\\
+The transition formula for each command are as follows:
+\\
+\todo{adding the naive transition formula for assignment and if}
+\\
+\todo{adding the compose method for composing 2 transition formulas}
+\\
 The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a trasition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
 
 \paragraph{Preprocessing} Actually, we do not need to do $\rb$ on every node of the graph from phase 1. Only the node associated with a loop is necessary. We will have an preprocessing algorithms to go through the programs and returns the list of labels that needs {$\rb$}. 
