@@ -4,9 +4,118 @@
    $$\pathsearch(\progG) \geq \progA(\progG).$$
 \end{thm}
 proof Summary:
-1. for each SCC, a subgraph of $\progG$, $\pathsearch_{scc}(SCC) \geq \progA(SCC)$
-2. for every two nodes with a path $x, \cdots, y$, let $\walks(k_{x,y})$ be all the walks from $x$ to $y$ on $\progG$,
-then $adapt[SCC(x)] + \cdots + adapt[SCC(y)] \geq \max\{\qlen(k)\}$
+\\
+1. 
+\\
+2. for every two nodes with a walk $k_{x,y}$ from $x$ to $y$ on $\progG$, we have a path
+ $p_{x,y} = (x, v_1, \cdots, y)$ by the $\kw{bfs}$ algorithm,
+and $adapt[SCC(x)] + adapt[SCC(v_1)] + \cdots + adapt[SCC(y)] \geq \{\qlen(k_{x,y})\}$.
+\\
+Then we have
+$\max\{adapt[SCC(x)] + adapt[SCC(v_1)] + \cdots + adapt[SCC(y)] | x, y \in \progG, p_{x,y} \in \paths(k_{x,y}) \}
+\geq \max\{\qlen(k_{x,y}) | x, y \in \progG, k_{x,y} \in \walks(k_{x,y})\}$
+\\
+i.e., 
+$\pathsearch(\progG(c)) \geq \progA(c)$.
 \begin{proof}
+  Taking arbitrary program $c \in \cdom$, let $\progG(c) = (\progV, \progE, \progW, \progF)$ be its 
+  program based dependency graph.
+  Taking arbitrary walk $k_{x,y} \in \walks{\progG}$, with vertices sequence
+  $(x, s_1, \cdots, y)$, it is sufficient to show:
+  \[
+    \qlen(k_{x,y}) = \len(s | s \in (x, s_1, \cdots, y) \land \qflag(s) = 1) \leq \pathsearch(\progG(c))
+  \]
+  By $\pathsearch(\progG)$ algorithm, let $\kw{SCC_1}, \cdots, \kw{SCC_n}$ be all the strong connected components on $\progG$ with $0 \leq n \leq |\vertxs|$,
+  where each $\kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$,
+  \\
+  and $\kw{adapt_{scc}(SSC_i)}$ be the results of $\pathsearch_{scc}(SCC_i)$ for each $SCC_i$.
+    % i.e.,
+  % \[
+  %   \]
+  \\
+  There are 2 cases:
+  \caseL{$x, y$ on the same SCC}.
+  Let  $SCC$ be this SCC $x$ and $y$ on, by Lemma~\ref{lem:sound_adaptalg_scc}, we know
+  \[
+    \qlen(k_{x,y}) \leq \max\{\qlen(k) | k \in \walks(SCC)\} \leq \pathsearch_{scc}(SCC)
+  \]
+%
+By $\pathsearch(\progG)$ algorithm,let $\kw{adapt}$ be the output variable,
+we know $\kw{adapt} \geq \kw{adapt_{tmp}} \geq  \kw{adapt_{scc}(SSC)} $.
+\\
+i.e., 
+\[
+  \qlen(k_{x,y}) \leq \pathsearch(\progG(c)) 
+  \]
+This case is proved.
+%
+%
+\caseL{$x, y$ on different SSC}.
+Let $SCC_x, SCC_1, \cdots, SCC_m, SCC_y, 0 \leq m$ be all the SCC this walk pass by, where each vertex in 
+$(x, s_1, \cdots, s_n, y) $ belongs to a single SCC number. 
+\\
+By the property of SCC, we know every 2 SCCs are single direct connected. Then we can divide this walk into $m+2$ sub-walks:
+\\
+$k_x = (x, s_1, \cdots, s_{scc_x})$;
+\\
+$k_1 = (s_{scc_x}, \cdots, s_{scc_1})$;
+\\
+$\cdots$
+\\
+$k_y = (s_{scc_m}, \cdots, s_y)$;
+\\
+where $k_x \in \walks(SCC_x), \cdots, k_y \in \walks(SCC_y)$.
+\\
+By Lemma~\ref{lem:sound_adaptalg_scc}, we know for each walk $k_i$:
+\[ \qlen(k_i) \leq \max\{\qlen(k_i) | k_i \in \walks(SCC_i)\} \leq \pathsearch_{scc}(SCC_i) = \kw{adapt_{scc}(SSC_i)} \]
+%
+Then we have:
+\[ 
+  \qlen(k_{x,y}) = \qlen(k_x) + \qlen(k_1) + \cdots + \qlen(k_y) \leq 
+  \kw{adapt_{scc}(SSC_x)} + \kw{adapt_{scc}(SSC_1)}  + \cdots + \kw{adapt_{scc}(SSC_y)}
+  \leq \kw{adapt}
+  \]
+, where $\kw{adapt}$ is the output of $\pathsearch(\progG)$.
+This case is proved.
+\end{proof}
 
+\begin{lem}[Soundness of $\pathsearch_{scc}$]
+  \label{lem:sound_adaptalg_scc}
+  For every program $c$, given its \emph{Program-Based Dependency Graph} $\progG$, if $SCC$ is a strong connected sub-graph of $\progG$, then
+  $\max\{\qlen(k) | k \in \walks(SCC)\} \leq \pathsearch_{scc}(SCC) $.
+\end{lem}
+
+ProofSummary:
+\\
+(1) for each node $x$ on SCC, by property of SCC, 
+for every walk on SCC $k_{x, x} = (x, s_1, \cdots, x)$,
+with set of unique vertex $\{v_1, \cdots, x\}$
+there are $\paths(p_{x,x})$ on $SCC$.
+\\
+(2) For every path $p_{x,x}^{i} = (x, v_1, \cdots, x) \in \paths(p_{x,x})$,  
+flowcapacity($p_{x,x}^{i}$) is the maximum visiting times for every $v \in (x, v_1, \cdots, x)$, 
+$\visit(s) (s_1, \cdots, x)) \leq $ flowcapacity($p_{x,x}^{i}$);
+\\
+(3) querynum($p_{x,x}^{i}$)  * flowcapacity($p_{x,x}^{i}$)  $\geq\len(s | s \in ( s_1, \cdots, x) \land \qflag(s) = 1) =  \qlen(k)$,
+\\
+(4) Then, the $\max\limits_{p_{x,x}^{i} \in \paths(p_{x,x})} \geq \max\{\qlen(k_{x, x}) | k_{x, x} \in \walks(k_{x, x})\}$
+\\
+(5) Then,  $\max\{$querynum$(p_{x,x}^{i})  * $flowcapacity$(p_{x,x}^{i}) | x \in SCC \land {p_{x,x}^{i} \in \paths(p_{x,x})} \} 
+\geq \max\{\qlen(k_{x, x}^i) |x \in SCC \land  k_{x, x}^i \in \walks(k_{x, x})\}$
+\\
+(6) We also know by the property of SCC, $\forall x, y \in SCC, $ let $k_{x, y}$ be arbitrary walk on $SCC$,
+ $\qlen(k_{x, y}) \leq \max\{\qlen(k_{x, x}^i) | k_{x, x}^i \in \walks(k_{x, x})\}$.
+\\
+(7) Then,$ \max\{\qlen(k_{x, x}^i) |x \in SCC \land  k_{x, x}^i \in \walks(k_{x, x})\} \geq  \max\{\qlen(k_{x, y}^i) |x, y \in SCC \land  k_{x, y}^i \in \walks(k_{x, y})\}$
+\\
+i.e., 
+$ \max\{\qlen(k_{x, x}^i) |x \in SCC \land  k_{x, x}^i \in \walks(k_{x, x})\} \geq  \max\{\qlen(k) | k\in \walks(SCC)\} = \progA(SCC)$.
+\\
+(8) We also know 
+$\pathsearch_{scc}(SCC) = \max\{$querynum$(p_{x,x}^{i})  * $flowcapacity$(p_{x,x}^{i}) | x \in SCC \land {p_{x,x}^{i} \in \paths(p_{x,x})} \} $ by the $\pathsearch_{scc}$ algorithm.
+\\
+Then we have
+$\pathsearch_{scc}(SCC) \geq \progA(SCC)$
+\\
+\begin{proof}
 \end{proof}
