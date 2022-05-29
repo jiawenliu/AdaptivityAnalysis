@@ -642,16 +642,37 @@ The transition formula for each command are as follows:
 \\
 \todo{adding the naive transition formula for assignment and if}
 \\
-\todo{adding the compose method for composing 2 transition formulas}
+\jl{$translate(c)$  is defined as follows:}
 \\
-The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a trasition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
+$translate(\assign{x}{e}) = \{x := e\} if x \in VAR(b)$
+\\
+% $translate(\assign{x}{e}) = \{\} if x \notin VAR(b)$
+% \\
+$translate(\assign{x}{\qexpr}) = \{x \in VAR(b) \implies x := \qexpr\} $
+\\
+% $translate(\assign{x}{\qexpr}) = \{\} if x \notin VAR(b)$
+% \\
+$translate(\eif(\bexpr, c_1, c_2)) = \{\bexpr \implies translate(c_1), \neg\bexpr \implies translate(c_2)\}$
+\\
+$translate(\ewhile(\bexpr, c_w)) = \{ ComputeBound(GenerateTransitionSystem(C,l)) \times translate(c_w) \}$
+\\
+$translate(c_1;c_2) = translate(c_1) + translate(c_2)$
+\\
+\todo{adding the compose method for composing 2 transition formulas}
+$compose\{x := e_1, \cdots, x := e_2 \} = \{x := e_2\}$
+\\
+$\{y := e_1, \cdots, x := e_2 \} \land \flowsto(y, x, c) = \{x := [y \to e_1] e_2\}$
+\\
+\todo{add the $ComputeBound$ function, specifically the ranking function}
+\\
+The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a transition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
 
-\paragraph{Preprocessing} Actually, we do not need to do $\rb$ on every node of the graph from phase 1. Only the node associated with a loop is necessary. We will have an preprocessing algorithms to go through the programs and returns the list of labels that needs {$\rb$}. 
+\paragraph{Preprocessing} Actually, we do not need to do $\rb$ on every node of the graph from phase 1. Only the node associated with a loop is necessary. We will have a pre-processing algorithm to go through the programs and returns the list of labels that needs {$\rb$}. 
 
 \begin{algorithm}
 \caption{
 {Add weights to dependency graph (the main algorithm of phase 2)}
-\label{alg:rb}
+\label{alg:preproce_rb}
 }
 \begin{algorithmic}
 \REQUIRE the program $C$, the dependency graph $G$ from phase 1
