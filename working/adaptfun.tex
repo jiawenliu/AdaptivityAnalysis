@@ -615,9 +615,33 @@ The Reaching definition is calculated by the Worklist algorithm as below.
  
 
 \subsubsection{Phase 2, reachability number analysis}
-In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the visit times (how many times this block is exeucted). To be precise, we use static analysis method from \wq{cite}, which is able to "provide the symbolic worst case bound on the number of times a block is reached", let us call it reachability bound analysis. 
 
-This analysis only works to find the symbolic bound of one block (in our graph, it corresponds to one node). The high level idea as follows.
+In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the approximated visiting times (how many times this block is exeucted). The algorithm is defined in Algorithm~\ref{alg:add_weights}, with 3 main functions, the PREPROCESSING, $\rb$ and ADDWEIGHT. 
+\begin{algorithm}
+\caption{
+{Add weights to dependency graph (the main algorithm of phase 2)}
+\label{alg:add_weights}
+}
+\begin{algorithmic}[1]
+\REQUIRE the program $c$, the dependency graph $G = (\vertxs, \edges, \weights, \qflag)$ from phase 1
+\STATE  prel = PREPROCESSING(c) 
+\STATE {\bf for} $x^l \in \vertxs$: 
+\STATE \qquad {\bf if} $l \in prel$:
+\STATE \qquad \qquad $\weights(x^l) = \rb(c, l)$
+\STATE \qquad {\bf else}:
+\STATE \qquad \qquad $\weights(x^l) = 1$
+\RETURN $G$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Preprocessing} This step is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
+We have a pre-processing algorithm to go through the programs and returns the list of labels associating with a loop and whose visiting times need to be analyzed.
+
+\paragraph{Getting Reachability Bounds}
+This is defined in Algorithm~\ref{alg:rb}.
+To be precise, we use static analysis method from \cite{Sumit2010rechability}, which is able to "provide the symbolic worst case bound on the number of times a block is reached", let us call it reachability bound analysis. 
+
+This analysis only works to find the symbolic bound of one block (in our graph, it corresponds to one node). This algorithm is summarized as follows.
 \begin{enumerate}
     \item Build a transition system which describes the relation between variables in this target block and these variables in the successive visit to this block. There are defined translate functions which translate the statement to transition system and the corresponding operations such as the composition of transition systems, merging two transition systems from two control branches and so on. It is worth to mention that it calculates the transitive closure of the transition system obtained from a loop body, which can be analogy to computing the invariant of a loop.  
     \item Use Ranking function which takes the transition system and outputs the bound
@@ -628,7 +652,7 @@ This analysis only works to find the symbolic bound of one block (in our graph, 
 {Reachability Bound Analysis ($\rb$)}
 \label{alg:rb}
 }
-\begin{algorithmic}
+\begin{algorithmic}[1]
 \REQUIRE the program $C$, the target while loop with label $l$.
 \STATE  T  = GenerateTransitionSystem(C,l) 
 \STATE B = 1 + ComputeBound(T)
@@ -667,24 +691,9 @@ $\{y := e_1, \cdots, x := e_2 \} \land \flowsto(y, x, c) = \{x := [y \to e_1] e_
 \\
 The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a transition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
 
-\paragraph{Preprocessing} Actually, we do not need to do $\rb$ on every node of the graph from phase 1. Only the node associated with a loop is necessary. We will have a pre-processing algorithm to go through the programs and returns the list of labels that needs {$\rb$}. 
+\paragraph{Add Weight} We also need to take care about the situation when a bound can not be predicted by {$\rb$}, we need to use another loose analysis to get a loose bound.
 
-\begin{algorithm}
-\caption{
-{Add weights to dependency graph (the main algorithm of phase 2)}
-\label{alg:preproce_rb}
-}
-\begin{algorithmic}
-\REQUIRE the program $C$, the dependency graph $G$ from phase 1
-\STATE  RBLABELS = PREPROCESSING(C) 
-\STATE FOR l $\in$ RBLABELS
-\STATE w = $\rb$ (C, l)
-\STATE Add weight (G, l, w)
-\RETURN G
-\end{algorithmic}
-\end{algorithm}
 
-\paragraph{Add Weight} we also need to take care about the situation when a bound can not be predicted by {$\rb$}, we need to use another loose analysis to get a loose bound.
 
 \clearpage
 \subsubsection{Phase 3, path finding algorithm in weighted graph (graph in phase 1 with weights predicted in phase 2) }
@@ -715,7 +724,7 @@ A combination of DFS and BFS Algorithm:
     \STATE Find all Strong Connected Components (SCC) in $G$: $\kw{SCC_1}, \cdots, \kw{SCC_n}, 0 \leq n \leq |\vertxs|$, where $\kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$.
     % and assign each vertex $x^i$ with an SCC number $\kw{SCC}(x^i)$
     \STATE {\bf for} every SCC: $\kw{SCC_i}$, compute its Adaptivity $\kw{SCC_i}$:
-    \STATE \quad $\kw{adapt_{scc}(SCC_i) = \pathsearch_{scc}(SCC_i)}$;
+    \STATE \quad $\kw{adapt_{scc}[SCC_i] = \pathsearch_{scc}(SCC_i)}$;
     \STATE {\bf for} every vertex $\kw{SCC_i}$:
     \STATE \qquad $q.append(\kw{SCC_i})$;
     \STATE \qquad $\kw{adapt_{tmp}} = 0$;
@@ -729,7 +738,7 @@ A combination of DFS and BFS Algorithm:
     % \STATE \qquad \qquad \qquad \#\{compute the adaptivity of vertex $v$  on $\kw{SCC}(v)$, and update r[v] with the SCC-adapt\}
     % \STATE \qquad \qquad \qquad $ r[v] = r[s] + \kw{dfs_{refine}(G, v, visited)})$; 
     \STATE \qquad \qquad \qquad {\bf if} $(\kw{adapt_{tmp}} < \kw{adapt_{tmp}}_0 + \kw{adapt_{scc}(SCC')})$:
-    \STATE \qquad \qquad \qquad \qquad $\kw{adapt_{tmp}} = \kw{adapt_{tmp}}_0 + \kw{adapt_{scc}(SCC')}$; 
+    \STATE \qquad \qquad \qquad \qquad $\kw{adapt_{tmp}} = \kw{adapt_{tmp}}_0 + \kw{adapt_{scc}[SCC']}$; 
     \STATE \qquad \qquad \qquad \qquad $\kw{SCC_{max} = SCC'} $; \#\{update the SCC with longest walk in this level\} 
     % \STATE \qquad   $r[c] = r[c] + $cycle-adapt;
     % \STATE \qquad for all unvisited vertex $v$ having directed edge from c and $! \kw{cycle}(c)$:
@@ -851,7 +860,7 @@ A combination of DFS and BFS Algorithm:
     \begin{algorithm}
             \caption{
             {Adaptivity on $\kw{SCC}$}
-            \label{alg:dfscycle_alg}
+            \label{alg:adaptscc}
             }
             \begin{algorithmic}[1]
               \REQUIRE $G = (\vertxs, \edges, \weights, \qflag)$ \#\{An Strong Connected Symbolic Weighted Directed Graph\}
@@ -878,23 +887,26 @@ A combination of DFS and BFS Algorithm:
             % $r[s] =  r[s] + $$\kw{flowcapacity}$[s] * querynum[s].
             % \RETURN  \qquad $r[s]$.      
             \STATE \qquad {\bf for}  all vertex $v$ having directed edge from $c$:
-            \STATE \qquad \qquad \qquad $\kw{flowcapacity}$[v] = min($\weights(v)$, $\kw{flowcapacity}$[c]);
+            \STATE \qquad \qquad {\bf if} $\kw{visited}[v] = \efalse$:
+            \STATE \qquad \qquad \qquad $\kw{flowcapacity[v] = \min(\weights(v), {flowcapacity}[c])}$;
             \STATE \qquad \qquad \qquad $\kw{querynum[v] = querynum[c] + \qflag(v)}$;
             % \STATE \qquad \qquad \qquad \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
-            \STATE \qquad \qquad \qquad $\kw{r[v] =  r[c]} $; \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
-            \STATE \qquad \qquad {\bf if}  $v$ is unvisited:
-            \STATE \qquad \qquad \qquad  $\kw{visited}[v] = 1$; \#\{mark $v$ as visited\}
+            % \STATE \qquad \qquad \qquad $\kw{r[v] =  r[c] + flowcapacity[v] \times querynum[v]} $; \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
+            \STATE \qquad \qquad \qquad $\kw{r[v] =  \max(r[v], flowcapacity[v] \times querynum[v]}) $; 
+            % \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
+            \STATE \qquad \qquad \qquad  $\kw{visited}[v] = \etrue$; \#\{mark $v$ as visited\}
             \STATE \qquad \qquad \qquad $\kw{dfs_{refine}(G, v, visited)}$;
             \STATE \qquad \qquad {\bf else}: \#\{There is a cycle finished\}
             % \STATE \qquad \qquad \qquad \#\{update the length of the longest path reaching this vertex\}
             \STATE \qquad \qquad \qquad 
-             $\kw{r[v] =  \max(r[v], r[c] + flowcapacity[v] * querynum[v])}$; \#\{update the length of the longest walk reaching this vertex on a cycle\}
+            $\kw{r[v] =  \max(r[v], r[c] +  \min(\weights(v), {flowcapacity}[c]) * (querynum[c] + \qflag(v)))}$; \#\{update the length of the longest walk reaching this vertex on this cycle\}
+            %  $\kw{r[v] =  \max(r[v], r[c] + flowcapacity[v] * querynum[v])}$; \#\{update the length of the longest walk reaching this vertex on this cycle\}
             %  \STATE \qquad \qquad \qquad \#\{Recover the $\kw{flowcapacity}$ and querynumber to previous state, for different loops\}
-            \STATE \qquad \qquad \qquad $\kw{flowcapacity[v] = flowcapacity[c]}$; \#\{Recover the $\kw{flowcapacity}$\}
-            \STATE \qquad \qquad \qquad $\kw{querynum[v] = querynum[c]}$;\#\{Recover the $\kw{querynum}$\}
+            % \STATE \qquad \qquad \qquad $\kw{flowcapacity[v] = flowcapacity[c]}$; \#\{Recover the $\kw{flowcapacity}$\}
+            % \STATE \qquad \qquad \qquad $\kw{querynum[v] = querynum[c]}$;\#\{Recover the $\kw{querynum}$\}
             \STATE \qquad {\bf return}  $\kw{r[c]}$
             \STATE  {\bf for} every vertex $v$ in $\vertxs$:
-            \STATE  \qquad initialize $\kw{visited}$ with $\efalse$.
+            \STATE  \qquad initialize the $\kw{visited}$ list with $\efalse$.
             \STATE  \qquad $\kw{r_{scc} = \max(r_{scc}, dfs(G, v, \kw{visited} ))}$  
             \RETURN  $\kw{r_{scc}}$
             \end{algorithmic}

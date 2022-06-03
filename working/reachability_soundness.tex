@@ -1,6 +1,51 @@
+
 {
-  \begin{thm}[Soundness of the Reachability Analysis]
-    \label{thm:reachability_soundness}
+  \begin{thm}[Soundness of the Visiting Bounds Estimation Algorithm]
+    \label{thm:addweight_soundness}
+  Given a program ${c}$ with its program-based dependency graph $\progG = (\vertxs, \edges, \weights, \qflag)$, we have:
+  %
+  \[
+  \forall x^l \in \lvar_c \st 
+  \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
+  \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
+  \leq 
+  \weights(x^l)
+  \]
+  \end{thm}
+}
+\begin{proof}
+  Taking an arbitrary a program ${c}$ with its program-based dependency graph $\progG = (\vertxs, \edges, \weights, \qflag)$, and an arbitrary labelled variable $x^l \in \lvar_c$.
+  \\
+  By definition of $\progG$, we know $ x^l \in \vertxs$. 
+  \\
+  By line:2 of Algorithm~\ref{alg:add_weights}, there are 2 cases:
+  \caseL{$l \notin prel$}
+  In this case, we know variable $x^l$ isn't involved in the body of any $\ewhile$ command. 
+  \\
+  Taking arbitrary $\vtrace \in \mathcal{T}$, when executing $c$ with $\trace$, i.e., $\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'}$,
+  \\
+  we know the
+  assignment command at line $l$ associated with the labelled variable $x^l$ will be executed at most once, i.e.,:
+  %
+  $\vcounter(\vtrace') l \leq 1$
+  \\
+  By line:6 in Algorithm~\ref{alg:add_weights}, we also know $\weights(x^l) = 1$.
+  \\
+  This case is proved.
+  \caseL{$l \in prel$}
+  By line:4 in Algorithm~\ref{alg:add_weights}, we know  $\weights(x^l) = \rb(c, l)$.
+  \\
+  Taking arbitrary $\vtrace \in \mathcal{T}$, executing $c$ with $\trace$, we have the evaluation $\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'}$.
+  \\
+  By the soundness of the $\rb$ algorithm in \cite{Sumit2010rechability}, we know:
+$\vcounter(\vtrace') l \leq \rb(c, l)$
+\\
+This case is proved.
+\end{proof}
+
+  {
+  \begin{lem}[Soundness of the Reachability Analysis]
+    \label{lem:reachability_soundness}
   Given a program ${c}$, we have:
   %
   \[
@@ -10,7 +55,7 @@
   \leq 
   \rb(x^l, c)
   \]
-  \end{thm}
+  \end{lem}
 }
 Proof Summary:
 \\
