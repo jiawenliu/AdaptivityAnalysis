@@ -69,23 +69,38 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
         while i != -1 and self.scc_no[u] == self.scc_no[self.edges[i].to]:
             v = self.edges[i].to
             self.flow_capacity[v] = self.flow_capacity[u].adapt_min(self.graph.weights[v])
+            query_num_temp = self.query_num[v]
+            flow_capacity_temp = self.flow_capacity[v]
             self.query_num[v] = self.query_num[u] + self.graph.query[v]
             self.refined_adapt[v] = self.refined_adapt[u]
+            i = self.edges[i].next
+            print("visiting vertex", v)
             if not self.refined_adapt_visited[v]:
                 self.refined_adapt_visited[v] = True
                 self.refined_adapt_calculation_dfs(v)
                 # print("in the visiting #: ", self.dfs_clock, ". after visit vertex ", v, "the first visit is: ", self.first_visit[v], 
                 #     "the last visit is: ", self.last_visit[v])
             else:
-                self.refined_adapt[v] = self.refined_adapt[v].adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
-                self.flow_capacity[v] = self.graph.weights[v]
+                if v == u:
+                    self.refined_adapt[v] = (self.graph.weights[v] + self.refined_adapt[v]).adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
+                else:
+                    self.refined_adapt[v] = self.refined_adapt[v].adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
+                if i == -1: 
+                    self.flow_capacity[v] = self.graph.weights[v]
                 # self.flow_capacity[v] = AdaptType("MAX")
-                self.query_num[v] = 0
+                    self.query_num[v] = 0
+                else: 
+                    self.flow_capacity[v] = self.graph.weights[v]
+                # self.flow_capacity[v] = AdaptType("MAX")
+                    self.query_num[v] = self.query_num[u]
+                self.flow_capacity[v] = flow_capacity_temp
+                # self.flow_capacity[v] = AdaptType("MAX")
+                self.query_num[v] = query_num_temp
                 # self.flow_capacity[v] = self.flow_capacity[u]
                 # self.query_num[v] = self.query_num[u]
                 # print("in the visiting #: ", self.dfs_clock, "the visited vertex ", v, ", whoes first visit is: ", self.first_visit[v], 
                 #     "the last visit is: ", self.last_visit[v])
-            i = self.edges[i].next
+            # i = self.edges[i].next
         
 
 

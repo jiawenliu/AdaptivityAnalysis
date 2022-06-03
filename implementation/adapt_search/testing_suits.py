@@ -71,7 +71,6 @@ class TestUnits:
         print("The Adaptivity Expected for This Graph is: 1 + k ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
-
     # the example with Nested loop and nested val Dep,  
     # Expected Adaptivity: 2 + k!
     # Ouput Adaptivity: 1 + k + k!
