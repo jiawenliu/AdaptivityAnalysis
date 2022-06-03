@@ -1,0 +1,178 @@
+%
+%
+\subsection{Event}
+%
+% \todo{
+% \[
+% \begin{array}{llll}
+% \mbox{Post-Processed Event} & \event & ::= & 
+%       ({x}, l, n, v) | ({x}, l, n, \qval, v)  ~~~~~~~ \mbox{Post-Processed Assignment Event} \\
+% &&& | (\bexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Post-Processed Testing Event}
+% \end{array}
+% \]
+% %
+% Informally, $n$ marks the number of times this label appears in a trace including itself. Informally, the n-th appearance of this label.
+% \\
+% Below we use the same notation $\eventset$, $\eventset^{\asn}$ and $\eventset^{\test} $ represent the 
+% set of post-processed events, assignment events and testing events.
+% \[
+% \begin{array}{lll}
+% %
+% \eventset  & : & \mbox{Set of Post-Processed Events}  
+% \\
+% %
+% \eventset^{\asn}  & : & \mbox{Set of Post-Processed Assignment Events}  
+% \\
+% %
+% \eventset^{\test}  & : & \mbox{Set of Post-Processed Testing Events}  
+% \end{array}
+% \]
+% %
+% Event Processor : $ \circ : \mbox{Event} \to \mbox{Post-Processed Events}$
+% \[
+% \begin{array}{lll}
+% (x, l, v) \circ n \triangleq (x, l, n, v)
+% &
+% (x, l, \qval, v) \circ n \triangleq (x, l, n, \qval, v)
+% &
+% (b, l, v) \circ n  \triangleq (b, l, n, v)
+% \end{array}
+% \]
+% }
+% %
+%
+% Given a trace $\ostrace$ and $\osevent$, the corresponding well-formed event $\event$ 
+% \[
+%   \event \triangleq 
+%   \left\{
+%   \begin{array}{ll}
+%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
+%   (x, l, \vcounter(\ostrace) l, v, \qval) & \osevent = (x, l, v)\\
+%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
+%   \end{array}
+%   \right.
+% \]
+%
+% \\
+% Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
+% \[
+% \begin{array}{lll}
+% \pi_v((x, l, n, v)) \triangleq v
+% &
+% \pi_v (x, l, n, \qval, v) \triangleq v
+% &
+% \pi_v (b, l, n, v)  \triangleq v
+% \end{array}
+% \]
+% %
+% %
+% Event Distinguishable Value : $\pi_{q} : \eventset \to \mathcal{QVAL}$ 
+% \[
+% \begin{array}{lll}
+% \pi_{q} (x, l, n, v) \triangleq v
+% &
+% \pi_{q} (x, l, n, \qval, v) \triangleq \qval
+% &
+% \pi_{q} (b, l, n, v)  \triangleq v
+% \end{array}
+% \]%
+% 
+Event projection operators $\pi_i$ projects the $i$th element from an event: 
+\\
+$\pi_i : 
+\eventset \to \mathcal{VAR}\cup \mbox{Boolean Expression}  \cup \mathbb{N} \cup \mathcal{VAL} \cup \mathcal{QVAL} $ 
+% \wqside{use b for Boolean expression?}
+\\
+% $\pi_{(i,j)} (\event) \triangleq (\pi_i(\event), \pi_j(\event)) $
+% %
+% \\
+% Event Signature : $\pi_{\sig} : \eventset \to (\mathcal{VAR}\cup \mbox{Boolean Expression}) \times\mathbb{N}\times \mathbb{N}$
+% \[
+% \begin{array}{lll}
+% \pi_{\sig} (x, l, n, v) \triangleq (x, l, n)
+% &
+% \pi_{\sig} (x, l, n, \qval, v) \triangleq (x, l, n, \query)
+% &
+% \pi_{\sig} (b, l, n, v)  \triangleq (b, l, n)
+% \end{array}
+% \]
+%
+%
+\begin{defn}[Equivalence of Query Expression].
+%
+\label{def:query_equal}
+2 query expressions $\qexpr_1$, $\qexpr_2$ are equivalent, denoted as $\qexpr_1 =_{q} \qexpr_2$, if and only if
+$$
+ \begin{array}{l} 
+  \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st \forall \trace \in \mathcal{T} \st
+    (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+    \\
+    \quad \land (\forall D \in \dbdom, r \in D \st 
+    \exists v \in \mathcal{VAL} \st 
+          \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+  \end{array}.
+$$
+%
+, where $r \in D$ is a record in the database domain $D$, $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
+$\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  is defined vice versa.
+%
+\end{defn}
+%
+\begin{defn}[Event Equivalence $\eventeq$]
+Two events $\event_1, \event_2 \in \eventset$ is in \emph{Equivalence} relation, denoted as $\event_1 \eventeq \event_2$ if and only if:
+\[
+\pi_1(\event_1) = \pi_1(\event_2) 
+\land  
+\pi_2(\event_1) = \pi_2(\event_2) 
+\land
+\pi_{3}(\event_1) =_q \pi_{3}(\event_2)
+\]
+%
+The $\event_1 \eventneq \event_2$ is defined as vice versa.
+\end{defn}
+%
+%
+% \begin{defn}[Signature Equivalence of Events $\sigeq$]
+% Two events $\event_1, \event_2 \in \eventset$ is in \emph{signature equivalence} relation, denoted as $\event_1 \sigeq \event_2$ if and only if:
+% \[
+% \forall i \in \{1, 2, 3\} \st \pi_{\sig}(\event_1) = \pi_{\sig}(\event_2) 
+% \]
+% The $\event_1 \signeq \event_2$ is defined as vice versa.
+% \end{defn}
+%
+\begin{defn}[Events Different up to Value ($\diff$)]
+Two events $\event_1, \event_2 \in \eventset$ is \emph{Different up to Value}, 
+denoted as $\diff(\event_1, \event_2)$ if and only if:
+\[
+\pi_1(\event_1) = \pi_1(\event_2) 
+\land  
+\pi_2(\event_1) = \pi_2(\event_2) 
+\land  
+\pi_3(\event_1) \neq_q \pi_3(\event_2)
+\]
+\end{defn}
+%
+% \begin{defn}[Order of Events].
+% \label{def:query_dir}
+% \\
+% An event $\event_1 \in \eventset$, where $\pi_{\{1, 2, 3\}}(\event_1) = (x_1, l_1, n_1)$,
+% has smaller order than another event $\event_2 \in \eventset$, 
+% where 
+% $ \pi_{\{1, 2, 3\}}(\event_2) = (x_2, l_2, n_2)$, defined as follows:
+% %
+% \[
+% \event_1 \eventlt \event_2
+% \triangleq 
+% \left\{
+% \begin{array}{ll}
+%   l_1 < l_2 & n_1 = n_2
+%   \\
+%   n_1 < n_2  & o.w.
+% \end{array}  
+% \right.
+% \]
+% %
+% $\event_1 \eventgeq \event_2$  is defined vice versa.
+% \end{defn}
+%
+%

@@ -1,0 +1,50 @@
+% The topic, motivation, the importance of adaptivity 
+
+
+
+Consider a dataset $X$ consisting of $n$ independent samples from some  unknown population $\dist$.  How can we ensure that the conclusions drawn from $X$ \emph{generalize} to the population $\dist$?  Despite decades of research in statistics and machine learning on methods for ensuring generalization, there is an increased recognition that many scientific findings generalize poorly (e.g. 
+%\cite{Ioannidis05}
+).  While there are many reasons a conclusion might fail to generalize, one that is receiving increasing attention is \emph{adaptivity}, which occurs when the choice of method for analyzing the dataset depends on previous interactions with the same dataset.
+
+ Adaptivity can arise from many common practices, such as exploratory data analysis, using the same data set for feature selection and regression, and the re-use of datasets across research projects.  Unfortunately, adaptivity invalidates traditional methods for ensuring generalization and statistical validity, which assume that the method is selected independently of the data. The misinterpretation of adaptively selected results has even been blamed for a ``statistical crisis'' in empirical science.
+%  ~\cite{GelmanL13}.
+
+A recent line of work initiated by Dwork \etal~\cite{dwork2015preserving} and Hardt and Ullman posed the question: Can we design \emph{general-purpose} methods that ensure generalization in the presence of adaptivity, together with guarantees on their accuracy?  This line of work has identified many new algorithmic techniques for ensuring generalization in adaptive data analysis, leading to algorithms with greater statistical power than all previous approaches.  It has also identified problematic strategies for adaptive analysis, showing limitations on the statistical power one can hope to achieve.
+
+A key development in this line of work is that the best method for ensuring generalization in an adaptive data analysis depends to a large extent on the number of \emph{rounds of adaptivity}. That is, not only does the analysis of the generalization error depend on the number of rounds, but knowing the number of rounds actually allows one to choose methods that lead to the smallest possible generalization error.
+
+%gap
+It is obviously promising if this number of \emph{rounds of adaptivity} can be estimated statically. Nevertheless, the corresponding study on static analysis over programs implementing adaptive analysis is not well explored, even the formal definition of this \emph{rounds of adaptivity} is not clear. Our goal is to study adaptivity and conduct analysis over programs to find the number of rounds.
+% our innovation
+To this end, we design a programming framework, which statically provides an upper bound of the number of rounds of adaptivity for programs implementing adaptive data analysis algorithms. The first question we need to decide on is what language the target programs to be analyzed are written, in a functional programming language or an imperative one?     
+% the reason we do not use functional programming language, 
+
+ We choose the imperative programming language, then the following question is what does this imperative language look like? A principle of the ideal language in our mind is supposed to be simple enough to alleviate the burden of analysis on complex components that is unnecessary to adpativity, and expressive enough to support most of the adaptive data analysis algorithms. With this principle in mind, we introduce an imperative language called the loop language, with one finite loop construct, allowing data analysts recursively request queries in their programs. The query request is also supported in the language.
+
+% The query request is abstract in the loop language and shows up as a primitive construct $q(e)$, where the argument $e$ is an expression tracking the necessary information needed to construct the unique query. We choose to make query abstract for the reason that we only care about the elements(the arguments) used to construct the query instead the detail of the query, with respect to what we are interested in: whether some queries rely on some other queries.        
+
+ For the number of rounds of adaptivity of program in the loop language, a definition of "one query relies on another query", or "one query may depend on the other" is the next big thing. We choose to define this "may-dependency" with the help of a trace-based operational semantics.  
+%  the change of the results of the query will affect the appearance of the other in a trace of the execution. The trace is
+ The trace is a list of queries generated along with the execution of the program, a history of the execution only caring about query requests.
+%  which is specified in the operational semantics and will be discussed later.
+
+Our framework includes transformations of the target programs in loop language,
+% one is the transformation of programs of the aforementioned loop language we call it "high level language", to its variant "low level language", in which the arguments of queries go into the control flow of the program. Performing such a transformation helps us to better focus on the dependency between queries because we can treat queries simply as primitive symbols in the low level loop language without worrying about the arguments of the queries affecting the results. 
+% In a word, the key idea of this transformation guarantees all the effect on queries comes from the structure of the programs. 
+% The other is the transformation from the "low level" programs
+to "ssa-form" programs. The programs in single static assignment form, with all the variables assigned once (variables in the loop is also handled and will be discussed in later section), greatly helps our analysis avoid the complexity of handling variables overwriting. The direct analysis on program in ssa form then allows our framework to provide the upper bound on the number of rounds of adaptivity.
+% to construct a dependency graph between these unique variables, and hence predict the rounds of adaptivity from the graph. To generate the dependency graph, 
+To be more specific, our framework is equipped with algorithms to record the necessary information and construct a dependency graph to reach a final estimation of the adaptivity.
+
+Our contribution lies in the static analysis on programs implementing adaptive analysis for a tight estimation of its number of rounds of adaptivity through a framework. Specifically, our contributions can be broken into the following:
+\begin{enumerate}
+    \item A formal definition of dependency between queries in adaptive data analysis programs.
+    % \item A trace-based operational semantics for the loop language, specific to dependency between queries.
+    \item A formal definition of adaptivity through a query-based dependency graph, bases on a trace-based operational semantics for the loop language.
+    \item A transformation between programs in loop language and its ssa form language, with the soundness of the transformation shows that every program in loop language can be appropriately transformed to its ssa form.
+    \item An matrix-and-vector-based algorithm to track the dependency between unique variables of ssa form programs (including loop) and construct a variable-based dependency graph for our static estimation of rounds of adaptivity. 
+    \item A soundness proof shows that the predicted upper bound from our algorithm strictly bounds the actual number of rounds of adaptivity in execution. 
+\end{enumerate}
+
+
+
