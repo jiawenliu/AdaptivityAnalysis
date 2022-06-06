@@ -1,9 +1,23 @@
 The two round strategy works well in our framework, we explore further to look at an advanced adaptive data analysis algorithm - multiple round algorithm.
 \begin{example}[Two Round Algorithm]
+    \[
+    %
+        \bf{TRC}(k) \triangleq
+    \begin{array}{l}
+           \clabel{ a \leftarrow []}^{1} ; \\
+            \clabel{\assign{j}{k} }^{2} ; \\
+            \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
+            \Big(
+             \clabel{x \leftarrow (\chi(k - j)\cdot \chi(k)) }^{4}  ; \\
+             \clabel{\assign{j}{j-1}}^{5} ;\\
+            \clabel{a \leftarrow x :: a}^{6}       \Big);\\
+            \clabel{l \leftarrow (\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+        \end{array}
+    \]
     %
     \begin{algorithm}
     \footnotesize
-    \caption{A two-round analyst strategy for random data (Algorithm 5 in ...)}
+    \caption{A two-round analyst strategy for random data (The example in  \cite{dwork2015preserving})}
     \label{alg:twoRound}
     \begin{algorithmic}
     \REQUIRE Mechanism $\mathcal{M}$ with a hidden state $X\in [N]^{n}$ sampled u.a.r., control set size $c$
@@ -25,29 +39,30 @@ The two round strategy works well in our framework, we explore further to look a
     \end{algorithmic}
     \end{algorithm}
     %
-    \[
-    %
-    \begin{array}{l}
-        \bf{TRC}(k) \\
-            % \left[j \leftarrow 0 \right]^1 ; \\
-            \\
-           \clabel{ a \leftarrow []}^{1} ; \\
-            \clabel{\assign{j}{0} }^{2} ; \\
-            \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
-            \Big(
-             \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-             \clabel{\assign{j}{j+1}}^{5} ;\\
-            \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-            \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
-        \end{array}
-    \]
+%
     \end{example}
 
 \begin{example}[Multiple Round Algorithm]
 %
+\[
+%
+MR(k) \triangleq
+\begin{array}{l}
+     \left[j \leftarrow k \right]^1 ; \\
+    \left[I_1 \leftarrow [] \right]^2; \\
+    \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
+    \Big(
+    \clabel{\assign{j}{j-1}}^{4} ;\\
+    \left[p_1 \leftarrow c \right]^5; \\
+    \left[ a_1 \leftarrow q (p, I_3) \right]^6;\\
+    \left[I_2 \leftarrow \mathrel{\mathsf{update}} ( {I_3}, (a_1, p_1))  \right]^7
+    \Big) 
+\end{array}
+\]
+%
 \begin{algorithm}
 \footnotesize
-\caption{A multi-round analyst strategy for random data (Algorithm 5 in ...)}
+\caption{A multi-round analyst strategy for random data base \cite{dwork2015preserving}}
 \label{alg:multiRound}
 \begin{algorithmic}
 \REQUIRE Mechanism $\mathcal{M}$ with a hidden state $X\in [N]^{n}$ sampled u.a.r., control set size $c$
@@ -65,40 +80,27 @@ The two round strategy works well in our framework, we explore further to look a
 \STATE \qquad {\bf let} $I = \{i | i\in [N] \land Nscore(i) > \max(Cscore)\}$
 \STATE \qquad {\bf let} $X = X \setminus I$ 
 \RETURN $X$.
-% \ENSURE 
 \end{algorithmic}
 \end{algorithm}
 %
-\[
 %
-MR(k) \triangleq
-\begin{array}{l}
-    %  \left[j \leftarrow 0 \right]^1 ; \\
-    \left[I_1 \leftarrow [] \right]^1; \\
-    \eloop ~ [k]^{2} , 0, [I_3,I_1,I_2] \\ 
-    \ ~ \edo ~ \\ \Big(
-    \left[p_1 \leftarrow c \right]^3 ; \\
-    \left[ a_1 \leftarrow q (p, I_3) \right]^4;\\
-    \left[I_2 \leftarrow \mathrel{\mathsf{update}} ( {I_3}, (a_1, p_1))  \right]^5
-    \Big) 
-\end{array}
-\]
 \end{example}
 %   We have seen the two round algorithm in Section~\ref{subsec:loop-syntax}. We show the multiple-round algorithm, which is an advanced algorithm.
 %  \\
 \textbf{Description:}
-The multiple round algorithm starts from an initialized empty tracking list $I$, a score called Nscore $ns=0$ , another score Cscore $cs=0$. There is a hidden database $X$ as well.It goes $k$ rounds and every round, the two scores $ns$ and $cs$ are updated by a query result. Then the list $I$ is updated by the two scores for every round. After the $r$ rounds, the algorithm returns the columns of the hidden database $X$ not specified in the tracking list $I$, which is $X\setminus I$. 
+The multiple round algorithm starts from an initialized empty tracking list $I$, a score called Nscore $ns=0$ , another score Cscore $cs=0$. There is a hidden database $X$ as well.
+It goes $k$ rounds and every round, the two scores $ns$ and $cs$ are updated by a query result. Then the list $I$ is updated by the two scores for every round. After the $r$ rounds, the algorithm returns the columns of the hidden database $X$ not specified in the tracking list $I$, which is $X\setminus I$. 
 
-The algorithm is written in the loop language as $MR$. It uses a loop for the $k$ rounds computation and. We use functions $update\_nscore(p,a)$,$update\_cscore(p,a)$,$update(I,ns,cs)$ to simplify the complex update computation of Nscore, Cscore and the tracking list $I$. It will not change our analysis because these functions provides enough information through their arguments.
+The algorithm is written in the loop language as $MR$. 
+It uses a loop for the $k$ rounds computation and. We use functions $update\_nscore(p,a)$,$update\_cscore(p,a)$,$update(I,ns,cs)$ to simplify the complex update computation of Nscore, Cscore and the tracking list $I$. It will not change our analysis because these functions provides enough information through their arguments.
 % As described in the two round algorithm, the multi-round algorithm has a loop as well.
 % compare to two round algorithm
-In comparison with the two round algorithm, the query asked in each iteration is not independent  in the multiple round one any more. The query in one iteration $j$ now depends on the tracking list $I$ from its previous iteration $j-1$, which is updated by the query result at the same iteration $j-1$. We can easily see the connection between queries from different iterations.
-
+In comparison with the two round algorithm, the query asked in each iteration is not independent  in the multiple round one any more. 
+The query in one iteration $j$ now depends on the tracking list $I$ from its previous iteration $j-1$, which is updated by the query result at the same iteration $j-1$. We can easily see the connection between queries from different iterations.
 % the result of the query from previous iteration,
 % so that the query ask at the $j^{th}$ iteration is
 % $q(p, I)$.
 %
-
 %
 %
 %
@@ -164,41 +166,23 @@ The query-based dependency graph is a subgraph of the variable dependency graph 
     \[
     %
     \begin{array}{l}
-        \bf{TRC}(k) \\
-            % \left[j \leftarrow 0 \right]^1 ; \\
-            \\
-           \clabel{ a \leftarrow []}^{1} ; \\
-            \clabel{\assign{j}{0} }^{2} ; \\
-            \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
-            \Big(
-             \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-             \clabel{\assign{j}{j+1}}^{5} ;\\
-            \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-            \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+           \clabel{ \assign{x}{\chi[0]}}^{1} ; \\
+            \clabel{\assign{y}{\chi[x + 1]} }^{2} ; \\
+            \clabel{\assign{z}{\chi[y + 1]}}^{3}; \\
+             \clabel{\assign{w}{\chi[z + 1] \cdot \chi[x]} }^{4}  ; \\
         \end{array}
     \]
     \end{example}
 
-
-
-
-    \begin{example}[If with Data-Control Dependency]
+    \begin{example}[If with Data-Control Dependency Separated]
         %
         %
         \[
         %
         \begin{array}{l}
-            \bf{TRC}(k) \\
-                % \left[j \leftarrow 0 \right]^1 ; \\
-                \\
-               \clabel{ a \leftarrow []}^{1} ; \\
-                \clabel{\assign{j}{0} }^{2} ; \\
-                \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
-                \Big(
-                 \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                 \clabel{\assign{j}{j+1}}^{5} ;\\
-                \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+            \clabel{ \assign{x}{\chi[0]}}^{1} ; \\
+            \clabel{\assign{z}{\chi[1]} }^{2} ; \\
+            \eif(\clabel{x < 0}, \clabel{\assign{y}{\chi[z]}}^{4}, \clabel{\assign{y}{\chi[0]}}^{4})
             \end{array}
         \]
         \end{example}
@@ -209,164 +193,176 @@ The query-based dependency graph is a subgraph of the variable dependency graph 
             \[
             %
             \begin{array}{l}
-                \bf{TRC}(k) \\
-                    % \left[j \leftarrow 0 \right]^1 ; \\
-                    \\
-                   \clabel{ a \leftarrow []}^{1} ; \\
-                    \clabel{\assign{j}{0} }^{2} ; \\
-                    \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
-                    \Big(
-                     \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                     \clabel{\assign{j}{j+1}}^{5} ;\\
-                    \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                    \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
-                \end{array}
+                \clabel{ \assign{x}{\chi[0]}}^{1} ; \\
+                \clabel{\assign{z}{\chi[1]} }^{2} ; \\
+                \eif(\clabel{x < 0}^{3}, \clabel{\assign{y}{\chi[z] + \chi[x]}}^{4}, \clabel{\assign{y}{\chi[x]}}^{4})
+            \end{array}
             \]
             \end{example}
 
 
-            \begin{example}[Simple While with Data-Value Dependency]
+            \begin{example}[Simple While without Recursive Data-Value Dependency]
                 %
                 %
                 \[
                 %
+                smpWhile(k)
                 \begin{array}{l}
-                    \bf{TRC}(k) \\
-                        % \left[j \leftarrow 0 \right]^1 ; \\
-                        \\
-                       \clabel{ a \leftarrow []}^{1} ; \\
-                        \clabel{\assign{j}{0} }^{2} ; \\
-                        \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
+                    \clabel{ \assign{a}{\chi[0]}}^{1} ; \\
+                    \clabel{\assign{j}{k} }^{2} ; \\
+                        \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
                         \Big(
-                         \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                         \clabel{\assign{j}{j+1}}^{5} ;\\
-                        \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                        \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+                         \clabel{\assign{x}{\query(\chi[k]) }^{4}  ; \\
+                         \clabel{\assign{j}{j-1}}^{5} ;\\
+                        \clabel{a \leftarrow x + a}^{6}       \Big);
                     \end{array}
                 \]
                 \end{example}
-
-                \begin{example}[Nested While with Recursive Data-Value Dependency]
+%
+                \begin{example}[Simple While with Recursive Data-Value Dependency]
                     %
                     %
                     \[
                     %
+                    smpWhileRec(k)
                     \begin{array}{l}
-                        \bf{TRC}(k) \\
-                            % \left[j \leftarrow 0 \right]^1 ; \\
-                            \\
-                           \clabel{ a \leftarrow []}^{1} ; \\
-                            \clabel{\assign{j}{0} }^{2} ; \\
-                            \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
+                        \clabel{ \assign{a}{\query(\chi[0])}}^{1} ; \\
+                        \clabel{\assign{j}{k} }^{2} ; \\
+                            \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
                             \Big(
-                             \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                             \clabel{\assign{j}{j+1}}^{5} ;\\
-                            \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                            \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+                             \clabel{\assign{x}{\query(\chi(\ln(a)))} }^{4}  ; \\
+                             \clabel{\assign{j}{j-1}}^{5} ;\\
+                            \clabel{a \leftarrow x + a}^{6}       \Big);
                         \end{array}
                     \]
                     \end{example}
-
-                \begin{example}[While with Multi-Path Data-Value Dependency]
+%
+                \begin{example}[Nested While with Simple Recursive Data-Value Dependency]
                     %
                     %
                     \[
                     %
+                    nestedWhileRecSmp(k)
                     \begin{array}{l}
-                        \bf{TRC}(k) \\
-                            % \left[j \leftarrow 0 \right]^1 ; \\
-                            \\
-                           \clabel{ a \leftarrow []}^{1} ; \\
-                            \clabel{\assign{j}{0} }^{2} ; \\
-                            \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
+                        \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                        \clabel{\assign{j}{k} }^{2} ; \\
+                            \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
                             \Big(
-                             \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                             \clabel{\assign{j}{j+1}}^{5} ;\\
-                            \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                            \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+                             \clabel{\assign{y}{\query(\chi(\ln(x)))} }^{4}  ; \\
+                             \clabel{\assign{j}{j-1}}^{5} ;\\
+                             \clabel{\assign{i}{k}}^{6} ;\\
+                             \ewhile ~ \clabel{i > 0}^{7} ~ \edo ~ \\
+                             \Big(
+                              \clabel{\assign{x}{\query(\chi(\ln(x)))} }^{8}  ; \\
+                              \clabel{\assign{i}{i-1}}^{9}
+                              \Big) \Big);
                         \end{array}
                     \]
                     \end{example}
 
-                    \begin{example}[While with Multiple-Variable Data-Value Dependency]
+                    \begin{example}[Nested While with Nested Recursive Data-Value Dependency Across Outer and Inner Loop]
                         %
                         %
                         \[
                         %
+                        \kw{nestedWhileRecAcross}(k)
                         \begin{array}{l}
-                            \bf{TRC}(k) \\
-                                % \left[j \leftarrow 0 \right]^1 ; \\
-                                \\
-                               \clabel{ a \leftarrow []}^{1} ; \\
-                                \clabel{\assign{j}{0} }^{2} ; \\
-                                \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
+                            \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                            \clabel{\assign{j}{k} }^{2} ; \\
+                                \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
                                 \Big(
-                                 \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                                 \clabel{\assign{j}{j+1}}^{5} ;\\
-                                \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                                \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+                                 \clabel{\assign{y}{\query(\chi(\ln(x)))} }^{4}  ; \\
+                                 \clabel{\assign{j}{j-1}}^{5} ;\\
+                                 \clabel{\assign{i}{k}}^{6} ;\\
+                                 \ewhile ~ \clabel{i > 0}^{7} ~ \edo ~ \\
+                                 \Big(
+                                  \clabel{\assign{x}{\query(\chi(\ln(y)))} }^{8}  ; \\
+                                  \clabel{\assign{i}{i-1}}^{9}
+                                  \Big) \Big);
                             \end{array}
                         \]
                         \end{example}
-                        \begin{example}[Nested While with Recursive Multiple-Variable Data-Value Dependency]
-                            %
+                %
+                \begin{example}[Simple While with Multi-Path Data-Value Dependency]
+                \todo{Over-Approximated, because we cannot accurately calculate the multi-path reachability bounds.
+                But can extend with the analysis method in \cite{Sumit2010rechability} to cover this}
+                    %
+                    %
+                    \[
+                    %
+                    smpWhileIf(k)
+                    \begin{array}{l}
+                        \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                        \clabel{\assign{j}{k} }^{2} ; \\
+                            \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
+                            \Big(
+                             \clabel{\assign{j}{j-1}}^{4} ;\\
+                             \eif(\clabel{j \% 2 == 0}^{5}, 
+                             \clabel{\assign{y}{\chi[x]}}^{6}, 
+                             \eskip)                             
+                             \clabel{\assign{x}{\query(\chi(\ln(y)))} }^{7} \Big);
+                        \end{array}
+                    \]
+                    \end{example}
+%
+                    \begin{example}[Simple While with Recursive Multiple-Variable Data-Value Dependency]
+                        \[
+                        %
+                        \kw{smpWhileMultiVar}(k) \triangleq
+                        \begin{array}{l}
+                            \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                            \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
+                            \clabel{\assign{j}{k} }^{3} ; \\
+                                \ewhile ~ \clabel{j > 0}^{4} ~ \edo ~ \\
+                                \Big(
+                                 \clabel{\assign{j}{j-1}}^{5} ;\\
+                                 \clabel{\assign{z}{\query(\chi(x + \ln(y)))} }^{6}  ; \\
+                                 \clabel{ \assign{x}{\query(\chi[z])}}^{7} ; \\
+                                 \clabel{ \assign{y}{\query(\chi[z])}}^{8} ; \\
+                                \Big);
+                            \end{array}
+                        \]
+                        \end{example}
+                        \begin{example}[Nested While with Nested Recursive Multiple Variable 
+                            Data-Value Dependency Across Outer and Inner Loop]
                             %
                             \[
                             %
+                            \kw{nestedWhileMultiVarRecAcross}(k)
                             \begin{array}{l}
-                                \bf{TRC}(k) \\
-                                    % \left[j \leftarrow 0 \right]^1 ; \\
-                                    \\
-                                   \clabel{ a \leftarrow []}^{1} ; \\
-                                    \clabel{\assign{j}{0} }^{2} ; \\
-                                    \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
+                                \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                                \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
+                                \clabel{\assign{j}{k} }^{3} ; \\
+                                    \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
                                     \Big(
-                                     \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                                     \clabel{\assign{j}{j+1}}^{5} ;\\
-                                    \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                                    \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+                                     \clabel{\assign{y}{\query(\chi(\ln(x) + y))} }^{4}  ; \\
+                                     \clabel{\assign{j}{j-1}}^{5} ;\\
+                                     \clabel{\assign{i}{k}}^{6} ;\\
+                                     \ewhile ~ \clabel{i > 0}^{7} ~ \edo ~ \\
+                                     \Big(
+                                      \clabel{\assign{x}{\query(\chi(\ln(y))+\chi[x])} }^{8}  ; \\
+                                      \clabel{\assign{i}{i-1}}^{9}
+                                      \Big) \Big);
                                 \end{array}
                             \]
                             \end{example}
-
-                            \begin{example}[While with Multiple-Variable Data-Value Dependency]
-                                %
-                                %
-                                \[
-                                %
-                                \begin{array}{l}
-                                    \bf{TRC}(k) \\
-                                        % \left[j \leftarrow 0 \right]^1 ; \\
-                                        \\
-                                       \clabel{ a \leftarrow []}^{1} ; \\
-                                        \clabel{\assign{j}{0} }^{2} ; \\
-                                        \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
-                                        \Big(
-                                         \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                                         \clabel{\assign{j}{j+1}}^{5} ;\\
-                                        \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                                        \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
-                                    \end{array}
-                                \]
-                                \end{example}
                         
-                                \begin{example}[While with Data-Value and Data-Control Dependency Overlapped]
+                            \begin{example}[While with Data-Value and Data-Control Dependency Overlapped]
                                     %
                                     %
                                     \[
                                     %
+                                    \kw{smpWhileValCtl} \triangleq
                                     \begin{array}{l}
-                                        \bf{TRC}(k) \\
-                                            % \left[j \leftarrow 0 \right]^1 ; \\
-                                            \\
-                                           \clabel{ a \leftarrow []}^{1} ; \\
-                                            \clabel{\assign{j}{0} }^{2} ; \\
-                                            \eloop ~ \clabel{k}^{3} ~ \edo ~ \\
+                                        \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                                        \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
+                                            \ewhile ~ \clabel{x > 0}^{3} ~ \edo ~ \\
                                             \Big(
-                                             \clabel{x \leftarrow q(\chi(j)\cdot \chi(k)) }^{4}  ; \\
-                                             \clabel{\assign{j}{j+1}}^{5} ;\\
-                                            \clabel{a \leftarrow x :: a}^{6}       \Big);\\
-                                            \clabel{l \leftarrow q(\mathrm{sign}\big (\sum_{i\in [k]} \chi(i)\times\ln\frac{1+a[i]}{1-a[i]} \big ))}^{7}\\
+                                             \clabel{\assign{x}{\query(\chi[x - 1])} }^{4}  ; \\
+                                             \clabel{ \assign{y}{\query(\chi[x] * \chi[y])}}^{5} ; \\
+                                            \Big);
                                         \end{array}
                                     \]
                                     \end{example}
+                            
+                                    \todo{Over approximated, we will not infer the most accurate reachability bound for Variable x}

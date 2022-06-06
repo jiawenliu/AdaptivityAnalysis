@@ -616,7 +616,10 @@ The Reaching definition is calculated by the Worklist algorithm as below.
 
 \subsubsection{Phase 2, reachability number analysis}
 
-In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the approximated visiting times (how many times this block is exeucted). The algorithm is defined in Algorithm~\ref{alg:add_weights}, with 3 main functions, the PREPROCESSING, $\rb$ and ADDWEIGHT. 
+In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the approximated visiting times (how many times this block is exeucted). The algorithm is defined in Algorithm~\ref{alg:add_weights}, with 3 main functions, the Control Location Insertion, 
+Program Transition Abstraction, 
+Bound Calculation 
+and ADDWEIGHTs.
 \begin{algorithm}
 \caption{
 {Add weights to dependency graph (the main algorithm of phase 2)}
@@ -634,8 +637,91 @@ In last phase, we get a dependency graph whose node is computation blocks unique
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Preprocessing} This step is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
+\paragraph*{Control Flow Abstraction}
+Based on the Data-Control flow graph we generated in the first step, in order to analysis the reachability bound for each vertex, 
+we first extract the control flow graph utilizing our control flow generation at the first step of phase.
+% this step insert the control location with the edge representing
+% the control flow into the graph.
+% Given a program $c$, the control location and control flow edge is inserted as follows
+% \[ 
+% \begin{array}{l} 
+%   locations(\assign{x}{\expr})
+% \end{array}
+%   \]
+
+More specifically, given a program $c$, its control flow graph can be described as follows
+\\
+1. inserting the enter location $l_b$ before the starting of the program.
+\\
+2. For every sequence command $c_1;c_2$
+if $c_2$ doesn't start with a $\eif$ and $\ewhile$ command, don't insert any contro location. 
+\\
+if $c_2$ starts with a $\eif$ command, and the last control location inserted in $c_1$ is $l_i$,
+inserting a control location $l_{i+1}$, then recursively inserting on bodys and on the commands after $\eif$.
+\\
+if $c_2$ starts with a $\eif$ command, and the last control location inserted in $c_1$ is $l_i$,
+inserting a control location $l_{i+1}$, then recursively inserting on bodys and on the commands after $\eif$.
+\\
+if $c_2$ starts with a $\ewhile$ command, and the last control location inserted in $c_1$ is $l_i$,
+inserting a control location $l_{i+1}$, then recursively inserting on the while body and on the commands after $\ewhile$.
+
+\paragraph{Program Transition Abstraction,} 
+Given a program $c$, with its control flow graph, for every 2 control locations $l_1$ and $l_2$ with a control flow egde, let $B_{(l_1, l_2)}$ be the set of blocks between control locations $l_1$ and $l_2$.
+The symbolic difference constraints for transitions between the control locations $l_1$ and $l_2$ is abstracted as follows:
+\[ 
+  abs(l_1, l_2,B_{(l_1, l_2)}) \triangleq
+\begin{array}{l}
+  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{[\assign{x}{c_1 \times x -/+ c_2}]{}^l\}) \triangleq 
+  \{x^l \leq x^l +/- \frac{c_2}{c_1} \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+\end{array}
+  \]
+We handle the same normalized guard expression in $\ewhile$ and the same forms of the counter modification as in paper \cite{sinn2017complexity}. More specifically as follows:
+\\
+The counter variables only increase, decrease or reset by expression in the form of arithmetic multiplication, minus and plus, max and min.
+\\
+For more complex cases where the counter reset, or calcualted from Log, Query calculation, the bound will be approximated as $\infty$.
+\\ 
+The boolean expression in the guard of $\ewhile$ command is normalized into form of $ x > 0$ where $x^l \in \lvar_c$ for some $l$.
+\\
+This step is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
 We have a pre-processing algorithm to go through the programs and returns the list of labels associating with a loop and whose visiting times need to be analyzed.
+
+\paragraph*{Computing the Local Bounds}
+Given an abstract transition between 2 locations, the local bound is assigned to every abstract transition as follows:
+\[ 
+  lbound(l_1, l_2) \triangleq
+\begin{array}{l}
+  
+  \\
+  lbound(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+  lbound(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+\end{array}
+  \]
+
+\paragraph*{Computing the Bounds for Each Transition}
+Then, the symbolic bounds for each variable involved into the guard 
+as well as the symbolic bounds for each transition is calcualted as follows:
+\[ 
+  abs(l_1, l_2,B_{(l_1, l_2)}) \triangleq
+\begin{array}{l}
+  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{[\assign{x}{c_1 \times x -/+ c_2}]{}^l\}) \triangleq 
+  \{x^l \leq x^l +/- \frac{c_2}{c_1} \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \\
+\end{array}
+  \]
+
+\paragraph*{Adding the Reachability Bounds for Every Vertex in the Data-Control Flow Graph}
 
 \paragraph{Getting Reachability Bounds}
 This is defined in Algorithm~\ref{alg:rb}.
