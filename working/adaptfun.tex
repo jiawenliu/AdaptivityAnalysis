@@ -672,7 +672,7 @@ The symbolic difference constraints for transitions between the control location
   abs(l_1, l_2,B_{(l_1, l_2)}) \triangleq
 \begin{array}{l}
   abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{[\assign{x}{c_1 \times x -/+ c_2}]{}^l\}) \triangleq 
-  \{x^l \leq x^l +/- \frac{c_2}{c_1} \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \{x^l' \leq x^l +/- \frac{c_2}{c_1} \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
   \\
   abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
   \\
@@ -696,9 +696,7 @@ Given an abstract transition between 2 locations, the local bound is assigned to
 \[ 
   lbound(l_1, l_2) \triangleq
 \begin{array}{l}
-  
-  \\
-  lbound(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  lbound(l_1, l_2) \triangleq \{ x^l \} if (x^l' \leq x^l - Expr(Var, C)) \in abs(l_1, l_2,B_{(l_1, l_2)}) 
   \\
   lbound(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
   \\
@@ -706,6 +704,8 @@ Given an abstract transition between 2 locations, the local bound is assigned to
   \]
 
 \paragraph*{Computing the Bounds for Each Transition}
+We first Identify the transitions where each variable increase and reset:
+
 Then, the symbolic bounds for each variable involved into the guard 
 as well as the symbolic bounds for each transition is calcualted as follows:
 \[ 
