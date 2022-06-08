@@ -58,6 +58,17 @@ class TestUnits:
         print("The Adaptivity Expected for This Graph is: 2 ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
+    # the multiple-round example, 
+    # Expected Adaptivity: k
+    def test_multiple_round(self):
+        weights = [AdaptType(1),  AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType("k")]
+        query = [0, 0, 1, 0, 0]
+        edges = [(0, 4), (1, 2), (1, 3), (2, 3), (3, 2), (3, 3), (4, 4)]
+        adapt_search = self.ALG(Graph(edges, weights, query))
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for This Graph is: k ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
+
     # the example with while loop of multi-path from if branch (multi-path loop will result in different visiting times for
     # verteices  belong to the same loop),  
     # Expected Adaptivity: 1 + k
@@ -81,6 +92,18 @@ class TestUnits:
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
         print("The Adaptivity Expected for This Graph is: 2 + k! ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
+
+    # the nested while example, 
+    # Expected Weights: [1, 1, k, k, k, k^2, k^2]
+    def test_simple_nested2(self):
+        weights = [AdaptType(1), AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType("k"), AdaptType("k * k"), AdaptType("k * k")]
+        query = [0, 1, 0, 0, 1, 0, 1]
+        edges = [(0, 2), (1, 4), (1, 6), (2, 2), (2, 3), (3, 5), (5, 5), (6, 4), (6, 6)]
+
+        adapt_search = self.ALG(Graph(edges, weights, query))
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for Simple Nested While Algorithm is: 2 + k * k ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with Nested loop and nested val Dep of multi-ath from nested loop,  
@@ -154,6 +177,7 @@ class TestUnits:
         self.test_while_multivar_nested()
         self.test_while_val_ctl()
         self.test10()
+        self.test_simple_nested2()
 
 
 
@@ -163,5 +187,5 @@ class TestUnits:
 
 
 test_refined = TestUnits(AdaptSearchAlgRefined)
+test_refined.test_multiple_round()
 test_refined.run_tests()
-test_refined.test_while_multivar_nested()
