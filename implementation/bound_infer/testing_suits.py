@@ -1,8 +1,8 @@
 import sys
 sys.path.append('~/Users/admin/iCloud Drive (Archive)/Documents/.git/AdaptiveAnalysis-jiawen/AdaptivityAnalysis/implementation/adapt_search/')
 from lib2to3.pgen2.literals import test
-from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint, VariableReachingBound,Graph, AdaptType
-# from ..adapt_search import Graph, AdaptType
+from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint, VariableReachingBound
+from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
 # from .adapt_search.adapt_search_refined import AdaptSearchAlgRefined
 
 class TestUnits:
@@ -20,8 +20,8 @@ class TestUnits:
     # Expected Weights: [1,1,1,1]
     def test_seq(self):
         weights = [AdaptType(0), AdaptType(0), AdaptType(0), AdaptType(0)]
-        query = [1, 1, 1, 0]
-        edges = [(0, 2), (1, 2), (1, 3)]
+        query = [1, 1, 1, 1]
+        edges = [(0, 1), (1, 2), (1, 3), (2, 3)]
         # adapt_search = self.ALG(Graph(edges, weights, query))
 
         ctl_edges = [(0, 1)]
@@ -32,12 +32,17 @@ class TestUnits:
         bound_infer.attach_weights()
         print("The Reachability Bounds Expected for  Vertices in Pure Sequence Graph are: [1,1,1,1] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
+        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
+
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for Simple Seq Algorithm is: 4 ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example with simple Loop sequence, 
     # Expected Weights: [1,k,k,k]
     def test_simple_while(self):
         weights = [AdaptType(0), AdaptType(0), AdaptType(0), AdaptType(0)]
-        query = [1, 1, 1, 0]
+        query = [0, 1, 1, 0]
         edges = [(0, 2), (1, 2), (1, 3)]
         # adapt_search = self.ALG(Graph(edges, weights, query))
 
@@ -50,13 +55,17 @@ class TestUnits:
         bound_infer.attach_weights()
         print("The Reachability Bounds Expected for  Vertices in Simple while are: [1, k, k,k] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
-
+        
+        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for Simple While Algorithm is: 1 ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the two-round example, 
     # Expected Weights: [1,k,k,1]
     # i.e., [AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType(1)]
     def test_two_round(self):
-        query = [0, 0, 0, 1, 0, 0]
+        query = [0, 0, 0, 1, 0, 1]
         edges = [(0, 2), (1, 2), (1,4), (2,2), (2, 3), (3, 4), (4, 4), (4, 5)]
         weights = [AdaptType("INF")]*len(query)
 
@@ -76,18 +85,17 @@ class TestUnits:
         print("The Reachability Bounds Expected for  Vertices in the Two Round Graph are: [1, 1, k, k, k, 1] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
        
-        # adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
-        # adapt_search.search_adapt()
-        # print("The Adaptivity Expected for Two Round Algorithm is: 2 ")
-        # print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
+        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for Two Round Algorithm is: 2 ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the multiple-round example, 
     # Expected Weights: [1, 1, k, k, k]
-    # i.e., [AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType(1)]
+    # i.e., weights = [AdaptType(1),  AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType("k")]
     def test_multiple_round(self):
-        # weights = [AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType(1)]
         query = [0, 0, 1, 0, 0]
-        edges = [(0, 4), (1, 2), (1, 3), (2, 3), (3, 2), (3, 3)]
+        edges = [(0, 4), (1, 2), (1, 3), (2, 3), (3, 2), (3, 3), (4, 4)]
         weights = [AdaptType("INF")]*len(query)
 
         ctl_edges = [(0, 1), (1, 1)]
@@ -99,18 +107,21 @@ class TestUnits:
             DifferenceConstraint("I", "a", "[]", DifferenceConstraint.DCType.INC)], 1, [2, 3, 4])
             ]
 
-
         bound_infer = self.ALG(Graph(edges, weights, query), TransitionGraph(ctl_edges, transitions))
         bound_infer.attach_weights()
         print("The Reachability Bounds Expected for  Vertices in the Multiple Round Graph are: [1, 1, k, k, k] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
 
+        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for multiple Round Algorithm is: k ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the nested while example, 
     # Expected Weights: [1, 1, k, k, k!]
     def test_simple_nested(self):
         # weights = [AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType(1)]
-        query = [1, 1, 1, 1]
+        query = [0, 0, 0, 1, 0, 1]
         edges = [(0, 4), (1, 2), (1, 3), (2, 3), (3, 2), (3, 3)]
         weights = [AdaptType("INF")]*len(query)
 
@@ -129,6 +140,38 @@ class TestUnits:
         print("The Reachability Bounds Expected for  Vertices in the Simple Nested While Graph are: [1, k, k, k!] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
 
+        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for Simple Nested While Algorithm is: 2 + k! ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
+
+    # the nested while example, 
+    # Expected Weights: [1, 1, k, k, k!]
+    def test_simple_nested_withquery(self):
+        # weights = [AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType(1)]
+        query = [0, 0, 0, 1, 0, 1]
+        edges = [(0, 4), (1, 2), (1, 3), (2, 3), (3, 2), (3, 3)]
+        weights = [AdaptType("INF")]*len(query)
+
+        ctl_edges = [(0, 1), (1, 2), (2, 1), (2, 2)]
+        transitions = [
+            (0, [DifferenceConstraint("i", None, "k", DifferenceConstraint.DCType.RESET)], 1, [0]),
+            (1, [DifferenceConstraint("i", None, "1", DifferenceConstraint.DCType.DEC),
+            DifferenceConstraint("j", "i", "0", DifferenceConstraint.DCType.RESET)], 2, [1, 2]),
+            (2, [DifferenceConstraint("j", None, "1", DifferenceConstraint.DCType.DEC)], 2, [3]),
+            (2, [], 1, [])
+            ]
+
+
+        bound_infer = self.ALG(Graph(edges, weights, query), TransitionGraph(ctl_edges, transitions))
+        bound_infer.attach_weights()
+        print("The Reachability Bounds Expected for  Vertices in the Simple Nested While Graph are: [1, k, k, k!] ")
+        print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
+
+        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for Simple Nested While Algorithm is: 2 + k! ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # the example in if branch and only value dependency, 
     # Expected Adaptivity: 2
@@ -268,6 +311,37 @@ class TestUnits:
         self.test_while_val_ctl()
         self.test10()
 
+    # the two-round example, 
+    # Expected Weights: [1,k,k,1]
+    # i.e., [AdaptType(1), AdaptType("k"), AdaptType("k"), AdaptType(1)]
+    def test_two_round2(self):
+        query = [0, 0, 0, 1, 0, 1]
+        edges = [(0, 2), (1, 2), (1,4), (2,2), (2, 3), (3, 4), (4, 4), (4, 5)]
+        weights = [AdaptType("INF")]*len(query)
+
+        ctl_edges = [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 2), (2, 6)]
+        transitions = [
+            (0, [DifferenceConstraint("i", None, "k", DifferenceConstraint.DCType.RESET)], 1, [0]),
+            (1, [DifferenceConstraint("l", None, "Q", DifferenceConstraint.DCType.RESET)], 2, [1]),
+            (1, [DifferenceConstraint("i", None, "1", DifferenceConstraint.DCType.DEC)], 1, [2]),
+            (1, [DifferenceConstraint("a", None, "Q", DifferenceConstraint.DCType.RESET)], 1, [3]),
+            (1, [DifferenceConstraint("l", "a", "0", DifferenceConstraint.DCType.INC)], 1, [4]),
+            (1, [], 1, []),
+            (1, [DifferenceConstraint("b", "l", "Q", DifferenceConstraint.DCType.RESET)], 2, [5])] 
+
+        bound_infer = self.ALG(Graph(edges, weights, query), TransitionGraph(ctl_edges, transitions))
+        bound_infer.attach_weights()
+        print("The Reachability Bounds Expected for  Vertices in the Two Round Graph are: [1, 1, k, k, k, 1] ")
+        print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
+       
+        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for Two Round Algorithm is: 2 ")
+        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
+
+
+
+
 
 
 
@@ -283,3 +357,4 @@ test_bound_infer.test_two_round()
 test_bound_infer.test_multiple_round()
 test_bound_infer.test_simple_nested()
 test_bound_infer.test_while_multipath_if()
+test_bound_infer.test_two_round2()
