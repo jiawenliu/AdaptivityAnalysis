@@ -189,6 +189,7 @@ class TransitionBound:
         self.transition_graph = transition_graph
         self.transition_bounds = [""]*len(transition_graph.transitions)
         self.transition_local_bounds = LocalBound.compute_local_bounds(transition_graph)
+        print (self.transition_local_bounds)
         self.var_invariant = defaultdict(str)
         self.var_incs = defaultdict(list)
         self.var_incs_bound = defaultdict(str)
