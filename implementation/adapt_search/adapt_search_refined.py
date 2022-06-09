@@ -1,3 +1,4 @@
+from itertools import accumulate
 from adapt_search_naive import AdaptSearchAlg, AdaptType, Graph
 
 
@@ -67,16 +68,17 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
     def refined_adapt_calculation_dfs (self, u: int):
         i = self.head[u]
         while i != -1:
-            if not self.scc_id[u] == self.scc_id[self.edges[i].to]:
+            v = self.edges[i].to
+            if not (self.scc_id[u] == self.scc_id[v]):
                 i = self.edges[i].next
                 continue 
-            v = self.edges[i].to
             query_num_temp = self.query_num[v]
             flow_capacity_temp = self.flow_capacity[v]
             self.flow_capacity[v] = self.flow_capacity[u].adapt_min(self.graph.weights[v])
             self.query_num[v] = self.query_num[u] + self.graph.query[v]
             self.refined_adapt[v] = self.refined_adapt[u]
-            print("visiting vertex", v)
+            print("visiting vertex", v, "from vertex", u, " with its query annotation: ",  self.graph.query[v],
+            "and accumulated query number ",  self.query_num[u])
             if not self.refined_adapt_visited[v]:
                 self.refined_adapt_visited[v] = True
                 self.refined_adapt_calculation_dfs(v)
@@ -84,7 +86,9 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
                 #     "the last visit is: ", self.last_visit[v])
             else:
                 if v == u:
-                    self.refined_adapt[v] = (self.graph.weights[v] + self.refined_adapt[v]).adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
+                    print("update the adaptivity with self loop  with accumulate adaptivity", self.refined_adapt[v].value,
+                    "with weight ", self.graph.weights[v].value, " and accumulate weight and query number", self.flow_capacity[v].value, self.query_num[v])
+                    self.refined_adapt[v] = (self.graph.weights[v] * AdaptType(self.graph.query[v]) + self.refined_adapt[v]).adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
                 else:
                     self.refined_adapt[v] = self.refined_adapt[v].adapt_max(self.flow_capacity[v] * AdaptType(self.query_num[v]))
                 if i == -1: 
