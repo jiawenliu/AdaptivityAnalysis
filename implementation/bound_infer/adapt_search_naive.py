@@ -1,11 +1,18 @@
 
 
+import enum
+
+
 class AdaptType:
     value = 0
     def __init__(self, value = 0) -> None:
         self.value = value
     def __add__(self, other):
         if (isinstance(self.value, str)) or isinstance(other.value, str):
+            if (isinstance(self.value, int) and int(self.value) == 0):
+                return other
+            if (isinstance(other.value, int) and int(other.value) == 0):
+                return self
             return AdaptType(str(self.value) + " + " + str(other.value))
         else:
             # print(self.value, other.value, " both are int")
@@ -13,6 +20,10 @@ class AdaptType:
 
     def __radd__(self, other):
         if (isinstance(self.value, str)) or isinstance(other.value, str):
+            if (isinstance(self.value, int) and int(self.value) == 0):
+                return other
+            if (isinstance(other.value, int) and int(other.value) == 0):
+                return self
             return AdaptType(str(other.value) + " + " + str(self.value))
         else:
             # print(self.value, other.value, " both are int")
@@ -20,13 +31,23 @@ class AdaptType:
     
     def __mul__(self, other):
         if (isinstance(self.value, str)) or isinstance(other.value, str):
-            return AdaptType(str(other.value) + " * " + str(self.value))
+            if (isinstance(self.value, int) and int(self.value) == 0) or (isinstance(other.value, int) and int(other.value) == 0):
+                return AdaptType(0)
+            if (isinstance(self.value, int) and int(self.value) == 1):
+                return other
+            if (isinstance(other.value, int) and int(other.value) == 1):
+                return self
+            return AdaptType("(" + str(other.value) + ") * (" + str(self.value) + ")")
         else:
             # print(self.value, other.value, " both are int")
-            return AdaptType(self.value * other.value)
+            return AdaptType(self.value * (other.value))
 
     def adapt_max(self, other):
         if (isinstance(self.value, str)) and isinstance(other.value, str):
+            if (isinstance(self.value, int) and int(self.value) == 0):
+                return other
+            if (isinstance(other.value, int) and int(other.value) == 0):
+                return self
             return AdaptType("max(" + str(self.value) + ", " + str(other.value) + ")")
         elif (isinstance(self.value, str)) or (isinstance(other.value, str)):
             return self  if other.value == 0 else other if self.value == 0 else AdaptType("max(" + str(self.value) + ", " + str(other.value) + ")")
@@ -38,6 +59,10 @@ class AdaptType:
 
     def adapt_min(self, other):
         if (isinstance(self.value, str)) and isinstance(other.value, str):
+            if (isinstance(self.value, int) and int(self.value) == 0):
+                return self
+            if (isinstance(other.value, int) and int(other.value) == 0):
+                return other
             return AdaptType("min(" + str(self.value) + ", " + str(other.value) + ")")
         elif (isinstance(self.value, str)) or (isinstance(other.value, str)):
             return self  if other.value == 0 else other if self.value == 0 else AdaptType("min(" + str(self.value) + ", " + str(other.value) + ")")
@@ -164,7 +189,7 @@ class AdaptSearchAlg:
     def build_scc(self):
         self.scc_graph = [[] for _ in range(self.vertex_no+1)]
         for u in range(0, self.vertex_no):
-            print("vertex ", u, " is the head of edge # ", self.head[u])
+            print("vertex ", u, " is the head of edge # ", self.head[u], "to the node: ", self.edges[self.head[u]].to)
             i = self.head[u]
             print("vertex ", u, "belongs to the scc # ", self.scc_id[u])
             while i != -1:
@@ -199,9 +224,29 @@ class AdaptSearchAlg:
         bfs_q = []
         visited = [False]*(self.vertex_no + 1)
         self.adapt = [AdaptType(0)]* (self.scc_cnt+2)
+        start_v = min([i if q == 1 else self.graph.get_vertice_num() for (i, q) in enumerate((self.graph.query))])
+        
+        # for j in range(1, self.scc_cnt+1):
+        #     # if visited[j]: 
+        #     #     continue
+        #     # visited[j] = True
+        #     self.adapt[j] = self.scc_adapt[j] if self.adapt[j].value == 0 else self.adapt[j]
+        #     bfs_q.append(j)
+        #     # for i in range(1, self.scc_cnt+1):
+        #     #     self.adapt[i] = self.scc_adapt[i] if self.scc_id[0] == i  else AdaptType(0)
+        #     # bfs_q.append(self.scc_id[0])
+        #     while bfs_q != []:
+        #         u = bfs_q.pop(0)
+        #         # print(u)
+        #         visited[u] = False
+        #         for v in self.scc_graph[u]:
+        #             self.adapt[v] = (self.adapt[v].adapt_max(self.adapt[u] + self.scc_adapt[v]))
+        #             if not visited[v]:
+        #                 visited[v] = True 
+        #                 bfs_q.append(v)
         for i in range(1, self.scc_cnt+1):
-            self.adapt[i] = self.scc_adapt[i] if self.scc_id[0] == i  else AdaptType(0)
-        bfs_q.append(self.scc_id[0])
+            self.adapt[i] = self.scc_adapt[i] if self.scc_id[start_v] == i  else AdaptType(0)
+        bfs_q.append(self.scc_id[start_v])
         while bfs_q != []:
             u = bfs_q.pop(0)
             # print(u)

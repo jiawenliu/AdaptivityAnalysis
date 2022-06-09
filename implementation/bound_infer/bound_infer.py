@@ -234,6 +234,9 @@ class TransitionBound:
         if v == "1":
             self.transition_bounds[t_index] = "1"
             return "1"
+        if v == "-1":
+            self.transition_bounds[t_index] = "INF"
+            return "INF"
         else:
             if v not in self.var_invariant.keys():
                 self.compute_var_invariant(v)
@@ -262,7 +265,6 @@ class VariableReachingBound:
         self.transition_graph = transition_graph
     
     def attach_weights(self):
-
         transition_bounds = TransitionBound(self.transition_graph).compute_transition_bounds()
         for (t_index, b) in enumerate(transition_bounds):
             for var_vertex in self.transition_graph.transitions[t_index][3]:
@@ -270,5 +272,10 @@ class VariableReachingBound:
     
     def get_weights(self):
         return [w.value for w in self.graph.weights]
+    
+    def print_weights(self):
+        for transition in self.transition_graph.transitions:
+            for var_vertex in transition[3]:
+                print( "weight for Variable: " + transition[1][0].get_var() + " of label " + str(var_vertex) + " is: " + str(self.graph.weights[var_vertex].value))
 
 
