@@ -1,3 +1,4 @@
+open Core
 open Syntax
 open Format
 
@@ -22,7 +23,7 @@ let parseArgs () =
                    | None -> printf "specify your input file name by -i infilename"; ""
                    
 let parse_prog file =
-    let ic = open_in file 
+    let ic = In_channel.create file
     in
       let lb = (Lexing.from_channel ic) in 
         Parser.toplevel Lexer.main lb
@@ -33,9 +34,16 @@ let _ =
       let result = parse_prog infile in
       let final_label = Cfg.final result in 
       let _ =  Printf.printf "final label size: %d" (List.length final_label) in 
-        List.fold_left ( fun () label -> Printf.printf "final label : %d" (Syntax.print_label label) ) () final_label;
+        List.fold_left ~f:( fun () label -> Printf.printf "final label : %d" (Syntax.print_label label) ) ~init:() final_label;
       let blocks = Cfg.blocks result in
-      List.fold_left ( fun () block -> Printf.printf "%s ; \n" (Syntax.print_block block) ) () blocks;
+      let blocksmap = Cfg.blocks2map blocks in
+      Int.Map.iter_keys blocksmap
+      ~f: (fun k -> let node = Int.Map.find blocksmap k in
+       match node with
+       | Some bk ->   Printf.printf "key %d, node is %s ; \n" k (Syntax.print_block bk)
+      | None ->   Printf.printf " No node for key %d; \n" k
+       ) ;
+      List.fold_left ~f:( fun () block -> Printf.printf "%s ; \n" (Syntax.print_block block) ) ~init:() blocks;
       let string_result = print_lcommand result in
       Printf.printf "The input program is : %s" string_result;
       let flow = Cfg.flow result in
