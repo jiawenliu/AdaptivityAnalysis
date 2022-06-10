@@ -165,7 +165,8 @@ The query-based dependency graph is a subgraph of the variable dependency graph 
     %
     \[
     %
-    \begin{array}{l}
+        \kw{seq} \triangleq 
+    \begin{array}{l} 
            \clabel{ \assign{x}{\chi[0]}}^{1} ; \\
             \clabel{\assign{y}{\chi[x + 1]} }^{2} ; \\
             \clabel{\assign{z}{\chi[y + 1]}}^{3}; \\
@@ -174,76 +175,140 @@ The query-based dependency graph is a subgraph of the variable dependency graph 
     \]
     \end{example}
 
-    \begin{example}[If with Data-Control Dependency Separated]
+    \begin{example}[If with Data-Value Dependency Separated]
         %
         %
         \[
         %
         \begin{array}{l}
-            \clabel{ \assign{x}{\chi[0]}}^{1} ; \\
-            \clabel{\assign{z}{\chi[1]} }^{2} ; \\
-            \eif(\clabel{x < 0}, \clabel{\assign{y}{\chi[z]}}^{4}, \clabel{\assign{y}{\chi[0]}}^{4})
+        \kw{if-value-dependency} \triangleq \\
+           \quad \clabel{ \assign{x}{\chi[0]}}^{1} ; \\
+           \quad \clabel{\assign{z}{\chi[1]} }^{2} ; \\
+           \quad \eif(\clabel{x < 0}, \\
+           \quad \clabel{\assign{y}{\chi[z]}}^{3}, 
+           \quad \clabel{\assign{y}{\chi[0]}}^{4})
             \end{array}
         \]
         \end{example}
 
-        \begin{example}[If with Data-Value and Data-Control Dependency Overlapped]
+        \begin{example}[If with Data-Control Dependency Overlapped]
             %
             %
             \[
             %
             \begin{array}{l}
+            \kw{if-control-dependency} \triangleq \\
                 \clabel{ \assign{x}{\chi[0]}}^{1} ; \\
                 \clabel{\assign{z}{\chi[1]} }^{2} ; \\
-                \eif(\clabel{x < 0}^{3}, \clabel{\assign{y}{\chi[z] + \chi[x]}}^{4}, \clabel{\assign{y}{\chi[x]}}^{4})
+                \eif(\clabel{x < 0}^{3}, 
+                \clabel{\assign{y}{\chi[0] + \chi[1]}}^{4}, 
+                \clabel{\assign{y}{\chi[0]}}^{4})
             \end{array}
             \]
             \end{example}
 
 
-            \begin{example}[Simple While without Recursive Data-Value Dependency]
+            \begin{example}[Simple While with Recursive Data-Value Dependency]
                 %
                 %
                 \[
                 %
-                smpWhile(k)
+                \kw{while}() \triangleq
                 \begin{array}{l}
                     \clabel{ \assign{a}{\chi[0]}}^{1} ; \\
-                    \clabel{\assign{j}{k} }^{2} ; \\
+                    \clabel{\assign{j}{10000} }^{2} ; \\
                         \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
                         \Big(
-                         \clabel{\assign{x}{\query(\chi[k]) }^{4}  ; \\
+                         \clabel{\assign{x}{\query(\chi[a]) }}^{4}  ; \\
                          \clabel{\assign{j}{j-1}}^{5} ;\\
                         \clabel{a \leftarrow x + a}^{6}       \Big);
                     \end{array}
                 \]
                 \end{example}
 %
-                \begin{example}[Simple While with Recursive Data-Value Dependency]
+        \begin{example}[Simple While with Multi-Path Data-Value Dependency]
+        %
+        %
+        \[
+        %
+        \begin{array}{l}
+        \kw{while-multiple-path}(k) \triangleq \\
+            \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+            \clabel{\assign{j}{k} }^{2} ; \\
+                \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
+                \Big(
+                 \clabel{\assign{j}{j-1}}^{4} ;\\
+                 \eif(\clabel{j \% 2 == 0}^{5}, 
+                 \clabel{\assign{y}{\chi[x]}}^{6}, 
+                 \clabel{\assign{w}{\chi[x]}}^{7})                             
+                 \clabel{\assign{x}{\query(\chi(\ln(y)))} }^{7} \Big);
+            \end{array}
+        \]
+        \end{example}
+%
+        \begin{example}[Simple While with Recursive Multiple-Variable Data-Value Dependency]
+            \[
+            %
+            \begin{array}{l}
+            \kw{while-multiple-var}(k) \triangleq \\
+                \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
+                \clabel{\assign{j}{k} }^{3} ; \\
+                    \ewhile ~ \clabel{j > 0}^{4} ~ \edo ~ \\
+                    \Big(
+                     \clabel{\assign{j}{j-1}}^{5} ;\\
+                     \clabel{\assign{z}{\query(\chi(x + \ln(y)))} }^{6}  ; \\
+                     \clabel{ \assign{x}{\query(\chi[z])}}^{7} ; \\
+                     \clabel{ \assign{y}{\query(\chi[z])}}^{8} ; \\
+                    \Big);
+                \end{array}
+            \]
+            \end{example}
+            %
+            %
+            \begin{example}[Simple While with Data-Value and Data-Control Dependency]
+                %
+                \[
+                \begin{array}{l}
+                \kw{while-value-control-dependency}() \triangleq \\
+                    \clabel{ \assign{x}{\query(\chi[0])} }^{1} ; \\
+                    \clabel{ \assign{z}{\query(\chi[0])} }^{2} ; \\
+                        \ewhile ~ \clabel{x > 0}^{3} ~ \edo ~ \\
+                        \Big(
+                        \clabel{\assign{x}{\query(\chi(z))} }^{4}  ; \\
+                        \clabel{\assign{z}{\query(\chi(x))}}^{5} ;
+                      \Big);
+                    \end{array}
+                \]
+                \end{example}
+%
+            \begin{example}[Simple While with MultiplePath Data-Value and Data-Control Dependency]
+                %
+                \[
                     %
-                    %
-                    \[
-                    %
-                    smpWhileRec(k)
                     \begin{array}{l}
-                        \clabel{ \assign{a}{\query(\chi[0])}}^{1} ; \\
-                        \clabel{\assign{j}{k} }^{2} ; \\
-                            \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
+                    \kw{while-multiple-path-value-control-dependency}(k) \triangleq\\
+                        \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
+                        \clabel{\assign{y}{0} }^{2} ; \\
+                            \ewhile ~ \clabel{x > 0}^{3} ~ \edo ~ \\
                             \Big(
-                             \clabel{\assign{x}{\query(\chi(\ln(a)))} }^{4}  ; \\
-                             \clabel{\assign{j}{j-1}}^{5} ;\\
-                            \clabel{a \leftarrow x + a}^{6}       \Big);
+                             \clabel{\assign{x}{x-1}}^{4} ;\\
+                             \eif(\clabel{y > 0}^{5}, 
+                             \clabel{\assign{y}{\query(\chi[12])}}^{6}, 
+                             \clabel{\assign{w}{\query(\chi[9])}}^{7})                             
+                             \Big);\\
+                             \clabel{\assign{y}{\query(\chi(\ln(y)))} }^{8} 
                         \end{array}
                     \]
-                    \end{example}
-%
-                \begin{example}[Nested While with Simple Recursive Data-Value Dependency]
+                \end{example}
+                                %
+                \begin{example}[Nested While with Recursive Data-Value Dependency]
                     %
                     %
                     \[
                     %
-                    nestedWhileRecSmp(k)
                     \begin{array}{l}
+                    \kw{nest-while-value-dependency}(k) \triangleq \\
                         \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
                         \clabel{\assign{j}{k} }^{2} ; \\
                             \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
@@ -265,8 +330,8 @@ The query-based dependency graph is a subgraph of the variable dependency graph 
                         %
                         \[
                         %
-                        \kw{nestedWhileRecAcross}(k)
                         \begin{array}{l}
+                            \kw{nestedWhileRecAcross}(k) \triangleq \\
                             \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
                             \clabel{\assign{j}{k} }^{2} ; \\
                                 \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
@@ -283,53 +348,14 @@ The query-based dependency graph is a subgraph of the variable dependency graph 
                         \]
                         \end{example}
                 %
-                \begin{example}[Simple While with Multi-Path Data-Value Dependency]
-                \todo{Over-Approximated, because we cannot accurately calculate the multi-path reachability bounds.
-                But can extend with the analysis method in \cite{Sumit2010rechability} to cover this}
-                    %
-                    %
-                    \[
-                    %
-                    smpWhileIf(k)
-                    \begin{array}{l}
-                        \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
-                        \clabel{\assign{j}{k} }^{2} ; \\
-                            \ewhile ~ \clabel{j > 0}^{3} ~ \edo ~ \\
-                            \Big(
-                             \clabel{\assign{j}{j-1}}^{4} ;\\
-                             \eif(\clabel{j \% 2 == 0}^{5}, 
-                             \clabel{\assign{y}{\chi[x]}}^{6}, 
-                             \eskip)                             
-                             \clabel{\assign{x}{\query(\chi(\ln(y)))} }^{7} \Big);
-                        \end{array}
-                    \]
-                    \end{example}
-%
-                    \begin{example}[Simple While with Recursive Multiple-Variable Data-Value Dependency]
-                        \[
-                        %
-                        \kw{smpWhileMultiVar}(k) \triangleq
-                        \begin{array}{l}
-                            \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
-                            \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
-                            \clabel{\assign{j}{k} }^{3} ; \\
-                                \ewhile ~ \clabel{j > 0}^{4} ~ \edo ~ \\
-                                \Big(
-                                 \clabel{\assign{j}{j-1}}^{5} ;\\
-                                 \clabel{\assign{z}{\query(\chi(x + \ln(y)))} }^{6}  ; \\
-                                 \clabel{ \assign{x}{\query(\chi[z])}}^{7} ; \\
-                                 \clabel{ \assign{y}{\query(\chi[z])}}^{8} ; \\
-                                \Big);
-                            \end{array}
-                        \]
-                        \end{example}
+            
                         \begin{example}[Nested While with Nested Recursive Multiple Variable 
                             Data-Value Dependency Across Outer and Inner Loop]
                             %
                             \[
                             %
-                            \kw{nestedWhileMultiVarRecAcross}(k)
                             \begin{array}{l}
+                            \kw{nestedWhileMultiVarRecAcross}(k) \triangleq \\
                                 \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
                                 \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
                                 \clabel{\assign{j}{k} }^{3} ; \\
@@ -346,23 +372,5 @@ The query-based dependency graph is a subgraph of the variable dependency graph 
                                 \end{array}
                             \]
                             \end{example}
-                        
-                            \begin{example}[While with Data-Value and Data-Control Dependency Overlapped]
-                                    %
-                                    %
-                                    \[
-                                    %
-                                    \kw{smpWhileValCtl} \triangleq
-                                    \begin{array}{l}
-                                        \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
-                                        \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
-                                            \ewhile ~ \clabel{x > 0}^{3} ~ \edo ~ \\
-                                            \Big(
-                                             \clabel{\assign{x}{\query(\chi[x - 1])} }^{4}  ; \\
-                                             \clabel{ \assign{y}{\query(\chi[x] * \chi[y])}}^{5} ; \\
-                                            \Big);
-                                        \end{array}
-                                    \]
-                                    \end{example}
+                    
                             
-                                    \todo{Over approximated, we will not infer the most accurate reachability bound for Variable x}
