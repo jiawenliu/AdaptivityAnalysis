@@ -69,8 +69,6 @@ let rec abs_flow (lcom : lcommand) : abs_transition list =
   
 
 
-  let infile = ref (None : string option)
-(* let outfile = ref (None : string option) *)
 
 let print_const const = 
   match const with
@@ -91,6 +89,7 @@ let print_abs_flow aflow =
   List.fold_left (fun () (x,  y, c) -> Printf.printf "edge from %d to %d  with constriant: %s \n" (print_label x) (print_label y) 
   (print_constriant c) ) () aflow 
 
+  
   let print_abs_flow_label aflow =
     List.fold_left (fun () (x,  y, _) -> Printf.printf "(%d, %d), " (print_label x) (print_label y)) () aflow 
 
@@ -104,50 +103,41 @@ let print_abs_flow aflow =
       | Inc (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None, \"%s\", DifferenceConstraint.DCType.INC) " var.v_name (print_const cons)
       | Top -> sprintf ""
 
+      let print_abs_flow_constraints aflow =
+        List.fold_left (
+          fun () (x, y, c) -> 
+          (let _ = Printf.printf "(%d, [%s], %d, [%d])" (print_label x) (print_constriant_for_python c) (print_label y) (print_label x)
+          in let _ = Printf.printf "," in
+          print_newline())
+          ) () aflow
+          
+      
+          let print_out_constriant c = 
+            match c with
+            | Reset (var, Some var', cons) -> sprintf "%s,%s,%s,RESET" var.v_name var'.v_name (print_const cons)
+            | Dec (var, Some var', cons) -> sprintf "%s,%s,%s,DEC" var.v_name var'.v_name (print_const cons)
+            | Inc (var, Some var', cons) -> sprintf "%s,%s,%s,INC" var.v_name var'.v_name (print_const cons)
+            | Reset (var, None, cons) -> sprintf "%s,,%s,RESET" var.v_name (print_const cons)
+            | Dec (var, None, cons) -> sprintf "%s,,%s,DEC" var.v_name (print_const cons)
+            | Inc (var, None, cons) -> sprintf "%s,,%s,INC" var.v_name (print_const cons)
+            | Top -> sprintf ""
 
-    let print_abs_flow_constraints aflow =
-      List.fold_left (
-        fun () (x, y, c) -> 
-        (let _ = Printf.printf "(%d, [%s], %d, [%d])" (print_label x) (print_constriant_for_python c) (print_label y) (print_label x)
-        in let _ = Printf.printf "," in
-        print_newline())
-        ) () aflow
-  
+        let print_out_abs_flow oc aflow =
+          List.fold_left (fun () (x,  y, c) -> Printf.fprintf oc "%d;%s;%d;%d\n" (print_label x) (print_out_constriant c) (print_label y) (print_label x)
+           ) () aflow 
+        
 
+        let print_out_abs_flow_edges oc aflow =
+          List.fold_left (fun () (x,  y, _) -> Printf.fprintf oc "%d,%d;" (print_label x) (print_label y)) () aflow 
 
-let argDefs = [
-    "-i", Arg.String (fun s -> infile := Some s  ), "specify the input file name" ] 
-    (* "-o", Arg.String (fun s -> outfile := Some s ), "specify the output file name" *)
-
-let parseArgs () =  
-        Arg.parse argDefs 
-        (fun s -> 
-                match !infile  with 
-                      | Some (_) -> printf "%s" "specify "  
-                      | None  -> infile := Some (s) ) " " ;
-             match !infile  with
-                   | Some inf -> inf
-                   | None -> printf "specify your input file name by -i infilename"; ""
-                   
-let parse_prog file =
-    let ic = open_in file 
-    in
-      let lb = (Lexing.from_channel ic) in 
-        Parser.toplevel Lexer.main lb
-
-      let _ =
-        (* let lexbuf = Lexing.from_channel stdin in *)
-        let infile  = parseArgs () in 
+          (*        let _ =
+        let (infile , outfile) = parseArgs () in 
+        let oc = Out_channel.create outfile in
           let result = parse_prog infile in
-          let final_label = Cfg.final result in 
-          let _ =  Printf.printf "final label size: %d" (List.length final_label) in 
-            List.fold_left ( fun () label -> Printf.printf "final label : %d" (Syntax.print_label label) ) () final_label;
-          let blocks = Cfg.blocks result in
-          List.fold_left ( fun () block -> Printf.printf "%s ; \n" (Syntax.print_block block) ) () blocks;
           let string_result = print_lcommand result in
           Printf.printf "The input program is : %s" string_result;
           print_newline();
-          let aflow = abs_flow (Seq (result, Skip)) in
+          let aflow = Abs.abs_flow (Seq (result, Skip)) in
           print_abs_flow aflow;
           print_newline();
 
@@ -156,4 +146,10 @@ let parse_prog file =
 
           print_abs_flow_constraints aflow;
           print_newline();
-      
+          let blocks = Cfg.blocks result in
+          let _ =  Printf.fprintf oc "%d\n" (List.length blocks + 1)  in 
+          print_out_abs_flow_edges oc aflow;
+          Printf.fprintf oc "\n";
+          print_out_abs_flow oc aflow;
+          Out_channel.close oc
+ *)
