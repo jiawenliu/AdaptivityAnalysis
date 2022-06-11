@@ -47,6 +47,14 @@ let _ =
       let string_result = print_lcommand result in
       Printf.printf "The input program is : %s" string_result;
       let flow = Cfg.flow result in
+      let precessor_map = Cfg.precessor_map blocks flow in
+      Int.Map.iter_keys precessor_map
+      ~f: (fun k -> let node = Int.Map.find precessor_map k in
+       match node with
+       | Some precessors_labels ->  List.fold_left precessors_labels ~init:() 
+       ~f: (fun () precessor -> Printf.printf "key %d, precessor is %d ; \n" k (Syntax.print_label precessor) )
+      | None ->   Printf.printf " No node for key %d; \n" k
+       ) ;
       print_flow flow;
       print_newline();
         
