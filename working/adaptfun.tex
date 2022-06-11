@@ -501,8 +501,10 @@ There are 3 steps to generate the graph in this phase.
 \end{enumerate}
 
 \paragraph{Generate CFG}
- Define $\mathsf{init}$: Command -> label, which returns the initial label of the statement. 
- \[
+ \begin{def}
+  \label{def:init_label}
+  Define $\mathsf{init}$: Command -> label, which returns the initial label of the statement. 
+\[
  \begin{array}{ll}
     init([x := e]^{l})  & = l  \\
      init([x := q(e)]^{l})  & = l \\
@@ -512,6 +514,7 @@ There are 3 steps to generate the graph in this phase.
      init(C_1 ; C_2)  & = init(C_1) \\
  \end{array}
  \]
+\end{def}
   Define $\mathsf{final}$: Command -> Powerset(label), which returns the final labels of the statement. 
  \[
  \begin{array}{ll}
@@ -614,61 +617,93 @@ The Reaching definition is calculated by the Worklist algorithm as below.
  
  
 
-\subsubsection{Phase 2, reachability number analysis}
+\subsubsection{Phase 2, Reachability Bounds Estimation}
 
-In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the approximated visiting times (how many times this block is exeucted). The algorithm is defined in Algorithm~\ref{alg:add_weights}, with 3 main functions, the Control Location Insertion, 
-Program Transition Abstraction, 
-Bound Calculation 
-and ADDWEIGHTs.
-\begin{algorithm}
-\caption{
-{Add weights to dependency graph (the main algorithm of phase 2)}
-\label{alg:add_weights}
-}
-\begin{algorithmic}[1]
-\REQUIRE the program $c$, the dependency graph $G = (\vertxs, \edges, \weights, \qflag)$ from phase 1
-\STATE  prel = PREPROCESSING(c) 
-\STATE {\bf for} $x^l \in \vertxs$: 
-\STATE \qquad {\bf if} $l \in prel$:
-\STATE \qquad \qquad $\weights(x^l) = \rb(c, l)$
-\STATE \qquad {\bf else}:
-\STATE \qquad \qquad $\weights(x^l) = 1$
-\RETURN $G$
-\end{algorithmic}
-\end{algorithm}
+% In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the approximated visiting times (how many times this block is exeucted). The algorithm is defined in Algorithm~\ref{alg:add_weights}, with 3 main functions, the Control Location Insertion, 
+% Program Transition Abstraction, 
+% Bound Calculation 
+% and ADDWEIGHTs.
+% \begin{algorithm}
+% \caption{
+% {Add weights to dependency graph (the main algorithm of phase 2)}
+% \label{alg:add_weights}
+% }
+% \begin{algorithmic}[1]
+% \REQUIRE the program $c$, the dependency graph $G = (\vertxs, \edges, \weights, \qflag)$ from phase 1
+% \STATE  prel = PREPROCESSING(c) 
+% \STATE {\bf for} $x^l \in \vertxs$: 
+% \STATE \qquad {\bf if} $l \in prel$:
+% \STATE \qquad \qquad $\weights(x^l) = \rb(c, l)$
+% \STATE \qquad {\bf else}:
+% \STATE \qquad \qquad $\weights(x^l) = 1$
+% \RETURN $G$
+% \end{algorithmic}
+% \end{algorithm}
 
+\paragraph*{Expression Abstraction}
 
-\paragraph{Program Transition Abstraction,} 
+Abstract Domain $ \absdom: \mathcal{P}(DC(VAR \cup \constdom) \cup \{\top \})$:
+\\
+$\constdom: \mathbb{Z} \cup symbc \cup \{\max{\dbdom}\} $ constants $\mathbb{Z}$ and 
+the symbolic constants $symbc$ (the program input and a special symbol $\max{\dbdom}$ reserved for representing the )
 Given a program $c$, with its control flow graph, we first extract its abstract final and initial states:
-Define $\mathsf{init}$: Command -> label, which returns the initial label of the statement. 
+\\
+$DC : VAR \cup \constdom \to \mathcal{VAR \times (VAR \cup \constdom) } \times \mathbb{Z}$
+\\
+The difference constraint $DC$ over $VAR \cup \constdom$ is inequality of form $x \leq y + c$ where $x \in VAR$, $y \in VAR \cup \constdom$ and $c \in \mathbb{Z}$, $DC(VAR \cup \constdom)$ represents the set of inequality over all $VAR \cup \constdom$.
+\\
+Expression Abstraction:
+$\absexpr : \expr \to VAR \to \absdom$,
+computes the difference constraints for variable 
+according to the expression $\expr$ assigned to it in the program.
+\[
+  \begin{array}{ll}
+    \absexpr(\expr, x)  & =   \\
+    \absexpr(\qexpr, x)  & = x \leq \max(\dbdom)  \\
+    \absexpr(\bexpr, x)  & = \top  \\
+  \end{array}
+  \]
+
+\paragraph{Program Event Abstraction} 
+Abstract event is a tuple of a pair of Labels with a difference constraint.
+\\
+Abstract Event: 
+$\absevent \in $
+Label $\times$ Label $\times \absdom$ 
+\\
+Abstract Initial State of Each Command is its Initial Label, computed in the way defined in Definition~\ref{def:init_label}.
+\\
+Final State Abstraction: 
+$\absfinal: \cdom \to \mathcal{Label}$,
+computes the Abstract Final State of the command. 
  \[
  \begin{array}{ll}
-    init([x := e]^{l})  & = l  \\
-     init([x := q(e)]^{l})  & = l \\
-     init([skip]^{l})  & = l \\
-     init([if [b]^l then C_1 else C_2]^{l})  & = l \\
-     init([while [b]^l do C]^{l})  & = l \\
-     init(C_1 ; C_2)  & = init(C_1) \\
- \end{array}
- \]
-  Define $\mathsf{final}$: Command -> Powerset(label), which returns the final labels of the statement. 
- \[
- \begin{array}{ll}
-    final([x := e]^{l})  & = \{l\}  \\
-     final([x := q(e)]^{l})  & = \{l\}  \\
-     final([skip]^{l})  & = \{l\} \\
-     final([if [b]^l then C_1 else C_2]^{l})  & = final(C_1) \cup final(C_2) \\
-     final([while [b]^l do C]^{l})  & = \{l\} \footnote{while terminates after b evaluates to false} \\
-     final(C_1 ; C_2)  & =  final(C_2) \\
+    \absfinal([x := \expr]^{l})  & = \{(l, \absexpr \eapp \expr \eapp x)\}  \\
+     \absfinal([x := \query(\qexpr))]^{l})  & = \{
+      (l, \absexpr \eapp \expr \eapp x)\}  \\
+     \absfinal([\eskip]^{l})  
+     & = \{(l, \top)\} \\
+     \absfinal([\eif [b]^l \ethen C_1 \eelse C_2]^{l})  & = \absfinal(C_1) \cup \absfinal(C_2) \\
+     \absfinal([\ewhile [b]^l do c_w]^{l})  & = \{(l, \top)\} \\
+     \absfinal(C_1 ; C_2)  & =  \absfinal(C_2) \\
  \end{array}
  \]
  %
  \paragraph{Control Flow Abstraction}
 Then, based on the Data-Control flow graph we generated in the first step, in order to analysis the reachability bound for each vertex, 
 we  extract the abstract control flow graph:
-For every 2 control locations $l_1$ and $l_2$ with a control flow egde, let $B_{(l_1, l_2)}$ be the set of blocks between control locations $l_1$ and $l_2$.
-The symbolic difference constraints for transitions between the control locations $l_1$ and $l_2$ is abstracted as follows:
-
+\\
+ Abstract Flow computation:
+ $\absflow: \cdom -> List(\absevent)$, 
+ $\absflow(c)$ computes the Abstract Flow of type $List(\absevent)$ for program $c$.
+ \\
+ For every two abstract events $\absevent_1$, $\absevent_2$ next to each other in $\absflow$,
+ the final label of  $\absevent_1$ equal to the 
+ initial label of $\absevent_2$.
+%  \\
+% For every 2 control locations $l_1$ and $l_2$ with a control flow edge, 
+% The symbolic difference constraints for transitions between the control locations $l_1$ and $l_2$ is abstracted as follows:
+\\
 % this step insert the control location with the edge representing
 % the control flow into the graph.
 % Given a program $c$, the control location and control flow edge is inserted as follows
@@ -677,7 +712,6 @@ The symbolic difference constraints for transitions between the control location
 %   locations(\assign{x}{\expr})
 % \end{array}
 %   \]
-
 More specifically, given a program $c$, its control flow graph can be described as follows
 \\
 1. inserting the enter location $l_b$ before the starting of the program.
@@ -693,94 +727,113 @@ inserting a control location $l_{i+1}$, then recursively inserting on bodys and 
 \\
 if $c_2$ starts with a $\ewhile$ command, and the last control location inserted in $c_1$ is $l_i$,
 inserting a control location $l_{i+1}$, then recursively inserting on the while body and on the commands after $\ewhile$.
-\[ 
-  absflow(l_1, l_2,B_{(l_1, l_2)}) \triangleq
-\begin{array}{l}
-  absflow(l_1, l_2,B_{(l_1, l_2)}' \cup \{[\assign{x}{c_1 \times x -/+ c_2}]{}^l\}) \triangleq 
-  \{x^l \leq x^l +/- \frac{c_2}{c_1} \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
-  absflow(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
-  absflow(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
-\end{array}
-  \]
-
+%
 \[
   \begin{array}{ll}
-     absflow([x := e]^{l})  & = \emptyset  \\
-     absflow([x := q(e)]^{l})  & = \emptyset  \\
-     absflow([skip]^{l})  & = \emptyset \\
-     absflow([if [b]^l then C_1 else C_2)  & =  flow(C_1) \cup flow(C_2)\cup \{(l, init(C_1)) , (l, init(C_2)) \} \\
-     absflow([while [b]^l do C)  & =  flow(C) \cup \{(l, init(C)) \} \cup \{(l', l)| l' \in final(C) \} \\
-     absflow(C_1 ; C_2)  & = flow(C_1) \cup  flow(C_2) \cup \{ (l,init(C_2)) | l \in final(C_1) \} \\
+     \absflow([x := \expr]^{l})  & = \emptyset  \\
+     \absflow([x := \query(\qexpr)]^{l})  & = \emptyset  \\
+     \absflow([\eskip]^{l})  & = \emptyset \\
+     \absflow([\eif [b]^l \ethen c_t \eelse c_f)  & =  \absflow(c_t) \cup \absflow(c_f)\cup \{(l, \top,  \init(c_t) ) , 
+     (l, \top, \init(c_f)) \} \\
+     \absflow([\ewhile [b]^l \edo c_w)  & =  \absflow(c_w) \cup \{(l, \top, \init(c_w)) \} \cup \{(l', dc, l)| (l', dc) \in \absfinal(c_w) \} \\
+     \absflow(c_1 ; c_2)  & = \absflow(c_1) \cup  \absflow(c_2) \cup \{ (l, dc, \init(c_2)) | (l, dc) \in \absfinal(c_1) \} \\
   \end{array}
   \]
 We handle the same normalized guard expression in $\ewhile$ and the same forms of the counter modification as in paper \cite{sinn2017complexity}. More specifically as follows:
 \\
 The counter variables only increase, decrease or reset by expression in the form of arithmetic multiplication, minus and plus, max and min.
 \\
-For more complex cases where the counter reset, or calcualted from Log, Query calculation, the bound will be approximated as $\infty$.
+For more complex cases where the counter reset, or calculated from Log, Query calculation, the bound will be approximated as $\infty$.
 \\ 
 The boolean expression in the guard of $\ewhile$ command is normalized into form of $ x > 0$ where $x^l \in \lvar_c$ for some $l$.
 \\
 This step is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
 We have a pre-processing algorithm to go through the programs and returns the list of labels associating with a loop and whose visiting times need to be analyzed.
-
-\paragraph*{Computing the Local Bounds}
-Given an abstract flow between 2 locations, the local bound is assigned to every abstract transition as follows:
+%
+\paragraph{Abstract Control Flow Graph} 
+Given program $c$ with its abstract control flow $\absflow(c)$, the Abstract Control Flow Graph:
+\\
+$\absG =(\absV, \absE)$:
+%
+\\
+$\absE = \{(l_1, dc, l_2) | (l_1, dc, l_2) \in \absflow(c)\}$,
+\\
+$\absV = labels(c)\cup\{l_e\}$
+%
+\paragraph*{Variable Modification Tracking}
+Identify the abstract events where each variable is increased, decreased and reset:
+\\
+$\inc: VAR \to \mathcal{P}(\absevent) $
+the set of the abstract events where the variable increase.
+\\
+$\inc(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x + c)\}$
+\\
+$\reset: VAR \to \mathcal{P}(\absevent) $
+The set of the abstract events where the variable is reset.
+\\
+$\dec: VAR \to \mathcal{P}(\absevent) $
+The set of abstract events where the variable decrease.
+\\
+$Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{TB(\absevent) \times c\}$
+%
+\paragraph*{Local Bounds}
+Given a program $c$ with its abstract control flow graph 
+$\absG(c) = (\absV, \absE)$
+\\
+Local Bounds Computation:
+$locbound: \absevent \to VAR \cup \constdom$.
+%
 \[ 
-  lbound(l_1, l_2, constraints) \triangleq
-\begin{array}{l}
-  lbound(l_1, l_2) \triangleq \{ x^l \} if (x^l = x^l - Expr(Var, C)) \in abs(l_1, l_2,B_{(l_1, l_2)}) 
+\begin{array}{ll}
+  \locbound(\absevent) \triangleq 1 
+  & \absevent \notin SCC(\absG(c))
   \\
-  lbound(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
+  \locbound(\absevent) \triangleq x 
+  & \absevent \in SCC(\absG(c)) \land \absevent \in \dec(x)
   \\
+  \locbound(\absevent) \triangleq x 
+  & \absevent \in SCC(\absG(c)) \land 
+  \absevent 
+  \notin \bigcup_{x \in VAR} \dec(x)
+  \land \absevent \notin SCC(\absG(c)/\dec(x)) 
 \end{array}
   \]
-
-\paragraph*{Computing the Transition Closure and Bound Invariant}
-We first Identify the transitions where each variable increase and reset:
-
-Then, the symbolic bounds for each variable involved into the guard 
-as well as the symbolic bounds for each transition is calculated as follows:
+%
+\paragraph*{Abstract Event Closure and Bound Invariant}
+Then, computing the bound invariants for variables and the transition closures for abstract events:
+\\ 
+$VB: VAR \cup \constdom \to EXPR(\constdom)$
+\\
+$TB: \absevent \to EXPR(\constdom)$
+\\
+Then, the symbolic invariant for each variable 
+as well as the symbolic transition closure for each transition is calculated as follows:
 \[ 
-  abs(l_1, l_2,B_{(l_1, l_2)}) \triangleq
-\begin{array}{l}
-  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{[\assign{x}{c_1 \times x -/+ c_2}]{}^l\}) \triangleq 
-  \{x^l \leq x^l +/- \frac{c_2}{c_1} \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
-  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
-  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
+\begin{array}{lll}
+  \varinvar(x) & \triangleq c & c \in \constdom \\
+  \varinvar(x) & \triangleq Incr(v) + \max(\{\varinvar(a) + c | (t, a, c) \in \reset(x)\}) & c \notin \constdom
+\end{array}
+\]
+%
+\[ 
+\begin{array}{lll}
+  \absclr(\absevent) 
+  & \triangleq \locbound(\absevent) & \locbound(\absevent) \in \constdom \\
+  \absclr(\absevent) 
+  & \triangleq Incr(\locbound(\absevent)) + 
+  \sum\limits_{(\absevent', a, c) \in \reset(\locbound(\absevent))}
+  \absclr(\absevent') \times \max(\varinvar(a) + c, 0)  & \locbound(\absevent) \notin \constdom
 \end{array}
   \]
-
-  For each transition, with labelled variable and local bound, we compute the variables invariant upper bound,
-  recursively as follows:
-  \[ 
-  variableInvariant(l_1, l_2, C, v ) \triangleq
-\begin{array}{l}
-  C.values \quad  C = RESET
-  \\
-  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\expr}]{}^l \}) \land x \notin VAR(\expr) \triangleq \{ x^l \leq \expr \} \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
-  abs(l_1, l_2,B_{(l_1, l_2)}' \cup \{ [\assign{x}{\qexpr}]{}^l \}) \triangleq \{ x^l \leq \infty \}  \cup abs(l_1, l_2, B_{(l_1, l_2)}') 
-  \\
-\end{array}
-  \]
-
-  \[ 
-    TransitionClousre(l_1, l_2, C, v ) \triangleq
-  \begin{array}{l}
-    variableInvariant(v) lbound(l_1, l_2, C, v ) = v.
-  \end{array}
-    \]
-
+%
 \paragraph*{Adding the Reachability Bounds for Every Vertex in the Data-Control Flow Graph}
-
-
+Updating the weight of every vertex in the $\progG(c)$ for program $c$ generated from phase 1.
+\\
+$
+\progW(x^l) 
+\triangleq \absclr(\absevent) 
+\absevent = (l, dc, l')
+$
 % \paragraph{Getting Reachability Bounds}
 % This is defined in Algorithm~\ref{alg:rb}.
 % To be precise, we use static analysis method from \cite{Sumit2010rechability}, which is able to "provide the symbolic worst case bound on the number of times a block is reached", let us call it reachability bound analysis. 
@@ -791,51 +844,51 @@ as well as the symbolic bounds for each transition is calculated as follows:
 %     \item Use Ranking function which takes the transition system and outputs the bound
 % \end{enumerate}
 
-\begin{algorithm}
-\caption{
-{Reachability Bound Analysis ($\rb$)}
-\label{alg:rb}
-}
-\begin{algorithmic}[1]
-\REQUIRE the program $C$, the target while loop with label $l$.
-\STATE  T  = GenerateTransitionSystem(C,l) 
-\STATE B = 1 + ComputeBound(T)
-\RETURN B
-\end{algorithmic}
-\end{algorithm}
+% \begin{algorithm}
+% \caption{
+% {Reachability Bound Analysis ($\rb$)}
+% \label{alg:rb}
+% }
+% \begin{algorithmic}[1]
+% \REQUIRE the program $C$, the target while loop with label $l$.
+% \STATE  T  = GenerateTransitionSystem(C,l) 
+% \STATE B = 1 + ComputeBound(T)
+% \RETURN B
+% \end{algorithmic}
+% \end{algorithm}
 
-The algorithm $GenerateTransitionSystem(C,l)$ can be described as follows. It uses the control flow graph generated from the program $C$, and splits the node marked by $l$ into two nodes $l_1$ and $l_2$ to generate a new control flow graph from the $l_1$ to $l_2$. It translates the node in the graph into a transition systems by the its translate function and replaces node with transition systems. For loops in the graph, the loop itself is replaced by the transitive closure of the transition systems of its body. Finally, the new generated control flow graph can be transformed to a transition system. The transition system is a disjunction of transitions, and every transition is expressed as a conjuction of formulas over program variables $x,y,z$ in the target block (l) and its successive visits $x',y',z'$ in the same block.
-\\
-The transition formula for each command are as follows:
-\\
-\todo{adding the naive transition formula for assignment and if}
-\\
-\jl{$translate(c)$  is defined as follows:}
-\\
-$translate(\assign{x}{e}) = \{x := e\} if x \in VAR(b)$
-\\
-% $translate(\assign{x}{e}) = \{\} if x \notin VAR(b)$
+% The algorithm $GenerateTransitionSystem(C,l)$ can be described as follows. It uses the control flow graph generated from the program $C$, and splits the node marked by $l$ into two nodes $l_1$ and $l_2$ to generate a new control flow graph from the $l_1$ to $l_2$. It translates the node in the graph into a transition systems by the its translate function and replaces node with transition systems. For loops in the graph, the loop itself is replaced by the transitive closure of the transition systems of its body. Finally, the new generated control flow graph can be transformed to a transition system. The transition system is a disjunction of transitions, and every transition is expressed as a conjuction of formulas over program variables $x,y,z$ in the target block (l) and its successive visits $x',y',z'$ in the same block.
 % \\
-$translate(\assign{x}{\qexpr}) = \{x \in VAR(b) \implies x := \qexpr\} $
-\\
-% $translate(\assign{x}{\qexpr}) = \{\} if x \notin VAR(b)$
+% The transition formula for each command are as follows:
 % \\
-$translate(\eif(\bexpr, c_1, c_2)) = \{\bexpr \implies translate(c_1), \neg\bexpr \implies translate(c_2)\}$
-\\
-$translate(\ewhile(\bexpr, c_w)) = \{ ComputeBound(GenerateTransitionSystem(C,l)) \times translate(c_w) \}$
-\\
-$translate(c_1;c_2) = translate(c_1) + translate(c_2)$
-\\
-\todo{adding the compose method for composing 2 transition formulas}
-$compose\{x := e_1, \cdots, x := e_2 \} = \{x := e_2\}$
-\\
-$\{y := e_1, \cdots, x := e_2 \} \land \flowsto(y, x, c) = \{x := [y \to e_1] e_2\}$
-\\
-\todo{add the $ComputeBound$ function, specifically the ranking function}
-\\
-The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a transition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
+% \todo{adding the naive transition formula for assignment and if}
+% \\
+% \jl{$translate(c)$  is defined as follows:}
+% \\
+% $translate(\assign{x}{e}) = \{x := e\} if x \in VAR(b)$
+% \\
+% % $translate(\assign{x}{e}) = \{\} if x \notin VAR(b)$
+% % \\
+% $translate(\assign{x}{\qexpr}) = \{x \in VAR(b) \implies x := \qexpr\} $
+% \\
+% % $translate(\assign{x}{\qexpr}) = \{\} if x \notin VAR(b)$
+% % \\
+% $translate(\eif(\bexpr, c_1, c_2)) = \{\bexpr \implies translate(c_1), \neg\bexpr \implies translate(c_2)\}$
+% \\
+% $translate(\ewhile(\bexpr, c_w)) = \{ ComputeBound(GenerateTransitionSystem(C,l)) \times translate(c_w) \}$
+% \\
+% $translate(c_1;c_2) = translate(c_1) + translate(c_2)$
+% \\
+% \todo{adding the compose method for composing 2 transition formulas}
+% $compose\{x := e_1, \cdots, x := e_2 \} = \{x := e_2\}$
+% \\
+% $\{y := e_1, \cdots, x := e_2 \} \land \flowsto(y, x, c) = \{x := [y \to e_1] e_2\}$
+% \\
+% \todo{add the $ComputeBound$ function, specifically the ranking function}
+% \\
+% The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a transition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
 
-\paragraph{Add Weight} We also need to take care about the situation when a bound can not be predicted by {$\rb$}, we need to use another loose analysis to get a loose bound.
+% \paragraph{Add Weight} We also need to take care about the situation when a bound can not be predicted by {$\rb$}, we need to use another loose analysis to get a loose bound.
 
 
 

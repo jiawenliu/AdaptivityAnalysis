@@ -1,6 +1,6 @@
 
 {
-  \begin{thm}[Soundness of the Visiting Bounds Estimation Algorithm]
+  \begin{thm}[Soundness of the Reachability Bounds Estimation]
     \label{thm:addweight_soundness}
   Given a program ${c}$ with its program-based dependency graph $\progG = (\vertxs, \edges, \weights, \qflag)$, we have:
   %
@@ -14,98 +14,157 @@
   \end{thm}
 }
 \begin{proof}
-  Taking an arbitrary a program ${c}$ with its program-based dependency graph $\progG = (\vertxs, \edges, \weights, \qflag)$, and an arbitrary labelled variable $x^l \in \lvar_c$.
+  Taking an arbitrary a program ${c}$ with its program-based dependency graph $\progG = (\vertxs, \edges, \weights, \qflag)$, 
+  and an arbitrary labelled variable $x^l \in \lvar_c$.
   \\
   By definition of $\progG$, we know $ x^l \in \vertxs$. 
   \\
-  By line:2 of Algorithm~\ref{alg:add_weights}, there are 2 cases:
-  \caseL{$l \notin prel$}
-  In this case, we know variable $x^l$ isn't involved in the body of any $\ewhile$ command. 
+  By last step of phase 2  (i.e., 
+  $
+  \progW(x^l) 
+  \triangleq \absclr(\absevent) 
+  \absevent = (l, dc, l')
+    $), 
+    according to label consistency
+    there is unique $(\absevent) = (l, dc, l')$ for some $dc$ and $l'$
+    corresponding to the assignment command associated to labeled variable 
+    $x^l$.
+   Then, it is sufficient to show:
+  \[
+    \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
+  \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
+  \leq 
+  \absclr(\absevent)
+  \]
+  % By line:2 of Algorithm~\ref{alg:add_weights}, there are 2 cases:
+  By definition of $\absclr(\absevent)$:
+  \[
+ \begin{array}{ll}
+  \locbound(\absevent) & \locbound(\absevent) \in \constdom \\
+  Incr(\locbound(\absevent)) + 
+  \sum\{\absclr(\absevent') \times \max(\varinvar(a) + c, 0) | (\absevent', a, c) \in \reset(\locbound(\absevent))\} 
+  & \locbound(\absevent) \notin \constdom
+\end{array}
+\]
+  \caseL{$\locbound(\absevent) \in \constdom$}
   \\
-  Taking arbitrary $\vtrace \in \mathcal{T}$, when executing $c$ with $\trace$, i.e., $\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'}$,
-  \\
-  we know the
-  assignment command at line $l$ associated with the labelled variable $x^l$ will be executed at most once, i.e.,:
-  %
-  $\vcounter(\vtrace') l \leq 1$
-  \\
-  By line:6 in Algorithm~\ref{alg:add_weights}, we also know $\weights(x^l) = 1$.
-  \\
-  This case is proved.
-  \caseL{$l \in prel$}
-  By line:4 in Algorithm~\ref{alg:add_weights}, we know  $\weights(x^l) = \rb(c, l)$.
-  \\
-  Taking arbitrary $\vtrace \in \mathcal{T}$, executing $c$ with $\trace$, we have the evaluation $\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'}$.
-  \\
-  By the soundness of the $\rb$ algorithm in \cite{Sumit2010rechability}, we know:
-$\vcounter(\vtrace') l \leq \rb(c, l)$
+  Proved by the soundness of Local bound in Lemma~\ref{lem:local_bound_sound}.
+  \caseL{$\locbound(\absevent) \notin \constdom$}
+To show:
+\[
+  \begin{array}{l}
+    \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
+\forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
 \\
+\leq 
+Incr(\locbound(\absevent)) + 
+\sum\{\absclr(\absevent') \times \max(\varinvar(a) + c, 0) | (\absevent', a, c) \in \reset(\locbound(\absevent))\} 
+\end{array}
+\]
+  % \caseL{$l \in prel$}
+  % \\
+  Taking an arbitrary initial trace
+  $\trace_0 \in \mathcal{T}$, 
+  executing $c$ with $\trace_0$, let $\trace$ be the trace after evaluation, i.e., $\config{{c}, \trace_0} \to^{*} \config{\eskip,\vtrace}$, it is sufficient to show:
+  \[ 
+    \begin{array}{l}
+      \vcounter(\vtrace') l \leq 
+    Incr(\locbound(\absevent)) + 
+    \sum\{\absclr(\absevent') \times \max(\varinvar(a) + c, 0) | (\absevent', a, c) \in \reset(\locbound(\absevent))\}
+  \end{array}
+  \]
+%
+ By the soundness of the (1) Transition Bound and (2) Variable Bound Invariant 
+ in \cite{sinn2017complexity} Theorem 1, 
 This case is proved.
 \end{proof}
 
 \begin{lem}[Soundness of the Local Bound]
-  \label{lem:reachability_soundness}
+  \label{lem:local_bound_sound}
 Given a program ${c}$, we have:
 %
 \[
-\forall x^l \in \lvar_c \st 
+\forall \absevent = (l, dc, l') \st 
 \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
 \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
 \leq 
-\rb(x^l, c)
+\locbound(\absevent)
 \]
 \end{lem}
-
-\begin{lem}[Soundness of the Variable Bound Invariant]
-  \label{lem:reachability_soundness}
-Given a program ${c}$, we have:
-%
-\[
-\forall x^l \in \lvar_c \st 
-\max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
-\forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
-\leq 
-\rb(x^l, c)
-\]
-\end{lem}
-
-\begin{lem}[Soundness of the Transition Clousre ]
-  \label{lem:reachability_soundness}
-Given a program ${c}$, we have:
-%
-\[
-\forall x^l \in \lvar_c \st 
-\max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
-\forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
-\leq 
-\rb(x^l, c)
-\]
-\end{lem}
-
-  {
-  \begin{lem}[Soundness of the Reachability Analysis]
-    \label{lem:reachability_soundness}
-  Given a program ${c}$, we have:
+\begin{proof}
+  \subcaseL{$l \notin SCC(\absG(c))$}
+  In this case, we know variable $x^l$ isn't involved in the body of any $\ewhile$ command. 
+  \\
+  Taking an arbitrary $\vtrace_0 \in \mathcal{T}$, 
+  let $\trace \in \mathcal{T}$ be of resulting trace of executing $c$ with $\trace$, 
+  i.e., $\config{{c}, \trace_0} \to^{*} \config{\eskip, \trace}$,
+  \\
+  we know the
+  assignment command at line $l$ associated with the abstract event $\absevent$ will be executed at most once, i.e.,:
   %
-  \[
-  \forall x^l \in \lvar_c \st 
-  \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
-  \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
-  \leq 
-  \rb(x^l, c)
-  \]
-  \end{lem}
-}
-Proof Summary:
-\\
-1. Translating of each command estimate the upper bound of the change of each variable showing up in the guard of the while command, in each iteration.
-\\
-2. Composition of sequence either preserve the latest update of the variable, or compose it with variables flows to it.
-\\
-3. Composition of if preserve the variable upper bound in both of the 2 branches.
-\\
-4. Composition of a nested $\ewhile$ multiples the variable change upper bound by the bound of the nested while loop, which safely estimated the variable upper bound for the outside while loop.
-\\
-5. Ranking function matches the pattern for every possibility and Give the max upper bound of changes for variable showing up inside the guard of the while.
-\\
-6. By estimating the changes for all the variables in the boolean expression of the guard of the while in 1 iteration, computeBound divides the n by the changes of the boolean expression is the safe upper bound of how many times this while can looped. 
+  $\vcounter(\vtrace) l \leq 1$
+  \\
+  By $\locbound$ definition, we know $\locbound(\absevent) = 1$.
+  \\
+  This case is proved.
+  \subcaseL{$l \in SCC(\absG(c)) \land \absevent \in \dec(x) $}  in this case, we know $\locbound(\absevent) \triangleq x$.
+  \subcaseL{$l \in SCC(\absG(c)) \land \absevent 
+  \notin \bigcup_{x \in VAR} \dec(x)
+  \land \absevent \notin SCC(\absG(c)/\dec(x)) $}  in this case, we know $\locbound(\absevent) \triangleq x$.
+  \\
+  In the two cases above, the soundness is discussed in \cite{sinn2017complexity} Section 4 of Paragraph \emph{Discussion on Soundness} in Page 25.
+\end{proof}
+
+% \begin{lem}[Soundness of the Variable Bound Invariant]
+%   \label{lem:var_invariant_soundness}
+% Given a program ${c}$, we have:
+% %
+% \[
+% \forall x^l \in \lvar_c \st 
+% \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
+% \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
+% \leq 
+% \rb(x^l, c)
+% \]
+% \end{lem}
+
+% \begin{lem}[Soundness of the Transition Clousre ]
+%   \label{lem:transition_closure_soundness}
+% Given a program ${c}$, we have:
+% %
+% \[
+% \forall x^l \in \lvar_c \st 
+% \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
+% \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
+% \leq 
+% \rb(x^l, c)
+% \]
+% \end{lem}
+
+%   {
+%   \begin{lem}[Soundness of the Reachability Analysis]
+%     \label{lem:reachability_soundness}
+%   Given a program ${c}$, we have:
+%   %
+%   \[
+%   \forall x^l \in \lvar_c \st 
+%   \max \left\{ \vcounter(\vtrace') l ~ \middle\vert~
+%   \forall \vtrace \in \mathcal{T} \st \config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} \right\} 
+%   \leq 
+%   \rb(x^l, c)
+%   \]
+%   \end{lem}
+% }
+% Proof Summary:
+% \\
+% 1. Translating of each command estimate the upper bound of the change of each variable showing up in the guard of the while command, in each iteration.
+% \\
+% 2. Composition of sequence either preserve the latest update of the variable, or compose it with variables flows to it.
+% \\
+% 3. Composition of if preserve the variable upper bound in both of the 2 branches.
+% \\
+% 4. Composition of a nested $\ewhile$ multiples the variable change upper bound by the bound of the nested while loop, which safely estimated the variable upper bound for the outside while loop.
+% \\
+% 5. Ranking function matches the pattern for every possibility and Give the max upper bound of changes for variable showing up inside the guard of the while.
+% \\
+% 6. By estimating the changes for all the variables in the boolean expression of the guard of the while in 1 iteration, computeBound divides the n by the changes of the boolean expression is the safe upper bound of how many times this while can looped. 
