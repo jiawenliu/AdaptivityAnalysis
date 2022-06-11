@@ -138,9 +138,11 @@ class TransitionGraph(DirectedGraph):
     def __init__(self, 
     edges=[(0, 1), (1, 1)], 
     transitions=[(0, [DifferenceConstraint("x", None, "k", DifferenceConstraint.DCType.RESET)], 1, [0]),
-    (1, [DifferenceConstraint("x", None, "1", DifferenceConstraint.DCType.DEC)], 1, [1, 2])]
+    (1, [DifferenceConstraint("x", None, "1", DifferenceConstraint.DCType.DEC)], 1, [1, 2])],
+    vertex_num = None
     ):
-        super().__init__(max(map(lambda x: max(x), edges)) + 1, edges)
+
+        super().__init__(vertex_num if vertex_num else (max(map(lambda x: max(x), edges)) + 1), edges)
         self.ctl_edges = edges
         self.transitions = transitions
 
