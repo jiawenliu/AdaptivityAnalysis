@@ -130,7 +130,21 @@ let print_abs_flow aflow =
         let print_out_abs_flow_edges oc aflow =
           List.fold_left (fun () (x,  y, _) -> Printf.fprintf oc "%d,%d;" (print_label x) (print_label y)) () aflow 
 
-          (*        let _ =
+          (*  
+let parseArgs () =  
+  Arg.parse argDefs 
+  (fun s -> 
+          match !infile  with 
+                | Some (_) -> printf "%s" "specify "  
+                | None  -> infile := Some (s) ) " " ;
+       match !infile, !outfile  with
+             | Some inf, Some outf -> (inf, outf)
+             | Some inf, None  -> (inf, "./graphs/"^(String.sub inf ~pos:(11) ~len:((String.length inf) - 11)))
+             | None, Some _ -> printf "specify your input file name by -i infilename"; ("", "")
+             | _ -> printf "specify your input file name and output file name "; ("", "")
+
+             
+                    let _ =
         let (infile , outfile) = parseArgs () in 
         let oc = Out_channel.create outfile in
           let result = parse_prog infile in
@@ -152,4 +166,5 @@ let print_abs_flow aflow =
           Printf.fprintf oc "\n";
           print_out_abs_flow oc aflow;
           Out_channel.close oc
+
  *)
