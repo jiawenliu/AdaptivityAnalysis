@@ -48,6 +48,21 @@ let rec init lcom =
       Int.Map.set blockmap ~key:keylabel ~data:node in
     List.fold_left blocks ~init:Int.Map.empty ~f:add_node
 
+  (*create a map from int(label) -> a list of its precessors  **)
+  let precessor block edges =
+    List.fold_left edges  ~init:[] 
+    ~f:(fun acc_list edge ->
+        match edge with
+        | ( pre , b ) when (print_label b) = (getLabelFromBlock block) -> pre::acc_list
+        | _ -> acc_list
+      )
+
+  let precessor_map nodes edges =
+    let add_node pre_map node =
+      let keylabel = getLabelFromBlock node in
+      let value = precessor node edges in
+      Int.Map.set pre_map ~key:keylabel ~data:value in
+    List.fold_left nodes ~init:Int.Map.empty ~f:add_node
 
   (* Control flow graph*)
 
@@ -98,7 +113,7 @@ let rec init lcom =
 
 
 
-   
+(*    
    type domain = Syntax.label list
 
    type sigma =  domain String.Map.t
@@ -120,7 +135,7 @@ let rec init lcom =
      let show_result ~key:location ~data:sigma results =
          Format.sprintf "%s\n%d: %s" results location (string_of_sigma sigma)
        in
-       Int.Map.fold results ~init:"Results before node n" ~f:show_result 
+       Int.Map.fold results ~init:"Results before node n" ~f:show_result  *)
 
    
    
