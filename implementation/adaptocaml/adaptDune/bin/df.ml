@@ -25,7 +25,12 @@ let gen  =  function
 | Assignblock (var, _ , l) ->  [(var.v_name, print_label l)]
 | Queryblock (var, _, l) -> [(var.v_name, print_label l)]
 
- 
+(* in and out*) 
+let in_init program =
+    let vars = Cfg.assign_vars program in
+    List.map ~f:(fun var -> (var, print_label Syntax.Bot)) vars 
+
+
 
 let rec string_of_dom = function
   | [] -> "[]"

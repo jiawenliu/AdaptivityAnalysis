@@ -114,7 +114,7 @@ let rec init lcom =
      | Ebexpr b -> vars_b b
 
 
-   (*  Reaching Definition**)  
+   (*  label of x in program p, input x, output : a list of labels of x in program p**)  
 
    let rec defs x = function
    | Skip  -> []
@@ -125,32 +125,18 @@ let rec init lcom =
    | If ( _ , lc_1 , lc_2 , _ ) -> (defs x lc_1) @ (defs x lc_2) 
 
    
-
-
-
-(*    
-   type domain = Syntax.label list
-
-   type sigma =  domain String.Map.t
-   
-   let rec string_of_dom = function
-     | [] -> "[]"
-     | h :: l -> Format.sprintf "%d :: %s" (Syntax.print_label h) (string_of_dom l) 
-   
-   let string_of_sigma sigma =
-     let show_abstract_val ~key:variable ~data:abstract_value values =
-       Format.sprintf "%s%s = %s; " values variable (string_of_dom abstract_value)
-     in
-     let values = String.Map.fold sigma ~init:"" ~f:show_abstract_val in
-     Format.sprintf "[ %s]" values
-   
-     type rd_results = sigma Int.Map.t
-   
-   let string_of_results results =
-     let show_result ~key:location ~data:sigma results =
-         Format.sprintf "%s\n%d: %s" results location (string_of_sigma sigma)
-       in
-       Int.Map.fold results ~init:"Results before node n" ~f:show_result  *)
+   (*  assigned variables of program, return a list of assigned variables, if we have duplicate x, then just one x**)  
+  let assign_vars program = 
+   let rec assigned = function
+   | Skip  -> []
+   | Assign ( var , _ , _) -> [var.v_name]
+   | Query ( var ,  _ , _ ) -> [var.v_name]
+   | While ( _ , lc , _ ) ->   assigned lc
+   | Seq ( lc_1,  lc_2 ) -> (assigned lc_1) @ (assigned lc_2) 
+   | If ( _ , lc_1 , lc_2 , _ ) -> (assigned lc_1) @ (assigned lc_2) 
+  in 
+     let result = assigned program in
+       List.dedup_and_sort result ~compare:String.compare
 
    
    

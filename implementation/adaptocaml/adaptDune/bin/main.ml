@@ -85,6 +85,9 @@ let _ =
       List.fold_left ~f:( fun () (x, v) -> 
         Printf.printf "%s : %d\n" x v ) ~init:() kill_result;
       print_newline();
+      let in_init = Df.in_init result in
+      List.fold_left ~f:( fun () (x, v) -> 
+        Printf.printf "%s : %d\n" x v ) ~init:() in_init;
       Out_channel.close oc
         
 
