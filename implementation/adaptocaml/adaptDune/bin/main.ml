@@ -70,8 +70,20 @@ let _ =
        ~f: (fun () precessor -> Printf.printf "key %d, precessor is %d ; \n" k (Syntax.print_label precessor) )
       | None ->   Printf.printf " No node for key %d; \n" k
        ) ;
+       let successor_map = Cfg.successor_map blocks flow in
+      Int.Map.iter_keys successor_map
+      ~f: (fun k -> let node = Int.Map.find successor_map k in
+       match node with
+       | Some suc_labels ->  List.fold_left suc_labels ~init:() 
+       ~f: (fun () suc -> Printf.printf "key %d, successor is %d ; \n" k (Syntax.print_label suc) )
+      | None ->   Printf.printf " No node for key %d; \n" k
+       ) ;
       print_flow flow;
       print_out_flow oc flow;
+      let kill_result = Df.kill result (List.nth_exn blocks 1) in
+      Printf.printf "kill of 2nd block with size : %d \n" (List.length kill_result) ;
+      List.fold_left ~f:( fun () (x, v) -> 
+        Printf.printf "%s : %d\n" x v ) ~init:() kill_result;
       print_newline();
       Out_channel.close oc
         

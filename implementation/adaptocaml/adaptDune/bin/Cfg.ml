@@ -64,6 +64,22 @@ let rec init lcom =
       Int.Map.set pre_map ~key:keylabel ~data:value in
     List.fold_left nodes ~init:Int.Map.empty ~f:add_node
 
+    (*create a map from int(label) -> a list of its precessors  **)
+  let successor block edges =
+    List.fold_left edges  ~init:[] 
+    ~f:(fun acc_list edge ->
+        match edge with
+        | (  b, suc ) when (print_label b) = (getLabelFromBlock block) -> suc::acc_list
+        | _ -> acc_list
+      )
+
+  let successor_map nodes edges =
+    let add_node suc_map node =
+      let keylabel = getLabelFromBlock node in
+      let value = successor node edges in
+      Int.Map.set suc_map ~key:keylabel ~data:value in
+    List.fold_left nodes ~init:Int.Map.empty ~f:add_node
+
   (* Control flow graph*)
 
   let rec flow lcom = 
@@ -108,8 +124,7 @@ let rec init lcom =
    | Seq ( lc_1,  lc_2 ) -> (defs x lc_1) @ (defs x lc_2) 
    | If ( _ , lc_1 , lc_2 , _ ) -> (defs x lc_1) @ (defs x lc_2) 
 
-   (* let kill =  function
-   | Testblock (b,l) ->  [] *)
+   
 
 
 
