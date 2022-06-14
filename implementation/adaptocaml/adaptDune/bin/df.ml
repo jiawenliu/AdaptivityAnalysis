@@ -25,10 +25,13 @@ let gen  =  function
 | Assignblock (var, _ , l) ->  [(var.v_name, print_label l)]
 | Queryblock (var, _, l) -> [(var.v_name, print_label l)]
 
-(* in and out*) 
+(* in and out, input is label, out put is [(x, 5)]*) 
 let in_init program =
     let vars = Cfg.assign_vars program in
     List.map ~f:(fun var -> (var, print_label Syntax.Bot)) vars 
+
+(* let out l =  *)
+     
 
 
 

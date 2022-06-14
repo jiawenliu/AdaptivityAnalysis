@@ -46,11 +46,10 @@ let _ =
     let (infile , outfile) = parseArgs () in 
     let oc = Out_channel.create outfile in
       let result = parse_prog infile in
-      let final_label = Cfg.final result in 
-        List.fold_left ~f:( fun () label -> Printf.printf "final label : %d" (Syntax.print_label label) ) ~init:() final_label;
-      let blocks = Cfg.blocks result in
+      let cfg_result = Cfg.generate_cfg result in 
+      let blocks = cfg_result.nodes in
       let _ =  Printf.fprintf oc "%d\n" (List.length blocks) in 
-      let blocksmap = Cfg.blocks2map blocks in
+      let blocksmap = cfg_result.node_map in
       Int.Map.iter_keys blocksmap
       ~f: (fun k -> let node = Int.Map.find blocksmap k in
        match node with
@@ -61,8 +60,8 @@ let _ =
       Printf.fprintf oc "\n";
       let string_result = print_lcommand result in
       Printf.printf "The input program is : %s" string_result;
-      let flow = Cfg.flow result in
-      let precessor_map = Cfg.precessor_map blocks flow in
+      let flow = cfg_result.edges in
+      let precessor_map = cfg_result.pre_map in
       Int.Map.iter_keys precessor_map
       ~f: (fun k -> let node = Int.Map.find precessor_map k in
        match node with
@@ -70,7 +69,7 @@ let _ =
        ~f: (fun () precessor -> Printf.printf "key %d, precessor is %d ; \n" k (Syntax.print_label precessor) )
       | None ->   Printf.printf " No node for key %d; \n" k
        ) ;
-       let successor_map = Cfg.successor_map blocks flow in
+       let successor_map = cfg_result.suc_map in
       Int.Map.iter_keys successor_map
       ~f: (fun k -> let node = Int.Map.find successor_map k in
        match node with
@@ -88,6 +87,8 @@ let _ =
       let in_init = Df.in_init result in
       List.fold_left ~f:( fun () (x, v) -> 
         Printf.printf "%s : %d\n" x v ) ~init:() in_init;
+      let cfg_result = Cfg.generate_cfg result in 
+      let _ =  Printf.printf  "%d\n" (List.length cfg_result.nodes ) in   
       Out_channel.close oc
         
 
