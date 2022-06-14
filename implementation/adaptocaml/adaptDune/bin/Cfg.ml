@@ -5,6 +5,7 @@ type edge = label * label
 type node = block
 
 type t = {
+  program : lcommand;
   nodes : block list;
   node_map: block Int.Map.t;
   edges: (label*label) list;
@@ -152,6 +153,7 @@ let rec init lcom =
      let pre_map = precessor_map nodes edges in
      let suc_map = successor_map nodes edges in
      {
+      program = program;
       nodes = nodes;
       node_map = nodesmap;
       edges =  edges ;
