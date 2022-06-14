@@ -4,7 +4,14 @@ open Core
 type edge = label * label
 type node = block
 
-
+type t = {
+  program : lcommand;
+  nodes : block list;
+  node_map: block Int.Map.t;
+  edges: (label*label) list;
+  pre_map : (label list) Int.Map.t;
+  suc_map :(label list) Int.Map.t;
+}
 
 let rec init lcom = 
   match lcom with
@@ -57,7 +64,7 @@ let rec init lcom =
         | _ -> acc_list
       )
 
-  let precessor_map nodes edges =
+  let precessor_map nodes edges : (label list) Int.Map.t =
     let add_node pre_map node =
       let keylabel = getLabelFromBlock node in
       let value = precessor node edges in
@@ -73,7 +80,7 @@ let rec init lcom =
         | _ -> acc_list
       )
 
-  let successor_map nodes edges =
+  let successor_map nodes edges : (label list) Int.Map.t =
     let add_node suc_map node =
       let keylabel = getLabelFromBlock node in
       let value = successor node edges in
@@ -139,9 +146,21 @@ let rec init lcom =
        List.dedup_and_sort result ~compare:String.compare
 
    
-   
+   let generate_cfg program =
+     let nodes = blocks program in
+     let nodesmap = blocks2map nodes in
+     let edges = flow program in
+     let pre_map = precessor_map nodes edges in
+     let suc_map = successor_map nodes edges in
+     {
+      program = program;
+      nodes = nodes;
+      node_map = nodesmap;
+      edges =  edges ;
+      pre_map = pre_map;
+      suc_map = suc_map;
+     }
 
-   
    (* 
     To do: need RD first
    let rec cdfg lcom  : lvar * lvar list = 
