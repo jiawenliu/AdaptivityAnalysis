@@ -166,7 +166,7 @@ class LocalBound:
             else:
                 for dc in dc_set:
                     if dc.is_dec():
-                        transition_local_bounds[index] = dc.get_var()                    
+                        transition_local_bounds[index] = dc.get_var()                
         
         for index, local_bound in enumerate(transition_local_bounds):
             # (_, dc_set, _, _) = transition_graph.transitions[transition_index]
@@ -236,6 +236,9 @@ class TransitionBound:
         if v == "1":
             self.transition_bounds[t_index] = "1"
             return "1"
+        if v == "Q":
+            self.transition_bounds[t_index] = "max(DB)"
+            return "1"
         if v == "-1":
             self.transition_bounds[t_index] = "INF"
             return "INF"
@@ -269,8 +272,9 @@ class VariableReachingBound:
     def attach_weights(self):
         transition_bounds = TransitionBound(self.transition_graph).compute_transition_bounds()
         for (t_index, b) in enumerate(transition_bounds):
-            for var_vertex in self.transition_graph.transitions[t_index][3]:
-                self.graph.weights[var_vertex] = AdaptType(b)
+            transition = self.transition_graph.transitions[t_index]
+            for var_vertex in transition[3] :
+                self.graph.weights[var_vertex] = self.graph.weights[var_vertex] + AdaptType(b)
     
     def get_weights(self):
         return [w.value for w in self.graph.weights]
@@ -278,6 +282,9 @@ class VariableReachingBound:
     def print_weights(self):
         for transition in self.transition_graph.transitions:
             for var_vertex in transition[3]:
-                print( "weight for Variable: " + transition[1][0].get_var() + " of label " + str(var_vertex) + " is: " + str(self.graph.weights[var_vertex].value))
+                if not transition[1] == []:
+                #     print( "weight for a testing command of label : " + str(var_vertex) + " is: " + str(self.graph.weights[var_vertex].value))
+                # else:
+                    print( "weight for Variable: " + transition[1][0].get_var() + " of label " + str(var_vertex) + " is: " + str(self.graph.weights[var_vertex].value))
 
 
