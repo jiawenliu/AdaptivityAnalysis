@@ -16,7 +16,18 @@ class GraphParser(argparse.ArgumentParser):
         default= "AdaptivityAnalysis/implementation/bound_infer/examples_abscfg/seq.br", 
         help='The input file name for the Abstract Control Flow Graph')
 
+        self.add_argument('-e', '--example',
+        type=str, 
+        default= "seq.br", 
+        help='The example name for the Abstract Control Flow Graph')
+
+
         self.args = self.parse_args()
+
+        # Just for simplicity of testing, using the same name in different folder
+        # Will be removed when lauching
+        self.args.dcfg = "examples_dcfg/" + self.args.example
+        self.args.abs_cfg = "examples_abscfg/" + self.args.example
 
 
     def dcfg_parse(self):
