@@ -131,6 +131,7 @@ let print_abs_flow aflow =
           List.fold_left (fun () (x,  y, _) -> Printf.fprintf oc "%d,%d;" (print_label x) (print_label y)) () aflow 
 
           (*  
+          open Abs 
 let parseArgs () =  
   Arg.parse argDefs 
   (fun s -> 
