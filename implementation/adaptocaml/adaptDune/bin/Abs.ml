@@ -15,7 +15,7 @@ type constriant =
 type abs_transition = label * label * constriant
 
 let is_para var =
-  if var.v_name = 'k' then true
+  if var.v_name = "k" then true
   else false
 
 let abs_expr var e = 
@@ -25,9 +25,9 @@ let abs_expr var e =
     | Aint c -> Reset (var, None, Const c)
     | Avar v -> 
       if is_para v then 
-        Reset (var, None, Symb v)
+        Reset (var, None, Symb v.v_name)
     else
-        Reset (var, None, Some v, Const 0)
+        Reset (var,Some v, Const 0)
     | Aaop (Sub, Avar var', Aint c) -> 
       if var = var' then 
         Dec (var, None, Const c)
