@@ -14,12 +14,20 @@ type constriant =
 
 type abs_transition = label * label * constriant
 
+let is_para var =
+  if var.v_name = 'k' then true
+  else false
+
 let abs_expr var e = 
   match e with 
   | Eaexpr a ->
 (    match a with
     | Aint c -> Reset (var, None, Const c)
-    | Avar v -> Reset (var, Some v, Const 0)
+    | Avar v -> 
+      if is_para v then 
+        Reset (var, None, Symb v)
+    else
+        Reset (var, None, Some v, Const 0)
     | Aaop (Sub, Avar var', Aint c) -> 
       if var = var' then 
         Dec (var, None, Const c)
@@ -73,7 +81,7 @@ let rec abs_flow (lcom : lcommand) : abs_transition list =
 let print_const const = 
   match const with
   | Symb s -> s
-  | Const i ->  sprintf " %d " i
+  | Const i ->  sprintf "%d" i
 
 let print_constriant c = 
   match c with
@@ -98,7 +106,7 @@ let print_abs_flow aflow =
       | Reset (var, Some var', cons) -> sprintf " DifferenceConstraint(\"%s\", \"%s\",\"%s\", DifferenceConstraint.DCType.RESET) " var.v_name var'.v_name (print_const cons)
       | Dec (var, Some var', cons) -> sprintf " DifferenceConstraint( \"%s\", \"%s\", \"%s\", DifferenceConstraint.DCType.DEC) " var.v_name var'.v_name (print_const cons)
       | Inc (var, Some var', cons) -> sprintf " DifferenceConstraint(\"%s\", \"%s\", \"%s\", DifferenceConstraint.DCType.INC) " var.v_name var'.v_name (print_const cons)
-      | Reset (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None, \"%s\", DifferenceConstraint.DCType.RESET) " var.v_name (print_const cons)
+      | Reset (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None,\"%s\", DifferenceConstraint.DCType.RESET) " var.v_name (print_const cons)
       | Dec (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None, \"%s\", DifferenceConstraint.DCType.DEC) " var.v_name (print_const cons)
       | Inc (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None, \"%s\", DifferenceConstraint.DCType.INC) " var.v_name (print_const cons)
       | Top -> sprintf ""
