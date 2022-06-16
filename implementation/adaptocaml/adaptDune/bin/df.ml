@@ -13,7 +13,7 @@ type rd_results = sigma Int.Map.t
    | Assignblock (var, _ , _) -> 
      let kill_list =
       let l_list = defs var.v_name program in
-      let _ = Printf.printf "in kill, l_list size = %d\n" (List.length l_list) in
+      (* let _ = Printf.printf "in kill, l_list size = %d\n" (List.length l_list) in *)
       List.map ~f:(fun l -> (var.v_name, print_label l)) l_list in 
     [ (var.v_name, print_label Bot ) ] @ kill_list
    | Queryblock (var, _, _) -> 
@@ -42,7 +42,7 @@ let compare_domain (a:domain) (b:domain) : int =
       let sorted_2 = List.sort state2 ~compare:compare_domain in
       let com_result =
       List.compare compare_domain sorted_1 sorted_2 in
-      com_result = 0
+      not (com_result = 0)
  
 
 (* two associate list a, b, return a - b**)
