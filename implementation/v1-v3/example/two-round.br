@@ -1,0 +1,25 @@
+let get : depth 0 = {contra : int list -> int -> int } in
+
+let g : depth bot = 
+{ 
+fix round (j: int). lambda db:int list list. lambda k : int.
+	if((j < k), 
+	let a: depth 0 = 
+	mech ({lambda x: int list. (get x j) * (get x k): int list -> int }) 
+	in
+	(a,j)::(round (j + 1) db k)
+	, nil)
+	:
+int -> int list list, bot -> ([ (j : bot), (f: bot) ]; index 0) int , 1 -> ([ (k :1), (j :1), (f: 0) ]; index 1) (real X int) list
+}
+
+in
+fix twoRound(k:int). lambda db:int list list. 
+ let l : depth 1 = { g 0 db k : real X int list}
+	in let q: depth 1 = 
+	{ lambda x: int list. sign(foldl (lambda acc: real. lambda ai : real X int list. (acc + (get x (snd ai)) * log( (1 + (fst ai))/ (1 - (fst ai)) ) ) ) 0 l  ) : int list -> real; [ bot ]; index 0} 
+		in mech(q)
+
+
+
+|- int, bot -> ([ (g: bot), (get : bot) ]; index 0) int list list, bot -> ([(k :1), (g : 1), (get: 1), (twoRound: 0) ]; index 2) real

@@ -1,0 +1,92 @@
+let get : depth 0 = {contra : real list -> int -> real } in
+
+let foldl : depth 0 = {contra : (real -> real -> real) -> real -> real list -> real } in
+
+let updtSC: depth 0 = 
+{
+fix f (z: unit). lambda sc: real list. lambda a : real. lambda p: real. lambda q:  (int list -> real). lambda ii:int list. lambda i: int. lambda nn : int.
+	if	(	(i < nn),
+			if( (contains ii  i),
+				let x: depth 0 = (get sc i) + (a - p) * ((q ii) - p) in
+					let sc': depth 0 = updt sc i x in
+						(f () sc' a p q ii (i + 1) nn),
+				f () sc a p q ii (i + 1) nn),
+			sc
+		)
+:
+unit -> real list -> real  -> real -> (int list -> real) -> int list -> int -> int -> real list
+}
+in
+let updtSCC: depth 0 = 
+{
+fix f (z: unit). lambda scc: real list. lambda a : real. lambda p: real. lambda qc: (int list -> real). lambda i: int. lambda cc: int.
+	if	(	(i < cc),
+			let x: depth 0 = (get scc i) + (a - p) * ((qc (i)) - p) in
+				let scc': depth 0 = updt scc i x in
+					(f () scc' a p qc (i + 1) cc),
+			scc
+		)
+:
+unit -> real list -> real -> real -> (int list -> real) -> int -> int -> real list
+}
+in
+
+let updtI: depth 0 = 
+{
+fix f (z: unit). lambda maxScc: real. lambda sc: real list. lambda i : int. lambda nn: int.
+	if(	(i < nn),
+		if(	((get sc i) < maxScc),
+			i :: (f () maxScc sc (i + 1) nn),
+			f () maxScc sc (i + 1) nn),
+		nil
+		)
+:
+unit -> real -> real list -> int -> int -> int list
+}
+in 
+
+fix multiRound (z: unit). Lambda. index k. Lambda. index j. lambda k : int. lambda j: int. lambda sc: real list. lambda scc: real list. lambda ii: int list. lambda nn: int. lambda cc: int. lambda db: int list list.
+	if(	(j < k),
+		let p: depth k - depth j = { uniform(0, 1) : real} 
+		in
+		let q: depth k - depth j = {lambda x: int list. bernoulli p : int list -> real} in
+		let qc: depth k - depth j = 
+						{lambda x: int list. bernoulli p : int list -> real} 
+						in
+		let qj: depth k - depth j = {restrict q db : int list -> real} 
+		in
+		let a: depth k - depth j - depth 1 = mech(qj) 
+		in 
+		let sc': depth k - depth j - depth 1 = updtSC () sc a p q ii 0 nn 
+		in
+		let scc': depth k - depth j - depth 1 = updtSCC () scc a p qc 0 cc 
+		in
+		let maxScc: depth k - depth j - depth 1 = { foldl (lambda acc: real. lambda a: real. if(acc < a, a, acc)) 0.0 scc' : real } 
+		in
+		let ii': depth 0 = updtI () maxScc sc 0 nn in 
+		let db': depth k - depth j - depth 1 = db \ ii' in
+			a::(multiRound () [index k] [index j + index 1] k (j + 1) sc' scc' ii' nn cc db') ,
+		nil)
+
+
+|- unit, bot 
+	-> ([(foldl: bot),(get: bot), (updtI: bot), (updtSC: bot), (updtSCC: bot)]; index 0)
+	forall  k:::adapt. forall  j:::adapt. int[index k], bot
+	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot)]; index 0) 
+	int[index j], bot
+	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot)]; index 0) 
+	real list, bot 
+	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot)]; index 0) 
+	real list, bot 
+	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot)]; index 0) 
+	int list, bot 
+	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot), (scc: bot)]; index 0) 
+	int, bot 
+	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot), (scc: bot), (ii: bot)]; index 0) 
+	int, bot 
+	-> ([(get:bot), (foldl: bot), (z: bot), (updtSC :bot), (updtSCC: bot), (updtI: bot), (multiRound: bot), (k : bot), (j : bot), (sc: bot), (scc: bot), (ii: bot), (nn: bot)]; index 0) 
+	int list, 0 
+	-> ( [ (get:0), (foldl: 0), (z: 0), (updtSC : depth k - depth j), (updtSCC: depth k - depth j), (updtI: depth k - depth j), (multiRound: depth k - depth j), (k : depth k - depth j), (j : depth k - depth j), (sc: depth k - depth j), (scc: depth k - depth j), (ii: depth k - depth j), (cc: depth k - depth j), (nn: depth k - depth j) ] ; index k - index j) 
+	real list
+
+

@@ -1,6 +1,5 @@
 from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint, VariableReachingBound
 from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
-from adapt_estimate import AdaptEstimate
 import argparse
 
 class GraphParser(argparse.ArgumentParser):
@@ -26,8 +25,8 @@ class GraphParser(argparse.ArgumentParser):
 
         # Just for simplicity of testing, using the same name in different folder
         # Will be removed when lauching
-        self.args.dcfg = "examples_dcfg/" + self.args.example
-        self.args.abs_cfg = "examples_abscfg/" + self.args.example
+        self.args.dcfg = "./dcfg/" + self.args.example
+        self.args.abs_cfg = "./abscfg/" + self.args.example
 
 
     def dcfg_parse(self):

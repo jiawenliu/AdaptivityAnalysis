@@ -120,6 +120,12 @@ let rec init lcom =
      | Eaexpr a -> vars_a a
      | Ebexpr b -> vars_b b
 
+  let rec qvars q : var_info list = 
+    match q with
+  | Qalpha  -> []
+  | Qaexpr a -> vars_a a 
+  | Qaop (_, q_1 , q_2) -> (qvars q_1) @ (qvars q_2)
+  | Qchi a -> vars_a a
 
    (*  label of x in program p, input x, output : a list of labels of x in program p**)  
 
@@ -145,6 +151,9 @@ let rec init lcom =
      let result = assigned program in
        List.dedup_and_sort result ~compare:String.compare
 
+ 
+         
+
    
    let generate_cfg program =
      let nodes = blocks program in
@@ -161,13 +170,5 @@ let rec init lcom =
       suc_map = suc_map;
      }
 
-   (* 
-    To do: need RD first
-   let rec cdfg lcom  : lvar * lvar list = 
-    match lcom with
-    |  Skip  -> []
-    | Assign ( x , e , l) -> [  ]  (vars e) 
-    | Query ( _ ,  _ , _ ) -> []
-    | While ( _ , lc , l ) ->   (flow lc) @ [(l, init lc)] @ (List.map (fun l_1 -> (l_1,l)) (final lc) ) 
-    | Seq ( lc_1,  lc_2 ) -> (flow lc_1) @ (flow lc_2) @ (List.map (fun l_1 -> (l_1, init lc_2 )) (final lc_1) )
-    | If ( _ , lc_1 , lc_2 , l ) -> [ ( l, init lc_1 ) ; (l, init lc_2) ] @ (flow lc_1) @ (flow lc_2)  *)
+   
+  

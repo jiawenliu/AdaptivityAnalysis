@@ -16,7 +16,11 @@ type abs_transition = label * label * constriant
 
 let is_para var =
   if var.v_name = "k" then true
-  else false
+  else 
+    if var.v_name = "N" then true 
+    else
+      if var.v_name = "c" then true 
+      else false
 
 let abs_expr var e = 
   match e with 
