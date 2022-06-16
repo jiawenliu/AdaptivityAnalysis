@@ -89,6 +89,12 @@ let _ =
         Printf.printf "%s : %d\n" x v ) ~init:() in_init;
       let cfg_result = Cfg.generate_cfg result in 
       let _ =  Printf.printf  "%d\n" (List.length cfg_result.nodes ) in   
+      let (rd_in, rd_out) = Df.kildall cfg_result in
+      Printf.printf "rd: %d : %d\n" (Int.Map.length rd_in) (Int.Map.length rd_out);
+      Printf.printf "Rd_in Result:\n";
+      Int.Map.iter rd_in ~f: (fun sigma -> Df.print_sigma sigma; Printf.printf "\n" ) ;
+      Printf.printf "Rd_out Result:\n";
+      Int.Map.iter rd_out ~f: (fun sigma -> Df.print_sigma sigma; Printf.printf "\n" ) ;
       Out_channel.close oc
         
 
