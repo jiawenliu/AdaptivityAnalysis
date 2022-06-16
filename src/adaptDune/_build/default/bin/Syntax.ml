@@ -63,8 +63,11 @@ type block =
 | Queryblock of var_info * query_expr * label
 | Testblock of b_expr * label
 
-type lvar = LabelVar of var_info * label
+type lvar = LabelVar of string * int
 
+let print_lvar lvar =
+  match lvar with
+    | LabelVar (s,i) -> sprintf "(%s)^{%d}" s i
 
 let print_label l = 
   match l with
@@ -146,4 +149,4 @@ let rec print_lcommand lcom =
 
   
     let print_out_flow oc flow =
-      List.fold_left (fun () (x,  y) -> Printf.fprintf oc "%d,%d;" (print_label x) (print_label y)  ) () flow   
+      List.fold_left (fun () (x,  y) -> Printf.fprintf oc "(%d, %d)," (print_label x) (print_label y)  ) () flow   
