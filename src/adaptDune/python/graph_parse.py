@@ -25,8 +25,8 @@ class GraphParser(argparse.ArgumentParser):
 
         # Just for simplicity of testing, using the same name in different folder
         # Will be removed when lauching
-        self.args.dcfg = "./dcfg/" + self.args.example
-        self.args.abs_cfg = "./abscfg/" + self.args.example
+        self.args.dcfg = "./dcfg/" + self.args.example[11:]
+        self.args.abs_cfg = "./abscfg/" + self.args.example[11:]
 
 
     def dcfg_parse(self):

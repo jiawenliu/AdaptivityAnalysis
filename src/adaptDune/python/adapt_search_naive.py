@@ -224,6 +224,8 @@ class AdaptSearchAlg:
         bfs_q = []
         visited = [False]*(self.vertex_no + 1)
         self.adapt = [AdaptType(0)]* (self.scc_cnt+2)
+        if sum(self.graph.query) == 0:
+            return
         start_v = min([i if q == 1 else self.graph.get_vertice_num() for (i, q) in enumerate((self.graph.query))])
         
         # for j in range(1, self.scc_cnt+1):
