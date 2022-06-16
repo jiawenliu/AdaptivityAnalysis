@@ -63,8 +63,11 @@ type block =
 | Queryblock of var_info * query_expr * label
 | Testblock of b_expr * label
 
-type lvar = LabelVar of var_info * label
+type lvar = LabelVar of string * int
 
+let print_lvar lvar =
+  match lvar with
+    | LabelVar (s,i) -> sprintf "(%s)^{%d}" s i
 
 let print_label l = 
   match l with

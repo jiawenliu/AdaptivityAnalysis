@@ -79,22 +79,26 @@ let _ =
        ) ;
       print_flow flow;
       print_out_flow oc flow;
-      let kill_result = Df.kill result (List.nth_exn blocks 1) in
+      (* let kill_result = Df.kill result (List.nth_exn blocks 1) in
       Printf.printf "kill of 2nd block with size : %d \n" (List.length kill_result) ;
       List.fold_left ~f:( fun () (x, v) -> 
         Printf.printf "%s : %d\n" x v ) ~init:() kill_result;
       print_newline();
       let in_init = Df.in_init result in
       List.fold_left ~f:( fun () (x, v) -> 
-        Printf.printf "%s : %d\n" x v ) ~init:() in_init;
+        Printf.printf "%s : %d\n" x v ) ~init:() in_init; *)
       let cfg_result = Cfg.generate_cfg result in 
       let _ =  Printf.printf  "%d\n" (List.length cfg_result.nodes ) in   
-      let (rd_in, rd_out) = Df.kildall cfg_result in
+      let (rd_out, rd_in) = Df.kildall cfg_result in
       Printf.printf "rd: %d : %d\n" (Int.Map.length rd_in) (Int.Map.length rd_out);
       Printf.printf "Rd_in Result:\n";
       Int.Map.iter rd_in ~f: (fun sigma -> Df.print_sigma sigma; Printf.printf "\n" ) ;
       Printf.printf "Rd_out Result:\n";
       Int.Map.iter rd_out ~f: (fun sigma -> Df.print_sigma sigma; Printf.printf "\n" ) ;
+      Printf.printf "DCDG result:\n";
+      let dcdg_result =Dcdg.dcdg result cfg_result rd_in in
+      List.fold_left ~f:( fun () (lvar_x, lvar_y) -> 
+        Printf.printf "%s -> %s\n" (print_lvar lvar_x) (print_lvar lvar_y) ) ~init:() dcdg_result;
       Out_channel.close oc
         
 

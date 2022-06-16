@@ -32,9 +32,6 @@ let compare_domain (a:domain) (b:domain) : int =
  if ( string_cmpare = 0) then Int.compare (snd a) (snd b)
  else string_cmpare
 
- let print_sigma (a:sigma) =
-  List.fold_left ~f:( fun () (x, v) -> 
-    Printf.printf "%s : %d," x v ) ~init:() a
 
 (*
    For Kildall's algorithm ur termination condition relies on the ability to tell whether one
@@ -75,6 +72,10 @@ let in_init program : sigma =
      let minus_list = sigma_minus in_list kill_list in
      sigma_join gen_list minus_list
 
+ let print_sigma (sigma:sigma) =
+  List.fold_left ~f:( fun () (x, v) -> 
+    Printf.printf "%s : %d," x v ) ~init:() sigma
+
 let in_f (label_int:int) (rd: rd_results  ) (cfg_result:Cfg.t) :sigma = 
     let pre_map = cfg_result.pre_map in
     let precessors = Int.Map.find_exn  pre_map  label_int in
@@ -92,9 +93,18 @@ let kildall (cfg : Cfg.t) : rd_results * rd_results =
         | n :: ns -> (* take node n off of the worklist *)
            (* let block = Int.Map.find_exn cfg.node_map n in *)
            let old = Int.Map.find_exn inputs_out n in
+           let _ = Printf.printf "old %d\n" n in
+           let () = print_sigma old in
+           let _ = Printf.printf "end old %d\n" n in
            let in_l = in_f n inputs_out cfg in
+           let _ = Printf.printf "in_l %d\n" n in
+           let _ = print_sigma in_l in
+           let _ = Printf.printf "in_l end %d\n" n in
            let inputs_in' = Int.Map.set inputs_in ~key:n ~data:in_l in
            let out_l = out n in_l cfg in
+           let _ = Printf.printf "out_l %d\n" n in
+           let _ = print_sigma out_l in
+           let _ = Printf.printf "end out_l %d\n" n in
            let inputs_out' = Int.Map.set inputs_out ~key:n ~data:out_l in 
            let worklist' = 
              if (sigma_ne old out_l) then 
@@ -119,26 +129,4 @@ let kildall (cfg : Cfg.t) : rd_results * rd_results =
       work (outputMap) (inputMap) (List.sort (Int.Map.keys cfg.node_map) ~compare:Int.compare)
     
         
-
-(* let in l       *)
-
-
-(* let rec string_of_dom = function
-  | [] -> "[]"
-  | h :: l -> Format.sprintf "%d :: %s" (Syntax.print_label h) (string_of_dom l) 
-
-let string_of_sigma sigma =
-  let show_abstract_val ~key:variable ~data:abstract_value values =
-    Format.sprintf "%s%s = %s; " values variable (string_of_dom abstract_value)
-  in
-  let values = String.Map.fold sigma ~init:"" ~f:show_abstract_val in
-  Format.sprintf "[ %s]" values *)
-
-  
-
-(* let string_of_results results =
-  let show_result ~key:location ~data:sigma results =
-      Format.sprintf "%s\n%d: %s" results location (string_of_sigma sigma)
-    in
-    Int.Map.fold results ~init:"Results before node n" ~f:show_result *)
 
