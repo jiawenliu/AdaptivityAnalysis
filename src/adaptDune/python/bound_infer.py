@@ -158,17 +158,17 @@ class LocalBound:
     
     @staticmethod
     def compute_local_bounds(transition_graph):
-        transition_local_bounds = ["-1"]*len(transition_graph.transitions)
+        transition_local_bounds = [("-1", 1)]*len(transition_graph.transitions)
         for index, (_, dc_set, _, _) in enumerate((transition_graph.transitions)):
             # (_, dc_set, _, _) = transition_graph.transitions[transition_index]
             if not transition_graph.is_in_scc(transition_graph.edges[index]):
-                transition_local_bounds[index] = "1"
+                transition_local_bounds[index] = ("1", 1)
             else:
                 for dc in dc_set:
                     if dc.is_dec():
-                        transition_local_bounds[index] = dc.get_var()                
+                        transition_local_bounds[index] = (dc.get_var(), (dc.dc_const))                
         
-        for index, local_bound in enumerate(transition_local_bounds):
+        for index, (local_bound, _) in enumerate(transition_local_bounds):
             # (_, dc_set, _, _) = transition_graph.transitions[transition_index]
             if local_bound == "-1":
                 for i_other, lb_other in enumerate(transition_local_bounds):
@@ -232,7 +232,7 @@ class TransitionBound:
     def compute_transition_bound_closure(self, t_index):
         if not self.transition_bounds[t_index] == "":
             return self.transition_bounds[t_index]
-        v = self.transition_local_bounds[t_index]
+        (v,c) = self.transition_local_bounds[t_index]
         if v == "1":
             self.transition_bounds[t_index] = "1"
             return "1"
@@ -255,7 +255,7 @@ class TransitionBound:
                     if dc_var not in self.var_invariant.keys():
                         self.compute_var_invariant(dc_var)
                     tb_temp += " + " + self.transition_bounds[reset_t] + " * (" +  self.var_invariant[dc_var] + " + " + dc_const + ")"              
-            self.transition_bounds[t_index] = tb_temp
+            self.transition_bounds[t_index] = tb_temp if c == " 1 " else  (tb_temp + "/" + c)
     
     def compute_transition_bounds(self):
         self.compute_var_inc_and_reset()
