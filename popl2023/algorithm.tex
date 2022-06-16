@@ -1,23 +1,58 @@
-In this section, we clarify the algorithm {\THESYSTEM} that analyzes the adpativity of a target program in ssa language, which consists of three auxiliary algorithms: $\mathsf{AG}$ and $\mathsf{AD}$ for generating a weighted variable-based dependency graph and $\mathsf{AP}$ to find the most weighted path in the graph. We do not show details of  $\mathsf{AP}$, it is quite standard path-finding algorithm in a weighted graph. We go through the two round example to illustrate the algorithm. Finally, we show the soundness of our algorithm with respect to the adaptivity.  
+In this section, we clarify the algorithm {\THESYSTEM} that analyzes the adaptivity of a target program in SSA loop language, which consists of three auxiliary algorithms: a variable estimation algorithm $\mathsf{VE}$, a matrix-vector based graph generating algorithm $\mathsf{GG}$ to generate the weighted variable-based dependency graph, and a path-searching algorithm $\mathsf{PS}$ to find the most weighted path in the graph. We do not show details of  $\mathsf{PS}$ as we use a standard graph algorithm.
+We start with the ideas of {\THESYSTEM}, and illustrate the first two auxiliary algorithms, variable estimation algorithm $\mathsf{VE}$ and dependency graph generating algorithm $\mathsf{GG}$. 
+In the end, we show the soundness of our algorithm with respect to adaptivity.  
 
 
-\subsection{The ideas behind the algorithm}
-In consideration of the definition of adaptivity from the query-based dependency graph, our analysis whose goal is a sound upper bound on the adaptivity, is supposed to take care of paths(possible adaptivity candidates) in all the possible dependency graphs (per configuration). To this end, our algorithm aims to syntactically construct a dependency graph, in which the nodes are annotated ssa variables and the directed edges showing one annotated variable may depend on the other if there exists an edge between them. Intuitively, query requests in the query-based dependency graph is assigned to  variables that appears in the  predicted ssa-variable-based dependency graph. 
+\subsection{Ideas behind the Algorithm}
+In consideration of the definition of adaptivity, the longest path in its query-based dependency graph, our analysis targeting a tight upper bound on the
+adaptivity, is supposed to take care of paths (possible adaptivity candidates) in all the possible dependency graphs (per configuration).
+To this end, {\THESYSTEM} aims to statically construct a weighted directed dependency graph, in which the nodes are annotated SSA variables and directed edges show when one annotated variable may depend on another. The weight of the node shows if the variable is assigned with a query request. Intuitively, every query request in the query-based dependency graph is assigned to variables that appear in the SSA variable-based dependency graph. \dg{I think the last sentence can be deleted.}
 
-The algorithm {\THESYSTEM} estimates the adaptivity from the weighted variable-based dependency graph, whose structure is shown in Figure~\ref{fig:adaptfun}. We have a look at the structure of {\THESYSTEM}. We start with the dependency graph, represented in the form of a matrix $M$. To know which variable is associated with a query request in the matrix, an extra vector $V$ is produced in the algorithm, of the size of all estimated assigned variables in the target program $\ssa{c}$. Naturally, the first question comes to us, what is the size of the matrix $M$ and $V$, or the estimated assigned variables? To solve this,    
-the analysis goes through the ssa program $\ssa{c}$ twice, estimating the assigned variables to be tracked and adding the appropriate annotation $(l,w)$, in the first time scan. Those annotated variables are collected in a global list $G$, whose size determines the size of the matrix and vector. This first scan generating $G$ is conducted by the algorithm $\mathsf{AG}$ in Figure~\ref{fig:adaptfun}, which takes the target program $\ssa{c}$ as input. The global list $G$ is fed into the second scan, which decides the size of the matrix and vector.
-For example, if $G$ of size $N$, then the matrix used in the second round is of size $N \times N$, and vector of size $N$. It maintains an unique mapping from variables in $G$ to the matrix $M$ and the vector $V$. For example,  the $i$th row, $j$th column of the matrix $M[i][j] =1 $ represents the may-dependency from variable $ G[i]$ to $G[j]$, $M[i][j] =0$ means no dependency. In a similar way, $V[i]=1$ means the variable $G[i]$ is assigned to a query request. The second scan of $\ssa{c}$, implemented by the algorithm $\mathsf{AD}$, then records the may-dependency in $M$, the weight is tracked in $V$. We think variable associated with a query request of weight $1$ in the graph and others of weight $0$. After the analysis of $\mathsf{AG}$ and $\mathsf{AD}$, a ssa-variable-based weighted dependency graph is constructed. We use another auxiliary algorithm $AP$ to find the path with the most weights in the graph. Then the weight is the adaptivity $A$ {\THESYSTEM} estimates.    
+The algorithm {\THESYSTEM}, summarized in Figure~\ref{fig:adaptfun}, estimates the adaptivity from the weighted variable-based dependency graph. Given the input SSA program $c$ to be analyzed, the first step of {\THESYSTEM} is the variable estimation via the auxiliary algorithm $\mathsf{VE}$, which specifies the nodes of the variable-based dependency graph. The result of $\mathsf{VE}$ is stored in a global variable list $G$, fed to the next step. The second step is the graph generation, via a matrix-vector-based graph generating algorithm $\mathsf{GG}$. The matrix $M$ records the may-dependency between annotated variables in the global list $G$. It has size $|G| \times |G|$. The vector $V$ has the same size as $G$ and gives a weight to each variable in $G$. This weight is $1$ when the variable is assigned with a query request and $0$ otherwise. 
 
+To be precise, the $i$th row, $j$th column of the matrix $M$, written $M[i][j]$, is  $1$ when there may be a dependency from variable $ G[i]$ to $G[j]$. Dually, $M[i][j] =0$ means no dependency. In a similar way, $V[i]=1$ means the variable $G[i]$ is assigned with a query request.
+ 
+The SSA variable-based weighted dependency graph is constructed by the graph generating algorithm $\mathsf{GG}$. The final step is to find out the estimated adaptivity -- the most weighted path in the graph. We use another auxiliary algorithm $PS$ to find the path with the most weights in the graph.     
+%
+{\small
 \begin{figure}
-    \centering
-    \includegraphics[width=0.7\columnwidth]{adapfun.png}
+    \centering    
+    \begin{tikzpicture}
+    % {node distance = 2cm, auto}
+  % nodes
+%   \node[block] at (2,-6) (block6) {$f_6$};
+\draw[very thick, dashed] (-1, 3.6)  -- (9.5, 3.6) -- (9.5,0.4) -- (-1,0.4) -- (-1,3.6);
+  \node [block]at (1,3) [text width=6em](VG){ Variable Estimation} ;
+  \node [block]at (1,1)[text width=6em](GG){Graph Generating};
+    \node [block, line width=0.8mm, dashed,  minimum width=6.5em,minimum height=6.5em, rounded corners=1cm] at (4.5,2)[text width=6em](graph)
+{Variable Based Weighted Dependency Graph};
+    \node [block] at (7.5,2)[text width=3.5em](pathsearch)
+{Most Weighted Path Search};
+    \node[inner sep=0,minimum size=0,left of=VG, node distance = 3cm] (start) {};
+\node[inner sep=0,minimum size=0,right of=pathsearch, node distance = 3cm] (end) {};
+% edges
+%   \draw[->] (VG.west) -- -(0.5,0);
+  \path [line, thick] (graph) -- node [above] {} (pathsearch) ;
+  \path [line, thick] (GG) -- node [below] {$M$, $V$} (graph);
+  \path [line, thick]  (VG) -- node {Global Variables $G$}(GG); 
+%   \draw [double distance=2.5mm, -{Latex[length=1.2cm,open]}, blue, line width=1mm] (start.east) to (VG.west);
+%     \draw [double distance=.5mm, white, line width=1mm] (start.east) to ($(VG.west) - (11mm,0)$);
+  \path [line, -{Implies},double, line width=0.7mm]  (start) -- node[text width=5em, above, text centered] {SSA Program $c^{s}$}(VG); 
+  \path [line,  line width=0.7mm, -{Implies},double]  (pathsearch) -- node[text width=5em, above, text centered] {Estimated Adaptivity $Adapt$}(end); 
+  %   \draw[vecArrow] (start) to (VG) [above] {ssa Program $c^{s}$}
+%   % 2nd pass: copy all from 1st pass, and replace vecArrow with innerWhite
+%   \draw[innerWhite] (start) to (VG);
+ \end{tikzpicture} 
+    \vspace{-0.3cm}
     \caption{The overview of {\THESYSTEM}}
     \label{fig:adaptfun}
+    \vspace{-0.5cm}
 \end{figure}
-
-
-\subsection{Variable Estimation algorithm}
-We first show how $G$ will be collected, through a variable estimating algorithm $\mathsf{AG}$ of the form $\ag{G; w; \ssa{c}}{ G'; w'} $ in Figure~\ref{fig:ag}. The input of $\mathsf{AG}$ is a list of estimated annotated variables $G$ collected before the program $\ssa{c}$, a while map $w$ consistent with previous estimation, a program $\ssa{c}$. The output of the algorithm is the updated global list $G'$, along with the updated while map $w$ for later estimation.   
+}
+%
+\subsection{Variable Estimation Algorithm}
+We first show the algorithm $\mathsf{VE}$, which adds variables to the global variable list $G$. $\mathsf{VE}$ has the form $\ag{G; w; \ssa{c}}{ G'; w'} $, as shown in Figure~\ref{fig:ag}. The input of $\mathsf{VE}$ is a list of annotated variables $G$ collected before the program $\ssa{c}$, a loop map $w$ consistent with previous estimation, and an input SSA program $\ssa{c}$. The output of the algorithm is the updated global list $G'$, along with the updated loop maps $w$, for later estimation.   
+{\footnotesize
 \begin{figure}
  \begin{mathpar}
 \inferrule
@@ -51,19 +86,19 @@ We first show how $G$ will be collected, through a variable estimating algorithm
 %
 %
 %
-\and 
-%
-\inferrule
-{
-\ag{G; w; \ssa{c_1}}{ G_1; w_1}
-\and 
-\ag{G_1;w_1; \ssa{c_2}}{ G_2; w_2}
-}
-{
-\ag{G; w;
-\ssa{(c_1 ; c_2)}}{  G_2 ; w_2}
-}
-~\textbf{ag-seq}
+% \and 
+% %
+% \inferrule
+% {
+% \ag{G; w; \ssa{c_1}}{ G_1; w_1}
+% \and 
+% \ag{G_1;w_1; \ssa{c_2}}{ G_2; w_2}
+% }
+% {
+% \ag{G; w;
+% \ssa{(c_1 ; c_2)}}{  G_2 ; w_2}
+% }
+% ~\textbf{ag-seq}
 \and 
 \inferrule
 {
@@ -78,50 +113,38 @@ We first show how $G$ will be collected, through a variable estimating algorithm
 }
 {\ag{G; w; [\eloop ~ \ssa{\aexpr}, n, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l} }{ G_f; w_N\setminus l }
 }~\textbf{ag-loop}
-% \and 
-% \inferrule
-% {
-% \Gamma \vdash^{(i,i+a )}_{M, V} c 
-% }
-% {\Gamma \vdash^{(i, i+ N*a)}_{M_{i,a}^N(f), V_{i, a}^N} 
-% \ewhile([\bexpr]^l,   c) : \phi \Rightarrow \psi
-% }~\textbf{while}
-% %
-% \and
-% %
-% \inferrule
-% {
-% }
-% { \ag{ G;w; [ \eswitch(\ssa{\expr}, \ssa{x},(\ssa{v_j} \rightarrow \ssa{q_j} ) )]^{l} } { G ++ [\ssa{x}^{(l, w)}] ; w} }
-% ~\textbf{switch}
 \end{mathpar}
- \caption{The algorithm $\mathsf{AG}$ }
+\vspace{-0.4cm}
+ \caption{The key rule of variable estimation algorithm  }
     \label{fig:ag}
+    \vspace{-0.5cm}
 \end{figure}
-The assignment is the source of variables $\mathsf{AG}$ estimates, in the case $\textbf{ag-asgn}$ and $\textbf{ag-query}$, the output global list is extended by $\ssa{x}^{(l,w)}$. When it comes to the if command in the rule $\textbf{ag-if}$, variables assigned in the then branch $\ssa{c_1}$, as well as the variables assigned in the else branch $\ssa{c_2}$, and the new generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$. The sequence is standard by accumulating the predicted variables in the two commands $\ssa{c_1}$ and $\ssa{c_2}$ in a sequence $\ssa{c_1;c_2}$. The loop considers the loop iterations as well by assuming the loop counter $\ssa{\aexpr}$ to be certain natural number $N$ in the rule $\textbf{ag-loop}$. The algorithm counts the assigned variables in every iteration, including those new assigned variables in $\bar{\ssa{x}}$, those variables assigned in the body $\ssa{c}$, with the appropriate annotation showing the iteration number of the variables.      
+}
 
+The algorithm adds variables to $G$ at assignments. In the case of expression assignment $\textbf{ag-asgn}$ and query request $\textbf{ag-query}$, the output global list is expanded by $\ssa{x}^{(l,w)}$. When it comes to if statements (rule $\textbf{ag-if}$), variables assigned in both branches, as well as generated variables $\bar{\ssa{x}},\bar{\ssa{y}},\bar{\ssa{z}}$ in $ [ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}],[ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]$ are all added to $G$. Sequencing $\ssa{c_1;c_2}$ is handled as expected.
 
-\subsection{Matrix and Vector based algorithm}
-We have a global list $G$ after the first scan of the ssa programs $\ssa{c}$. We develop a matrix and vector based approach based on the global list $G$ to get an estimated upper bound on the adaptivity of the program.  In this approach, a matrix is constructed according to those estimated annotated variables from the global list, in which every row and every column corresponds to the unique variable in $G$ by position. To be precise, in this matrix, $0$ means no dependency while non-zero value in the matrix shows may-dependency between corresponding variables. If the value of $M[i][j]$ in the matrix $M$ is greater than zero, we know annotated variable $G[i]$ may depend on $G[j]$. A vector $V$ has the same size as $G$ and it records whether the corresponding variable $G[i]$ is assigned with a query request. $V[i] =1$ means assigned with a query request and  otherwise $V[i]=0$. We call this algorithm which tracks may-dependency in the ssa programs and query information, $\mathsf{AD}$. The algorithm of the form $ \ad{\Gamma; \ssa{c} ;i }{ M; V;  i' } $, the input is a tuple consisting of three elements: (1) a one-row-N-column matrix $\Gamma$ storing the dependency from previous program, it is used when handling the if command. (2) the ssa program $\ssa{c}$ to be analyzed (3) an index $i$ specifying the location of the first assigned variable of the program $\ssa{c}$ in the global list $G$. The output of $\mathsf{AD}$ also consists of three elements ; (1) A matrix $M$ showing the may-dependency in $\ssa{c}$ (2) A vector $V$ records the query requests in $\ssa{c}$ (3) the index $i'$ that refers to the next position of the last assigned variable in $\ssa{c}$, if exists. The existence of the index $i'$ helps to locate the first assigned variable if we need to analyze programs after $\ssa{c}$.  
+For loops, we assume that a loop counter is a natural number (rule 
+$\textbf{ag-loop}$). The algorithm accounts for variables assigned in every iteration, including newly created variables in $\bar{\ssa{x}}$, and adds them to $G$ with annotations representing the iteration number. 
+
+\subsection{Matrix and Vector based Algorithm}
+Next, we describe the algorithm $GG$, which takes the list $G$ generated by the previous algorithm. $\mathsf{GG}$ has the form: $ \ad{\Gamma; \ssa{c} ;i }{ M; V;  i' } $. The input is a tuple consisting of three elements: (1) a 1-row-N-column matrix $\Gamma$ storing the (annotated) variables on which the execution of the current instruction is control dependent; this is needed for if statements. (2) the SSA program $\ssa{c}$ to be analyzed. (3) an index $i$ specifying the location of the first assigned variable of the program $\ssa{c}$ in the global list $G$. The output of $\mathsf{GG}$ also consists of three elements: (1) A matrix $M$ representing the may-dependencies from $\ssa{c}$. (2) A vector $V$ representing the (annotated) variables assigned with queries in $\ssa{c}$. (3) the index $i'$ that refers to the next position of the last assigned variable in $\ssa{c}$, if it exists. The existence of the index $i'$ helps to locate the first assigned variable when we need to analyze the continuation of $\ssa{c}$.  
 
 We first define some functions which use the indices in $G$. 
-The function $\mathsf{L(i)}$ generates one-column-N-rows  matrix, where only the $i-th$ row is $1$ and all the other rows are $0$. This function is used to locate the right row when calculate the matrix when analyzing assignment and query. 
+The function $\mathsf{L(i)}$ generates a 1-column-N-rows  matrix, where only the $i$-th row is $1$ and all the other rows are $0$. This function is used to locate the right row when we calculate the matrix during assignment and query commands. 
 
-The function $\mathsf{R(e, i)}$ generates a one-row-N-column matrix. For every variable used in $e$, it finds the corresponding index $i$ in $G$ so that $G[i]$ maps to the variable and mark the $i$th column as $1$. If it is not found, we do not mark. When we say $G[i]$ maps to a target variable, we take off the annotation of $G[i]$ and check if the left variable is the same as the target variable. To handle loop, for instance, a variable $y$ appears many times in $G$, but with different annotations(iteration numbers), the argument $i$ helps to find most recent assignment variable $y$ before the index $i$ in $G$. It is still used when analyzing assignment and query. Thanks to our ssa language, our choice of the most recent assigned variable is reasonable because the variable used in the loop refers to the most recent assignment and every variable is uniquely assigned in its ssa form. 
+The function $\mathsf{R(\ssa{e}, i)}$ generates a 1-row-N-column matrix. For every variable used in $\ssa{e}$, it finds the corresponding index $i$ in $G$ so that $G[i]$ maps to the variable and marks the $i$th column as $1$. If the variable is not found, we do not mark it. When we say $G[i]$ maps to a target variable, we take off the annotation of $G[i]$ and check if the left variable with no annotation is the same as the target variable. The extra argument $i$ is used to handle loops. For instance, a variable $y$ may appear many times in $G$, but with different annotations (iteration numbers). In this case, $i$ helps find the most recently assigned variable version of $y$ in $G$. It is used when analyzing assignment and query request commands. Thanks to our SSA language, where every variable is assigned once, our choice of the most recent assigned variable is reasonable because the variable used in the loop refers to the most recent assignment of itself. 
 
-We define $M_1;M_2$ to combine two matrix, where $M_1 + M_2$ is the standard sum of two matrix.
-\[
-M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2 
-\]
-And define the operator $\uplus$ to combine two vectors.
+We define $M_1 ; M_2  :=  M_2 \cdot M_1 + M_1 + M_2 $, where $M_1 + M_2$ is the standard sum of two matrices.
+We also define the operator $\uplus$ to combine two vectors.
 \[
 V_1 \uplus V_2  :=  \left\{
 \begin{array}{ll}
-1 & (V_1[i] = 1 \lor V_2[i] = 1) \land i = 1, \cdots, N \land |V_1| = |V_2|\\
-0 & o.w.
+1 & (V_1[i] = 1 \lor V_2[i] = 1) \land 1 \leq i \leq N \land |V_1| = |V_2|\\
+0 & \mbox{otherwise}
 \end{array}\right.
 \]
-For the sake of brevity, we also define some annotations as follows. We show how the algorithm $\mathsf{AD}$ handles the extra part $[ \bar{\ssa{x}}, \bar{\ssa{x_1}},\bar{\ssa{x_2}} ] $ in the if and loop commands. First, we give a unique name for variables in lists $\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}$ respectively, as follows: {$ \forall 0 \leq z < |\bar{\ssa{x}}|. \bar{\ssa{x}}(z) = \ssa{x_z}, \bar{\ssa{x_1}}(z) = \ssa{x_{1z}}, \bar{\ssa{x_2}}(z) = \ssa{x_{2z}} $ }. And then we treat every tuple $(\ssa{x_z},\ssa{x_{1z}},\ssa{x_{2z}} )$ in $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}} ]$ as the simple may dependency case : $\ssa{x_z}$ may depend on both $ \ssa{x_{1z}}$ and $\ssa{x_{2z}}$, just like $ \assign{\ssa{x_z} }{\ssa{x_{1z}} + \ssa{x_{2z}} }$, defined as follows. 
+For the sake of brevity, we also use some annotations when the algorithm $\mathsf{GG}$ handles the extra part $[ \bar{\ssa{x}}, \bar{\ssa{x_1}},\bar{\ssa{x_2}} ] $ in the if and loop statements. First, we give unique names for variables in lists $\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}$ respectively, as follows: \[ \forall 0 \leq z < |\bar{\ssa{x}}|. \bar{\ssa{x}}(z) = \ssa{x_z}, \bar{\ssa{x_1}}(z) = \ssa{x_{1z}}, \bar{\ssa{x_2}}(z) = \ssa{x_{2z}} \]
+We treat every tuple $(\ssa{x_z},\ssa{x_{1z}},\ssa{x_{2z}} )$ in $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}} ]$ as the simple may dependency case : $\ssa{x_z}$ may depend on both $ \ssa{x_{1z}}$ and $\ssa{x_{2z}}$, just like $ \assign{\ssa{x_z} }{\ssa{x_{1z}} + \ssa{x_{2z}} }$, defined as follows.\\ 
 $
  \ad{\Gamma; [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}} ] ; i }{ M; V_{\emptyset}; i + |\bar{\ssa{x}}| } 
   \triangleq { \forall 0 \leq z < |\bar{\ssa{x}}|.
@@ -129,6 +152,7 @@ $
    where $M = \sum_{o \leq z < |\bar{\ssa{x}}| }M_{x_z} $.
 % \framebox{$ \ad{\Gamma; \ssa{c} ; i_1){M;V;i_2} $}
 %
+{\footnotesize
 \begin{figure}
 \begin{mathpar}
 \inferrule
@@ -172,17 +196,11 @@ V= \mathsf{L}(i)
 \\
 %
 {\ad{\Gamma; [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}]; i_3+|\bar{\ssa{x}}|+ |\bar{\ssa{y}}|}{ M_y; V_{\emptyset}; i_3+|\bar{\ssa{x}}|+|\bar{\ssa{y}}| + |\bar{\ssa{z}}| }}
-% { \forall 0 \leq j < |\bar{x}|.  \Gamma \vdash_{M_{x_j}, V_{\emptyset}}^{i_3+j, i_3+j+1 } x_j \leftarrow x_{1j} + x_{2j} }
-% \and
-% { \forall 0 \leq j < |\bar{y}|.  \Gamma \vdash_{M_{y_j}, V_{\emptyset}}^{i_3+|\bar{x}|+j, i_3+|\bar{x}|+j+1 } y_j \leftarrow y_{1j} + y_{2j} }
-% \\
-% { \forall 0 \leq j < |\bar{z}|.  \Gamma \vdash_{M_{z_j}, V_{\emptyset}}^{i_3+|\bar{x}|+|\bar{y}|+j, i_3+|\bar{x}|+|\bar{y}|+j+1 } z_j \leftarrow z_{1j} + z_{2j} }
 \\
 {M = (M_1+M_2)+ M_x+M_y +M_z }
 }
 {
-\Gamma \vdash^{(i_1, i_3+|\bar{x}|+|\bar{y}|+|\bar{z}|)}_{M, V_1 \uplus V_2 } 
-[\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l}
+\ad{\Gamma ; \eif([\ssa{\bexpr}]^{l},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)} ; i_1}{ M ;V_1 \uplus V_2  ; i_3+|\bar{x}|+|\bar{y}|+|\bar{z}| }
 }~\textbf{ad-if}
 %
 %
@@ -238,67 +256,33 @@ B= |\ssa{\bar{x}}| \and {A = |\ssa{c}|}
 \and
 {V' = V \uplus \sum_{0 \leq j <N}( V_{1j} \uplus V_{2j})  }
 }
-{\Gamma \vdash^{(i, i+N*(B+A)+B   )}_{M', V'} 
-[\eloop ~ \ssa{\aexpr}, 0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}]^{l}
+{
+\ad{\Gamma;\eloop ~ [\ssa{\aexpr}]^{l}, ~0, [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ~ \edo ~ \ssa{c}, i }{ M';V' ;i+N*(B+A)+B }
+%  \vdash^{(i,   )}_{M', V'} 
 % : \Phi \land \expr_N = \lceil { N} \rceil \Rightarrow \Phi \land \expr_N = \lceil{0}\rceil
 }~\textbf{ad-loop}
-% \and 
-% \inferrule
-% {
-% \Gamma \vdash^{(i,i+a )}_{M, V} c 
-% }
-% {\Gamma \vdash^{(i, i+ N*a)}_{M_{i,a}^N(f), V_{i, a}^N} 
-% \ewhile([\bexpr]^l,   c) : \phi \Rightarrow \psi
-% }~\textbf{while}
-% %
-% \and
-% %
-% \inferrule
-% { \Gamma + \mathsf{R}(\expr,i) \vdash^{(i, i+1)}_{M, V} \assign{ x}{q_j} 
-% % : \Phi \Rightarrow \Psi
-% \\
-% j \in \{1, \dots, N\}     }
-% {\Gamma \vdash^{(i, i+1)}_{ M,V } 
-% [\eswitch(\ssa{\expr}, \ssa{x},(v_j \rightarrow q_j ) ]^{l}
-% % : \Phi \Rightarrow \Psi 
-% }
-% ~\textbf{switch}
-% %
-% \and
-% %
-% \inferrule
-% { 
-% \vDash 
-% \Phi \Rightarrow \Phi'  
-% \and
-% \Gamma \vdash^{(i_1, i_2)}_{(M',V')} c : \Phi' \Rightarrow \Psi'
-% \and
-% \vDash \Psi' \Rightarrow \Psi
-% \and 
-% \Phi \vDash M' \leq M
-% \and 
-% \Phi \vDash V' \leq V
-% }
-% {\Gamma \vdash^{(i_1, i_2)}_{(M,V)} c 
-% : \Phi \Rightarrow \Psi
-% }
-% ~\textbf{conseq}
 \end{mathpar}
-    \caption{The algorithm AD}
+    \vspace{-0.4cm}
+    \caption{The key rules of the graph generating algorithm}
     \label{fig:algo_ad}
+    \vspace{-0.5cm}
 \end{figure}
-One of the key idea under algorithm $\mathsf{AD}$ is to track the indices $i$,$i'$ both in the input and output to synchronize with its previous algorithm $\mathsf{AG}$. The index in $\mathsf{AD}$ increases as the same way as the global list expands after the analysis of a program $\ssa{c}$, which helps $\mathsf{AD}$ record the dependency relation from the program $\ssa{c}$ in the right place of the matrix. For example, in the case $\textbf{ad-asgn}$ and $\textbf{ad-query}$, the index increases by 1, which corresponds to their counterparts of algorithm $\textbf{AG}$. The if and loop commands have the extra part $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] $ and we find that the output index increases by also considering this part as we do in collecting the global list.  
+}
+%
 
-Another interesting point is the construction of the matrix. The fundamental case is the assignment and query cases. We use a function $L(i)$ to generate a N-row-one-column matrix $L$ to guarantee the resulting matrix only has non-zeros at row $i$. The intuition behind is that one single assignment or query request can only reveal the dependency of its assigned variable (corresponding to one row of the matrix) to the variables used on the right hand sides. Thanks to the index $i$, we know which row this assignment should be in the matrix. The function $\mathsf{R}(\ssa{\expr},i)$ gets a one-row-N-column matrix marking the variables used in the right hand side. The $\Gamma$ is designed for the if command and we will discuss it later. We can see one simple example $sa$ to get a taste.     
+One key idea of algorithm $\mathsf{GG}$ is to track the indices $i$, $i'$ in the input and output to synchronize with the previous algorithm $\mathsf{VE}$: The index in $\mathsf{GG}$ increases in the same way as the global list expands after the analysis of a program $\ssa{c}$ by $\mathsf{VE}$, which helps $\mathsf{GG}$ record the dependency relation from the program $\ssa{c}$ in the right place of the matrix. For example, in the cases $\textbf{ad-asgn}$ and $\textbf{ad-query}$, the index increases by 1, which corresponds to the addition of one variable in the algorithm $\textbf{VE}$. The if and loop commands have the extra part $[\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] $ and the output index increases by also considering this part as we do in collecting $G$ in $\mathsf{VE}$.  
+
+% Another interesting point is the construction of the matrix. The fundamental case is the assignment and query cases. We use a function $L(i)$ to generate a N-row-one-column matrix $L$ to guarantee the resulting matrix only has non-zeros at row $i$. The intuition behind is that one single assignment or query request can only reveal the dependency of its assigned variable (corresponding to one row of the matrix) to the variables used on the right hand sides. Thanks to the index $i$, we know which row this assignment should be in the matrix. The function $\mathsf{R}(\ssa{\expr},i)$ gets a one-row-N-column matrix marking the variables used in the right hand side. The $\Gamma$ is designed for the if command and we will discuss it later.
+We show one simple example $sa$ to illustrate the construction of the matrix.     
 \[
 sa \triangleq
 \begin{array}{l}
-    \left[x_1 \leftarrow 2 \right]^1; \\
-    \left[x_2 \leftarrow x_1 + 2 \right]^2 ; \\
+    \left[x_1 \leftarrow 2 \right]^1; 
+    \left[x_2 \leftarrow x_1 + 2 \right]^2 ; 
     \left[x_3 \leftarrow x_1 + x_2 \right]^3
 \end{array}
 \]
-In the program $sa$, only simple assignment is involved. When we assume $\Gamma$ is empty, for the assignment at line $3$, the matrix is built as follows.
+In the program $sa$, only simple assignment is involved. When we assume an empty $\Gamma$, when analyzing the assignment at line $3$, the matrix is built as follows.
 \[
 \textbf{line3:} ~~
  \left[x_3 \leftarrow x_1 + x_2 \right]^3 :
@@ -327,108 +311,37 @@ x_3 & 1 & 1 & 0 \\
 \end{block}
 \end{blockarray}
 \]
-% a simple example of assignment
-% \begin{example}[Simple Assignment]
-% \[
-% SA \triangleq
-% \begin{array}{l}
-%     \left[x_1 \leftarrow 2 \right]^1; \\
-%     \left[x_2 \leftarrow x_1 + 2 \right]^2 ; \\
-%     \left[x_3 \leftarrow x_1 + x_2 \right]^3
-% \end{array}
-% \]
-% %
-% %
-% \[
-%  \textbf{line2:} ~~
-%  \left[x_2 \leftarrow x_1 + 2 \right]^2 :
-%  ~~~
-% \begin{blockarray}{cc}
-% \begin{block}{c[c]}
-%  x_1 & 0   \\
-%  x_2 & 1 \\
-%  x_3 & 0 \\
-% \end{block}
-% \end{blockarray}
-% *
-% \begin{blockarray}{ccc}
-% x_1 & x_2 & x_3 \\
-% \begin{block}{[ccc]}
-% 1 & 0 & 0 \\
-% \end{block}
-% \end{blockarray}
-% = 
-% \begin{blockarray}{cccc}
-% & x_1 & x_2 & x_3\\
-% \begin{block}{c[ccc]}
-% x_1 & 0 & 0 & 0 \\
-% x_2 & 1 & 0 & 0 \\
-% x_3 & 0 & 0 & 0 \\
-% \end{block}
-% \end{blockarray}
-% \]
-% %
-% %
-% %
-% \[
-% \textbf{line3:} ~~
-%  \left[x_3 \leftarrow x_1 + x_2 \right]^3 :
-%  ~~~
-% \begin{blockarray}{cc}
-% \begin{block}{c[c]}
-%  x_1 & 0   \\
-%  x_2 & 0 \\
-%  x_3 & 1 \\
-% \end{block}
-% \end{blockarray}
-% *
-% \begin{blockarray}{ccc}
-% x_1 & x_2 & x_3 \\
-% \begin{block}{[ccc]}
-% 1 & 1 & 0 \\
-% \end{block}
-% \end{blockarray}
-% = 
-% \begin{blockarray}{cccc}
-% & x_1 & x_2 & x_3\\
-% \begin{block}{c[ccc]}
-% x_1 & 0 & 0 & 0 \\
-% x_2 & 1 & 0 & 0 \\
-% x_3 & 1 & 1 & 0 \\
-% \end{block}
-% \end{blockarray}
-% \]
-% %
-% \end{example}
- We use a one-row-N-column matrix $\Gamma$ as one of the input of $\mathsf{AD}$, to handle the cases when the control flow diverges in the labelled if command $[\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l} $, where the execution of either branch may depend on the conditional guard $\ssa{\bexpr}$. Follow this intuition, the analysis of either branch is supposed to consider the variables used in the conditional $\ssa{\bexpr}$, tracked in $\Gamma$. In the case $\textbf{ad-if}$, we can see the analysis of the two branches $\ssa{c_1}$ and $\ssa{c_2}$ share the same input $\Gamma + \mathsf{R}(\ssa{\bexpr}, i)$ and $\mathsf{R}(\ssa{\bexpr}, i) $ tells the variables assigned before the if command and used in the conditional $\ssa{\bexpr}$.   
+%
+$\Gamma$ is needed to handle the case when the control flow diverges in an if statement
+% $[\eif(\ssa{\bexpr},[ \bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}] ,[ \bar{\ssa{y}}, \bar{\ssa{y_1}}, \bar{\ssa{y_2}}] , [ \bar{\ssa{z}}, \bar{\ssa{z_1}}, \bar{\ssa{z_2}}] , \ssa{ c_1, c_2)}]^{l} $
+, where the execution of either branch may depend on the conditional predicate $\ssa{\bexpr}$. Following this intuition, the analysis of either branch considers the variables used in the conditional $\ssa{\bexpr}$, tracked in $\Gamma$. In the rule $\textbf{ad-if}$, the analysis of the two branches $\ssa{c_1}$ and $\ssa{c_2}$ is in $\Gamma + \mathsf{R}(\ssa{\bexpr}, i)$. Here, $\mathsf{R}(\ssa{\bexpr}, i) $ gives variables used in the conditional predicate $\ssa{\bexpr}$.   
 
-We compose the matrix and vectors in the case of sequence in $\textbf{ad-seq}$. The non-zeros or we call it effect range of the matrix and vector is decided by its input and output indices. From the case $\textbf{ad-seq}$, two programs $\ssa{c_1}$ and $\ssa{c_2}$ have disjoint effect ranges $[i_1, i_2)$ and $[i_1,i_3)$, it is safe to combine them without lose information. 
+We compose the matrices and vectors in sequencing in rule $\textbf{ad-seq}$. The non-zeros or, as we call them, the \emph{effect ranges}, of the matrix and the vector are decided by input and output indices. In rule $\textbf{ad-seq}$, the two programs $\ssa{c_1}$ and $\ssa{c_2}$ must have disjoint effect ranges $[i_1, i_2)$ and $[i_2,i_3)$, so it is safe to combine them without losing information. 
+In rule \textbf{ad-seq}, we use $B= |\bar{\ssa{x}}|$ and $A= |{\ssa{c}}|$ to estimate the number of variables assigned in $\bar{\ssa{x}}$ and $\ssa{c}$. $|\ssa{c}|$ is defined with the help of the algorithm $\mathsf{VE}$, defined as $|\ssa{c}|= |G|$ when $\ag{[];\ssa{c};\emptyset }{ G; \emptyset }$. The algorithm then determines the number $N$ of loop iterations from the loop counter $\ssa{\aexpr}$. For every iteration, it first records the dependency relations between variables in $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$ by constructing a corresponding matrix $M_{1j}$ ($j$ is the iteration number) and an empty vector $V_{1j}$, and analyzes the loop body $\ssa{c}$, resulting in a matrix $M_{2j}$ and vector $V_{2j}$. We know that for all possible iteration numbers $j$, $M_{1j}$ and $M_{2j}$ have disjoint effect ranges so we can safely combine them. Similarly, we can combine the vectors $V_{1j}$ and $V_{2j}$.   
 
-The loop case is handled in a well organized way. We use $B= |\bar{\ssa{x}}|$ and $A= |{\ssa{c}}|$ to estimate the size of variables assigned in $\bar{\ssa{x}}$ and $\ssa{c}$. And  $|\ssa{c}|$ is defined by the help of the algorithm $\mathsf{AG}$, defined as $|\ssa{c}|= |G|$ when $\ag{[];\ssa{c};\emptyset }{ G; \emptyset }$. The algorithm then gets how many iterations $N$ the loop may executes from the loop counter $\ssa{\aexpr}$. For every iteration, it first records the dependency relations between variables in $ [\bar{\ssa{x}}, \bar{\ssa{x_1}}, \bar{\ssa{x_2}}]$ by constructing a corresponding matrix $M_{1j}$ ($j$ is the iteration number) and an empty vector $V_{1j}$, and analyze the loop body $\ssa{c}$ with a resulting matrix $M_{2j}$ and vector $V_{2j}$. We give an extra analysis of those new assigned variables as what $\mathsf{AG}$ does, it works well when the loop is executed ($N = 0$) or not. We know that for all the possible iteration number $j$, $M_{1j}$ and $M_{2j}$ have disjoint effect ranges so we combine them, similar as the vectors $V_{1j}$ and $V_{2j}$.   
-
-Finally, we are able to construct a variable-based weighted dependency graph based on $G$,$M$ and $V$ generated by the framework. The definition of the estimated adaptivity is the weight of the most weighted path in the graph defined as follows. 
+End-to-end, {\THESYSTEM} yields a variable-based weighted dependency graph defined by edges $M$ and weights $V$. The definition of the estimated adaptivity is the weight of the most weighted path in the graph, defined as follows. 
 
 \begin{defn}
-[Estimated Adaptivity]
+[Estimated adaptivity]
 Given a program $\ssa{c}$, the global list $G$, and $\ad{\Gamma; \ssa{c}; i_1}{M, V, i_2}$, the weighted dependency graph $G_{ssa}(M, V,G,i_1,i_2) = (Nodes, Edges, Weights)$ is defined as:
 \\
 Nodes $Vt = \{ G(j) \in \mathcal{LV} \mid i_1 \leq j < i_2 \}$
 \\
 Edges $E = \{ (G(j_1), G(j_2)) \in \mathcal{LV} \times \mathcal{LV} \mid M[j_1][j_2] \geq 1 \land  i_1 \leq j_1,j_2 < i_2   \}$
 \\
- Weights $Wt = \{ (  G(j), 1 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 1\}
-        \cup \{ (  G(j), 0 ) \in \mathcal{LV} \times \mathcal{N} | i_1 \leq j < i_2 \land V[j] = 0 \} $.
+ Weights $Wt = \{ (  G(j), 1 ) \in \mathcal{LV} \times \mathcal{N} \mid i_1 \leq j < i_2 \land V[j] = 1\}
+        \cup \{ (  G(j), 0 ) \in \mathcal{LV} \times \mathcal{N} \mid i_1 \leq j < i_2 \land V[j] = 0 \} $.
         
-Adaptivity of the program defined according to the graph is as:
+Adaptivity of the program is then defined as:
 \[
-Adapt(M, V,i_1,i_2) := \max_{vt_1, vt_2 \in Vt}\{ \mathsf{Weight}( p(vt_1, vt_2), Wt) \},
+Adapt(M, V,G,i_1,i_2) := \max_{vt_1, vt_2 \in Vt}\{ \mathsf{Weight}( p(vt_1, vt_2), Wt) \},
 \]
-where $p(k, l)$ is the path in graph $G_{ssa}(M, V, i_1,i_2)$ starting from $k$ to $l$, $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ get the total sum of weights along the path $p(vt_1,vt_2)$.
+where $p(k, l)$ is the path in graph $G_{ssa}(M, V,G, i_1,i_2)$ starting from $k$ to $l$, and $\mathsf{Weight}(p(vt_1,vt_2), Wt)$ is the total sum of weights of nodes along the path $p(vt_1,vt_2)$.
 \end{defn}        
-
-\subsection{Analysis on two round algorithm}
-We show how {\THESYSTEM} analyze the two round algorithm. For the sake of brevity, we conduct the analysis on the simplified two round algorithm $TR^{ssa}$.
-
+%
+% \subsection{Analysis on two round algorithm}
+% We still use the two round example in Figure~\ref{fig:ssa_tworound} to illustrate how {\THESYSTEM} works.
+%
 % \[
 % TR^{ssa}(k) \triangleq
 % {
@@ -445,10 +358,18 @@ We show how {\THESYSTEM} analyze the two round algorithm. For the sake of brevit
 % \end{array}
 % }
 % \]
-{\THESYSTEM} first runs the algorithm $\mathsf{AG}$ to generate the global list $G$. We assume the input $k=2$ and have the following.
-
-\[G_{k=2} = \left[
-  {a_1}^{(1,\emptyset)} , {a_3}^{(2,[2:1])} , {x_1}^{(3,[2:1])} , {a_2}^{(4,[2:1])} ,  {a_3}^{(2,[2:2])} , {x_1}^{(3,[2:2])} , {a_2}^{(4,[2:2])} , {a_3}^{(2,\emptyset)} , {l_1}^{(5,\emptyset)}   \right] \]
+% {\THESYSTEM} first runs the algorithm $\mathsf{AG}$ to generate the global list $G$.
+%
+% \[G = \left[
+% \begin{array}{l}
+%     {a_1}^{(1,\emptyset)}, {i_1}^{(2,\emptyset)}, {i_3}^{(3,[3:1])} ,{a_3}^{(3,[3:1])} , {x_1}^{(4,[3:1])} , {a_2}^{(5,[3:1])} , {i_2}^{(6,[3:1])} ,
+%   {i_3}^{(3,[3:2])} , {a_3}^{(3,[3:2])} , {x_1}^{(4,[3:2])} , \\ {a_2}^{(5,[3:2])} ,{i_2}^{(6,[3:2])},  
+%   {i_3}^{(3,[3:3])} , {a_3}^{(3,[3:3])} , {x_1}^{(4,[3:3])} , {a_2}^{(5,[3:3])} ,{i_2}^{(6,[3:3])},
+%   {i_3}^{(3,\emptyset)}, {a_3}^{(3,\emptyset)} , {l_1}^{(7,\emptyset)}    
+% \end{array} \right] 
+%   \]
+%   There are in total $20$ elements in the generated $G$. We can notice that there are $5$ annotated variables for every iteration. One iteration contains both the new generated variable $i_3$, $a_3$, and the variables $x_1,a_2,i_2$, assigned in the loop body.   
+%
 % \[G_{k=2} = \left[ \begin{array}{l}
 %      {a_1}^{(1,\emptyset)} , {j_1}^{(2,\emptyset)}, {j_3}^{(3,[2:1])} , {a_3}^{(3,[2:1])} , {x_1}^{(4,[2:1])} ,{j_2}^{(5,[2:1])} ,
 %   {a_2}^{(6,[2:1])},  \\
@@ -458,44 +379,72 @@ We show how {\THESYSTEM} analyze the two round algorithm. For the sake of brevit
 %   {l_1}^{(7,\emptyset)} \\  
 % \end{array}
 %      \right] \]
- We denote $a_1^{1}$ short for ${a_1}^{(1,\emptyset)}$ and ${a_3}^{(2,1)}$ short for ${a_3}^{(2,[2:1])}$. Then the resulting matrix $M_{tr}$ and $V_{tr}$ of the algorithm $\mathsf{AD}$ as follows.
- 
-{ \tiny
- \[
-M_{tr} =  \left[ \begin{matrix}
- & a_1^{1} & a_3^{(2,1)} & x_1^{(3,1)} & a_2^{(4,1)}  & a_3^{(2,2)} & x_1^{(3,2)} & a_2^{(4,2)} & a_3^{2} & l_1^{5}\\
- a_1^{1} & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 \\
-a_3^{(2,1)} & 1 & 0 & 0 & 0 & 0 & 0 & 0&0&0\\
-x_1^{(3,1)} & 0 & 0 & 0 & 0 & 0 & 0& 0& 0 &0\\
-a_2^{(4,1)} & 0 & 1 & 1 & 0 & 0 & 0 & 0& 0&0\\
-a_3^{(2,2)} & 1 & 0 & 0 & 1 & 0 & 0 & 0 & 0&0 \\
-x_1^{(3,2)} & 0 & 0 & 0 & 0 & 0 & 0 & 0& 0&0\\
-a_2^{(4,2)} & 0 & 0 & 0 & 0 & 1 & 1 & 0& 0&0\\
-a_3^{2} & 1 & 0 & 0 & 0 & 0 & 0 & 1& 0&0\\
-l_1^{5} & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 &0 \\
- \end{matrix} \right] 
-~ , V_{tr} = \left [ \begin{matrix}
-a_1^{1} &  0 \\
-a_3^{(2,1)} & 0 \\
-x_1^{(3,1)} & 1 \\
-a_2^{(4,1)} &  0 \\
-a_3^{(2,2)} & 0 \\
-x_1^{(3,2)} & 1 \\
-a_2^{(4,2)} &  0 \\
-a_3^{2} &  0 \\
-l_1^{5} &  1 \\
-\end{matrix} \right ]
-\]
-}
+%  For simplicity, we denote $a_1$ short for ${a_1}^{(1,\emptyset)}$. We use both ${a_3}^{1}$ and ${a_3}(1)$ as the short for ${a_3}^{(3,[3:1])}$ when the iteration number matters, similarly for other variables. Because of the property of ssa, we can uniquely find the variable even if we omit the line number.  Then the resulting matrix $M_{tr}$ and $V_{tr}$ of the algorithm $\mathsf{AD}$ as follows.
+ %
+% { \tiny
+%  \[
+% M_{tr} = 
+% \begin{blockarray}{ccccccccccccccccccccc}
+% % & a_1^{1} & a_3^{(2,1)} & x_1^{(3,1)} & a_2^{(4,1)}  & a_3^{(2,2)} & x_1^{(3,2)} & a_2^{(4,2)} & a_3^{2} & l_1^{5}& x & x\\
+% & a_1 & i_1 & i_3^{1} & a_3^{1}  & x_1^{1} & a_2^{1} & i_2^{1} & i_3^{2} & a_3^{2}  & x_1^{2} & a_2^{2} & i_2^{2} &i_3^{3} & a_3^{3}  & x_1^{3} & a_2^{3} & i_2^{3} & i_3 & a_3 & l_1\\
+% \begin{block}{c[cccccccccccccccccccc]}
+%  a_1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+%  i_1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% i_3({1}) & 0 & 1 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% a_3({1}) & 1 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% x_1({1}) & 0 & 0 & 1 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% a_2({1}) & 0 & 0 & 0 & 1 & 1 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% i_2({1}) & 0 & 0 & 1 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% i_3({2}) & 0 & 1 & 0 & 0 & 0 & 0 & 1 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% a_3({2}) & 1 & 0 & 0 & 0 & 0 & 1 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% x_1({2}) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &1 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% a_2({2}) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &1 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% i_2({2}) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &1 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% i_3({3}) & 0 & 1 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% a_3({3}) & 1 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% x_1({3}) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% a_2({3}) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0 &0 \\
+% i_2({3}) & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 &0 & 0 & 0 & 1 & 0 & 0 & 0 & 0 & 0 & 0 &0 \\
+% i_3 & 0 & 1 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 &0 \\
+% a_3 & 1 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 &0 \\
+% l_1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 &0 &0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 &0 \\
+% \end{block}
+% \end{blockarray}
+% ~ , V_{tr} = \left [ \begin{matrix}
+% a_1 &  0 \\
+% i_1 & 0 \\
+% i_3({1}) & 0 \\
+% a_3({1}) & 0 \\
+% x_1({1}) &  1 \\
+% a_2({1}) & 0 \\
+% i_2({1}) & 0 \\
+% i_3({2}) & 0 \\
+% a_3({2}) & 0 \\
+% x_1({2}) &  1 \\
+% a_2({2}) & 0 \\
+% i_2({2}) & 0 \\
+% i_3({3}) & 0 \\
+% a_3({3}) & 0 \\
+% x_1({3}) &  1 \\
+% a_2({3}) & 0 \\
+% i_2({3}) & 0 \\
+% i_3 & 0 \\
+% a_3 &  0 \\
+% l_1 & 0 \\
+% \end{matrix} \right ]
+% \]
+% }
+% The graph is built as in Figure~\ref{fig:ssa_tworound}. The most weighted path has the weight $2$.
+%
 %% a graph is better here
-
+%
 \subsection{ Soundness of {\THESYSTEM}}
-We would like to show that the query-based dependency graph generated from the trace of the execution of the target ssa program is a subgraph of the variable-based dependency graph predicted from our algorithm ${\THESYSTEM}$, and the query requested during the execution is also bounded by an estimation from our algorithm.
+We would like to show that the query-based dependency graph generated from the trace of the execution of the target SSA program is a subgraph of the variable-based dependency graph generated by ${\THESYSTEM}$, and the total number of queries asked in the program implementing an adaptive data analysis is also bounded by our algorithm.
 
-We first give a definition of subgraph of a query-based dependency graph with respect to a variable-based dependency graph.
+We first define when a query-based dependency graph whose nodes are queries is a subgraph of a variable-based dependency graph whose nodes are variables. Intuitively, this happens when there is a mapping of nodes from the first graph to the second.
 \begin{defn}
 [Subgraph]
-Given a query-based dependency graph $G_{s} = (V_1, E_1)$, a variable-based dependency graph $G_{ssa} = (V_2, E_2)$, $G_{s} \subseteq G_{ssa}$ iff:\\
+Given a query-based dependency graph $G_{s} = (V_1, E_1)$, a variable-based dependency graph $G_{ssa} = (V_2, E_2)$, $G_{s} \subseteq G_{ssa}$ iff:
 $\exists f$ so that \\
 1. for every $v \in V_1$, $f(v) \in V_2$. 
 \\
@@ -504,14 +453,24 @@ $\exists f$ so that \\
 from $f(v_i)$ to $f(v_2)$ in $G_{ssa}$.
 \end{defn}
 
-Then we show the soundness of {\THESYSTEM}. In the theorem, we use some definition. $G \vDash M, V$ says that $G$ and $M$, $V$ have the corresponding size. $G; w \vDash (\ssa{c}, i_1,i_2)$ checks if the variables assigned in $\ssa{c}$ calculated by $\mathsf{AG}$ matches the variables in $G$ from index $i_1$ to $i_2$.
+We now show the soundness of {\THESYSTEM}. We use some new definitions. $G \vDash M, V$ means that $G$ matches $M$, $V$ in size. For example, if the cardinality of $G$ is $N$, a matched matrix $M$ is of size $N\times N$ and a good vector $V$ has the same size as $G$. The assumption $G; w \vDash (\ssa{c}, i_1,i_2)$ checks that the variables assigned in $\ssa{c}$ estimated by $\mathsf{VE}$ match the variables in $G$ from index $i_1$ to $i_2$.
 
 \begin{thm}
 [Soundness of {\THESYSTEM}]
-Given $ \ad{\Gamma; \ssa{c}; i_1 }{M; V;i_2}$,  for any global list $G$,  loop maps $w$ such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$. $K$ is the number of queries inquired during the execution of the piece of program $\ssa{c}$ and |V| gives the number of non-zeros in $V$. 
+Given $ \ad{\Gamma; \ssa{c}; i_1 }{M; V;i_2}$,  for any global list $G$,  loop maps $w$ such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$, let $K$ be the number of queries made during the execution of the piece of program $\ssa{c}$ and |V| be the number of non-zeros in $V$. 
 % $|.|_{low} $ is the annotation erasure, which turns a ssa form program $\ssa{c}$ to its low-level version.
 Then,
 \[
-K \leq |V| \land \forall D, \ssa{m}. G_{s}(\ssa{c},D,\ssa{m},w) \subseteq G_{ssa}(M, V,G,i_1, i_2)
+K \leq |V| \land \forall D, \ssa{m}.\, G_{s}(\ssa{c},D,\ssa{m},w) \subseteq G_{ssa}(M, V,G,i_1, i_2)
 \]      
 \end{thm}
+
+\begin{coro}
+Given $ \ad{\Gamma; \ssa{c}; i_1 }{M; V;i_2}$,  for any global list $G$,  loop maps $w$ such that $G ;w \vDash (\ssa{c}, i_1, i_2) \land G \vDash (M,V)$,
+\[
+K \leq |V| \land A_s(\ssa{c}, D, \ssa{m}, w) \leq Adapt(M, V,G,i_1, i_2)
+\]      
+\end{coro}
+We have already shown in Lemma~\ref{lem:same_adapt} that for every transformation of a program $c$ to $\ssa{c}$, the adaptivity of $c$ and $\ssa{c}$ is equal. It follows that the bound estimated by {\THESYSTEM} on $\ssa{c}$ is an upper bound on the adaptivity of $c$.  
+
+% \mg{I think we should connect this theorem with our definition of adaptivity, rather than just with the graph. Can we write a corollary about this?}
