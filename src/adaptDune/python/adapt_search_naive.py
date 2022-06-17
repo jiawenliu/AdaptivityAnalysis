@@ -1,6 +1,7 @@
 
 
 import enum
+import math
 
 
 class AdaptType:
@@ -131,6 +132,8 @@ class AdaptSearchAlg:
         self.scc_id = [0]*self.vertex_no
         self.scc_cnt = 0
         self.dfs_clock = 0
+        self.adaptivity = AdaptType(0)
+        
 
     def create_edges (self):
         for e in self.graph.edges:
@@ -260,18 +263,24 @@ class AdaptSearchAlg:
                     bfs_q.append(v)
         print("Adaptivity of each SCC: ", list(map(lambda a: a.value, self.adapt)) )
 
+    def print_adapt(self):
+        print("The Adaptivity From This Graph is: ", self.get_adapt())
+        print("The Total Query Number For This Graph is: ", sum(self.graph.query))
+        print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O(", 
+        (self.adaptivity  * AdaptType((math.sqrt(sum(self.graph.query))))).value, "/"+f"√N )")
+        #  u"\u221A".encode('utf-8'), "(n) )")
+
+
     def get_adapt(self):
-        adaptivity = AdaptType(0)
-        for adapt_value in self.adapt:
-            adaptivity = adaptivity.adapt_max(adapt_value)
-        return adaptivity.value
+        return self.adaptivity.value
     
     def search_adapt(self):
         self.create_edges()
         self.find_scc()
         self.build_scc()
         self.bfs_adapt()
-
+        for adapt_value in self.adapt:
+            self.adaptivity = self.adaptivity.adapt_max(adapt_value)
 
 # # the example with only sequence, 
 # # Expected Adaptivity: 4
