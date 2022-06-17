@@ -1,5 +1,6 @@
 import enum
 from collections import defaultdict
+from ntpath import join
 from adapt_search_refined import Graph, AdaptType
 
 
@@ -196,6 +197,8 @@ class TransitionBound:
         self.var_incs = defaultdict(list)
         self.var_incs_bound = defaultdict(str)
         self.var_resets = defaultdict(list)
+        self.var_reset_chains = defaultdict(list)
+        self.reset_vars = defaultdict(set)
         
     def compute_var_inc_and_reset(self):
         # self.var_incs = {}
@@ -208,6 +211,25 @@ class TransitionBound:
                 elif dc.dc_type == DifferenceConstraint.DCType.RESET:
                     self.var_resets[dc.get_var()].append((transition_index, dc.dc_var, dc.dc_const))
     
+    def dfs_var_inc_and_reset_chains(self, v):
+        print("computing the reset chain of: ", v)
+        for (transition_index, dc_var, dc_const) in self.var_resets[v]:
+            if dc_var:
+                self.reset_vars[v].add(dc_var)
+                if (dc_var not in self.var_reset_chains.keys()):
+                    self.dfs_var_inc_and_reset_chains(dc_var)
+                print("the nested reset chain of " , v, "are: ", self.var_reset_chains[dc_var])
+                for dc_var_rchain in self.var_reset_chains[dc_var]:
+                    self.var_reset_chains[v].append(dc_var_rchain+[(transition_index, dc_var, dc_const)])
+                for rv in self.reset_vars[dc_var]:
+                    self.reset_vars[v].add(rv)
+            else:
+                self.var_reset_chains[v].append([(transition_index, dc_var, dc_const)])
+        print("computed the reset chain of: ", v, self.var_reset_chains[v])
+        print("computed the reset vars of: ", v, self.reset_vars[v])
+        # self.var_reset_chains[v]=(reset_chains)
+        
+        return
     # def compute_var_reset(self):
     #     self.var_resets = {}
     
@@ -231,6 +253,57 @@ class TransitionBound:
         self.var_incs_bound[v] = var_inc
         self.var_invariant[v] = var_inc + " + " + var_reset
 
+    def compute_var_invariant_optimal(self, v):
+        var_inc = "0"
+        var_reset = "0"
+        # print(v, self.var_resets[v], self.var_incs[v])
+        for (t, dc_const) in self.var_incs[v]:
+            if self.transition_bounds[t] == "":
+                self.compute_transition_bound_closure_optimal(t)
+            var_inc += " + " + self.transition_bounds[t] + " * " + dc_const
+        for (t, dc_var, dc_const) in self.var_resets[v]:
+            if dc_var and self.var_invariant[dc_var] == "":
+                self.compute_var_invariant_optimal(dc_var)
+            var_reset = "max(" + var_reset + ", " + (self.var_invariant[dc_var] if dc_var else "0") + " + " + dc_const + ")"
+
+        self.var_incs_bound[v] = var_inc
+        self.var_invariant[v] = var_inc + " + " + var_reset
+
+
+    def compute_transition_bound_closure_optimal(self, t_index):
+        if not self.transition_bounds[t_index] == "":
+            return self.transition_bounds[t_index]
+        (v,c) = self.transition_local_bounds[t_index]
+        if v == "1":
+            self.transition_bounds[t_index] = "1"
+            return "1"
+        if v == "Q":
+            self.transition_bounds[t_index] = "max(DB)"
+            return "1"
+        if v == "-1":
+            self.transition_bounds[t_index] = "INF"
+            return "INF"
+        else:
+            if v not in self.var_invariant.keys():
+                self.compute_var_invariant_optimal(v)
+            tb_temp = self.var_incs_bound[v] + "+" + "+".join([self.var_incs_bound[v] for v in self.reset_vars[v]]) if self.reset_vars[v] else self.var_incs_bound[v]
+            for reset_chain in self.var_reset_chains[v]:
+                min_transition = ""
+                chain_in = ""
+                chain_const = ""
+                for (reset_t, dc_var, dc_const) in reset_chain:
+                    if self.transition_bounds[reset_t] == "":
+                        self.compute_transition_bound_closure_optimal(reset_t)
+                    min_transition = self.transition_bounds[reset_t] if min_transition == "" else  "min( " + self.transition_bounds[reset_t] + ", " + min_transition + ")"
+                    if dc_var: 
+                        if dc_var not in self.var_invariant.keys():
+                            self.compute_var_invariant(dc_var)
+                        # if (chain_in == ""):
+                        #     chain_in = self.var_invariant[dc_var]
+                    chain_const = dc_const if chain_const == "" else chain_const + " + " + dc_const
+                tb_temp += " + " + min_transition + " * (" +  chain_const + ")" if chain_in == "" else " + " + min_transition + " * (" +  chain_in + " + " + chain_const + ")"
+            self.transition_bounds[t_index] = str(int(tb_temp)/int(c)) if isinstance(c, int) and isinstance(tb_temp, int)else  (tb_temp + "/" + c)
+        return self.transition_bounds[t_index]
 
 
     def compute_transition_bound_closure(self, t_index):
@@ -263,8 +336,12 @@ class TransitionBound:
     
     def compute_transition_bounds(self):
         self.compute_var_inc_and_reset()
-        for transition_index in range(len(self.transition_graph.transitions)):
-            self.compute_transition_bound_closure(transition_index)
+        # visited = {v:False for v in self.var_resets.keys()}
+        for v in self.var_resets.keys():
+            if v not in self.var_reset_chains.keys():
+               self.dfs_var_inc_and_reset_chains(v)
+        for transition_index in reversed(range(len(self.transition_graph.transitions))):
+            self.compute_transition_bound_closure_optimal(transition_index)
         return self.transition_bounds
 
 
