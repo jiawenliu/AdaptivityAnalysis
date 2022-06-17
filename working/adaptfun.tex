@@ -483,7 +483,7 @@ the program-based adaptivity for $c$ is defined as%
 % %
 % %
 \subsection{ $\THESYSTEM$ Analysis Algorithm}
-\wq{To do: Add $\THESYSTEM$, a data flow analysis algorithm to scan the program and give a graph.}
+% \wq{To do: Add $\THESYSTEM$, a data flow analysis algorithm to scan the program and give a graph.}
 {\THESYSTEM} consists of three phases: 
 \begin{enumerate}
     \item An algorithm to generate a precise data control flow graph
@@ -641,29 +641,76 @@ The Reaching definition is calculated by the Worklist algorithm as below.
 % \end{algorithm}
 
 \paragraph*{Expression Abstraction}
-
-Abstract Domain $ \absdom: \mathcal{P}(DC(VAR \cup \constdom) \cup \{\top \})$:
+We define the abstract domain and
+an expression abstraction method by simplifying the method in paper \cite{sinn2017complexity}.
 \\
-$\constdom: \mathbb{Z} \cup symbc \cup \{\max{\dbdom}\} $ constants $\mathbb{Z}$ and 
-the symbolic constants $symbc$ (the program input and a special symbol $\max{\dbdom}$ reserved for representing the )
-Given a program $c$, with its control flow graph, we first extract its abstract final and initial states:
+Abstract Domain $ \absdom: \mathcal{P}(DC(\mathcal{VAR}  \cup \constdom) \cup \{\top \})$:
 \\
-$DC : VAR \cup \constdom \to \mathcal{VAR \times (VAR \cup \constdom) } \times \mathbb{Z}$
+$\constdom: \mathbb{N} \cup \inpvar \cup \{\max{(\dbdom)}\} $ 
+The  constants in abstract domain consist of natural number $\mathbb{Z}$,
+the symbolic constants,  $\inpvar$ (i.e., the set of the program's input variables), 
+and a constant value $\max(\dbdom)$ for estimating the upper bound of variables'
+assigned by query expression.
 \\
-The difference constraint $DC$ over $VAR \cup \constdom$ is inequality of form $x \leq y + c$ where $x \in VAR$, $y \in VAR \cup \constdom$ and $c \in \mathbb{Z}$, $DC(VAR \cup \constdom)$ represents the set of inequality over all $VAR \cup \constdom$.
+$DC : \mathcal{VAR} \cup \constdom \to \mathcal{\mathcal{VAR} \times (\mathcal{VAR} \cup \constdom) } \times (\mathbb{N} \cup \{\infty\})$
+\\
+The difference constraint $DC$ over $\mathcal{VAR} \cup \constdom$ is inequality of form $x \leq y + v$ where $x \in \mathcal{VAR} $, 
+$y \in \mathcal{VAR}  \cup \constdom$ and $v \in \mathbb{N}$, $DC(\mathcal{VAR}  \cup \constdom)$ represents the set of inequality over all $\mathcal{VAR}  \cup \constdom$.
+\\
+We simplify the expression abstraction method from paper \cite{sinn2017complexity}, where 
+\\
+1. First normalize all the boolean expressions in the guards of $\ewhile$ header into the form 
+$ a > 0 $ or $a \geq 0$, generating a set of variables involved into these boolean expressions, $\grdvar \subseteq \mathcal{VAR}$.
+\\
+2. Then, we symbolic executing the assignment commands 
+(substituting the variables in every expression by the symbolic expression assigned to it previously) until 
+all the expressions stabilized.
+\\
+3. Then, abstract the stabilized expression in every assignment command into an abstract value in $\absdom$ as follows:
 \\
 Expression Abstraction:
-$\absexpr : \expr \to VAR \to \absdom$,
-computes the difference constraints for variable 
-according to the expression $\expr$ assigned to it in the program.
-\[
-  \begin{array}{ll}
-    \absexpr(\expr, x)  & =   \\
-    \absexpr(\qexpr, x)  & = x \leq \max(\dbdom)  \\
-    \absexpr(\bexpr, x)  & = \top  \\
-  \end{array}
-  \]
-
+$\absexpr : \expr \to \mathcal{VAR} \to \absdom$,
+computes the abstract value for each variable 
+according to the expression $\expr$ assigned to it in the command.
+% \[
+%   \begin{array}{ll} 
+%     \absexpr(y + c, x)  = x' \leq y + c  & c \in \mathbb{N} \land y \in (VAR \cup \constdom) \\
+%     \absexpr(y - c, x)  = x' \leq y - c  & c \in \mathbb{N} \land y \in (VAR \cup \constdom) \\
+%     \absexpr(v, x)  = x' \leq v + 0  & v \in (VAR \cup \constdom) \\
+%     \absexpr(\aexpr, x) = x' \leq 0 + \infty   & \aexpr \text{ doesn't have any of the forms as above} \\
+%     \absexpr(\qexpr, x)  = x' \leq 0 + \max(\dbdom) & \qexpr \text{ is a query expression}  \\
+%     \absexpr(\bexpr, x) = x' \leq 0 + 1   & \bexpr \text{ is a boolean expression} \\
+%   \end{array}
+%   \]
+  \[
+    \begin{array}{ll} 
+      \absexpr(x - v, x)  = x' \leq x - v  & x \in \grdvar \land v \in \mathbb{N} \\
+      \absexpr(y + v, x)  = x' \leq y + v  & x \in \grdvar \land v \in \mathbb{Z} \land y \in (\grdvar \cup \constdom) \\
+      \absexpr(v, x)  = x' \leq v + 0  & x \in \grdvar \land v \in (\grdvar \cup \constdom) \\
+      \absexpr(y + v, x)  = x' \leq y + v & \\
+      \grdvar = \grdvar \cup \{y\} & x \in \grdvar \land v \in \mathbb{Z} \land y \notin (\grdvar \cup \constdom)  \\
+      \absexpr(\qexpr, x)  = x' \leq 0 + \max(\dbdom) & x \in \grdvar \land \qexpr \text{ is a query expression}  \\
+      \absexpr(\bexpr, x) = x' \leq 0 + 1   & x \in \grdvar \land \bexpr \text{ is a boolean expression} \\
+      \absexpr(\expr, x) = x' \leq \infty  &  x \in \grdvar \land \expr \text{ doesn't have any of the forms as above} \\
+      \absexpr(\expr, x) = \top  &  x \notin \grdvar \\
+    \end{array}
+    \]
+  In line:4 of case where variable in the $\grdvar$ is updated by a variable $y$ not in this set, we add $y$ into the set $\grdvar$ and repeat 
+  above procedure  until $\grdvar$ and $\absexpr(\expr, x)$ is stabilized for every variable.
+  \\
+More specifically in understanding the intuition, we handle a simplified normalized guard expression ($ x > 0$ for $x^l \in \lvar_c$)
+ in $\ewhile$ and the same forms of the counter modification as in paper \cite{sinn2017complexity}.
+\\
+The counter variables only increase, decrease or reset by expression in the form of arithmetic minus and plus (able to extend to max and min.)
+\\
+For more complex expression assignments, where the counter reset, or calculated from $\elog$, 
+multiplication or division, and expressions involving multiple variables, the constraint is approximated as reset of $\infty$.
+\\
+This simplification doesn't affect our analysis results in our examples. It is easy to extend the normalized expression 
+into more complex forms as in \cite{sinn2017complexity}, as well as the 
+counter variable manipulation with more advanced expressions as in \cite{}.
+% \\ 
+% The boolean expression in the guard of $\ewhile$ command is normalized into form of $ x > 0$ where $x^l \in \lvar_c$ for some $l$.
 \paragraph{Program Event Abstraction} 
 Abstract event is a tuple of a pair of Labels with a difference constraint.
 \\
@@ -671,35 +718,49 @@ Abstract Event:
 $\absevent \in $
 Label $\times$ Label $\times \absdom$ 
 \\
-Abstract Initial State of Each Command is its Initial Label, computed in the way defined in Definition~\ref{def:init_label}.
+Given a program $c$, with its control flow graph, we first extract its abstract final and initial states:
+\\
+Abstract Initial State of Each Command is its Initial Label, computed as follows:
+\\
+\[
+ \begin{array}{ll}
+    \absinit([x := e]^{l})  & = l  \\
+    \absinit([x := q(e)]^{l})  & = l \\
+    \absinit([\eskip]^{l})  & = l \\
+    \absinit([\eif [b]^l \ethen c_1 \eelse c_2]^{l})  & = l \\
+    \absinit([\ewhile [b]^l \edo c]^{l})  & = l \\
+    \absinit(c_1 ; c_2)  & = \absinit(c_1) \\
+ \end{array}
+ \]
 \\
 Final State Abstraction: 
 $\absfinal: \cdom \to \mathcal{Label}$,
 computes the Abstract Final State of the command. 
  \[
  \begin{array}{ll}
-    \absfinal([x := \expr]^{l})  & = \{(l, \absexpr \eapp \expr \eapp x)\}  \\
+    \absfinal([x := \expr]^{l})  & = \{(l, \absexpr\eapp (\expr, x))\}  \\
      \absfinal([x := \query(\qexpr))]^{l})  & = \{
-      (l, \absexpr \eapp \expr \eapp x)\}  \\
+      (l, x' \leq 0 + \max(\dbdom) )\}  \\
      \absfinal([\eskip]^{l})  
      & = \{(l, \top)\} \\
-     \absfinal([\eif [b]^l \ethen C_1 \eelse C_2]^{l})  & = \absfinal(C_1) \cup \absfinal(C_2) \\
+     \absfinal([\eif [b]^l \ethen c_1 \eelse c_2]^{l})  & = \absfinal(c_1) \cup \absfinal(c_2) \\
      \absfinal([\ewhile [b]^l do c_w]^{l})  & = \{(l, \top)\} \\
-     \absfinal(C_1 ; C_2)  & =  \absfinal(C_2) \\
+     \absfinal(c_1 ; c_2)  & =  \absfinal(c_2) \\
  \end{array}
  \]
  %
- \paragraph{Control Flow Abstraction}
-Then, based on the Data-Control flow graph we generated in the first step, in order to analysis the reachability bound for each vertex, 
-we  extract the abstract control flow graph:
+ \paragraph{Abstract Execution Trace}
+Then, based on the abstract final and initial state, in order to analysis the reachability bound for each vertex, 
+we  extract the abstract execution trace for a program, which is a set of the abstract events.
 \\
- Abstract Flow computation:
- $\absflow: \cdom -> List(\absevent)$, 
- $\absflow(c)$ computes the Abstract Flow of type $List(\absevent)$ for program $c$.
+Abstract Execution Trace Computation:
+ $\absflow: \cdom -> \mathcal{P}($Label $\times$ Label $\times \absdom$ $)$, 
+ $\absflow(c)$ computes the Abstract Execution Trace for program $c$, as a set of the abstract events $\absevent$.
  \\
- For every two abstract events $\absevent_1$, $\absevent_2$ next to each other in $\absflow$,
- the final label of  $\absevent_1$ equal to the 
- initial label of $\absevent_2$.
+ For simplicity, we use $\mathcal{P}(\absevent)$ represent the power set of all abstract events, and we have $\absflow(c) \in \mathcal{P}(\absevent)$.
+%  For every two abstract events $\absevent_1$, $\absevent_2$ next to each other in $\absflow$,
+%  the final label of  $\absevent_1$ equal to the 
+%  initial label of $\absevent_2$.
 %  \\
 % For every 2 control locations $l_1$ and $l_2$ with a control flow edge, 
 % The symbolic difference constraints for transitions between the control locations $l_1$ and $l_2$ is abstracted as follows:
@@ -712,43 +773,47 @@ we  extract the abstract control flow graph:
 %   locations(\assign{x}{\expr})
 % \end{array}
 %   \]
-More specifically, given a program $c$, its control flow graph can be described as follows
+% More specifically, given a program $c$, its control flow graph can be described as follows
+% \\
+% 1. inserting the enter location $l_b$ before the starting of the program.
+% \\
+% 2. For every sequence command $c_1;c_2$
+% if $c_2$ doesn't start with a $\eif$ and $\ewhile$ command, don't insert any contro location. 
+% \\
+% if $c_2$ starts with a $\eif$ command, and the last control location inserted in $c_1$ is $l_i$,
+% inserting a control location $l_{i+1}$, then recursively inserting on bodys and on the commands after $\eif$.
+% \\
+% if $c_2$ starts with a $\eif$ command, and the last control location inserted in $c_1$ is $l_i$,
+% inserting a control location $l_{i+1}$, then recursively inserting on bodys and on the commands after $\eif$.
+% \\
+% if $c_2$ starts with a $\ewhile$ command, and the last control location inserted in $c_1$ is $l_i$,
+% inserting a control location $l_{i+1}$, then recursively inserting on the while body and on the commands after $\ewhile$.
+% \\
 \\
-1. inserting the enter location $l_b$ before the starting of the program.
-\\
-2. For every sequence command $c_1;c_2$
-if $c_2$ doesn't start with a $\eif$ and $\ewhile$ command, don't insert any contro location. 
-\\
-if $c_2$ starts with a $\eif$ command, and the last control location inserted in $c_1$ is $l_i$,
-inserting a control location $l_{i+1}$, then recursively inserting on bodys and on the commands after $\eif$.
-\\
-if $c_2$ starts with a $\eif$ command, and the last control location inserted in $c_1$ is $l_i$,
-inserting a control location $l_{i+1}$, then recursively inserting on bodys and on the commands after $\eif$.
-\\
-if $c_2$ starts with a $\ewhile$ command, and the last control location inserted in $c_1$ is $l_i$,
-inserting a control location $l_{i+1}$, then recursively inserting on the while body and on the commands after $\ewhile$.
+We first append a skip command with a symbolic label $l_e$, i.e., $\clabel{\eskip}^{l_e}$ at the end of the program $c$, and compute the $\absflow(c) = \absflow'(c')$ where $c' = c;\clabel{\eskip}^{l_e}$  as follows:
 %
 \[
   \begin{array}{ll}
-     \absflow([x := \expr]^{l})  & = \emptyset  \\
-     \absflow([x := \query(\qexpr)]^{l})  & = \emptyset  \\
-     \absflow([\eskip]^{l})  & = \emptyset \\
-     \absflow([\eif [b]^l \ethen c_t \eelse c_f)  & =  \absflow(c_t) \cup \absflow(c_f)\cup \{(l, \top,  \init(c_t) ) , 
-     (l, \top, \init(c_f)) \} \\
-     \absflow([\ewhile [b]^l \edo c_w)  & =  \absflow(c_w) \cup \{(l, \top, \init(c_w)) \} \cup \{(l', dc, l)| (l', dc) \in \absfinal(c_w) \} \\
-     \absflow(c_1 ; c_2)  & = \absflow(c_1) \cup  \absflow(c_2) \cup \{ (l, dc, \init(c_2)) | (l, dc) \in \absfinal(c_1) \} \\
+     \absflow'([x := \expr]^{l})  & = \emptyset  \\
+     \absflow'([x := \query(\qexpr)]^{l})  & = \emptyset  \\
+     \absflow'([\eskip]^{l})  & = \emptyset \\
+     \absflow'([\eif [b]^l \ethen c_t \eelse c_f)  & =  \absflow'(c_t) \cup \absflow'(c_f)
+      \\ & \quad 
+      \cup \{(l, \top,  \init(c_t) ) ,  (l, \top, \init(c_f)) \} \\
+     \absflow'([\ewhile [b]^l \edo c_w)  & =  \absflow'(c_w) \cup \{(l, \top, \init(c_w)) \} 
+     \\ & \quad 
+     \cup \{(l', dc, l)| (l', dc) \in \absfinal(c_w) \} \\
+     \absflow'(c_1 ; c_2)  & = \absflow'(c_1) \cup  \absflow'(c_2) 
+     \\ & \quad 
+     \cup \{ (l, dc, \init(c_2)) | (l, dc) \in \absfinal(c_1) \} \\
   \end{array}
   \]
-We handle the same normalized guard expression in $\ewhile$ and the same forms of the counter modification as in paper \cite{sinn2017complexity}. More specifically as follows:
+For every event $\event$ with label $l$ in an execution trace $\trace$ of program $c$, 
+there is an abstract event in program's abstract execution trace of form $(l, \_, \_)$. This lemma is proved formally in Lemma~\ref{lem:abscfg_sound} in Appendix~\ref{apdx:reachability_soundness}.
 \\
-The counter variables only increase, decrease or reset by expression in the form of arithmetic multiplication, minus and plus, max and min.
-\\
-For more complex cases where the counter reset, or calculated from Log, Query calculation, the bound will be approximated as $\infty$.
-\\ 
-The boolean expression in the guard of $\ewhile$ command is normalized into form of $ x > 0$ where $x^l \in \lvar_c$ for some $l$.
-\\
-This step is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
-We have a pre-processing algorithm to go through the programs and returns the list of labels associating with a loop and whose visiting times need to be analyzed.
+For every labeled variable in program $c$, $x^l \in \lvar_c$, there is a unique abstract event in program's abstract execution trace $\absevent \in \absflow(c)$ of form $(l, \_, \_)$. This lemma and proof is also formalized in Lemma~\ref{lem:absevent_unique} in Appendix~\ref{apdx:reachability_soundness}.
+
+% We have a pre-processing algorithm to go through the programs and returns the list of labels associating with a loop and whose visiting times need to be analyzed.
 %
 \paragraph{Abstract Control Flow Graph} 
 Given program $c$ with its abstract control flow $\absflow(c)$, the Abstract Control Flow Graph:
@@ -759,52 +824,57 @@ $\absG =(\absV, \absE)$:
 $\absE = \{(l_1, dc, l_2) | (l_1, dc, l_2) \in \absflow(c)\}$,
 \\
 $\absV = labels(c)\cup\{l_e\}$
+\\
+It is easy to show for every $(l_1, dc, l_2) \in \absflow(c)$ such that $l_2 \neq l_e$, $(l_1, l_2) \in flow(c)$. The formal Lemma and proof can be found in Lemma~\ref{lem:flow_to_absflow} in Appendix~\ref{apdx:reachability_soundness}.
 %
 \paragraph*{Variable Modification Tracking}
 Identify the abstract events where each variable is increased, decreased and reset:
 \\
-$\inc: VAR \to \mathcal{P}(\absevent) $
+$\inc: \mathcal{VAR} \to \mathcal{P}(\absevent) $
 the set of the abstract events where the variable increase.
 \\
-$\inc(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x + c)\}$
+$\inc(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x + v)\}$
 \\
-$\reset: VAR \to \mathcal{P}(\absevent) $
+$\reset: \mathcal{VAR} \to \mathcal{P}(\absevent) $
 The set of the abstract events where the variable is reset.
 \\
-$\dec: VAR \to \mathcal{P}(\absevent) $
+$\dec: \mathcal{VAR} \to \mathcal{P}(\absevent) $
 The set of abstract events where the variable decrease.
+% \\
+% $\dec(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x - v)\}$
 \\
-$Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{TB(\absevent) \times c\}$
+$Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{\absclr(\absevent) \times v\}$
 %
 \paragraph*{Local Bounds}
 Given a program $c$ with its abstract control flow graph 
 $\absG(c) = (\absV, \absE)$
 \\
 Local Bounds Computation:
-$locbound: \absevent \to VAR \cup \constdom$.
+$\locbound: \absevent \to \mathcal{VAR} \cup \constdom$.
 %
 \[ 
 \begin{array}{ll}
   \locbound(\absevent) \triangleq 1 
   & \absevent \notin SCC(\absG(c))
   \\
-  \locbound(\absevent) \triangleq x 
-  & \absevent \in SCC(\absG(c)) \land \absevent \in \dec(x)
-  \\
-  \locbound(\absevent) \triangleq x 
+  \locbound(\absevent) \triangleq (x, v) 
+  & \absevent \in SCC(\absG(c)) \land \absevent \in \dec(x) \land  \absevent = (\_, \_ , x' \leq x - v) \\
+  \locbound(\absevent) \triangleq (x, \max(\dec(x))) 
   & \absevent \in SCC(\absG(c)) \land 
-  \absevent 
-  \notin \bigcup_{x \in VAR} \dec(x)
-  \land \absevent \notin SCC(\absG(c)/\dec(x)) 
+  \absevent  \notin \bigcup_{x \in \mathcal{VAR}} \dec(x)
+  \land \absevent \notin SCC(\absG(c) \setminus \dec(x)) 
 \end{array}
   \]
+  The first case is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
+  The second and third step is guaranteed by the \emph{Discussion on Soundness} in Section 4 of \cite{sinn2017complexity}.
+  Then complete soundness proof is in Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
 %
 \paragraph*{Abstract Event Closure and Bound Invariant}
 Then, computing the bound invariants for variables and the transition closures for abstract events:
 \\ 
-$VB: VAR \cup \constdom \to EXPR(\constdom)$
+$ \varinvar: \mathcal{VAR} \cup \constdom \to EXPR(\constdom)$
 \\
-$TB: \absevent \to EXPR(\constdom)$
+$\absclr: \absevent \to EXPR(\constdom)$
 \\
 Then, the symbolic invariant for each variable 
 as well as the symbolic transition closure for each transition is calculated as follows:
@@ -818,21 +888,23 @@ as well as the symbolic transition closure for each transition is calculated as 
 \[ 
 \begin{array}{lll}
   \absclr(\absevent) 
-  & \triangleq \locbound(\absevent) & \locbound(\absevent) \in \constdom \\
+  & \triangleq x / v & \\ 
+  & \locbound(\absevent) = (x, v) \in \constdom \times \mathbb{N} & \\
   \absclr(\absevent) 
-  & \triangleq Incr(\locbound(\absevent)) + 
-  \sum\limits_{(\absevent', a, c) \in \reset(\locbound(\absevent))}
-  \absclr(\absevent') \times \max(\varinvar(a) + c, 0)  & \locbound(\absevent) \notin \constdom
+  & \triangleq (Incr(x) + 
+  \sum\limits_{(\absevent', y, v') \in \reset(x)}
+  \absclr(\absevent') \times \max(\varinvar(y) + v', 0) ) / v & \\
+  & \locbound(\absevent) = (x, v) \land x \notin \constdom & 
 \end{array}
   \]
 %
 \paragraph*{Adding the Reachability Bounds for Every Vertex in the Data-Control Flow Graph}
-Updating the weight of every vertex in the $\progG(c)$ for program $c$ generated from phase 1.
+Updating the weight of every vertex in the $\progG(c) = (\progV, \progE, \progW, \progF)$ for program $c$ generated from phase 1. 
+For every $x^l \in \progV$, find the abstract event $\absevent \in \absflow(c)$ of the form $(l, \_, \_)$, updating the $\progW(x^l) $ by the transition closure of this event.
 \\
 $
 \progW(x^l) 
-\triangleq \absclr(\absevent) 
-\absevent = (l, dc, l')
+  \triangleq \absclr(\absevent)
 $
 % \paragraph{Getting Reachability Bounds}
 % This is defined in Algorithm~\ref{alg:rb}.
@@ -1025,7 +1097,8 @@ A combination of DFS and BFS Algorithm:
       \STATE  \qquad $r_{scc} += \weights(v)*\qflag(v)$  
       \RETURN $r[c]$
       \end{algorithmic}
-      \end{algorithm}%
+      \end{algorithm}
+      %
 %
     % \begin{algorithm}
     %     \caption{
