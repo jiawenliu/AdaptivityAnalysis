@@ -265,7 +265,10 @@ class AdaptSearchAlg:
 
     def print_adapt(self):
         print("The Adaptivity From This Graph is: ", self.get_adapt())
-        print("The Total Query Number For This Graph is: ", sum(self.graph.query))
+        query_num = AdaptType(0)
+        for qn in [(AdaptType(self.graph.query[i]) * self.graph.weights[i]) for i in range(self.graph.get_vertice_num())]:
+            query_num += qn
+        print("The Total Query Number For This Graph is: ", query_num.value)
         print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O(", 
         (self.adaptivity  * AdaptType((math.sqrt(sum(self.graph.query))))).value, "/"+f"√N )")
         #  u"\u221A".encode('utf-8'), "(n) )")
