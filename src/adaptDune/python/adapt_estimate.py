@@ -1,3 +1,4 @@
+import math
 from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint, VariableReachingBound
 from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
 
@@ -14,3 +15,7 @@ class AdaptEstimate():
         adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
         adapt_search.search_adapt()
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
+        print("The Total Query Number For This Graph is: ", sum(unweighted_graph.query))
+        print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O( ", 
+        adapt_search.get_adapt(),  "*", math.sqrt(sum(unweighted_graph.query)), "/ (n) )")
+        
