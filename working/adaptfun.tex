@@ -898,6 +898,49 @@ as well as the symbolic transition closure for each transition is calculated as 
 \end{array}
   \]
 %
+\paragraph*{Improved Variable Modification Tracking}
+Instead of just identifying the abstract events where each variable is reset,
+this improvement identifies the chain of the events where a given variable is reset by the 
+variables of the abstract events through the chain.
+\\
+$\resetchain: \mathcal{VAR} \to \mathcal{P}(\mathcal{P}(\absevent)) $
+The set of the chain of abstract events where the variable is reset through the chain.
+% \\
+% $Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{\absclr(\absevent) \times v\}$
+%
+\paragraph*{Improved Bound Invariant Computation}
+Then, computing the bound invariants for variables and the transition closures for abstract events:
+\\ 
+$ \varinvar: \mathcal{VAR} \cup \constdom \to EXPR(\constdom)$
+\\
+$\absclr: \absevent \to EXPR(\constdom)$
+\\
+Then, the symbolic invariant for each variable 
+as well as the symbolic transition closure for each transition is calculated as follows:
+\[ 
+\begin{array}{lll}
+  \varinvar(x) & \triangleq c & c \in \constdom \\
+  \varinvar(x) & \triangleq Incr(v) + \max(\{\varinvar(a) + c | (t, a, c) \in \reset(x)\}) & c \notin \constdom
+\end{array}
+\]
+%
+\[ 
+\begin{array}{lll}
+  \absclr(\absevent) 
+  & \triangleq x / v & \\ 
+  & \locbound(\absevent) = (x, v) \in \constdom \times \mathbb{N} & \\
+  \absclr(\absevent) 
+  & \triangleq \Big(
+    \sum\limits_{y \in \{ y ~|~ 
+    ch \in \resetchain(x), (l_1, x, y, v, l_2) \in ch \} } Incr(x) & \\
+    & \quad + 
+  \sum\limits_{ch \in \resetchain(x)}
+  \big( \min\limits_{\absevent' \in ch}({\absclr(\absevent')}) \times 
+  \max(\varinvar(y) + \sum\limits_{(l_1, x, y, v, l_2) \in ch } v, 0)\big) \Big) / v & \\
+  & \locbound(\absevent) = (x, v) \land x \notin \constdom & 
+\end{array}
+  \]
+  %
 \paragraph*{Adding the Reachability Bounds for Every Vertex in the Data-Control Flow Graph}
 Updating the weight of every vertex in the $\progG(c) = (\progV, \progE, \progW, \progF)$ for program $c$ generated from phase 1. 
 For every $x^l \in \progV$, find the abstract event $\absevent \in \absflow(c)$ of the form $(l, \_, \_)$, updating the $\progW(x^l) $ by the transition closure of this event.
