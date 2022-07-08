@@ -4,7 +4,7 @@
   %
   \[
     \forall \trace \in \mathcal{T} \st 
-    \config{\progA(c), \trace} \earrow n \implies n \geq A(c)(\trace)
+    \config{A(c), \trace} \earrow n \implies n \geq A(c)(\trace)
   \]
   \end{thm}
   %
@@ -40,46 +40,38 @@ trace-based graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$  by Defi
 \\
 The parameter $(c)$ for the components in the two graphs are omitted for concise.
 \\
-%
-According to the Definition \ref{def:prog_adapt} and Definition~\ref{def:trace_adapt}, it is sufficient to show:
+Taking arbitarty trace such that 
+\[ 
+\config{A(c), \trace} \earrow n\]
+to show $n \geq A(c)(\trace)$, 
+according to the Definition \ref{def:prog_adapt} and Definition~\ref{def:trace_adapt}, it is sufficient to show:
 %
 $$
-\forall \trace \in \mathcal{T} \st
-\config{\max\left\{ \qlen(k) \ \mid \  k\in \walks(\progG({c}))\right \}
-, \trace } \earrow n \implies
-n \geq
 \max \big 
-\{ \qlen(k)(\trace) \mid k \in \walks(\traceG(c)) \big \} 
+\{ \qlen(k) \mid k \in \walks(\traceG(c)) \big \} 
+\leq
+\max\left\{ \qlen(k) \ \mid \  k\in \walks(\progG({c}))\right \}
 $$
 %
 %
-Then it is sufficient to show that:
+It is sufficient to show that:
 \[
-  \forall 
-  k_t \in \walks(\traceG({c}),
-  \exists k_p \in \walks(\progG({c})) 
-  \st \forall \trace \in \mathcal{T} \st
-  \qlen(k_p), \trace \earrow n
-   \implies 
-  n \geq \qlen(k_t(\trace))
-  %  \leq \qlen(k_p)
+  \forall k_t \st 
+  k_t \in \walks(\traceG({c}) \implies
+  \exists k_p \in \walks(\progG({c})) \land 
+  \qlen(k_t(\trace)) \leq \qlen(k_p)
 \]
 %
-Let $k_t\in \walks(\traceG(c))$ be an arbitrary walk in $\traceG(c)$, 
-and $\trace \in \mathcal{T}$ be arbitrary trace.
+Let $k_t = (e_1, \cdots, e_{n-1}) \in \walks(\traceG(c))$ be an arbitrary walk in $\traceG(c)$ with its vertices sequence 
+$(v_1, \cdots, v_n)$.
 \\
-Then, 
-let $(e_{p1}, \cdots, e_{p(n-1)}) $ and
-$(v_1, \cdots, v_n)$ be the edges and vertices sequence  for $k_t(\trace)$.
-\\
-%
-% By Lemma~\ref{lem:vertex_map},
-% we know 
-% % for every $v_1$, there exists a unique image of $v_1$ in vertices set of $\progG(c)$.
-% % Let $f_v : \mathcal{LV} \to \mathcal{LV}$ be this mapping function, we have:
-% \[
-%   \forall v_i \in (v_1, \cdots, v_n) \st v_i \in \progV
-%   \]
+By Lemma~\ref{lem:vertex_map},
+we know 
+% for every $v_1$, there exists a unique image of $v_1$ in vertices set of $\progG(c)$.
+% Let $f_v : \mathcal{LV} \to \mathcal{LV}$ be this mapping function, we have:
+\[
+  \forall v_i \in (v_1, \cdots, v_n) \st v_i \in \progV
+  \]
 %
 % By 3 and 4, we know:
 % $   
@@ -87,7 +79,7 @@ $(v_1, \cdots, v_n)$ be the edges and vertices sequence  for $k_t(\trace)$.
 % \land 
 % \traceW(v_i) \leq \progW(f_v(v_i))$.
 % \\
-By Lemma~\ref{lem:vertex_map} and Lemma~\ref{lem:edge_map}, we know
+By Lemma~\ref{lem:edge_map}, we know
 %
 \[
   \forall e_i \in k_t \st e_i = (v_i, v_{i + 1}) \implies
@@ -98,71 +90,23 @@ Then we construct a walk $k_p$ with an edge sequence $(e_{p1}, \cdots, e_{p(n-1)
 with a vertices sequence $(v_1, \cdots, v_n)$ where 
 $e_{pi} = (v_i, v_{i + 1}) \in \progE$ for all $e_{pi} \in (e_{p1}, \cdots, e_{p(n-1)})$.
 \\
-Let $n \in \mathbb{N}$ such that 
-% \[ 
-$\config{\qlen(k_p), \trace} \earrow n$,
-% \]
-% to show $n \geq A(c)(\trace)$, 
-then, it is sufficient to show
-\[
-  k_p \in \progG(c) \land n \geq \qlen(k_t)(\trace)
-  \] 
-  % following two, 
-% \\
-% (1) 
-To show $k_p \in \progG(c)$, by Definition~\ref{def:finitewalk} for finite walk, 
+By Definition~\ref{def:finitewalk} for finite walk, 
 we know
 % \[
 %   \forall (v_i, n_i) \in \traceW \st v_i \in (v_1, \cdots, v_n)
 %   \implies \visit((v_1, \cdots, v_n), (v_i)) \leq n_i
 % \]
 \[
-  \forall v_i \in (v_1, \cdots, v_n), (v_i, w_i) \in \traceW(c) 
-  \st
-  \visit((v_1, \cdots, v_n), (v_i)) \leq w_i(\trace)
+  \forall v_i \in (v_1, \cdots, v_n) \st
+  \visit((v_1, \cdots, v_n), (v_i)) \leq \traceW(v_i)
 \]
 %
-By Lemma~\ref{lem:weights_map}, we know for every 
-\[
-  \forall v_i \in (v_1, \cdots, v_n), (v_i, w_i) \in \progW(c), n_i \in \mathbb{N} 
-  \st
-  \config{w_i, \trace} \earrow n_i
-  \implies
-   w_i(\trace) \leq n_i ~ (\star)
-\]
-% $ v_i \in (v_1, \cdots, v_n)$,
-% $\visit((v_1, \cdots, v_n), (v_i)) \leq \progW(v_i)$.
-% \\
-Then, by Definition~\ref{def:prog_finitewalk}, we know
-the occurrence times for every $v_i \in (v_1, \cdots, v_n)$ 
-is bound by the arithmetic expression $w_i$ where $(v_i, w_i) \in \progW(c)$.
+By Lemma~\ref{lem:weights_map}, we know for every $ v_i \in (v_1, \cdots, v_n)$,
+$\visit((v_1, \cdots, v_n), (v_i)) \leq \progW(v_i)$.
 \\
-So we have $k_p \in \walks(\progG)$ proved.
+Then, by Definition~\ref{def:finitewalk}, we know $k_p \in \walks(\progG)$.
 \\
-In order to show $ n \geq \qlen(k_t)(\trace) $, it is sufficient to show
-\[
-  \begin{array}{l}
-  \forall v_i \in (v_1, \cdots, v_n),
-  (v_i, w_i) \in \progW(c), (v_i, w'_i) \in \traceW(c), n_i \in \mathbb{N} 
-  \st
-  \config{w_i, \trace} \earrow n_i
-  \\
-  \implies
-   \sum\limits_{\traceF(c)(v_i) = 1}
-   w'_i(\trace) 
-   \leq 
-   \sum\limits_{\progF(c)(v_i) = 1}n_i 
-  \end{array}
-  \]
-By Lemma~\ref{lem:queryvertex_map} and Definition~\ref{def:qlen}, we know for every $v_i$, $\traceF(c)(v_i) = \progF(c)(v_i) $ 
-\\
-Then by $(\star)$, we know $  \sum\limits_{\traceF(c)(v_i) = 1}
-w'_i(\trace) 
-\leq 
-\sum\limits_{\progF(c)(v_i) = 1}n_i $.
-\\
-Then we have $ n \geq \qlen(k_t)(\trace) $ proved.
-% $\qlen(k_t) = \qlen(k_p)$.
+By Lemma~\ref{lem:queryvertex_map} and Definition~\ref{def:qlen}, we know $\qlen(k_t) = \qlen(k_p)$.
 % Taking an arbitrary starting memory $m$ and an arbitrary underlying database $D$,
 % we construct a trace-based graph $\traceG({c}, \text{D}, {m}) = (\vertxs, \edges)$ by the definition \ref{def:trace-based_graph}.
 % %

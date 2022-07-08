@@ -729,20 +729,24 @@ Proof Summary: trivially by induction on $c$ and enumerate all operational seman
 For all $c \in \cdom \trace, \trace' \in \mathcal{T} $, if 
 $\config{c, \trace} \xrightarrow{}^* \config{c', \trace'}$,
 and for all $x^l \in \lvar_c$ such that 
-$\llabel(\trace') x = l $, then $(x^l \in \live^{\entry_{c'}}(c))$.
+% $\llabel(\trace') x = l $, then $(x^l \in \live^{\entry_{c'}}(c))$.
+$\llabel(\trace') x = l $, then $x^l \in \live(\absinit(c), c)$.
 %
 \[
 	\forall c \in \cdom , \trace, \trace' \in \mathcal{T} \st
 	\config{c, \trace} \xrightarrow{}^* \config{c', \trace'}
 	\implies
-	\forall x^l \in \lvar_c \st \llabel(\trace') x = l \implies (x^l \in \live^{\entry_{c'}}(c))
+	% \forall x^l \in \lvar_c \st \llabel(\trace') x = l \implies (x^l \in \live^{\entry_{c'}}(c))
+	\forall x^l \in \lvar_c \st \llabel(\trace') x = l \implies x^l \in \live(\absinit(c), c)
 \]
 \end{lem}
 Proof Summary: 
 If a variable with the label which is the latest one in the trace,
 Then by the environment definition, the value associated to this labelled variable is read from the trace.
 \\
-Then this labelled variable must be reachable at the point of $\entry_{c'}$, i.e., $x^l \in \live^{\entry_{c'}}(c)$.
+Then this labelled variable must be reachable at the point of $\entry_{c'}$, i.e., 
+% $x^l \in \live^{\entry_{c'}}(c)$.
+$x^l \in \live(\absinit(c), c)$.
 \begin{proof}
 	Take arbitrary $c \in \cdom , \trace, \trace' \in \mathcal{T}$ satisfying 
 	$\config{c, \trace} \xrightarrow{}^* \config{c', \trace'}$, 
@@ -755,9 +759,18 @@ Then this labelled variable must be reachable at the point of $\entry_{c'}$, i.e
 %
 \\
 	Then, by the environment definition, we know:
-	$\env(\trace') x = v$, i.e., $x^l$ is reachable at the point of $\entry_{c'}$.
+	$\env(\trace') x = v$, i.e., $x^l$ is 
+	reachable at the point of 
+	% $\entry_{c'}$.
+	$\absinit(c)$.
 	\\
-	By the $\live$ definition, we know $x^l \in \live^{\entry_{c'}}(c)$.
+	By the $in(l)$ operator define in Section~\ref{sec:alg_edgegen}, we know $x^l$ is in the $in(\absinit(c)$ for prpgram $c$.
+	\\
+	% By the $\live$ definition, 
+	Since $\live(\absinit(c), c)$ is a stabilized closure of $in(l)$ for $c$,
+	we know 
+	% $x^l \in \live^{\entry_{c'}}(c)$.
+	$x^l \in \live(\absinit(c), c)$.
 	\\
 	This lemma is proved.
 \end{proof}

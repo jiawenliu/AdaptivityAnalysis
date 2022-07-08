@@ -98,13 +98,27 @@ $\pi_i :
 % \]
 %
 %
-\begin{defn}[Equivalence of Query Expression].
+Free Variables: $FV: \expr \to \mathcal{P}(\mathcal{VAR})$, the set of free variables in an expression.
+\\
+$FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
+\begin{defn}[Equivalence of Query Expression]
 %
 \label{def:query_equal}
-2 query expressions $\qexpr_1$, $\qexpr_2$ are equivalent, denoted as $\qexpr_1 =_{q} \qexpr_2$, if and only if
+% \mg{Two} \sout{2} 
+Two query expressions $\qexpr_1$, $\qexpr_2$ are equivalent, denoted as $\qexpr_1 =_{q} \qexpr_2$, if and only if
+% $$
+%  \begin{array}{l} 
+%   \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st \forall \trace \in \mathcal{T} \st
+%     (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+%     \\
+%     \quad \land (\forall D \in \dbdom, r \in D \st 
+%     \exists v \in \mathcal{VAL} \st 
+%           \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+%   \end{array}.
+% $$
 $$
  \begin{array}{l} 
-  \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st \forall \trace \in \mathcal{T} \st
+   \forall \trace \in \mathcal{T} \st \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st
     (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
     \\
     \quad \land (\forall D \in \dbdom, r \in D \st 
@@ -112,27 +126,72 @@ $$
           \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
   \end{array}.
 $$
-%
-, where $r \in D$ is a record in the database domain $D$, $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
-$\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  is defined vice versa.
+% \mg{$$
+%  \begin{array}{l} 
+%    \forall \trace \in \mathcal{T} \st \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st
+%     (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+%     \\
+%     \quad \land (\forall D \in \dbdom, r \in D \st 
+%     \exists v \in \mathcal{VAL} \st 
+%           \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+%   \end{array}.
+% $$
+% }
+ %
+ where $r \in D$ is a record in the database domain $D$. 
+ As usual, we will denote by $\qexpr_1 \neq_{q} \qexpr_2$  the negation of the equivalence.
+% \\ 
+% where $r \in D$ is a record in the database domain $D$,
+% \mg{is  $FV(\qexpr)$ being defined here? If yes, I suggest to put it in a different place, rather than in the middle of another definition.} 
+% $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
+% \sout{$\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  is defined vice versa.}
+% \mg{As usual, we will denote by $\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  the negation of the equivalence.}
 %
 \end{defn}
 %
-\begin{defn}[Event Equivalence $\eventeq$]
-Two events $\event_1, \event_2 \in \eventset$ is in \emph{Equivalence} relation, denoted as $\event_1 \eventeq \event_2$ if and only if:
-\[
-\pi_1(\event_1) = \pi_1(\event_2) 
-\land  
-\pi_2(\event_1) = \pi_2(\event_2) 
-\land
-\pi_{3}(\event_1) =_q \pi_{3}(\event_2)
-\]
-%
-The $\event_1 \eventneq \event_2$ is defined as vice versa.
+% \mg{In the next definition you don’t need the subscript e, it is clear that it is equivalence of events by the fact that the elements on the two sides of = are events. That is also true for query expressions. Also, I am confused by this definition. What happen for two query events?}
+% \\
+% \jl{The last component of the event is equal based on Query equivalence, $\pi_{4}(\event_1) =_q \pi_{4}(\event_2)$.
+% In the previous version, the query expression is in the third component and I defined $v \neq \qexpr$ for all $v$ that isn't a query value.}
+% \begin{defn}[Event Equivalence $\eventeq$]
+% Two events $\event_1, \event_2 \in \eventset$ \mg{are equivalent, \sout{is in \emph{Equivalence} relation,}} denoted as $\event_1 \eventeq \event_2$ if and only if:
+% \[
+% \pi_1(\event_1) = \pi_1(\event_2) 
+% \land  
+% \pi_2(\event_1) = \pi_2(\event_2) 
+% \land
+% \pi_{3}(\event_1) = \pi_{3}(\event_2)
+% \land 
+% \pi_{4}(\event_1) =_q \pi_{4}(\event_2)
+% \]
+% %
+% % \sout{The $\event_1 \eventneq \event_2$ is defined as vice versa.}
+% % \mg{As usual, we will denote by $\event_1 \eventneq \event_2$  the negation of the equivalence.}
+% \end{defn}
+\begin{defn}[Event Equivalence]
+  Two events $\event_1, \event_2 \in \eventset$ are equivalent, 
+  % denoted as $\event_1 \eventeq \event_2$ 
+  denoted as $\event_1 = \event_2$ 
+  if and only if:
+  \[
+  \pi_1(\event_1) = \pi_1(\event_2) 
+  \land  
+  \pi_2(\event_1) = \pi_2(\event_2) 
+  \land
+  \pi_{3}(\event_1) = \pi_{3}(\event_2)
+  \land 
+  \pi_{4}(\event_1) =_q \pi_{4}(\event_2)
+  \]
+  %
+  As usual, we will denote by $\event_1 \neq \event_2$  the negation of the equivalence.
+  % As usual, we will denote by $\event_1 \eventneq \event_2$  the negation of the equivalence.
+  % When it is clear from the context, we omit the subscript $\kw{e}$ and use 
+  % $\event_1 = \event_2$ (and $\event_1 \neq \event_2$) for event equivalent
 \end{defn}
 %
 %
 % \begin{defn}[Signature Equivalence of Events $\sigeq$]
+
 % Two events $\event_1, \event_2 \in \eventset$ is in \emph{signature equivalence} relation, denoted as $\event_1 \sigeq \event_2$ if and only if:
 % \[
 % \forall i \in \{1, 2, 3\} \st \pi_{\sig}(\event_1) = \pi_{\sig}(\event_2) 
@@ -140,18 +199,42 @@ The $\event_1 \eventneq \event_2$ is defined as vice versa.
 % The $\event_1 \signeq \event_2$ is defined as vice versa.
 % \end{defn}
 %
+% \begin{defn}[Events Different up to Value ($\diff$)]
+% Two events $\event_1, \event_2 \in \eventset$ \mg{are \sout{is}} \emph{Different up to Value}, 
+% denoted as $\diff(\event_1, \event_2)$ if and only if:
+% \[
+% \pi_1(\event_1) = \pi_1(\event_2) 
+% \land  
+% \pi_2(\event_1) = \pi_2(\event_2) 
+% \land  
+% \pi_3(\event_1) \neq_q \pi_3(\event_2)
+% \]
+% \end{defn}
 \begin{defn}[Events Different up to Value ($\diff$)]
-Two events $\event_1, \event_2 \in \eventset$ is \emph{Different up to Value}, 
-denoted as $\diff(\event_1, \event_2)$ if and only if:
-\[
-\pi_1(\event_1) = \pi_1(\event_2) 
-\land  
-\pi_2(\event_1) = \pi_2(\event_2) 
-\land  
-\pi_3(\event_1) \neq_q \pi_3(\event_2)
-\]
-\end{defn}
-%
+  Two events $\event_1, \event_2 \in \eventset are $ \emph{Different up to Value}, 
+  denoted as $\diff(\event_1, \event_2)$ if and only if:
+  \[
+    \begin{array}{l}
+  \pi_1(\event_1) = \pi_1(\event_2) 
+  \land  
+  \pi_2(\event_1) = \pi_2(\event_2) \\
+  \land  
+  \big(
+    (\pi_3(\event_1) \neq \pi_3(\event_2)
+  \land 
+  \pi_{4}(\event_1) = \pi_{4}(\event_2) = \bullet )
+  % \qquad \qquad 
+  \lor 
+  (\pi_4(\event_1) \neq \bullet
+  \land 
+  \pi_4(\event_2) \neq \bullet
+  \land 
+  \pi_{4}(\event_1) \neq_q \pi_{4}(\event_2)) 
+  \big)
+  \end{array}
+  \]
+  \end{defn}
+  %
 % \begin{defn}[Order of Events].
 % \label{def:query_dir}
 % \\
