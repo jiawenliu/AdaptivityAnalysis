@@ -1,0 +1,658 @@
+%
+\subsection{Trace}
+%
+% An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
+% %
+% \begin{equation}
+%   \event \eventin \trace  
+%   \triangleq \left\{
+%   \begin{array}{ll} 
+%     \etrue                  & \trace =  (\trace' \tracecate \event') \land (\event \eventeq \event') \\
+%     \event \eventin \trace' & \trace =  (\trace' \tracecate \event') \land (\event \eventneq \event') \\ 
+%     \efalse                 & o.w.
+%   \end{array}
+%   \right.
+% \end{equation}
+% %
+% A well-formed event $\event \in \eventset$ belongs to a trace $\trace$ in signature, 
+% i.e., $\event \sigin \trace$ are defined as follows:
+%   %
+% \begin{equation}
+%   \event \sigin \trace  
+%   \triangleq \left\{
+%   \begin{array}{ll} 
+%     \etrue                  & \trace =  (\trace' \tracecate \event') \land (\event \sigeq \event') \\
+%     \event \sigin \trace'   & \trace =  (\trace' \tracecate \event') \land (\event \signeq \event') \\ 
+%     \efalse                 & o.w.
+%   \end{array}
+%   \right.
+% \end{equation}
+%
+%
+%
+%
+% \todo{
+% \[
+% \mbox{Post-Processed Trace} \qquad \trace \qquad ::= \qquad \tracecate | \trace \tracecate \event
+% % %
+% \]
+% Trace appending: $\tracecate: \mathcal{T} \to \eventset \to \mathcal{T}$
+% \[
+%   \trace \tracecate \event \triangleq
+%   \left\{
+%   \begin{array}{ll} 
+%     {} \tracecate \event           & \trace =  \tracecate \\
+%     \trace \tracecate \event    & \trace =  \trace' \tracecate \event\\ 
+%   \end{array}
+%   \right.
+% \]
+%
+% \mg{I suggest to use more definition environments throughout this section.}
+% \mg{Is ++ a constructor or a defined operation? It is in the grammar
+%   but it seems that you are actually defining it here.}
+%   \jl{It is a defined operator, I mixed them wrongly.}
+  \begin{defn}[Trace Concatenation, $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$]
+Given two traces $\trace_1, \trace_2 \in \mathcal{T}$, the trace concatenation operator 
+$\tracecat$ is defined as:
+% \[
+  % \trace_1 \tracecat \trace_2 \triangleq
+  % \left\{
+  % \begin{array}{ll} 
+  %   \trace_1 \tracecat [] \triangleq \trace_1 & 
+  %   \trace_1 \tracecat (\trace_2' :: \event) \triangleq  (\trace_1  \tracecat \trace_2')  :: \event 
+  % \end{array}
+  % \right.
+% \]
+% \[
+  % \trace_1 \tracecat \trace_2 \triangleq
+  % \left\{
+  % \begin{array}{ll} 
+  %   \trace_1 \tracecat [] \triangleq \trace_1 & 
+  %   \trace_1 \tracecat (\trace_2' :: \event) \triangleq  (\trace_1  \tracecat \trace_2')  :: \event 
+  % \end{array}
+  % \right.
+% \]
+\[
+  \trace_1 \tracecat \trace_2 \triangleq
+  \left\{
+  \begin{array}{ll} 
+     \trace_1 & \trace_2 = [] \\
+     (\trace_1  \tracecat \trace_2')  :: \event & \trace_2 = \trace_2' :: \event
+  \end{array}
+  \right.
+\]
+\end{defn}
+%
+% \todo{ need to consider the occurrence times }
+% \\
+% \mg{This definition is not well given. You use a different operator to define it t[:e] which you say it is a shorthand. It cannot be a shorthand because it is used in the definition. I think you need to define two operations, either in sequence or mutually recursive.}
+% \jl{I moved this definition from the main paper into the appendix \ref{apdx:flowsto_event_soundness}. Because this operator is only being used in the soundness proof. And I also feel it doesn't worth to spend many lines in the main paper for defining this complex notation.}
+% Subtrace: $[ : ] : \mathcal{{T} \to \eventset \to \eventset \to \mathcal{T}}$ 
+% \wqside{Confusing, I can not understand the subtraction, it takes a trace, and two events, and this operator is used to subtract these two events?}
+% \[
+%   \trace[\event_1 : \event_2] \triangleq
+%   \left\{
+%   \begin{array}{ll} 
+%   \trace'[\event_1: \event_2]             & \trace = \event :: \trace' \land \event \eventneq \event_1 \\
+%   \event_1 :: \trace'[:\event_2]  & \trace = \event :: \trace' \land \event \eventeq \event_1 \\
+%   {[]} & \trace = [] \\
+%   \end{array}
+%   \right.
+% \]
+% For any trace $\trace$ and two events $\event_1, \event_2 \in \eventset$,
+% $\trace[\event_1 : \event_2]$ takes the subtrace of $\trace$ starting with $\event_1$ and ending with $\event_2$ including $\event_1$ and $\event_2$.
+% \\
+% We use $\trace[:\event_2] $ as the shorthand of subtrace starting from head and ending with $\event_2$, and similary for $\trace[\event_1:]$.
+% \[
+%   \trace[:\event] \triangleq
+%   \left\{
+%   \begin{array}{ll} 
+%  \event' :: \trace'[: \event]             & \trace = \event' :: \trace' \land \event' \eventneq \event \\
+%   \event'  & \trace = \event' :: \trace' \land \event' \eventeq \event \\
+%   {[]}  & \trace = [] 
+%   \end{array}
+%   \right.
+% % \]
+% % \[
+%   \quad
+%   \trace[\event: ] \triangleq
+%   \left\{
+%   \begin{array}{ll} 
+%   \trace'[\event: ]     & \trace =  \event' :: \trace' \land \event \eventneq \event' \\
+%   \event' :: \trace'  & \trace = \event' :: \trace' \land \event \eventeq \event' \\
+%   {[ ] } & \trace = []
+%   \end{array}
+%   \right.
+% \]
+% %
+% \mg{why in the next definition you use ( ) while in the previous ones you didn't? They seem like the same cases. And why you use o.w. instead of []?}
+% An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
+% %
+% \begin{equation}
+%   \event \eventin \trace  
+%   \triangleq \left\{
+%   \begin{array}{ll} 
+%     \etrue                  & \trace =  (\event' :: \trace') \land (\event \eventeq \event')
+%                               \\
+%     \event \eventin \trace' & \trace =  (\event' :: \trace') \land (\event \eventneq \event') \\ 
+%     \efalse                 & o.w.
+%   \end{array}
+%   \right.
+% \end{equation}
+\begin{defn}(An Event Belongs to A Trace)
+  An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \in \trace$ are defined as follows:
+%
+\begin{equation}
+  \event \in \trace  
+  \triangleq \left\{
+  \begin{array}{ll} 
+    \etrue                  & \trace =  \trace' :: \event'
+     \land \event = \event'
+                              \\
+    \event \in \trace' & \trace =  \trace' :: \event'
+    \land \event \neq \event' \\ 
+    \efalse                 & \trace = []
+  \end{array}
+  \right.
+\end{equation}
+As usual, we denote by $\event \notin \trace$ that the event $\event$ doesn't belong to the trace $\trace$.
+\end{defn}
+%
+% An event $\event \in \eventset$ belongs to a trace $\trace$ up to value, 
+% i.e., $\event \sigin \trace$ are defined as follows:
+%   %
+% \begin{equation}
+%   \event \sigin \trace  
+%   \triangleq \left\{
+%   \begin{array}{ll} 
+%     \etrue                  & \trace =  (\trace' \tracecate \event')                          \land \pi_1(\event_1) = \pi_1(\event_2) 
+%                               \land  \pi_2(\event_1) = \pi_2(\event_2)  
+%                               % \land \vcounter(\trace \event) = \vcounter()
+%                               \\
+%     \event \sigin \trace'   & \trace =  (\trace' \tracecate \event') 
+%                               \land 
+%                               (\pi_1(\event_1) \neq \pi_1(\event_2) 
+%                               \lor  \pi_2(\event_1) \neq \pi_2(\event_2)) 
+%                               \\ 
+%     \efalse                 & o.w.
+%   \end{array}
+%   \right.
+% \end{equation}
+%
+% % \mg{Why the previous definition used :: and now you switch to ++? Cannot this just be defined using ::? I am trying to anticipate places where a reader might be confused. Also, this definition would be much simpler if we defined event in a more uniform way. Ideally, we want to distinguish three cases, we don't need to distinguish 7 cases.}\\
+% % \jl{My bad, I was really too sticky to the convention.
+% I though the list appending  $::$ can only append element on the left side.}
+% \mg{We introduce a counting operator $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$ whose behavior is defined as follows, \sout{Counter $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$ }}.
+% \wq{The operator counter actually provides the number of times a specific label appears in a trace. Only a number, the position of label is ignored.}
+% \[
+% \begin{array}{lll}
+% \vcounter((x, l, v) :: \trace ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter((b, l, v):: \trace ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter((x, l, \qval, v):: \trace ) l \triangleq \vcounter(\trace) l + 1
+% \\
+% \vcounter((x, l', v):: \trace ) l \triangleq \vcounter(\trace ) l
+% &
+% \vcounter((b, l', v):: \trace ) l \triangleq \vcounter(\trace ) l
+% &
+% \vcounter((x, l', \qval, v):: \trace ) l \triangleq \vcounter(\trace ) l
+% \\
+% \vcounter({[]}) l \triangleq 0
+% &&
+% \end{array}
+% \]
+% \[
+% \begin{array}{lll}
+% \vcounter(\trace  \tracecat [(x, l, v)] ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter(\trace  \tracecat [(b, l, v)] ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter(\trace  \tracecat [(x, l, \qval, v)] ) l \triangleq \vcounter(\trace) l + 1
+% \\
+% \vcounter(\trace  \tracecat [(x, l', v)] ) l \triangleq \vcounter(\trace ) l
+% &
+% \vcounter(\trace  \tracecat [(b, l', v)] ) l \triangleq \vcounter(\trace ) l
+% &
+% \vcounter(\trace  \tracecat [(x, l', \qval, v)]) l \triangleq \vcounter(\trace ) l
+% \\
+% \vcounter({[]}) l \triangleq 0
+% &&
+% \end{array}
+% \]
+We introduce a counting operator $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$ whose behavior is defined as follows,
+% \[
+% \begin{array}{lll}
+% \vcounter(\trace :: (x, l, v, \bullet) ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter(\trace  ::(b, l, v, \bullet) ) l \triangleq \vcounter(\trace) l + 1
+% &
+% \vcounter(\trace  :: (x, l, v, \qval) ) l \triangleq \vcounter(\trace) l + 1
+% \\
+% \vcounter(\trace  :: (x, l', v, \bullet) ) l \triangleq \vcounter(\trace ) l, l' \neq l
+% &
+% \vcounter(\trace  :: (b, l', v, \bullet) ) l \triangleq \vcounter(\trace ) l, l' \neq l
+% &
+% \vcounter(\trace  :: (x, l', v, \qval)) l \triangleq \vcounter(\trace ) l, l' \neq l
+% \\
+% \vcounter({[]}) l \triangleq 0
+% &&
+% \end{array}
+% \]
+\[
+\begin{array}{lll}
+\vcounter(\trace :: (x, l, v, \bullet), l ) \triangleq \vcounter(\trace, l) + 1
+&
+\vcounter(\trace  ::(b, l, v, \bullet), l) \triangleq \vcounter(\trace, l) + 1
+&
+\vcounter(\trace  :: (x, l, v, \qval), l) \triangleq \vcounter(\trace, l) + 1
+\\
+\vcounter(\trace  :: (x, l', v, \bullet), l) \triangleq \vcounter(\trace, l), l' \neq l
+&
+\vcounter(\trace  :: (b, l', v, \bullet), l) \triangleq \vcounter(\trace, l), l' \neq l
+&
+\vcounter(\trace  :: (x, l', v, \qval), l) \triangleq \vcounter(\trace, l), l' \neq l
+\\
+\vcounter({[]}, l) \triangleq 0
+&&
+\end{array}
+\]
+%
+% The Latest Label $\llabel : \mathcal{T} \to \mathcal{VAR} \to \mathbb{N}$ 
+% The label of the latest assignment event which assigns value to variable $x$.
+% \[
+%   \begin{array}{lll}
+% \llabel((x, l, v):: \trace) x \triangleq l
+% &
+% \llabel((b, l, v)):: \trace x \triangleq \llabel(\trace) x
+% &
+% \llabel((x, l, \qval, v):: \trace) x \triangleq l
+% \\
+% \llabel((y, l, v):: \trace) x \triangleq \llabel(\trace ) x
+% &
+% \llabel((y, l, \qval, v):: \trace) x \triangleq \llabel(\trace ) x
+% \\
+% \llabel({[]}) x \triangleq \bot
+% &&
+% \end{array}
+% \]
+%
+% \todo{wording}
+% \mg{This wording needs to be fixed. Also notice that the type is wrong, a label is not always returned.}
+%  The Latest Label $\llabel : \mathcal{T} \to \mathcal{VAR} \to \mathbb{N}$ 
+% The label of the latest assignment event which assigns value to variable $x$.
+% \[
+%   \begin{array}{lll}
+% \llabel(\trace  \tracecat [(x, l, v)]) x \triangleq l
+% &
+% \llabel(\trace  \tracecat [(b, l, v)]) x \triangleq \llabel(\trace) x
+% &
+% \llabel(\trace  \tracecat [(x, l, \qval, v)]) x \triangleq l
+% \\
+% \llabel(\trace  \tracecat [(y, l, v)]) x \triangleq \llabel(\trace ) x
+% &
+% \llabel(\trace  \tracecat [(y, l, \qval, v)]) x \triangleq \llabel(\trace ) x
+% \\
+% \llabel({[]}) x \triangleq \bot
+% &&
+% \end{array}
+% \]
+We introduce an operator $\llabel : \mathcal{T} \to \mathcal{VAR} \to \ldom \cup \{\bot\}$, which 
+takes a trace and a variable and returns the label of the latest assignment event which assigns value to that variable.
+Its behavior is defined as follows,
+% \begin{defn}[Latest Label]
+  \[
+    % \begin{array}{lll}
+  \llabel(\trace  :: (x, l, \_, \_)) x \triangleq l
+  ~~~
+  \llabel(\trace  :: (y, l, \_, \_)) x \triangleq \llabel(\trace ) x, y \neq x
+  % &
+  ~~~
+  \llabel(\trace :: (b, l, v, \bullet)) x \triangleq \llabel(\trace) x
+  % &
+  % \\
+  % \llabel(\trace  :: (y, l, v, \bullet)) x \triangleq \llabel(\trace ) x
+  % &
+  % \llabel(\trace :: (y, l, v, \qval)) x \triangleq \llabel(\trace ) x
+  % &
+  ~~~
+  \llabel({[]}) x \triangleq \bot
+  % \end{array}
+  \]
+% \end{defn}
+%
+% \mg{This wording needs to be fixed but also the description does not make sense. This operator seems to just collect all the labels in a trace. Again, this definition would be shorter with a more uniform definition of events.}
+% The Trace Label Set $\tlabel : \mathcal{T} \to \mathcal{P}{(\mathbb{N})}$ 
+% The label of the latest assignment event which assigns value to variable $x$.
+% \[
+%   \begin{array}{llll}
+% \tlabel_{(\trace  \tracecat [(x, l, v)])} \triangleq \{l\} \cup \tlabel_{(\trace )}
+% &
+% \tlabel_{(\trace  \tracecat [(b, l, v)])} \triangleq \{l\} \cup \tlabel_{(\trace)}
+% &
+% \tlabel_{(\trace  \tracecat [(x, l, \qval, v)])} \triangleq \{l\} \cup \tlabel_{(\trace)}
+% &
+% \tlabel_{[]} \triangleq \{\}
+% \end{array}
+% \]
+% \begin{defn}
+  The operator $\tlabel : \mathcal{T} \to \mathcal{P}{(\ldom)}$ gives the set of labels in every event belonging to 
+  a trace, whoes behavior is defined as follows,
+\[
+  % \begin{array}{llll}
+\tlabel{(\trace  :: (\_, l, \_, \_)])} \triangleq \{l\} \cup \tlabel{(\trace )}
+~~~
+\tlabel({[ ]}) \triangleq \{\}
+% \end{array}
+\]
+% \end{defn}%
+% Given a trace $\trace$, its -processed trace $\trace$ is computed by a function $p : \trace \to \trace$ as follows:
+% \[
+%   \trace \triangleq
+%   \left\{
+%   \begin{array}{ll} 
+%   p(\trace' \tracecate (x, l, v)) & = p(\trace') \tracecate (x, l, \vcounter(\trace') l + 1, v) \\
+%   p(\trace' \tracecate (b, l, v)) & = p(\trace') \tracecate (b, l, \vcounter(\trace') l + 1, v) \\
+%   p(\trace' \tracecate (x, l, \qval, v)) & = p(\trace') \tracecate (x, l, \vcounter(\trace') l + 1, \qval, v) \\
+%   p([]) & = []
+%   \end{array}
+%   \right.
+% \]
+%
+%
+% $\mathcal{T}$ : Set of Well-formed Traces (in Definition~\ref{def:wf_trace})
+%
+%
+% \\
+%
+
+%
+% \mg{The next lemma is trivial but it still needs a proof sketch.}
+If we observe the operational semantics rules, we can find that no rule will shrink the trace. 
+So we have the Lemma~\ref{lem:tracenondec} with proof in Appendix~\ref{apdx:lemma_sec123}, 
+specifically the trace has the property that its length never decreases during the program execution.
+\begin{lem}
+[Trace Non-Decreasing]
+\label{lem:tracenondec}
+For every program $c \in \cdom$ and traces $\trace, \trace' \in \mathcal{T}$, if 
+$\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'}$,
+then there exists a trace $\trace'' \in \mathcal{T}$ with $\trace \tracecat \trace'' = \trace'$
+%
+$$
+\forall \trace, \trace' \in \mathcal{T}, c \st
+\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
+\implies \exists \trace'' \in \mathcal{T} \st \trace \tracecat \trace'' = \trace'
+$$
+\end{lem}
+% \begin{proof}
+%   Taking arbitrary trace $\trace \in \mathcal{T}$, by induction on program $c$, we have the following cases:
+%   \caseL{$c = [\assign{x}{\expr}]^{l}$}
+%   By the evaluation rule $\rname{assn}$, we have
+%   $
+%   {
+%   \config{[\assign{{x}}{\aexpr}]^{l},  \trace } 
+%   \xrightarrow{} 
+%   \config{\eskip, \trace :: ({x}, l, v, \bullet)}
+%   }$, for some $v \in \mathbb{N}$.
+%   \\
+%   Picking $\trace' = \trace ::({x}, l, v, \bullet)$ and $\trace'' =  [({x}, l, v, \bullet) ]$,
+%   it is obvious that $\trace \tracecat \trace'' = \trace'$.
+%   % \\
+%   % There are 2 cases, where $l' = l$ and $l' \neq l$.
+%   % \\
+%   % In case of $l' \neq l$, we know $\event \not\eventin \trace$, then this Lemma is vacuously true.
+%   %   \\
+%   %   In case of $l' = l$, by the abstract Execution Trace computation, we know 
+%   %   $\absflow(c) = \absflow'([x := \expr]^{l}; \clabel{\eskip}^{l_e}) = \{(l, \absexpr(\expr), l_e)\}$  
+%   %   \\
+%   % Then we have $\absevent = (l, \absexpr(\expr), l_e) $ and $\absevent \in \absflow(c)$.
+%   \\
+%   This case is proved.
+%   \caseL{$c = [\assign{x}{\query(\qexpr)}]^{l'}$}
+%   This case is proved in the same way as \textbf{case: $c = [\assign{x}{\expr}]^l$}.
+%   \caseL{$\ewhile [b]^{l_w} \edo c$}
+%   By the first rule applied to $c$, there are two cases:
+%   \subcaseL{$\textbf{while-t}$}
+%   If the first rule applied to is $\rname{while-t}$, we have
+%   \\
+%   $\config{{\ewhile [b]^{l_w} \edo c_w, \trace}}
+%     \xrightarrow{} 
+%     \config{{
+%     c_w; \ewhile [b]^{l_w} \edo c_w,
+%     \trace :: (b, l_w, \etrue, \bullet)}}~ (1)
+%   $.
+%   \\
+%   Let $\trace_w' \in \mathcal{T}$ be the trace satisfying following execution:
+%   \\
+%   $
+%   \config{{
+%   c_w,
+%   \trace :: (b, l_w, \etrue, \bullet)}}
+%   \xrightarrow{*} 
+%   \config{{
+%   \eskip, \trace_w'}}
+% $
+% \\
+% By induction hypothesis on sub program $c_w$ with starting trace 
+% $\trace :: (b, l_w, \etrue, \bullet)$ and ending trace $\trace_w'$, 
+% we know there exist
+% $\trace_w \in \mathcal{T}$ such that $\trace_w' = \trace :: (b, l_w, \etrue, \bullet) \tracecat \trace_w$.
+% \\
+% Then we have the following execution continued from $(1)$:
+% \\
+% $
+% \config{{\ewhile [b]^{l_w} \edo c_w, \trace}}
+%     \xrightarrow{} 
+%     \config{{
+%     c_w; \ewhile [b]^{l_w} \edo c_w,
+%     \trace :: (b, l_w, \etrue, \bullet)}}
+%     \xrightarrow{*} 
+%     \config{\ewhile [b]^{l_w} \edo c_w, \trace :: (b, l_w, \etrue, \bullet) \tracecat \trace_w}
+%     ~(2)
+% $
+% By repeating the execution (1) and (2) until the program is evaluated into $\eskip$,
+% with trace $\trace_w^{i'} $ for $i = 1, \cdots, n n \geq 1$ in each iteration, we know 
+% in the $i-th$ iteration,
+%  there exists  $\trace_w^i \in \mathcal{T}$ such that  
+% $\trace_w^{i'} = \trace_w^{(i-1)'} :: (b, l_w, \etrue, \bullet) ++ \trace_w^{i'}$
+% \\
+% Then we have the following execution:
+% \\
+% $
+% \config{{\ewhile [b]^{l_w} \edo c_w, \trace}}
+%     \xrightarrow{} 
+%     \config{{
+%     c_w; \ewhile [b]^{l_w} \edo c_w,
+%     \trace :: (b, l_w, \etrue, \bullet)}}
+%     \xrightarrow{*} 
+%     \config{\ewhile [b]^{l_w} \edo c_w, \trace_w^{n'}}
+%     \xrightarrow{}^\rname{{while-f}}
+%     \config{\eskip, \trace_w^{n'}:: (b, l_w, \efalse, \bullet)}
+% $ and $\trace_w^{n'} = \trace :: (b, l_w, \etrue, \bullet) \tracecat \trace_w^{1} :: \cdots :: (b, l_w, \etrue, \bullet) \tracecat \trace_w^{n} $.
+% \\
+% Picking $\trace' = \trace_w^{n'} :: (b, l_w, \efalse, \bullet)$ and $\trace'' = [(b, l_w, \etrue, \bullet)] \tracecat \trace_w^{1} :: \cdots :: (b, l_w, \etrue, \bullet) \tracecat \trace_w^{n}$,
+% we have 
+% $\trace ++ \trace'' = \trace'$.
+% \\
+% This case is proved.
+%   \subcaseL{$\textbf{while-f}$}
+%   If the first rule applied to $c$ is $\rname{while-f}$, we have
+%   \\
+%   $
+%   {
+%     \config{{\ewhile [b]^{l_w} \edo c_w, \trace}}
+%     \xrightarrow{}^\rname{while-f}
+%     \config{{
+%     \eskip,
+%     \trace :: (b, l_w, \efalse, \bullet)}}
+%   }$,
+%   In this case, picking $\trace' = \trace ::(b, l_w, \efalse, \bullet)$ and $\trace'' =  [(b, l_w, \efalse, \bullet) ]$,
+%   it is obvious that $\trace \tracecat \trace'' = \trace'$.
+%   \\
+%   This case is proved.
+%   \caseL{$\eif([b]^l, c_t, c_f)$}
+%   This case is proved in the same way as \textbf{case: $c = \ewhile [b]^{l} \edo c$}.
+%   \caseL{$c = c_{s1};c_{s2}$}
+%  By the induction hypothesis on $c_{s1}$ and $c_{s2}$ separately,
+%  we have this case proved.
+% \end{proof}
+%
+% \todo{more explanation}
+% \mg{This corollary needs some explanation. In particular, we should stress that $\event$ and $\event'$ may differ in the query value.}
+Since the equivalence over two events is defined over the query value equivalence, 
+when there is an event belonging to a trace, 
+if this event is a query assignment event, 
+it is possible that 
+the event showing up in this trace has a different form of query value, 
+but they are equivalent by Definition~\ref{def:query_equal}.
+So we have the following Corollary~\ref{coro:aqintrace} with proof in Appendix~\ref{apdx:lemma_sec123}.
+\begin{coro}
+\label{coro:aqintrace}
+For every event and a trace $\trace \in \mathcal{T}$,
+if $\event \in \trace$, 
+then there exist another event $\event' \in \eventset$ and traces $\trace_1, \trace_2 \in \mathcal{T}$
+such that $\trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace $
+with 
+$\event$ and $\event'$ equivalent but may differ in their query value.
+\[
+  \forall \event \in \eventset, \trace \in \mathcal{T} \st
+\event \in \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
+\event' \in \eventset \st (\event \in \event') \land \trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace  
+\]
+\end{coro}
+% \begin{subproof}
+% Proof in File: {\tt ``coro\_aqintrace.tex''}
+% % \input{coro_aqintrace}
+% %
+% \end{subproof}
+% \\
+% %
+% %
+% \mg{I'll skip the rest of this page because it seems not relevant.}
+% \todo{Not Necessary but keep it for now}
+% \\
+% Given a trace $\trace$, its post-processed trace $\trace_p$ is computed by a function $p : \trace \to \trace_p$ as follows:
+% \[
+%   p(\trace) \triangleq
+%   \left\{
+%   \begin{array}{ll} 
+%   p(\trace' \tracecat [(x, l, v)]) & = p(\trace') \tracecat [(x, l, \vcounter(\trace') l + 1, v)] \\
+%   p(\trace' \tracecat [(b, l, v)]) & = p(\trace') \tracecat [(b, l, \vcounter(\trace') l + 1, v)] \\
+%   p(\trace' \tracecat [(x, l, \qval, v)]) & = p(\trace') \tracecat [(x, l, \vcounter(\trace') l + 1, \qval, v)] \\
+%   p({[]}) & = []
+%   \end{array}
+%   \right.
+% \]
+% \\
+% \begin{defn}[Well-formed Post-Processed Trace $\mathcal{T_p}$]
+% \label{def:wf_trace}
+% A post-processed trace $\trace_p$ is well formed, i.e., $\trace_p \in \mathcal{T_p}$ if and only if it preserves the following two properties:
+% \begin{itemize}
+% \item{\emph{(Uniqueness)}} 
+% $\forall \event_1, \event_2 \eventin \trace_p \st \event_1 \signeq \event_2$
+% %
+% \item{\emph{(Ordering)}} $\forall \event_1, \event_2 \eventin \trace_p \st 
+% (\event_1 \eventlt \event_2) \Longleftrightarrow
+% \exists \trace_1, \trace_2, \trace_3 \in \mathbb{T_p},
+%  \event_1', \event_2' \in \eventset \st
+% (\event_1 \eventeq \event_1') \land (\event_2 \eventeq \event_2')
+% \land \trace_1 \tracecat [\event_1'] \tracecat \trace_2 \tracecat [\event_2'] \tracecat \trace_3 = \trace_p$
+% \end{itemize}
+% \end{defn}
+% %
+% %
+% \begin{thm}[Trace Generated from Operational Semantics after Post Processing is Well-formed $c \vDash \trace$].
+% \label{thm:os_wf_trace}
+% \\
+% \[
+% \forall \trace \in \mathcal{T}, c \st
+% \config{c, \vtrace} \to^{*} \config{\eskip, \trace \tracecat \trace'} \land \trace_p = p(\trace')
+% \implies
+% \trace_p\in \mathcal{T}
+% \] 
+% % \wqside{ is $p(\tau)$ defined some where? I guess it means post-processing.}
+% %
+% \end{thm}
+% \begin{proof}
+% Proof in File: {\tt ``thm\_os\_wf\_trace.tex''}.
+% % \input{thm_os_wf_trace}
+% \end{proof}
+%
+%
+% \todo{
+% \begin{lem}[While Map Remains Unchanged (Invariant)]
+% \label{lem:wunchange}
+% Given a program $c$ with a starting memory $m$, trace $t$ and while map $w$, s.t.,
+% $\config{m, c, t, w} \to^{*} \config{m', \eskip, t', w'}$ and $Labels(c) \cap Keys(w) = \emptyset$, then 
+% \[
+%   w = w'
+% \]
+% \end{lem}
+% \begin{subproof}[Proof of Lemma~\ref{lem:wunchange}]
+% %
+% Proof in File: {\tt ``lem\_wunchange.tex''}
+% % \input{lem_wunchange}
+% %
+% \end{subproof}
+% }
+%
+% \todo{
+% \begin{lem}[Trace is Written Only]
+% \label{lem:twriteonly}
+% Given a program $c$ with starting trace $t_1$ and $t_2$,
+% for arbitrary starting memory $m$ and while map $w$,
+% if there exist evaluations
+% $$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% % 
+% $$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+% %
+% then:
+% %
+% \[
+%   m_1' = m_2' \land w_1' = w_2'
+% \]
+% \end{lem}
+% %
+% \begin{subproof}[Proof of Lemma~\ref{lem:twriteonly}]
+% %
+% Proof in File: {\tt ``lem\_twriteonly.tex''}
+% % \input{lem_twriteonly}
+% \end{subproof}
+% }
+%
+% \todo{
+% \begin{lem}[Trace Uniqueness]
+% \label{lem:tunique}
+% Given a program $c$ with a starting memory $m$, \wq{a while map w,}
+% for any starting trace $t_1$ and $t_2$, if there exist evaluations
+% $$\config{m, c, t_1, w} \to^{*} \config{m_1', \eskip, t_1', w_1'}$$
+% % 
+% $$\config{m, c, t_2, w} \to^{*} \config{m_2', \eskip, t_2', w_2'}$$
+% %
+% then:
+% %
+% \[
+% t_1' - t_1 = t_2' - t_2
+% \]
+% \end{lem}
+% %
+% \begin{subproof}[Proof of Lemma~\ref{lem:tunique}]
+% %
+% Proof in File: {\tt ``lem\_tunique.tex''}
+% % \input{lem_tunique}
+% \end{subproof}
+% }
+%
+
+%
+%
+%
+%
+%
+%
+%
+% \subsection{SSA Transformation and Soundness of Transformation}
+% in File {\tt ``ssa\_transform\_sound.tex''}
+% \input{ssa_transform_sound}
+%
+\clearpage
