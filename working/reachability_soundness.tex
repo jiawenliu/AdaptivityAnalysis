@@ -184,6 +184,21 @@ Incr(\locbound(\absevent)) +
  in \cite{sinn2017complexity} Theorem 1, 
 This case is proved.
 \end{proof}
+% \begin{lem}[Soundness of the Abstract Execution Trace]
+%   \label{lem:abscfg_sound}
+% Given a program ${c}$, we have:
+% %
+% \[
+%   \begin{array}{l}
+%     \forall \vtrace_0, \trace \in \mathcal{T} ,  \event = (\_, l, \_) \in \eventset \st
+% \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0 \tracecat \vtrace} 
+% \land \event \in \trace 
+% \\
+% \qquad \implies \exists \absevent = (l, \_, \_) \in Label(c) \times Label(c) \times \absdom \st 
+% \absevent \in \absflow(c)
+% \end{array}
+% \]
+% \end{lem}
 \begin{lem}[Soundness of the Abstract Execution Trace]
   \label{lem:abscfg_sound}
 Given a program ${c}$, we have:
@@ -194,11 +209,16 @@ Given a program ${c}$, we have:
 \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0 \tracecat \vtrace} 
 \land \event \in \trace 
 \\
-\qquad \implies \exists \absevent = (l, \_, \_) \in Label(c) \times Label(c) \times \absdom \st 
+\qquad \implies \exists \absevent = (l, \_, \_) \in (\ldom\times \dcdom^{\top} \times \ldom) \st 
 \absevent \in \absflow(c)
 \end{array}
 \]
 \end{lem}
+%    This lemma is proved formally in Appendix~\ref{apdx:reachability_soundness}.
+% For every event $\event$ with label $l$ in an execution trace $\trace$ of program $c$, 
+% there is an abstract event in program's abstract execution trace of form $(l, \_, \_)$. 
+% This lemma is proved formally in Lemma~\ref{lem:abscfg_sound} in Appendix~\ref{apdx:reachability_soundness}.
+% \\
 \begin{proof}
   Taking arbitrary $\trace_0 \in \mathcal{T}$, and an arbitrary event $\event = (\_, l, \_) \in \eventset$, it is sufficient to show:
   \[
@@ -207,7 +227,10 @@ Given a program ${c}$, we have:
 \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0 \tracecat \vtrace} 
 \land \event \in \trace 
 \\
-\qquad \implies \exists \absevent = (l, \_, \_) \in Label(c) \times Label(c) \times \absdom \st 
+\qquad \implies 
+% \exists \absevent = (l, \_, \_) \in Label(c) \times Label(c) \times \absdom \st 
+% \absevent \in \absflow(c)
+\exists \absevent = (l, \_, \_) \in (\ldom\times \dcdom^{\top} \times \ldom) \st 
 \absevent \in \absflow(c)
 \end{array}
 \]
@@ -439,18 +462,36 @@ Given a program ${c}$, we have:
 % \\
 % 6. By estimating the changes for all the variables in the boolean expression of the guard of the while in 1 iteration, computeBound divides the n by the changes of the boolean expression is the safe upper bound of how many times this while can looped. 
 %
-\begin{lem}[Uniqueness of the Abstract Event]
-  \label{lem:absevent_unique}
+% \begin{lem}[Uniqueness of the Abstract Event]
+%   \label{lem:absevent_unique}
+% Given a program ${c}$, we have:
+% %
+% \[
+%   \begin{array}{l}
+%     \forall x^l \in \lvar_c \st
+% \exists \absevent = (l, \_, \_) \in Label(c) \times Label(c) \times \absdom \st 
+% \absevent \in \absflow(c)
+% \end{array}
+% \]
+% \end{lem}
+For every labeled variable in program $c$, $x^l \in \lvar_c$, there is a unique abstract event in program's abstract execution trace $\absevent \in \absflow(c)$ of form $(l, \_, \_)$. 
+\begin{lem}[Uniqueness of the Abstract Execution Trace]
+\label{lem:absevent_unique}
 Given a program ${c}$, we have:
 %
 \[
-  \begin{array}{l}
-    \forall x^l \in \lvar_c \st
-\exists \absevent = (l, \_, \_) \in Label(c) \times Label(c) \times \absdom \st 
+\begin{array}{l}
+ \forall \vtrace_0, \trace \in \mathcal{T} ,  \event = (\_, l, \_, \_) \in \eventset^{\asn} \st
+\config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0 \tracecat \vtrace} 
+\land \event \in \trace 
+\\
+\qquad \implies \exists! \absevent = (l, \_, \_) \in (\ldom\times \dcdom^{\top} \times \ldom) \st 
 \absevent \in \absflow(c)
 \end{array}
 \]
 \end{lem}
+% This lemma and proof is also 
+% formalized in Lemma~\ref{lem:absevent_unique} in Appendix~\ref{apdx:reachability_soundness}.
 \begin{proof}
   This is proved trivially by induction on the program $c$.
 \end{proof}
