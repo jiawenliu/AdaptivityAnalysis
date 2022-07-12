@@ -1,0 +1,145 @@
+\begin{defn}[The $\flowsto$ Searching Algorithm]
+\[
+\begin{array}{l}
+	\mathcal{A}:(\eventset \times \eventset \times \mathcal{T} \times \cdom \times \dbdom )\to \mathcal{P}(List(\eventset))
+	\\
+	\mathcal{A}(\event_1, \event_2, \trace, c, D) 
+	= 
+	\kw{setmap} ~
+	% \bigcup\limits_{l \in \kw{dfs}(\trace, c, D) \land l = \event_1 :: l'}
+	\\ \qquad \qquad
+	\left(\efun l \to ( \emap 
+		(\efun  \event \to \pi_1(\event)^{\pi_2(\event)})
+	(\efilter 
+		(\efun \event \to  \event \in \eventset^{\asn}) ~ l) \right)
+	\\ \qquad \qquad
+	(\kw{setfilter} ~
+		(\efun l \to l = [\event_1, \cdots, \event_2]) ~ (\kw{dfs} \eapp \trace \eapp c \eapp  D ))
+	\end{array}
+\]
+%
+% %
+% \[
+% \begin{array}{l}
+% 	\kw{dfs}(\trace, c, D)
+% 	= 
+% 	\ematch~  \trace ~ \ewith
+% 	\\ \qquad
+% 	| \event \to \{[\event]\}
+% 	\\ \qquad
+% 	|  \cdot \event \tracecat \trace' \to  
+% 	% \\ \quad \qquad
+% 	 \bigcup\limits_{l \in \kw{dfs}(\trace', c, D) }
+% 	\left(  \eif \event \stackrel{\trace}{\uplus} l \neq [] 
+% 	\ethen \left\{ \event \stackrel{\trace}{\uplus} l \right\} \eelse \left\{ l \right\}
+% 	\right)
+% \end{array}
+% \]
+%
+\[
+\begin{array}{l}
+	\kw{dfs} : \mathcal{T} \to \cdom \to \dbdom \to \mathcal{P}(List(\eventset))
+	\\
+	\kw{dfs} \eapp \trace \eapp c \eapp  D
+	= 
+	\ematch~  \trace ~ \ewith
+	\\ \qquad
+	| \event :: {[]} \to \{[\event]\}
+	\\ \qquad
+	|  \event :: \trace' \to  
+	% \\ \quad \qquad
+	(\kw{dfs} \eapp \trace'  \eapp c  \eapp D)
+	\cup 
+	\left(   \bigcup\limits_{l \in \kw{dfs} \eapp \trace' \eapp c \eapp  D }
+	\left( \uplus \eapp  \event  \eapp \trace  \eapp l \right)
+	\right)
+	\\ \qquad
+	| {[]}\to \{\}
+\end{array}
+\]
+%
+%
+\[
+\begin{array}{l}
+	\uplus : \eventset \to \mathcal{T} \to List(\eventset) \to \mathcal{P}(List(\eventset))
+	\\
+	% \event \stackrel{\trace}{\uplus} 
+	\uplus \eapp  \event  \eapp \trace  \eapp l
+	= 
+	\ematch~  l ~ \ewith
+	\\ \qquad
+	| [] \to \{\}
+	\\ \qquad
+	|  \event' :: l' \to  
+	\\ \quad \qquad 	
+	\ecase \event \in \eventset^{\asn}  \land \eventdep^{val}(\event, \event', \trace[\event:\event'], c, D)
+	\to \left\{ \event::(\event' :: l') \right\}
+	\\ \quad \qquad 	
+	\ecase \event \in \eventset^{\test} \land \eventdep^{\ctl}(\event, \event', c, D)
+	\to \left\{ \event::(\event' :: l') \right\}\cup 
+	% \left( \event \stackrel{\trace}{\uplus} l' \right)
+	\left( \uplus \eapp  \event  \eapp \trace  \eapp l' \right)
+	\\ \quad \qquad 	
+	% \ecase \_ \to \event \stackrel{\trace}{\uplus} l' 
+	\ecase \_ \to \uplus \eapp  \event  \eapp \trace  \eapp l'  
+\end{array}
+\]
+\end{defn}
+%
+\begin{thm}[Algorithm Soundness w.r.t. $\flowsto$ and $\eventdep$]
+% (Algorithm Soundness)
+\label{thm:alg_correct}
+For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}$, and two assignment events $\event_1, \event_2 \in \eventset^{\asn}$
+if there exists a trace $\trace' \in \mathcal{T}$ such that $trace$ has the form $\trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$, then 
+for any two labelled variables $z^i, y^j \in \lvar_c$, and two lists $l_h, l_t$
+with $ l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)$,
+ $flowsto(z^i, y^j, c)$ and $\eventdep(\event_1, \event_2, \trace, {c}, D)$
+ %
+\[
+\begin{array}{l}
+  \forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+  \\ \quad 
+   \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+   \implies    \forall  z^i, y^j \in \lvar_c, l_h, l_t \st 
+  \\ \qquad 
+   l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)
+   \implies \flowsto(z^i, y^j, c) \land \eventdep(\event_1, \event_2, \trace, {c}, D)
+    % \land \vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})
+\end{array}
+\]
+\end{thm}
+%
+% \begin{thm}[Algorithm Completeness w.r.t. $\flowsto$]
+% \label{thm:alg_complete}
+% \[
+% \begin{array}{l}
+%   \forall c, z^i, y^j \in \lvar_c \st 
+%    \flowsto(z^i, y^j)
+%   \\ \quad 
+%    \implies \exists \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T}, D \in \dbdom \st
+%    l_h, l_t \st 
+%    l_h ++ [z^i, y^j] ++ l_t \in \mathcal{A}(\event_1, \event_2, \trace, c, D)
+% \end{array}
+% \]
+% \end{thm}
+%
+\begin{thm}[Algorithm Completeness w.r.t. $\eventdep$]
+\label{thm:algeventdep_sound}
+For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}$, and two assignment events $\event_1, \event_2 \in \eventset^{\asn}$
+if there exists a trace $\trace' \in \mathcal{T}$ such that $trace$ has the form $\trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$ and 
+$\eventdep(\event_1, \event_2, \trace, {c}, D)$, then $\mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset $.
+%
+\[
+\begin{array}{l}
+	\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+	\\ \quad 
+   \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+  \implies \eventdep(\event_1, \event_2, \trace, {c}, D)
+   \implies
+   \mathcal{A}(\event_1, \event_2, \trace, c, D) \neq \emptyset
+\end{array}
+\]
+\end{thm}
+%
+\jl{the algorithm is (complete w.r.t. $\eventdep$ while incomplete w.r.t. $\flowsto$ )
+}
