@@ -70,17 +70,12 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 ~|~ {c};{c}  
 ~|~ \eif([\bexpr]{}^l , {c}, {c}) 
 ~|~ [\eskip]^l\\ 
-% &&& \text{\mg{Is skip missing a label?}}
-% \\
-% &&& \text{\jl{I intentionally removed leabel for skip before}}
-% \\%
-% &&& \text{\jl{but I realized I need it after implementation}}
-% \\%
-% &&& \text{\jl{I haven't yet updated it here, thanks for reminding}}
-% \\% \mbox{Event} 
-% & \event & ::= & 
-%     ({x}, l, v) ~|~ ({x}, l, \qval, v)  ~~~~~~~~~~~ \mbox{Assignment Event} \\
-% &&& ~|~(\bexpr, l, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
+&&&
+\highlight{
+~|~ \clabel{def}^l: fname(r^l, x_1, \ldots, x_n) := c
+~|~ \clabel{\assign{x}{call(fname, e_1, \ldots, e_n)}}^l
+}
+\\ 
 % \\
 \mbox{Event} 
 & \event & ::= & 
@@ -545,7 +540,50 @@ c; \ewhile [b]^{l} \edo c),
 }
 ~\textbf{if-f}
 % %
+\and
 %
+\highlight{
+\inferrule
+{
+ c' = c^{+n}
+ \and 
+ \event = (fname, l, (r^l, x_1, \ldots, x_n) := c, \bullet)
+}
+{
+\config{{
+  [def]^l: fname(r^l, x_1, \ldots, x_n) := c, \trace}}
+\xrightarrow{} 
+\config{{\clabel{\eskip}^l, \trace \traceadd \event}}
+}
+~\textbf{fun-def}
+%
+}
+\\
+\highlight{
+%
+\inferrule
+{
+\env(\trace, fname) = (r^{l_r}, x_1, \ldots, x_n) := c
+\and 
+\config{{
+  \clabel{\assign{x_1}{e_1, \ldots, e_n)}}^{(l, 1)}; \ldots;
+  \clabel{\assign{x_n}{e_n)}}^{(l, n)}, \trace}} 
+  \xrightarrow{}^* 
+  \config{{\clabel{\eskip}^{(l, n)}, \trace_1}}
+  \\ 
+  \config{{\clabel{c}^{(l)}, \trace_1}}
+  \xrightarrow{}^* 
+  \config{{\clabel{\eskip}^{(l, n+l_r)}, \trace'}}
+%  \event = (x, l, \env(\trace', r^{l_r}), \bullet)
+}
+{
+\config{{
+  \clabel{\assign{x}{call(fname, e_1, \ldots, e_n)}}^l, \trace}}
+\xrightarrow{} 
+\config{{\clabel{\eskip}^l, \trace'}}
+}
+~\textbf{fun-call}
+}
 %
 \end{mathpar}
 }
