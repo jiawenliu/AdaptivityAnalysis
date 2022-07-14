@@ -22,27 +22,165 @@ $\flowsto(x^i,  z_1^{r_1}, c)
 \end{thm}
 Proof Summary:
 \\
-induction on $c$.
+induction on $c$. Proved by induction hypothesis in if and while case, and cases analysis in seq case.
 %
 %
 \begin{proof}
-  Taking arbitrary $x^i, y^j \in \lvar_c$,
-%
-%
-by definition of $\vardep(x^i, y^j, {c})$, 
-let $D \in \dbdom$ be the dataset,
-and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the trace and two events satisfying the definition, 
-with $\pi_1(\event_x)^{\pi_2(\event_x)} = x^i$ and $\pi_1(\event_y)^{\pi_2(\event_y)} = y^j$,  it is sufficient to show:
-$$
-\begin{array}{l}
-  \eventdep(\event_x, \event_y, \trace, c, D) 
-  \\ \quad 
-  \implies 
-  \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-  \flowsto(x^i,  z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
-\end{array}
-$$
-%
-By Theorem~\ref{thm:flowsto_event_soundness}, we have this theorem proved.
+  By induction on program $c$, we have the following cases:
+  \caseL{$c = \clabel{\assign{x}{\expr}}^l$}
+  \caseL{$c = \clabel{\assign{x}{\query(\qexpr)}}^l$}
+  \caseL{$c = \clabel{\eskip}^l$}
+  \caseL{$c = \clabel{def}^l: fname(r^l, x_1, \ldots, x_n) := c$}
+  \caseL{$c = \eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) $}
+  Let $\trace, \trace' \in \mathcal{T}, \trace_0 \in \mathcal{T}_0(c)$ be the two witness traces and initial trace satisfying 
+  $\dep(x^i, y^j, \trace_1, \trace_2, \trace_0, \eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) )$.
+  \\
+  By \emph{may-dependency} in Definition~\ref{def:var_dep}, let $\trace_0' \in \mathcal{T}_0(c)$ be the initial trace satisfying,
+  \\
+  (1) $ (\forall z^r \neq x^i \st   \env(\trace_0, z^r ) \neq   \env(\trace_0',z^r) )$
+  and \\
+  (2) $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) , \trace_0} 
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0  \tracecat \trace } $ 
+    and \\
+  (3) $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}), \trace_0'} 
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace'}$ 
+    and \\
+    (4) $\sdiff(\trace, \trace', y^j ) \neq \emptyset$.
+    By the evaluation rules for $\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) $, we have the two following cases on the evaluation in (2):
+    \subcaseL{\rname{if-t}}
+    $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) , \trace_0} 
+    \rightarrow^{\rname{if-t}} \config{c_1, \trace_0  :: (b, l, \etrue, \bullet) } 
+    \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0 :: (b, l, \etrue, \bullet) \tracecat \trace_1 } $  
+    Accordingly, there are two cases on the evaluation in (3) as follows,
+    \subsubcaseL{\rname{if-f}}  
+    $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) , \trace_0'} 
+    \rightarrow^{\rname{if-f}} \config{c_2, \trace_0'  :: (b, l, \efalse, \bullet) } 
+    \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0' :: (b, l, \efalse, \bullet) \tracecat \trace_2' } $ 
+    \\
+    By (1) and Inversion Lemma~\ref{lem:inv_expr}(3) of boolean expression evaluation, we know
+    $x \in FV(b)$ and $x^l \in \live(l, c)$.
+    \\
+    By  $\sdiff(\trace, \trace', y^j ) \neq \emptyset$, we know $y^j \in \lvar(c_1) \cup \lvar(c_2)$.
+    \\
+    Then, by $\flowsto$ in Definition~\ref{def:feasible_flowsto}, we know $\flowsto(x^i, y^j, c)$, this case is proved.
+    %
+    \subsubcaseL{\rname{if-t}}  
+    $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) , \trace_0'} 
+    \rightarrow^{\rname{if-t}} \config{c_1, \trace_0'  :: (b, l, \etrue, \bullet) } 
+    \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0' :: (b, l, \etrue, \bullet)  \tracecat \trace_1' } $  
+\\
+To show : $
+\Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$.
+\\
+We first have the following induction hypothesis,
+\\
+(IH) 
+$(\exists \trace_{ih}, \trace_{ih}' \in \mathcal{T}, 
+\trace_{ih0} \in \mathcal{T}_0(c_1) \st \dep(x^i, y^j, \trace_{ih}, \trace_{ih}', \trace_{ih0}, {c_1}) )
+\implies
+\Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c_1}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c_1) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c_1) \Big)$.
+\\
+Constructing $ \trace_{ih0} = \trace_0 :: (b, l, \etrue, \bullet) $, 
+$\trace_{ih} = \trace_1$ and $\trace_{ih}' = \trace_1'$.
+\\
+By (1), we know $\forall z^r \neq x^i$,
+\\
+(ih1)$ (\env(\trace_0 :: (b, l, \etrue, \bullet) , z^r ) \neq   \env(\trace_0':: (b, l, \etrue, \bullet) ,z^r) )$.
+\\
+We also have two following evaluations:
+\\
+(ih2) $\config{c_1, \trace_0  :: (b, l, \etrue, \bullet) } 
+\rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0  \tracecat \trace_1 } $ 
+\\
+(ih3) $\config{c_1, \trace_0'  :: (b, l, \etrue, \bullet) } 
+\rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace_1' } $  
+\\
+By the determinism of evaluation, we have
+ $\trace = (b, l, \etrue, \bullet) \tracecat \trace_1$ and $\trace' = (b, l, \etrue, \bullet) \tracecat \trace_1$.
+\\
+By (4) and $\sdiff$ in Definition~\ref{def:diffseq}, we then have
+\\
+(ih4) $\sdiff( (b, l, \etrue, \bullet) \tracecat \trace_1,  (b, l, \etrue, \bullet) \tracecat \trace_1', y^j ) = \sdiff(\trace_1, \trace_1', y^j ) \neq \emptyset$
+\\
+Then, by (ih1) - (ih4), we know\\
+ $(\exists \trace_{ih}, \trace_{ih}' \in \mathcal{T}, 
+\trace_{ih0} \in \mathcal{T}_0(c_1) \st \dep(x^i, y^j, \trace_{ih}, \trace_{ih}', \trace_{ih0}, {c_1}) )$.
+\\
+Then, by induction hypothesis (IH), we know 
+\\
+$\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c_1}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c_1) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c_1)$
+\\
+Then, by the $\flowsto$ in Definition~\ref{def:feasible_flowsto}, we have 
+\\
+$\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$.
+\\
+This case is proved.
+    \subcaseL{\rname{if-f}}
+This \textbf{sub-case} is proved in exactly the same way as \textbf{sub-case: \rname{if-t}}.
+  \caseL{$c = \ewhile \clabel{\bexpr}^{l} \edo {c}$ }
+  This \textbf{case} is proved in exactly the same way as \textbf{sub-case: \rname{if-t}}.
+  \caseL{$c = c_1; c_2$ }
+  Let $\trace, \trace' \in \mathcal{T}, \trace_0 \in \mathcal{T}_0(c)$ be the two witness traces and initial trace satisfying 
+  $\dep(x^i, y^j, \trace_1, \trace_2, \trace_0, \eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) )$.
+  \\
+  By \emph{may-dependency} in Definition~\ref{def:var_dep}, let $\trace_0' \in \mathcal{T}_0(c)$ be the initial trace satisfying,
+  \\
+  (1) $ (\forall z^r \neq x^i \st   \env(\trace_0, z^r ) \neq   \env(\trace_0',z^r) )$
+  and \\
+  (2) $\config{c_1;c_2 , \trace_0} 
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0  \tracecat \trace } $ 
+    and \\
+  (3) $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}), \trace_0'} \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace'}$ 
+    and \\
+    (4) $\sdiff(\trace, \trace', y^j ) \neq \emptyset$.
+  By the Evaluation rules for $c_1;c_2$, we have the following evaluations for (2) and (3)
+  (2) $\config{c_1;c_2 , \trace_0} 
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0  \tracecat \trace_1}
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0  \tracecat \trace_1 \tracecat \trace_2 } $ 
+    and \\
+  (3) $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}), \trace_0'}
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace_1'}
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace_1' \tracecat \trace_2'}$ 
+  \\
+  where $\trace = \trace_1 \tracecat \trace_2$ 
+  and $\trace' = \trace_1' \tracecat \trace_2'$.
+Then, we have two following \textbf{sub-cases},
+\subcaseL{$\sdiff(\trace_1, \trace_1', y^j ) \neq \emptyset$}
+By induction hypothesis, we have 
+\\
+$\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c_1}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c_1) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c_1)$
+\\
+Then, by the $\flowsto$ in Definition~\ref{def:feasible_flowsto}, we have 
+\\
+$\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+\flowsto(x^i,  z_1^{r_1}, c) 
+\land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$.
+\\
+This case is proved.
+\subcaseL{$\sdiff(\trace_1, \trace_1', y^j ) = \emptyset$}
+By (4), we know $sdiff(\trace_2, \trace_2', y^j ) \neq \emptyset$.
+\\
+Let $LV_{\diff}$ be the set of variables $z^l$ on $\trace_0  \tracecat \trace_1$ and $\trace_0'  \tracecat \trace_1'$ 
+where $\env(\trace_0  \tracecat \trace_1, w^l) \neq \env(\trace_0'  \tracecat \trace_1', w^l) $.
+\\
+By induction hypothesis, we know $\flowsto(x^i, z^l, c)$.
+\\
+By the inversion Lemma~\ref{lem:inv_expr_gnl}, we know 
+$LV_{\diff} \cap FV(\expr) \neq \emptyset$.
+\\
+By $\flowsto$ in Definition~\ref{def:feasible_flowsto}, we know $\flowsto(z^l, y^j, c)$.
+\\
+Then we know $\exists z^l \st \flowsto(x^i, z^l, c) \land \flowsto(z^l, y^j, c)$.
+\\
+  Then, we have this theorem proved.
 \end{proof}
