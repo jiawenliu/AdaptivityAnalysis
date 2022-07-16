@@ -551,32 +551,34 @@ Likewise the adaptivity is defined as a finite walk in the execution based depde
 % %
 % \subsection{ $\THESYSTEM$ Analysis Algorithm}
 % \subsection{Dependency Graph Estimation}
-\subsection{Vertices Estimation and Query Annotation Estimation}
+\subsection{Vertices Estimationn}
 \label{sec:alg_vertexgen}
-The vertices in the static analysis dependency graph are actually identical as the  Execution-Based Dependency Graph, which are assigned variables in the program annotated with the unique label(line number). These vertices are collected by statically scanning the program, like what we do for vertices of its Execution-Based Dependency Graph. The vertices are defined formally as follows.
+The first component of every vertex in the static analysis dependency graph are actually identical as the  Execution-Based Dependency Graph, which are assigned variables in the program annotated with the unique label(line number). 
+These vertices are collected by statically scanning the program, like what we do for vertices of its Execution-Based Dependency Graph. 
+The vertices are defined formally as follows.
 
   \highlight{
 \[
     \progV(c) \triangleq \left\{ 
-  x^l \in \mathcal{LV} 
+  (x^l, w) \in \mathcal{LV} \times \mathcal{A}_{\lin}
   ~ \middle\vert ~
   x^l \in \lvar_{c}
   \right\}
   \]
   }
   %
+where $\mathcal{A}_{\lin}$ is the set of arithmetic expressions over $\mathbb{N}$ and the input variables.
+% The static scanning of the programs also tells us whether one vertice(assigned variable) is assigned by a query request. We have similar definition when defining the Execution-Based Dependency Graph, 
+% a set of pairs $\progF(c) \in \mathcal{P}(\mathcal{LV} \times \{0, 1\} )$ 
+% % is the set of pairs 
+% % The weight for each vertex in $\progV(c)$ is computed 
+% mapping each $x^l \in \progV(c)$ to a flag, either $0$ or $1$, where $1$  means $x^{l}$ is a member of $ \qvar_{c}$, a set of those variables assigned with query requests, and $0$ means $x^{l}$ not in this set. It is defined formally below.
 
-The static scanning of the programs also tells us whether one vertice(assigned variable) is assigned by a query request. We have similar definition when defining the Execution-Based Dependency Graph, 
-a set of pairs $\progF(c) \in \mathcal{P}(\mathcal{LV} \times \{0, 1\} )$ 
-% is the set of pairs 
-% The weight for each vertex in $\progV(c)$ is computed 
-mapping each $x^l \in \progV(c)$ to a flag, either $0$ or $1$, where $1$  means $x^{l}$ is a member of $ \qvar_{c}$, a set of those variables assigned with query requests, and $0$ means $x^{l}$ not in this set. It is defined formally below.
-
-\[\progF(c) =\left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
-~ \middle\vert ~
-x^l \in \lvar_{c},
-n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \not\in \qvar_{c} .
-\right\}\]
+% \[\progF(c) =\left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
+% ~ \middle\vert ~
+% x^l \in \lvar_{c},
+% n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \not\in \qvar_{c} .
+% \right\}\]
 %
 
 % \wq{To do: Add $\THESYSTEM$, a data flow analysis algorithm to scan the program and give a graph.}
@@ -717,7 +719,7 @@ the vertices of this graph is the set of $c$'s labels with an exit label $l_{ex}
 The expression assigned to the variable on the left hand of the assignment command is abstracted to an abstract value: (adopted from the expression abstraction method in paper \cite{sinn2017complexity}). The abstract value is expressed in the form of Difference constraint, denotated as $DC : \mathcal{VAR} \cup \constdom \to \mathcal{\mathcal{VAR} \times (\mathcal{VAR} \cup \constdom) } \times (\mathbb{Z} \cup \{\infty\})$.  $\constdom$ is called the Symbolic Constant defined as $\constdom \triangleq \mathbb{N} \cup \inpvar \cup \{\max{(\dbdom)}\} $, which consists of 
 natural numbers $\mathbb{N}$,
 the program's input variables $\inpvar$  
-and a constant value $\max(\dbdom)$ for estimating the upper bound of variables which are
+and a constant value $Q_m$ for estimating the upper bound of variables which are
 assigned by queries. 
 
 Give an instance of difference constraint used here,
@@ -745,7 +747,7 @@ We show the expression abstraction $\absexpr : \expr \to \mathcal{VAR} \to DC(\m
 % It consists of 
 % natural number $\mathbb{N}$,
 % the symbolic constants $\inpvar$ (i.e., the set of the program's input variables), 
-% and a constant value $\max(\dbdom)$ for estimating the upper bound of variables which are
+% and a constant value $Q_m$ for estimating the upper bound of variables which are
 % assigned by queries.
 % \\
 % The symbolic constant is enriched into $\constdom \triangleq \mathbb{N} \cup \inpvar \cup \{\max{(\dbdom)}\} $.
@@ -765,7 +767,7 @@ We show the expression abstraction $\absexpr : \expr \to \mathcal{VAR} \to DC(\m
 %     \absexpr(y - c, x)  = x' \leq y - c  & c \in \mathbb{N} \land y \in (VAR \cup \constdom) \\
 %     \absexpr(v, x)  = x' \leq v + 0  & v \in (VAR \cup \constdom) \\
 %     \absexpr(\aexpr, x) = x' \leq 0 + \infty   & \aexpr \text{ doesn't have any of the forms as above} \\
-%     \absexpr(\qexpr, x)  = x' \leq 0 + \max(\dbdom) & \qexpr \text{ is a query expression}  \\
+%     \absexpr(\qexpr, x)  = x' \leq 0 + Q_m & \qexpr \text{ is a query expression}  \\
 %     \absexpr(\bexpr, x) = x' \leq 0 + 1   & \bexpr \text{ is a boolean expression} \\
 %   \end{array}
 %   \]
@@ -776,7 +778,7 @@ We show the expression abstraction $\absexpr : \expr \to \mathcal{VAR} \to DC(\m
       \absexpr(v, x)  = x' \leq v + 0  & x \in \grdvar \land v \in (\grdvar \cup \constdom) \\
       \absexpr(y + v, x)  = x' \leq y + v & \\
       \grdvar = \grdvar \cup \{y\} & x \in \grdvar \land v \in \mathbb{Z} \land y \notin (\grdvar \cup \constdom)  \\
-      \absexpr(\qexpr, x)  = x' \leq 0 + \max(\dbdom) & x \in \grdvar \land \qexpr \text{ is a query expression}  \\
+      \absexpr(\qexpr, x)  = x' \leq 0 + Q_m & x \in \grdvar \land \qexpr \text{ is a query expression}  \\
       \absexpr(\bexpr, x) = x' \leq 0 + 1   & x \in \grdvar \land \bexpr \text{ is a boolean expression} \\
       \absexpr(\expr, x) = x' \leq \infty  &  x \in \grdvar \land \expr \text{ doesn't have any of the forms as above} \\
       \absexpr(\expr, x) = \top  &  x \notin \grdvar \\
@@ -864,7 +866,7 @@ computes the set of Abstract Final State for the command.
   \begin{array}{ll}
     \absfinal(\clabel{\assign{x}{\expr}}{}^l)  & = \{(l, \absexpr\eapp (\expr, x))\}  \\
      \absfinal(\clabel{\assign{x}{\query(\qexpr)}}{}^l)  & = \{
-      (l, x' \leq 0 + \max(\dbdom) )\}  \\
+      (l, x' \leq 0 + Q_m )\}  \\
      \absfinal(\clabel{\eskip}^{l})  
      & = \{(l, \top)\} \\
      \absfinal(\eif [b]^l \ethen c_1 \eelse c_2)  & = \absfinal(c_1) \cup \absfinal(c_2) \\
@@ -1043,8 +1045,8 @@ representing that value of $a$ is less than or equals to $0$ after
 location $0$ before executing command at line $1$. The difference constraint is an inequality relation between, the left-hand side of the inequality talks about the variable before the execution and the right-hand side ascribes those after the execution. 
 Look at the $a < a+x $ on the edge $5$ to $2$, which describes the execution of the command at line $5$, which is an assignment $a = a+x$. The $a$ on the left side of $a < a+x$ represents the value of $a$ after the assignment, while the right-hand side $a$ stores the value before the assignment. 
 Also, we have while loop, which is a circle $2 \to 4 \to 5 \to 2$ in Figure~\ref{fig:abscfg_tworound}(b). 
-Please also look at the edge from $3$ to $4$, which talks about the query! The $x < \max(\dbdom)$ describes the execution of a query request (the command at line 3), the query results stored in $x$ is bounded by $\max(\dbdom)$. 
-$\max(\dbdom)$ is the maximal value for query requesting result from the database $DB$. $top$ means there is no assignment executed, for example, we have the difference constraint $\top$ on the edge $2$ to $6$, means at line $2$, there is no assignment (it is a testing guard $j>0$.) 
+Please also look at the edge from $3$ to $4$, which talks about the query! The $x < Q_m$ describes the execution of a query request (the command at line 3), the query results stored in $x$ is bounded by $Q_m$. 
+$Q_m$ is the maximal value for query requesting result from the database $DB$. $top$ means there is no assignment executed, for example, we have the difference constraint $\top$ on the edge $2$ to $6$, means at line $2$, there is no assignment (it is a testing guard $j>0$.) 
 %
 The same way for the rest edges' constructions.
 \begin{figure} 
@@ -1161,324 +1163,6 @@ The same way for the rest edges' constructions.
   \end{figure}
 %
 
-\subsubsection{\highlight{Path Sensitive Reachability Bound Analysis} Weight Estimation}
-\label{sec:alg_weightgen}
-%
-% In order to estimate weight for every vertex in $\progV(c)$,
-%  we first show how to compute the reachability bound for every label in $c$
-%  % (i.e., every vertex in $\absV(c)$)
-%  (i.e., the $\absW(c)$), 
-%  then show how to compute the weight for every vertex in $\progV(c)$.
-%  \\
-%  Through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels,
-
-%  \wq{In order to estimate weight for every vertex in the static analysis dependency graph($\progV(c)$), we want to find out the upper bound on 
-%  the number of times the labeled command (uniquely associated with a vertex in $\progV(c)$) may be executed when running the program.
-%  This information can be obtained by computing the reachability bound for every vertice in the abstract control flow graph ($\absW(c)$), because
-%  the vertices in the two graph share the same unique label, the line number. We can easily show that the reachability bound on one vertex of the actract control flow graph is also the upper bound for the corresponding vertex in the static analysis dependency graph, both vertices share the same unique line number.}
-
-
-
-%  We perform the symbolic reachability bound anaysis on the abstract control flow graph, 
-%  through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels.
-%  we infer the invariant for every variable, and compute the transition closure for every abstract transition. By solving the closure
-%  with the invariants of variables involved in this closure for every transition, we compute
-%  the symbolic reachability bound of every commands corresponding to this transition.
-%  \\
-%  Specifically in four steps, Variable Modification Tracking, Local Bounds Computation,
-%  the symbolic reachability bound of every commands corresponding to this transition. Specifically, this analysis can be performed in four steps:
-%   Variable Modification Tracking, Local Bounds Computation,
-%  Invariant Inference and Closure Generation, and Reachability Bound Computation,
-{In order to estimate weight for every vertex in the static analysis dependency graph($\progV(c)$), we want to find out the upper bound on 
-the number of times the labeled command (uniquely associated with a vertex in $\progV(c)$) may be executed when running the program.
-This information can be obtained by computing the reachability bound for every vertex in the abstract control flow graph ($\absW(c)$), because
-the vertices in the two graph share the same unique label, the line number. We can easily show that the reachability bound on one vertex of the abstract control flow graph is also the upper bound for the corresponding vertex in the static analysis dependency graph, both vertices share the same unique line number.}
-
-
-We perform the symbolic reachability bound analysis on the abstract control flow graph, 
-through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels.
-We infer the invariant for every variable, and compute the transition closure for every abstract transition. By solving the closure
-with the invariants of variables involved in this closure for every transition, we compute
-the symbolic reachability bound of every commands corresponding to this transition. Specifically, this analysis can be performed in four steps:
- Variable Modification Tracking, Local Bounds Computation,
-Invariant Inference and Closure Generation, and Reachability Bound Computation,
-% 
-% We present the details of invariant, closure generation, and reachability bound computation as follows.
-with details as follows.
-%
-%
-\paragraph*{Variable Modification Tracking}
-Identify the abstract events where each variable is increased, decreased and reset:
-\\
-$\inc: \mathcal{VAR} \to \mathcal{P}(\absevent) $
-the set of the abstract events where the variable increase.
-\\
-$\inc(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x + v)\}$
-\\
-$\reset: \mathcal{VAR} \to \mathcal{P}(\absevent) $
-The set of the abstract events where the variable is reset.
-\\
-$\dec: \mathcal{VAR} \to \mathcal{P}(\absevent) $
-The set of abstract events where the variable decrease.
-% \\
-% $\dec(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x - v)\}$
-\\
-$Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{\absclr(\absevent) \times v\}$
-%
-\paragraph*{Local Bounds}
-Given a program $c$ with its abstract control flow graph 
-$\absG(c) = (\absV, \absE)$
-\\
-Local Bounds Computation:
-$\locbound: \absevent \to \mathcal{VAR} \cup \constdom$.
-%
-\[ 
-\begin{array}{ll}
-  \locbound(\absevent) \triangleq 1 
-  & \absevent \notin SCC(\absG(c))
-  \\
-  \locbound(\absevent) \triangleq (x, v) 
-  & \absevent \in SCC(\absG(c)) \land \absevent \in \dec(x) \land  \absevent = (\_, \_ , x' \leq x - v) \\
-  \locbound(\absevent) \triangleq (x, \max(\dec(x))) 
-  & \absevent \in SCC(\absG(c)) \land 
-  \absevent  \notin \bigcup_{x \in \mathcal{VAR}} \dec(x)
-  \land \absevent \notin SCC(\absG(c) \setminus \dec(x)) 
-\end{array}
-  \]
-  The first case is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
-  The second and third step is guaranteed by the \emph{Discussion on Soundness} in Section 4 of \cite{sinn2017complexity}.
-  Then soundness proof is in Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
-%
-\paragraph*{Invariant Inference and Closure Generation }
-Then, computing the bound invariants for variables and the transition closures for abstract events:
-\\ 
-$ \varinvar: \mathcal{VAR} \cup \constdom \to EXPR(\constdom)$
-\\
-$\absclr: \absevent \to EXPR(\constdom)$
-\\
-Then, the symbolic invariant for each variable 
-as well as the symbolic transition closure for each transition is calculated as follows:
-\[ 
-\begin{array}{lll}
-  \varinvar(x) & \triangleq c & c \in \constdom \\
-  \varinvar(x) & \triangleq Incr(v) + \max(\{\varinvar(a) + c | (t, a, c) \in \reset(x)\}) & c \notin \constdom
-\end{array}
-\]
-%
-\begin{defn}
-  \label{def:transition_closure_base}
-\[ 
-\begin{array}{lll}
-  \absclr(\absevent) 
-  & \triangleq x / v & \\ 
-  & \locbound(\absevent) = (x, v) \in \constdom \times \mathbb{N} & \\
-  \absclr(\absevent) 
-  & \triangleq (Incr(x) + 
-  \sum\limits_{(\absevent', y, v') \in \reset(x)}
-  \absclr(\absevent') \times \max(\varinvar(y) + v', 0) ) / v & \\
-  & \locbound(\absevent) = (x, v) \land x \notin \constdom & 
-\end{array}
-  \]
-\end{defn}
-%
-\paragraph*{Improved Variable Modification Tracking}
-Instead of just identifying the abstract events where each variable is reset,
-this improvement identifies the chain of the events where a given variable is reset by the 
-variables of the abstract events through the chain.
-\\
-$\resetchain: \mathcal{VAR} \to \mathcal{P}(\mathcal{P}(\absevent)) $
-The set of the chain of abstract events where the variable is reset through the chain.
-% \\
-% $Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{\absclr(\absevent) \times v\}$
-%
-\paragraph*{Improved Invariant Inference and Closure Generation}
-Then, computing the bound invariants for variables and the transition closures for abstract events:
-\\ 
-$ \varinvar: \mathcal{VAR} \cup \constdom \to EXPR(\constdom)$
-\\
-$\absclr: \absevent \to EXPR(\constdom)$
-\\
-Then, the symbolic invariant for each variable 
-as well as the symbolic transition closure for each transition is calculated as follows:
-\[ 
-\begin{array}{lll}
-  \varinvar(x) & \triangleq c & c \in \constdom \\
-  \varinvar(x) & \triangleq Incr(v) + \max(\{\varinvar(a) + c | (t, a, c) \in \reset(x)\}) & c \notin \constdom
-\end{array}
-\]
-%
-\begin{defn}
-  \label{def:transition_closure}
-\[ 
-\begin{array}{lll}
-  \absclr(\absevent) 
-  & \triangleq x / v & \\ 
-  & \locbound(\absevent) = (x, v) \in \constdom \times \mathbb{N} & \\
-  \absclr(\absevent) 
-  & \triangleq \Big(
-    \sum\limits_{y \in \{ y ~|~ 
-    ch \in \resetchain(x), (l_1, x, y, v, l_2) \in ch \} } Incr(x) & \\
-    & \quad + 
-  \sum\limits_{ch \in \resetchain(x)}
-  \big( \min\limits_{\absevent' \in ch}({\absclr(\absevent')}) \times 
-  \max(\varinvar(y) + \sum\limits_{(l_1, x, y, v, l_2) \in ch } v, 0)\big) \Big) / v & \\
-  & \locbound(\absevent) = (x, v) \land x \notin \constdom & 
-\end{array}
-  \]
-\end{defn}
-  %
-% \paragraph*{Adding the Reachability Bounds for Every Vertex in the Data-Control Flow Graph}
-% Updating the weight of every vertex in the $\progG(c) = (\progV, \progE, \progW, \progF)$ for program $c$ generated from phase 1. 
-% For every $x^l \in \progV$, find the abstract event $\absevent \in \absflow(c)$ of the form $(l, \_, \_)$, updating the $\progW(x^l) $ by the transition closure of this event.
-% \\
-$
-\progW(x^l) 
-  \triangleq \absclr(\absevent)
-$
-\paragraph*{Reachability Bound Computation}
-Through the transition closure computed above, 
-The weight of every label in 
-% Then we update 
-the program $c$'s abstract control flow graph,
-$\absG(c) =(\absV, \absE, \absW)$
-is 
-computed as the maximum over all the abstract events $\absevent \in \absE$ heading out from this vertex, formally as follows.
-% by annotating each vertex with a symbolic weight. 
-% This weight corresponds to 
-%reachability bounds of
-\\
-$\absW 
-\triangleq \left\{ (l, w) \in \mathbb{N} \times EXPR(\constdom) | w = \max\limits_{\absevent = (l, \_, \_)} \{ \absclr(\absevent)\} \right\}$.
-% \\
-\paragraph*{Example}
-We perform the symbolic reachability bound analysis on the abstract control flow graph as follows. 
-We would like to generate the closure of every edge, which is an equality relation between variables.  Solving this closure gives us the reachability bound for this edge. With all the bound for all the edges in the abstract control flow graph, we can calculate the weight for every vertex in this graph. For example, we show the closure generated for the edge 
-$(4, j < j - 1, 5)$, 
-$\absclr(4, 5) = \varinvar(j)$. The invariant for variable $j$, $\varinvar(j)$ used here is 
-$\varinvar(j) = k * \absclr(1, 2)$, which is generated by all the difference constraints involving $j$ in the graph. Notice the $k$ in $\varinvar(j)$ comes from considering both difference constraint $j<=k$ from edge (1,2) and $j<=j-1$ from (4,5), which intuitively reflects the while loop whose counter is set to $k$ at the beginning and decreases by 1 at each iteration. 
-With all the closures for all the edges of the abstract control flow graph, we can solve them to obtains the reachability bound of every edge. We decide the weight for every vertex in the abstract control flow graph by using the bound of the edges which head out from this vertex, by taking the max of the bound from these involving edges. For instance,   
-By the constraint on the edge $(4, j \leq j - 1, 5)$, we get bound $k$ for this edge.
-Then, we assign vertex $4$ by reachability bound $k$, as in Figure~\ref{fig:abscfg_tworound}(c). 
-Another interesting vertex is $2$, which has more than one edge heading out from it, $(2, \top, 3)$ and $(2,\top, 6)$. For the weight for vertex $2$, we choose the max between the bound $k$ from $(2,\top, 3)$ and $1$ from $(2,\top, 6)$.
-The same way for the rest weights' computation.
-We use $\absW(c)$ for the set of weights we just computed 
-for each label in the abstract control flow graph of $c$.
-% Still looking at the two-round example as in Figure~\ref{fig:adapfun_tworound}(b) where 
-% each label $l$ is added with a weight by $absW$.
-% This weight represents the  maximum reaching times of this location $l$, in the other word, 
-% the estimated maximum visiting times of the command labeled with $l$.
-% For example, looking at the vertex $1$,
-% by analysis steps, since it isn't in any SCC, it's estimated reachability bound is computed as $1$.
-% However, for the vertex $4$ which is involved in an SCC, the reachability bound is inferred in another way.
-% By the constraint on the edge $4, j \leq j - 1, 5$,
-% we first infer its local bound as variable $j$.
-% Then by solving the invariant for variable $j$,
-% we infer the value bound for $j$, which is $k$.
-% Then the reachability bound for this abstract transition, (i.e., edge $4, j \leq j - 1, 5$) 
-% is computed as $k$ as well through Definition~\ref{def:abs_trace}.
-% In this abstract control flow graph, every vertex is a label,
-% corresponding to a label command in the program.
-% Each directed 
-% edge represents an abstract transition 
-% between two control locations, 
-% i.e., the labels of two commands (we call the labels also control location and they refer to the same thing), 
-% where the second labeled command will be executed after execution of the command with first label.
-% For example, the edge $0, a \leq 0, 1$ on the top, represents,
-% from location $0$, the command 
-% $\clabel{\assign{a}{0}}^0$ is executed with next continuation location $1$,
-% where the 
-% command $\clabel{\assign{j}{k}}^1$ will be executed next.
-% The constraint $a \leq 0$ is generated by abstracting from the assignment command $\assign{a}{0}$,
-% representing that value of $a$ is less than or equals to $0$ after 
-% location $0$ before executing command at line $1$.
-%
-The same way for the rest weights' computation.
-\paragraph{Vertex Weight Computation}
-% The weight for each vertex in $\progV(c)$ is computed as follows,
-Then we compute the weight for each vertex in $\progV(c)$,
-% as a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
-as a set of pairs 
-% is the set of pairs 
-% The weight for each vertex in $\progV(c)$ is computed 
-mapping each $x^l \in \progV(c)$ to a symbolic expression over $\constdom$. Since symbolic expression 
-over $\constdom$ is a subset of arithmetic expressions,
-we use $\mathcal{A}_{in}$ denotes the arithmetic expression 
-over $\mathcal{N}$ and input variable and $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{in})$ 
-as follows,
-\highlight{
-% :
-% \\
- \[\progW(c) \triangleq
-   \left\{ (x^l, w) 
-  %  \in  \mathcal{LV} \times \expr
-\mid
-x^l \in \progV(c) \land (l, w) \in \absW(c)
-\right\}.
-\]
-}
-%
-% Since 
-We prove that this 
-% symbolic expression is the upper bound for $x^l$'s 
-symbolic expression for $x^l \in \progV(c)$ is a sound upper bound of 
-the weight for the same vertex $x^l$ in Program's execution-based dependency graph in Appendix~\ref{apdx:reachability_soundness}.
-The maximum visiting times of $x^l$ over all execution traces of $c$ in Appendix~\ref{apdx:reachability_soundness}. 
-%
-\begin{thm}[Soundness of the Reachability Bounds Estimation]
-  \label{thm:addweight_soundness}
-Given a program ${c}$ with its program-based dependency graph 
-$\progG = (\progV, \progE, \progW, \progF)$,
-$\traceG = (\traceV, \traceE, \traceW, \traceF)$, we have:
-%
-\[
-\forall (x^l, w_{t}) \in \traceW,
-(x^l, w_{p}) \in \progW, \vtrace \in \mathcal{T} \st
-% \lvar_c \st 
-%  \vcounter(\vtrace') l ~ \middle\vert~
-% \forall \vtrace \in \mathcal{T} \st 
-\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} 
-\land 
-\config{w_{p}, \trace} \earrow v
-\implies
-% \right\} 
-\leq 
-w_{t}(\trace) \leq v
-\]
-\end{thm}
-\paragraph*{Example}
-Now let's 
-% where we goes 
-go back to the Program-Based Dependency Graph which we aim to build for approximating the 
-Execution-Based Dependency graph for two-round example, as in
-Figure~\ref{fig:adapfun_tworound}(c).
-%
-%  looking at the two-round example,
-%  as in  where we
-% each vertex in 
-%  $l$ is added with a weight by $absW$.
-% This weight represents the  maximum reaching times of this location $l$, in the other word, 
-% the estimated maximum visiting times of the command labeled with $l$.
-% For example, looking at the vertex $1$,
-% by analysis steps, since it isn't in any SCC, it's estimated reachability bound is computed as $1$.
-% However, for the vertex $4$ which is involved in an SCC, the reachability bound is inferred in another way.
-% By the constraint on the edge $4, j \leq j - 1, 5$,
-% we first infer its local bound as variable $j$.
-% Then by solving the invariant for variable $j$,
-Every vertex from $\progV(c)$ in this graph corresponds to a labeled variable, for example $a^5$,
-and this label $5$ is also a vertex $5$ in the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b).
-%
-% we infer the value bound for $j$, which is $k$.
-% Then the reachability bound for this abstract transition, (i.e., edge $4, j \leq j - 1, 5$) 
-Then, it is straight forward, 
-that the reachability bound for the label $5$, 
-is also the maximum visiting times bound of the labeled variable $a^5$.
-% is computed as $k$ as well through Definition~\ref{def:abs_trace}.
-% In this abstract control flow graph, every vertex is a label,
-% corresponding to a label command in the program.
-So, we estimate the visiting time for  labeled variable $a^5$ in Program-Based Dependency Graph in Figrue~\ref{fig:abscfg_tworound}(c) as $k$ as well.
-%
-The same way for the rest weights' computation.
-%
 \subsubsection{\highlight{Edge Estimation with Interprocedure Call}}
 \label{sec:alg_edgegen}
 % \wq{
@@ -1741,16 +1425,16 @@ by generating the set of feasible data-flow between labeled variables as follows
       x^i \in \live(l,   \ewhile [b]^l \edo c_w) \land  y^j \in \lvar(c_w) \\
     %   ([y = \_]^j) \in \mathsf{blk}(c_w) \} \\
        \flowsto(x^i, y^j, c_1 ;c_2)  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\
-       {\highlight{\clabel{def}^l: fname(r^l, x_1, \ldots, x_n) := c}}& \emptyset\\
-       {\highlight{\clabel{\assign{x}{call(fname, e_1, \ldots, e_n)}}^l } } 
+       {\highlight{\clabel{\efun}^l: x(r^l, x_1, \ldots, x_n) := c}}& \emptyset\\
+       {\highlight{\clabel{\assign{x}{\ecall(f, e_1, \ldots, e_n)}}^l } } 
        &     
        \triangleq
        \flowsto(x^i, y^j, \clabel{\assign{x_i}{e_i}}^{(l,i)}) \lor
        \flowsto(x^i, y^j, \clabel{c^{+n}}^l) \lor 
-       \flowsto(x^i, y^j, \clabel{\assign{x}{r^{r+n}}}^{l}) 
+       \flowsto(x^i, y^j, \clabel{\assign{x}{r^{{l_r}+n}}}^{l}) 
        \\ &
        \land
-       fname(r^l, x_1, \ldots, x_n) := c\in \live(l, c)
+       f(r^{l_r}, x_1, \ldots, x_n) := c\in \live(l, c)
    \end{array}
    \]
    }
@@ -1758,15 +1442,17 @@ by generating the set of feasible data-flow between labeled variables as follows
 %
 We prove that this \emph{Feasible Data-Flow} relation is a sound approximation 
 of the \emph{Variable May-Dependency} relation over labeled variables for every program,
-in Appendix~\ref{apdx:flowsto_soundness}.
+in Appendix~\ref{apdx:flowsto_soundness_extend}.
 %
 \paragraph*{Edges Estimation}
 Then we define the estimated directed edges
 % for each vertex in $\progV(c)$,
-between vertices in $\progV(c)$,
-as a set of pairs 
+between vertices $({x}_1^{i}, w_1)$  
+and $({x}_2^{j}, w_2)$ 
+where ${x}_1^{i}, {x}_2^{j} \in \lvar(c)$,
+as a set of triples 
 % $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
-$\progE(c) \in \mathcal{P}(\in \mathcal{LV} \times \mathcal{LV})$
+$\progE(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{\lin} \times \mathcal{LV})$
 % is the set of pairs 
 % The weight for each vertex in $\progV(c)$ is computed 
 indicating a directed edge from the first vertex to the second one in each pair
@@ -1775,7 +1461,8 @@ as follows,
   \[
     \progE(c) \triangleq 
     \left\{ 
-    ({x}_1^{i}, {x}_2^{j}) \in \mathcal{LV} \times \mathcal{LV}
+    ({x}_1^{i}, w, {x}_2^{j}) \in \mathcal{LV} \times 
+    (\mathcal{A}_{\kw{in}}) \times \mathcal{LV}
     ~ \middle\vert ~
     \begin{array}{l}
       {x}_1^{i}, {x}_2^{j} \in \progV(c)
@@ -1851,6 +1538,384 @@ Also, from the Reaching definition analysis, we know $a^5 \in \live(6, two-round
 Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $(l^6, a^5)$.
 And same way for constructing the rest edges. Also, the edge $(x^3,j^5)$ in the same graph represents the control flow, caught by our $\flowsto$ relation.
 %
+
+\subsubsection{\highlight{Path Sensitive Reachability Bound Analysis} Weight Estimation}
+\label{sec:alg_weightgen}
+%
+% In order to estimate weight for every vertex in $\progV(c)$,
+%  we first show how to compute the reachability bound for every label in $c$
+%  % (i.e., every vertex in $\absV(c)$)
+%  (i.e., the $\absW(c)$), 
+%  then show how to compute the weight for every vertex in $\progV(c)$.
+%  \\
+%  Through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels,
+
+%  \wq{In order to estimate weight for every vertex in the static analysis dependency graph($\progV(c)$), we want to find out the upper bound on 
+%  the number of times the labeled command (uniquely associated with a vertex in $\progV(c)$) may be executed when running the program.
+%  This information can be obtained by computing the reachability bound for every vertice in the abstract control flow graph ($\absW(c)$), because
+%  the vertices in the two graph share the same unique label, the line number. We can easily show that the reachability bound on one vertex of the actract control flow graph is also the upper bound for the corresponding vertex in the static analysis dependency graph, both vertices share the same unique line number.}
+
+
+
+%  We perform the symbolic reachability bound anaysis on the abstract control flow graph, 
+%  through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels.
+%  we infer the invariant for every variable, and compute the transition closure for every abstract transition. By solving the closure
+%  with the invariants of variables involved in this closure for every transition, we compute
+%  the symbolic reachability bound of every commands corresponding to this transition.
+%  \\
+%  Specifically in four steps, Variable Modification Tracking, Local Bounds Computation,
+%  the symbolic reachability bound of every commands corresponding to this transition. Specifically, this analysis can be performed in four steps:
+%   Variable Modification Tracking, Local Bounds Computation,
+%  Invariant Inference and Closure Generation, and Reachability Bound Computation,
+{In order to estimate weight for every vertex in the static analysis dependency graph($\progV(c)$), we want to find out the upper bound on 
+the number of times the labeled command (uniquely associated with a vertex in $\progV(c)$) may be executed when running the program.
+This information can be obtained by computing the reachability bound for every vertex in the abstract control flow graph ($\absW(c)$), because
+the vertices in the two graph share the same unique label, the line number. We can easily show that the reachability bound on one vertex of the abstract control flow graph is also the upper bound for the corresponding vertex in the static analysis dependency graph, both vertices share the same unique line number.}
+
+
+We perform the symbolic reachability bound analysis on the abstract control flow graph, 
+through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels.
+We infer the invariant for every variable, and compute the transition closure for every abstract transition. By solving the closure
+with the invariants of variables involved in this closure for every transition, we compute
+the symbolic reachability bound of every commands corresponding to this transition. Specifically, this analysis can be performed in four steps:
+ Variable Modification Tracking, Local Bounds Computation,
+Invariant Inference and Closure Generation, and Reachability Bound Computation,
+% 
+% We present the details of invariant, closure generation, and reachability bound computation as follows.
+with details as follows.
+%
+%
+\paragraph*{Variable Modification Tracking}
+Identify the abstract events where each variable is increased, decreased and reset:
+\\
+$\inc: \mathcal{VAR} \to \mathcal{P}(\absevent) $
+the set of the abstract events where the variable increase.
+\\
+$\inc(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x + v)\}$
+\\
+$\reset: \mathcal{VAR} \to \mathcal{P}(\absevent) $
+The set of the abstract events where the variable is reset.
+\\
+$\dec: \mathcal{VAR} \to \mathcal{P}(\absevent) $
+The set of abstract events where the variable decrease.
+% \\
+% $\dec(x) = \{(\absevent, c) | \absevent = (l, l', x' \leq x - v)\}$
+\\
+$Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{\absclr(\absevent) \times v\}$
+%
+\paragraph*{Local Bounds}
+Given a program $c$ with its abstract control flow graph 
+$\absG(c) = (\absV, \absE)$
+\\
+Local Bounds Computation:
+$\locbound: \absevent \to \mathcal{VAR} \cup \constdom$.
+%
+\[ 
+\begin{array}{ll}
+  \locbound(\absevent) \triangleq 1 
+  & \absevent \notin SCC(\absG(c))
+  \\
+  \locbound(\absevent) \triangleq (x, v) 
+  & \absevent \in SCC(\absG(c)) \land \absevent \in \dec(x) \land  \absevent = (\_, \_ , x' \leq x - v) \\
+  \locbound(\absevent) \triangleq (x, \max(\dec(x))) 
+  & \absevent \in SCC(\absG(c)) \land 
+  \absevent  \notin \bigcup_{x \in \mathcal{VAR}} \dec(x)
+  \land \absevent \notin SCC(\absG(c) \setminus \dec(x)) 
+\end{array}
+  \]
+  The first case is straightforward. Since variable's visiting time outside of any while loop is at most 1, we do not need to analyze the visiting times of every node in the graph from phase 1.
+  The second and third step is guaranteed by the \emph{Discussion on Soundness} in Section 4 of \cite{sinn2017complexity}.
+  Then soundness proof is in Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
+%
+\paragraph*{Invariant Inference and Closure Generation }
+Then, computing the bound invariants for variables and the transition closures for abstract events:
+\\ 
+$ \varinvar: \mathcal{VAR} \cup \constdom \to EXPR(\constdom)$
+\\
+$\absclr: \absevent \to EXPR(\constdom)$
+\\
+$EXPR(\constdom)$ is symbolic expression 
+over $\constdom$, which is a subset of arithmetic expressions over $\mathbb{N}$ with input variables and $ $.
+We use $\mathcal{A}_{\lin}$ denotes the arithmetic expression 
+over the symbolic variables, (i.e., $\mathbb{N}$ with input variables and $ $).
+Then, the symbolic invariant for each variable 
+as well as the symbolic transition closure for each transition is calculated as follows:
+\[ 
+\begin{array}{lll}
+  \varinvar(x) & \triangleq c & c \in \constdom \\
+  \varinvar(x) & \triangleq Incr(v) + \max(\{\varinvar(a) + c | (t, a, c) \in \reset(x)\}) & c \notin \constdom
+\end{array}
+\]
+%
+\begin{defn}
+  \label{def:transition_closure_base}
+\[ 
+\begin{array}{lll}
+  \absclr(\absevent) 
+  & \triangleq x / v & \\ 
+  & \locbound(\absevent) = (x, v) \in \constdom \times \mathbb{N} & \\
+  \absclr(\absevent) 
+  & \triangleq (Incr(x) + 
+  \sum\limits_{(\absevent', y, v') \in \reset(x)}
+  \absclr(\absevent') \times \max(\varinvar(y) + v', 0) ) / v & \\
+  & \locbound(\absevent) = (x, v) \land x \notin \constdom & 
+\end{array}
+  \]
+\end{defn}
+%
+\paragraph*{Improved Variable Modification Tracking}
+Instead of just identifying the abstract events where each variable is reset,
+this improvement identifies the chain of the events where a given variable is reset by the 
+variables of the abstract events through the chain.
+\\
+$\resetchain: \mathcal{VAR} \to \mathcal{P}(\mathcal{P}(\absevent)) $
+The set of the chain of abstract events where the variable is reset through the chain.
+% \\
+% $Incr(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{\absclr(\absevent) \times v\}$
+%
+\paragraph*{Improved Invariant Inference and Closure Generation}
+Then, computing the bound invariants for variables and the transition closures for abstract events:
+\\ 
+$ \varinvar: \mathcal{VAR} \cup \constdom \to \mathcal{A}_{\lin}$
+\\
+$\absclr: \absevent \to \mathcal{A}_{\lin}$
+\\
+Then, the symbolic invariant for each variable 
+as well as the symbolic transition closure for each transition is calculated as follows:
+\[ 
+\begin{array}{lll}
+  \varinvar(x) & \triangleq c & c \in \constdom \\
+  \varinvar(x) & \triangleq Incr(v) + \max(\{\varinvar(a) + c | (t, a, c) \in \reset(x)\}) & c \notin \constdom
+\end{array}
+\]
+%
+\begin{defn}
+  \label{def:transition_closure}
+\[ 
+\begin{array}{lll}
+  \absclr(\absevent) 
+  & \triangleq x / v & \\ 
+  & \locbound(\absevent) = (x, v) \in \constdom \times \mathbb{N} & \\
+  \absclr(\absevent) 
+  & \triangleq \Big(
+    \sum\limits_{y \in \{ y ~|~ 
+    ch \in \resetchain(x), (l_1, x, y, v, l_2) \in ch \} } Incr(x) & \\
+    & \quad + 
+  \sum\limits_{ch \in \resetchain(x)}
+  \big( \min\limits_{\absevent' \in ch}({\absclr(\absevent')}) \times 
+  \max(\varinvar(y) + \sum\limits_{(l_1, x, y, v, l_2) \in ch } v, 0)\big) \Big) / v & \\
+  & \locbound(\absevent) = (x, v) \land x \notin \constdom & 
+\end{array}
+  \]
+\end{defn}
+  %
+% \paragraph*{Adding the Reachability Bounds for Every Vertex in the Data-Control Flow Graph}
+% Updating the weight of every vertex in the $\progG(c) = (\progV, \progE, \progW, \progF)$ for program $c$ generated from phase 1. 
+% For every $x^l \in \progV$, find the abstract event $\absevent \in \absflow(c)$ of the form $(l, \_, \_)$, updating the $\progW(x^l) $ by the transition closure of this event.
+% \\
+$
+\progW(x^l) 
+  \triangleq \absclr(\absevent)
+$
+\paragraph*{Reachability Bound Computation}
+Through the transition closure computed above, 
+The weight of every label in 
+% Then we update 
+the program $c$'s abstract control flow graph,
+$\absG(c) =(\absV, \absE, \absW)$
+is 
+computed as the maximum over all the abstract events $\absevent \in \absE$ heading out from this vertex, formally as follows.
+% by annotating each vertex with a symbolic weight. 
+% This weight corresponds to 
+%reachability bounds of
+\\
+$\absW 
+\triangleq \left\{ (l, w) \in \mathbb{N} \times \mathcal{A}_{\lin} | 
+w = \max\limits_{\absevent = (l, \_, \_)} \{ \absclr(\absevent)\} \right\}$.
+% \\
+\paragraph*{Example}
+We perform the symbolic reachability bound analysis on the abstract control flow graph as follows. 
+We would like to generate the closure of every edge, which is an equality relation between variables.  Solving this closure gives us the reachability bound for this edge. With all the bound for all the edges in the abstract control flow graph, we can calculate the weight for every vertex in this graph. For example, we show the closure generated for the edge 
+$(4, j < j - 1, 5)$, 
+$\absclr(4, 5) = \varinvar(j)$. The invariant for variable $j$, $\varinvar(j)$ used here is 
+$\varinvar(j) = k * \absclr(1, 2)$, which is generated by all the difference constraints involving $j$ in the graph. Notice the $k$ in $\varinvar(j)$ comes from considering both difference constraint $j<=k$ from edge (1,2) and $j<=j-1$ from (4,5), which intuitively reflects the while loop whose counter is set to $k$ at the beginning and decreases by 1 at each iteration. 
+With all the closures for all the edges of the abstract control flow graph, we can solve them to obtains the reachability bound of every edge. We decide the weight for every vertex in the abstract control flow graph by using the bound of the edges which head out from this vertex, by taking the max of the bound from these involving edges. For instance,   
+By the constraint on the edge $(4, j \leq j - 1, 5)$, we get bound $k$ for this edge.
+Then, we assign vertex $4$ by reachability bound $k$, as in Figure~\ref{fig:abscfg_tworound}(c). 
+Another interesting vertex is $2$, which has more than one edge heading out from it, $(2, \top, 3)$ and $(2,\top, 6)$. For the weight for vertex $2$, we choose the max between the bound $k$ from $(2,\top, 3)$ and $1$ from $(2,\top, 6)$.
+The same way for the rest weights' computation.
+We use $\absW(c)$ for the set of weights we just computed 
+for each label in the abstract control flow graph of $c$.
+% Still looking at the two-round example as in Figure~\ref{fig:adapfun_tworound}(b) where 
+% each label $l$ is added with a weight by $absW$.
+% This weight represents the  maximum reaching times of this location $l$, in the other word, 
+% the estimated maximum visiting times of the command labeled with $l$.
+% For example, looking at the vertex $1$,
+% by analysis steps, since it isn't in any SCC, it's estimated reachability bound is computed as $1$.
+% However, for the vertex $4$ which is involved in an SCC, the reachability bound is inferred in another way.
+% By the constraint on the edge $4, j \leq j - 1, 5$,
+% we first infer its local bound as variable $j$.
+% Then by solving the invariant for variable $j$,
+% we infer the value bound for $j$, which is $k$.
+% Then the reachability bound for this abstract transition, (i.e., edge $4, j \leq j - 1, 5$) 
+% is computed as $k$ as well through Definition~\ref{def:abs_trace}.
+% In this abstract control flow graph, every vertex is a label,
+% corresponding to a label command in the program.
+% Each directed 
+% edge represents an abstract transition 
+% between two control locations, 
+% i.e., the labels of two commands (we call the labels also control location and they refer to the same thing), 
+% where the second labeled command will be executed after execution of the command with first label.
+% For example, the edge $0, a \leq 0, 1$ on the top, represents,
+% from location $0$, the command 
+% $\clabel{\assign{a}{0}}^0$ is executed with next continuation location $1$,
+% where the 
+% command $\clabel{\assign{j}{k}}^1$ will be executed next.
+% The constraint $a \leq 0$ is generated by abstracting from the assignment command $\assign{a}{0}$,
+% representing that value of $a$ is less than or equals to $0$ after 
+% location $0$ before executing command at line $1$.
+%
+The same way for the rest weights' computation.
+\paragraph{Vertex Weight Computation}
+% The weight for each vertex in $\progV(c)$ is computed as follows,
+Then we compute the weight for each vertex in $\progV(c)$,
+% as a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
+as a set of pairs 
+% is the set of pairs 
+% The weight for each vertex in $\progV(c)$ is computed 
+mapping each vertex $x^l \in \lvar(c)$ to a symbolic expression over $\constdom$.
+$\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{\lin})$ is formally computed
+as follows,
+\highlight{
+% :
+% \\
+ \[\progV(c) \triangleq
+   \left\{ (x^l, w) 
+\mid
+x^l \in \progV(c) \land (l, w) \in \absW(c)
+\right\}.
+\]
+}
+%
+% Since 
+We prove that this 
+% symbolic expression is the upper bound for $x^l$'s 
+symbolic expression for $x^l \in \progV(c)$ is a sound upper bound of 
+the weight for the same vertex $x^l$ in Program's execution-based dependency graph in Appendix~\ref{apdx:reachability_soundness}.
+The maximum visiting times of $x^l$ over all execution traces of $c$ in Appendix~\ref{apdx:reachability_soundness}. 
+%
+\begin{thm}[Soundness of the Vertex Weight Estimation]
+  \label{thm:vertexweight_soundness}
+Given a program ${c}$ with its program-based dependency graph 
+$\progG = (\progV, \progE)$,
+$\traceG = (\traceV, \traceE)$, we have:
+%
+\[
+\forall (x^l, w_{t}) \in \traceV,
+(x^l, w_{p}) \in \progV, \vtrace \in \mathcal{T} \st
+\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} 
+\land 
+\config{w_{p}, \trace} \earrow v
+\implies
+% \right\} 
+\leq 
+w_{t}(\trace) \leq v
+\]
+\end{thm}
+\paragraph*{Example}
+Now let's 
+% where we goes 
+go back to the Program-Based Dependency Graph which we aim to build for approximating the 
+Execution-Based Dependency graph for two-round example, as in
+Figure~\ref{fig:adapfun_tworound}(c).
+%
+Every vertex from $\progV(c)$ in this graph corresponds to a labeled variable, for example $a^5$,
+and this label $5$ is also a vertex $5$ in the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b).
+%
+% we infer the value bound for $j$, which is $k$.
+% Then the reachability bound for this abstract transition, (i.e., edge $4, j \leq j - 1, 5$) 
+Then, it is straight forward, 
+that the reachability bound for the label $5$, 
+is also the maximum visiting times bound of the labeled variable $a^5$.
+% is computed as $k$ as well through Definition~\ref{def:abs_trace}.
+% In this abstract control flow graph, every vertex is a label,
+% corresponding to a label command in the program.
+So, we estimate the visiting time for  labeled variable $a^5$ in Program-Based Dependency Graph in Figrue~\ref{fig:abscfg_tworound}(c) as $k$ as well.
+%
+The same way for the rest weights' computation.
+%
+\paragraph{Edges Weight Computation}
+% The weight for each vertex in $\progV(c)$ is computed as follows,
+Then we compute the weight for each vertex in $\progV(c)$,
+% % as a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
+% as a set of pairs 
+% % is the set of pairs 
+% % The weight for each vertex in $\progV(c)$ is computed 
+% mapping each $x^l \in \progV(c)$ to a symbolic expression over $\constdom$. Since symbolic expression 
+% over $\constdom$ is a subset of arithmetic expressions,
+% we use $\mathcal{A}_{in}$ denotes the arithmetic expression 
+% over $\mathcal{N}$ and input variable and $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{in})$ 
+% as follows,
+\highlight{
+% :
+% \\
+ \[
+   \progE(c) \triangleq
+   \left\{ (x^i, w, y^j) 
+\mid
+x^i, y^j\in \lvar(c) \land 
+w = \max\limits_{\absevent = (i, \_, j)} \{ \absclr(\absevent)\} 
+\right\}.
+\]
+}
+%
+% Since 
+We prove that this 
+% symbolic expression is the upper bound for $x^l$'s 
+symbolic expression $w$ for edge $(x^i, w, y^j) \in \progE(c)$
+ is a sound upper bound of 
+the weight for the same edge $(x^i, w', y^j)$ in Program's execution-based dependency graph in Appendix~\ref{apdx:edgeweight_soundness}.
+% The maximum visiting times of $x^l$ over all execution traces of $c$ in Appendix~\ref{apdx:reachability_soundness}. 
+%
+\begin{thm}[Soundness of the Edge Weight Estimation]
+  \label{thm:edgeweight_soundness}
+Given a program ${c}$ with its program-based dependency graph 
+$\progG = (\progV, \progE, \progW, \progF)$,
+$\traceG = (\traceV, \traceE, \traceW, \traceF)$, we have:
+%
+\[
+\forall (x^l, w_{t}) \in \traceW,
+(x^l, w_{p}) \in \progW, \vtrace \in \mathcal{T} \st
+% \lvar_c \st 
+\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\vtrace'} 
+\land 
+\config{w_{p}, \trace} \earrow v
+\implies
+% \right\} 
+\leq 
+w_{t}(\trace) \leq v
+\]
+\end{thm}
+\paragraph*{Example}
+Now let's 
+% where we goes 
+go back to the Program-Based Dependency Graph which we aim to build for approximating the 
+Execution-Based Dependency graph for two-round example, as in
+Figure~\ref{fig:adapfun_tworound}(c).
+%
+%  looking at the two-round example,
+%  as in  where we
+% each vertex in 
+%  $l$ is added with a weight by $absW$.
+% This weight represents the  maximum reaching times of this location $l$, in the other word, 
+% the estimated maximum visiting times of the command labeled with $l$.
+% For example, looking at the vertex $1$,
+% by analysis steps, since it isn't in any SCC, it's estimated reachability bound is computed as $1$.
+% However, for the vertex $4$ which is involved in an SCC, the reachability bound is inferred in another way.
+% By the constraint on the edge $4, j \leq j - 1, 5$,
+% we first infer its local bound as variable $j$.
+% Then by solving the invariant for variable $j$,
+%
    \subsection{Program-Based Data Dependency Graph Generation}
   %  Weighted Data Dependency Graph Generation}
    \label{sec:alg_graphgen}
@@ -1917,15 +1982,13 @@ Finally we build the estimated data dependency graph based on the above program 
 \\
 \highlight{
   \[
-    \progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))
+    % \progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))
+    \progG(c) = (\progV(c), \progE(c))
     \]
 }
-with $\progV(c), \progE(c), \progW(c)$ and $ \progF(c)$ as computed in each steps above.
-% and $\progF(c) =\left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
-% ~ \middle\vert ~
-% x^l \in \lvar_{c},
-% n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \in \qvar_{c} .
-% \right\} $,
+with $\progV(c)$ and  $\progE(c)$
+as computed in each steps above.
+%
 This program-based graph program-based graph has a similar topology structure as 
 % the one
 % of 
@@ -1965,48 +2028,52 @@ is generated as follows,
 % $\progG({c}) = (\vertxs, \edges, \weights, \qflag)$ is defined as:
 {\footnotesize
 \[
-\begin{array}{rlcl}
-\text{Vertices} &
-\progV & := & \left\{ 
-x^l \in \mathcal{LV} 
-~ \middle\vert ~
-x^l \in \lvar_{c}
-\right\}
-\\
-\text{Directed Edges} &
-\progE & := & 
-\left\{ 
-({x}_1^{i}, {x}_2^{j}) \in \mathcal{LV} \times \mathcal{LV}
-~ \middle\vert ~
-\begin{array}{l}
-  {x}_1^{i}, {x}_2^{j} \in \vertxs
-\land
-  % \\
-  \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
-  n \geq 0 \land
-  \\
-  \flowsto(x^i,  z_1^{r_1}, c) 
-  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
-\end{array}
-\right\}
-\\
-\text{Weights} &
-\progW & := &
+\begin{array}{lcl}
+% \text{Vertices} &
+% \progV & := & \left\{ 
+% x^l \in \mathcal{LV} 
+% ~ \middle\vert ~
+% x^l \in \lvar_{c}
+% \right\}
+% \\
+% \text{Directed Edges} &
+% \progE & := & 
+% \left\{ 
+% ({x}_1^{i}, {x}_2^{j}) \in \mathcal{LV} \times \mathcal{LV}
+% ~ \middle\vert ~
+% \begin{array}{l}
+%   {x}_1^{i}, {x}_2^{j} \in \vertxs
+% \land
+%   % \\
+%   \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
+%   n \geq 0 \land
+%   \\
+%   \flowsto(x^i,  z_1^{r_1}, c) 
+%   \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
+% \end{array}
+% \right\}
+% \\
+\progV(c) & \triangleq &
 % \bigcup
 % \begin{array}{l}
 \left\{ (x^l, w) \in  \mathcal{LV} \times \mathcal{A}_{in}
 \mid
 x^l \in \lvar_{{c}} \land (l, w) \in \absW(c)
 \right\}
-% \end{array} 
 \\
-\text{Query Annotation} &
-\progF & := & 
-\left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
-~ \middle\vert ~
-x^l \in \lvar_{c},
-n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \in \qvar_{c} .
-\right\}
+\progE(c) & \triangleq &
+   \left\{ (x^i, w, y^j) 
+\mid
+x^i, y^j \in \lvar(c) \land \flowsto(x^i, y^j, c) \land
+w = \max\limits_{\absevent = (i, \_, j)} \{ \absclr(\absevent)\} 
+\right\}.
+% \text{Query Annotation} &
+% \progF & := & 
+% \left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
+% ~ \middle\vert ~
+% x^l \in \lvar_{c},
+% n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \in \qvar_{c} .
+% \right\}
 \end{array}
 \] }
 \end{defn}
@@ -2140,7 +2207,7 @@ Different from the finite walk on a program $c$'s execution based graph,
 % $k \in \walks(\progG(c))$ 
 the finite walk in $\progG(c)$ doesn't rely on initial trace.
 The occurrence times of every $v_i $ in $k$'s vertex sequence is bound by 
-an arithmetic expression $w_i$ where $(v_i, w_i) \in \progW(c)$, is $v_i$'s estimated weight. 
+an arithmetic expression $w_i$ where $(v_i, w_i) \in \progV(c)$, is $v_i$'s estimated weight. 
 % Then $\qlen(k) \in \mathcal{A}_{in}$ as well. 
 % The full definition for $\walks(\progG(c))$ and $\qlen$ over $\walks(\progG(c))$ is in Apdix.
 %
@@ -2159,7 +2226,8 @@ Formally defined as follows.
 %   %
 %   The length of $fw$ is the number of vertices in its vertex sequence, i.e., $\len(k) = n$.
   Given a program $c$'s program-based dependency graph 
-  $\progG({c}) = (\progV(c), \progE(c), \progW(c), \progF(c))$, 
+  $\progG({c}) = (\progV(c), \progE(c))$
+  % , \progW(c), \progF(c))$, 
   a \emph{finite walk} $k$ in $\traceG({c})$ is
   % function $k: \mathcal{T} \to $ 
   % sequence of edges.
@@ -2169,13 +2237,18 @@ Formally defined as follows.
   for which there is a sequence of vertices 
   $(v_1, \ldots, v_{n})$ such that:
   \begin{itemize}
-      \item $e_i = (v_{i},v_{i + 1}) \in \progE(c)$ for every $1 \leq i < n$.
-      \item every vertex $v_i \in \progV(c)$,
-      and $(v_i, w_i) \in \progW(c)$, 
+      \item 
+      \highlight{
+        $e_i = (v_{i},w_i, v_{i + 1}) \in \progE(c)$ for every $1 \leq i < n$,
+        and occurrence times of $e_i$ smaller than $w_i$.
+        }
+      \item 
+      \highlight{
+        every vertex $(v_i, w_i) \in \progV(c)$,
        $v_i$ appears in $(v_1, \ldots, v_{n})$ at most 
     %   \wq{$\traceW({c})(\trace)$} 
     $w_i$
-      times.  
+      times. } 
   \end{itemize}
   %
   The length of $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = a$.
@@ -2185,7 +2258,7 @@ Different from the walks on a program $c$'s execution based graph,
  $k \in \walks(\traceG(c))$, 
 $k \in \walks(\progG(c))$ doesn't rely on initial trace.
 The occurrence times of every $v_i $ in $k$'s vertex sequence is bound by 
-an arithmetic expression $w_i$ where $(v_i, w_i) \in \progW(c)$, is $v_i$'s estimated weight. 
+an arithmetic expression $w_i$ where $(v_i, w_i) \in \progV(c)$, is $v_i$'s estimated weight. 
 % Notice here, for a walk in $\progG(c)$, the occurrence times of every vertex in vertices sequence, 
 %  and its 
  The length of a finite walk $k \in \walks(\progG(c))$ is an arithmetic expression
@@ -2228,16 +2301,10 @@ an arithmetic expression $w_i$ where $(v_i, w_i) \in \progW(c)$, is $v_i$'s esti
   is the number of vertices which correspond to query variables in the vertices sequence of the this walk $k$
   $(v_1, \ldots, v_{n})$ as follows, 
   \[
-    \qlen(k) = |\big( v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 1 \big)|.
+    \qlen(k) = |\big( v \mid v \in (v_1, \ldots, v_{n}) \land v \in \qvar(c) \big)|.
   \]
-  % , where $\trace_0 \in \mathcal{T}$ is the initial trace and $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 1 \big)$ is a subsequence of $(v_1, \ldots, v_{n})$.
-  %  $k$'s vertex sequence.
-  % \mg{If I understand where you want to go, why don't you just use the cardinality of the set above, rather than taking the length of a subsequence?}
-  % \jl{because the same vertex could have multiple occurrence in the sequence, and we will count all the occurrence instead of just once.
-  % So the cardinality of set doesn't work.}
   \end{defn}
 % is computed as the maximum query length over all finite walks in $\walks(\progG({c}))$, and computed 
-
 %
 % It is formally defined in \ref{def:prog_adapt}.
 % defined formally as follows.
