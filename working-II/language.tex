@@ -8,9 +8,6 @@
 & \oplus_a & ::= & + ~|~ - ~|~ \times 
 %
 ~|~ \div ~|~ \max ~|~ \min\\  
-% \mbox{Unary Operators} 
-% & \oplus_a & ::= & + ~|~ - ~|~ \times 
-% %
 % ~|~ \div \\  
 \mbox{Boolean Operators} 
 & \oplus_b & ::= & \lor ~|~ \land
@@ -20,15 +17,9 @@
 & \sim & ::= & < ~|~ \leq ~|~ == 
 \\  
 %
-\mbox{Label} 
-& l & \in & \mathbb{N} \cup \{in, ex\} 
-\\ 
-%
 \mbox{Arithmetic Expression} 
 & \aexpr & ::= & 
 n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr  
-\\
-&  &  & 
  ~|~ \elog \aexpr  ~|~ \esign \aexpr
 \\
 %
@@ -40,11 +31,11 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 ~|~ \aexpr \sim \aexpr 
 \\
 %
-\mbox{Expression} & \expr & ::= & v ~|~ \aexpr \sep \bexpr ~|~ [\expr, \dots, \expr]
+\mbox{Expression} & \expr & ::= & v ~|~ \aexpr ~|~ \bexpr ~|~ [\expr, \dots, \expr]
 \\  
 %
 \mbox{Value} 
-& v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
+& v & ::= & { n ~|~ \etrue ~|~ \efalse ~|~ [] ~|~ [v, \dots, v]}  
 \\
 %
 \mbox{Query Expression} 
@@ -55,30 +46,27 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 \mbox{Query Value} & \qval & ::= 
 & {n ~|~ \chi[n] ~|~ \qval \oplus_a  \qval ~|~ n \oplus_a  \chi[n]
     ~|~ \chi[n] \oplus_a  n}
-    \\
-% &&& \text{\mg{I don’t think this is what we want. Isn’t $\chi[n+1]$ a query value?}}\\
-% &&& \text{\mg{What about $\chi[i] + \chi[i] + \chi[i]$? They are not in the grammar}}
-% \\
-% &&& \text{\jl{ $\chi[i] + \chi[i] + \chi[i]$ and $\chi[n+1]$ are both expressions, they will be evaluated to a value 
-% }}
+\\
 % \\%
+\mbox{Label} 
+& l & ::= & (n \in \mathbb{N} \cup \{\lin, \lex\}) ~|~ (l, n)
+\\ 
+%
 \mbox{Labeled Command} 
 & {c} & ::= &  
 \clabel{\assign{x}{\expr}}^l 
 ~|~ \clabel{\assign{x}{\query(\qexpr)}}^l
-~|~ \ewhile \clabel{\bexpr}^{l} \edo {c}
-\\
-&&&
-~|~ {c};{c}  
-~|~ \eif(\clabel{\bexpr}^{l} , {c}, {c}) 
 ~|~  \clabel{\eskip}^l
+~|~ \ewhile \clabel{\bexpr}^{l} \edo {c}
+~|~ \eif(\clabel{\bexpr}^{l} , {c}, {c}) 
 \\ 
 &&&
 \highlight
 {
-~|~ \clabel{def}^l: fname(r^l, x_1, \ldots, x_n) := c
-~|~ \clabel{\assign{x}{call(fname, e_1, \ldots, e_n)}}^l
+~|~ \clabel{\efun}^l: x(r^l, x_1, \ldots, x_n) := c
+~|~ \clabel{\assign{x}{\ecall(x, e_1, \ldots, e_n)}}^l
 }
+~|~ {c};{c}  
 \\ 
 % \\
 \mbox{Event} 
@@ -147,7 +135,7 @@ We use following notations to represent the set of corresponding terms:
 {\mathcal{T}} & : & \mbox{Set of Traces}
 \\
 %
-\mathcal{T}_0 & : & \mbox{Set of Initial Traces, where all the input variables of a program are initialized.
+\mathcal{T}_0(c) & : & \mbox{Set of Initial Traces, where all the input variables of the program $c$ are initialized.
 }
 \\
 %
@@ -551,11 +539,11 @@ c; \ewhile [b]^{l} \edo c),
 {
  c' = c^{+n}
  \and 
- \event = (fname, l, (r^l, x_1, \ldots, x_n) := c, \bullet)
+ \event = (x, l, (r^{l_r}, x_1, \ldots, x_n) := c, \bullet)
 }
 {
 \config{{
-  [def]^l: fname(r^l, x_1, \ldots, x_n) := c, \trace}}
+  [\efun]^l: x(r^{l_r}, x_1, \ldots, x_n) := c, \trace}}
 \xrightarrow{} 
 \config{{\clabel{\eskip}^l, \trace \traceadd \event}}
 }
@@ -567,11 +555,11 @@ c; \ewhile [b]^{l} \edo c),
 %
 \inferrule
 {
-\env(\trace, fname) = (r^{l_r}, x_1, \ldots, x_n) := c
+\env(\trace, f) = (r^{l_r}, x_1, \ldots, x_n) := c
 \and 
 \config{{
-  \clabel{\assign{x_1}{e_1, \ldots, e_n)}}^{(l, 1)}; \ldots;
-  \clabel{\assign{x_n}{e_n)}}^{(l, n)}, \trace}} 
+  \clabel{\assign{x_1}{e_1}}^{(l, 1)}; \ldots;
+  \clabel{\assign{x_n}{e_n}}^{(l, n)}, \trace}} 
   \xrightarrow{}^* 
   \config{{\clabel{\eskip}^{(l, n)}, \trace_1}}
   \\ 
@@ -582,7 +570,7 @@ c; \ewhile [b]^{l} \edo c),
 }
 {
 \config{{
-  \clabel{\assign{x}{call(fname, e_1, \ldots, e_n)}}^l, \trace}}
+  \clabel{\assign{x}{\ecall(f, e_1, \ldots, e_n)}}^l, \trace}}
 \xrightarrow{} 
 \config{{\clabel{\eskip}^l, \trace'}}
 }

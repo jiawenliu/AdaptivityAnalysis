@@ -661,8 +661,8 @@ $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is def
 %
 \highlight{\small
 \[
-\begin{array}{rlcl}
-  \text{Vertices} &
+\begin{array}{lcl}
+  % \text{Vertices} &
   \traceV({c}) & := & 
   \{ 
   (x^l, w) 
@@ -671,7 +671,7 @@ $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is def
   w : \mathcal{T} \to \mathbb{N}
   \land
   x^l \in \lvar(c) 
-  \\ & & &
+  \\ & &
   \land
   % n = \max \left\{ 
     % ~ \middle\vert~
@@ -681,7 +681,7 @@ $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is def
 %   \right
 \}
   \\
-  \text{Edges} &
+  % \text{Edges} &
   \traceE({c}) & := & 
   \{ 
   (x^i, w, y^j) 
@@ -692,17 +692,17 @@ $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is def
   \land 
   \exists \trace \in \mathcal{T}_0(c), 
   \trace_1, \trace_2 \in \mathcal{T} \st \dep(x^i, y^j,\trace_1, \trace_2, \trace_0, c)
-  \\ & & &
-  \forall \trace_0 \in \mathcal{T}_0(c) \st
+  \\ & &
+  \land \forall \trace_0 \in \mathcal{T}_0(c) \st
   w (\trace_0) = \max\{|\sdiff(\trace_1, \trace_2, y)|
   \forall \trace_1, \trace_2 \in \mathcal{T} \st \dep(x^i, y^j,\trace_1, \trace_2, \trace_0, c) \}
-  % \text{\mg{$\land$ instead of ,}}
   \}
-\end{array}.
+\end{array}
 \]
 }
 \end{defn}
 There are two components of the execution-based dependency graph. 
+\\
 \highlight{
 The vertices $\traceV(c)$  is a set of pairs, $(x^l, w) \in \mathcal{LV} \times (\mathcal{T} \to \mathbb{N})$,
 with a labeled variable as first component and
@@ -717,8 +717,9 @@ This natural number is the evaluation times of the labeled command corresponding
 computed by the counter operator $w(\trace) = \vcounter(\vtrace', l)$.
 We can see in the execution-based dependency graph of $\kw{twoRounds}$ in
  Figure~3(b) in main paper, the weight of vertices in the while loop is  $\env(\trace) k$, which depends on the value of the user input $k$ specified in the starting trace $\tau$.
-The directed edges $\traceE({c})$ is also a set of pairs with two labeled variables $ (x^i, y^j) \in \mathcal{LV} \times \mathcal{LV}$, from $x^i$ pointing to $y^j$ in the graph.
-% with The directed edges $E$ 
+\\
+The directed edges $\traceE({c})$ is a set of triples $ (x^i, w, y^j) \in \mathcal{LV} \times (\mathcal{T}_0 \to \mathbb{N}) \times \mathcal{LV}$,
+ with two labeled variables (from $x^i$ pointing to $y^j$) and a weight $w$ for this edge.
 % comes 
 The edges are constructed directly from our variable may-dependency relation. 
 For any two vertices $x^{i}$ and $y^{j}$ in $\traceV(c)$, if there exists two witness traces $\trace_1, \trace_2$ and an initial trace $\trace_0 \in \mathcal{T}_0$ such that,
@@ -791,8 +792,8 @@ the vertices in $k$'s vertices sequence, we just count the number of vertices wh
 \label{def:qlen}
 \\
 Given 
-% labelled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
-the execution-based dependency graph $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ of a program $c$,
+the execution-based dependency graph 
+$\traceG({c}) = (\traceV({c}), \traceE({c}))$ of a program $c$,
  and a \emph{finite walk} 
 %  $k$ in $\traceG(c)(\trace)$
  $k \in \walks(\traceG(c))$. 
@@ -802,7 +803,7 @@ The query length of $k$ is a function $\qlen(k): \mathcal{T} \to \mathbb{N}$, su
 the number of vertices which correspond to query variables in the vertices sequence of the walk $k(\trace_0)$
 $(v_1, \ldots, v_{n})$ as follows, 
 \[
-  \qlen(k)(\trace_0) = |\big( v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 1 \big)|.
+  \qlen(k)(\trace_0) = |\big( v \mid v \in (v_1, \ldots, v_{n}) \land v \in \qvar(c) \big)|.
 \]
 % , where $\trace_0 \in \mathcal{T}$ is the initial trace and $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 1 \big)$ is a subsequence of $(v_1, \ldots, v_{n})$.
 %  $k$'s vertex sequence.
@@ -812,4 +813,4 @@ $(v_1, \ldots, v_{n})$ as follows,
 \end{defn}
 %
 \subsection{Example From Limitation}
-% \input{multipleRoundsSingleAccurate}
+\input{multipleRoundsSingleAccurate}
