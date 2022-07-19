@@ -13,9 +13,7 @@ class DifferenceConstraint:
     var = ""
     dc_var = ""
     dc_const = ""
-    # dec_dc = ()
-    # reset_dc = ()
-    # inc_dc = ()
+
     dc_type = 1
     def __init__(self, var="x", dc_var = None, dc_const = None, dc_type = 1) -> None:
         self.var = var 

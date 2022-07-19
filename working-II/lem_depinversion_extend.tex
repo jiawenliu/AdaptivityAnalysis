@@ -16,13 +16,18 @@ Proof Summary, by unfolding the Difference Sequence Definition~\ref{def:diffseq}
 %
 let $\trace_1, \trace_2 \in \mathcal{T}, x^i\in \lvar(c)$ 
 be the traces and variable satisfying 
-$\sdiff(\trace_1, \trace_2, x^i) \neq \emptyset \land |\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)|$.
+$(\diamond) ~ \sdiff(\trace_1, \trace_2, x^i) \neq \emptyset 
+\land 
+(\star)~|\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)|$.
 \\
-By Difference Sequence in Definition~\ref{def:diffseq}, we know $|\seq(\trace_1, x^i)| \neq 0$ or $|\seq(\trace_1, x^i)| \neq 0$.
+% By Difference Sequence in Definition~\ref{def:diffseq}, we know $|\seq(\trace_1, x^i)| \neq 0$ or $|\seq(\trace_1, x^i)| \neq 0$.
+% \\
+% Then, by $|\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)|$ we know $|\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)| \geq 1$.
+% \\
+Then by Definition~\ref{def:diffseq} and the assumptions $(\diamond)$ and $(\star)$,
+we know $|\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)| \geq 1$.
 \\
-Then, by $|\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)|$ we know $|\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)| \geq 1$.
-\\
-By Value Sequence in Definition~\ref{def:vseq}, we know there is at least an event $(x, i, \_, \_) \in \trace_1$ and 
+By $\seq$ in Definition~\ref{def:vseq}, we know there is at least an event $(x, i, \_, \_) \in \trace_1$ and 
 $(x, i, \_, \_) \in \trace_2$
 in order to have $|\seq(\trace_1, x^i)| = |\seq(\trace_2, x^i)| \geq 1$.
 \\
@@ -31,7 +36,7 @@ by assuming
 \\
 $(hc)~ \forall \event_1 = (x, i, \_, \_) \in \trace_1, \event_2 = (x, i, \_, \_) \in \trace_2 \st \neg \diff(\event_1, \event_2)$
 \\
-By Value Sequence in Definition~\ref{def:vseq} and $(hc)$, we know every value $v_1$ in $\seq(\trace_1, x^i)$ and $v_2$ at the same
+By $\seq$ in Definition~\ref{def:vseq} and $(hc)$, we know every value $v_1$ in $\seq(\trace_1, x^i)$ and $v_2$ at the same
 index position of $\seq(\trace_2, x^i)$
 are equivalent to each other.
 \\
@@ -56,7 +61,7 @@ Then we know $(hc)$ is false and this Lemma is proved.
 	\end{array}
 	\]
 \end{lem} 
-Proof Summary: 	Proof by initution :).
+Proof Summary:
 \\
 Proving by using the Inversion Lemmas~\ref{lem:inv_expr}, \ref{lem:inv_expr_gnl}, 
 \ref{lem:inv_event}, and \ref{lem:inv_live}, and the \emph{May-Dependency} definition.
@@ -85,9 +90,10 @@ Proving by using the Inversion Lemmas~\ref{lem:inv_expr}, \ref{lem:inv_expr_gnl}
 Take arbitrary $c \in \cdom$,
 %
 let $\trace_0 \in \mathcal{T}_0(c), \trace_1, \trace_2 \in \mathcal{T}, x^i, y^j \in \lvar(c)$ be the traces and variables satisfying 
-$\dep(x^i, y^j, \trace_1, \trace_2 , \trace_0, c) \land
+$(\diamond)~\dep(x^i, y^j, \trace_1, \trace_2 , \trace_0, c) 
+\land
 % \sdiff(\trace_1, \trace_2, x^i) \neq \emptyset \land 
-|\seq(\trace_1, y^j)| \neq |\seq(\trace_2, y^j)|$.
+(\star)~|\seq(\trace_1, y^j)| \neq |\seq(\trace_2, y^j)|$.
 \\
 To show 
 $(c1)~\exists \event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \trace_2
@@ -96,20 +102,30 @@ $(c1)~\exists \event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \
 \\
 Splitting the conjunction, there are two sub conclusions need to be proved:
 \\
-To show 
-$(c1)~\exists \event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \trace_2$, 
+\textbf{Subproof of $\boldsymbol{(c1)~\exists \event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \trace_2}$}:
+\\
+To show $(c1)$
+% $(c1)~\exists \event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \trace_2$, 
 it is sufficient to show a contradiction by assuming 
 \\
 $(hc)~\neg (\exists \event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \trace_2)$.
 \\
-By $(hc)$, we know $\forall \event \in \trace_1 \st \event \in \eventset^{\asn}$.
+By $(hc)$, we know there are two cases
 \\
+(1) $\forall \event \in \trace_1 \st \event \in \eventset^{\asn}$.
+\\
+(2) $\forall \event_b = (b, i, v, \bullet) \in \trace_1 \st 
+\event_b \notin \trace_2$.
+%
+\subcaseL{(1) $\forall \event \in \trace_1 \st \event \in \eventset^{\asn}$}
 By Event Inversion Lemma~\ref{lem:inv_event} on every $\event \in \trace_1$, we know program $c$ has the following form
 \\
 $c =  \clabel{\eskip}^*;\clabel{\assign{x_1}{\expr_1 / \query(\qexpr_1)}}^{l_1}; \clabel{\eskip}^*; \ldots; \clabel{\eskip}^* $, i.e., $c$ consists of 
 only assignment and $\eskip$ commands.
 \\
-Then by the \emph{May-Dependency} in Definition~\ref{def:var_dep}, we know $\forall \trace_0' \in \mathcal{T}_0(c)$ such that
+Then by the \emph{May-Dependency} in Definition~\ref{def:var_dep} and 
+determinism of evaluation,
+we know $\forall \trace_0' \in \mathcal{T}_0(c)$
 \\
 $
 \config{{c}, \vtrace_0} \rightarrow^{*} 
@@ -118,30 +134,78 @@ $
   \land 
   \config{{c}, \vtrace_0'} \rightarrow^{*} 
 \config{\clabel{\eskip}^l, \vtrace_0'  \tracecat \trace_2} 
-$, the condition 
-$|\seq(\trace_1, y^j)| = |\seq(\trace_2, y^j)|$ always holds. 
+\implies
+|\seq(\trace_1, y^j)| = |\seq(\trace_2, y^j)|$.
 \\
-This is contradicted with the condition where $|\seq(\trace_1, y^j)| \neq |\seq(\trace_2, y^j)|$.
+This is contradicted to the condition $(\star)~|\seq(\trace_1, y^j)| \neq |\seq(\trace_2, y^j)|$.
+% \\%
+\subcaseL{(2) $\forall \event_b = (b, i, v, \bullet) \in \trace_1 \st 
+\neg \event_b \notin \trace_2$}
+% \todo{rewrite}
+By Event Inversion Lemma~\ref{lem:inv_event} on every $\event \in \trace_1$, 
+\\
+Since $\neg \event_b \notin \trace_2$, 
+by the
+determinism of evaluation, we know the two executions are executing the same program.
+\\
+In the same way by the \emph{May-Dependency} in Definition~\ref{def:var_dep} and 
+we know 
+$\forall \trace_0' \in \mathcal{T}_0(c)$
+\\
+$
+\config{{c}, \vtrace_0} \rightarrow^{*} 
+% \config{{c}_1, \vtrace_0' \tracecat [\event_1]}  \rightarrow^{*} 
+  \config{\clabel{\eskip}^l, \vtrace_0  \tracecat \trace_1 } 
+  \land 
+  \config{{c}, \vtrace_0'} \rightarrow^{*} 
+\config{\clabel{\eskip}^l, \vtrace_0'  \tracecat \trace_2} 
+\implies
+|\seq(\trace_1, y^j)| = |\seq(\trace_2, y^j)|$.
+\\
+This is contradicted to the condition $(\star)~|\seq(\trace_1, y^j)| \neq |\seq(\trace_2, y^j)|$.
 \\
 Then we have $(hc)$ is false, and $(c1)$ is proved.
 \\
 % the executions,
-To show $(c2)~\forall z \in FV(b), \exists l \in \ldom \st \flowsto(z^l, y^j, c)$,
-we know from $(c1)$ such that there exists $\event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \trace_2$.
+Let $\event_b = (b, i, v, \bullet) \in \trace_1$ be the testing event such that 
+$\neg \event_b \in \trace_2$.
 \\
-By Lemma~\ref{lem:diffval_inv}, we know there exists at least an event $\event_y = (y, j, \_, \_)$ such that
+By the $\lvar(c)$ in Definition~\ref{def:lvar}, we know 
+$\forall z \in FV(b)$, either $z$ is input variable, we have $z^{\lin} \in \lvar(c)$,
+or $z$ is assigned in $c$, we have $\exists r \in \mathbb{N} \st z^r \in \lvar(c)$.
+\\
+Let $r$ be the label for every $z \in FV(b)$, we prove the second sub-conclusion
+$(c2)$ as follows.
+\\
+\textbf{Subproof of $ \boldsymbol{\forall z \in FV(b), \exists l \in \ldom \st \flowsto(z^l, y^j, c)}$}
+% To show $(c2)~\forall z \in FV(b), \exists l \in \ldom \st \flowsto(z^l, y^j, c)$,
+% we know from $(c1)$ such that there exists $\event_b = (b, i, v, \bullet) \in \trace_1 \st \neg \event_b \in \trace_2$.
+\\
+By $(\diamond)$ and $(\star)$,
+ we know there exists at least an event $\event_y = (y, j, \_, \_)$ such that
  $ \event_y \in \trace_1$ or $\event_y \in \trace_2$.
  \\
  Without loss of generalization, we assume $\event_y \in \trace_1$ 
 %  and another event $\event_y' = (y, j, \_, \_) \in \trace_2$
  (The case of $\event_y \notin \trace_1$ and $\event_y \in \trace_2$ will be proved as a symmetric case of this assumption).
  \\
+ Without loss of generalization, let $\event_b$ be the testing event, 
+ and $\trace_1^1, \trace_1^2, \trace_1^3, \trace_2^1, \trace_2^2 \in \mathcal{T}$ be traces
+ such that 
+ \\
+ $\trace_1 = \trace_1^1 \tracecat [\event_b] \tracecat  \trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3$,
+%  \\
+and $\trace_2 = \trace^1_2 \tracecat [\neg\event_b] \tracecat  \trace^2_2$
+% \\
+and $\tlabel(\trace_1^2 \tracecat [\event_y]) \cap \tlabel(\trace^2_2) = \emptyset$.
+ \\
 Then by Inversion Lemma~\ref{lem:inv_event} on 
 $\event_y$, and $\event_b$,
-We have the following instance of the first execution in Definition~\ref{def:var_dep},
+we have the following instance of the first execution in Definition~\ref{def:var_dep},
 % Let $\event_{ih} = (b, l_b, n_b, v_b)$, by Eq.~\ref{eq:ctldep_inv1} and {Inversion Lemma~\ref{lem:inv_test}}, we have:
 \begin{equation}
-\begin{array}{l}   
+	\label{eq:ctldep_exe1}
+	\begin{array}{l}   
 \config{{c}, \vtrace_0} \rightarrow^{*} 
 \config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_3', 
 \vtrace_0 \tracecat \trace_1^1} 
@@ -164,10 +228,12 @@ We have the following instance of the first execution in Definition~\ref{def:var
 \end{array}
 \end{equation}
 %  %
-, where $\trace_1 = \trace_1^1 [\event_b] \tracecat  \trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3$,
-and $\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w$ 
+, where 
+% $\trace_1 = \trace_1^1 [\event_b] \tracecat  \trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3$,
+% and 
+$\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w$ 
 is the conditional command of the assignment commands associated to the 
-$\event_b$ from Inversion Lemma~\ref{lem:inv_event} of testing event.
+$\event_b$ by applying Inversion Lemma~\ref{lem:inv_event} on $\event_b$.
 \\
 The notation $(c_t;c' / c_f;c') /(c_w; \ewhile [b]^{l_b} \edo c_w;c'/[\eskip]; c')$ represents:
 \\
@@ -184,10 +250,11 @@ The same for case of $\eif ([b]^{l_b}, c_t, c_f)$ with $\pi_3(\event_b) = \efals
 and case of $\ewhile [b]^{l_b} \edo c_w$ with $\pi_3(\event_b) = \etrue$ and $\pi_3(\event_b) = \efalse$.
 %
 \\
-By the command label consistency,
-we also have the instance of second execution in Definition~\ref{def:var_dep} as follows:
+By applying Inversion Lemma~\ref{lem:inv_event} on $\event_b$, 
+and the command label consistency,
+we also have the instance of second execution from Definition~\ref{def:var_dep} as follows,
 \begin{equation}
-\label{eq:ctldep_inv2}
+\label{eq:ctldep_exe2}
 \begin{array}{l}   
 	\config{{c}, \vtrace_0'} \rightarrow^{*} 
 	\config{\eif ([b]^{l_b}, c_t, c_f) / \ewhile [b]^{l_b} \edo c_w;{c}_3', 
@@ -205,35 +272,97 @@ we also have the instance of second execution in Definition~\ref{def:var_dep} as
 \end{array}
 \end{equation}
 %
-where $\trace_2 = \trace^1_2 \tracecat [\neg\event_b] \tracecat  \trace^2_2$.
+% where $\trace_2 = \trace^1_2 \tracecat [\neg\event_b] \tracecat  \trace^2_2$.
+% \\
+Then for every $z \in FV(b)$ with label $r$ such that $z^r \in \lvar(c)$,
+to show $\flowsto(z^r, y^j, c)$,
+by Definition~\ref{def:feasible_flowsto},
+it is sufficient to show:
 \\
-Then, it is sufficient to show $y^j \in \lvar(c_w)$ in the case of $\ewhile [b]^{l_b} \edo c_w$;
-and  $y^j \in \lvar(c_t)$ or $y^j \in \lvar(c_f)$ in the case of $\eif ([b]^{l_b}, c_t, c_f)$.
+in the case of $\ewhile [b]^{l_b} \edo c_w$, $y^j \in \lvar(c_w)$ ;
 \\
-By the condition where $|\seq(\trace_1, y^j)| \neq |\seq(\trace_2, y^j)|$, 
-we know 
+in the case of $\eif ([b]^{l_b}, c_t, c_f)$, $y^j \in \lvar(c_t)$ or $y^j \in \lvar(c_f)$ .
+% \\
+\subcaseL{$\eif ([b]^{l_b}, c_t, c_f) \land \pi_3(\event_b) = \etrue$}
+In this case, we have the following execution instances for executions i
+n Equation~\ref{eq:ctldep_exe1} and \ref{eq:ctldep_exe1}.
+\[
+	\begin{array}{l}   
+\config{{c}, \vtrace_0} \rightarrow^{*} 
+\config{\eif ([b]^{l_b}, c_t, c_f);{c}', 
+\vtrace_0 \tracecat \trace_1^1} 
+% \\
+% \qquad 
+\rightarrow^{\rname{if-b}} 
+\config{c_t;c', \vtrace_0 \tracecat \trace_1^1 \tracecat [\event_b]} 
+% \\
+% \qquad  
+\rightarrow^{*} 
+\config{[\assign{y}{\expr_2 / \query(\qexpr_2)}]^{j}; c'', 
+\vtrace_0 \tracecat \trace_1^1 \tracecat[\event_b] \tracecat  \trace_1^2}
+\\ \qquad \rightarrow^{\rname{assn/query}}
+\config{ c'', 
+\vtrace_0 \tracecat \trace_1^1 \tracecat[\event_b] \tracecat  \trace_1^2 \tracecat [\event_y]}
+\rightarrow^{*} 
+\config{\eskip, 
+\vtrace_0 \tracecat \trace_1^1\tracecat [\event_b] \tracecat  \trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3}
+% 
+\\ 
+	\config{{c}, \vtrace_0'} \rightarrow^{*} 
+	\config{\eif ([b]^{l_b}, c_t, c_f);{c}', 
+	\vtrace_0' \tracecat \trace^1_2} 
+	% \\
+	% \qquad 
+	\rightarrow^{\rname{if-b}} 
+	\config{c_f;c', 
+	\vtrace_0' \tracecat \trace^1_2 \tracecat [\neg\event_b]} 
+	% \\ \qquad 
+	 \rightarrow^{*} 
+	\config{ \clabel{\eskip}^{l'}
+	\vtrace_0' \tracecat \trace^1_2 \tracecat [\neg\event_b] \tracecat  \trace^2_2}
+% 
+\end{array}
+\]
+By $\tlabel(\trace_1^2 \tracecat [\event_y]) \cap \tlabel(\trace^2_2) = \emptyset$, 
+we know $\tlabel(\trace_1^2 \tracecat [\event_y])$ doesn't contain any 
+label of the program $c'$.
 \\
- $|\seq(\trace_1^1 [\event_b] \tracecat  \trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3, y^j)| \neq 
- |\seq(\trace^1_2 \tracecat [\neg\event_b] \tracecat  \trace^2_2, y^j)|$.
- \\
- Then, we know either 
- $|\seq(\trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3, y^j)| \neq 
- |\seq(\trace^2_2, y^j)|$.
+Then we know $\event_y$ isn't generated from evaluating $c'$, i.e., it is generated 
+by executing $c_t$.
 \\
-Then, by Event Inversion Lemma~\ref{lem:inv_event} and the program label consistency, we know the
-command $[\assign{y}{\expr_2 / \query(\qexpr_2)}]^{j}$ is evaluated different times in the two executions.
+Then we know $y^j \in \lvar(c_t)$.
 \\
-Since $\neg\event_b$ will change whether a command is evaluated or not, we know 
+This case is proved.
 \\
-in the case of $\eif ([b]^{l_b}, c_t, c_f)$, $\event_y$ comes from the evaluation of $c_t$ or $c_f$,
-i.e., $[\assign{y}{\expr_2 / \query(\qexpr_2)}]^{j} \in_c c_t$ or $c_f$, i.e., $y^j \in \lvar(c_t)$ or $y^j \in \lvar(c_f)$;
-\\
-and in the case of $\ewhile [b]^{l_b} \edo c_w$, $\event_y$ comes from the evaluation of $c_w$,
-i.e., $[\assign{y}{\expr_2 / \query(\qexpr_2)}]^{j} \in_c c_w$, and $y^j \in \lvar(c_w)$.
-\\
-In both of the two cases, we know $\forall z \in VAR(\pi_1(\event_b)) $ there is a label $l \in \mathbb{N}$ for this variable,
-and by the $\flowsto$ definition, 
-$\flowsto(z^l, \pi_1(\event_2)^{\pi_2(\event_2)},c)$.
+The \textbf{sub-cases:} 
+{$\eif ([b]^{l_b}, c_t, c_f) \land \pi_3(\event_b) = \efalse$},
+$\ewhile [b]^{l_b} \edo c_w\land \pi_3(\event_b) = \etrue$, 
+and $\ewhile [b]^{l_b} \edo c_w \land \pi_3(\event_b) = \etrue$ 
+are proved in the same way.
+% By the condition where $|\seq(\trace_1, y^j)| \neq |\seq(\trace_2, y^j)|$, 
+% we know 
+% \\
+%  $|\seq(\trace_1^1 [\event_b] \tracecat  \trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3, y^j)| \neq 
+%  |\seq(\trace^1_2 \tracecat [\neg\event_b] \tracecat  \trace^2_2, y^j)|$.
+%  \\
+%  Then, we know either 
+%  $|\seq(\trace_1^2 \tracecat [\event_y] \tracecat \trace_1^3, y^j)| \neq 
+%  |\seq(\trace^2_2, y^j)|$.
+% \\
+% Then, by Event Inversion Lemma~\ref{lem:inv_event} and the program label consistency, we know the
+% command $[\assign{y}{\expr_2 / \query(\qexpr_2)}]^{j}$ is evaluated different times in the two executions.
+% \\
+% Since $\neg\event_b$ will change whether a command is evaluated or not, we know 
+% \\
+% in the case of $\eif ([b]^{l_b}, c_t, c_f)$, $\event_y$ comes from the evaluation of $c_t$ or $c_f$,
+% i.e., $[\assign{y}{\expr_2 / \query(\qexpr_2)}]^{j} \in_c c_t$ or $c_f$, i.e., $y^j \in \lvar(c_t)$ or $y^j \in \lvar(c_f)$;
+% \\
+% and in the case of $\ewhile [b]^{l_b} \edo c_w$, $\event_y$ comes from the evaluation of $c_w$,
+% i.e., $[\assign{y}{\expr_2 / \query(\qexpr_2)}]^{j} \in_c c_w$, and $y^j \in \lvar(c_w)$.
+% \\
+% In both of the two cases, we know $\forall z \in VAR(\pi_1(\event_b)) $ there is a label $l \in \mathbb{N}$ for this variable,
+% and by the $\flowsto$ definition, 
+% $\flowsto(z^l, \pi_1(\event_2)^{\pi_2(\event_2)},c)$.
 \\
 This Lemma is proved.
 % By the label consistency, and $\tlabel_{\trace_3} \cap \tlabel_{\trace_3'} = \emptyset$, 
