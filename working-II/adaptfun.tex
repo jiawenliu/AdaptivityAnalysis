@@ -1428,7 +1428,7 @@ by generating the set of feasible data-flow between labeled variables as follows
       x^i \in \live(l,   \ewhile [b]^l \edo c_w) \land  y^j \in \lvar(c_w) \\
     %   ([y = \_]^j) \in \mathsf{blk}(c_w) \} \\
        \flowsto(x^i, y^j, c_1 ;c_2)  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\
-       {\highlight{\clabel{\efun}^l: x(r^l, x_1, \ldots, x_n) := c}}& \emptyset\\
+       {\highlight{\clabel{\efun}^l: x(r, x_1, \ldots, x_n) := c}}& \emptyset\\
        {\highlight{\clabel{\assign{x}{\ecall(f, e_1, \ldots, e_n)}}^l } } 
        &     
        \triangleq
@@ -1465,7 +1465,7 @@ as follows,
     \progE^0(c) \triangleq 
     \left\{ 
     ({x}_1^{i}, w, {x}_2^{j}) \in \mathcal{LV} \times 
-    (\mathcal{A}_{\kw{in}}) \times \mathcal{LV}
+    \mathcal{A}_{\kw{in}} \times \mathcal{LV}
     ~ \middle\vert ~
     \begin{array}{l}
       {x}_1^{i}, {x}_2^{j} \in \lvar(c)
@@ -1735,7 +1735,7 @@ computed as the maximum over all the abstract events $\absevent \in \absE$ headi
 \\
 $\absW 
 \triangleq \left\{ (l, w) \in \mathbb{N} \times \mathcal{A}_{\lin} | 
-w = \max\limits_{\absevent = (l, \_, \_)} \{ \absclr(\absevent)\} \right\}$.
+w = \max \left\{ \absclr(\absevent) ~\mid~   \absevent \in \absflow(c) \land \absevent = (l, \_, \_) \right\} \right\}$.
 % \\
 \paragraph*{Example}
 We perform the symbolic reachability bound analysis on the abstract control flow graph as follows. 
@@ -1872,7 +1872,8 @@ Then we compute the weight for each edge in $\progE(c)$ computed above,
    \left\{ (x^i, w, y^j) 
 \mid
 (x^i, w, y^j) \in \progE^0(c) \land 
-w = \max\limits_{\absevent = (i, \_, j)} \{ \absclr(\absevent)\} 
+% w = \max\limits_{\absevent = (i, \_, j)} \{ \absclr(\absevent)\} 
+w = \max \left\{ \absclr(\absevent) ~\mid~ \absevent \in \absflow(c) \land \absevent = (i, \_, j) \right\} 
 \right\}.
 \]
 }
@@ -2001,7 +2002,9 @@ This program-based graph program-based graph has a similar topology structure as
 % the one
 % of 
 the Execution-Based Dependency Graph. It has the same
-vertices and query annotations, but approximated edges and weights.  
+vertices 
+% and query annotations, 
+but approximated edges and weights.  
 % The algorithm computation is 
 It is formally defined in Definition~\ref{def:prog_graph}.
 % Through the reachable definition set on every label,
@@ -2070,18 +2073,20 @@ x^l \in \lvar_{{c}} \land (l, w) \in \absW(c)
 \right\}
 \\
 \progE(c) & \triangleq &
-   \left\{ (x^i, w, y^j) 
-\mid
+   \Big\{ (x^i, w, y^j) \in \mathcal{LV} \times 
+   \mathcal{A}_{\kw{in}} \times \mathcal{LV}
+~\mid~
+  \\ & & \quad 
 x^i, y^j \in \lvar(c) \land \flowsto(x^i, y^j, c) \land
-w = \max\limits_{\absevent = (i, \_, j)} \{ \absclr(\absevent)\} 
-\right\}.
-% \text{Query Annotation} &
-% \progF & := & 
-% \left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
-% ~ \middle\vert ~
-% x^l \in \lvar_{c},
-% n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \in \qvar_{c} .
-% \right\}
+  \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
+  n \geq 0 
+  % \\ & & \quad 
+  % \flowsto(x^i,  z_1^{r_1}, c) 
+  \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
+  \\ & & \quad 
+  \land
+  w = \max \left\{ \absclr(\absevent) ~\mid~ \absevent \in \absflow(c) \land \absevent = (i, \_, j) \right\} 
+\Big\}.
 \end{array}
 \] }
 \end{defn}

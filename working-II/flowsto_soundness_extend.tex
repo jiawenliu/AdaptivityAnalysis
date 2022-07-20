@@ -27,10 +27,13 @@ induction on $c$. Proved by induction hypothesis in if and while case, and cases
 %
 \begin{proof}
   By induction on program $c$, we have the following cases:
+  \caseL{$c = \clabel{\eskip}^l$}
+  By $\lvar$ in Definition~\ref{def:lvar}, we know $\lvar(c) = \emptyset$ and the theorem is vacuously true.
   \caseL{$c = \clabel{\assign{x}{\expr}}^l$}
   \caseL{$c = \clabel{\assign{x}{\query(\qexpr)}}^l$}
-  \caseL{$c = \clabel{\eskip}^l$}
+  This case is proved in the same way as \textbf{case: $c = \clabel{\assign{x}{\expr}}^l$}.
   \caseL{$c = \clabel{\efun}^l: f(r^{l_r}, x_1, \ldots, x_n) := c$}
+  This case is proved in the same way as \textbf{case: $c = \clabel{\assign{x}{\expr}}^l$}.
   \caseL{$c = \eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) $}
   Let $\trace, \trace' \in \mathcal{T}, \trace_0 \in \mathcal{T}_0(c)$ be the two witness traces and initial trace satisfying 
   $\dep(x^i, y^j, \trace_1, \trace_2, \trace_0, \eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) )$.
@@ -46,13 +49,15 @@ induction on $c$. Proved by induction hypothesis in if and while case, and cases
   \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace'}$ 
     and \\
     (4) $\sdiff(\trace, \trace', y^j ) \neq \emptyset$.
-    By the evaluation rules for $\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) $, we have the two following cases on the evaluation in (2):
-    \subcaseL{\rname{if-t}}
+    \\
+    By the evaluation rules for $\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) $, we have the two following cases on the evaluation in (2).
+    \subcaseL{(2) : \rname{if-t}}
     $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) , \trace_0} 
     \rightarrow^{\rname{if-t}} \config{c_1, \trace_0  :: (b, l, \etrue, \bullet) } 
-    \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0 :: (b, l, \etrue, \bullet) \tracecat \trace_1 } $  
-    Accordingly, there are two cases on the evaluation in (3) as follows,
-    \subsubcaseL{\rname{if-f}}  
+    \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0 :: (b, l, \etrue, \bullet) \tracecat \trace_1 } $.
+    \\  
+    Accordingly, there are also two cases on the evaluation in (3) as follows,
+    \subsubcaseL{(3) : \rname{if-f}}  
     $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) , \trace_0'} 
     \rightarrow^{\rname{if-f}} \config{c_2, \trace_0'  :: (b, l, \efalse, \bullet) } 
     \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0' :: (b, l, \efalse, \bullet) \tracecat \trace_2' } $ 
@@ -64,7 +69,7 @@ induction on $c$. Proved by induction hypothesis in if and while case, and cases
     \\
     Then, by $\flowsto$ in Definition~\ref{def:feasible_flowsto}, we know $\flowsto(x^i, y^j, c)$, this case is proved.
     %
-    \subsubcaseL{\rname{if-t}}  
+    \subsubcaseL{(3) : \rname{if-t}}  
     $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}) , \trace_0'} 
     \rightarrow^{\rname{if-t}} \config{c_1, \trace_0'  :: (b, l, \etrue, \bullet) } 
     \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0' :: (b, l, \etrue, \bullet)  \tracecat \trace_1' } $  
@@ -123,10 +128,10 @@ $\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \g
 \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$.
 \\
 This case is proved.
-    \subcaseL{\rname{if-f}}
-This \textbf{sub-case} is proved in exactly the same way as \textbf{sub-case: \rname{if-t}}.
+    \subcaseL{(2) : \rname{if-f}}
+This \textbf{sub-case} is proved in exactly the same way as \textbf{sub-case: (2) : \rname{if-t}}.
   \caseL{$c = \ewhile \clabel{\bexpr}^{l} \edo {c}$ }
-  This \textbf{case} is proved in exactly the same way as \textbf{case: \rname{if}}.
+  This \textbf{case} is proved in exactly the same way as \textbf{case: $c = \eif(\clabel{\bexpr}^{l} , {c_1}, {c_2})$}.
   \caseL{$c = c_1; c_2$ }
   Let $\trace, \trace' \in \mathcal{T}, \trace_0 \in \mathcal{T}_0(c)$ be the two witness traces and initial trace satisfying 
   $\dep(x^i, y^j, \trace_1, \trace_2, \trace_0, c_1; c_2)$.
@@ -138,7 +143,7 @@ This \textbf{sub-case} is proved in exactly the same way as \textbf{sub-case: \r
   (2) $\config{c_1;c_2 , \trace_0} 
   \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0  \tracecat \trace } $ 
     and \\
-  (3) $\config{\eif(\clabel{\bexpr}^{l} , {c_1}, {c_2}), \trace_0'} \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace'}$ 
+  (3) $\config{c_1;c_2, \trace_0'} \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace'}$ 
     and \\
     (4) $\sdiff(\trace, \trace', y^j ) \neq \emptyset$.
     \\
@@ -234,8 +239,10 @@ two cases,
 $|\seq(\trace_2, y^j)| = |\seq(\trace_2', y^j)|$
 \\
 $|\seq(\trace_2, y^j)| \neq |\seq(\trace_2', y^j)|$
-\\
-In case of $|\seq(\trace_2, y^j)| = |\seq(\trace_2', y^j)|$, according to the Definition~\ref{def:vseq},
+% \\
+% In case of 
+\subsubsubcaseL{$|\seq(\trace_2, y^j)| = |\seq(\trace_2', y^j)|$}, 
+According to the Definition~\ref{def:vseq},
 and {Diff Value Dependency Inversion Lemma\ref{lem:diffval_inv}} we know 
 there exist two events $(y, j, v_1, \qval) \in \trace_2$ and $(y, j, v_1', \qval') \in \trace_2'$.
 \\
@@ -256,7 +263,7 @@ Then we have the following two execution instances
 \end{equation}
 where $\expr_2 / \qexpr_2$ is the expression of the assignment command associated to the events $(y, j, v_1, \qval)$ and $(y, j, v_1', \qval')$ by the Inversion Lemma.~\ref{lem:inv_event}.
 \\
-Let $LV_{\diff}$ be the set of all the variables $z^r$ on $\trace_1' \tracecat \trace'^1_2$ and $\trace_1 \tracecat \trace_2^1$ 
+Let $\mathbb{LV}_{\diff}$ be the set of all the variables $z^r$ on $\trace_1' \tracecat \trace'^1_2$ and $\trace_1 \tracecat \trace_2^1$ 
 satisfying $\env(\trace_1 \tracecat \trace_2^1, z^r) \neq \env(\trace_1'\tracecat \trace'^1_2, z^r) $.
 \\
 Then, by the $\sdiff$ in Definition~\ref{def:diffseq}, we know for every $z^r \in \mathbb{LV}_{\diff}$,
@@ -299,8 +306,10 @@ $\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \g
 \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$.
 \\
 This case is proved.
-\\
-In case of $|\seq(\trace_2, y^j)| \neq |\seq(\trace_2', y^j)|$,  according to the Definition~\ref{def:vseq},
+% \\
+% In case of 
+\subsubsubcaseL{$|\seq(\trace_2, y^j)| \neq |\seq(\trace_2', y^j)|$}
+According to the Definition~\ref{def:vseq},
 and {Diff Control Dependency Inversion Lemma~\ref{lem:diffctl_inv}}, we know 
 there exist two testing events $\event_b \in \trace_2$ and $\neg\event_b \in \trace_2'$ satisfying 
 \\
@@ -308,11 +317,11 @@ $\forall z \in FV(\pi_1(\event_b)), \exists r \in \ldom \st \flowsto(z^r, y^j, c
 i.e., $\flowsto(z^r, y^j, c)$.
 % $\forall z^r \in FV(\pi_1(\event_b)) \st \flowsto(z^r, y^j, c)$.
 \\
-In the same way as above by inversion on the testing event, we get similar execution instance as 
+In the same way as above by inversion on the testing event $\event_b$, we get similar execution instance as 
 Equation~\ref{eq:flowstosound_seq_valdep_inv1} and ~\ref{eq:flowstosound_seq_valdep_inv2}.
 \\
-Repeating the same proof steps after the two executions,
-similarly, by the expression evaluation inversion Lemma~\ref{lem:inv_expr_gnl}, we also know 
+Repeating the same proof steps under the two executions,
+similarly, by the expression evaluation inversion Lemma~\ref{lem:inv_expr_gnl}, we know 
 % $(\mathbb{LV}_{\diff} \cup \{x^i\} )\cap FV(\pi_1(\event_b)) \neq \emptyset$.
 \\
 $\exists z^r \in (\mathbb{LV}_{\diff} \cup \{x^i\} ) \st z \in FV(b) 
@@ -339,7 +348,7 @@ $\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \g
 \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$.
 \\
 This case is proved.
-  \case{$c = \clabel{\assign{x}{\ecall(x, e_1, \ldots, e_n)}}^l$}
+  \caseL{$c = \clabel{\assign{x}{\ecall(x, e_1, \ldots, e_n)}}^l$}
   By the evaluation rule, this case is proved in the same way as \textbf{case: $c = c_1; c_2$}
 \end{proof}
 

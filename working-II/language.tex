@@ -36,6 +36,12 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 %
 \mbox{Value} 
 & v & ::= & { n ~|~ \etrue ~|~ \efalse ~|~ [] ~|~ [v, \dots, v]}  
+\\ 
+&&&
+\highlight
+{
+~|~ (r, x_1, \ldots, x_n) := c
+}
 \\
 %
 \mbox{Query Expression} 
@@ -63,7 +69,7 @@ n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 &&&
 \highlight
 {
-~|~ \clabel{\efun}^l: x(r^l, x_1, \ldots, x_n) := c
+~|~ \clabel{\efun}^l: x(r, x_1, \ldots, x_n) := c
 ~|~ \clabel{\assign{x}{\ecall(x, e_1, \ldots, e_n)}}^l
 }
 ~|~ {c};{c}  
@@ -397,7 +403,7 @@ The trace based operational semantics rules are defined in Figure \ref{fig:os}.
 {
 \inferrule
 {
- \trace, \qexpr \qarrow \qval
+ \config{\trace, \qexpr }\qarrow \qval
  \and 
 \query(\qval) = v
 \and 
@@ -415,7 +421,7 @@ The trace based operational semantics rules are defined in Figure \ref{fig:os}.
 %
 \inferrule
 {
- \trace, b \barrow \etrue
+  \config{\trace, b} \barrow \etrue
  \and 
  \event = (b, l, \etrue, \bullet)
 }
@@ -423,7 +429,7 @@ The trace based operational semantics rules are defined in Figure \ref{fig:os}.
 \config{{\ewhile [b]^{l} \edo c, \trace}}
 \xrightarrow{} 
 \config{{
-c; \ewhile [b]^{l} \edo c),
+c; \ewhile [b]^{l} \edo c,
 \trace \traceadd \event}}
 }
 ~\textbf{while-t}
@@ -433,7 +439,7 @@ c; \ewhile [b]^{l} \edo c),
 %
 \inferrule
 {
- \trace, b \barrow \efalse
+  \config{\trace, b} \barrow \efalse
  \and 
  \event = (b, l, \efalse, \bullet)
 }
@@ -481,7 +487,7 @@ c; \ewhile [b]^{l} \edo c),
 %
 \inferrule
 {
-   \trace, b \barrow \etrue
+  \config{\trace, b} \barrow \etrue
  \and 
  \event = (b, l, \etrue, \bullet)
 }
@@ -498,7 +504,7 @@ c; \ewhile [b]^{l} \edo c),
 %
 \inferrule
 {
- \trace, b \barrow \efalse
+ \config{\trace, b} \barrow \efalse
  \and 
  \event = (b, l, \efalse, \bullet)
 }
@@ -516,11 +522,11 @@ c; \ewhile [b]^{l} \edo c),
 {
  c' = c^{+n}
  \and 
- \event = (x, l, (r^{l_r}, x_1, \ldots, x_n) := c', \bullet)
+ \event = (x, l, (r, x_1, \ldots, x_n) := c', \bullet)
 }
 {
 \config{{
-  [\efun]^l: x(r^{l_r}, x_1, \ldots, x_n) := c, \trace}}
+  [\efun]^l: x(r, x_1, \ldots, x_n) := c, \trace}}
 \xrightarrow{} 
 \config{{\clabel{\eskip}^l, \trace \traceadd \event}}
 }
@@ -532,7 +538,7 @@ c; \ewhile [b]^{l} \edo c),
 %
 \inferrule
 {
-\env(\trace) f = (r^{l_r}, x_1, \ldots, x_n) := c
+  \config{ \trace, f} \earrow (r, x_1, \ldots, x_n) := c
 \and 
 \config{{
   \clabel{\assign{x_1}{e_1}}^{(l, 1)}; \ldots;
@@ -542,9 +548,9 @@ c; \ewhile [b]^{l} \edo c),
   \\ 
   \config{{\clabel{c}^{(l)}, \trace_1}}
   \xrightarrow{}^* 
-  \config{{\clabel{\eskip}^{(l, n+l_r)}, \trace'}}
+  \config{{\clabel{\eskip}^{l}, \trace'}}
   \and
-  \config{r, \trace'} \earrow v
+  \config{\trace', r } \earrow v
   \and
  \event = (x, l, v, \bullet)
 }
@@ -571,7 +577,7 @@ c; \ewhile [b]^{l} \edo c),
     Label Increase $ + : {\ldom \to \mathbb{N} \to \ldom}$, increase a label $l$ by a natural number $n$:
 \[
     n + n' \triangleq n'' ~ n, n' \in \mathbb{N} \land \config{[], n + n'} \aarrow n''
-   \qquad (l, n) + n' \triangleq (l + n', n'') ~ n, n' \in \mathbb{N} \land \config{[], n + n'} \aarrow 
+   \qquad (l, n) + n' \triangleq (l + n', n'') ~ n, n' \in \mathbb{N} \land \config{[], n + n'} \aarrow n''
    \]
 \end{defn}
 The case of $(l, n) + n'$ will never happen during evaluation.
