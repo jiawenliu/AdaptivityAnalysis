@@ -1,4 +1,4 @@
-from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint, VariableReachingBound
+from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint
 from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
 from adapt_estimate import AdaptEstimate
 from graph_parse import GraphParser
@@ -396,7 +396,7 @@ class TestUnits:
 
 
 
-test_bound_infer = TestUnits(VariableReachingBound)
+test_bound_infer = TestUnits(AdaptEstimate)
 test_bound_infer.seq()
 test_bound_infer.seq_multivar()
 test_bound_infer.if_valdep()

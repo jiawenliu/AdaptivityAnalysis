@@ -1,4 +1,5 @@
-from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint, VariableReachingBound
+from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint
+# , VariableReachingBound
 from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
 
 class TestUnits:

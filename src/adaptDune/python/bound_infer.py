@@ -343,27 +343,9 @@ class TransitionBound:
         return self.transition_bounds
 
 
-class VariableReachingBound:
-    def __init__(self, graph=Graph(), transition_graph=TransitionGraph()) -> None:
-        self.graph = graph
-        self.transition_graph = transition_graph
-    
-    def attach_weights(self):
-        transition_bounds = TransitionBound(self.transition_graph).compute_transition_bounds()
-        for (t_index, b) in enumerate(transition_bounds):
-            transition = self.transition_graph.transitions[t_index]
-            for var_vertex in transition[3] :
-                self.graph.weights[var_vertex] = self.graph.weights[var_vertex] + AdaptType(b)
-    
-    def get_weights(self):
-        return [w.value for w in self.graph.weights]
-    
-    def print_weights(self):
-        for transition in self.transition_graph.transitions:
-            for var_vertex in transition[3]:
-                if not transition[1] == []:
-                #     print( "weight for a testing command of label : " + str(var_vertex) + " is: " + str(self.graph.weights[var_vertex].value))
-                # else:
-                    print( "weight for Variable: " + transition[1][0].get_var() + " of label " + str(var_vertex) + " is: " + str(self.graph.weights[var_vertex].value))
-
+    def compute_bounds(self):
+        self.compute_transition_bounds()
+        
+    def print_bounds(self):
+            return [w.value for w in self.transition_bounds]
 

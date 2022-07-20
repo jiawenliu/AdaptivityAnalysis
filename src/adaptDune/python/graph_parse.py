@@ -1,4 +1,4 @@
-from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint, VariableReachingBound
+from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint
 from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
 import argparse
 
