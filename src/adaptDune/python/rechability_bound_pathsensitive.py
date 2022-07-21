@@ -343,26 +343,73 @@ class TransitionBound:
             self.compute_transition_bound_closure_optimal(transition_index)
         return self.transition_bounds
 
-    def collect_paths(self):
+    def compute_bounds(self):
+        self.compute_transition_bounds()
+
+    def print_bounds(self):
+            return [w.value for w in self.transition_bounds]
+
+
+class ProgramRefine():
+    class RefinedType(enum.Enum):
+        CHOICE = 1
+        REPEAT = 2
+        SEQ = 3
+
+    def __init__(self) -> None:
+        self.refined_result = []
+        pass
+
+    def refine(self):
+        pass 
+
+    def get_result(self):
+        return self.refined_result
+
+    def get_choices(self):
+        return self.refined_result
+
+    def get_seqs(self):
+        return self.refined_result
+
+    def get_repeat(self):
+        return self.refined_result
+
+
+class ReachabilityBound(TransitionBound):
+
+
+    def __init__(self, transition_graph=TransitionGraph()) -> None:
+        super().__init__(transition_graph)
+        self.transition_paths = []
+        self.tp_loc_bound = []
+        self.tp_var_modi = []
+
+    def collect_transition_paths(self):
         pass   
 
     def program_refine(self):
-        pass 
+        self.refined_prog = ProgramRefine(self.transition_graph).get_result() 
 
-    def outside_in(self):
+    def outside_in(self, refined_prog):
+        if refined_prog.type == ProgramRefine.RefinedType.CHOICE:
+            return max(self.outside_in(refined_p) for refined_p in refined_prog.get_choices())
+        elif refined_prog.type == ProgramRefine.RefinedType.REPEAT:
+            return 
         pass
 
     def inside_out(self):
         pass 
 
-    def var_modi(self):
+    def var_modi(self, transition_path):
         pass 
 
-    def path_local_bound(self):
+    def transition_path_initial(self):
+        pass 
+
+    def transition_path_invariant(self):
+        pass   
+    
+    def transition_path_local_bound(self):
         pass
 
-    def compute_bounds(self):
-        self.compute_transition_bounds()
-        
-    def print_bounds(self):
-            return [w.value for w in self.transition_bounds]
