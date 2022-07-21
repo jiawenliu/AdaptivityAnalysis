@@ -590,8 +590,8 @@ D \in \dbdom \st
   \end{array}
 \]  
 \highlight{
-  A variable $y^j \in \lvar(c)$ is in the \emph{may-dependency} relation with another
-  variable $x^i \in \lvar(c)$ in a program ${c}$, w.r.t. an initial trace $\trace_0 \in \mathcal{T_0}(c)$
+  A labeled variable $y^j \in \lvar(c)$ is in the \emph{may-dependency} relation with another
+  labeled variable $x^i \in \lvar(c)$ in a program ${c}$, w.r.t. an initial trace $\trace_0 \in \mathcal{T}_0(c)$
   and two witness traces $\trace_1, \trace_2 \in \mathcal{T}$,
   denoted as 
   %
@@ -615,8 +615,8 @@ D \in \dbdom \st
   % \diff(\event_1, \event_1') 
   % \env(\trace_0, x^i) \neq   \env(\trace_0', x^i) 
   % \land 
-  (\forall z^l \neq x^i \st   \env(\trace_0, z^l ) =   \env(\trace_0',z^l) )
-  \land 
+  (\forall z \neq x \st   \env(\trace_0 ) z =   \env(\trace_0') z )
+  \\ \quad \land 
   % \\ \quad \land 
    \config{{c}, \vtrace_0} \rightarrow^{*} 
   % \config{{c}_1, \vtrace_0' \tracecat [\event_1]}  \rightarrow^{*} 
@@ -631,7 +631,7 @@ D \in \dbdom \st
     \config{{c}, \vtrace_0'} \rightarrow^{*} 
     % \config{{c}_1, \vtrace_0' \tracecat [\event_1]}  \rightarrow^{*} 
       \config{\clabel{\eskip}^l, \vtrace_0'  \tracecat \trace_2} 
-    \\ \quad \land 
+    \land 
       \sdiff(\trace_1, \trace_2, y^j ) \neq \emptyset
     \end{array}
   \]  
@@ -642,7 +642,9 @@ D \in \dbdom \st
   %
   \end{defn}
 %
+In most data analysis programs $c$ we are interested, there are usually some user input variables, such as $k$ in $\kw{twoRounds}$. 
 We denote $\mathcal{T}_0(c)$ as the set of initial traces in which all the input variables in $c$ are initialized.
+% We denote $\mathcal{T}_0(c)$ as the set of initial traces in which all the input variables in $c$ are initialized.
 %
 \subsection{Execution Based Dependency Graph}
 \label{sec:execution-base-graph-def}
@@ -688,14 +690,15 @@ $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is def
 %   \in \mathcal{LV} \times \mathcal{LV}
   ~ \vert ~
   x^i, y^j \in \lvar(c)
-  \land w \in \mathcal{P}( \mathcal{T} \to \mathbb{N})
+  \land w \in \mathcal{P}( \mathcal{T}_0(c) \to \mathbb{N})
   \land 
   \exists \trace \in \mathcal{T}_0(c), 
   \trace_1, \trace_2 \in \mathcal{T} \st \dep(x^i, y^j,\trace_1, \trace_2, \trace_0, c)
   \\ & &
   \land \forall \trace_0 \in \mathcal{T}_0(c) \st
-  w (\trace_0) = \max\{|\sdiff(\trace_1, \trace_2, y)|
-  \forall \trace_1, \trace_2 \in \mathcal{T} \st \dep(x^i, y^j,\trace_1, \trace_2, \trace_0, c) \}
+  w (\trace_0) = \max \left\{ | \sdiff(\trace_1, \trace_2, y)|
+  ~\middle\vert~
+  \forall \trace_1, \trace_2 \in \mathcal{T} \st \dep(x^i, y^j,\trace_1, \trace_2, \trace_0, c) \right\}
   \}
 \end{array}
 \]
@@ -718,7 +721,7 @@ computed by the counter operator $w(\trace) = \vcounter(\vtrace', l)$.
 We can see in the execution-based dependency graph of $\kw{twoRounds}$ in
  Figure~3(b) in main paper, the weight of vertices in the while loop is  $\env(\trace) k$, which depends on the value of the user input $k$ specified in the starting trace $\tau$.
 \\
-The directed edges $\traceE({c})$ is a set of triples $ (x^i, w, y^j) \in \mathcal{LV} \times (\mathcal{T}_0 \to \mathbb{N}) \times \mathcal{LV}$,
+The directed edges $\traceE({c})$ is a set of triples $ (x^i, w, y^j) \in \mathcal{LV} \times \mathcal{P}(\mathcal{T}_0(c) \to \mathbb{N}) \times \mathcal{LV}$,
  with two labeled variables (from $x^i$ pointing to $y^j$) and a weight $w$ for this edge.
 % comes 
 The edges are constructed directly from our variable may-dependency relation. 
@@ -726,12 +729,12 @@ For any two vertices $x^{i}$ and $y^{j}$ in $\traceV(c)$, if there exists two wi
 they satisfy the variable may-dependency relation 
 $\dep(x^i, y^j, \trace_1, \trace_2, \trace_0, c)$ , 
 there is a direct edge. 
-The weight of the edge is a function $w: \mathcal{T}_0 \to \mathbb{N}$,
+The weight of the edge is a function $w: \mathcal{T}_0(c) \to \mathbb{N}$,
 where given an initial trace $\trace_0$,
-it  of the edge is the maximum length of their difference sequence between all pairs of the witness traces $\trace_1, \trace_2$ of their dependency relation.
+it is the maximum length of the difference sequence between all pairs of the witness traces $\trace_1, \trace_2$ 
+satisfying the dependency relation.
 }
-In most data analysis programs $c$ we are interested, there are usually some user input variables, such as $k$ in $\kw{twoRounds}$. 
-We denote $\mathcal{T}_0(c)$ as the set of initial traces in which all the input variables in $c$ are initialized, it is also reflected in $\traceW({c})$.    
+% it is also reflected in $\traceW({c})$.    
 
 
 \subsection{Trace-based Adaptivity}

@@ -30,6 +30,45 @@ induction on $c$. Proved by induction hypothesis in if and while case, and cases
   \caseL{$c = \clabel{\eskip}^l$}
   By $\lvar$ in Definition~\ref{def:lvar}, we know $\lvar(c) = \emptyset$ and the theorem is vacuously true.
   \caseL{$c = \clabel{\assign{x}{\expr}}^l$}
+  In case of $x^l \neq y^j$, this case is vacuously true because there doesn't 
+  exist initial trace or witness trace satisfying \emph{may-dependency} by Definition~\ref{def:var_dep}.
+  \\
+  We have $c = \clabel{\assign{y}{\expr}}^j$.
+  \\
+  Let $\trace, \trace' \in \mathcal{T}, \trace_0 \in \mathcal{T}_0(c)$ be the two witness traces and initial trace satisfying 
+  $\dep(x^i, y^j, \trace_1, \trace_2, \trace_0, \clabel{\assign{y}{\expr}}^j )$.
+  \\
+  By \emph{may-dependency} in Definition~\ref{def:var_dep},
+  let $\trace_0' \in \mathcal{T}_0(c)$ be the initial trace satisfying,
+  \\
+  (1) $ (\forall z^r \neq x^i \st   \env(\trace_0, z^r ) \neq   \env(\trace_0',z^r) )$
+  and \\
+  (2) $\config{\clabel{\assign{y}{\expr}}^j , \trace_0} 
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0  \tracecat \trace } $ 
+    and \\
+  (3) $\config{\clabel{\assign{y}{\expr}}^j, \trace_0'} 
+  \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0'  \tracecat \trace'}$ 
+    and \\
+    (4) $\sdiff(\trace, \trace', y^j ) \neq \emptyset$.
+    \\
+    By the evaluation rules for $\clabel{\assign{y}{\expr}}^j$, we have the following two execution instances for 
+    % execution in 
+    (2) and (3).
+    \\
+    (2-exe) $\config{\clabel{\assign{y}{\expr}}^j , \trace_0} 
+    \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0 :: (y,j, v, \bullet)  } $, and $\trace = [(y,j, v, \bullet)]$;
+    \\
+    (3-exe) $\config{\clabel{\assign{y}{\expr}}^j, \trace_0'} 
+    \rightarrow^{*} \config{\clabel{\eskip}^l, \trace_0' :: (y,j, v', \bullet) }$,   and $\trace' = [(y,j, v', \bullet)]$.
+    \\
+    By (4), we know $v' \neq v$.
+    \\
+    Then by (1) and Inversion Lemma~\ref{lem:inv_expr}, we know $x \in FV(\expr)$ and $i = \llabel(\trace_0)x$.
+    \\
+    Then by Reaching Definition Inversion Lemma~\ref{lem:inv_live}, we know $x^i \in \live(j, c)$.
+    \\
+    So we know $\flowsto(x^i, y^j, c)$ by Definition~\ref{def:feasible_flowsto}.
+    This case is proved.   
   \caseL{$c = \clabel{\assign{x}{\query(\qexpr)}}^l$}
   This case is proved in the same way as \textbf{case: $c = \clabel{\assign{x}{\expr}}^l$}.
   \caseL{$c = \clabel{\efun}^l: f(r^{l_r}, x_1, \ldots, x_n) := c$}

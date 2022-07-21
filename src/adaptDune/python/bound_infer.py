@@ -342,6 +342,10 @@ class TransitionBound:
             self.compute_transition_bound_closure_optimal(transition_index)
         return self.transition_bounds
 
+    def collect_paths(self):
+        pass 
+
+    
 
     def compute_bounds(self):
         self.compute_transition_bounds()
