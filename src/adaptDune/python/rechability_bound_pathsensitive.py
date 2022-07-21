@@ -355,6 +355,7 @@ class ProgramRefine():
         CHOICE = 1
         REPEAT = 2
         SEQ = 3
+        TP = 4
 
     def __init__(self) -> None:
         self.refined_result = []
@@ -374,6 +375,15 @@ class ProgramRefine():
 
     def get_repeat(self):
         return self.refined_result
+    
+    def get_tp(self):
+        return self.refined_result
+    
+    def get_assumes(self):
+        return self.refined_result
+    
+    def get_vars(self):
+        return self.refined_result
 
 
 class ReachabilityBound(TransitionBound):
@@ -384,32 +394,71 @@ class ReachabilityBound(TransitionBound):
         self.transition_paths = []
         self.tp_loc_bound = []
         self.tp_var_modi = []
+        self.transition_path_bound = {}
 
-    def collect_transition_paths(self):
-        pass   
+    # def collect_transition_paths(self):
+    #     pass   
 
     def program_refine(self):
         self.refined_prog = ProgramRefine(self.transition_graph).get_result() 
 
     def outside_in(self, refined_prog):
         if refined_prog.type == ProgramRefine.RefinedType.CHOICE:
-            return max(self.outside_in(refined_p) for refined_p in refined_prog.get_choices())
+            return max(self.outside_in(choice_prog) for choice_prog in refined_prog.get_choices())
         elif refined_prog.type == ProgramRefine.RefinedType.REPEAT:
-            return 
-        pass
+            rp_prog = refined_prog.get_repeat()
+            return (self.prog_initial(rp_prog) - self.prog_final(rp_prog)) / self.var_modi(rp_prog)
+        elif refined_prog.type == ProgramRefine.RefinedType.SEQ:
+            return sum(self.outside_in(seq_prog) for seq_prog in refined_prog.get_seqs())
+        elif refined_prog.type == ProgramRefine.RefinedType.TP:
+            return 1
 
-    def inside_out(self):
-        pass 
+    def var_modi(self, prog):
+        if self.prog_loc_bound[prog] == "":
+           self.prog_loc_bound[prog] = self.outside_in(prog)
+        return self.prog_loc_bound[prog] * (self.prog_initial(prog) - self.prog_next(prog))
 
-    def var_modi(self, transition_path):
-        pass 
+    # def transition_path_next(self):
+    #     return [self.var_incs[v] - self.var_decs[v] for v in self.vars]
 
-    def transition_path_initial(self):
-        pass 
+    def prog_initial(self, prog):
+        return "/\ ".join([v + "= " + sum(self.var_resets[v]) for v in prog.get_vars()])
 
-    def transition_path_invariant(self):
-        pass   
-    
-    def transition_path_local_bound(self):
-        pass
+    def prog_final(self, prog):
+        return self.prog_initial(prog) + "/\ ¬(" + self.prog_invariant(prog) + ")"
+
+    def prog_next(self, prog):
+        if prog.type == ProgramRefine.RefinedType.CHOICE:
+            return max(self.prog_next(choice_p) for choice_p in prog.get_choices())
+        elif prog.type == ProgramRefine.RefinedType.REPEAT:
+            rp_prog = prog.get_repeat()
+            if self.prog_loc_bound[rp_prog] == "":
+                self.prog_loc_bound[rp_prog] = self.outside_in(rp_prog)
+            return self.self.prog_loc_bound[rp_prog] * (self.prog_next(rp_prog))
+        elif prog.type == ProgramRefine.RefinedType.SEQ:
+            return sum(self.prog_next(seq_prog) for seq_prog in prog.get_seqs())
+        elif prog.type == ProgramRefine.RefinedType.TP:
+            return sum([self.var_incs[v] - self.var_decs[v] for v in prog.get_vars()])
+
+    def prog_invariant(self, prog):
+        invariant = "True"
+        for assume in prog.get_assumes():
+            invariant += " /\ " + assume.get_condition()
+        return invariant
+
+    def repeat_chain_transition(self, prog, rp_bound):
+        if prog.type == ProgramRefine.RefinedType.CHOICE:
+            (self.repeat_chain_transition(choice_prog, rp_bound) for choice_prog in prog.get_choices())
+        elif prog.type == ProgramRefine.RefinedType.REPEAT:
+            self.repeat_chain_transition(prog.get_repeat(), self.prog_loc_bound[prog] * rp_bound)
+        elif prog.type == ProgramRefine.RefinedType.SEQ:
+            (self.repeat_chain_transition(seq_prog, rp_bound) for seq_prog in prog.get_seqs())
+        elif prog.type == ProgramRefine.RefinedType.TP:
+            self.transition_path_bound[prog.get_tp()] = rp_bound
+        else:
+            return
+
+    def inside_out(self, prog):
+        self.repeat_chain_transition(self, prog, 1) 
+
 
