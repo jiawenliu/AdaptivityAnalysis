@@ -50,11 +50,33 @@ class DirectedGraph:
         self.time = 0
         self.scc_ids = [-1] * (self.vertices_num)
         self.scc_cnt = -1
+        self.edge_indices = defaultdict(int)
         pass
 
     def build_edges(self):
         for (u, v) in self.edges:
             self.graph[u].append(v)
+    
+    def build_edge_indices(self):
+        for index, (u, v) in enumerate(self.edges):
+            self.edge_indices[str(u) + "->" + str(v)] = index
+
+    def search_path(self, st, dest):
+        r = []
+        self.build_edge_indices()
+        visited = [0] * self.vertices_num
+        def dfs(c, path):
+            if c == dest:
+                r.append(path)
+                return 
+            else:
+                for next_v in self.graph[c]:
+                    if not visited[next_v]:
+                        visited[next_v] = 1
+                        dfs(next_v, path + [self.edge_indices[str(c) + "->" + str(next_v)]])
+                        visited[next_v] = 0
+        dfs(st, [st])
+        return r
 
     def is_in_scc(self, edge):
         if self.scc_cnt == -1:
@@ -123,7 +145,8 @@ class DirectedGraph:
         # in DFS tree rooted with vertex 'i'
         for i in range(self.vertices_num):
             if disc[i] == -1:
-                self.scc_dfs(i, low, disc, stackMember, st)   
+                self.scc_dfs(i, low, disc, stackMember, st)  
+     
 
 
 #TODO: build Base Father Graph Calss

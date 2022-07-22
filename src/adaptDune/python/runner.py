@@ -25,7 +25,6 @@ class TestUnits:
     # Expected Weights: [1,1,1,1]
     # Expected Adaptivity: 4
     def seq(self):
-        AdaptEstimate.adapt_estimate(dcf_graph, abscf_graph)
         print("The Reachability Bounds Expected for  Vertices in Pure Sequence Graph are: [1,1,1,1] ")
         print("The Adaptivity Expected for Simple Seq Algorithm is: 4 ")
 

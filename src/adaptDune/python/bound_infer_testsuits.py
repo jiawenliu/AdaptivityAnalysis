@@ -1,5 +1,4 @@
 from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint
-# , VariableReachingBound
 from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
 
 class TestUnits:
@@ -82,10 +81,6 @@ class TestUnits:
         print("The Reachability Bounds Expected for  Vertices in the Two Round Graph are: [1, 1, k, k, k, 1] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
        
-        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
-        adapt_search.search_adapt()
-        print("The Adaptivity Expected for Two Round Algorithm is: 2 ")
-        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
     # # the multiple-round example, 
     # # Expected Weights: [1, 1, k, k, k]
@@ -239,11 +234,6 @@ class TestUnits:
         print("The Reachability Bounds Expected for  Vertices in the Two Round Graph are: [1, 1, k, k, k, 1] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
        
-        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
-        adapt_search.search_adapt()
-        print("The Adaptivity Expected for Two Round Algorithm is: 2 ")
-        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
-
 
     # the multiple-round example, 
     # Expected Weights: [1, 1, k, k, k]
@@ -266,11 +256,6 @@ class TestUnits:
         bound_infer.attach_weights()
         print("The Reachability Bounds Expected for  Vertices in the Multiple Round Graph are: [1, 1, k, k, k] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
-
-        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
-        adapt_search.search_adapt()
-        print("The Adaptivity Expected for multiple Round Algorithm is: k ")
-        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
 
 
     # the nested while example, 
@@ -301,11 +286,6 @@ class TestUnits:
         print("The Reachability Bounds Expected for  Vertices in the Simple Nested While Graph are: [1, 1, k, k, k, k^2, k^2] ")
         print("The Reachability Bounds Calculated for Vertices in This Graph are: ", bound_infer.get_weights())
 
-        adapt_search = AdaptSearchAlgRefined(bound_infer.graph)
-        adapt_search.search_adapt()
-        print("The Adaptivity Expected for Simple Nested While Algorithm is: 2 + k * k ")
-        print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
-
     
     def run_tests(self):
         self.test_seq()
@@ -316,7 +296,7 @@ class TestUnits:
 
 
 
-test_bound_infer = TestUnits(VariableReachingBound)
+test_bound_infer = TestUnits(TransitionBound)
 test_bound_infer.test_default()
 test_bound_infer.test_seq()
 test_bound_infer.test_simple_while()

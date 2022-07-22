@@ -395,9 +395,7 @@ class ReachabilityBound(TransitionBound):
         self.tp_loc_bound = []
         self.tp_var_modi = []
         self.transition_path_bound = {}
-
-    # def collect_transition_paths(self):
-    #     pass   
+ 
 
     def program_refine(self):
         self.refined_prog = ProgramRefine(self.transition_graph).get_result() 

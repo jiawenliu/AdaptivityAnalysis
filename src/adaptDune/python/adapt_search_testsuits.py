@@ -1,4 +1,4 @@
-from adapt_search_naive import AdaptSearchAlg, AdaptType, Graph
+from adapt_base import AdaptType, Graph
 from adapt_search_refined import AdaptSearchAlgRefined
 
 
@@ -17,6 +17,8 @@ class TestUnits:
 
         adapt_search = self.ALG(Graph(edges, weights, query))
         adapt_search.search_adapt()
+        adapt_search.print_adapt()
+
         print("The Adaptivity Expected for This Graph is: 4 ")
         print("The Adaptivity Calculated for This Graph is: ", adapt_search.get_adapt())
 
