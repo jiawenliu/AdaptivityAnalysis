@@ -98,25 +98,6 @@ class AdaptSearchAlg:
         print("The SCC graph: ", self.scc_graph)
 
   
-    # def bfs_adapt(self):
-    #     bfs_q = []
-    #     visited = [False]*(self.vertex_no + 1)
-    #     self.adapt = [AdaptType(0)]* (self.scc_cnt+2)
-    #     for j in range(1, self.scc_cnt+1):
-    #         if not visited[j]:
-    #             self.adapt[j] = self.scc_adapt[j]
-    #             visited[j] = True 
-    #             bfs_q.append(j)
-    #             while bfs_q != []:
-    #                 u = bfs_q.pop(0)
-    #                 # print(u)
-    #                 # visited[u] = False
-    #                 for v in self.scc_graph[u]:
-    #                     self.adapt[v] = (self.adapt[v].adapt_max(self.adapt[u] + self.scc_adapt[v]))
-    #                     if not visited[v]:
-    #                         visited[v] = True 
-    #                         bfs_q.append(v)
-    #     print("Adaptivity of each SCC: ", list(map(lambda a: a.value, self.adapt)) )
 
     def bfs_adapt(self):
         bfs_q = []

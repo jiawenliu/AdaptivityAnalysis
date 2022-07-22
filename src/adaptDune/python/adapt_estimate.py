@@ -46,7 +46,7 @@ class AdaptEstimate():
 
        
         def get_edge_weights(self):
-            return [w.value for w in self.graph.edge_weights]
+            return self.graph.edge_weights.items()
         
         def print_edge_weights(self):
             for s in ["weight for Edge: " + w[0] + " is: " + str(w[1].value) for w in self.graph.edge_weights.items()]:
@@ -63,10 +63,6 @@ class AdaptEstimate():
             self.edge_weights_estimate()
             self.vertex_weights_estimate()
 
-        
-        def get_weights(self):
-            return [w.value for w in self.graph.weights]
-        
         def print_weights(self):
             self.print_vertex_weights()
             self.print_edge_weights()

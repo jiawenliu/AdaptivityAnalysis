@@ -235,9 +235,10 @@ class TransitionBound:
     def dfs_var_inc_and_reset_chains(self, v):
         print("computing the reset chain of: ", v)
         for (transition_index, dc_var, dc_const) in self.var_resets[v]:
-            if dc_var:
+            if dc_var and (dc_var not in self.reset_vars[v]) and (not (dc_var == v)):
                 self.reset_vars[v].add(dc_var)
                 if (dc_var not in self.var_reset_chains.keys()):
+                    self.var_reset_chains[dc_var] = []
                     self.dfs_var_inc_and_reset_chains(dc_var)
                 print("the nested reset chain of " , v, "are: ", self.var_reset_chains[dc_var])
                 for dc_var_rchain in self.var_reset_chains[dc_var]:
