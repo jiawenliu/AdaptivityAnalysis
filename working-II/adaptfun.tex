@@ -2516,7 +2516,8 @@ The full details of all the soundness can be found in the appendix.
 % %  for this program, 
 % % that 
 % \\
-As indicated by our definition of prograpm-based adaptivity, the key point is to find the walks in the program-based dependency graph. We develop some walk-finding algorithms,  Algorithm~\ref{alg:adpt_alg} and Algorithm~\ref{alg:adaptscc}, which use both the deep first search and breath first search strategy.  
+As indicated by our definition of prograpm-based adaptivity, the key point is to find the walks in the program-based dependency graph. We develop some walk-finding algorithms, 
+Algorithm~\ref{alg:adpt_alg} and Algorithm~\ref{alg:adaptscc}, which use both the deep first search and breath first search strategy.  
 
 By Definition~\ref{def:finitewalk}, this finite walk isn't easy to find. We first discuss two challenges when we try to find the walks in the dependency graph, and show that how we solve them using our algorithms.
 
@@ -2576,15 +2577,17 @@ $
 \draw[] (5, 6) circle (0pt) node {{ $j^4: {}^{k}_{0}$}};
 %
 % Value Dependency Edges:
-\draw[ ultra thick, -latex, densely dotted,] (0, 4.5)  -- (0, 6.5) ;
+\draw[ ultra thick, -latex, densely dotted,] (0, 4.5)  -- node[left]{\highlight{$k$}} (0, 6.5) ;
 \draw[ ultra thick, -latex, densely dotted,] (0.5, 4.2) arc (150:-180:1);
+\draw[] (2, 4) node []{\highlight{$k$}};
 \draw[ thick, -Straight Barb] (5.5, 6.2) arc (150:-150:1);
-\draw[ thick, -latex] (5, 6.5)  -- (5, 8.5) ;
+\draw[] (7, 6) node []{\highlight{$k$}};
+\draw[ thick, -latex] (5, 6.5)  -- node[right]{\highlight{$k$}} (5, 8.5) ;
 % Control Dependency
-\draw[ thick,-latex] (1.5, 7)  -- (4, 9) ;
-\draw[ thick,-latex] (1.5, 4)  -- (4, 9) ;
-\draw[ thick,-latex] (1.5, 7)  -- (4, 6) ;
-\draw[ thick,-latex] (1.5, 4)  -- (4, 6) ;
+\draw[ thick,-latex] (1.5, 7)  -- node[above]{\highlight{$k$}} (4, 9) ;
+\draw[ thick,-latex] (1.5, 4)  -- node[above]{\highlight{$k$}} (4, 9) ;
+\draw[ thick,-latex] (1.5, 7)  -- node[below]{\highlight{$k$}} (4, 6) ;
+\draw[ thick,-latex] (1.5, 4)  -- node[below]{\highlight{$k$}} (4, 6) ;
 \end{tikzpicture}
 \caption{}
   \end{centering}
@@ -2976,97 +2979,79 @@ in Appendix~\ref{apdx:adaptalg_completeness}.
 % because the weight is symbolic and simply traversing leads to non-termination.
 % \\
 % In Algorithm~\ref{alg:adaptscc}, 
+\highlight{Algorithm Introduction}
 This algorithm takes a subgraph of the program-based dependency graph as input, to be precise, the input graph is SCC, and the output is the adaptivity of this SCC. 
 For an SCC containing only one vertex without any edge, it returns the query annotation of this vertex as adaptivity.
 For SCC containing at least one edge, 
 There are three steps in this algorithm: 1. find out all the paths in the input SCC 2. Calculate the adaptivity of every path using our designed adaptivity counting method. 3. Return the maximal adaptivity among all the paths. The step 3 is trivial. Because our input graph is SCC, when we start traversing from a vertex, we will finally go back to this vertex. The paths we find in step 1 are all those with the same starting and ending vertex. The most interesting part is step 2. 
 We discuss as follows.
 
-This algorithm first check if an SCC contains only one vertex without any edge, as in line:4-5 in Algorithm~\ref{alg:adaptscc}.
-% then 
-% \\
-% If yes, then it's easy to know that it will be visited 
-% at most once since there isn't edge going back to this vertex. 
-% So we can know that the adaptivity on this SCC is at most one if it is a query vertex,
+
+This algorithm in Alg.~\ref{alg:adaptscc} takes a subgraph of the program-based dependency graph(SCC), and the output is the adaptivity of the input. 
+For an SCC containing only one vertex, it returns the query annotation of this vertex as adaptivity.
+For SCC containing at least one edge, 
+There are three steps: 1. find out all the paths in the input 2. calculate the adaptivity of every path using our designed adaptivity counting method. 3. return the maximal adaptivity among all the paths. Because our input graph is SCC, when we start traversing from a vertex, we will finally go back to this vertex. The paths we find in step 1 are all those with the same starting and ending vertex. The most interesting part is step 2. 
+% \wq{Add more about step 2 here, what it is and why it is good.}
+% Again, for 
+% the SCC containing only one vertex without any edge, as in line:4-5 in Alg.~\ref{alg:adaptscc}.
+% % then 
+% % If yes, then i
+% % it's easy to know that it will be visited 
+% % at most once since there isn't edge going back to this vertex. 
+% % So we can know 
+% The adaptivity on this SCC is at most one if it is a query vertex,
 % and zero otherwise.
+% $\kw{\pathsearch_{scc}(G)}$ return query annotation directly as in line:4-5.
+% % So $\kw{\pathsearch_{scc}(G)}$ return query annotation directly as in line:4-5.
 % \\
-% If not, then 
-Again, for 
-the SCC containing only one vertex without any edge, as in line:4-5 in Algorithm~\ref{alg:adaptscc}.
-% then 
-% If yes, then i
-% it's easy to know that it will be visited 
-% at most once since there isn't edge going back to this vertex. 
-% So we can know 
-The adaptivity on this SCC is at most one if it is a query vertex,
-and zero otherwise.
-$\kw{\pathsearch_{scc}(G)}$ return query annotation directly as in line:4-5.
-% So $\kw{\pathsearch_{scc}(G)}$ return query annotation directly as in line:4-5.
-\\
-% For the SCC contains at least one edge, we are searching for the finite walk having the longest query length through a deep first search strategy.
+% If not, then the 
 For the SCC containing at least one edge, 
 we compute the adaptivity for each path 
 on the fly of searching for the paths 
 in the
 % design a 
-recursion algorithm $\kw{dfs}$ designed based on 
+recursion algorithm $\kw{dfs}$. It is designed based on 
 a deep first search strategy 
 % of this algorithm is described as follows,
-from line: 6-16 in $\kw{\pathsearch_{scc}(G)}$ in Algorithm~\ref{alg:adaptscc}.
-\\
+from line: 6-16.
+% searching for the paths 
+% starting from every vertex as step 1. 
+% In the meantime, it computes the adaptivity for each path during the path searching procedure, which is the step 2.
+% with special parameter 
+% searching for the finite walk having the longest query length
+% we are searching for the finite walk having the longest query length through a deep first search strategy.
 % The difficulty is, the visiting times of every vertex on this walk should be no more than its weight, which is a symbolic expression.
-% As the two challenges discussed above, we want to guarantee the visiting time of each vertex smaller than 
-% its weight, in the meantime the algorithm termination. 
+% As the two challenges discussed above, 
+% we want to guarantee the visiting time of each vertex smaller than 
+% its weight and compute the adaptivity accurately, in the meantime guarantee the algorithm termination. 
+% It use a capacity limitation and  special parameters to achieve it,
+% specifically as follows.
 % Additionally, we are computing the query length rather than sum of the weights.
 % We design a deep first search strategy
 % % of this algorithm is described as follows,
-% from line: 6-16 in Algorithm~\ref{alg:adaptscc}, 
-% searching for the finite walk having the longest query length
-% %  through a deep first search strategy
-% with a capacity limitation and use special parameter to compute the adaptivity.
-%
-As the \textbf{Approximation Challenge} discussed above, 
-we want to guarantee the visiting time of each vertex smaller than 
-its weight and compute the adaptivity accurately, in the meantime guarantee the algorithm termination. 
-It uses a capacity limitation and  special parameters to achieve it,
-specifically as follows.
-Additionally, we are computing the query length rather than sum of the weights.
-We design a deep first search strategy
-% of this algorithm is described as follows,
-from line: 6-16 in Algorithm~\ref{alg:adaptscc}, 
+% from line: 6-16 in Alg.~\ref{alg:adaptscc}, 
 % searching for the finite walk having the longest query length
 %  through a deep first search strategy
-with a capacity limitation and use special parameter to compute the adaptivity.
-% for every path.
-%
+% with a capacity limitation and use special parameter to compute the adaptivity.
 % for every path.
 % So we cannot simply search for the longest weight path where the visiting times of the vertex on it could possibly exceed its weights.
 % We can neither simply traverse on this graph by decreasing the weight of every node by 1 after every visiting,
 % because the weight is symbolic and simply traversing leads to non-termination.
 % \\
-\\
-In order to
-guarantee the termination, 
-% this algorithm 
-$\kw{\pathsearch_{scc}(G)}$
-terminates the recursion if monitored a cycle, as in line:8 and line:14, through a boolean list $\kw{visited}$.
-This guaranteed the termination and solved the \textbf{Challenge II.} discussed above.
+% We will explain some interesting part of the algorithm, which is related to solving the challenges.
+% In order to
+% guarantee the termination, 
+% % this algorithm 
+% $\kw{\pathsearch_{scc}(G)}$
+% terminates the recursion if monitored a cycle, as in line:8 and line:14, through a $\{0, 1\}$ list $\kw{visited}$.
+% This 
+% % guaranteed the termination and 
+% solved the \textbf{Non-Termination Challenge}.
 % \todo{solve the challenge 2} 
 % search for finite walk  
 % So we use the dfs to search for the 
-\\
-% In order to
-% solve the \textbf{Challenge I},
-% specifically guarantee the visiting times of each vertex by its weight, 
-% we use a special parameter $\kw{flowcapacity}$  to track the minimum weight during the 
-% % dfs process, 
-% deep first searching along the walk, 
-% also a parameter $\kw{querynum}$
-% % to compute the query length of this walk
-% to track the total number of vertices which are query vertices along the walk in order to compute the query length of this walk.
-In order to
-solve the \textbf{Approximation Challenge},
-specifically guarantee the visiting times of each vertex by its weight
+% \\
+In order to guarantee the visiting times of each vertex by its weight
 and compute the adaptivity accurately, 
 we use a special parameter $\kw{flowcapacity}$  to track the minimum weight
 along the path during the 
@@ -3077,8 +3062,110 @@ and a parameter $\kw{querynum}$
 % to compute the query length of this walk
 to track the total number of vertices with query annotation $1$
 % which are query vertices 
-along the path 
-in order to compute the query length.
+along the path.
+% 
+% \todo{solve the challenge 1, specifically in the dfs strategy
+% of this algorithm is described as follows,
+% from line: 6-16 in Alg.~\ref{alg:adaptscc}. } 
+% \\
+% Then, to compute the query length of this walk, 
+% we use another parameter $\kw{querynum}$
+% to track the total number of vertices which are query vertices along the walk.
+
+% The detail steps of this dfs strategy
+% % of this algorithm is described as follows,
+% from line: 3-16 in Alg.~\ref{alg:adaptscc},
+% particularly from line: 7-15 on how to 
+% use these two special parameters to resolve \textbf{Challenge I}
+%  is described as follows.
+% searching for the finite walk having the longest query length through a deep first search strategy
+% with a capacity limitation and use special parameter to compute the adaptivity
+% for every path.
+% \\
+% We first initialize some parameters:
+% \\
+% $\kw{visited}$ is initialized as a list of $0$ for every vertex on this SCC, in order to guarantee the termination;
+% \\ 
+% $\kw{r}$ is initialized  as a list of integer with length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex. The adaptivity reaching each vertex.
+% \\ 
+$\kw{flowcapacity}$ is a list of arithmeitc expression $\mathcal{A}_{in}$ 
+% for every vertex,
+recording the minimum weight when the path reaches that vertex, which is initialized by $\infty$.
+% , inside a cycle\}
+
+$\kw{querynum}$ is a list of integer
+% of all the vertices, which is 
+initialized by query annotation $\qflag(v)$ for every vertex. 
+% For every vertex, 
+% % recording the query numbers when the path reaching.
+% % in order to 
+% it records the total query numbers when the path reaching this vertex.
+
+% We maintain the minimum weight for the 
+% $\kw{flowcapacity}$, 
+% number of query vertices 
+% $\kw{querynum}$ 
+% and update the adaptivity for this path $\kw{r}$
+% alone the path and update the adaptivity reaching 
+% this vertex, 
+% when traversing on this graph, as in Alg.~\ref{alg:adaptscc} from line: 8-13.
+% % and then recursively dfs on all vertices heading out from this vertex.
+% % \\
+% At line: 15 where this vertex is visited, i.e., this path 
+% going back to its starting node,
+% we only update the adaptivity $\kw{r}$ reaching this vertex.
+% and neither recursion nor update the $\kw{flowcapacity}$  and 
+% $\kw{querynum}$.
+
+% Again, Non-recursion in the second branch
+% % in order to 
+% guarantees the termination and resolves \textbf{Non-Termination Challenge}.
+% \\
+The updating operations
+during the traverse 
+(line: 8) and 
+at the end of the traverse (line: 11) are interesting,
+% in these two branches, 
+specifically $\kw{flowcapacity[v] \times querynum[v]}$ 
+% in line: 11 and line: 15 
+computes the query length for this path. 
+it guarantees 
+the visiting times of each vertex on the path reaching a vertex $v$ is no more than 
+the maximum visiting times it can be on a qualified walk, through $\kw{flowcapacity[v]}$,
+and in the same time  compute the query length instead of weighted length accurately through 
+$\kw{ querynum[v]}$.
+%  its minimum visiting time, 
+In this way, we resolve the \textbf{Approximation Challenge} without losing the soundness, formally in the appendix.
+This step also guaranteed the termination, as in line:8 and line:14, through a boolean list $\kw{visited}$.
+% and solved the \textbf{Challenge II.} discussed above.
+% % \todo{solve the challenge 2} 
+% % search for finite walk  
+% % So we use the dfs to search for the 
+% \\
+% % In order to
+% % solve the \textbf{Challenge I},
+% % specifically guarantee the visiting times of each vertex by its weight, 
+% % we use a special parameter $\kw{flowcapacity}$  to track the minimum weight during the 
+% % % dfs process, 
+% % deep first searching along the walk, 
+% % also a parameter $\kw{querynum}$
+% % % to compute the query length of this walk
+% % to track the total number of vertices which are query vertices along the walk in order to compute the query length of this walk.
+% In order to
+% solve the \textbf{Approximation Challenge},
+% specifically guarantee the visiting times of each vertex by its weight
+% and compute the adaptivity accurately, 
+% we use a special parameter $\kw{flowcapacity}$  to track the minimum weight
+% along the path during the 
+% % dfs process, 
+% % deep first 
+% searching procedure, 
+% and a parameter $\kw{querynum}$
+% % to compute the query length of this walk
+% to track the total number of vertices with query annotation $1$
+% % which are query vertices 
+% along the path 
+% in order to compute the query length.
 % 
 % \todo{solve the challenge 1, specifically in the dfs strategy
 % of this algorithm is described as follows,
@@ -3088,6 +3175,7 @@ in order to compute the query length.
 % we use another parameter $\kw{querynum}$
 % to track the total number of vertices which are query vertices along the walk.
 
+\highlight{Algorithm Detail Steps}
 The detail steps of this dfs strategy
 % of this algorithm is described as follows,
 from line: 3-16 in Algorithm~\ref{alg:adaptscc},
@@ -3186,6 +3274,7 @@ Notice here, another special operation we have in the second branch is Non-updat
 $\kw{querynum}$ and $\kw{flowcapacity}$.
 This guarantees both the accuracy and the soundness, formally in Lemma~\ref{thm:sound_adaptalg} in Appendix~\ref{apdx:adaptalg_soundness}.
 
+\highlight{Example}
 Now, we show an example illustrating how our two updating operations for adaptivity 
 for each path can guarantee both the accuracy and the soundness. 
 Look at a Nested While Loop example program in Figure~\ref{fig:alg_adaptsearch_nestedwhile}.
@@ -3258,7 +3347,6 @@ value over every vertex.
 The soundness is formally guaranteed in Lemma~\ref{lem:sound_adaptalg_scc} in Appendix~\ref{apdx:adaptalg_soundness}.
 
 % Look at a Nested While Loop example program in Figure~\ref{fig:alg_adaptsearch_nestedwhile}.
-
 % Specifically,
 % % because a second visiting of the same vertex 
 % if this vertex is visited, it indicates that a cycle is monitored and  
@@ -3279,7 +3367,7 @@ The soundness is formally guaranteed in Lemma~\ref{lem:sound_adaptalg_scc} in Ap
   \begin{figure}
     \centering
     {\footnotesize
-    \begin{subfigure}{.5\textwidth}
+    \begin{subfigure}{.4\textwidth}
     \begin{centering}
     % 
     $ 
@@ -3305,48 +3393,48 @@ The soundness is formally guaranteed in Lemma~\ref{lem:sound_adaptalg_scc} in Ap
     \end{centering}
     \end{subfigure}
     \quad
-    \begin{subfigure}{.42\textwidth}
+    \begin{subfigure}{.52\textwidth}
       \begin{centering}
       \begin{tikzpicture}[scale=\textwidth/18cm,samples=200]
-% Variables Initialization
-\draw[] (-5, 1) circle (0pt) node{{ $a^0: {}^1_{0}$}};
-\draw[] (-5, 7) circle (0pt) node{{ $x^1: {}^{1}_{0}$}};
-% Variables Inside the Loop
-   \draw[] (0, 7) circle (0pt) node{{ $y^6: {}^{k}_{0}$}};
-   \draw[] (0, 1) circle (0pt) node{{ $x^9: {}^{k}_{0}$}};
-   % Counter Variables
-   \draw[] (5, 9) circle (0pt) node {{$i^0: {}^{1}_{0}$}};
-   \draw[] (5, 6) circle (0pt) node {{ $i^4: {}^{k}_{0}$}};
-   \draw[] (5, 3) circle (0pt) node {{$j^0: {}^{1}_{0}$}};
-   \draw[] (5, 0) circle (0pt) node {{ $j^8: {}^{k}_{0}$}};
-   %
-   % Value Dependency Edges:
-   \draw[ ultra thick, -latex, densely dotted,] (0, 7.5) arc (220:-100:1.5);
-   \draw[ thick, -latex] (5, 6.5)  -- (5, 8.5) ;
-   \draw[ thick, -latex] (5, 0.5)  -- (5, 2.5) ;
-   \draw[ ultra thick, -latex, densely dotted,] (1., 0.5) arc (120:-200:1.5);
-   % Value Dependency Edges on Initial Values:
-   \draw[ thick, -latex,] (-0.5, 1)  -- (-4.5, 1) ;
-   \draw[ thick, -latex,] (-0.5, 7)  -- (-4.5, 7) ;
-   %
-   \draw[ ultra thick, -latex, densely dotted,] (-0.5, 1.5)  to  [out=-220,in=220]  (-0.5, 7);
-   \draw[ ultra thick, -latex, densely dotted,]  (0.5, 7) to  [out=-60,in=60] (0.5, 1) ;
-   % Control Dependency
-  %  \draw[ thick,-latex] (1.5, 7)  -- (4, 9) ;
-  %  \draw[ thick,-latex] (1.5, 4)  -- (4, 9) ;
-  \draw[ thick, -latex, ] (6.5, 6.5) arc (150:-150:1);
-  \draw[ thick, -latex, ] (6.5, 0.5) arc (150:-150:1);
-  \draw[ thick,-latex] (1.5, 7)  -- (4, 6) ;
-   \draw[ thick,-latex] (1.5, 1)  -- (4, 6) ;
-   \draw[ thick,-latex] (1.5, 1)  -- (4, 1) ;
+      % Variables Initialization
+      \draw[] (-5, 1) circle (0pt) node{{ $a^0: {}^1_{0}$}};
+      \draw[] (-5, 7) circle (0pt) node{{ $x^1: {}^{1}_{0}$}};
+      % Variables Inside the Loop
+      \draw[] (0, 7) circle (0pt) node{{ $y^6: {}^{k}_{0}$}};
+      \draw[] (0, 1) circle (0pt) node{{ $x^9: {}^{k}_{0}$}};
+      % Counter Variables
+      \draw[] (5, 9) circle (0pt) node {{$i^0: {}^{1}_{0}$}};
+      \draw[] (5, 6) circle (0pt) node {{ $i^4: {}^{k}_{0}$}};
+      \draw[] (5, 3) circle (0pt) node {{$j^0: {}^{1}_{0}$}};
+      \draw[] (5, 0) circle (0pt) node {{ $j^8: {}^{k}_{0}$}};
+      % Value Dependency Edges:
+      \draw[ ultra thick, -latex, densely dotted,] (0, 7.5) arc (220:-100:1.5);
+      \draw[] (1, 8) node [] {\highlight{$k$}};
+      \draw[ thick, -latex] (5, 6.5)  -- node[left]{\highlight{{$k$}}}(5, 8.5) ;
+      \draw[ thick, -latex] (5, 0.5)  -- node[left]{\highlight{{$k$}}}(5, 2.5) ;
+      \draw[ ultra thick, -latex, densely dotted,] (1., 0.5) arc (120:-200:1.5);
+      \draw[] (1, 0) node [] {\highlight{$k$}};
+      % Value Dependency Edges on Initial Values:
+      \draw[ thick, -latex,] (-0.5, 1)  -- node[above]{\highlight{{$k$}}}(-4.5, 1) ;
+      \draw[ thick, -latex,] (-0.5, 7)  -- node[above]{\highlight{{$k$}}}(-4.5, 7) ;
+      %
+      \draw[ ultra thick, -latex, densely dotted,] (-0.5, 1.5)  to  [out=-220,in=220]  
+      node[left]{\highlight{{$k$}}}(-0.5, 7);
+      \draw[ ultra thick, -latex, densely dotted,]  (0.5, 7) to  [out=-60,in=60] 
+      node[right]{\highlight{{$k$}}}(0.5, 1) ;
+      % Control Dependency
+      \draw[ thick, -latex, ] (6.5, 6.5) arc (150:-150:1);
+      \draw[] (7.5, 6) node [] {\highlight{$k$}};
+      \draw[ thick, -latex, ] (6.5, 0.5) arc (150:-150:1);
+      \draw[] (7.5, 0) node [] {\highlight{$k$}};
+      \draw[ thick,-latex] (1.5, 7)  -- node[below]{\highlight{{$k$}}}(4, 6) ;
+      \draw[ thick,-latex] (1.5, 1)  -- node[right]{\highlight{{$k$}}}(4, 6) ;
+      \draw[ thick,-latex] (1.5, 1)  -- node[above]{\highlight{{$k$}}}(4, 1) ;
    \end{tikzpicture}
    \caption{}
       \end{centering}
       \end{subfigure}
     }
-    % \end{wrapfigure}
-    % \end{equation*}
-    \vspace{-0.4cm}
      \caption{(a) Nested While Loop Example, (b) Execution-Based Dependency Graph, (c) The Static Program-Based Dependency graph.}
     \label{fig:alg_adaptsearch_nestedwhile}
     \vspace{-0.5cm}
