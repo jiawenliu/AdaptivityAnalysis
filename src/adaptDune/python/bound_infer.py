@@ -220,18 +220,24 @@ class TransitionBound:
         self.var_resets = defaultdict(list)
         self.var_reset_chains = defaultdict(list)
         self.reset_vars = defaultdict(set)
+        self.var_decs = defaultdict(list)
+
         
-    def compute_var_inc_and_reset(self):
-        # self.var_incs = {}
+
+   
+    def collect_var_modifications(self):
         for transition_index in range(len(self.transition_graph.transitions)):
             (_, dc_set, _, _) = self.transition_graph.transitions[transition_index]
             # (_, dc_set, _, _) = t
             for dc in dc_set:
+                var = dc.get_var()
                 if dc.dc_type == DifferenceConstraint.DCType.INC:
-                    self.var_incs[dc.get_var()].append((transition_index, dc.dc_const))
+                    self.var_incs[var].append((transition_index, dc.dc_const))
                 elif dc.dc_type == DifferenceConstraint.DCType.RESET:
-                    self.var_resets[dc.get_var()].append((transition_index, dc.dc_var, dc.dc_const))
-    
+                    self.var_resets[var].append((transition_index, dc.dc_var, dc.dc_const))
+                elif dc.dc_type == DifferenceConstraint.DCType.DEC:
+                    self.var_decs[var].append((var, (dc.dc_const)) )
+
     def dfs_var_inc_and_reset_chains(self, v):
         print("computing the reset chain of: ", v)
         for (transition_index, dc_var, dc_const) in self.var_resets[v]:
@@ -358,7 +364,7 @@ class TransitionBound:
 
 
     def compute_transition_bounds(self):
-        self.compute_var_inc_and_reset()
+        self.collect_var_modifications()
         # visited = {v:False for v in self.var_resets.keys()}
         for v in self.var_resets.keys():
             if v not in self.var_reset_chains.keys():
@@ -367,26 +373,3 @@ class TransitionBound:
             self.compute_transition_bound_closure_optimal(transition_index)
         return self.transition_bounds
 
-    def collect_paths(self):
-        pass   
-
-    def program_refine(self):
-        pass 
-
-    def outside_in(self):
-        pass
-
-    def inside_out(self):
-        pass 
-
-    def var_modi(self):
-        pass 
-
-    def path_local_bound(self):
-        pass
-
-    def compute_bounds(self):
-        self.compute_transition_bounds()
-        
-    def print_bounds(self):
-            return [w.value for w in self.transition_bounds]

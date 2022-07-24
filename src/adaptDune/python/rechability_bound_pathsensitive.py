@@ -34,11 +34,7 @@ class DifferenceConstraint:
     def is_dec(self):
         return self.dc_type == self.DCType.DEC
     
-    def get_inc_value(self):
-        return self.inc_value
 
-    def get_dec_value(self):
-        return self.dec_value
 
 
 class DirectedGraph:
@@ -126,10 +122,8 @@ class DirectedGraph:
                 self.scc_dfs(i, low, disc, stackMember, st)   
 
 
-#TODO: build Base Father Graph Calss
 #Inherit the Transition Graph and the Data-Flow Graph from the Command Graph Class
 class TransitionGraph(DirectedGraph):
-    # locations = [0, 1]
     ctl_edges = [(0, 1), (1, 1)]
     transitions = [(0, [DifferenceConstraint("x", None, "k", DifferenceConstraint.DCType.RESET)], 1, [0]),
     (1, [DifferenceConstraint("x", None, "1", DifferenceConstraint.DCType.DEC)], 1, [1, 2])]
@@ -180,7 +174,7 @@ class LocalBound:
 
 
 
-
+# TODO: Consider to reduce to use the global variables
 class TransitionBound:
     transition_bounds = []
     var_invariant = {}
@@ -192,23 +186,28 @@ class TransitionBound:
         self.transition_local_bounds = LocalBound.compute_local_bounds(transition_graph)
         print (self.transition_local_bounds)
         self.var_invariant = defaultdict(str)
+        # List of Pairs : INT * STRING : (transition_index, dc.dc_const)
         self.var_incs = defaultdict(list)
         self.var_incs_bound = defaultdict(str)
+        # List of Truples : INT * STRING * STRING : (transition_index, dc.dc_var, dc.dc_const)
         self.var_resets = defaultdict(list)
         self.var_reset_chains = defaultdict(list)
         self.reset_vars = defaultdict(set)
-        
-    def compute_var_inc_and_reset(self):
-        # self.var_incs = {}
+        self.var_decs = defaultdict(list)
+
+    def collect_var_modifications(self):
         for transition_index in range(len(self.transition_graph.transitions)):
             (_, dc_set, _, _) = self.transition_graph.transitions[transition_index]
             # (_, dc_set, _, _) = t
             for dc in dc_set:
+                var = dc.get_var()
                 if dc.dc_type == DifferenceConstraint.DCType.INC:
-                    self.var_incs[dc.get_var()].append((transition_index, dc.dc_const))
+                    self.var_incs[var].append((transition_index, dc.dc_const))
                 elif dc.dc_type == DifferenceConstraint.DCType.RESET:
-                    self.var_resets[dc.get_var()].append((transition_index, dc.dc_var, dc.dc_const))
-    
+                    self.var_resets[var].append((transition_index, dc.dc_var, dc.dc_const))
+                elif dc.dc_type == DifferenceConstraint.DCType.DEC:
+                    self.var_decs[var].append((var, (dc.dc_const)) )
+
     def dfs_var_inc_and_reset_chains(self, v):
         print("computing the reset chain of: ", v)
         for (transition_index, dc_var, dc_const) in self.var_resets[v]:
@@ -225,11 +224,8 @@ class TransitionBound:
                 self.var_reset_chains[v].append([(transition_index, dc_var, dc_const)])
         print("computed the reset chain of: ", v, self.var_reset_chains[v])
         print("computed the reset vars of: ", v, self.reset_vars[v])
-        # self.var_reset_chains[v]=(reset_chains)
         
         return
-    # def compute_var_reset(self):
-    #     self.var_resets = {}
     
     # Input: a variable
     # computes the symbolic invariant for this variable over the whole program
@@ -334,7 +330,7 @@ class TransitionBound:
 
 
     def compute_transition_bounds(self):
-        self.compute_var_inc_and_reset()
+        self.collect_var_modifications()
         # visited = {v:False for v in self.var_resets.keys()}
         for v in self.var_resets.keys():
             if v not in self.var_reset_chains.keys():
@@ -351,43 +347,57 @@ class TransitionBound:
 
 
 class ProgramRefine():
-    class RefinedType(enum.Enum):
-        CHOICE = 1
-        REPEAT = 2
-        SEQ = 3
-        TP = 4
 
     def __init__(self) -> None:
         self.refined_result = []
         pass
 
-    def refine(self):
+    def collect_paths(self):
+        pass
+
+    def program_refine(self):
         pass 
 
     def get_result(self):
         return self.refined_result
 
+class RefinedProg():
+    class RType(enum.Enum):
+        CHOICE = 1
+        REPEAT = 2
+        SEQ = 3
+        TP = 4
+    
+    # type: The type of the refined program
+    # prog: List of Refined Program
+    def __init__(self, type = None, prog = None):
+        self.type = type
+        self.prog = prog
+
+
     def get_choices(self):
-        return self.refined_result
+
+        return self.prog
 
     def get_seqs(self):
-        return self.refined_result
+        return self.prog
 
     def get_repeat(self):
-        return self.refined_result
+        return self.prog[0]
     
     def get_tp(self):
-        return self.refined_result
+        return self.prog
     
+    # dfs until the TP, return the list of assumptions on all the transition paths.
     def get_assumes(self):
-        return self.refined_result
+        return self.prog
     
+    # dfs until the TP, return the list of unique variables on all the transition paths.
     def get_vars(self):
-        return self.refined_result
+        return self.prog
 
 
-class ReachabilityBound(TransitionBound):
-
+class ReachabilityBound():
 
     def __init__(self, transition_graph=TransitionGraph()) -> None:
         super().__init__(transition_graph)
@@ -396,19 +406,30 @@ class ReachabilityBound(TransitionBound):
         self.tp_var_modi = []
         self.transition_path_bound = {}
  
+    def transition_bound(self, transition_graph):
+        return TransitionBound(transition_graph).compute_bounds()
 
     def program_refine(self):
+        self.refined_prog = RefinedProg(RefinedProg.RType.REPEAT, 
+            [RefinedProg(RefinedProg.RType.CHOICE, 
+                [RefinedProg(RefinedProg.RType.SEQ, 
+                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
+                    RefinedProg(RefinedProg.RType.TP, [2, 1, 4])]),
+                 RefinedProg(RefinedProg.RType.SEQ, 
+                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 1, 4])),
+                    RefinedProg(RefinedProg.RType.TP, [2, 0, 3])])
+                    ])])
         self.refined_prog = ProgramRefine(self.transition_graph).get_result() 
 
     def outside_in(self, refined_prog):
-        if refined_prog.type == ProgramRefine.RefinedType.CHOICE:
+        if refined_prog.type == RefinedProg.RType.CHOICE:
             return max(self.outside_in(choice_prog) for choice_prog in refined_prog.get_choices())
-        elif refined_prog.type == ProgramRefine.RefinedType.REPEAT:
+        elif refined_prog.type == RefinedProg.RType.REPEAT:
             rp_prog = refined_prog.get_repeat()
             return (self.prog_initial(rp_prog) - self.prog_final(rp_prog)) / self.var_modi(rp_prog)
-        elif refined_prog.type == ProgramRefine.RefinedType.SEQ:
+        elif refined_prog.type == RefinedProg.RType.SEQ:
             return sum(self.outside_in(seq_prog) for seq_prog in refined_prog.get_seqs())
-        elif refined_prog.type == ProgramRefine.RefinedType.TP:
+        elif refined_prog.type == RefinedProg.RType.TP:
             return 1
 
     def var_modi(self, prog):
@@ -420,23 +441,23 @@ class ReachabilityBound(TransitionBound):
     #     return [self.var_incs[v] - self.var_decs[v] for v in self.vars]
 
     def prog_initial(self, prog):
-        return "/\ ".join([v + "= " + sum(self.var_resets[v]) for v in prog.get_vars()])
+        return "/\ ".join([v + "= " + str(self.var_invariant[v]) for v in prog.get_vars()])
 
     def prog_final(self, prog):
         return self.prog_initial(prog) + "/\ ¬(" + self.prog_invariant(prog) + ")"
 
     def prog_next(self, prog):
-        if prog.type == ProgramRefine.RefinedType.CHOICE:
+        if prog.type == RefinedProg.RType.CHOICE:
             return max(self.prog_next(choice_p) for choice_p in prog.get_choices())
-        elif prog.type == ProgramRefine.RefinedType.REPEAT:
+        elif prog.type == RefinedProg.RType.REPEAT:
             rp_prog = prog.get_repeat()
             if self.prog_loc_bound[rp_prog] == "":
                 self.prog_loc_bound[rp_prog] = self.outside_in(rp_prog)
             return self.self.prog_loc_bound[rp_prog] * (self.prog_next(rp_prog))
-        elif prog.type == ProgramRefine.RefinedType.SEQ:
+        elif prog.type == RefinedProg.RType.SEQ:
             return sum(self.prog_next(seq_prog) for seq_prog in prog.get_seqs())
-        elif prog.type == ProgramRefine.RefinedType.TP:
-            return sum([self.var_incs[v] - self.var_decs[v] for v in prog.get_vars()])
+        elif prog.type == RefinedProg.RType.TP:
+            return sum([(self.var_decs[v] if self.var_dec[v].transition_index in prog.transitions else 0) - self.var_incs[v] for v in prog.get_vars()])
 
     def prog_invariant(self, prog):
         invariant = "True"
@@ -445,13 +466,13 @@ class ReachabilityBound(TransitionBound):
         return invariant
 
     def repeat_chain_transition(self, prog, rp_bound):
-        if prog.type == ProgramRefine.RefinedType.CHOICE:
+        if prog.type == RefinedProg.RType.CHOICE:
             (self.repeat_chain_transition(choice_prog, rp_bound) for choice_prog in prog.get_choices())
-        elif prog.type == ProgramRefine.RefinedType.REPEAT:
+        elif prog.type == RefinedProg.RType.REPEAT:
             self.repeat_chain_transition(prog.get_repeat(), self.prog_loc_bound[prog] * rp_bound)
-        elif prog.type == ProgramRefine.RefinedType.SEQ:
+        elif prog.type == RefinedProg.RType.SEQ:
             (self.repeat_chain_transition(seq_prog, rp_bound) for seq_prog in prog.get_seqs())
-        elif prog.type == ProgramRefine.RefinedType.TP:
+        elif prog.type == RefinedProg.RType.TP:
             self.transition_path_bound[prog.get_tp()] = rp_bound
         else:
             return
