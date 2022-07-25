@@ -3,7 +3,7 @@ from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
 import argparse
 
 class GraphParser(argparse.ArgumentParser):
-    def __init__(self) -> None:
+    def __init__(self, example = None) -> None:
         super().__init__(description='Process the Abstract Control Flow Graph and Data Dependency Graph')
         self.add_argument('-d', '--dcfg',
         type=str, 
@@ -20,17 +20,23 @@ class GraphParser(argparse.ArgumentParser):
         default= "seq.br", 
         help='The example name for the Abstract Control Flow Graph')
 
-
-        self.args = self.parse_args()
+        if example:
+            self.example_path = example
+        else:
+            self.args = self.parse_args()
+            self.example_path = self.args.example
 
         # Just for simplicity of testing, using the same name in different folder
         # Will be removed when lauching
-        self.args.dcfg = "./dcfg/" + self.args.example[11:]
-        self.args.abs_cfg = "./abscfg/" + self.args.example[11:]
+        # self.args.dcfg = "./dcfg/" + self.args.example[11:]
+        # self.args.abs_cfg = "./abscfg/" + self.args.example[11:]
+        # self.example_path = self.args.example
+        self.dcfg_file = "./dcfg/" + self.example_path[11:]
+        self.abs_cfg_file = "./abscfg/" + self.example_path[11:]
 
 
     def dcfg_parse(self):
-        with open(self.args.dcfg, "r") as graphdata:
+        with open(self.dcfg_file, "r") as graphdata:
             n = int(graphdata.readline())
             query = [int(q) for q in graphdata.readline().strip("\n").split(",")]
             edges = [([int(v) for v in e.split(",")]) for e in graphdata.readline().split(";")]
@@ -42,7 +48,7 @@ class GraphParser(argparse.ArgumentParser):
         pass
 
     def abscfg_parse(self):
-        with open(self.args.abs_cfg, "r") as graphdata:
+        with open(self.abs_cfg_file, "r") as graphdata:
             # _ = [graphdata.readline() for _ in range(3)]
             n = int( graphdata.readline())
             edges = [[(n - 1) if int(v) == -1 else int(v) for v in e.split(",")] for e in graphdata.readline().split(";")[:-1]]

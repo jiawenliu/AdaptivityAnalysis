@@ -234,7 +234,7 @@ class TransitionBound:
                 elif dc.dc_type == DifferenceConstraint.DCType.RESET:
                     self.var_resets[var].append((transition_index, dc.dc_var, dc.dc_const))
                 elif dc.dc_type == DifferenceConstraint.DCType.DEC:
-                    self.var_decs[var].append((var, (dc.dc_const)) )
+                    self.var_decs[var].append((transition_index, var, (dc.dc_const)) )
 
     def dfs_var_inc_and_reset_chains(self, v):
         print("computing the reset chain of: ", v)
