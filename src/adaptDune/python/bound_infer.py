@@ -1,8 +1,6 @@
 import enum
 from collections import defaultdict
 from ntpath import join
-from adapt_search_refined import Graph, AdaptType
-
 
 class DifferenceConstraint:
     class DCType(enum.Enum):
@@ -373,3 +371,10 @@ class TransitionBound:
             self.compute_transition_bound_closure_optimal(transition_index)
         return self.transition_bounds
 
+    def print_transition_bounds(self):
+            for (t_index, b) in enumerate(self.transition_bounds):
+                transition = self.transition_graph.transitions[t_index]
+                for var_vertex in transition[3]:
+                    print( "Reachability Bound for Transition: (" + str(transition[0]) + ", " + str(transition[2]) + ") is: " + str(b))
+                    if not transition[1] == []:
+                        print( "weight for Variable: " + transition[1][0].get_var() + " of label " + str(var_vertex) + " is: " + str(b))

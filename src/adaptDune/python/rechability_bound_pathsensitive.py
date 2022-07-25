@@ -465,19 +465,19 @@ class ReachabilityBound():
             invariant += " /\ " + assume.get_condition()
         return invariant
 
-    def repeat_chain_transition(self, prog, rp_bound):
+    def repeat_chain_dfs(self, prog, rp_bound):
         if prog.type == RefinedProg.RType.CHOICE:
-            (self.repeat_chain_transition(choice_prog, rp_bound) for choice_prog in prog.get_choices())
+            (self.repeat_chain_dfs(choice_prog, rp_bound) for choice_prog in prog.get_choices())
         elif prog.type == RefinedProg.RType.REPEAT:
-            self.repeat_chain_transition(prog.get_repeat(), self.prog_loc_bound[prog] * rp_bound)
+            self.repeat_chain_dfs(prog.get_repeat(), self.prog_loc_bound[prog] * rp_bound)
         elif prog.type == RefinedProg.RType.SEQ:
-            (self.repeat_chain_transition(seq_prog, rp_bound) for seq_prog in prog.get_seqs())
+            (self.repeat_chain_dfs(seq_prog, rp_bound) for seq_prog in prog.get_seqs())
         elif prog.type == RefinedProg.RType.TP:
             self.transition_path_bound[prog.get_tp()] = rp_bound
         else:
             return
 
     def inside_out(self, prog):
-        self.repeat_chain_transition(self, prog, 1) 
+        self.repeat_chain_dfs(self, prog, 1) 
 
 
