@@ -19,12 +19,6 @@ class TestUnits:
         print("The Calculated Path Sensitive Reachability Bounds are: ") 
         pathsensitive_rb.print_path_bound()
 
-    # test the default graph
-    def test_default(self):
-        bound_infer = self.ALG()
-        bound_infer.compute_transition_bounds()
-        print("The Reachability Bounds Calculated for Vertices in Default Graph are: ", bound_infer.print_transition_bounds())
-
     # the example with only sequence, 
     # Expected Weights: [1,1,1,1]
     def test_seq(self):
@@ -44,18 +38,9 @@ class TestUnits:
 
     # the example with while loop of multi-path from if branch (multi-path loop will result in different visiting times for
     # verteices  belong to the same loop),  
-    # Expected Adaptivity: 1 + k
-    # Ouput Adaptivity: 1 + k/2 + k
+    # Expected Path Sensitive Reachability Bounds: 1, 
+    # Ouput Reachability Bounds: 
     def multiple_round_odd_sim(self):
-        ctl_edges = [(0, 1), (1, 2), (2, 3), (2, 3), (3, 1)]
-        transitions = [
-            (0, [DifferenceConstraint("i", None, "k", DifferenceConstraint.DCType.RESET),
-            DifferenceConstraint("x", None, "Q", DifferenceConstraint.DCType.RESET)], 1, [0, 1]),
-            (1, [DifferenceConstraint("i", None, "1", DifferenceConstraint.DCType.DEC)], 2, [2]),
-            (2, [DifferenceConstraint("y", None, "Q", DifferenceConstraint.DCType.RESET)], 3, [3]),
-            (2, [DifferenceConstraint("y", None, "Q", DifferenceConstraint.DCType.RESET)], 3, [4]),
-            (3, [DifferenceConstraint("x", None, "Q", DifferenceConstraint.DCType.RESET)], 2, [5])
-            ]
         refined_prog = RefinedProg(RefinedProg.RType.REPEAT, 
             RefinedProg(RefinedProg.RType.CHOICE, 
                 [RefinedProg(RefinedProg.RType.SEQ, 
@@ -65,10 +50,29 @@ class TestUnits:
                     [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 1, 4])),
                     RefinedProg(RefinedProg.RType.TP, [2, 0, 3])])
                     ]))
-        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Simple While Graph are: [1, 1, k, k/2, k/2, k] ")
-        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Simple While Graph are: [1, 1, k, k/2, k/2, k] ")
+        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
+        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
 
         transition_graph = GraphParser("./examples/multiple_round_odd_sim.br").abscfg_parse()
+        self.runner(transition_graph, refined_prog)
+
+    # the example with while loop of multi-path from if branch (multi-path loop will result in different visiting times for
+    # verteices  belong to the same loop),  
+    # Expected Path Sensitive Reachability Bounds: 1, 
+    # Ouput Reachability Bounds: 
+    def multiple_round_single_sim(self):
+        refined_prog = RefinedProg(RefinedProg.RType.CHOICE, 
+                [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
+                RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 1, 4])),
+                RefinedProg(RefinedProg.RType.REPEAT, 
+                    RefinedProg(RefinedProg.RType.SEQ,
+                        [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
+                        RefinedProg(RefinedProg.RType.TP, [2, 1, 4])]))])
+
+        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
+        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
+
+        transition_graph = GraphParser("./examples/multiple_round_single_sim.br").abscfg_parse()
         self.runner(transition_graph, refined_prog)
 
 
@@ -278,5 +282,5 @@ class TestUnits:
 
 tester = TestUnits(PathSensitiveReachabilityBound)
 tester.test_seq()
-tester.multiple_round_odd_sim()
+tester.multiple_round_single_sim()
 
