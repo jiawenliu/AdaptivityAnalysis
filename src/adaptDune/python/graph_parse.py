@@ -63,7 +63,8 @@ class GraphParser(argparse.ArgumentParser):
                     v_set = [int(v)]
                     (var, avar, c, ctype) = dc.split(",")
                     print((var, avar, c, ctype))
-                    dc_type = DifferenceConstraint.DCType.RESET if ctype == "RESET" else DifferenceConstraint.DCType.INC if ctype == "INC" else DifferenceConstraint.DCType.DEC
+                    dc_type = DifferenceConstraint.DCType.RESET if ctype == "RESET" else DifferenceConstraint.DCType.INC if ctype == "INC" else DifferenceConstraint.DCType.DEC if ctype == "DEC" else DifferenceConstraint.DCType.ASUM
+                    b_expr = var if ctype == "ASUM" else None
                     avar = None if avar == "" else avar
                     c =  None if c == "" else int(c) if isinstance(c, int) else c
                     dc_set = [DifferenceConstraint(var, avar, c, dc_type)]

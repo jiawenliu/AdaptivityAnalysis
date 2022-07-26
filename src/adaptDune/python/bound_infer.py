@@ -7,10 +7,7 @@ class DifferenceConstraint:
         DEC = 1
         INC = 2
         RESET = 3
-
-    var = ""
-    dc_var = ""
-    dc_const = ""
+        ASUM = 4
 
     dc_type = 1
     def __init__(self, var="x", dc_var = None, dc_const = None, dc_type = 1) -> None:
@@ -18,6 +15,7 @@ class DifferenceConstraint:
         self.dc_var = dc_var
         self.dc_const = dc_const
         self.dc_type = dc_type
+        self.dc_bexpr = var if dc_type == self.DCType.ASUM else None
         pass
 
     def get_var(self):
@@ -31,12 +29,18 @@ class DifferenceConstraint:
 
     def is_dec(self):
         return self.dc_type == self.DCType.DEC
-    
+
+    def is_asum(self):
+        return self.dc_type == self.DCType.ASUM
+
     def get_inc_value(self):
         return self.inc_value
 
     def get_dec_value(self):
         return self.dec_value
+    
+    def get_asum(self):
+        return self.dc_bexpr
 
 
 class DirectedGraph:
