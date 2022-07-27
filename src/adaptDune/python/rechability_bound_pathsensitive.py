@@ -276,8 +276,14 @@ class PathSensitiveReachabilityBound():
 
     def var_modi(self, prog):
         id = prog.prog_id()
+        
         if (not self.prog_loc_bound[id]):
            self.prog_loc_bound[id] = self.outside_in(prog)
+        ## For Debuging:
+        next = self.prog_next(prog)
+        print("the NEXT state for program : ", prog.prog_id(), " is : ", next)
+
+        ## For Releasing:
         return self.prog_loc_bound[id]  + " * ("  +  self.prog_initial(prog) + " - "  + self.prog_next(prog) + ")"
 
     # def transition_path_next(self):
@@ -289,7 +295,9 @@ class PathSensitiveReachabilityBound():
         r = set()
         for (_, dc_set, _, _) in [self.transition_graph.transitions[t_id] for t_id in transitions]:
             for dc in dc_set:
-                (r.add(dc.var))
+                if(not (dc.dc_type == DifferenceConstraint.DCType.ASUM)):
+                    (r.add(dc.var))
+        ## For Debuging:
         print("The Variables Set for Program : ", prog.prog_id(), " is : ", r)
         return r
 
@@ -301,16 +309,17 @@ class PathSensitiveReachabilityBound():
             for dc in dc_set:
                 if dc.dc_type == DifferenceConstraint.DCType.ASUM:
                     (r.add(dc.dc_bexpr))
+        ## For Debuging:
         print("The Assumptions for Program : ", prog.prog_id(), " is : ", r)
         return r
 
 
     def prog_initial(self, prog):
         ## For Debuging:
-        print("the INITIAL state for program : ", prog.prog_id(), " is : ")
-        print("/\\ ".join([str(v) + "= " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)]))
-        
-        return "/\\ ".join([str(v) + " = " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)])
+        temp = "/\\".join([str(v) + "= " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)])
+        print("the INITIAL state for program : ", prog.prog_id(), " is : ", temp)
+        ## For Releasing:
+        return "/\\".join([str(v) + " = " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)])
 
     def prog_final(self, prog):
         f = self.prog_invariant(prog)
@@ -331,7 +340,7 @@ class PathSensitiveReachabilityBound():
             return ("(" + "+".join(self.prog_next(seq_prog) for seq_prog in prog.get_seqs()) + ")")
         elif prog.type == RefinedProg.RType.TP:
             return ("(" + "+".join([
-                (str(self.transition_bound.var_incs[v][1]) if self.transition_bound.var_incs[v] else "0") for v in self.get_vars(prog)]) + ")")
+                (str("+".join([inc[1] for inc in self.transition_bound.var_incs[v]])) if self.transition_bound.var_incs[v] else "0") for v in self.get_vars(prog)]) + ")")
 
     def prog_invariant(self, prog):
         return "/\\ ".join(self.get_assumes(prog))

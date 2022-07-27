@@ -10,8 +10,8 @@ class DifferenceConstraint:
         ASUM = 4
 
     dc_type = 1
-    def __init__(self, var="x", dc_var = None, dc_const = None, dc_type = 1) -> None:
-        self.var = var 
+    def __init__(self, var = None, dc_var = None, dc_const = None, dc_type = 1) -> None:
+        self.var = None if dc_type == self.DCType.ASUM else var 
         self.dc_var = dc_var
         self.dc_const = dc_const
         self.dc_type = dc_type
@@ -232,6 +232,7 @@ class TransitionBound:
             (_, dc_set, _, _) = self.transition_graph.transitions[transition_index]
             # (_, dc_set, _, _) = t
             for dc in dc_set:
+                if dc.dc_type == DifferenceConstraint.DCType.ASUM: continue
                 var = dc.get_var()
                 if dc.dc_type == DifferenceConstraint.DCType.INC:
                     self.var_incs[var].append((transition_index, dc.dc_const))
@@ -377,8 +378,9 @@ class TransitionBound:
 
     def print_transition_bounds(self):
             for (t_index, b) in enumerate(self.transition_bounds):
-                transition = self.transition_graph.transitions[t_index]
-                for var_vertex in transition[3]:
-                    print( "Reachability Bound for Transition: (" + str(transition[0]) + ", " + str(transition[2]) + ") is: " + str(b))
-                    if not transition[1] == []:
-                        print( "weight for Variable: " + transition[1][0].get_var() + " of label " + str(var_vertex) + " is: " + str(b))
+                (l1, dc_set, l2, vars) = self.transition_graph.transitions[t_index]
+                for var_vertex in vars:
+                    print( "Reachability Bound for Transition: (" + str(l1) + ", " + str(l2) + ") is: " + str(b))
+                    for dc in dc_set:
+                        if not (dc.dc_type == DifferenceConstraint.DCType.ASUM) :
+                            print( "weight for Variable: " + dc.get_var() + " of label " + str(var_vertex) + " is: " + str(b))
