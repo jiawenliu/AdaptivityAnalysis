@@ -215,9 +215,9 @@ class RefinedProg():
     def get_tp(self):
         return self.prog
     
-    # dfs until the TP, return the list of assumptions on all the transition paths.
-    def get_assumes(self):
-        return "True"
+    # # dfs until the TP, return the list of assumptions on all the transition paths.
+    # def get_assumes(self):
+    #     return ["True"]
     
     def get_transitions(self):
         if self.type == RefinedProg.RType.CHOICE:
@@ -236,11 +236,11 @@ class RefinedProg():
 
     def prog_signature(self):
         if self.type == RefinedProg.RType.CHOICE:
-            return "CH : \{ " + ",".join(choice_p.prog_id() for choice_p in self.get_choices()) + " \}"
+            return "CH : {" + ",".join(choice_p.prog_signature() for choice_p in self.get_choices()) + "}"
         elif self.type == RefinedProg.RType.REPEAT:
-            return "RP : \{ " + self.get_repeat().prog_id() + " \}"
+            return "RP : (" + self.get_repeat().prog_signature() + ")"
         elif self.type == RefinedProg.RType.SEQ:
-            return "SEQ : \{ " + ",".join(seq_prog.prog_id() for seq_prog in self.get_seqs()) + " \}"
+            return "SEQ : (" + ",".join(seq_prog.prog_signature() for seq_prog in self.get_seqs()) + ")"
         elif self.type == RefinedProg.RType.TP:
             return str(self.prog)
 
@@ -265,12 +265,12 @@ class PathSensitiveReachabilityBound():
 
     def outside_in(self, refined_prog):
         if refined_prog.type == RefinedProg.RType.CHOICE:
-            return "max".join(self.outside_in(choice_prog) for choice_prog in refined_prog.get_choices())
+            return ("max(" + ",".join(self.outside_in(choice_prog) for choice_prog in refined_prog.get_choices()) + ")")
         elif refined_prog.type == RefinedProg.RType.REPEAT:
             rp_prog = refined_prog.get_repeat()
-            return "(" + self.prog_initial(rp_prog) + " - "  + self.prog_final(rp_prog) + ") / (" + self.var_modi(rp_prog)
+            return "(" + self.prog_initial(rp_prog) + " until "  + self.prog_final(rp_prog) + ") / (" + self.var_modi(rp_prog)
         elif refined_prog.type == RefinedProg.RType.SEQ:
-            return "sum".join(self.outside_in(seq_prog) for seq_prog in refined_prog.get_seqs())
+            return ("(" + "+".join(self.outside_in(seq_prog) for seq_prog in refined_prog.get_seqs()) + ")")
         elif refined_prog.type == RefinedProg.RType.TP:
             return "1"
 
@@ -293,22 +293,34 @@ class PathSensitiveReachabilityBound():
         print("The Variables Set for Program : ", prog.prog_id(), " is : ", r)
         return r
 
+    # dfs until the TP, return the list of assumptions on all the transition paths.
+    def get_assumes(self, prog):
+        transitions = prog.get_transitions()
+        r = set()
+        for (_, dc_set, _, _) in [self.transition_graph.transitions[t_id] for t_id in transitions]:
+            for dc in dc_set:
+                if dc.dc_type == DifferenceConstraint.DCType.ASUM:
+                    (r.add(dc.dc_bexpr))
+        print("The Assumptions for Program : ", prog.prog_id(), " is : ", r)
+        return r
+
+
     def prog_initial(self, prog):
         ## For Debuging:
         print("the INITIAL state for program : ", prog.prog_id(), " is : ")
-        print("/\ ".join([str(v) + "= " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)]))
+        print("/\\ ".join([str(v) + "= " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)]))
         
-        return "/\ ".join([str(v) + " = " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)])
+        return "/\\ ".join([str(v) + " = " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)])
 
     def prog_final(self, prog):
-        print("the FINAL state for program : ", prog.prog_id(), " is : ")
-        print(self.prog_initial(prog) + "/\ ¬(" + self.prog_invariant(prog) + ")")
+        f = self.prog_invariant(prog)
+        print("the FINAL state for program : ", prog.prog_id(), " is : ", "¬(" + f + ")")
 
-        return self.prog_initial(prog) + "/\ ¬(" + self.prog_invariant(prog) + ")"
+        return " ¬(" + self.prog_invariant(prog) + ")"
 
     def prog_next(self, prog):
         if prog.type == RefinedProg.RType.CHOICE:
-            return "max".join(self.prog_next(choice_p) for choice_p in prog.get_choices())
+            return ("max(" + ",".join(self.prog_next(choice_p) for choice_p in prog.get_choices()) + ")")
         elif prog.type == RefinedProg.RType.REPEAT:
             rp_prog = prog.get_repeat()
             rp_id = rp_prog.prog_id()
@@ -316,13 +328,13 @@ class PathSensitiveReachabilityBound():
                 self.prog_loc_bound[rp_id] = self.outside_in(rp_prog)
             return self.prog_loc_bound[rp_id]  + " * ("  + (self.prog_next(rp_prog)) + ")"
         elif prog.type == RefinedProg.RType.SEQ:
-            return "sum".join(self.prog_next(seq_prog) for seq_prog in prog.get_seqs())
+            return ("(" + "+".join(self.prog_next(seq_prog) for seq_prog in prog.get_seqs()) + ")")
         elif prog.type == RefinedProg.RType.TP:
-            return "sum".join([
-                (str(self.transition_bound.var_incs[v][1]) if self.transition_bound.var_incs[v] else "0") for v in self.get_vars(prog)])
+            return ("(" + "+".join([
+                (str(self.transition_bound.var_incs[v][1]) if self.transition_bound.var_incs[v] else "0") for v in self.get_vars(prog)]) + ")")
 
     def prog_invariant(self, prog):
-        return " /\ "+ (prog.get_assumes())
+        return "/\\ ".join(self.get_assumes(prog))
 
     def repeat_chain_dfs(self, prog, rp_bound):
         print("Computing the rp Bound for prog : ", prog.prog_signature())
