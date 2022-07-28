@@ -343,7 +343,7 @@ class PathSensitiveReachabilityBound():
                 (str("+".join([inc[1] for inc in self.transition_bound.var_incs[v]])) if self.transition_bound.var_incs[v] else "0") for v in self.get_vars(prog)]) + ")")
 
     def prog_invariant(self, prog):
-        return "/\\ ".join(self.get_assumes(prog))
+        return "/\\".join(self.get_assumes(prog))
 
     def repeat_chain_dfs(self, prog, rp_bound):
         print("Computing the rp Bound for prog : ", prog.prog_signature())
