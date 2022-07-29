@@ -23,10 +23,11 @@ class AdaptEstimate():
             return [w.value for w in self.graph.weights]
         
         def print_vertex_weights(self):
-            for transition in self.transition_graph.transitions:
-                for var_vertex in transition[3]:
-                    if not transition[1] == []:
-                        print( "weight for Variable: " + transition[1][0].get_var() + " of label " + str(var_vertex) + " is: " + str(self.graph.weights[var_vertex].value))
+            for (_, dc_set, _, var_set) in self.transition_graph.transitions:
+                for var in var_set:
+                    print( "weight for Variable or Bool guard: " 
+                        + str(dc_set[0].get_var() if dc_set[0].get_var() else dc_set[0].dc_bexpr) + " of label " 
+                        + str(var) + " is: " + str(self.graph.weights[var].value))
 
         def edge_weights_estimate(self):
             transition_bounds = TransitionBound(self.transition_graph).compute_transition_bounds()

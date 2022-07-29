@@ -215,7 +215,9 @@ class TransitionBound:
         self.transition_graph = transition_graph
         self.transition_bounds = [""]*len(transition_graph.transitions)
         self.transition_local_bounds = LocalBound.compute_local_bounds(transition_graph)
-        print (self.transition_local_bounds)
+        print("THE LOCAL BOUNDS ARE: ", self.transition_local_bounds)
+        for t,lb in enumerate(self.transition_local_bounds):
+            print(self.transition_graph.transitions[t], "has local bound", lb)
         self.var_invariant = defaultdict(str)
         self.var_incs = defaultdict(list)
         self.var_incs_bound = defaultdict(str)
@@ -246,12 +248,13 @@ class TransitionBound:
         for (transition_index, dc_var, dc_const) in self.var_resets[v]:
             if dc_var and (dc_var not in self.reset_vars[v]) and (not (dc_var == v)):
                 self.reset_vars[v].add(dc_var)
-                if (dc_var not in self.var_reset_chains.keys()):
-                    self.var_reset_chains[dc_var] = []
+                if (not self.var_reset_chains[dc_var]):
+                    # self.var_reset_chains[dc_var] = []
                     self.dfs_var_inc_and_reset_chains(dc_var)
                 print("the nested reset chain of " , v, "are: ", self.var_reset_chains[dc_var])
                 for dc_var_rchain in self.var_reset_chains[dc_var]:
-                    self.var_reset_chains[v].append(dc_var_rchain+[(transition_index, dc_var, dc_const)])
+                    # tmp = [(transition_index, dc_var, dc_const)] + [(t, v, c) if (not t == transition_index) for (t, v, c) in dc_var_rchain]
+                    self.var_reset_chains[v].append(list(filter(lambda x: (x[0] != transition_index and x[1] != v), dc_var_rchain))+[(transition_index, dc_var, dc_const)])
                 for rv in self.reset_vars[dc_var]:
                     self.reset_vars[v].add(rv)
             else:
@@ -284,6 +287,7 @@ class TransitionBound:
         self.var_incs_bound[v] = var_inc
         self.var_invariant[v] = var_inc + " + " + var_reset
 
+    ###TODO: Non-termination when the variable is reset or increased in side the loop where it is a local bound"
     def compute_var_invariant_optimal(self, v):
         var_inc = "0"
         var_reset = "0"

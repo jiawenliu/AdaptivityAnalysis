@@ -346,7 +346,7 @@ class PathSensitiveReachabilityBound():
         return "/\\".join(self.get_assumes(prog))
 
     def repeat_chain_dfs(self, prog, rp_bound):
-        print("Computing the rp Bound for prog : ", prog.prog_signature())
+        print("Computing the Repeat Chain for prog : ", prog.prog_signature())
         if prog.type == RefinedProg.RType.CHOICE:
             for choice_prog in prog.get_choices():
                 (self.repeat_chain_dfs(choice_prog, rp_bound))
@@ -357,6 +357,21 @@ class PathSensitiveReachabilityBound():
                 (self.repeat_chain_dfs(seq_prog, rp_bound))
         elif prog.type == RefinedProg.RType.TP:
             self.transition_path_bound[prog.prog_id()] = rp_bound
+        else:
+            return
+
+    def choose_chain_dfs(self, prog, choose_chian):
+        print("Computing the Choose Chain for prog : ", prog.prog_signature())
+        if prog.type == RefinedProg.RType.CHOICE:
+            for choice_prog in prog.get_choices():
+                (self.repeat_chain_dfs(choice_prog, choose_chian + [choice_prog]))
+        elif prog.type == RefinedProg.RType.REPEAT:
+            self.repeat_chain_dfs(prog.get_repeat(), self.prog_loc_bound[prog.prog_id()]  + " * ("  + rp_bound + ")")
+        elif prog.type == RefinedProg.RType.SEQ:
+            for seq_prog in prog.get_seqs():
+                (self.repeat_chain_dfs(seq_prog, rp_bound))
+        elif prog.type == RefinedProg.RType.TP:
+            return choose_chian
         else:
             return
 

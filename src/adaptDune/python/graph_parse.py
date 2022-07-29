@@ -67,7 +67,8 @@ class GraphParser(argparse.ArgumentParser):
                     c =  None if c == "" else int(c) if isinstance(c, int) else c
                     dc_set = [DifferenceConstraint(var, avar, c, dc_type)]
                 transitions.append((int(l1), dc_set, int(l2), v_set))
-    
+            transitions.sort(key=lambda y: y[0]) 
+            edges.sort(key=lambda y: y[0])   
             print(n, edges, transitions)
             return TransitionGraph(edges, transitions)
 
