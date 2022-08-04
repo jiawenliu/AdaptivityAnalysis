@@ -1,3 +1,4 @@
+from asyncore import loop
 import enum
 from collections import defaultdict
 from functools import reduce
@@ -197,10 +198,13 @@ class RefinedProg():
     
     # type: The type of the refined program
     # prog: List of Refined Program
-    def __init__(self, type = None, prog = None):
+    def __init__(self, type = None, prog = None, loop_label = None):
         self.type = type
         self.prog = prog
+        self.loop_label = loop_label
 
+    def get_loop_label(self):
+        return self.loop_label
 
     def get_choices(self):
 
@@ -253,9 +257,11 @@ class PathSensitiveReachabilityBound():
         self.transition_paths = []
         self.tp_var_modi = []
         self.prog_loc_bound =  defaultdict(str)
-        self.transition_path_bound =  defaultdict(str)
+        self.transition_path_rpchain_bound =  defaultdict(str)
         self.prog_bound =  defaultdict(str)
         self.transition_bound = TransitionBound(transition_graph)
+        self.transition_path_ps_bound =  defaultdict(str)
+        self.loop_chains = defaultdict(list)
  
     # def transition_bound(self, transition_graph):
     #     return TransitionBound(transition_graph).compute_bounds()
@@ -345,38 +351,76 @@ class PathSensitiveReachabilityBound():
     def prog_invariant(self, prog):
         return "/\\".join(self.get_assumes(prog))
 
-    def repeat_chain_dfs(self, prog, rp_bound):
+    def repeat_chain_dfs(self, prog, rp_bound, L=None):
         print("Computing the Repeat Chain for prog : ", prog.prog_signature())
+        L = prog.get_loop_label() if prog.get_loop_label() else L
+        rp_bound = "1" if prog.get_loop_label() else rp_bound
         if prog.type == RefinedProg.RType.CHOICE:
             for choice_prog in prog.get_choices():
-                (self.repeat_chain_dfs(choice_prog, rp_bound))
+                (self.repeat_chain_dfs(choice_prog, rp_bound, L))
         elif prog.type == RefinedProg.RType.REPEAT:
-            self.repeat_chain_dfs(prog.get_repeat(), self.prog_loc_bound[prog.prog_id()]  + " * ("  + rp_bound + ")")
+            self.repeat_chain_dfs(prog.get_repeat(), self.prog_loc_bound[prog.prog_id()]  + " * ("  + rp_bound + ")", L)
         elif prog.type == RefinedProg.RType.SEQ:
             for seq_prog in prog.get_seqs():
-                (self.repeat_chain_dfs(seq_prog, rp_bound))
+                (self.repeat_chain_dfs(seq_prog, rp_bound, L))
         elif prog.type == RefinedProg.RType.TP:
-            self.transition_path_bound[prog.prog_id()] = rp_bound
-        else:
-            return
-
-    def choose_chain_dfs(self, prog, choose_chian):
-        print("Computing the Choose Chain for prog : ", prog.prog_signature())
-        if prog.type == RefinedProg.RType.CHOICE:
-            for choice_prog in prog.get_choices():
-                (self.repeat_chain_dfs(choice_prog, choose_chian + [choice_prog]))
-        elif prog.type == RefinedProg.RType.REPEAT:
-            self.repeat_chain_dfs(prog.get_repeat(), self.prog_loc_bound[prog.prog_id()]  + " * ("  + rp_bound + ")")
-        elif prog.type == RefinedProg.RType.SEQ:
-            for seq_prog in prog.get_seqs():
-                (self.repeat_chain_dfs(seq_prog, rp_bound))
-        elif prog.type == RefinedProg.RType.TP:
-            return choose_chian
+            self.transition_path_rpchain_bound[prog.prog_id()] = (L, rp_bound)
         else:
             return
 
     def inside_out(self, prog):
         self.repeat_chain_dfs(prog, "1")
+        self.loop_chain_dfs(prog, [])
+        self.compute_transition_path_ps_bound(prog)
+
+
+    def compute_rb(self, prog):
+        self.transition_bound.compute_transition_bounds()
+        self.outside_in(prog)
+        self.inside_out(prog)
+    
+    def loop_chain_dfs(self, prog, loop_chain):
+        print("Computing the Loop Chain for prog : ", prog.prog_signature())
+        tmp = loop_chain + [(prog.get_loop_label(), prog)] if prog.get_loop_label() else loop_chain
+        if prog.type == RefinedProg.RType.CHOICE:
+            for choice_prog in prog.get_choices():
+                (self.loop_chain_dfs(choice_prog, tmp))
+        elif prog.type == RefinedProg.RType.REPEAT:
+            self.loop_chain_dfs(prog.get_repeat(), tmp)
+        elif prog.type == RefinedProg.RType.SEQ:
+            for seq_prog in prog.get_seqs():
+                (self.loop_chain_dfs(seq_prog, loop_chain))
+        elif prog.type == RefinedProg.RType.TP:
+            return self.loop_chains[prog.prog_id()].append(loop_chain)
+        else:
+            return
+    
+    def compute_loop_chain_bound(self, tp_prog, loop_chain):
+        (tp_id, tp_rpchain_bound) = self.transition_path_rpchain_bound[tp_prog.prog_id()]
+        loop_chain_bound = "1"
+        for (loop_id, prog) in loop_chain:
+            if  tp_id == loop_id:
+                loop_chain_bound += (" * " + tp_rpchain_bound)
+            else:
+                # TODO: replace self.prog_loc_bound[prog.prog_id()]
+                # with the nested loop chain bound 
+                # self.transition_path_lpchain_bound[("L : " + str(loop_id) + tp_prog.prog_id())]
+                loop_chain_bound += (" * " + self.prog_loc_bound[prog.prog_id()])
+        return loop_chain_bound
+
+    def compute_transition_path_ps_bound(self, prog):
+        if prog.type == RefinedProg.RType.TP:
+            self.transition_path_ps_bound[prog.prog_id()] = "max(" + ",".join(self.compute_loop_chain_bound(prog, loop_chain) for loop_chain in self.loop_chains[prog.prog_id()]) + ")"
+        if prog.type == RefinedProg.RType.CHOICE:
+            for choice_prog in prog.get_choices():
+                (self.compute_transition_path_ps_bound(choice_prog))
+        elif prog.type == RefinedProg.RType.REPEAT:
+            self.compute_transition_path_ps_bound(prog.get_repeat())
+        elif prog.type == RefinedProg.RType.SEQ:
+            for seq_prog in prog.get_seqs():
+                (self.compute_transition_path_ps_bound(seq_prog))
+        else:
+            return
     
     def compute_prog_bound(self, prog):
         p_id = (prog.prog_id())
@@ -391,20 +435,28 @@ class PathSensitiveReachabilityBound():
         else:
             return
 
-    def compute_rb(self, prog):
-        self.transition_bound.compute_transition_bounds()
-        self.outside_in(prog)
-        self.inside_out(prog)
-        # self.compute_prog_bound(prog)
 
     def print_path_bound(self):
-        print("Number of Bounds Computed for the Transition Path is : ", self.transition_path_bound)
-        for  transition, bound in self.transition_path_bound.items():
-            print("Bound for the Transition Path : ", transition, " is : ", bound)
+        print("Number of Repeat Chain Bounds Computed for the Transition Path is : ", len(self.transition_path_rpchain_bound))
+        for  transition, bound in self.transition_path_rpchain_bound.items():
+            print("Repeat Chain Bound for the Transition Path : ", transition, " is : ", bound)
     
     def print_prog_bound(self):
         for prog, bound in self.prog_bound.items():
             print("Bound for the Loop at : ", prog, " is : ", bound)
 
+
+    def print_loop_chain(self):
+        for prog, loop_chains in self.loop_chains.items():
+            print("Loop Chains for the transition path at : ", prog, " are : ")
+            for loop_ch in loop_chains:
+                print("loop chain: ")
+                for (loop_id, lprog) in loop_ch:
+                    print(" -> : L-", loop_id, "prog: ", lprog.prog_id())
+
+    def print_transition_path_ps_bound(self):
+        print("Number of Bounds Computed for the Transition Path is : ", len(self.transition_path_ps_bound))
+        for  transition, bound in self.transition_path_ps_bound.items():
+            print("path Sensitive Reachability Bound for the Transition Path : ", transition, " is : ", bound)
 
 

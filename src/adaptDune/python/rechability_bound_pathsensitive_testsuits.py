@@ -18,6 +18,7 @@ class TestUnits:
         bound_infer.print_transition_bounds()
         print("The Calculated Path Sensitive Reachability Bounds are: ") 
         pathsensitive_rb.print_path_bound()
+        pathsensitive_rb.print_transition_path_ps_bound()
 
     # the example with only sequence, 
     # Expected Weights: [1,1,1,1]
@@ -49,7 +50,7 @@ class TestUnits:
                  RefinedProg(RefinedProg.RType.SEQ, 
                     [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 1, 4])),
                     RefinedProg(RefinedProg.RType.TP, [2, 0, 3])])
-                    ]))
+                    ]), 1)
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
 
@@ -67,7 +68,7 @@ class TestUnits:
                 RefinedProg(RefinedProg.RType.REPEAT, 
                     RefinedProg(RefinedProg.RType.SEQ,
                         [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
-                        RefinedProg(RefinedProg.RType.TP, [2, 1, 4])]))])
+                        RefinedProg(RefinedProg.RType.TP, [2, 1, 4])]))], 1)
 
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
@@ -85,7 +86,7 @@ class TestUnits:
                 RefinedProg(RefinedProg.RType.REPEAT, 
                     RefinedProg(RefinedProg.RType.SEQ,
                         [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [3, 0, 2, 4])),
-                        RefinedProg(RefinedProg.RType.TP, [3, 1, 5])]))])
+                        RefinedProg(RefinedProg.RType.TP, [3, 1, 5])]))], 1)
 
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
@@ -101,20 +102,24 @@ class TestUnits:
                     RefinedProg(RefinedProg.RType.SEQ,
                         [ RefinedProg(RefinedProg.RType.TP, [4, 6, 7]),
                         RefinedProg(RefinedProg.RType.REPEAT, 
-                        RefinedProg(RefinedProg.RType.TP, [8, 10])),
-                        RefinedProg(RefinedProg.RType.TP, [9, 11])])),
+                        RefinedProg(RefinedProg.RType.TP, [8, 10]), 3),
+                        RefinedProg(RefinedProg.RType.TP, [9, 11])]), 2),
                         RefinedProg(RefinedProg.RType.TP, [12, 2])])
-                        )
+                        , 1)
 
         print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
 
         transition_graph = GraphParser("./examples/ps_reachability_bound/nested_while_three.br").abscfg_parse()
         self.runner(transition_graph, refined_prog)
+        pathsensitive_rb = self.ALG(transition_graph)
+        pathsensitive_rb.loop_chain_dfs(refined_prog, [])
+        pathsensitive_rb.print_loop_chain()
         
     
     def run_tests(self):
         self.test_seq()
+        self.multiple_round_odd_sim()
         self.multiple_round_single_sim()
         self.while_two_counters()
         self.three_nested_while()
