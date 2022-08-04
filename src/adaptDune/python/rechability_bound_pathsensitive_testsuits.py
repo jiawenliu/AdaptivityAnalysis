@@ -110,12 +110,27 @@ class TestUnits:
         print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
 
-        transition_graph = GraphParser("./examples/ps_reachability_bound/nested_while_three.br").abscfg_parse()
+        transition_graph = GraphParser("./examples/ps_reachability_bound/three_nested_while.br").abscfg_parse()
         self.runner(transition_graph, refined_prog)
-        pathsensitive_rb = self.ALG(transition_graph)
-        pathsensitive_rb.loop_chain_dfs(refined_prog, [])
-        pathsensitive_rb.print_loop_chain()
-        
+
+    def three_nested_while_II(self):
+        refined_prog = RefinedProg(RefinedProg.RType.REPEAT, 
+        RefinedProg(RefinedProg.RType.SEQ,
+                [RefinedProg(RefinedProg.RType.TP, [1, 3]),
+                RefinedProg(RefinedProg.RType.REPEAT, 
+                    RefinedProg(RefinedProg.RType.SEQ,
+                        [ RefinedProg(RefinedProg.RType.TP, [4, 6, 7]),
+                        RefinedProg(RefinedProg.RType.REPEAT, 
+                        RefinedProg(RefinedProg.RType.TP, [8, 10]), 3),
+                        RefinedProg(RefinedProg.RType.TP, [9, 11])]), 2),
+                        RefinedProg(RefinedProg.RType.TP, [12, 2])])
+                        , 1)
+
+        print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
+        print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
+
+        transition_graph = GraphParser("./examples/ps_reachability_bound/three_nested_while_II.br").abscfg_parse()
+        self.runner(transition_graph, refined_prog)       
     
     def run_tests(self):
         self.test_seq()
@@ -123,6 +138,7 @@ class TestUnits:
         self.multiple_round_single_sim()
         self.while_two_counters()
         self.three_nested_while()
+        self.three_nested_while_II()
 
 
 

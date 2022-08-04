@@ -255,7 +255,7 @@ class PathSensitiveReachabilityBound():
     def __init__(self, transition_graph=TransitionGraph()) -> None:
         self.transition_graph = transition_graph
         self.transition_paths = []
-        self.tp_var_modi = []
+        self.tp_var_gd = []
         self.prog_loc_bound =  defaultdict(str)
         self.transition_path_rpchain_bound =  defaultdict(str)
         self.prog_bound =  defaultdict(str)
@@ -274,15 +274,14 @@ class PathSensitiveReachabilityBound():
             return ("max(" + ",".join(self.outside_in(choice_prog) for choice_prog in refined_prog.get_choices()) + ")")
         elif refined_prog.type == RefinedProg.RType.REPEAT:
             rp_prog = refined_prog.get_repeat()
-            return "(" + self.prog_initial(rp_prog) + " until "  + self.prog_final(rp_prog) + ") / (" + self.var_modi(rp_prog)
+            return "(" + self.prog_initial(rp_prog) + " until "  + self.prog_final(rp_prog) + ") / (" + self.var_gd(rp_prog)
         elif refined_prog.type == RefinedProg.RType.SEQ:
             return ("(" + "+".join(self.outside_in(seq_prog) for seq_prog in refined_prog.get_seqs()) + ")")
         elif refined_prog.type == RefinedProg.RType.TP:
             return "1"
 
-    def var_modi(self, prog):
+    def var_gd(self, prog):
         id = prog.prog_id()
-        
         if (not self.prog_loc_bound[id]):
            self.prog_loc_bound[id] = self.outside_in(prog)
         ## For Debuging:
@@ -351,6 +350,13 @@ class PathSensitiveReachabilityBound():
     def prog_invariant(self, prog):
         return "/\\".join(self.get_assumes(prog))
 
+
+
+    def inside_out(self, prog):
+        self.repeat_chain_dfs(prog, "1")
+        self.loop_chain_dfs(prog, [])
+        self.compute_transition_path_ps_bound(prog)
+
     def repeat_chain_dfs(self, prog, rp_bound, L=None):
         print("Computing the Repeat Chain for prog : ", prog.prog_signature())
         L = prog.get_loop_label() if prog.get_loop_label() else L
@@ -368,16 +374,6 @@ class PathSensitiveReachabilityBound():
         else:
             return
 
-    def inside_out(self, prog):
-        self.repeat_chain_dfs(prog, "1")
-        self.loop_chain_dfs(prog, [])
-        self.compute_transition_path_ps_bound(prog)
-
-
-    def compute_rb(self, prog):
-        self.transition_bound.compute_transition_bounds()
-        self.outside_in(prog)
-        self.inside_out(prog)
     
     def loop_chain_dfs(self, prog, loop_chain):
         print("Computing the Loop Chain for prog : ", prog.prog_signature())
@@ -396,17 +392,25 @@ class PathSensitiveReachabilityBound():
             return
     
     def compute_loop_chain_bound(self, tp_prog, loop_chain):
-        (tp_id, tp_rpchain_bound) = self.transition_path_rpchain_bound[tp_prog.prog_id()]
-        loop_chain_bound = "1"
-        for (loop_id, prog) in loop_chain:
-            if  tp_id == loop_id:
-                loop_chain_bound += (" * " + tp_rpchain_bound)
-            else:
-                # TODO: replace self.prog_loc_bound[prog.prog_id()]
-                # with the nested loop chain bound 
-                # self.transition_path_lpchain_bound[("L : " + str(loop_id) + tp_prog.prog_id())]
-                loop_chain_bound += (" * " + self.prog_loc_bound[prog.prog_id()])
+        ### FOR DEBUGGING
+        if not (loop_chain): return "1"
+        (_, tp_rpchain_bound) = self.transition_path_rpchain_bound[tp_prog.prog_id()]
+        loop_chain_bound = tp_rpchain_bound
+        (_, tp_loop_prog) = loop_chain[-1]
+        for (_, nested_loop_prog) in loop_chain[:-1]:
+            loop_chain_bound += (" * " + self.compute_nested_lpchain_bound(nested_loop_prog, tp_loop_prog))
+        print("Loop Chain Bound for the Transition Path : ", tp_prog.prog_id(), " is : ", loop_chain_bound)
         return loop_chain_bound
+        ### FOR RELEASE
+        if not (loop_chain): return "1"
+        return self.transition_path_rpchain_bound[tp_prog.prog_id()][1] + ("*".join([self.compute_nested_lpchain_bound(loop_prog, loop_chain[-1][1]) for (_, loop_prog) in  loop_chain[:-1]]))
+
+    def compute_nested_lpchain_bound(self, tp_prog, loop_prog):
+        initial = self.prog_initial(tp_prog)
+        final = " ¬(" + self.prog_invariant(tp_prog) + ")"
+        next = self.prog_next(loop_prog)
+        return "(" + initial + " -> "  + final + ")/(" + initial + "-" + next + ")"
+
 
     def compute_transition_path_ps_bound(self, prog):
         if prog.type == RefinedProg.RType.TP:
@@ -434,6 +438,11 @@ class PathSensitiveReachabilityBound():
             self.prog_bound[p_id] = 1
         else:
             return
+
+    def compute_rb(self, prog):
+        self.transition_bound.compute_transition_bounds()
+        self.outside_in(prog)
+        self.inside_out(prog)
 
 
     def print_path_bound(self):
