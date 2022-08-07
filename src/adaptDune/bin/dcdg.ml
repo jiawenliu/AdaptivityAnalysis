@@ -39,19 +39,27 @@ let rec dcdg program (cfg:Cfg.t) (rd_in:Df.rd_results) : (lvar * lvar) list =
    let rdin_l = Int.Map.find_exn rd_in label_int in
    let vars = Cfg.vars e in 
    let live_vars = live_vars vars rdin_l in
-   List.map  ~f:(fun lvar_y -> ( lvar_x, lvar_y )  )  live_vars
+   List.fold_left ~f:( fun () lvar -> 
+    Printf.printf "live at assignment%d, %s\n" label_int (print_lvar lvar) ) ~init:() live_vars;
+   List.map  ~f:(fun lvar_y -> ( lvar_y, lvar_x )  )  live_vars
  | Query ( x ,  q , l ) -> let label_int = print_label l in
    let lvar_x  = LabelVar (x.v_name, label_int ) in
    let rdin_l = Int.Map.find_exn rd_in label_int in
    let vars = Cfg.qvars q in 
    let live_vars = live_vars vars rdin_l in
-   List.map  ~f:(fun lvar_y -> ( lvar_x, lvar_y )  )  live_vars
+   List.fold_left ~f:( fun () lvar -> 
+    Printf.printf "live at query%d, %s\n" label_int (print_lvar lvar) ) ~init:() live_vars;
+   List.map  ~f:(fun lvar_y -> ( lvar_y, lvar_x )  )  live_vars
  | While ( b , lc , l ) ->  
     let label_int = print_label l in
     let rdin_l = Int.Map.find_exn rd_in label_int in
     let lvars_y = assigned_lvars lc in
     let vars = Cfg.vars_b b in
     let lvars_x = live_vars vars rdin_l in
+    List.fold_left ~f:( fun () lvar -> 
+      Printf.printf "live at while %d, x: %s\n" label_int (print_lvar lvar) ) ~init:() lvars_x;
+    List.fold_left ~f:( fun () lvar -> 
+      Printf.printf "live at while %d, y:%s\n" label_int (print_lvar lvar) ) ~init:() lvars_y;
      (combine_lvars lvars_x lvars_y) @
     (dcdg lc cfg rd_in) 
  | Seq ( lc_1,  lc_2 ) ->  (dcdg lc_1 cfg rd_in) @ (dcdg lc_2 cfg rd_in)
@@ -62,5 +70,11 @@ let rec dcdg program (cfg:Cfg.t) (rd_in:Df.rd_results) : (lvar * lvar) list =
   let lvars_y_2 = assigned_lvars lc_2 in
   let vars = Cfg.vars_b b in
   let lvars_x = live_vars vars rdin_l in
+  List.fold_left ~f:( fun () lvar -> 
+    Printf.printf "live at if %d, x: %s\n" label_int (print_lvar lvar) ) ~init:() lvars_x;
+  List.fold_left ~f:( fun () lvar -> 
+    Printf.printf "live at if %d, y_1:%s\n" label_int (print_lvar lvar) ) ~init:() lvars_y_1;
+  List.fold_left ~f:( fun () lvar -> 
+    Printf.printf "live at if %d, y_2:%s\n" label_int (print_lvar lvar) ) ~init:() lvars_y_2;    
    (combine_lvars lvars_x lvars_y_1) @  (combine_lvars lvars_x lvars_y_2) @
   (dcdg lc_1 cfg rd_in) @ (dcdg lc_2 cfg rd_in)
