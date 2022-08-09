@@ -38,8 +38,8 @@ class GraphParser(argparse.ArgumentParser):
     def dcfg_parse(self):
         with open(self.dcfg_file, "r") as graphdata:
             n = int(graphdata.readline())
-            query = [int(q) for q in graphdata.readline().strip("\n").split(",")]
-            edges = [([int(v) for v in e.split(",")]) for e in graphdata.readline().split(";")]
+            query = [int(q) for q in graphdata.readline().strip("\n").split(",")[:-1]]
+            edges = [([int(v) for v in e.split(",")]) for e in graphdata.readline().split(";")[:-1]]
 
             print(n, query, edges)
             return Graph(edges, [AdaptType(0)]*n, query)

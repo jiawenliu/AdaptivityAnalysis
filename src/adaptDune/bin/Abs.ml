@@ -48,7 +48,7 @@ let abs_expr var e =
 
   let rec abs_init lcom = 
     match lcom with
-    | Skip  -> Label (-1)
+    | Skip l -> l
     | Assign ( _ , _ , l) -> l
     | Query ( _ ,  _ , l ) -> l
     | While ( _ , _ , l ) -> l
@@ -58,7 +58,7 @@ let abs_expr var e =
   let rec abs_final (lcom : lcommand) : (label * constriant) list 
   =
     match lcom with
-    | Skip  -> []
+    | Skip _ -> []
     | Assign (var, e, l ) -> [(l, (abs_expr var e))]
     | Query  ( var ,_ , l ) -> [(l, Reset (var, None, Symb "Q" ))]
     | While ( b , _ , l ) -> [(l, (Asum (BNeg b)))]
@@ -70,7 +70,7 @@ let abs_expr var e =
  
 let rec abs_flow (lcom : lcommand) : abs_transition list =
   match lcom with
-  | Skip  -> []
+  | Skip _ -> []
   | Assign ( _ , _ , _) -> []
   | Query ( _ ,  _ , _ ) -> []
   | While ( b , lc , l ) ->   (abs_flow lc) @ [(l, abs_init lc, (Asum b))] @ 

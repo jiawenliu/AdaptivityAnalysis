@@ -151,4 +151,4 @@ let rec print_lcommand lcom =
 
   
     let print_out_flow oc flow =
-      List.fold_left (fun () (x,  y) -> Printf.fprintf oc "(%d, %d)," (print_label x) (print_label y)  ) () flow   
+      List.fold_left (fun () (x,  y) -> Printf.fprintf oc "%d,%d;" (print_label x) (print_label y)  ) () flow   
