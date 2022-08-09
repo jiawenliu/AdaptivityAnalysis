@@ -9,6 +9,7 @@ type sigma =  domain list
 type rd_results = sigma Int.Map.t 
 
  let kill program =  function
+   | Skipblock _ -> []
    | Testblock (_,_) ->  [] 
    | Assignblock (var, _ , _) -> 
      let kill_list =
@@ -23,6 +24,7 @@ type rd_results = sigma Int.Map.t
     [ (var.v_name, print_label Bot ) ] @ kill_list
 
 let gen  =  function
+| Skipblock _ -> []
 | Testblock (_,_) ->  [] 
 | Assignblock (var, _ , l) ->  [(var.v_name, print_label l)]
 | Queryblock (var, _, l) -> [(var.v_name, print_label l)]

@@ -51,7 +51,7 @@ query_expr =
 
 and
 lcommand = 
-  Skip 
+  Skip of label
 | Assign of var_info * expr * label
 | Query of  var_info * query_expr * label
 | While of b_expr * lcommand * label
@@ -59,6 +59,7 @@ lcommand =
 | If of b_expr * lcommand * lcommand * label
 
 type block =
+| Skipblock of label
 | Assignblock of var_info * expr * label 
 | Queryblock of var_info * query_expr * label
 | Testblock of b_expr * label
@@ -124,6 +125,7 @@ let rec print_qexpr q =
 
 let print_block b =
   match b with
+  | Skipblock l -> sprintf " SkipBlock: [ skip ]^{%d}" (print_label l)
   | Assignblock (var, e, l) -> sprintf " AssignBlock: [ %s = %s ]^{%d}" var.v_name (print_expr e) (print_label l)
   | Queryblock (var, q, l) -> sprintf "QueryBlock: [ %s = query( %s) ]^{%d}" var.v_name (print_qexpr q) (print_label l)
   | Testblock (b, l) ->     sprintf "TestBlock:[%s]^{%d}" (print_bexpr b) (print_label l)
@@ -136,7 +138,7 @@ let print_block b =
 
 let rec print_lcommand lcom = 
   match lcom with
-  | Skip -> "Skip"
+  | Skip l -> sprintf "[ skip ]^{%d}"  (print_label l)
   | Assign  (var ,e , l) -> sprintf "[ %s = %s ]^{%d}" var.v_name (print_expr e) (print_label l)
   | Query   (var,  q , l)  -> sprintf "[ %s = query( %s) ]^{%d}" var.v_name (print_qexpr q) (print_label l)
   | While ( b, lc, l) -> sprintf "While [ %s ]^{%d} Do {%s}" (print_bexpr b) (print_label l) (print_lcommand lc)  

@@ -57,8 +57,8 @@ toplevel :
 lcommand : 
   | lcommand SEMICOLON lcommand
       { Seq ($1, $3) }
-  | SKIP
-     {Skip}   
+  | LBRACK SKIP RBRACK INT
+     {Skip (Label ($4)  )}   
   | LBRACK VAR LEFTARROW expr  RBRACK INT
      { Assign ({v_name = $2} , $4, Label($6) ) } 
   | LBRACK VAR LEFTARROW QUERY LPAREN qexpr RPAREN RBRACK INT

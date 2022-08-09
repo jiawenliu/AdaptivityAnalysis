@@ -15,7 +15,7 @@ type t = {
 
 let rec init lcom = 
   match lcom with
-  |  Skip  -> Bot
+  |  Skip l -> l
   | Assign ( _ , _ , l) -> l
   | Query ( _ ,  _ , l ) -> l
   | While ( _ , _ , l ) -> l
@@ -25,7 +25,7 @@ let rec init lcom =
 
  let rec final lcom =
    match lcom with
-   |  Skip  -> []
+   |  Skip l  -> [l]
    | Assign ( _ , _ , l) -> [l]
    | Query ( _ ,  _ , l ) -> [l]
    | While ( _ , _ , l ) -> [l]
@@ -34,7 +34,7 @@ let rec init lcom =
 
    let rec blocks lcom =
      match lcom with
-  |  Skip  -> []
+  |  Skip l  -> [Skipblock l ]
   | Assign ( var , e , l) -> [ Assignblock (var, e, l ) ]
   | Query ( var ,  q , l ) -> [ Queryblock (var, q ,l ) ]
   | While ( b , lc , l ) -> [ Testblock (b,l) ] @ (blocks lc)
@@ -44,6 +44,7 @@ let rec init lcom =
 
 (*get the int label from a block**)
   let getLabelFromBlock = function
+   | Skipblock l -> print_label l
    | Assignblock (_ , _, l ) -> print_label l
    | Queryblock (_, _,l ) -> print_label l
    | Testblock (_ , l) -> print_label l
@@ -91,7 +92,7 @@ let rec init lcom =
 
   let rec flow lcom = 
     match lcom with
-    |  Skip  -> []
+    |  Skip _  -> []
     | Assign ( _ , _ , _) -> []
     | Query ( _ ,  _ , _ ) -> []
     | While ( _ , lc , l ) ->   (flow lc) @ [(l, init lc)] @ (List.map ~f:(fun l_1 -> (l_1,l)) (final lc) ) 
@@ -130,7 +131,7 @@ let rec init lcom =
    (*  label of x in program p, input x, output : a list of labels of x in program p**)  
 
    let rec defs x = function
-   | Skip  -> []
+   | Skip _ -> []
    | Assign ( var , _ , l) -> if (String.equal var.v_name x) then [l] else []
    | Query ( var ,  _ , l ) -> if (String.equal var.v_name x) then [l] else []
    | While ( _ , lc , _ ) ->   defs x lc
@@ -141,7 +142,7 @@ let rec init lcom =
    (*  assigned variables of program, return a list of assigned variables, if we have duplicate x, then just one x**)  
   let assign_vars program = 
    let rec assigned = function
-   | Skip  -> []
+   | Skip _ -> []
    | Assign ( var , _ , _) -> [var.v_name]
    | Query ( var ,  _ , _ ) -> [var.v_name]
    | While ( _ , lc , _ ) ->   assigned lc

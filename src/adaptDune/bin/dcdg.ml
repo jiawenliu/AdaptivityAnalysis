@@ -14,7 +14,7 @@ let live_vars (vars: var_info list) (rd_in : Df.sigma) : lvar list =
 
 let assigned_lvars program : lvar list = 
     let rec assigned = function
-    | Skip  -> []
+    | Skip _ -> []
     | Assign ( var , _ , l ) -> [ LabelVar( var.v_name, print_label l)  ]
     | Query ( var ,  _ , l ) -> [ LabelVar( var.v_name, print_label l)  ]
     | While ( _ , lc , _ ) ->   assigned lc
@@ -32,7 +32,7 @@ let assigned_lvars program : lvar list =
 
 let rec dcdg program (cfg:Cfg.t) (rd_in:Df.rd_results) : (lvar * lvar) list = 
  match program with
- |  Skip  -> []
+ |  Skip _  -> []
  | Assign ( x , e , l) ->  
    let label_int = print_label l in
    let lvar_x  = LabelVar (x.v_name, label_int ) in
