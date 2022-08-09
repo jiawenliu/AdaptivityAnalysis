@@ -23,19 +23,24 @@ class TestUnits:
     # the example with only sequence, 
     # Expected Weights: [1,1,1,1]
     def test_seq(self):
-        ctl_edges = [(2, 3), (1, 2), (0, 1), (3, 4)]
-        transitions = [
-            (2, [ DifferenceConstraint("z", None, "Q", DifferenceConstraint.DCType.RESET) ], 3, [2]),
-            (1, [ DifferenceConstraint("y", None, "Q", DifferenceConstraint.DCType.RESET) ], 2, [1]),
-            (0, [ DifferenceConstraint("x", None, "Q", DifferenceConstraint.DCType.RESET) ], 1, [0]),
-            (3, [ DifferenceConstraint("w", None, "Q", DifferenceConstraint.DCType.RESET) ], -1, [3])
-            ]
         refined_prog = RefinedProg(RefinedProg.RType.TP, [0, 1, 2, 3])
         print("The Reachability Bounds Expected for Vertices in Simple Sequence Graph are: [1,1,1,1] ")
         print("The Path Sensitive Reachability Bounds Expected for All Transitions in Simple Sequence Graph are: [1,1,1,1] ")
         transition_graph = GraphParser("./examples/ps_reachability_bound/seq.br").abscfg_parse()
         self.runner(transition_graph, refined_prog)
 
+    # the example with only sequence, 
+    # Expected Weights: [1,1,1,1]
+    def while_sim(self):
+        refined_prog = RefinedProg(RefinedProg.RType.SEQ, 
+        [RefinedProg(RefinedProg.RType.TP, [0, 1]),
+        RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 4, 5, 6])),
+        RefinedProg(RefinedProg.RType.TP, [3, 7])
+        ])
+        print("The Reachability Bounds Expected for Vertices in Simple While Graph are: ")
+        print("The Path Sensitive Reachability Bounds Expected for All Transitions in Simple While Graph are: ")
+        transition_graph = GraphParser("./examples/ps_reachability_bound/while_sim.br").abscfg_parse()
+        self.runner(transition_graph, refined_prog)
 
     # the example with while loop of multi-path from if branch (multi-path loop will result in different visiting times for
     # verteices  belong to the same loop),  
@@ -134,6 +139,7 @@ class TestUnits:
     
     def run_tests(self):
         self.test_seq()
+        self.while_sim()
         self.multiple_round_odd_sim()
         self.multiple_round_single_sim()
         self.while_two_counters()
