@@ -53,6 +53,7 @@ class DirectedGraph:
         self.scc_ids = [-1] * (self.vertices_num)
         self.scc_cnt = -1
         self.edge_indices = defaultdict(int)
+        self.build_edges()
         pass
 
     def build_edges(self):
@@ -171,6 +172,7 @@ class TransitionGraph(DirectedGraph):
         self.transitions = transitions
 
     
+
 
 
 

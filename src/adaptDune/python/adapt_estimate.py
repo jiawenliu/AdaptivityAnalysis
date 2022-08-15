@@ -1,5 +1,9 @@
+from collections import defaultdict
 from bound_infer import TransitionGraph, TransitionBound
 from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
+from program_refine import ProgramRefine
+from rechability_bound_pathsensitive import PathSensitiveReachabilityBound
+# , RefinedProg, ProgramRefine
 
 class AdaptEstimate():
     def __init__(self) -> None:
@@ -11,14 +15,26 @@ class AdaptEstimate():
         def __init__(self, graph=Graph(), transition_graph=TransitionGraph()) -> None:
             self.graph = graph
             self.transition_graph = transition_graph
+            self.reachability_bound = defaultdict(AdaptType)
+
+        def reachability_bound_estimation(self):
+            # Path-Insensitive Version:
+            self.reachability_bound = TransitionBound(self.transition_graph).compute_transition_bounds()
+
+            # # Path-Sensitive Version:
+            # reachability_bound_path = PathSensitiveReachabilityBound(self.transition_graph).compute_rb(ProgramRefine(self.transition_graph).get_result())
+            # for transition_path, bound in reachability_bound_path.items():
+            #     for transition_id in [int(id) for id in (transition_path[1:-1].split(", "))]:
+            #         self.reachability_bound[transition_id] = bound
+            return
 
         def vertex_weights_estimate(self):
-            transition_bounds = TransitionBound(self.transition_graph).compute_transition_bounds()
-            for (t_index, b) in enumerate(transition_bounds):
+            for (t_index, b) in enumerate(self.reachability_bound):
                 transition = self.transition_graph.transitions[t_index]
                 for var_vertex in transition[3] :
                     self.graph.weights[var_vertex] = self.graph.weights[var_vertex] + AdaptType(b)
         
+
         def get_vertex_weights(self):
             return [w.value for w in self.graph.weights]
         
@@ -28,21 +44,23 @@ class AdaptEstimate():
                     print( "weight for Variable or Bool guard: " 
                         + str(dc_set[0].get_var() if dc_set[0].get_var() else dc_set[0].dc_bexpr) + " of label " 
                         + str(var) + " is: " + str(self.graph.weights[var].value))
-
+                                            
         def edge_weights_estimate(self):
-            transition_bounds = TransitionBound(self.transition_graph).compute_transition_bounds()
             # Edge Weight Initialize
-            for (t_index, b) in enumerate(transition_bounds):
+            # These are Weights for Edges corresponding to the Control Flow, not necessary the data denepdency edge
+            for (t_index, b) in enumerate(self.reachability_bound):
                 transition = self.transition_graph.transitions[t_index]
                 edge = str(transition[0]) + "->" + str(transition[-2])
                 self.graph.edge_weights[edge] = (self.graph.edge_weights[edge].adapt_max(AdaptType(b))) if (edge in self.graph.edge_weights.keys()) else AdaptType(b)
             # Edge Weight DFS
+            # Compute the Weight for Edges in Data Dependency Graph, Every Edge on this graph should correspond to
+            # a path on the Control Flow Graph
             for (u, v) in self.graph.edges:
                 edge = str(u) + "->" + str(v)
                 paths = self.transition_graph.search_path(u, v)
                 for p in paths:
                     p_reachability_bounds = AdaptType(0)
-                    for i in p: p_reachability_bounds = p_reachability_bounds.adapt_min(AdaptType(transition_bounds[i]))
+                    for i in p: p_reachability_bounds = p_reachability_bounds.adapt_min(AdaptType(self.reachability_bound[i]))
                     self.graph.edge_weights[edge] = (self.graph.edge_weights[edge].adapt_max(p_reachability_bounds))
 
        
@@ -52,15 +70,9 @@ class AdaptEstimate():
         def print_edge_weights(self):
             for s in ["weight for Edge: " + w[0] + " is: " + str(w[1].value) for w in self.graph.edge_weights.items()]:
                 print( s )
-
-
-        def attach_weights(self):
-            transition_bounds = TransitionBound(self.transition_graph).compute_transition_bounds()
-            for (t_index, b) in enumerate(transition_bounds):
-                transition = self.transition_graph.transitions[t_index]
-                for var_vertex in transition[3] :
-                    self.graph.weights[var_vertex] = self.graph.weights[var_vertex] + AdaptType(b)
-            
+        
+        def weight_estimate(self):
+            self.reachability_bound_estimation()
             self.edge_weights_estimate()
             self.vertex_weights_estimate()
 
@@ -72,8 +84,8 @@ class AdaptEstimate():
     @staticmethod
     def adapt_estimate(unweighted_graph, abs_transition_graph):
         weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(unweighted_graph, abs_transition_graph)
-        weight_infer.edge_weights_estimate()
-        weight_infer.attach_weights()
+        weight_infer.weight_estimate()
+        # weight_infer.vertex_weights_estimate()
         weight_infer.print_weights()
 
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)

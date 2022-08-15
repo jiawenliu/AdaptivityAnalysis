@@ -4,6 +4,7 @@ from collections import defaultdict
 from functools import reduce
 from ntpath import join
 from bound_infer import DifferenceConstraint, TransitionBound, TransitionGraph
+from program_refine import RefinedProg
 
 # class DifferenceConstraint:
 #     class DCType(enum.Enum):
@@ -174,79 +175,79 @@ from bound_infer import DifferenceConstraint, TransitionBound, TransitionGraph
 
 
 
-class ProgramRefine():
+# class ProgramRefine():
 
-    def __init__(self) -> None:
-        self.refined_result = []
-        pass
+#     def __init__(self) -> None:
+#         self.refined_result = []
+#         pass
 
-    def collect_paths(self):
-        pass
+#     def collect_paths(self):
+#         pass
 
-    def program_refine(self):
-        pass 
+#     def program_refine(self):
+#         pass 
 
-    def get_result(self):
-        return self.refined_result
+#     def get_result(self):
+#         return self.refined_result
 
-class RefinedProg():
-    class RType(enum.Enum):
-        CHOICE = 1
-        REPEAT = 2
-        SEQ = 3
-        TP = 4
+# class RefinedProg():
+#     class RType(enum.Enum):
+#         CHOICE = 1
+#         REPEAT = 2
+#         SEQ = 3
+#         TP = 4
     
-    # type: The type of the refined program
-    # prog: List of Refined Program
-    def __init__(self, type = None, prog = None, loop_label = None):
-        self.type = type
-        self.prog = prog
-        self.loop_label = loop_label
+#     # type: The type of the refined program
+#     # prog: List of Refined Program
+#     def __init__(self, type = None, prog = None, loop_label = None):
+#         self.type = type
+#         self.prog = prog
+#         self.loop_label = loop_label
 
-    def get_loop_label(self):
-        return self.loop_label
+#     def get_loop_label(self):
+#         return self.loop_label
 
-    def get_choices(self):
+#     def get_choices(self):
 
-        return self.prog
+#         return self.prog
 
-    def get_seqs(self):
-        return self.prog
+#     def get_seqs(self):
+#         return self.prog
 
-    def get_repeat(self):
-        return self.prog
+#     def get_repeat(self):
+#         return self.prog
     
-    def get_tp(self):
-        return self.prog
+#     def get_tp(self):
+#         return self.prog
     
-    # # dfs until the TP, return the list of assumptions on all the transition paths.
-    # def get_assumes(self):
-    #     return ["True"]
+#     # # dfs until the TP, return the list of assumptions on all the transition paths.
+#     # def get_assumes(self):
+#     #     return ["True"]
     
-    def get_transitions(self):
-        if self.type == RefinedProg.RType.CHOICE:
-            return reduce(lambda a, b: a + b, (choice_p.get_transitions() for choice_p in self.get_choices()), [])
-        elif self.type == RefinedProg.RType.REPEAT:
-            return self.get_repeat().get_transitions()
-        elif self.type == RefinedProg.RType.SEQ:
-            return reduce(lambda a, b: a + b, (seq_prog.get_transitions() for seq_prog in self.get_seqs()), [])
-        elif self.type == RefinedProg.RType.TP:
-            return (self.prog)
+#     def get_transitions(self):
+#         if self.type == RefinedProg.RType.CHOICE:
+#             return reduce(lambda a, b: a + b, (choice_p.get_transitions() for choice_p in self.get_choices()), [])
+#         elif self.type == RefinedProg.RType.REPEAT:
+#             return self.get_repeat().get_transitions()
+#         elif self.type == RefinedProg.RType.SEQ:
+#             return reduce(lambda a, b: a + b, (seq_prog.get_transitions() for seq_prog in self.get_seqs()), [])
+#         elif self.type == RefinedProg.RType.TP:
+#             return (self.prog)
 
-    def prog_id(self):
-        t = self.get_transitions()
-        return str(t)
+#     def prog_id(self):
+#         t = self.get_transitions()
+#         return str(t)
 
 
-    def prog_signature(self):
-        if self.type == RefinedProg.RType.CHOICE:
-            return "CH : {" + ",".join(choice_p.prog_signature() for choice_p in self.get_choices()) + "}"
-        elif self.type == RefinedProg.RType.REPEAT:
-            return "RP : (" + self.get_repeat().prog_signature() + ")"
-        elif self.type == RefinedProg.RType.SEQ:
-            return "SEQ : (" + ",".join(seq_prog.prog_signature() for seq_prog in self.get_seqs()) + ")"
-        elif self.type == RefinedProg.RType.TP:
-            return str(self.prog)
+#     def prog_signature(self):
+#         if self.type == RefinedProg.RType.CHOICE:
+#             return "CH : {" + ",".join(choice_p.prog_signature() for choice_p in self.get_choices()) + "}"
+#         elif self.type == RefinedProg.RType.REPEAT:
+#             return "RP : (" + self.get_repeat().prog_signature() + ")"
+#         elif self.type == RefinedProg.RType.SEQ:
+#             return "SEQ : (" + ",".join(seq_prog.prog_signature() for seq_prog in self.get_seqs()) + ")"
+#         elif self.type == RefinedProg.RType.TP:
+#             return str(self.prog)
 
 
 
@@ -324,6 +325,8 @@ class PathSensitiveReachabilityBound():
         temp = "/\\".join([str(v) + "= " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)])
         print("the INITIAL state for program : ", prog.prog_id(), " is : ", temp)
         ## For Releasing:
+        #### TODO: ADD the restriction on the label order.
+        ### THE label should smaller than first label of prog
         return "/\\".join([str(v) + " = " + str(self.transition_bound.var_invariant[v]) for v in self.get_vars(prog)])
 
     def prog_final(self, prog):
@@ -344,6 +347,9 @@ class PathSensitiveReachabilityBound():
         elif prog.type == RefinedProg.RType.SEQ:
             return ("(" + "+".join(self.prog_next(seq_prog) for seq_prog in prog.get_seqs()) + ")")
         elif prog.type == RefinedProg.RType.TP:
+        #### TODO: ADD the restriction on the label order.
+        ### THE label should be contained in the prog
+
             return ("(" + "+".join([
                 (str("+".join([inc[1] for inc in self.transition_bound.var_incs[v]])) if self.transition_bound.var_incs[v] else "0") for v in self.get_vars(prog)]) + ")")
 
@@ -406,10 +412,12 @@ class PathSensitiveReachabilityBound():
         return self.transition_path_rpchain_bound[tp_prog.prog_id()][1] + ("*".join([self.compute_nested_lpchain_bound(loop_prog, loop_chain[-1][1]) for (_, loop_prog) in  loop_chain[:-1]]))
 
     def compute_nested_lpchain_bound(self, tp_prog, loop_prog):
+        #### TODO: ADD the restriction on the label order.
+        ### THE label should smaller than first label of tp_prog and greater than loop_prog
         initial = self.prog_initial(tp_prog)
         final = " ¬(" + self.prog_invariant(tp_prog) + ")"
         next = self.prog_next(loop_prog)
-        return "(" + initial + " -> "  + final + ")/(" + initial + "-" + next + ")"
+        return "(" + initial + "->"  + final + ")/(" + initial + "-" + next + ")"
 
 
     def compute_transition_path_ps_bound(self, prog):
@@ -465,7 +473,7 @@ class PathSensitiveReachabilityBound():
 
     def print_transition_path_ps_bound(self):
         print("Number of Bounds Computed for the Transition Path is : ", len(self.transition_path_ps_bound))
-        for  transition, bound in self.transition_path_ps_bound.items():
-            print("path Sensitive Reachability Bound for the Transition Path : ", transition, " is : ", bound)
+        for  transition_path, bound in self.transition_path_ps_bound.items():
+            print("path Sensitive Reachability Bound for the Transition Path : ", transition_path, " is : ", bound)
 
 

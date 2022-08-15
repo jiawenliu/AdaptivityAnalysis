@@ -47,6 +47,7 @@ class GraphParser(argparse.ArgumentParser):
     def blockl_to_lvar(self):
         pass
 
+
     def abscfg_parse(self):
         with open(self.abs_cfg_file, "r") as graphdata:
             # _ = [graphdata.readline() for _ in range(3)]
@@ -70,6 +71,6 @@ class GraphParser(argparse.ArgumentParser):
             transitions.sort(key=lambda y: y[0]) 
             edges.sort(key=lambda y: y[0])   
             print(n, edges, transitions)
-            return TransitionGraph(edges, transitions)
+            return TransitionGraph(edges, transitions, n)
 
         pass

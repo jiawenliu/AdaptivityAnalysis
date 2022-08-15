@@ -1,6 +1,26 @@
 %
 \subsection{Trace}
 %
+A trace $\trace \in \mathcal{T} $ is a list of events, 
+collecting the events generated along the program execution. 
+\[
+\begin{array}{llll}
+\mbox{Trace} & \trace
+& ::= & [] ~|~ \trace :: \event
+\end{array}
+\]
+$\mathcal{T} $ represents the set of traces. 
+A trace can be regarded as the program history, 
+which records all the evaluations for assignment commands and guards in $\eif$ and $\ewhile$ command.
+This includes queries asked by the analyst during the execution of the program as well. 
+I collect the trace with a trace-based operational semantics based on transitions 
+of the form $ \config{c, \trace} \to \config{c', \trace'} $. 
+It states that a configuration $\config{c, \trace}$,
+which consists of a command $c$ to be evaluated and a starting trace $\trace$, 
+evaluates to another configuration with the trace updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.
+%
+\\
+There are some useful operators: the trace concatenation operator $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$, combines two traces.
 % An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
 % %
 % \begin{equation}
@@ -46,11 +66,6 @@
 %   \end{array}
 %   \right.
 % \]
-%
-% \mg{I suggest to use more definition environments throughout this section.}
-% \mg{Is ++ a constructor or a defined operation? It is in the grammar
-%   but it seems that you are actually defining it here.}
-%   \jl{It is a defined operator, I mixed them wrongly.}
   \begin{defn}[Trace Concatenation, $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$]
 Given two traces $\trace_1, \trace_2 \in \mathcal{T}$, the trace concatenation operator 
 $\tracecat$ is defined as:
@@ -99,46 +114,6 @@ $\tracecat$ is defined as:
 %   \end{array}
 %   \right.
 % \]
-% For any trace $\trace$ and two events $\event_1, \event_2 \in \eventset$,
-% $\trace[\event_1 : \event_2]$ takes the subtrace of $\trace$ starting with $\event_1$ and ending with $\event_2$ including $\event_1$ and $\event_2$.
-% \\
-% We use $\trace[:\event_2] $ as the shorthand of subtrace starting from head and ending with $\event_2$, and similary for $\trace[\event_1:]$.
-% \[
-%   \trace[:\event] \triangleq
-%   \left\{
-%   \begin{array}{ll} 
-%  \event' :: \trace'[: \event]             & \trace = \event' :: \trace' \land \event' \eventneq \event \\
-%   \event'  & \trace = \event' :: \trace' \land \event' \eventeq \event \\
-%   {[]}  & \trace = [] 
-%   \end{array}
-%   \right.
-% % \]
-% % \[
-%   \quad
-%   \trace[\event: ] \triangleq
-%   \left\{
-%   \begin{array}{ll} 
-%   \trace'[\event: ]     & \trace =  \event' :: \trace' \land \event \eventneq \event' \\
-%   \event' :: \trace'  & \trace = \event' :: \trace' \land \event \eventeq \event' \\
-%   {[ ] } & \trace = []
-%   \end{array}
-%   \right.
-% \]
-% %
-% \mg{why in the next definition you use ( ) while in the previous ones you didn't? They seem like the same cases. And why you use o.w. instead of []?}
-% An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
-% %
-% \begin{equation}
-%   \event \eventin \trace  
-%   \triangleq \left\{
-%   \begin{array}{ll} 
-%     \etrue                  & \trace =  (\event' :: \trace') \land (\event \eventeq \event')
-%                               \\
-%     \event \eventin \trace' & \trace =  (\event' :: \trace') \land (\event \eventneq \event') \\ 
-%     \efalse                 & o.w.
-%   \end{array}
-%   \right.
-% \end{equation}
 \begin{defn}(An Event Belongs to A Trace)
   An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \in \trace$ are defined as follows:
 %

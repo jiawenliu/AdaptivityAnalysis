@@ -1,5 +1,5 @@
 from rechability_bound_pathsensitive import PathSensitiveReachabilityBound
-from program_refine import RefinedProg
+from program_refine import ProgramRefine, RefinedProg
 from bound_infer import TransitionBound
 from graph_parse import GraphParser
 
@@ -25,12 +25,11 @@ class TestUnits:
     def test_seq(self):
         #TODO: implment the refined_prog
         # refined_prog = GraphParser("./examples/ps_reachability_bound/seq.br").refined_prog_parse()
-        refined_prog = GraphParser()
-        refined_prog = RefinedProg(RefinedProg.RType.TP, [0, 1, 2, 3])
-        print("The Reachability Bounds Expected for Vertices in Simple Sequence Graph are: [1,1,1,1] ")
-        print("The Path Sensitive Reachability Bounds Expected for All Transitions in Simple Sequence Graph are: [1,1,1,1] ")
         transition_graph = GraphParser("./examples/ps_reachability_bound/seq.br").abscfg_parse()
-        self.runner(transition_graph, refined_prog)
+        refined_prog = ProgramRefine(transition_graph).program_refine()
+        expected_refined_prog = RefinedProg(RefinedProg.RType.TP, [0, 1, 2, 3])
+        print("The Expected Refined Program for Simple Sequence Program is: ", expected_refined_prog)
+        print("The Computed Refined Program for Simple Sequence Program is: ", refined_prog)
 
     # the example with only sequence, 
     # Expected Weights: [1,1,1,1]
