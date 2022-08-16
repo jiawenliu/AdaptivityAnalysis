@@ -1,5 +1,5 @@
-from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint
-from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
+from abstract_transition_graph import TransitionGraph, DifferenceConstraint
+from adapt_lib import AdaptType, Graph
 import argparse
 
 class GraphParser(argparse.ArgumentParser):

@@ -1,5 +1,5 @@
 from bound_infer import TransitionGraph, TransitionBound, DifferenceConstraint
-from adapt_base import AdaptType
+from adapt_lib import AdaptType
 
 class TestUnits:
 

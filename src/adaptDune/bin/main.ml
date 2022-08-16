@@ -1,4 +1,4 @@
-open Core
+(* (* open Core
 open Syntax
 open Format
 
@@ -105,8 +105,8 @@ let _ =
       let dcdg_result =Dcdg.dcdg result cfg_result rd_in in
       List.fold_left ~f:( fun () (lvar_x, lvar_y) -> 
         Printf.printf "%s -> %s\n" (print_lvar lvar_x) (print_lvar lvar_y) ) ~init:() dcdg_result;
-      Out_channel.close oc
-
+      Out_channel.close oc *)
+ *)
 
 
 (* ******************  ABSCFG TESTING CODE: ****************** *)

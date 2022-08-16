@@ -1,9 +1,10 @@
 from collections import defaultdict
-from bound_infer import TransitionGraph, TransitionBound
-from adapt_search_refined import Graph, AdaptType, AdaptSearchAlgRefined
+from abstract_transition_graph import TransitionGraph, DifferenceConstraint
+from bound_infer import TransitionBound
+from adapt_lib import AdaptType, Graph
+from adapt_search import AdaptSearchAlgRefined
 from program_refine import ProgramRefine
 from rechability_bound_pathsensitive import PathSensitiveReachabilityBound
-# , RefinedProg, ProgramRefine
 
 class AdaptEstimate():
     def __init__(self) -> None:

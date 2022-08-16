@@ -1,5 +1,5 @@
-from adapt_base import AdaptType, Graph
-from adapt_search_refined import AdaptSearchAlgRefined
+from adapt_lib import AdaptType, Graph
+from adapt_search import AdaptSearchAlgRefined
 
 
 class TestUnits:

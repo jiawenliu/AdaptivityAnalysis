@@ -50,15 +50,19 @@ class TestUnits:
     # Expected Path Sensitive Reachability Bounds: 1, 
     # Ouput Reachability Bounds: 
     def multiple_round_odd_sim(self):
-        refined_prog = RefinedProg(RefinedProg.RType.REPEAT, 
+        refined_prog = RefinedProg(RefinedProg.RType.SEQ, 
+        [RefinedProg(RefinedProg.RType.TP, [0]),
+            RefinedProg(RefinedProg.RType.REPEAT, 
             RefinedProg(RefinedProg.RType.CHOICE, 
                 [RefinedProg(RefinedProg.RType.SEQ, 
-                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
-                    RefinedProg(RefinedProg.RType.TP, [2, 1, 4])]),
+                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [1, 3, 5])),
+                    RefinedProg(RefinedProg.RType.TP, [1, 4, 6])]),
                  RefinedProg(RefinedProg.RType.SEQ, 
-                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 1, 4])),
-                    RefinedProg(RefinedProg.RType.TP, [2, 0, 3])])
-                    ]), 1)
+                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [1, 4, 6])),
+                    RefinedProg(RefinedProg.RType.TP, [1, 3, 5])])
+                    ]), 1),
+         RefinedProg(RefinedProg.RType.TP, [2])]
+        )
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
 
@@ -70,13 +74,19 @@ class TestUnits:
     # Expected Path Sensitive Reachability Bounds: 1, 
     # Ouput Reachability Bounds: 
     def multiple_round_single_sim(self):
-        refined_prog = RefinedProg(RefinedProg.RType.CHOICE, 
-                [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
-                RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 1, 4])),
-                RefinedProg(RefinedProg.RType.REPEAT, 
-                    RefinedProg(RefinedProg.RType.SEQ,
-                        [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
-                        RefinedProg(RefinedProg.RType.TP, [2, 1, 4])]))], 1)
+        refined_prog = RefinedProg(RefinedProg.RType.SEQ, 
+        [RefinedProg(RefinedProg.RType.TP, [0]),
+            RefinedProg(RefinedProg.RType.REPEAT, 
+            RefinedProg(RefinedProg.RType.CHOICE, 
+                [RefinedProg(RefinedProg.RType.SEQ, 
+                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [1, 3, 5])),
+                    RefinedProg(RefinedProg.RType.TP, [1, 4, 6])]),
+                 RefinedProg(RefinedProg.RType.SEQ, 
+                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [1, 4, 6])),
+                    RefinedProg(RefinedProg.RType.TP, [1, 3, 5])])
+                    ]), 1),
+         RefinedProg(RefinedProg.RType.TP, [2])]
+        )
 
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
@@ -89,12 +99,16 @@ class TestUnits:
     # Expected Path Sensitive Reachability Bounds: 1, 
     # Ouput Reachability Bounds: 
     def while_two_counters(self):
-        refined_prog = RefinedProg(RefinedProg.RType.CHOICE, 
-                [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [3, 0, 2, 4])),
-                RefinedProg(RefinedProg.RType.REPEAT, 
-                    RefinedProg(RefinedProg.RType.SEQ,
-                        [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [3, 0, 2, 4])),
-                        RefinedProg(RefinedProg.RType.TP, [3, 1, 5])]))], 1)
+        refined_prog = RefinedProg(RefinedProg.RType.SEQ, 
+            [RefinedProg(RefinedProg.RType.TP, [0, 1]),
+            RefinedProg(RefinedProg.RType.CHOICE, 
+                    [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 4, 6, 7])),
+                    RefinedProg(RefinedProg.RType.REPEAT, 
+                        RefinedProg(RefinedProg.RType.SEQ,
+                            [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 4, 6, 7])),
+                            RefinedProg(RefinedProg.RType.TP, [2, 5, 8])]))], 1),
+            RefinedProg(RefinedProg.RType.TP, [3])]
+            )
 
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Multiple Path Single While Graph are: [1, 1, k, k/2, k/2, k] ")
@@ -103,17 +117,21 @@ class TestUnits:
         self.runner(transition_graph, refined_prog)
 
     def three_nested_while(self):
-        refined_prog = RefinedProg(RefinedProg.RType.REPEAT, 
-        RefinedProg(RefinedProg.RType.SEQ,
-                [RefinedProg(RefinedProg.RType.TP, [1, 3]),
+        refined_prog = RefinedProg(RefinedProg.RType.SEQ, 
+            [RefinedProg(RefinedProg.RType.TP, [0]),
                 RefinedProg(RefinedProg.RType.REPEAT, 
-                    RefinedProg(RefinedProg.RType.SEQ,
-                        [ RefinedProg(RefinedProg.RType.TP, [4, 6, 7]),
-                        RefinedProg(RefinedProg.RType.REPEAT, 
-                        RefinedProg(RefinedProg.RType.TP, [8, 10]), 3),
-                        RefinedProg(RefinedProg.RType.TP, [9, 11])]), 2),
-                        RefinedProg(RefinedProg.RType.TP, [12, 2])])
-                        , 1)
+                        RefinedProg(RefinedProg.RType.SEQ,
+                                [RefinedProg(RefinedProg.RType.TP, [1, 3]),
+                                RefinedProg(RefinedProg.RType.REPEAT, 
+                                    RefinedProg(RefinedProg.RType.SEQ,
+                                        [ RefinedProg(RefinedProg.RType.TP, [4, 6, 7]),
+                                        RefinedProg(RefinedProg.RType.REPEAT, 
+                                        RefinedProg(RefinedProg.RType.TP, [8, 10]), 3),
+                                        RefinedProg(RefinedProg.RType.TP, [9, 11])]), 2),
+                                        RefinedProg(RefinedProg.RType.TP, [5, 12])])
+                                        , 1),
+            RefinedProg(RefinedProg.RType.TP, [2])]
+            )
 
         print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
         print("The Reachability Bounds Expected for  Vertices in the Three Level Nested While Graph are: [1, 1, k, k/2, k/2, k] ")
