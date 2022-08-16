@@ -9,7 +9,7 @@ type constriant =
   Reset of var_info * ( var_info option )  * cons_info
 | Dec of var_info *  ( var_info  option )  * cons_info
 | Inc of var_info *  ( var_info  option )  * cons_info
-| Asum of Syntax.b_expr
+| Asum of string * b_expr
 | Top
 
 
@@ -61,7 +61,7 @@ let abs_expr var e =
     | Skip _ -> []
     | Assign (var, e, l ) -> [(l, (abs_expr var e))]
     | Query  ( var ,_ , l ) -> [(l, Reset (var, None, Symb "Q" ))]
-    | While ( b , _ , l ) -> [(l, (Asum (BNeg b)))]
+    | While ( b , _ , l ) -> [(l, (Asum ("W", BNeg b)))]
     | Seq ( _ ,  lc_2 ) -> abs_final lc_2 
     | If ( _ , lc_1 , lc_2 , _ ) -> (abs_final lc_1) @ (abs_final lc_2)
  
@@ -73,12 +73,12 @@ let rec abs_flow (lcom : lcommand) : abs_transition list =
   | Skip _ -> []
   | Assign ( _ , _ , _) -> []
   | Query ( _ ,  _ , _ ) -> []
-  | While ( b , lc , l ) ->   (abs_flow lc) @ [(l, abs_init lc, (Asum b))] @ 
+  | While ( b , lc , l ) ->   (abs_flow lc) @ [(l, abs_init lc, (Asum ("W", b)))] @ 
     (List.map (fun abs_l -> let (l_1, l_constriant) = abs_l in (l_1, l, l_constriant)) (abs_final lc) ) 
   | Seq ( lc_1,  lc_2 ) -> (abs_flow lc_1) @ (abs_flow lc_2) @ 
   (List.map (fun abs_l -> let (l_1, l_constriant) = abs_l in (l_1, abs_init lc_2, l_constriant))  (abs_final lc_1) )
 
-  | If ( b , lc_1 , lc_2 , l ) -> [ ( l, abs_init lc_1, (Asum b) ) ; (l, abs_init lc_2, (Asum (BNeg b))) ] @ (abs_flow lc_1) @ (abs_flow lc_2) 
+  | If ( b , lc_1 , lc_2 , l ) -> [ ( l, abs_init lc_1, (Asum ("IF", b)) ) ; (l, abs_init lc_2, (Asum ("IF", (BNeg b)))) ] @ (abs_flow lc_1) @ (abs_flow lc_2) 
   
 
 
@@ -96,7 +96,8 @@ let print_constriant c =
   | Reset (var, None, cons) -> sprintf " Variable Reset: [ %s <= %s ] " var.v_name (print_const cons)
   | Dec (var, None, cons) -> sprintf " Variable Decrease: [ %s <= %s - %s ] " var.v_name var.v_name (print_const cons)
   | Inc (var, None, cons) -> sprintf " Variable Increase: [ %s <= %s + %s ] " var.v_name var.v_name (print_const cons)
-  | Asum b -> sprintf " Assume %s " (print_bexpr b)
+  | Asum ("W", b) -> sprintf " Assume %s in While" (print_bexpr b)
+  | Asum ("IF", b) -> sprintf " Assume %s in IF" (print_bexpr b)
   | Top -> sprintf "[True]"
 
 let print_abs_flow aflow =
@@ -107,7 +108,7 @@ let print_abs_flow aflow =
   let print_abs_flow_label aflow =
     List.fold_left (fun () (x,  y, _) -> Printf.printf "(%d, %d), " (print_label x) (print_label y)) () aflow 
 
-    let print_constriant_for_python c = 
+    let pretty_print_constriant c = 
       match c with
       | Reset (var, Some var', cons) -> sprintf " DifferenceConstraint(\"%s\", \"%s\",\"%s\", DifferenceConstraint.DCType.RESET) " var.v_name var'.v_name (print_const cons)
       | Dec (var, Some var', cons) -> sprintf " DifferenceConstraint( \"%s\", \"%s\", \"%s\", DifferenceConstraint.DCType.DEC) " var.v_name var'.v_name (print_const cons)
@@ -115,13 +116,14 @@ let print_abs_flow aflow =
       | Reset (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None,\"%s\", DifferenceConstraint.DCType.RESET) " var.v_name (print_const cons)
       | Dec (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None, \"%s\", DifferenceConstraint.DCType.DEC) " var.v_name (print_const cons)
       | Inc (var, None, cons) -> sprintf " DifferenceConstraint(\"%s\", None, \"%s\", DifferenceConstraint.DCType.INC) " var.v_name (print_const cons)
-      | Asum b -> sprintf " DifferenceConstraint(\"%s\", None, None, DifferenceConstraint.DCType.ASUM) " (print_bexpr b)
+      | Asum ("W", b) -> sprintf " DifferenceConstraint(\"%s\", None, None, DifferenceConstraint.DCType.ASUM) " (print_bexpr b)
+      | Asum ("IF", b) -> sprintf " DifferenceConstraint(\"%s\", None, None, DifferenceConstraint.DCType.ASUM) " (print_bexpr b)
       | Top -> sprintf ""
 
       let print_abs_flow_constraints aflow =
         List.fold_left (
           fun () (x, y, c) -> 
-          (let _ = Printf.printf "(%d, [%s], %d, [%d])" (print_label x) (print_constriant_for_python c) (print_label y) (print_label x)
+          (let _ = Printf.printf "(%d, [%s], %d, [%d])" (print_label x) (pretty_print_constriant c) (print_label y) (print_label x)
           in let _ = Printf.printf "," in
           print_newline())
           ) () aflow
@@ -135,7 +137,8 @@ let print_abs_flow aflow =
             | Reset (var, None, cons) -> sprintf "%s,,%s,RESET" var.v_name (print_const cons)
             | Dec (var, None, cons) -> sprintf "%s,,%s,DEC" var.v_name (print_const cons)
             | Inc (var, None, cons) -> sprintf "%s,,%s,INC" var.v_name (print_const cons)
-            | Asum b -> sprintf "%s,,,ASUM" (print_bexpr b)
+            | Asum ("W", b) -> sprintf "W%s,,,ASUM" (print_bexpr b)
+            | Asum ("IF", b) -> sprintf "I%s,,,ASUM" (print_bexpr b)
             | Top -> sprintf ""
 
         let print_out_abs_flow oc aflow =

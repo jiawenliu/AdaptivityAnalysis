@@ -1,6 +1,4 @@
-from rechability_bound_pathsensitive import PathSensitiveReachabilityBound
 from program_refine import ProgramRefine, RefinedProg
-from bound_infer import TransitionBound
 from graph_parse import GraphParser
 
 class TestUnits:
@@ -8,17 +6,6 @@ class TestUnits:
     def __init__(self, ALG) -> None:
         self.ALG = ALG
 
-    def runner(self, transition_graph, refined_prog):
-        pathsensitive_rb = self.ALG(transition_graph)
-        pathsensitive_rb.compute_rb(refined_prog)
-        bound_infer = TransitionBound(transition_graph)
-        bound_infer.compute_transition_bounds()
-        
-        print("The Reachability Bounds Calculated for Transitions in This Graph are: ")
-        bound_infer.print_transition_bounds()
-        print("The Calculated Path Sensitive Reachability Bounds are: ") 
-        pathsensitive_rb.print_path_bound()
-        pathsensitive_rb.print_transition_path_ps_bound()
 
     # the example with only sequence, 
     # Expected Weights: [1,1,1,1]
@@ -28,28 +15,27 @@ class TestUnits:
         transition_graph = GraphParser("./examples/ps_reachability_bound/seq.br").abscfg_parse()
         refined_prog = ProgramRefine(transition_graph).program_refine()
         expected_refined_prog = RefinedProg(RefinedProg.RType.TP, [0, 1, 2, 3])
-        print("The Expected Refined Program for Simple Sequence Program is: ", expected_refined_prog)
-        print("The Computed Refined Program for Simple Sequence Program is: ", refined_prog)
+        print("The Expected Refined Program for Simple Sequence Program is: ", expected_refined_prog.prog_id(), expected_refined_prog.prog_signature())
+        print("The Computed Refined Program for Simple Sequence Program is: ", refined_prog.prog_id(), refined_prog.prog_signature())
 
-    # the example with only sequence, 
-    # Expected Weights: [1,1,1,1]
+
     def while_sim(self):
-        refined_prog = RefinedProg(RefinedProg.RType.SEQ, 
+        expected_refined_prog = RefinedProg(RefinedProg.RType.SEQ, 
         [RefinedProg(RefinedProg.RType.TP, [0, 1]),
         RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 4, 5, 6])),
         RefinedProg(RefinedProg.RType.TP, [3, 7])
         ])
-        print("The Reachability Bounds Expected for Vertices in Simple While Graph are: ")
-        print("The Path Sensitive Reachability Bounds Expected for All Transitions in Simple While Graph are: ")
         transition_graph = GraphParser("./examples/ps_reachability_bound/while_sim.br").abscfg_parse()
-        self.runner(transition_graph, refined_prog)
+        refined_prog = ProgramRefine(transition_graph).program_refine()
+        print("The Expected Refined Program for Simple While Program is: ", expected_refined_prog.prog_id(), expected_refined_prog.prog_signature())
+        print("The Computed Refined Program for Simple While Program is: ", refined_prog.prog_id(),refined_prog.prog_signature())
 
     # the example with while loop of multi-path from if branch (multi-path loop will result in different visiting times for
     # verteices  belong to the same loop),  
     # Expected Path Sensitive Reachability Bounds: 1, 
     # Ouput Reachability Bounds: 
     def multiple_round_odd_sim(self):
-        refined_prog = RefinedProg(RefinedProg.RType.REPEAT, 
+        expected_refined_prog = RefinedProg(RefinedProg.RType.REPEAT, 
             RefinedProg(RefinedProg.RType.CHOICE, 
                 [RefinedProg(RefinedProg.RType.SEQ, 
                     [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 0, 3])),
@@ -58,11 +44,11 @@ class TestUnits:
                     [RefinedProg(RefinedProg.RType.REPEAT, RefinedProg(RefinedProg.RType.TP, [2, 1, 4])),
                     RefinedProg(RefinedProg.RType.TP, [2, 0, 3])])
                     ]), 1)
-        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
-        print("The Reachability Bounds Expected for  Vertices in the Multiple Path Odd While Graph are: [1, 1, k, k/2, k/2, k] ")
 
         transition_graph = GraphParser("./examples/ps_reachability_bound/multiple_round_odd_sim.br").abscfg_parse()
-        self.runner(transition_graph, refined_prog)
+        refined_prog = ProgramRefine(transition_graph).program_refine()
+        print("The Expected Refined Program for the Multiple Path Odd While Program is: ", expected_refined_prog.prog_id(), expected_refined_prog.prog_signature())
+        print("The Computed Refined Program for the Multiple Path Odd While Program is: ", refined_prog.prog_id(),refined_prog.prog_signature())
 
     # the example with while loop of multi-path from if branch (multi-path loop will result in different visiting times for
     # verteices  belong to the same loop),  
@@ -142,14 +128,14 @@ class TestUnits:
     def run_tests(self):
         self.test_seq()
         self.while_sim()
-        self.multiple_round_odd_sim()
-        self.multiple_round_single_sim()
-        self.while_two_counters()
-        self.three_nested_while()
-        self.three_nested_while_II()
+        # self.multiple_round_odd_sim()
+        # self.multiple_round_single_sim()
+        # self.while_two_counters()
+        # self.three_nested_while()
+        # self.three_nested_while_II()
 
 
 
-tester = TestUnits(PathSensitiveReachabilityBound)
+tester = TestUnits(ProgramRefine)
 tester.run_tests()
 

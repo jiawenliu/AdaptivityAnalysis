@@ -8,6 +8,8 @@ class DifferenceConstraint:
         INC = 2
         RESET = 3
         ASUM = 4
+        WHILE = 5
+        IF = 6
 
     dc_type = 1
     def __init__(self, var = None, dc_var = None, dc_const = None, dc_type = 1) -> None:
@@ -16,6 +18,7 @@ class DifferenceConstraint:
         self.dc_const = dc_const
         self.dc_type = dc_type
         self.dc_bexpr = var if dc_type == self.DCType.ASUM else None
+        self.transition_type = "W" if dc_type == self.DCType.ASUM and self.dc_bexpr[0] == 'W' else "IF" if dc_type == self.DCType.ASUM else "ASN"
         pass
 
     def get_var(self):
@@ -54,6 +57,7 @@ class DirectedGraph:
         self.scc_cnt = -1
         self.edge_indices = defaultdict(int)
         self.build_edges()
+        self.build_edge_indices()
         pass
 
     def build_edges(self):
@@ -170,8 +174,16 @@ class TransitionGraph(DirectedGraph):
         super().__init__(vertex_num if vertex_num else (max(map(lambda x: max(x), edges)) + 1), edges)
         self.ctl_edges = edges
         self.transitions = transitions
-
+        self.transition_id = defaultdict(int)
     
+    def transition_id_lookup(self):
+        for id, transition in enumerate(self.transitions):
+            # print(id, transition)
+            l1,_,l2,_ = transition
+            self.transition_id[str(l1) + "->" + str(l2)] = id
+
+
+
 
 
 

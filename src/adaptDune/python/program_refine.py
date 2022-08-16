@@ -20,27 +20,57 @@ class ProgramRefine():
         pass
 
     def program_refine(self):
+        # self.transition_graph.build_edges()
+        self.transition_graph.transition_id_lookup()
+        print(self.transition_graph.graph)
         def refine_dfs(curr_label, curr_transition_path):
-            if not self.transition_graph.graph[curr_label]:
+            print("CURRENT_LABEL: ", curr_label)
+            print("CURRENT_Transition_Path: ", curr_transition_path)
+            # curr_label,curr_dc,next_label, _ = self.transition_graph.transitions[curr_transition_id]
+            if len(self.transition_graph.graph[curr_label]) == 0:
                 return  RefinedProg(RefinedProg.RType.TP, curr_transition_path)
-            #TODO: need to mark the while ID
-            if self.transition_graph[curr_label].get_transition_type == 'while: id':
+            elif len(self.transition_graph.graph[curr_label]) == 1: 
+                next_label = self.transition_graph.graph[curr_label][0]
+                edge_id = str(curr_label) + "->" + str(next_label)
+                next_transition_id = self.transition_graph.edge_indices[str(curr_label) + "->" + str(next_label)]
+                print("Single Path to The Nest Label %d Trough Transition Edge: %s" % (next_label, edge_id))
+                if self.transition_graph.transitions[curr_transition_path[0]][0] == next_label:
+                    return RefinedProg(RefinedProg.RType.TP, curr_transition_path + [next_transition_id])
+                else:
+                    return refine_dfs(next_label, curr_transition_path+[next_transition_id]) 
+            else:
                 tprog1 = RefinedProg(RefinedProg.RType.TP, curr_transition_path)
                 ch_progs = []
+                print("Building Mutiple Paths Through Multiple Next Labels:", self.transition_graph.graph[curr_label])
                 for next_label in self.transition_graph.graph[curr_label]:
-                    #TODO: check if it is going out of the same while: need to mark the while ID
-                    if self.transition_graph[next_label].get_transition_type == 'while_out : id':
-                        tprog2 = refine_dfs(next_label, [next_label])
+                    edge_id = str(curr_label) + "->" + str(next_label)
+                    next_transition_id = self.transition_graph.edge_indices[str(curr_label) + "->" + str(next_label)]
+                    _,dc,_,var = self.transition_graph.transitions[next_transition_id]
+                    print("Mutliple Path to One of The Nest Label %d Through Transition Edge: %s" % (next_label, edge_id))
+                    if dc.transition_type == "WHILE":
+                        ch_progs.append(refine_dfs(next_label, [self.transition_graph.transition_id[edge_id]]))
                     else:
-                        ch_progs.append(refine_dfs(next_label, [next_label]))
-                return RefinedProg(RefinedProg.RType.SEQ, [tprog1, RefinedProg(RefinedProg.RType.CHOICE, ch_progs), tprog2])
-            elif curr_label == curr_transition_path[0]:
-                return RefinedProg(RefinedProg.RType.TP, curr_transition_path)
-            else:
-                ch_progs = [refine_dfs(next_label, curr_transition_path+[next_label]) for next_label in self.transition_graph.graph[curr_label]]
-                if len(ch_progs) == 1: return ch_progs[0]
-                else: return RefinedProg(RefinedProg.RType.CHOICE, ch_progs)       
-        return refine_dfs(0, [])
+                        ch_progs.append(refine_dfs(next_label, curr_transition_path + [next_transition_id]))
+                return RefinedProg(RefinedProg.RType.SEQ, [tprog1, RefinedProg(RefinedProg.RType.CHOICE, ch_progs)])
+            #TODO: need to mark the while ID
+            # else:
+                if self.transition_graph[curr_label].get_transition_type == 'while: id':
+                    tprog1 = RefinedProg(RefinedProg.RType.TP, curr_transition_path)
+                    ch_progs = []
+                    for next_label in self.transition_graph.graph[curr_label]:
+                        #TODO: check if it is going out of the same while: need to mark the while ID
+                        if self.transition_graph[next_label].get_transition_type == 'while_out : id':
+                            tprog2 = refine_dfs(next_label, [next_label])
+                        else:
+                            ch_progs.append(refine_dfs(next_label, [next_label]))
+                    return RefinedProg(RefinedProg.RType.SEQ, [tprog1, RefinedProg(RefinedProg.RType.CHOICE, ch_progs), tprog2])
+                elif curr_label == curr_transition_path[0]:
+                    return RefinedProg(RefinedProg.RType.TP, curr_transition_path)
+                else:
+                    ch_progs = [refine_dfs(next_label, curr_transition_path+[next_label]) for next_label in self.transition_graph.graph[curr_label]]
+                    if len(ch_progs) == 1: return ch_progs[0]
+                    else: return RefinedProg(RefinedProg.RType.CHOICE, ch_progs)       
+        return refine_dfs(1, [0])
 
     def get_result(self):
         return self.refined_result
