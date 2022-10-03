@@ -9,7 +9,13 @@
 In this section, we present our static program analysis for computing an upper bound on the adaptivity of an arbitrary program $c$, as we define in last section.
 %
 \subsection{A guide to {\THESYSTEM} }
-In order to have the upper bound of the  adaptivity of a program $c$, we design a program analysis framework {\THESYSTEM}. It can be divided as two steps: 1) to construct a weighted depdenency graph based on $c$. 2) to find a path in this graph, which is used to estimate an upper bound on the adaptivity of $c$.
+In order to have a sound and accurate upper bound on the  adaptivity of a program $c$,
+we design a program analysis framework named {\THESYSTEM}.
+This framework composes two major algorithms as shown in Fig.~\ref{fig:adaptfun}.
+The first algorithm is a combined quantitative dependency analysis algorithm in the dashed box in Fig.~\ref{fig:adaptfun}.
+It produces an estimated quantitative dependency graph for a program.
+The second algorithm is a walk length estimation algorithm in the slashed box in Fig.~\ref{fig:adaptfun}.
+It computes the upper bound on the \emph{adaptivity} over the estimated quantitative dependency of an adaptive data analysis program $c$.
 \begin{figure}
   \centering    
 \includegraphics[width=1.0\columnwidth]{adapfun.png}
@@ -18,93 +24,39 @@ In order to have the upper bound of the  adaptivity of a program $c$, we design 
   \label{fig:adaptfun}
   \vspace{-0.5cm}
 \end{figure}
-% \subsubsection{Graph Estimation}
 %
-%
-% \subsection{A guide to the algorithm}
-% In order to have the upper bound of adaptivity:
-% \\
-% \begin{enumerate}
-% \item $\THESYSTEM$  first builds a program-based dependency graph to {over-}approximate the
-% % execution-based dependency graph (in Definition~\ref{def:trace_graph})
-% Execution-Based Dependency Graph (in Definition~\ref{def:trace_graph})
-% through Section~\ref{sec:alg_vertexgen}, Section~\ref{sec:alg_weightedgegen} and~\ref{sec:alg_graphgen}:
-% % in the phases one to phases four of $\THESYSTEM$ in Section~\ref{sec:abscfg} to Section~\ref{sec:alg_graphgen}:
-% \\
-% 1.1 approximate the vertices: 
-% % in the forth step of
-% in the first phase of $\THESYSTEM$ in
-% % the algorithm in Section~\ref{sec:alg_graphgen} 
-% Section~\ref{sec:alg_vertexgen}
-% without extra static analysis technique.
-% \\
-% 1.1 approximate the query annotations: 
-% % in the forth step of
-% in the first phase of $\THESYSTEM$ in
-% % the algorithm in Section~\ref{sec:alg_graphgen} 
-% Section~\ref{sec:alg_vertexgen}
-% without extra static analysis technique.
-% \\
-% 1.2 approximate the vertices weights:
-% in the second phase of 
-% % the algorithm in  
-% of $\THESYSTEM$ specifically in Section~\ref{sec:alg_weightgen}
-% \\
-% 1.3 approximate the edges between vertices:
-% also in the second phase of $\THESYSTEM$ specifically in 
-% % Section~\ref{sec:alg_weightgen}
-% Section~\ref{sec:alg_edgegen}
-% \\
-% 1.4 generate the final approximated program-based dependency graph in Section~\ref{sec:alg_graphgen}
-% %  to {over-}approximate the
-% % approximate the query annotation: 
-% % in the forth step of
-% in the third phase of $\THESYSTEM$.
-% % the algorithm  without extra static analysis technique.
-% % \\
-% This program-based graph has a similar topology structure as 
-% % the one
-% % of 
-% the Execution-Based Dependency Graph. It has the same
-% vertices and query annotations, but approximated edges and weights. 
-% \item Then in the last phase in Section~\ref{sec:alg_adaptcompute}, $\THESYSTEM$
-% % we compute the upper bound for adaptivity over this approximated graph:
-% % , as an upper bound for
-% % program's adaptivity
-% computes the upper bound for adaptivity over this approximated graph.
-% % in the last phase of this algorithm in Section~\ref{sec:alg_adaptcompute}.
-% % \subsection{Adaptivity Based on Program Analysis in \THESYSTEM}
-% % In order to give a bound on the program's adaptivity, we first build a
-% % program-based data-dependency graph to {over-}approximate the
-% % trace-based dependency graph.  Then, we define a program-based
-% % adaptivity over this approximated graph, as an upper bound for
-% % $A(c)$.
-% \end{enumerate}
-According to the dependency graph we use in adaptivity definition, we want to build a similar graph to {over-}approximate the
-% execution-based dependency graph (in Definition~\ref{def:trace_graph})
-Execution-Based Dependency Graph (in Definition~\ref{def:trace_graph}). The construction considers the vertices, edges, and the weight of every node, as well as some annotations which marks the query usage. The overall picture of this step is organized as follows.
+
 % through Section~\ref{sec:alg_vertexgen}, Section~\ref{sec:alg_weightedgegen} and~\ref{sec:alg_graphgen}:
 \begin{enumerate}
   \item \textbf{Quantitative Dependency Graph Estimation}
+  Because adaptivity is defined over a program's quantitative dependency graph (in Definition~\ref{def:trace_graph}), this algorithm first estimates this graph for the program statically.
+  % execution-based dependency graph (in Definition~\ref{def:trace_graph})
+  % Execution-Based Dependency Graph (in Definition~\ref{def:trace_graph}). 
+  It estimates the four components of this graph in two steps and then compose the four components into a quantitative dependency graph for a program in the last step.
+  %  Firvertices, edges, and the weight of every node, as well as some annotations which marks the query usage. 
+  The algorithm is presented in Section~\ref{sec:alg_graphgen} as follows.
 \begin{enumerate}
   \item \textbf{Vertex and Query Annotation Estimation}
   Vertices and query annotations in this graph are the assigned variables with unique labels. These are extracted directly from the program as in Section~\ref{sec:alg_vertexgen}.
   \item \textbf{Edge and Weight Estimation}
   \\
-  The edge and weight for a quantitative dependency graph is estimated through a combined dependency analysis algorithm.
-  There are three steps in this algorithm.
+  This step estimates the edge and weight for a quantitative dependency graph. It combines the control, data-flow  analysis algorithm and the loop bound inference algorithm.
+  There are three computation steps in this algorithm.
   \\
   \textbf{Abstract Control Flow Graph.}
-  In order to perform the dependency analysis and quantitative analysis, the analysis algorithm generates an \emph{abstract control flow graph} for a program as the first step, in Section~\ref{sec:abscfg}.
+  In order to perform the dependency analysis and quantitative analysis, this step first generates an \emph{abstract control flow graph} for a program in Section~\ref{sec:abscfg}.
   \\
   \textbf{Computing Edges via Dependency Analysis.} 
-  This algorithm 
-  is performed over \emph{abstract control flow graph} combining both control flow and data flow, See
+  This step 
+  is performed over \emph{abstract control flow graph} combining both control flow and data flow analysis in
   Section~\ref{sec:alg_edgegen}.
-  It estimates the dependency relation for a pair of labeled variables. Then it uses the estimated dependency relation to approximate the edge of the quantitative dependency graph between each pair of vertices.
+  It estimates the data dependency relation for each pair of labeled variables in a program. Then it uses the estimated data dependency relation to approximate the edge of the quantitative dependency graph between each pair of vertices.
   \\
   \textbf{Computing Weights via Quantitative Analysis.} 
-Every vertex and edge come with a weight, which tells the maximal times each vertex and edge can be visited in realistic execution. This weight is estimated by a reachability bound analysis on each vertex, See Section~\ref{sec:alg_weightgen}.
+  This step computes the upper bound on the maximal visiting times of each labeled variable for a program in Section~\ref{sec:alg_weightgen}.
+  %  can be visited during execution. 
+  It is performed over the same \emph{abstract control flow graph} as well. It first estimates the reachability bound for every vertex over this graph. Then, this reachability bound is used to estimate the maximal visiting times of each labeled variable for a program as the weight of this quantitative dependency graph.
+% This weight is estimated by a reachability bound estimation on each vertex in Section~\ref{sec:alg_weightgen}.
 \item  \textbf{Quantitative Dependency Graph.} 
 % \item Query annotations are also decided directly from the program, when there is a query request, the associated variables which are the results of the query requests are marked in the form of a flag, $0$ means no query, $1$ represents query related. See Section~\ref{sec:alg_vertexgen}.
 % \item 
@@ -343,7 +295,7 @@ In order to get a sound but precise upper bound, we will discuss some challenges
 % \weights & := &
 % % \bigcup
 % % \begin{array}{l}
-% 	\left\{ (x^l, w) \in  \mathcal{LV} \times EXPR(\constdom)
+% 	\left\{ (x^l, w) \in  \mathcal{LV} \times \mathcal{A}_{\lin}
 % 	\mid
 % 	x^l \in \lvar_{{c}} \land w = \absW(l)
 % 	\right\}
@@ -359,13 +311,13 @@ In order to get a sound but precise upper bound, we will discuss some challenges
 % \end{array}
 % \] 
 % }
-% , where the $\absW(l)$ is the symbolic reachability bound in domain of $EXPR(\constdom)$,
+% , where the $\absW(l)$ is the symbolic reachability bound in domain of $\mathcal{A}_{\lin}$,
 % % for the assignment command of label $l$ to which  
 % the labeled variable $x^l$, 
 % % is associated, 
 % computed from the $\THESYSTEM$ algorithm 
 % in Definition~\ref{def:transition_closure}.
-% The $EXPR(\constdom)$ is an expression over symbolic constants containing the
+% The $\mathcal{A}_{\lin}$ is an expression over symbolic constants containing the
 % input variables and natural number.
 % \end{defn} 
 % %
@@ -650,7 +602,6 @@ The vertices are defined formally as follows.
   }
   %
 where $\mathcal{A}_{\lin}$ is the set of arithmetic expressions over $\mathbb{N}$ and program's input variables. 
-The weight $w$ for every vertex will be computed in following step in Section~\ref{sec:alg_weightgen}.
 
 \paragraph{Query Annotation Computation}
 The static scanning of the programs also tells us whether one vertex(assigned variable) is assigned by a query request. We have similar definition when defining the Execution-Based Dependency Graph, 
@@ -668,50 +619,18 @@ n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \not\in \qvar_{c} .
 \subsection{Edge and Weight Estimation}
 \label{sec:alg_weightedgegen}
 
-Since the edges of the execution-based graph of a program relies on the dependency relation, which handles both control flow and data flow, as an over-approximation of this graph, the edges of our static anlaysis dependency graph also covers these two kind of flows. We develop a feasible data flow relation to catch these two flows, in Section~\ref{sec:alg_edgegen}.
+
+The edges and weight are estimated through a combined control, data flow, and loop bound analysis.
+
+% The weight of every vertice in the execution-based graph is built on all possible execution traces.
 
 
-The weight of every vertice in the execution-based graph is built on all possible execution traces.
-In order to over-approximate the weight statically but still tightly, we present a symbolic reachability bound analysis for estimation of the weight of each vertice(label) in Section~\ref{sec:alg_weightgen},
-in spirit of some reachability bound techiniques.
-
-
-The edges and weight estimation are both performed on basis of an abstract control flow graph of the program, we first show how to generate this abstract execution control flow graph before the introduction of  the edge and weight estimation.  
 
 
 \subsubsection{Abstract Execution Control Flow graph}
 \label{sec:abscfg}
-% In an 
-%  % a program $c$ 
-%  abstract control flow graph for a program $c$, $\absG(c)$, 
-%  every 
-%  vertex corresponds to the unique
-%  label.
-%  Specifically,
-%  The edge is directed, 
-%   representing an abstract transition 
-%   between two control locations uniquely decided by the labels.   
-%    (We refer control location and the label to the same thing). The abstract transition is of the form of a set of difference constraints for variables, built from the abstract execution trace of the program. For instance, the edge $(l_1, dc, l_2)$ from $l_1$ to $l_2$,
-%   represents an abstract transition 
-%   between two control locations with a set of difference constraints on it.
-%  In this transition, the  command labeled with the second location $l_2$, 
-%   will be executed after execution of the command with label $l_1$,
-%  %  The abstract transition contains a set of difference constraints for variables, 
-%  with the difference constraints generated by abstracting the command of the first label. Difference constraints is a constraint on difference between variables and constants, which will be formally introduced when we discuss experssion abstraction.
-%  \wq{The edge in the abstract control flow graph comes from the abstract execution trace of the program. The abstract execution trace, an abstract representation of the execution, consists of a list of abstract transitions. Then, every abstract transition in the abstrction execution trace corresponds to an edge in the abstract control flow graph. In aonther word, the edge $(l_1, dc, l_2)$ in the abstract control flow graph, represents an abstract transition 
-%   from $l_1$ to $l_2$, with a set of difference constraints $dc$. Also notice, the difference constraints generated during the abstract transition appears in the edge as annotation.}
-
-%  % over program's abstract execution 
-
-%  Overall, the key point of the abstract excution control flow graph is the construction of the abstract execution trace of a program, which relies on a program abstraction procedure in following steps:
-
-%  \begin{enumerate}
-%  \item  Computing the abstract expression for every assignment command in the program.
-%  \item Computing the abstract event for every labeled command in the program. Intuitively, this abstract event aims 
-%  to approximate the event in program's execution trace.
-%  \item Constructing the abstract execution trace for a program.
-%  \end{enumerate}  
-The Quantitave dependency analysis algorithm is performed on basis of an \emph{Abstract Transition Graph} for the program $c$.
+Because  both performed on basis of an \emph{Abstract Transition Graph} of the program, we first show how to generate this abstract execution control flow graph before the introduction of  the edge and weight estimation.  
+% The Quantitave dependency analysis algorithm is performed on basis of an  for the program $c$.
 % We first show 
 This step shows how to generate the abstract transition graph $\absG(c)$ of a
 program $c$ through constructing its vertices and edges.
@@ -861,7 +780,7 @@ The way of normalizing the guards and computing the norms is adopted from the co
 \begin{defn}[Symbolic Expression ($\mathcal{A}_{S}$)]
   $\mathcal{A}_{S}$ is the set of all the symbolic expressions 
 over $\constdom$.
-% For concise, $\mathcal{A}_{\lin}$ is used as the same meaning of $EXPR(\constdom)$ in the follows, to denote the arithmetic expression 
+% For concise, $\mathcal{A}_{\lin}$ is used as the same meaning of $\mathcal{A}_{\lin}$ in the follows, to denote the arithmetic expression 
 % over the symbolic variables, (i.e., $\mathbb{N}$ with input variables).
 \end{defn}
 The symbolic expression set is a subset of arithmetic expressions over $\mathbb{N}$ with input variables, 
@@ -1022,11 +941,11 @@ Then, we compute the $\absflow(c) = \absflow'(c')$ for $c'$ as follows,
      an initial trace  $\vtrace_0 \in \mathcal{T}_0(c)$,
      there is an abstract event $\absevent = (l, \_, \_) \in \absflow(c)$ 
      % with initial label $l$
-     for every event $\event \in \trace$ having the label $l$, i.e., $\event = (\_, l, \_)$.
+     for every event $\event \in \trace$ having the label $l$, i.e., $\event = (\_, l, \_, \_)$.
       %
    \[
      \begin{array}{l}
-       \forall c \in \cdom, \vtrace_0 \in \mathcal{T}_0(c), \trace \in \mathcal{T} ,  \event = (\_, l, \_) \in \eventset \st
+       \forall c \in \cdom, \vtrace_0 \in \mathcal{T}_0(c), \trace \in \mathcal{T} ,  \event = (\_, l, \_, \_) \in \eventset \st
    \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0 \tracecat \vtrace} 
    \land \event \in \trace 
    \\
@@ -1038,20 +957,20 @@ Then, we compute the $\absflow(c) = \absflow'(c')$ for $c'$ as follows,
 %    This lemma is proved formally in Appendix~\ref{apdx:rb_soundness}.
 % For every event $\event$ with label $l$ in an execution trace $\trace$ of program $c$, 
 % there is an abstract event in program's abstract events computation of form $(l, \_, \_)$. 
-This lemma is proved formally in Lemma~\ref{lem:abscfg_sound} in Appendix~\ref{apdx:rb_soundness}.
+This lemma is proved formally in Appendix~\ref{apdx:reachability_soundness}.
 \\
 For every program point $l$ corresponding to an assignment command in a program $c$,
 %  $x^l \in \lvar_c$, 
 there is a unique abstract event in the program's abstract events set $\absevent \in \absflow(c)$ of form $(l, \_, \_)$. 
 \begin{lem}[Uniqueness of the Abstract Events Computation]
-  \label{lem:abscfg_unique}
+  \label{lem:abscfg_uniquex}
   For every program $c$ and
   an execution trace $\trace \in \mathcal{T}$ that is generated w.r.t.
   an initial trace  $\vtrace_0 \in \mathcal{T}_0(c)$,
   there is a unique abstract event $\absevent = (l, \_, \_) \in \absflow(c)$ 
   % with initial label $l$
   for every assignment event $\event \in \eventset^{\asn}$ in the
-  execution trace having the label $l$, i.e., $\event = (\_, l, \_)$ and  $\event \in \trace$.
+  execution trace having the label $l$, i.e., $\event = (\_, l, \_, \_)$ and  $\event \in \trace$.
 %
 \[
   \begin{array}{l}
@@ -1065,7 +984,7 @@ there is a unique abstract event in the program's abstract events set $\absevent
 \]
 \end{lem}
 This lemma and proof is also 
-formalized in Lemma~\ref{lem:absevent_unique} in Appendix~\ref{apdx:rb_soundness}.
+formalized in Appendix~\ref{apdx:reachability_soundness}.
 
   \paragraph{Edge Construction}
 The edge for $c$'s abstract transition graph is constructed simply by computing the program's abstract events set, $\absflow(c)$ as follows,
@@ -1094,164 +1013,34 @@ $\absE(c) = \{(l_1, dc, l_2) | (l_1, dc, l_2) \in \absflow(c)\}$,
 $\absV(c) = \lvar(c)\cup\{\lex\}$
 % \\
 %  $\absW(c) 
-% \triangleq \left\{ (l, w) \in \mathbb{L} \times EXPR(\constdom) \right\}$.
+% \triangleq \left\{ (l, w) \in \mathbb{L} \times \mathcal{A}_{\lin} \right\}$.
 \end{defn}
 %
 % It is easy to show for every $(l_1, dc, l_2) \in \absflow(c)$ such that $l_2 \neq l_e$, $(l_1, l_2) \in flow(c)$. The formal Lemma and proof can be found in Lemma~\ref{lem:flow_to_absflow} in Appendix~\ref{apdx:reachability_soundness}.
 %
 \paragraph*{Example}
-% Look at the two-round example again, its generated abstract control is shown as in Figure~\ref{fig:adapfun_tworound}(a).
-% In this abstract control flow graph, every vertex is a label,
-% corresponding to a label command in the program.
-% Each directed 
-% edge represents an abstract transition 
-% between two control locations, 
-% i.e., the labels of two commands (we call the labels also control location and they refer to the same thing), 
-% where the second labeled command will be executed after execution of the command with first label.
-% For example, the edge $0, a \leq 0, 1$ on the top, represents,
-% from location $0$, the command 
+% Let us look at the two-round example, its generated abstract control flow graph is shown as in Figure~\ref{fig:abscfg_tworound}(b).
+% For example, the edge $(0, a \leq 0, 1)$ on the top, tells us the command 
 % $\clabel{\assign{a}{0}}^0$ is executed with next continuation location $1$,
 % where the 
 % command $\clabel{\assign{j}{k}}^1$ will be executed next.
-% The constraint $a \leq 0$ is generated by abstracting from the assignment command $\assign{a}{0}$,
+% The constraint $a \leq 0$ is a difference constraint, generated by abstracting from the assignment command $\assign{a}{0}$,
 % representing that value of $a$ is less than or equals to $0$ after 
-% location $0$ before executing command at line $1$.
-% %
-% The same way for the rest edges' constructions.
-%
-Let us look at the two-round example, its generated abstract control flow graph is shown as in Figure~\ref{fig:abscfg_tworound}(b).
-For example, the edge $(0, a \leq 0, 1)$ on the top, tells us the command 
-$\clabel{\assign{a}{0}}^0$ is executed with next continuation location $1$,
-where the 
-command $\clabel{\assign{j}{k}}^1$ will be executed next.
-The constraint $a \leq 0$ is a difference constraint, generated by abstracting from the assignment command $\assign{a}{0}$,
-representing that value of $a$ is less than or equals to $0$ after 
-location $0$ before executing command at line $1$. The difference constraint is an inequality relation between, the left-hand side of the inequality talks about the variable before the execution and the right-hand side ascribes those after the execution. 
-Look at the $a < a+x $ on the edge $5$ to $2$, which describes the execution of the command at line $5$, which is an assignment $a = a+x$. The $a$ on the left side of $a < a+x$ represents the value of $a$ after the assignment, while the right-hand side $a$ stores the value before the assignment. 
-Also, we have while loop, which is a circle $2 \to 4 \to 5 \to 2$ in Figure~\ref{fig:abscfg_tworound}(b). 
-Please also look at the edge from $3$ to $4$, which talks about the query! The $x < Q_m$ describes the execution of a query request (the command at line 3), the query results stored in $x$ is bounded by $Q_m$. 
-$Q_m$ is the maximal value for query requesting result from the database $DB$. $top$ means there is no assignment executed, for example, we have the difference constraint $\top$ on the edge $2$ to $6$, means at line $2$, there is no assignment (it is a testing guard $j>0$.) 
+% location $0$ before executing command at line $1$. The difference constraint is an inequality relation between, the left-hand side of the inequality talks about the variable before the execution and the right-hand side ascribes those after the execution. 
+% Look at the $a < a+x $ on the edge $5$ to $2$, which describes the execution of the command at line $5$, which is an assignment $a = a+x$. The $a$ on the left side of $a < a+x$ represents the value of $a$ after the assignment, while the right-hand side $a$ stores the value before the assignment. 
+% Also, we have while loop, which is a circle $2 \to 4 \to 5 \to 2$ in Figure~\ref{fig:abscfg_tworound}(b). 
+% The edge from $3$ to $4$talks about the query! The $x < Q_m$ describes the execution of a query request (the command at line 3), the query results stored in $x$ is bounded by $Q_m$. 
+% $Q_m$ is the maximal value for query requesting result from the database $DB$. $top$ means there is no assignment executed, for example, we have the difference constraint $\top$ on the edge $2$ to $6$, means at line $2$, there is no assignment (it is a testing guard $j>0$.) 
 %
 The same way for the rest edges' constructions.
-\begin{figure} 
-  \centering
-  \begin{subfigure}{.2\textwidth}
-  \begin{centering}
-  {\small
-  $
-      \begin{array}{l}
-            \clabel{ \assign{a}{0}}^{0} ;   
-              \clabel{\assign{j}{k} }^{1} ; \\
-              \ewhile ~ \clabel{j > 0}^{2} ~ \edo ~ \\
-              \Big(
-               \clabel{\assign{x}{\query(\chi[j])} }^{3}  ; \\
-               \clabel{\assign{j}{j-1}}^{4} ;\\
-              \clabel{\assign{a}{x + a}}^{5}       \Big);\\
-              \clabel{\assign{l}{\query(\chi[k]*a)} }^{6}\\
-          \end{array}
-  $
-  }
-  \caption{}
-  \end{centering}
-  \end{subfigure}
-    \begin{subfigure}{.35\textwidth}
-    \begin{centering}
-  %   \todo{abstract-cfg for two round}
-  \begin{tikzpicture}[scale=\textwidth/20cm,samples=200]
-  \draw[] (-7, 10) circle (0pt) node{{ $0$}};
-  \draw[] (0, 10) circle (0pt) node{{ $1$}};
-  \draw[] (0, 7) circle (0pt) node{\textbf{$2$}};
-  \draw[] (0, 4) circle (0pt) node{{ $3$}};
-  \draw[] (0, 1) circle (0pt) node{{ $4$}};
-  \draw[] (-7, 1) circle (0pt) node{{ $5$}};
-  % Counter Variables
-  \draw[] (6, 7) circle (0pt) node {\textbf{$6$}};
-  \draw[] (6, 4) circle (0pt) node {{ $ex$}};
-  %
-  % Control Flow Edges:
-  \draw[ thick, -latex] (-6, 10)  -- node [above] {$a \leq 0$}(-0.5, 10);
-  \draw[ thick, -latex] (0, 9.5)  -- node [left] {$j \leq k$} (0, 7.5) ;
-  \draw[ thick, -latex] (0, 6.5)  -- node [left] {$\top$}  (0, 4.5);
-  \draw[ thick, -latex] (0, 3.5)  -- node [right] {$x \leq Q_m$} (0, 1.5) ;
-  \draw[ thick, -latex] (-0.5, 1)  -- node [above] {$j \leq j - 1$} (-6, 1) ;
-  \draw[ thick, -latex] (-6, 1.5)  -- node [left] {$a \leq a + x$} (-0.5, 7)  ;
-  \draw[ thick, -latex] (0.5, 7)  -- node [above] {$l \leq Q_m$}  (5.5, 7);
-  \draw[ thick, -latex] (6, 6.5)  -- node [right] {$\top$} (6, 4.5) ;
-  \end{tikzpicture}
-  \caption{}
-    \end{centering}
-    \end{subfigure}
-    \begin{subfigure}{.35\textwidth}
-      \begin{centering}
-    %   \todo{abstract-cfg for two round}
-    \begin{tikzpicture}[scale=\textwidth/20cm,samples=200]
-    \draw[] (-10, 10) circle (0pt) node{{ $0: 1$}};
-    \draw[] (0, 10) circle (0pt) node{{ $1: 1$}};
-    \draw[] (0, 7) circle (0pt) node{\textbf{$2: k$}};
-    \draw[] (0, 4) circle (0pt) node{{ $3: k$}};
-    \draw[] (0, 1) circle (0pt) node{{ $4: k$}};
-    \draw[] (-10, 1) circle (0pt) node{{ $5: k$}};
-    % Counter Variables
-    \draw[] (6, 7) circle (0pt) node {\textbf{$6: 1$}};
-    \draw[] (6, 4) circle (0pt) node {{ $ex: 1$}};
-    %
-    % Control Flow Edges:
-  \draw[ thick, -latex] (-8, 10)  -- node [above] {$a \leq 0$}(-1.5, 10);
-  \draw[ thick, -latex] (0, 9.5)  -- node [left] {$j \leq k$} (0, 7.5) ;
-  \draw[ thick, -latex] (0, 6.5)  -- node [left] {$\top$}  (0, 4.5);
-  \draw[ thick, -latex] (0, 3.5)  -- node [right] {$x \leq Q_m$} (0, 1.5) ;
-  \draw[ thick, -latex] (-1.5, 1)  -- node [above] {$j \leq j - 1$} (-8, 1) ;
-  \draw[ thick, -latex] (-8, 1.5)  -- node [left] {$a \leq a + x$} (-1.5, 7)  ;
-  \draw[ thick, -latex] (1.5, 7)  -- node [above] {$l \leq Q_m$}  (4.5, 7);
-  \draw[ thick, -latex] (6, 6.5)  -- node [right] {$\top$} (6, 4.5) ;
-    \end{tikzpicture}
-    \caption{}
-      \end{centering}
-      \end{subfigure}
-  %       \begin{subfigure}{.3\textwidth}
-  %   \begin{centering}
-  %   \begin{tikzpicture}[scale=\textwidth/18cm,samples=200]
-  % \draw[] (0, 10) circle (0pt) node
-  % {{ $a^0: {}^1_{0}$}};
-  % \draw[] (0, 7) circle (0pt) node
-  % {\textbf{$x^3: {}^{k}_{1}$}};
-  % \draw[] (0, 4) circle (0pt) node
-  % {{ $a^5: {}^{k}_{0}$}};
-  % \draw[] (0, 1) circle (0pt) node
-  % {{ $l^6: {}^{1}_{1}$}};
-  % % Counter Variables
-  % \draw[] (5, 9) circle (0pt) node {\textbf{$j^2: {}^{1}_{0}$}};
-  % \draw[] (5, 6) circle (0pt) node {{ $j^4: {}^{k}_{0}$}};
-  % %
-  % % Value Dependency Edges:
-  % \draw[ ultra thick, -latex, densely dotted,] (0, 1.5)  -- (0, 3.5) ;
-  % \draw[ ultra thick, -latex, densely dotted,] (0, 4.5)  -- (0, 6.5) ;
-  % \draw[ thick, -latex] (0, 7.5)  -- (0, 9.5) ;
-  % \draw[ thick, -Straight Barb] (1.5, 3.5) arc (120:-200:1);
-  % \draw[ thick, -Straight Barb] (6.5, 6.5) arc (150:-150:1);
-  % \draw[ thick, -latex] (5, 6.5)  -- (5, 8.5) ;
-  % % Control Dependency
-  % \draw[ thick,-latex] (1.5, 7)  -- (4, 9) ;
-  % \draw[ thick,-latex] (1.5, 4)  -- (4, 9) ;
-  % \draw[ thick,-latex] (1.5, 7)  -- (4, 6) ;
-  % \draw[ thick,-latex] (1.5, 4)  -- (4, 6) ;
-  % \end{tikzpicture}
-  % \caption{}
-  %   \end{centering}
-  %   \end{subfigure}
-    \vspace{-0.3cm}
-    \caption{(a) The same $\kw{towRounds(k)}$ program as Figure~\ref{fig:overview-example}
-    (b) The abstract control flow graph for $\kw{towRounds(k)}$  (c) The abstract control flow graph with the reachability bound for $\kw{towRounds(k)}$.}
-    \vspace{-0.5cm}
-    \label{fig:abscfg_tworound}
-  \end{figure}
+\input{examples/abscfg_tworound}
 %
 
-\subsubsection{Dependency Analysis Algorithm}
+\subsubsection{Edge Estimation vis Dependency Analysis Algorithm}
 \label{sec:alg_edgegen}
+Since the edges of the execution-based graph of a program relies on the dependency relation, which handles both control flow and data flow, as an over-approximation of this graph, the edges of our static analysis dependency graph also covers these two kind of flows. We develop a feasible data flow relation to catch these two flows in this section.
 % \wq{
-  We show how to estimate the directed edges in the static analysis dependency graph.
-We develop a variant of data flow analysis, called Feasible Data-Flow Generation, which 
+This algorithm named Feasible Data-Flow Generation. It 
 considers both the control flow and data flow and
 is a sound approximation of the edges in the execution based dependency graph.
 % }
@@ -1516,7 +1305,7 @@ by generating the set of feasible data-flow between labeled variables as follows
 %
 We prove that this \emph{Feasible Data-Flow} relation is a sound approximation 
 of the \emph{Variable May-Dependency} relation over labeled variables for every program,
-in Appendix~\ref{apdx:flowsto_soundness_extend}.
+in Appendix~\ref{apdx:flowsto_soundness}.
 %
 \paragraph*{Edges Estimation}
 Then we define the estimated directed edges
@@ -1525,7 +1314,7 @@ between vertices $({x}_1^{i}, w_1)$
 and $({x}_2^{j}, w_2)$ 
 where ${x}_1^{i}, {x}_2^{j} \in \lvar(c)$,
 as a set of triples 
-% $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
+% $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times \mathcal{A}_{\lin})$ 
 $\progE(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{\lin} \times \mathcal{LV})$
 % is the set of pairs 
 % The weight for each vertex in $\progV(c)$ is computed 
@@ -1604,45 +1393,24 @@ in Appendix~\ref{apdx:adapt_soundness}.
 % And same way for constructing the rest edges.
 %
 Still looking at the Figure~3(c) in main paper, 
-and taking the edge $(l^6, a^5)$ for example.
+and taking the edge $l^6 \to a^5$ for example.
 By $\flowsto(l^6, a^5, c)$, we can see $a$ is used directly in the query expression $\chi[k]*a$,
-in the assignment command $\clabel{\assign{l}{\query(\chi[k]*a)}}^l$,
+in the assignment command $\clabel{\assign{l}{\query(\chi[k]*a)}}^6$,
 i.e., $a \in FV(\chi[k]*a)$.
-Also, from the Reaching definition analysis, we know $a^5 \in \live(6, two-round)$.
-Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $(l^6, a^5)$.
-And same way for constructing the rest edges. Also, the edge $(x^3,j^5)$ in the same graph represents the control flow, caught by our $\flowsto$ relation.
+Also, from the Reaching definition analysis, we know $a^5 \in \live(6, \kw{twoRounds})$.
+Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $l^6 \to a^5$.
+And same way for constructing the rest edges. Also, the edge $x^3 \to j^5$ in the same graph represents the control flow, caught by our $\flowsto$ relation.
 %
 
-\subsubsection{Quantitative Analysis }
+\subsubsection{Weight Estimation via Quantitative Analysis }
 \label{sec:alg_weightgen}
 %
-\highlight{Path Sensitive Reachability Bound Analysis}
-% In order to estimate weight for every vertex in $\progV(c)$,
-%  we first show how to compute the reachability bound for every label in $c$
-%  % (i.e., every vertex in $\absV(c)$)
-%  (i.e., the $\absW(c)$), 
-%  then show how to compute the weight for every vertex in $\progV(c)$.
-%  \\
-%  Through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels,
-
-%  \wq{In order to estimate weight for every vertex in the static analysis dependency graph($\progV(c)$), we want to find out the upper bound on 
-%  the number of times the labeled command (uniquely associated with a vertex in $\progV(c)$) may be executed when running the program.
-%  This information can be obtained by computing the reachability bound for every vertice in the abstract control flow graph ($\absW(c)$), because
-%  the vertices in the two graph share the same unique label, the line number. We can easily show that the reachability bound on one vertex of the actract control flow graph is also the upper bound for the corresponding vertex in the static analysis dependency graph, both vertices share the same unique line number.}
-
-
-
-%  We perform the symbolic reachability bound anaysis on the abstract control flow graph, 
-%  through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels.
-%  we infer the invariant for every variable, and compute the transition closure for every abstract transition. By solving the closure
-%  with the invariants of variables involved in this closure for every transition, we compute
-%  the symbolic reachability bound of every commands corresponding to this transition.
-%  \\
-%  Specifically in four steps, Variable Modification Tracking, Local Bounds Computation,
-%  the symbolic reachability bound of every commands corresponding to this transition. Specifically, this analysis can be performed in four steps:
-%   Variable Modification Tracking, Local Bounds Computation,
-%  Invariant Inference and Closure Generation, and Reachability Bound Computation,
-{In order to estimate weight for every vertex in the static analysis dependency graph($\progV(c)$), we want to find out the upper bound on 
+In order to estimate the weight statically but still tightly, we present a symbolic reachability bound analysis
+%  for estimation of the weight of each vertice(label) 
+in Section~\ref{sec:alg_weightgen},
+in spirit of some reachability bound analysis techniques~\cite{sinn2017complexity}.
+Specifically,
+{to estimate weight for every vertex in the static analysis dependency graph($\progV(c)$), we want to find out the upper bound on 
 the number of times the labeled command (uniquely associated with a vertex in $\progV(c)$) may be executed when running the program.
 This information can be obtained by computing the reachability bound for every vertex in the abstract control flow graph ($\absW(c)$), because
 the vertices in the two graph share the same unique label, the line number. We can easily show that the reachability bound on one vertex of the abstract control flow graph is also the upper bound for the corresponding vertex in the static analysis dependency graph, both vertices share the same unique line number.}
@@ -1778,16 +1546,16 @@ $SCC(\absG(c))$ is the set of all the strong connected components of $\absG(c)$.
   evaluated at most once. 
   % we do not need to analyze the visiting times of every node in the graph from phase 1.
   The second and third cases are guaranteed by the \emph{Discussion on Soundness} in Section 4 in~\cite{sinn2017complexity}.
-  The formal soundness proof is in Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:rb_soundness}.
+  The formal soundness proof is in Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
 %
 % \paragraph*{Invariant Inference and Closure Generation }
 % Then, computing the bound invariants for variables and the transition closures for abstract events:
 % \\ 
-% $ \varinvar: \mathcal{VAR} \cup \constdom \to EXPR(\constdom)$
+% $ \varinvar: \mathcal{VAR} \cup \constdom \to \mathcal{A}_{\lin}$
 % \\
-% $\absclr: \absevent \to EXPR(\constdom)$
+% $\absclr: \absevent \to \mathcal{A}_{\lin}$
 % \\
-% $EXPR(\constdom)$ is symbolic expression 
+% $\mathcal{A}_{\lin}$ is symbolic expression 
 % over $\constdom$, which is a subset of arithmetic expressions over $\mathbb{N}$ with input variables and $ $.
 % We use $\mathcal{A}_{\lin}$ denotes the arithmetic expression 
 % over the symbolic variables, (i.e., $\mathbb{N}$ with input variables and $ $).
@@ -1820,11 +1588,11 @@ $SCC(\absG(c))$ is the set of all the strong connected components of $\absG(c)$.
 % \\
 % $\incrs(v) \triangleq \sum\limits_{(\absevent, c) \in \inc(v)}\{\absclr(\absevent) \times v\}$
 %
-\paragraph{Local Bound s Estimation}
+\paragraph{Local Bound Estimation}
 This step estimates the upper bound, $\varinvar(x, c) \in \mathcal{A}_{\lin}$
 on the maximum value for each local bound  $x \in  \mathcal{VAR} \cup \constdom$.
 \\
-For a program $c$, the \emph{local boundbound} of an ,
+For a program $c$, the \emph{local bound} of an ,
 $\varinvar(\locbound(\absevent, c)) \in \mathcal{A}_{\lin}$ is 
 the bound on the maximum value of the local bound 
 % $\locbound(\absevent)  \in \mathcal{VAR} \cup \constdom $,
@@ -1939,8 +1707,8 @@ For a program $c$ and an edge $\absevent \in \absE(c)$,
 $\absclr(\absevent)$ is a sound upper bound
 %  for every label $l$ in this program 
 on the execution times of this transition,
-formally in Theorem~\ref{thm:rb_soundness}. 
-Proof of this theorem is in Appendix~\ref{apdx:rb_soundness}.
+formally in Theorem~\ref{thm:vertexweight_soundness}. 
+Proof of this theorem is in Appendix~\ref{apdx:reachability_soundness}.
 %
 \begin{lem}[Soundness of the Transition Bound]
   \label{lem:edge_bound_soundness}
@@ -1962,45 +1730,47 @@ the execution times of this assignment command in $c$.
       \trace \in \mathcal{T}, v \in \mathbb{N}
        \st 
        \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\vtrace} 
+       \land \config{\absclr(\absevent, c), \trace_0} \aarrow v
       \implies
-      \vcounter(\trace, l) \leq \config{\absclr(\absevent, c)}(\trace_0)
+      \vcounter(\trace, l) \leq v
     \end{array}
     \]
 \end{lem}
 %
-\begin{thm}[Soundness of the Path-insensitive Reachability-Bound]
-  \label{thm:rb_soundness}
-For each program ${c}$ and a program point $l$ in this program,
-% for each edge $\absevent = (l_1, \_, \_) \in \absG(c)$,
-$\config{RB(\absevent, c)}$
-%  label $l \in \lvar(c)$,
- is a \emph{reachability-bound} of $l$ in $c$,
-  %
-  \[
-    \begin{array}{l}
-      \forall c \in \cdom, l \in \lvar(c),\trace_0 \in \mathcal{T}_0(c), 
-      \trace \in \mathcal{T}, v \in \mathbb{N}
-      % , (v, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
-       \st 
-      %  \\ \quad
-      \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\vtrace} 
-      \implies
-      % \right\} 
-      \vcounter(\trace)l
-      \leq \config{RB(\absevent, c)}(\trace_0)
-    \end{array}
-    \]
-\end{thm}
+% \begin{thm}[Soundness of the Path-insensitive Reachability-Bound]
+%   \label{thm:rb_soundness}
+% For each program ${c}$ and a program point $l$ in this program,
+% % for each edge $\absevent = (l_1, \_, \_) \in \absG(c)$,
+% $\config{RB(\absevent, c)}$
+% %  label $l \in \lvar(c)$,
+%  is a \emph{reachability-bound} of $l$ in $c$,
+%   %
+%   \[
+%     \begin{array}{l}
+%       \forall c \in \cdom, l \in \lvar(c),\trace_0 \in \mathcal{T}_0(c), 
+%       \trace \in \mathcal{T}, v \in \mathbb{N}
+%       % , (v, n) \in \mathcal{VAR} \times \mathbb{N} \times \mathbb{N}
+%        \st 
+%       %  \\ \quad
+%       \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\vtrace} 
+%       \implies
+%       % \right\} 
+%       \vcounter(\trace)l
+%       \leq \config{RB(\absevent, c)}(\trace_0)
+%     \end{array}
+%     \]
+% \end{thm}
 \paragraph*{Example}
-We perform the symbolic reachability bound analysis on the abstract control flow graph as follows. 
+We perform the symbolic reachability bound analysis on the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b) and compute the result in Figure~\ref{fig:abscfg_tworound}(c).
 We would like to generate the closure of every edge, which is an equality relation between variables.  Solving this closure gives us the reachability bound for this edge. With all the bound for all the edges in the abstract control flow graph, we can calculate the weight for every vertex in this graph. For example, we show the closure generated for the edge 
-$(4, j < j - 1, 5)$, 
-$\absclr(4, 5) = \varinvar(j)$. The invariant for variable $j$, $\varinvar(j)$ used here is 
-$\varinvar(j) = k * \absclr(1, 2)$, which is generated by all the difference constraints involving $j$ in the graph. Notice the $k$ in $\varinvar(j)$ comes from considering both difference constraint $j<=k$ from edge (1,2) and $j<=j-1$ from (4,5), which intuitively reflects the while loop whose counter is set to $k$ at the beginning and decreases by 1 at each iteration. 
+$4 \xrightarrow{j' \leq j - 1} 5$, 
+$\absclr(4 \xrightarrow{j' \leq j - 1} 5) = \varinvar(j)$. The invariant for variable $j$, $\varinvar(j)$ used here is 
+$\varinvar(j) = k * \absclr(1 \xrightarrow{i' \leq k} 2)$, which is generated by all the difference constraints involving $j$ in the graph. Notice the $k$ in $\varinvar(j)$ comes from considering both difference constraint $j<=k$ from edge $1 \xrightarrow{i' \leq k} 2$ and $j'\leq j - 1$ from $4 \xrightarrow{j' \leq j - 1} 5$, which intuitively reflects the while loop whose counter is set to $k$ at the beginning and decreases by 1 at each iteration. 
 With all the closures for all the edges of the abstract control flow graph, we can solve them to obtains the reachability bound of every edge. We decide the weight for every vertex in the abstract control flow graph by using the bound of the edges which head out from this vertex, by taking the max of the bound from these involving edges. For instance,   
-By the constraint on the edge $(4, j \leq j - 1, 5)$, we get bound $k$ for this edge.
+By the constraint on the edge $4 \xrightarrow{j' \leq j - 1} 5$, we get bound $k$ for this edge.
 Then, we assign vertex $4$ by reachability bound $k$, as in Figure~\ref{fig:abscfg_tworound}(c). 
-Another interesting vertex is $2$, which has more than one edge heading out from it, $(2, \top, 3)$ and $(2,\top, 6)$. For the weight for vertex $2$, we choose the max between the bound $k$ from $(2,\top, 3)$ and $1$ from $(2,\top, 6)$.
+Another interesting vertex is $2$, which has more than one edge heading out from it,$2 \xrightarrow{j \geq 0} 3$ and 
+$2 \xrightarrow{j \leq 0} 6$. For the weight for vertex $2$, we choose the max between the bound $k$ from $2 \xrightarrow{j \geq 0} 3$ and $1$ from $2 \xrightarrow{j \leq 0} 6$.
 The same way for the rest weights' computation.
 We use $\absW(c)$ for the set of weights we just computed 
 for each label in the abstract control flow graph of $c$.
@@ -2037,7 +1807,7 @@ The same way for the rest weights' computation.
 \paragraph{Vertex Weight Computation}
 % The weight for each vertex in $\progV(c)$ is computed as follows,
 Then we compute the weight for each vertex in $\progV(c)$,
-% as a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
+% as a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times \mathcal{A}_{\lin})$ 
 as a set of pairs 
 % is the set of pairs 
 % The weight for each vertex in $\progV(c)$ is computed 
@@ -2080,16 +1850,14 @@ $\traceG = (\traceV, \traceE)$, we have:
   \config{w^{p}, \trace_0} \earrow v
   \implies
   % \right\} 
-  w_{t}(\trace) \leq v
+  w_{t}(\trace_0) \leq v
   \end{array}
 \]
 \end{thm}
 \paragraph*{Example}
-Now let's 
-% where we goes 
-go back to the Program-Based Dependency Graph which we aim to build for approximating the 
-Execution-Based Dependency graph for two-round example, as in
-Figure~\ref{fig:adapfun_tworound}(c).
+Going back to the
+quantitative dependency graph for two-round example in
+Figure~\ref{fig:kadaptwhile_alg}(c), which we aim to estimate.
 %
 Every vertex from $\progV(c)$ in this graph corresponds to a labeled variable, for example $a^5$,
 and this label $5$ is also a vertex $5$ in the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b).
@@ -2106,281 +1874,11 @@ So, we estimate the visiting time for  labeled variable $a^5$ in Program-Based D
 %
 The same way for the rest weights' computation.
 %
-% \paragraph{Edges Weight Computation}
-% % The weight for each vertex in $\progV(c)$ is computed as follows,
-% Then we compute the weight for each edge in $\progE(c)$ computed above,
-% % % as a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
-% % as a set of pairs 
-% % % is the set of pairs 
-% % % The weight for each vertex in $\progV(c)$ is computed 
-% % mapping each $x^l \in \progV(c)$ to a symbolic expression over $\constdom$. Since symbolic expression 
-% % over $\constdom$ is a subset of arithmetic expressions,
-% % we use $\mathcal{A}_{in}$ denotes the arithmetic expression 
-% % over $\mathcal{N}$ and input variable and $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{in})$ 
-% % as follows,
-% \highlight{
-% % :
-% % \\
-%  \[
-%    \progE(c) \triangleq
-%    \left\{ (x^i, w, y^j) 
-% \mid
-% (x^i, w, y^j) \in \progE^0(c) \land 
-% % w = \max\limits_{\absevent = (i, \_, j)} \{ \absclr(\absevent)\} 
-% w = \max \left\{ \absclr(\absevent) ~\mid~ \absevent \in \absflow(c) \land \absevent = (i, \_, j) \right\} 
-% \right\}.
-% \]
-% }
-% %
-% % Since 
-% We prove that this 
-% % symbolic expression is the upper bound for $x^l$'s 
-% symbolic expression $w$ for edge $(x^i, w, y^j) \in \progE(c)$
-%  is a sound upper bound of 
-% the weight for the same edge $(x^i, w', y^j)$ in Program's execution-based dependency graph in Appendix~\ref{apdx:edgeweight_soundness}.
-% % The maximum visiting times of $x^l$ over all execution traces of $c$ in Appendix~\ref{apdx:reachability_soundness}. 
-% %
-% \begin{thm}[Soundness of the Edge Weight Estimation]
-%   \label{thm:edgeweight_soundness}
-% Given a program ${c}$ with its program-based dependency graph 
-% $\progG = (\progV, \progE)$,
-% $\traceG = (\traceV, \traceE)$, we have:
-% %
-% \[
-% \forall (x^l, w_{t}) \in \traceW,
-% (x^l, w_{p}) \in \progW, \vtrace \in \mathcal{T} \st
-% % \lvar_c \st 
-% \config{{c}, \trace} \to^{*} \config{\eskip, \trace_0 \tracecat \vtrace'} 
-% \land 
-% \config{w_{p}, \trace} \earrow v
-% \implies
-% % \right\} 
-% \leq 
-% w_{t}(\trace) \leq v
-% \]
-% \end{thm}
-% \paragraph*{Example}
-% Now let's 
-% % where we goes 
-% go back to the Program-Based Dependency Graph which we aim to build for approximating the 
-% Execution-Based Dependency graph for two-round example, as in
-% Figure~\ref{fig:adapfun_tworound}(c).
 %
-%  looking at the two-round example,
-%  as in  where we
-% each vertex in 
-%  $l$ is added with a weight by $absW$.
-% This weight represents the  maximum reaching times of this location $l$, in the other word, 
-% the estimated maximum visiting times of the command labeled with $l$.
-% For example, looking at the vertex $1$,
-% by analysis steps, since it isn't in any SCC, it's estimated reachability bound is computed as $1$.
-% However, for the vertex $4$ which is involved in an SCC, the reachability bound is inferred in another way.
-% By the constraint on the edge $4, j \leq j - 1, 5$,
-% we first infer its local bound as variable $j$.
-% Then by solving the invariant for variable $j$,
-%
-   \subsection{Quantitative Dependency Graph Computation}
+   \subsubsection{Quantitative Dependency Graph Computation}
   %  Weighted Data Dependency Graph Generation}
    \label{sec:alg_graphgen}
    %
-%    Each directed edge represents an abstract transition 
-%    between two control locations, i.e., the labels of two commands (we call the labels also control location and they refer to the same thing in the follows), 
-%    where the second labeled command will be executed after execution of the command with first label.
-%    The abstract transition contains a set of difference constraints for variables, generated by abstracting the command of the first label.
-%   \item Computing 
-%   % we get the reachability bound for each command.
-%   the symbolic reachability bound for each command,
-%   % the value bound invariant for each variable in the event and 
-%   by inferring the value bound invariant for each variable 
-%   % the event transition closure over the abstract control flow graph,
-%   and the transition closure for every abstract transition through the constraints over the abstract control flow graph.
-%   % \\
-%   % Through this graph and constraint for every transition, we infer the  invariant for every variable,
-%   % and compute the transition closure for every abstract transition.
-%   % By solving the closure with the invariants of variables involved in this closure for every transition, 
-%   % we compute the symbolic reachability bound of every commands corresponding to 
-% %     % this transition.
-% %     \item Performing a feasible data-flow analysis from the reachable definition algorithm. 
-% % %  By generating set of all the reachable variables at location of label $l$ in the program $c$.
-% % and generating the set of all the reachable variables for every program location.
-% % For every labelled variable $x^l$ in this set, 
-% % the value assigned to that variable
-% % in the assignment command associated to that label is reachable at the entry point of  executing the command of label $l$.
-% % \item Refining the abstract control flow graph into a weighted-data dependency graph, 
-% % by annotating each vertex with reachability bounds and 
-% % removing unfeasible edges and redundant edges and vertices.
-% % adding edges between
-% %     variables having data-flow relations, and
-% % removing the edges between locations where the variables associated to that labeled command isn't reachable from the second location.
-% % \\
-% % first annotate each vertex of label $l$ with the variable 
-% % assigned in that labeled command, and remove the rest doesn't correspond to an assignment command.
-% % Then 
-% % add direct edge between two labeled variables,
-% % where the first variable 
-% % is directly used in the assignment expression to the second variable, by restricting 
-% % the first labeled variable is reachable at the the second label.
-% %
-% \item Computing the adaptivity through this weighted data dependency graph,
-%   by finding a finite walk on this weighted graph, 
-% traversing the maximum times of query variables, by restricting the visiting time of every vertex on this walk to its weight.
-% The maximum number of vertices corresponding to a query variables visited on this walk is the estimated upper bound, for program's adaptivity.
-
-%    In this step, $\THESYSTEM$ refines the abstract control flow graph into the program-based weighted-data dependency graph, 
-% by annotating each vertex with reachability bounds and 
-% removing unfeasible edges and redundant edges and vertices,
-% % This graph is used 
-% for approximating the trace-based weight-data dependency graph.
-% \\
-% Specifically, we first annotate each vertex of label $l$ with the variable 
-% assigned in that labeled command, and remove the rest doesn't correspond to an assignment command.
-% Then 
-% add direct edge between two labeled variables,
-% where the first variable 
-% is directly used in the assignment expression to the second variable, by restricting 
-% the first labeled variable is reachable at the second label.
-% % \\
-% The formal definition is as follows.
-% In this step, we compute the four components of the quantitative dependency graph based on the above program static analysis.
-% This graph is a sound approximation of the quantitative dependency graph for a program $c$.
-% \\
-% \highlight{
-%   \[
-%     \progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))
-%     % \progG(c) = (\progV(c), \progE(c))
-%     \]
-% }
-% \subsubsection{Edge Computation}
-% \paragraph*{Edges Estimation}
-% Then we define the estimated directed edges
-% % for each vertex in $\progV(c)$,
-% between vertices $({x}_1^{i}, w_1)$  
-% and $({x}_2^{j}, w_2)$ 
-% where ${x}_1^{i}, {x}_2^{j} \in \lvar(c)$,
-% as a set of triples 
-% % $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
-% $\progE(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{\lin} \times \mathcal{LV})$
-% % is the set of pairs 
-% % The weight for each vertex in $\progV(c)$ is computed 
-% indicating a directed edge from the first vertex to the second one in each pair
-% as follows,
-% \highlight{
-%   \[
-%     \progE(c) \triangleq 
-%     \left\{ 
-%     ({x}_1^{i}, {x}_2^{j}) \in \mathcal{LV} \times 
-%     % \mathcal{A}_{\kw{in}} \times 
-%     \mathcal{LV}
-%     ~ \middle\vert ~
-%     \begin{array}{l}
-%       {x}_1^{i}, {x}_2^{j} \in \lvar(c)
-%     \land
-%       % \\
-%       \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
-%       n \geq 0 \land
-%       \\
-%       \flowsto(x^i,  z_1^{r_1}, c) 
-%       \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
-%     \end{array}
-%     \right\}
-%     \]
-% }
-% The weight for every edge will be computed as next step in Section~\ref{sec:alg_weightgen}.
-% We prove that this estimated directed edge set $\progE(c)$ is a sound approximation of the 
-% edge set in $c$'s Execution-Based Dependency Graph 
-% in Appendix~\ref{apdx:adapt_soundness}.
-%   \paragraph*{Example}
-% % Still looking at the Figure~\ref{fig:adapfun_tworound}(c), 
-% % and taking the edge $(l^6, a^5)$ for example.
-% % By $\flowsto(l^6, a^5, c)$, we can see $a$ is used directly in the query expression $\chi[k]*a$,
-% % in the assignment command $\clabel{\assign{l}{\query(\chi[k]*a)}}^l$,
-% % i.e., $a \in FV(\chi[k]*a)$.
-% % Also, from the Reaching definition analysis, we know $a^5 \in \live(6, two-round)$.
-% % Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $(l^6, a^5)$.
-% % And same way for constructing the rest edges.
-% %
-% Still looking at the Figure~3(c) in main paper, 
-% and taking the edge $(l^6, a^5)$ for example.
-% By $\flowsto(l^6, a^5, c)$, we can see $a$ is used directly in the query expression $\chi[k]*a$,
-% in the assignment command $\clabel{\assign{l}{\query(\chi[k]*a)}}^l$,
-% i.e., $a \in FV(\chi[k]*a)$.
-% Also, from the Reaching definition analysis, we know $a^5 \in \live(6, two-round)$.
-% Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $(l^6, a^5)$.
-% And same way for constructing the rest edges. Also, the edge $(x^3,j^5)$ in the same graph represents the control flow, caught by our $\flowsto$ relation.
-%
-% \subsubsection{Weight Computation}
-% % The weight for each vertex in $\progV(c)$ is computed as follows,
-% Then we compute the weight for each vertex in $\progV(c)$,
-% % as a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
-% as a set of pairs 
-% % is the set of pairs 
-% % The weight for each vertex in $\progV(c)$ is computed 
-% mapping each vertex $x^l \in \lvar(c)$ to a symbolic expression over $\constdom$.
-% $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{A}_{\lin})$ is formally computed
-% as follows,
-% \highlight{
-% % :
-% % \\
-%  \[\progW(c) \triangleq
-%    \left\{ (x^l, w) 
-% \mid
-% x^l \in \progV^0(c) \land (l, w) \in \absW(c)
-% \right\}.
-% \]
-% }
-% %
-% % Since 
-% We prove that this 
-% % symbolic expression is the upper bound for $x^l$'s 
-% symbolic expression for $x^l \in \progV(c)$ is a sound upper bound of 
-% the weight for the same vertex $x^l$ in Program's execution-based dependency graph in Appendix~\ref{apdx:reachability_soundness}.
-% The maximum visiting times of $x^l$ over all execution traces of $c$ in Appendix~\ref{apdx:reachability_soundness}. 
-% %
-% \begin{thm}[Soundness of the Vertex Weight Estimation]
-%   \label{thm:vertexweight_soundness}
-% Given a program ${c}$ with its program-based dependency graph 
-% $\progG = (\progV, \progE)$,
-% $\traceG = (\traceV, \traceE)$, we have:
-% %
-% \[
-%   \begin{array}{l}
-%   \forall (x^l, w_{t}) \in \traceV,
-%   (x^l, w_{p}) \in \progV, 
-%   \trace_0 \in \mathcal{T}_0(c), 
-%   \trace' \in \mathcal{T}, v \in \mathbb{N} \st
-%   \\ \quad
-%   \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\vtrace'} 
-%   \land 
-%   \config{w^{p}, \trace_0} \earrow v
-%   \implies
-%   % \right\} 
-%   w_{t}(\trace) \leq v
-%   \end{array}
-% \]
-% \end{thm}
-% \paragraph*{Example}
-% Now let's 
-% % where we goes 
-% go back to the Program-Based Dependency Graph which we aim to build for approximating the 
-% Execution-Based Dependency graph for two-round example, as in
-% Figure~\ref{fig:adapfun_tworound}(c).
-% %
-% Every vertex from $\progV(c)$ in this graph corresponds to a labeled variable, for example $a^5$,
-% and this label $5$ is also a vertex $5$ in the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b).
-% %
-% % we infer the value bound for $j$, which is $k$.
-% % Then the reachability bound for this abstract transition, (i.e., edge $4, j \leq j - 1, 5$) 
-% Then, it is straight forward, 
-% that the reachability bound for the label $5$, 
-% is also the maximum visiting times bound of the labeled variable $a^5$.
-% % is computed as $k$ as well through Definition~\ref{def:abs_trace}.
-% % In this abstract control flow graph, every vertex is a label,
-% % corresponding to a label command in the program.
-% So, we estimate the visiting time for  labeled variable $a^5$ in Program-Based Dependency Graph in Figrue~\ref{fig:abscfg_tworound}(c) as $k$ as well.
-% %
-% The same way for the rest weights' computation.
-
-% \subsubsection{Quantitative Dependency Graph Estimation}
 In this step, we compute the four components of the quantitative dependency graph based on the above program static analysis.
 With $\progV(c), \progE(c), \progW(c)$, and $\progF(c)$
 as computed in each steps above, this step simply combine the four components into the quantitative dependency graph for program $c$.
@@ -2401,19 +1899,19 @@ vertices
 % and query annotations, 
 but approximated edges and weights.  
 This graph is a sound approximation of the quantitative dependency graph for a program $c$.
-\\
+
 % The algorithm computation is 
-It is formally defined in Definition~\ref{def:prog_graph}.
+It is formally defined in Definition~\ref{def:prog_graph} as follows.
 % Through the reachable definition set on every label,
 % we remove the edges between labels where the variables associated to that labeled command isn't reachable from the second location.
 %\absG(c) =(\absV, \absE, \absW)
 \begin{defn}
-  [Program-Based Dependency Graph]
+  [Program-Based Quantitative Dependency Graph]
   \label{def:prog_graph}
   % [Program-Based Weighted Data Dependency Graph Generation Algorithm]
 % \label{def:analyz_dcfg}
-Given a program $c$, with its abstract weighted control flow graph $\absG(c) = (\absV, \absE, \absW)$ and 
-feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar_c$, its Program-Based Weighted Data Dependency Graph
+Given a program $c$, with its abstract weighted control flow graph $\absG(c) = (\absV, \absE)$ and 
+feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$, its Program-Based Quantitative Dependency Graph
 is generated as follows,
 $$\progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))$$
 {\footnotesize
@@ -2463,83 +1961,6 @@ n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \in \qvar_{c} .
 \end{array}
 \] }
 \end{defn}
-% In last phase, we get a dependency graph whose node is computation blocks uniquely decided by its label. In this phase, we want to add more information to every node in the graph, which is the approximated visiting times (how many times this block is exeucted). The algorithm is defined in Algorithm~\ref{alg:add_weights}, with 3 main functions, the Control Location Insertion, 
-% Program Transition Abstraction, 
-% Bound Calculation 
-% and ADDWEIGHTs.
-% \begin{algorithm}
-% \caption{
-% {Add weights to dependency graph (the main algorithm of phase 2)}
-% \label{alg:add_weights}
-% }
-% \begin{algorithmic}[1]
-% \REQUIRE the program $c$, the dependency graph $G = (\vertxs, \edges, \weights, \qflag)$ from phase 1
-% \STATE  prel = PREPROCESSING(c) 
-% \STATE {\bf for} $x^l \in \vertxs$: 
-% \STATE \qquad {\bf if} $l \in prel$:
-% \STATE \qquad \qquad $\weights(x^l) = \rb(c, l)$
-% \STATE \qquad {\bf else}:
-% \STATE \qquad \qquad $\weights(x^l) = 1$
-% \RETURN $G$
-% \end{algorithmic}
-% \end{algorithm}
-
-% \paragraph{Getting Reachability Bounds}
-% This is defined in Algorithm~\ref{alg:rb}.
-% To be precise, we use static analysis method from \cite{Sumit2010rechability}, which is able to "provide the symbolic worst case bound on the number of times a block is reached", let us call it reachability bound analysis. 
-
-% This analysis only works to find the symbolic bound of one block (in our graph, it corresponds to one node). This algorithm is summarized as follows.
-% \begin{enumerate}
-%     \item Build a transition system which describes the relation between variables in this target block and these variables in the successive visit to this block. There are defined translate functions which translate the statement to transition system and the corresponding operations such as the composition of transition systems, merging two transition systems from two control branches and so on. It is worth to mention that it calculates the transitive closure of the transition system obtained from a loop body, which can be analogy to computing the invariant of a loop.  
-%     \item Use Ranking function which takes the transition system and outputs the bound
-% \end{enumerate}
-
-% \begin{algorithm}
-% \caption{
-% {Reachability Bound Analysis ($\rb$)}
-% \label{alg:rb}
-% }
-% \begin{algorithmic}[1]
-% \REQUIRE the program $C$, the target while loop with label $l$.
-% \STATE  T  = GenerateTransitionSystem(C,l) 
-% \STATE B = 1 + ComputeBound(T)
-% \RETURN B
-% \end{algorithmic}
-% \end{algorithm}
-
-% The algorithm $GenerateTransitionSystem(C,l)$ can be described as follows. It uses the control flow graph generated from the program $C$, and splits the node marked by $l$ into two nodes $l_1$ and $l_2$ to generate a new control flow graph from the $l_1$ to $l_2$. It translates the node in the graph into a transition systems by the its translate function and replaces node with transition systems. For loops in the graph, the loop itself is replaced by the transitive closure of the transition systems of its body. Finally, the new generated control flow graph can be transformed to a transition system. The transition system is a disjunction of transitions, and every transition is expressed as a conjuction of formulas over program variables $x,y,z$ in the target block (l) and its successive visits $x',y',z'$ in the same block.
-% \\
-% The transition formula for each command are as follows:
-% \\
-% \todo{adding the naive transition formula for assignment and if}
-% \\
-% \jl{$translate(c)$  is defined as follows:}
-% \\
-% $translate(\assign{x}{e}) = \{x := e\} if x \in VAR(b)$
-% \\
-% % $translate(\assign{x}{e}) = \{\} if x \notin VAR(b)$
-% % \\
-% $translate(\assign{x}{\qexpr}) = \{x \in VAR(b) \implies x := \qexpr\} $
-% \\
-% % $translate(\assign{x}{\qexpr}) = \{\} if x \notin VAR(b)$
-% % \\
-% $translate(\eif(\bexpr, c_1, c_2)) = \{\bexpr \implies translate(c_1), \neg\bexpr \implies translate(c_2)\}$
-% \\
-% $translate(\ewhile(\bexpr, c_w)) = \{ ComputeBound(GenerateTransitionSystem(C,l)) \times translate(c_w) \}$
-% \\
-% $translate(c_1;c_2) = translate(c_1) + translate(c_2)$
-% \\
-% \todo{adding the compose method for composing 2 transition formulas}
-% $compose\{x := e_1, \cdots, x := e_2 \} = \{x := e_2\}$
-% \\
-% $\{y := e_1, \cdots, x := e_2 \} \land \flowsto(y, x, c) = \{x := [y \to e_1] e_2\}$
-% \\
-% \todo{add the $ComputeBound$ function, specifically the ranking function}
-% \\
-% The function $computeBound$ takes into a transition system (a disjuction of transitions), and computes the bound. There are ranking functions which take a transition and return the bound, that is used by $computeBound$. There are some heuristics in compute the bound based on the transitions systems, if interested, please look at the paper for more details.
-
-% \paragraph{Add Weight} We also need to take care about the situation when a bound can not be predicted by {$\rb$}, we need to use another loose analysis to get a loose bound.
-% \clearpage
 \subsection{Adaptivity Upper Bound Computation}
 %  from refined weighted-labeled data-flow graph}
 \label{sec:alg_adaptcompute}
@@ -2554,48 +1975,21 @@ its adaptivity upper bound
 % Defined in Definition~\ref{def:prog_adapt} as 
 %
 is estimated as
-% Then the adaptivity bound based on program analysis for ${c}$ 
-% is the number of query vertices on a finite walk in $\progG({c})$. This finite walk satisfies:
-% \begin{itemize}
-% \item the number of query vertices on this walk is maximum
-% \item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
-% \end{itemize}
-the maximum query length over all finite walks in $\walks(\progG({c}))$ formally in Definition~\ref{def:prog_adapt}, 
+the length of the longest finite walk over $\walks(\progG({c}))$ formally in Definition~\ref{def:prog_adapt}, 
 and computed 
 % is computed as the maximum query length over all finite walks in $\walks(\progG({c}))$, and computed 
-in Algorithm~\ref{alg:adpt_alg}.
+by Algorithm~\ref{alg:adapt}.
 %
-% It is formally defined in \ref{def:prog_adapt}.
-% defined formally as follows.
-%
-% %
-% \begin{defn}
-% [{Program-Based Adaptivity}].
-% \label{def:prog_adapt}
-% \\
-% {
-% Given a program ${c}$ and its program-based graph 
-% $\progG({c})$
-% %  = (\vertxs, \edges, \weights, \qflag)$,
-% %
-% the program-based adaptivity for $c$ is defined as%
-% \[
-% \progA({c}) 
-% \triangleq \max
-% \left\{ \qlen(k)\ \mid \  k\in \walks(\progG({c}))\right \}.
-% \]
-% }
-% \end{defn} 
 
 % We use $\walks(\progG(c))$ represents the walks over the program-based dependency graph for $c$.
 Different from the finite walk on a program $c$'s execution based graph,
 %  $\traceG(c)$, 
 % $k \in \walks(\progG(c))$ 
 the finite walk in $\progG(c)$ doesn't rely on initial trace.
-The occurrence times of every $v_i $ in $k$'s vertex sequence is bound by 
-an arithmetic expression $w_i$ where $(v_i, w_i) \in \progW(c)$, is $v_i$'s estimated weight. 
+The occurrence times of every $v_i$ in $k$'s vertex sequence is bound by 
+an arithmetic expression $a_i$ which is $v_i$'s estimated weight, i.e., $(v_i, a_i) \in \progW(c)$. 
 % Then $\qlen(k) \in \mathcal{A}_{in}$ as well. 
-% The full definition for $\walks(\progG(c))$ and $\qlen$ over $\walks(\progG(c))$ is in Apdix.
+% The full definition for $\walks(\progG(c))$ and $\qlen$ over $\walks(\progG(c))$ is in Appendix.
 %
 Formally defined as follows.
 \begin{defn}[Finite Walk on Program-Based Dependency Graph ($k$)].
@@ -2668,7 +2062,7 @@ an arithmetic expression $w_i$ where $(v_i, w_i) \in \progV(c)$, is $v_i$'s esti
   The query length of $k$, $\qlen(k) \in \mathcal{A}_{in}$ 
   % is a function $\qlen(k): \mathcal{T} \to \mathbb{N}$, such that with an initial trace  $\trace_0 \in \mathcal{T}$, 
   % $\qlen(k)(\trace_0)$ 
-  is the number of vertices which correspond to query variables in the vertices sequence of the this walk $k$
+  is the number of vertices which correspond to query variables in the vertices sequence of this walk $k$
   $(v_1, \ldots, v_{n})$ as follows, 
   \[
     \qlen(k) = |\big( v \mid v \in (v_1, \ldots, v_{n}) \land v \in \progF(c) \big)|.
@@ -2711,22 +2105,26 @@ Based on our soundness of the program-based adaptivity, our program-based adapti
 For $\progA(c) \geq A(c)$ comparing between function and arithmetic expression,
 we are specifically comparing, $\forall \trace \in \mathcal{T} \st 
 \config{A(c), \trace} \earrow n \implies n \geq A(c)(\trace) $.
-To estimate a sound and precise upper bound on adaptivity, we develop an adaptivity estimation algorithm called $\pathsearch$ (in Apdix Algorithm~I), which uses both the deep first search and breath first search strategy to find the walk. We also show that the estimated adaptivity from our $\pathsearch$ is sound with respect to the program-based adaptivity. 
+
+To estimate a sound and precise upper bound on adaptivity, we develop an adaptivity estimation algorithm called $\pathsearch$ (in Appendix Algorithm~I).
+It uses combines the depth first search and breath first search strategies and computes a sound upper bound on $\progA(c)$.
+$\pathsearch$ also involves another algorithm $\pathsearch_{\kw{SCC}}$ in \ref{alg:adaptscc} recursively, which finds the longest walk for a strong connected component of $\progG(c)$.
+% We also show that the estimated adaptivity from our $\pathsearch$ is sound with respect to the program-based adaptivity as in 
+Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of this algorithm with proof in Appendix~\ref{apdx:adaptalg_soundness}.
 \begin{thm}[Soundness of $\pathsearch$]
-    \label{thm:sound_adaptalg}
-    For every program $c$.
-    % for any initial trace $\trace_0$,
+    \label{thm:adaptalg_soundness}
+    For every program $c$, we have
      $$\pathsearch(\progG({c})) \geq \progA(c).$$
 \end{thm}
-The full details of all the soundness can be found in the appendix.
+% The formal proof is in Appendix~\ref{apdx:adaptalg_soundness}.
 % The following algorithm finds the walk with the longest query length on a program $c$'s execution-based dependency graph 
 % $\progG(c)$
 % %  = (\vertxs, \edges, \weights, \qflag)$, 
 % through a combination of 
 % % DFS and BFS algorithm 
-% deep first search and breath first search strategy
+% depth first search and breath first search strategy
 % % as defined 
-% in Algorithm~\ref{alg:adpt_alg} and Algorithm~\ref{alg:adaptscc}.
+% in Algorithm~\ref{alg:adapt} and Algorithm~\ref{alg:adaptscc}.
 
 % \paragraph*{Challenges}
 % Following is the challenge of computing the adaptivity on a program based dependency graph.
@@ -2750,7 +2148,7 @@ The full details of all the soundness can be found in the appendix.
 % It is difficult to tell when to terminate the recursion when the domain of this symbolic expression isn't finite,
 % while, in most of our cases, the programs' Program-Based Dependency Graphs are having symbolic weights with infinite domains on vertices.
 % \todo{for example:}
-% Look at the simple example in Figure~\ref{fig:alg_adaptsearch_simplewhile}, where $k$ is the input variable from domain $\mathbb{N}$,
+% Look at the simple example in Figure~\ref{fig:kadaptwhile_alg}, where $k$ is the input variable from domain $\mathbb{N}$,
 % %  in Figure~\ref{} in Section~\ref{sec:overview},
 % \begin{figure}
 % \centering
@@ -2802,24 +2200,24 @@ The full details of all the soundness can be found in the appendix.
 % % \end{equation*}
 % \vspace{-0.4cm}
 %  \caption{(a) Simple While Loop Example, (b) Execution-Based Dependency Graph, (c) The Static Program-Based Dependency graph.}
-% \label{fig:alg_adaptsearch_simplewhile}
+% \label{fig:kadaptwhile_alg}
 % \vspace{-0.5cm}
 % \end{figure}
 % % Analysis Results: $ \progA(\kw{whileRec}(k)) = 1 + k$
 % %
 % If we traverse on it's $\progG(c)$, and decrease the weight of $x^3$ by one after every visit,
-% % We can simply adopt either a deep first strategy to estimate the adaptivity as the length of the longest weight path, as 
+% % We can simply adopt either a depth first strategy to estimate the adaptivity as the length of the longest weight path, as 
 % % in Algorithm~\ref{alg:overadp_alg}.
 % we will never terminate because we only know $k \in \mathbb{N}$.
 % % However, this gives us over-approximation to a large extend.
-% % In Algorithm~\ref{alg:adpt_alg}, 
+% % In Algorithm~\ref{alg:adapt}, 
 % % we first find all the strong connected components of this graph, 
 % \\
 % \textbf{Approximation Challenge:}
 % % As in Definition~\ref{def:finitewalk}, w
 % We cannot 
-% % simply adopt either a deep first strategy to estimate the adaptivity as the length of the longest weight path, as in Algorithm~\ref{alg:overadp_alg}.
-% simply adopt a deep first strategy to 
+% % simply adopt either a depth first strategy to estimate the adaptivity as the length of the longest weight path, as in Algorithm~\ref{alg:overadp_alg}.
+% simply adopt a depth first strategy to 
 % search for the longest weighted path
 % estimate the adaptivity as the weighted query length of this path
 % % of the longest weight path, 
@@ -2873,228 +2271,102 @@ The full details of all the soundness can be found in the appendix.
 % %  for this program, 
 % % that 
 % \\
-As indicated by our definition of prograpm-based adaptivity, the key point is to find the walks in the program-based dependency graph. We develop some walk-finding algorithms, 
-Algorithm~\ref{alg:adpt_alg} and Algorithm~\ref{alg:adaptscc}, which use both the deep first search and breath first search strategy.  
+By Definition~\ref{def:prog_adapt}, the key point is to find the walks in the program-based dependency graph. 
+% We develop two walk-finding algorithms, 
+% Algorithm~\ref{alg:adapt} and Algorithm~\ref{alg:adaptscc}, which use both the depth first search and breath first search strategy.  
+% By Definition~\ref{def:finitewalk}, this finite walk isn't easy to find. 
+We first discuss two challenges when we try to find the walks in the dependency graph, and then show that how we solve them using our algorithms.
 
-By Definition~\ref{def:finitewalk}, this finite walk isn't easy to find. We first discuss two challenges when we try to find the walks in the dependency graph, and show that how we solve them using our algorithms.
 
-% \paragraph*{Challenges}
-% Following is the challenge of computing the adaptivity on a program based dependency graph.
-% \\
-% In order to 
-% % search for the finite walk having the longest query length, which isn't a simple longest weighted path.
-% compute the adaptivity for a program $c$ on its estimated Program-Based Dependency Graph $\progG(c)$, we need to 
-% search for the finite walk having the longest query length.
-% \\
-% % However, the finite walk isn't a simple weighted path by Definition~\ref{def:finitewalk}, there are two challenges in order to find this walk.
-% However, by Definition~\ref{def:finitewalk}, this finite walk isn't easy to find, below are the challenges in order to find this walk.
-% \\
 \textbf{Non-Termination Challenge:}
 % Moreover, b
-One naive walk finding method is to simply traverse on this graph by decreasing the weight of every node by one after every visiting. However, this simple 
-traversing strategy leads to non-termination dilemma for most programs we are interested in. 
-Specifically, this challenge comes from the weight of each vertex estimated in program's Program-Based Dependency Graph,
-which is not only a number but also can be a symbolic expression. 
-
+One naive walk finding method is to simply traverse on this graph and decrease the weight of every node by one after every visiting. However, this simple 
+traversing strategy leads to non-termination dilemma for most programs which we are interested in. 
+Because the weight of each vertex in a program's program-based dependency graph,
+which is an arithmetic expression containing input variables. 
+In this sense, the simple traversing could never terminate when domain of the input variables isn't finite.
 % because the weight is symbolic and simply traversing leads to non-termination.
-It is difficult to tell when to terminate the recursion when the domain of this symbolic expression isn't finite, some the walk may also be infinite.
-While, in most of our cases, the programs' Program-Based Dependency Graphs are having symbolic weights with infinite domains on vertices.
-Look at the simple example in Figure~\ref{fig:alg_adaptsearch_simplewhile}, where $k$ is the input variable from domain $\mathbb{N}$.
-%  in Figure~\ref{} in Section~\ref{sec:overview},
-\begin{figure}
-\centering
-{
-% \footnotesize
-\begin{subfigure}{.25\textwidth}
-\begin{centering}
-$ 
-\begin{array}{l}
-  \kw{whileSim(k)} \triangleq \\
-  \clabel{ \assign{j}{k} }^{0} ; \\
-  \clabel{ \assign{x}{\query(\chi[0])} }^{1} ; \\
-      \ewhile ~ \clabel{j > 0}^{2} ~ \edo ~ \\
-      \Big(
-       \clabel{\assign{x}{\query(\chi[x]) }}^{3}  ; \\
-      \clabel{\assign{j}{j-1}}^{4}       \Big)
-  \end{array}
-$
-\caption{}
-\end{centering}
-\end{subfigure}
-\quad
-  \begin{subfigure}{.6\textwidth}
-  \begin{centering}
-  \begin{tikzpicture}[scale=\textwidth/18cm,samples=200]
-\draw[] (0, 7) circle (0pt) node
-{\textbf{$x^1: {}^{1}_{1}$}};
-\draw[] (0, 4) circle (0pt) node
-{{ $x^3: {}^{k}_{1}$}};
-% Counter Variables
-\draw[] (5, 9) circle (0pt) node {{$j^2: {}^{1}_{0}$}};
-\draw[] (5, 6) circle (0pt) node {{ $j^4: {}^{k}_{0}$}};
-%
-% Value Dependency Edges:
-\draw[ ultra thick, -latex, densely dotted,] (0, 4.5)  -- node[left]{\highlight{$k$}} (0, 6.5) ;
-\draw[ ultra thick, -latex, densely dotted,] (0.5, 4.2) arc (150:-180:1);
-\draw[] (2, 4) node []{\highlight{$k$}};
-\draw[ thick, -Straight Barb] (5.5, 6.2) arc (150:-150:1);
-\draw[] (7, 6) node []{\highlight{$k$}};
-\draw[ thick, -latex] (5, 6.5)  -- node[right]{\highlight{$k$}} (5, 8.5) ;
-% Control Dependency
-\draw[ thick,-latex] (1.5, 7)  -- node[above]{\highlight{$k$}} (4, 9) ;
-\draw[ thick,-latex] (1.5, 4)  -- node[above]{\highlight{$k$}} (4, 9) ;
-\draw[ thick,-latex] (1.5, 7)  -- node[below]{\highlight{$k$}} (4, 6) ;
-\draw[ thick,-latex] (1.5, 4)  -- node[below]{\highlight{$k$}} (4, 6) ;
-\end{tikzpicture}
-\caption{}
-  \end{centering}
-  \end{subfigure}
-}
-% \end{wrapfigure}
-% \end{equation*}
-\vspace{-0.4cm}
- \caption{(a) Simple While Loop Example, (b) The Program-Based Dependency Graph generated from $\THESYSTEM$.}
-\label{fig:alg_adaptsearch_simplewhile}
-\vspace{-0.5cm}
-\end{figure}
+% It is difficult to tell when to terminate the recursion when the domain of this symbolic expression isn't finite, some the walk may also be infinite.
+However, it is very common that the domain of program's input variables is infinite such as natural number $\mathbb{N}$, real number $\mathbb{R}$, or etc. As the simple while loop example program in Figure~\ref{fig:kadaptwhile_alg} with k adaptivity rounds, the input variable $k$ has domain $\mathbb{N}$.
 % Analysis Results: $ \progA(\kw{whileRec}(k)) = 1 + k$
 %
 If we traverse on the program-based dependency graph, and decrease the weight of $x^3$ (the weight $k$ is symbolic) by one after every visit,
-% We can simply adopt either a deep first strategy to estimate the adaptivity as the length of the longest weight path, as 
+% We can simply adopt either a depth first strategy to estimate the adaptivity as the length of the longest weight path, as 
 % in Algorithm~\ref{alg:overadp_alg}.
 we will never terminate because we only know $k \in \mathbb{N}$.
 
-To solve this non-termination challenge, we switch to another walk finding approach: we first find a  longest path in the program-based dependency graph and then approximate the walk with the path.
-Through a simple deep first search algorithm, we find the longest weighted path as the dotted arrow in Figure~\ref{fig:alg_adaptsearch_simplewhile},
-$x^3: {}^k_1 \to x^1: {}^1_1 $.
-Then, by summing up the weights on this path where the vertices has query annotation $1$, deep first search algorithm gives the adaptivity bound $1 + k$.
-This is a the tight bound for this program's adaptivity.
-% Look at the two-round example in overview, 
-% it is easy to find that the longest weighted path is  $x^3 : {}^{k}_{1} \to a^5 : {}^{k}_{0} \to l^6 : {}^{1}_{0}$ with weighted query length $1 + k$.
-% If we use this path to approximate a finite walk, and weight of each vertex as
-% %  their visiting times, 
-% its visiting time,
-% then it isn't a qualified walk. 
-% In the approximated walk, we have the vertices as $x^3 \to \cdots \to x^3 \to a^5 \to \cdots \to a^5 \to l^6$.
+\input{examples/kRoundsWhileSim_alg.tex}
 
-% However, this gives us over-approximation to a large extend in other cases as in \textbf{Approximation Challenge}.
-% In Algorithm~\ref{alg:adpt_alg}, 
-% we first find all the strong connected components of this graph, 
+To solve this non-termination challenge, we switch to another walk finding approach:
+finding the longest path in the program-based dependency graph via depth first search and then use this path as the estimated longest walk.
+Through a simple depth first search algorithm, we find the longest weighted path as the dotted arrow in Figure~\ref{fig:kadaptwhile_alg}(c),
+$x^3: {}^k_1 \to x^1: {}^1_1 $.
+Then, by summing up the weights on this path where the vertices have query annotations $1$, depth first search algorithm gives the adaptivity bound $k$.
+This is a tight bound for this simple k adaptivity rounds example program.
+
 \textbf{Approximation Challenge:}
 % As in Definition~\ref{def:finitewalk}, w
-When we adopt a deep first strategy to search for the longest weighted path, and then use the path to approximate the adaptivity. We find that this gives us over-approximation to a large extend.
-% Specifically, according to the finite walk definition in Definition~\ref{def:finitewalk},
-% the visiting time of every vertex on a walk should be no more than its weight.
-% However, by searching for the longest weighted path, 
-% % and approximating the finite walk by this weight path, 
-% and use it as the approximated finite walk with the longest query length, 
-% the visiting times of the vertex on 
-% % it 
-% this approximated walk could 
-% % possibly 
-% exceed 
-% % its weights. 
-% the visiting times it can have.
-% Then, this approximated walk isn't a qualified walk by Definition~\ref{def:finitewalk}, 
-% and the weighted query length of this path is obviously greater than the maximum query length of the finite walk.
-This over-approximation could result in a $\infty$ adaptivity upper bound on the program with actual adaptivity $2$.
-Look at the two-round example in overview, 
-it is easy to find that the longest weighted path is  $x^3 : {}^{k}_{1} \to a^5 : {}^{k}_{0} \to l^6 : {}^{1}_{0}$ with weighted query length $1 + k$.
-If we use this path to approximate a finite walk, and weight of each vertex as
+% When we adopt a depth first strategy to search for the longest weighted path, and then use the path to approximate the adaptivity. 
+However, this naive approximation via depth first searching over-approximates the adaptivity rounds largely in many cases.
+It computes $\infty$ adaptivity upper bound for our $\kw{twoRounds}$ example program in Figure~\ref{fig:overview-example}, which has only $2$ adaptivity rounds.
+% Look at the two-round example in overview, 
+% it is easy to find that 
+More specifically, the depth first searching finds the longest weighted path,
+$x^3 : {}^{k}_{1} \to a^5 : {}^{k}_{0} \to l^6 : {}^{1}_{0}$.
+Then, it computes the weighted length, $1 + k$.
+If we use this path to approximate the longest finite walk, and weight of each vertex as
 %  their visiting times, 
-its visiting time,
-then it isn't a qualified walk. 
-In the approximated walk, we have the vertices as $x^3 \to \cdots \to x^3 \to a^5 \to \cdots \to a^5 \to l^6$.
-Because $l^6$ can only be visited as most once by its weight,
+its visiting time, then we have a walk, $x^3 \to \cdots \to x^3 \to a^5 \to \cdots \to a^5 \to l^6$.
+However, this isn't a qualified walk by our Definition~\ref{def:finitewalk}.
+% then it isn't a qualified walk. 
+% In the approximated walk, we have the vertices as $x^3 \to \cdots \to x^3 \to a^5 \to \cdots \to a^5 \to l^6$.
+Because $l^6$ has weight $1$, it can only be visited as most once. In this sense,
 % and this lead to 
-resulting in the restriction on the maximum visiting time of $x^3$,
-such that $x^3$ is only able to be visited at most once as well.
+% resulting in the restriction on 
+% the maximum visiting time of 
+% ,
+% such that $x^3$ 
+$x^3$ is only able to be visited at most once as well, because the only way to re-visit $x^3$ is through $l^6 \to a^5 \to x^3$.
 %
-However, $x^3$ is visited $k$ times in this approximated walk.
+Contradictory, $x^3$ is visited $k$ times in this approximated walk.
 % Moever, with the longest query length, then 
-In order to have $x^3$ be visited $k$ time, we need to go back to 
-$x^3$ on this walk from either $a^5$ or $l^6$ for $k$ time.
-This is impossible since there is no edge going back to $x^3$ in $\progG(twoRound)$.
-Obviously,
+% In order to have $x^3$ be visited $k$ time, we need to go back to 
+% $x^3$ on this walk from either $a^5$ or $l^6$ for $k$ time.
+% This is impossible since there is no edge going back to $x^3$ in $\progG(twoRound)$.
+As a result,
 % the with the weighted length $1 + k$. It is obviously
-its weighted query length, $1 + k$, 
+the weighted length of this path is $1 + k$, which
 % which is 
 over approximates 
 % its 
-the adaptivity of this example to a large extend, which supposed to be $2$. 
+this two rounds example program's adaptivity rounds, which is supposed to be $2$. 
 %  for this program, 
 % that 
 
-
-These challenges motivate us to design a walk search algorithm through a combination of 
+To this end, we combine the 
 % DFS and BFS algorithm 
-deep first search and breath first search strategy. 
-% \wq{
-This walk search algorithm consists of two components:
-the path searching algorithm, $\pathsearch$ (in Algorithm~\ref{alg:adpt_alg})
-which search for a 'suitable' path relying on the strong connected components of the program based dependency graph, 
-and $\kw{\pathsearch_{scc}(G)}$ (in Algorithm~\ref{alg:adaptscc}) which approximates the
-path.
-% path found by Algorithm~\ref{alg:adpt_alg} 
-% to a precise walk on the SCC
-% and computes the adaptivity.
-% These challenges give us the necessary to design a walk search algorithm through a combination of 
-% % DFS and BFS algorithm 
-% deep first search and breath first search strategy
-% % as defined 
-% as in Algorithm~\ref{alg:adpt_alg} and Algorithm~\ref{alg:adaptscc}.
+depth first search and breath first search strategies in our longest walk estimation algorithm.
 %
-The $\pathsearch$ as shown in Appendix Algorithm~I, takes our program-based dependency graph as input, and outputs the estimated adaptivity by two steps. 1. Process the input graph to a simplified graph 2. Perform
-     the standard breath first search strategy to find the longest weighted path on this simplified graph and return the length as adaptivity.
-The step 2 is not interesting, we now discuss step 1. 
-The input dependency graph may contain circle due to the while loop, we simplify (shrank) the input graph by replacing every strong connected components(circle) of the graph with, the vertex whose weight is the adaptivity of the SCC 
-(a subgraph of the input one) calculated by the $\pathsearch_{\kw{scc}}$. 
-The SCC is found by using the Kosaraju's algorithm.
-% \wq{cite}. 
-The details of this algorithm is explained as follows.
-    % This algorithm first finds all the strong connected components (SCC) of $\progG(c)$ using the Kosaraju’s algorithm in line:3. 
-    % Every $\kw{SCC_1}, \cdots, \kw{SCC_n}$
-    % where $0 \leq n \leq |\vertxs|$ is a sub-graph of $\progG(c)$, where $\kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$.
-    % % where $\kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$.
-    % Then, 
-    % % we compute the adaptivity on every SCC, which is a subgraph of the $\progG(c)$, in line:4-5 by Algorithm~\ref{alg:adaptscc}.
-    % it computes the adaptivity on every SCC
-    % % , which is a subgraph of the $\progG(c)$, 
-    % in line:4-5 by Algorithm~\ref{alg:adaptscc}.
-    % % We guarantee the soundness of the adaptivity on SCC by Lemma~\ref{lem:sound_adaptalg_scc} with proof 
-    % in Appendix.
-    % % ~\ref{apdx:adaptalg_soundness}.
-    % The $\progG(c)$ is then shrunk into an acyclic directed graph where 
-    % % vertices are all the SCCs and edges are between every SCCs with their adaptivities as weights.
-    % $\kw{SCC_1}, \cdots, \kw{SCC_n}$ are vertices with their adaptivities as weights.
-    % % , and directed edges are .
-    % For every $(v_i, v_j) \in \edges$ such that $v_1 \in \vertxs_i$, $v_j \in \vertxs_j$ and $i \neq j$,
-    % there is a edge $(s_i, s_j)$ in this shrank graph. \\ 
-    % Then, we use the standard breath first search strategy to find the longest weighted path
-    % %  w.r.t. all the SCCs and their adaptivities.
-    % on this shrank graph and return the length as adaptivity.
-    % \\
-%     We guarantee that 
-%     % this longest weighted path is a sound computation of the adaptivity on this,
-%     the length of this longest weighted path is a sound computation of the adaptivity for program $c$,
-%     % as well as 
-%     and this longest weighted path a sound computation of the finite walk having the longest query length 
-%     % on this graph, in Theorem~\ref{thm:sound_adaptalg}
-%     on $c$'s program based dependency graph, in Theorem~\ref{thm:sound_adaptalg}
-%     in Appendix.
-%     % ~\ref{apdx:adaptalg_soundness}.
-% %    
-% % \todo{add proof} 
-% We also guarantee the conditional completeness of the adaptivity computation for graphs under the case that 
-% $c$'s Program-Based Dependency Graph $\progG(c)$ is acyclic directed
-% in Theorem~\ref{thm:adaptalg_pcomplete} 
-% in Appendix~\ref{apdx:adaptalg_completeness}.
+Our algorithm reduces the task of computing the longest walk into the computation of local adaptivity and the composition of
+local adaptivity into global adaptivity.
+%
+We exploit the structure of the program-based dependency graph (pDG): 
+Partitioning the pDG of programs into its strongly connected components (SCCs) (SCCs are maximal strongly connected subgraphs). For each SCC, we compute an adaptivity bound by Algorithm~\ref{alg:adaptscc}, and then compose these local bounds to an overall adaptivity bound by Algorithm~\ref{alg:adapt}.
+%
+Algorithm~\ref{alg:adapt} arranges the program-based dependency graph into SCCs and computes the adaptivity local bound of each SCC by Algorithm~\ref{alg:adaptscc}.
+Then it shrinks the program-based dependency graph into a directed acyclic graph (DAG) by reducing each SCC into a vertex with the weight equal to its adaptivity local bound.
+In this way, it simply computes the length of the longest path over this DAG.
+% The step 2 is not interesting, we now discuss step 1. 
+% The input dependency graph may contain circle due to the while loop, we simplify (shrank) the input graph by replacing every strong connected components(circle) of the graph with, the vertex whose weight is the adaptivity of the SCC 
+% (a subgraph of the input one) calculated by the $\pathsearch_{\kw{scc}}$. 
+% The SCC is found by using the Kosaraju's algorithm.
+% The details of this algorithm is explained as follows.
 %
 \paragraph*{The Adaptivity Computation Algorithm ($\pathsearch$)}
 \begin{algorithm}
     \caption{
     {Adaptivity Computation Algorithm ($\pathsearch$)}
-    \label{alg:adpt_alg}
+    \label{alg:adapt}
     }
     \begin{algorithmic}[1]
     \REQUIRE $G = (\vertxs, \edges, \weights, \qflag)$ \#\{The program based dependency graph\}
@@ -3106,11 +2378,6 @@ The details of this algorithm is explained as follows.
     \\
     $q$: empty queue.
     % \\
-    % $\kw{visited}$: List of length $|\vertxs|$, initialize with $\efalse$.
-    % \\
-    % $\kw{SSCvisited}$: List of length $|\vertxs|$, initialize with $\efalse$.
-    % \\ 
-    % $\kw{adapt_{scc}(SCC_i) = \pathsearch_{scc}(SCC_i)}$.
     \\
     $\kw{adapt}$ : the adaptivity of this graph initialize with $0$.
     \\
@@ -3131,139 +2398,99 @@ The details of this algorithm is explained as follows.
     % SCC having a directed edge from $s$ of $s$: $\kw{SCC'}$:
     % directed edge goes out of $\kw{s}$ and connects a 
     different SCC, $\kw{s'}$ connected by $\kw{s}$ by a directed edge from $\kw{s}$:
-    % \STATE \qquad \qquad   cycle-adapt$ = \max($cycle-adapt, $\kw{dfs_{refine}(G, v, v)})$;
-    % \STATE \qquad \qquad \qquad \#\{compute the adaptivity of vertex $v$  on $\kw{SCC}(v)$, and update r[v] with the SCC-adapt\}
-    % \STATE \qquad \qquad \qquad $ r[v] = r[s] + \kw{dfs_{refine}(G, v, visited)})$; 
     \STATE \qquad \qquad \qquad {\bf if} $(\kw{adapt_{tmp}} < \kw{adapt_{tmp}}_0 + \kw{adapt_{scc}[s']})$:
     \STATE \qquad \qquad \qquad \qquad $\kw{adapt_{tmp}} = \kw{adapt_{tmp}}_0 + \kw{adapt_{scc}[s']}$; 
-    \STATE \qquad \qquad \qquad \qquad $\kw{SCC_{max} = s'} $; \#\{update the SCC with longest walk in this level\} 
-    % \STATE \qquad   $r[c] = r[c] + $cycle-adapt;
-    % \STATE \qquad for all unvisited vertex $v$ having directed edge from c and $! \kw{cycle}(c)$:
-    % \STATE \qquad \qquad $r[v] = r[c] + \flag(v)$; 
-    % \STATE \qquad \qquad \qquad  \#\{mark all the nodes with the same $\kw{SCC}$ number as visited\} 
-    % \STATE \qquad \qquad \qquad  \#\{append the unvisited vertex to the rear of the queue\}
-    % \STATE \qquad \qquad \qquad  \#\{mark all the nodes with the same $\kw{SCC}$ number as visited\} 
-    % \STATE \qquad \qquad for $v \in V$,   $\kw{visited}[s] = 1$;
+    \STATE \qquad \qquad \qquad \qquad $\kw{SCC_{max} = s'} $; \#\{update the SCC with the longest walk in this level\} 
     \STATE \qquad \qquad \qquad $q.append(\kw{SCC_{max}})$;
     \STATE \qquad $\kw{adapt} = \max(\kw{adapt}, \kw{adapt_{tmp}})$;    
     \RETURN $\kw{adapt}$.
     \end{algorithmic}
     \end{algorithm}
     %
-%
-    % In Algorithm~\ref{alg:adpt_alg}, 
     % it 
-    This algorithm first finds all the strong connected components (SCC) of $\progG(c)$ using the Kosaraju’s algorithm in line:3.
-    Every $\kw{SCC_1}, \cdots, \kw{SCC_n}$
-    where $0 \leq n \leq |\vertxs|$ is a sub-graph of $\progG(c)$, where $\kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$.
+    This algorithm first finds all the SCCs of $\progG(c)$, $\kw{SCC_1}, \cdots, \kw{SCC_n}$
+    where $0 \leq n \leq |\vertxs|$ by the standard Kosaraju’s algorithm in line:3, where each
+    % Every SCC is a sub-graph of $\progG(c)$, where 
+    $\kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$.
     % where $\kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$.
     Then, 
-    % we compute the adaptivity on every SCC, which is a subgraph of the $\progG(c)$, in line:4-5 by Algorithm~\ref{alg:adaptscc}.
-    it computes the adaptivity on every SCC
+    it computes the adaptivity local bound on every SCC
     % , which is a subgraph of the $\progG(c)$, 
     in line:4-5 by Algorithm~\ref{alg:adaptscc}.
-    We guarantee the soundness of the adaptivity on SCC by Lemma~\ref{lem:sound_adaptalg_scc} with proof in Appendix~\ref{apdx:adaptalg_soundness}.
-    The $\progG(c)$ is then shrunk into an acyclic directed graph where 
+    We guarantee the soundness of the adaptivity local bound on an SCC by Lemma~\ref{lem:sound_adaptalg_scc} with formal proof in Appendix~\ref{apdx:adaptalg_soundness}.
+    The $\progG(c)$ is then shrunk into a directed acyclic graph where 
     % vertices are all the SCCs and edges are between every SCCs with their adaptivities as weights.
-    $\kw{SCC_1}, \cdots, \kw{SCC_n}$ are vertices with their adaptivities as weights.
+    $\kw{SCC_1}, \cdots, \kw{SCC_n}$ are all the vertices and the adaptivity local bounds are their weights.
     % , and directed edges are .
-    For every $(v_i, v_j) \in \edges$ such that $v_1 \in \vertxs_i$, $v_j \in \vertxs_j$ and $i \neq j$,
-    there is a edge $(s_i, s_j)$ in this shrank graph. \\ 
+    There is an edge $s_i \to s_j$ in this shrank graph, as long as we can find an edge $v_i \to v_j \in \progE(c)$ such that $v_1 \in \vertxs_i$, $v_j \in \vertxs_j$ and $i \neq j$.
+    % \\ 
     Then, we use the standard breath first search strategy to find the longest weighted path
     %  w.r.t. all the SCCs and their adaptivities.
-    on this shrank graph and return the length as adaptivity.
+    on this DAG and return this length as the adaptivity upper bound.
     \\
     We guarantee that 
     % this longest weighted path is a sound computation of the adaptivity on this,
-    the length of this longest weighted path is a sound computation of the adaptivity for program $c$,
+    the length of this longest weighted path is a sound computation of the adaptivity for program $c$
     % as well as 
-    and this longest weighted path a sound computation of the finite walk having the longest query length 
+    and this longest weighted path is a sound computation of the finite walk having the longest query length 
     % on this graph, in Theorem~\ref{thm:sound_adaptalg}
-    on $c$'s program based dependency graph, in Theorem~\ref{thm:sound_adaptalg}
-    in Appendix.
-    % ~\ref{apdx:adaptalg_soundness}.
-%    
-% \todo{add proof} 
-We also guarantee the conditional completeness of the adaptivity computation for graphs under the case that 
-$c$'s Program-Based Dependency Graph $\progG(c)$ is acyclic directed
-in Theorem~\ref{thm:adaptalg_pcomplete} 
-in Appendix~\ref{apdx:adaptalg_completeness}.
-    % for every vertex which isn't on any SCC, it is easy to know that it will be visited 
-    % at most once given no edges going back to this vertex. We can know the adaptivity on the SCC 
-     %
-    % \begin{algorithm}
-    % \caption{
-    % {Longest Adaptivity Search Algorithm ($\pathsearch$)}
-    % \label{alg:adpt_alg}
-    % }
-    % \begin{algorithmic}
-    % \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
-    % \STATE  {\bf {bfs $(G)$}:}  
-    % \STATE {\bf init} 
-    % \\
-    % current node: $c$, 
-    % \\
-    % queue: $q$ : List, add into $a$ an arbitrary v from $\vertxs$. 
-    % \\
-    % visited: List of length $|\vertxs|$, initialize with $\efalse$.
-    % \\
-    % results: $r$ : List of length $|\vertxs|$, initialize with -1.
-    % \\
-    % curr$\kw{flowcapacity}$: INT, initialize MAXINT.
-    % \\
-    % querynum: INT, initialize 0. \#\{To count the query numbers when we are walking inside a cycle\}
-    % \\
-    % \STATE \qquad {\bf while} $q$ isn't empty:
-    % \STATE \qquad \qquad take the vertex from head $c= q.pop()$
-    % \STATE \qquad \qquad mark $c$ as visited, visited $[c] = 1$.
-    % \STATE \qquad \qquad {\bf if} $\kw{cycle}(c)$  \#\{we are inside a cycle\}
-    % \STATE \qquad \qquad \qquad curr$\kw{flowcapacity}$ = min($\weights$(c), curr$\kw{flowcapacity}$).
-    % \STATE \qquad \qquad \qquad querynum += $\flag(c)$.
-    % \STATE \qquad \qquad  \qquad for all unvisited vertex $v$ having directed edge from c:
-    % \STATE \qquad \qquad \qquad \qquad r[v] = r[c]; q.add(v)
-    % \STATE \qquad \qquad \qquad  {\bf if}  $v$ is visited, then the circle finished
-    % \STATE \qquad \qquad \qquad \qquad update the result $r[v] =  \max(r[v], r[c] + $curr$\kw{flowcapacity}$*querynum)
-    % \STATE \qquad \qquad \qquad \qquad curr$\kw{flowcapacity}$ = MAXINT
-    % \STATE \qquad \qquad \qquad \qquad querynum = 0.  
-    % \STATE \qquad \qquad {\bf else} 
-    % \STATE \qquad \qquad \qquad for all unvisited vertex $v$ having directed edge from c:
-    % \STATE \qquad \qquad \qquad  \qquad $r[v] = \max(r[v], r[c] + \flag(c))$; q.add(v)
-    % \RETURN max($r$)
-    % \end{algorithmic}
-    % \end{algorithm}
+    on $c$'s program-based dependency graph in Theorem~\ref{thm:sound_adaptalg}
+    in Appendix
+    ~\ref{apdx:adaptalg_soundness}.
     %
-%
-    % \begin{algorithm}
-    %     \caption{
-    %     {Over-Approximated Adaptivity on SCC}
-    %     \label{alg:overadp_alg}
-    %     }
-    %     \begin{algorithmic}
-    %     \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \qflag)$ with a start vertex $s$ and destination vertex $t$ .
-    %     \STATE  {\bf {$\kw{dfs_{naive}(G, c,visited)}$}:}  
-    %     % \STATE {\bf init} 
-    %     % \\
-    %     % current node: $c$, 
-    %     % \\
-    %     % visited: List of length $|\vertxs|$, initialize with $\efalse$.
-    %     % \\
-    %     % \STATE {\bf if} $c = s$:
-    %     % \RETURN \qquad  $\weights(s)*\flag(s) $.
-    %     \STATE $r[c] = \weights(c)*\qflag(c) $
-    %     \STATE {\bf for}  all vertex $v$ having directed edge from $c$:
-    %     \STATE \qquad {\bf if}  $v$ is unvisited:
-    %     \STATE \qquad \qquad  \#\{mark $v$ as visited\} $\kw{visited}[v] = 1$;
-    %     \STATE \qquad \qquad $r[c] += \kw{dfs_{naive}(G, v, visited)}$;
-    %     % \STATE \qquad {\bf else}: \#\{There is a cycle finished\}
-    %     % \RETURN \qquad \qquad $\weights(v)*\flag(v) $.
-    %     \RETURN $r[c]$
-    %     \end{algorithmic}
-    %     \end{algorithm}%
-        %
-  \paragraph*{Adaptivity Computation Algorithm on SCC Graph ($\kw{\pathsearch_{scc}(G)}$)}
+If a program
+$c$'s program-based dependency graph $\progG(c)$ is a DAG, then we prove that the adaptivity upper bound by Algorithm~\ref{alg:adapt} is tight formally in Theorem~\ref{thm:adaptalg_pcomplete} in Appendix~\ref{apdx:adaptalg_completeness}.
+
+  \paragraph*{Adaptivity Computation Algorithm on An SCC ($\kw{\pathsearch_{scc}(G)}$)}
+  This algorithm takes an SCC of a program's program-based dependency graph as input
+% to be precise, the input graph is SCC, and 
+and outputs the adaptivity local bound of this SCC. 
+For an SCC containing only one vertex without any edge, it returns the query annotation of this vertex as adaptivity.
+For SCC containing at least one edge, 
+there are three steps in this algorithm: 1. It first collects all the paths in the input SCC 2. Then it calculates the adaptivity of every path by a novel adaptivity computation method. 3. The maximal adaptivity among over all paths is the adaptivity of this SCC in the end. Because the input graph is SCC, when the algorithm starts to traverse from a vertex, it finally goes back to the same vertex.
+In this sense, the paths collected in step 1 are all simple cycles with the same starting and ending vertex. 
+The most interesting part is step 2. It recursively computes the adaptivity upper bound on the fly of paths collecting through a depth first search procedure $\kw{dfs}$ from line: 6-16.
+It designs a novel adaptivity computation method, which guarantees the visiting times of each vertex by its weight and addresses the \textbf{Approximation Challenge}.
+The guarantee is achieved by two special parameters $\kw{flowcapacity}$ and $\kw{querynum}$ and the updating operations in line:8 and line:11.
+% 
+\begin{itemize}
+\item $\kw{flowcapacity}$ is a list of arithmetic expression $\mathcal{A}_{in}$.
+% for every vertex,
+It tracks the minimum weight
+along the path during the 
+searching procedure. For each vertex, it updates the minimum weight when the path reaches that vertex with $\infty$ as the initial value.
+% , inside a cycle\}
+\item $\kw{querynum}$ is a list of integer
+% of all the vertices, which is 
+initialized by query annotation $\qflag(v)$ for every vertex. 
+It tracks the total number of vertices with query annotation $1$
+% which are query vertices 
+along the path.
+\item
+% \\
+The updating operation
+during the traversal 
+(line: 8) and 
+at the end of the traverse (line: 11) is
+% in these two branches, 
+$\kw{flowcapacity[v] \times querynum[v]}$.
+% in line: 11 and line: 15 
+Because $\kw{querynum[v]}$ is the \# of the vertices with query annotation $1$ and $\kw{flowcapacity[v]}$ is the minimum weight over this path,
+this number is the accurate query length of this path. 
+It guarantees 
+the visiting times of each vertex on the path reaching a vertex $v$ is no more than 
+the maximum visiting times it can be on a qualified walk by $\kw{flowcapacity[v]}$,
+and 
+in the same time  compute the query length instead of weighted length through 
+$\kw{ querynum[v]}$.
+\end{itemize}
+%  its minimum visiting time, 
+In this way, we resolve the \textbf{Approximation Challenge} without losing the soundness, formally in Appendix~\ref{apdx:adaptalg_soundness}.
+This step also guarantees the termination through a boolean list, $\kw{visited}$ in line:8 and line:14.
+
     \begin{algorithm}
             \caption{
-            {Adaptivity Computation Algorithm on SCC Graph }
+            {Adaptivity Computation Algorithm on An SCC }
             \label{alg:adaptscc}
             }
             \begin{algorithmic}[1]
@@ -3271,17 +2498,13 @@ in Appendix~\ref{apdx:adaptalg_completeness}.
             \STATE  {\bf {$\kw{\pathsearch_{scc}(G)}$}:}  
             \STATE {\bf init} 
             \\
-            $\kw{r_{scc}}$: $EXPR(\constdom)$, initialized $0$, the Adaptivity of this SCC
+            $\kw{r_{scc}}$: $\mathcal{A}_{\lin}$, initialized $0$, the Adaptivity of this SCC
             \STATE \qquad {\bf init} 
-            % \STATE \qquad current node: $c$, 
-            % \\
-            % visited: List of length $|\vertxs|$, initialize with $\efalse$.
-            % \\ \qquad  $\kw{r_{scc}}$ : initialize $0$, the adaptivity of this graph
             \\ \qquad  $\kw{visited}$ : $\{0, 1\}$ List, 
             \\ \qquad  \#\{length $|\vertxs|$, initialize with $0$ for every vertex, recording whether a vertex is visted.\}
-            \\ \qquad  $\kw{r}$ : $EXPR(\constdom)$ List, 
+            \\ \qquad  $\kw{r}$ : $\mathcal{A}_{\lin}$ List, 
             \\ \qquad  \#\{length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex, recording the adaptivity reaching each vertex.\}
-            \\ \qquad  $\kw{flowcapacity}$: $EXPR(\constdom)$ List, 
+            \\ \qquad  $\kw{flowcapacity}$: $\mathcal{A}_{\lin}$ List, 
             % INT List of length $|\vertxs|$, initialize MAXINT. 
             \\ \qquad  \#\{length $|\vertxs|$, initialize with $\infty$ for every vertex,
             % \#\{For every vertex, 
@@ -3296,25 +2519,20 @@ in Appendix~\ref{apdx:adaptalg_completeness}.
             \STATE {\bf if} $|\vertxs| = 1$ and $|\edges| = 0$:
             \STATE \qquad {\bf return}  $\qflag(v)$
             \STATE  {\bf def} {$\kw{dfs(G, c,visited)}$}:
-            % \STATE \qquad update the length of the longest path reaching this vertex
-            % $r[s] =  r[s] + $$\kw{flowcapacity}$[s] * querynum[s].
-            % \RETURN  \qquad $r[s]$.      
             \STATE \qquad {\bf for} every vertex $v$ 
             % having directed edge from $c$:
             connected by a directed edge from $c$:
             \STATE \qquad \qquad {\bf if} $\kw{visited}[v] = \efalse$:
-            \STATE \qquad \qquad \qquad $\kw{flowcapacity[v] = \min(\weights(v), {flowcapacity}[c])}$;
-            \STATE \qquad \qquad \qquad $\kw{querynum[v] = querynum[c] + \qflag(v)}$;
-            % \STATE \qquad \qquad \qquad \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
-            % \STATE \qquad \qquad \qquad $\kw{r[v] =  r[c] + flowcapacity[v] \times querynum[v]} $; \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
-            \STATE \qquad \qquad \qquad $\kw{r[v] =  \max(r[v], flowcapacity[v] \times querynum[v]}) $; 
+            \STATE \qquad \qquad \qquad \highlight{$\kw{flowcapacity[v] = \min(\weights(v), {flowcapacity}[c])}$};
+            \STATE \qquad \qquad \qquad \highlight{$\kw{querynum[v] = querynum[c] + \qflag(v)}$};
+            \STATE \qquad \qquad \qquad \highlight{$\kw{r[v] =  \max(r[v], flowcapacity[v] \times querynum[v]}) $}; 
             % \#\{do not update the length of the longest walk reaching $v$ until the cycle is finished\}
             \STATE \qquad \qquad \qquad  $\kw{visited}[v] = 1$; %\#\{mark $v$ as visited\}
             \STATE \qquad \qquad \qquad $\kw{dfs(G, v, visited)}$;
             \STATE \qquad \qquad {\bf else}: \#\{There is a cycle finished\}
             % \STATE \qquad \qquad \qquad \#\{update the length of the longest path reaching this vertex\}
             \STATE \qquad \qquad \qquad 
-            $\kw{r[v] =  \max(r[v], r[c] +  \min(\weights(v), {flowcapacity}[c]) * (querynum[c] + \qflag(v)))}$; \#\{update the length of the longest walk reaching this vertex on this cycle\}
+            \highlight{$\kw{r[v] =  \max(r[v], r[c] +  \min(\weights(v), {flowcapacity}[c]) * (querynum[c] + \qflag(v)))}$}; \#\{update the length of the longest walk reaching this vertex on this cycle\}
             %  $\kw{r[v] =  \max(r[v], r[c] + flowcapacity[v] * querynum[v])}$; \#\{update the length of the longest walk reaching this vertex on this cycle\}
             %  \STATE \qquad \qquad \qquad \#\{Recover the $\kw{flowcapacity}$ and querynumber to previous state, for different loops\}
             % \STATE \qquad \qquad \qquad $\kw{flowcapacity[v] = flowcapacity[c]}$; \#\{Recover the $\kw{flowcapacity}$\}
@@ -3327,350 +2545,69 @@ in Appendix~\ref{apdx:adaptalg_completeness}.
             \end{algorithmic}
             \end{algorithm}
             % \\
-% Following is the challenge of computing the adaptivity on a program based dependency graph.
-% In order to search for the finite walk having the longest query length, which isn't a simple longest weighted path.
-% \\
-% the visiting times of every vertex on this walk should be no more than its weight, which is a symbolic expression.
-% So we cannot simply search for the longest weight path where the visiting times of the vertex on it could possibly exceed its weights.
-% We can neither simply traverse on this graph by decreasing the weight of every node by 1 after every visiting,
-% because the weight is symbolic and simply traversing leads to non-termination.
-% \\
-% In Algorithm~\ref{alg:adaptscc}, 
-\highlight{Algorithm Introduction}
-This algorithm takes a subgraph of the program-based dependency graph as input, to be precise, the input graph is SCC, and the output is the adaptivity of this SCC. 
-For an SCC containing only one vertex without any edge, it returns the query annotation of this vertex as adaptivity.
-For SCC containing at least one edge, 
-There are three steps in this algorithm: 1. find out all the paths in the input SCC 2. Calculate the adaptivity of every path using our designed adaptivity counting method. 3. Return the maximal adaptivity among all the paths. The step 3 is trivial. Because our input graph is SCC, when we start traversing from a vertex, we will finally go back to this vertex. The paths we find in step 1 are all those with the same starting and ending vertex. The most interesting part is step 2. 
-We discuss as follows.
-
-
-This algorithm in Alg.~\ref{alg:adaptscc} takes a subgraph of the program-based dependency graph(SCC), and the output is the adaptivity of the input. 
-For an SCC containing only one vertex, it returns the query annotation of this vertex as adaptivity.
-For SCC containing at least one edge, 
-There are three steps: 1. find out all the paths in the input 2. calculate the adaptivity of every path using our designed adaptivity counting method. 3. return the maximal adaptivity among all the paths. Because our input graph is SCC, when we start traversing from a vertex, we will finally go back to this vertex. The paths we find in step 1 are all those with the same starting and ending vertex. The most interesting part is step 2. 
-% \wq{Add more about step 2 here, what it is and why it is good.}
-% Again, for 
-% the SCC containing only one vertex without any edge, as in line:4-5 in Alg.~\ref{alg:adaptscc}.
-% % then 
-% % If yes, then i
-% % it's easy to know that it will be visited 
-% % at most once since there isn't edge going back to this vertex. 
-% % So we can know 
-% The adaptivity on this SCC is at most one if it is a query vertex,
-% and zero otherwise.
-% $\kw{\pathsearch_{scc}(G)}$ return query annotation directly as in line:4-5.
-% % So $\kw{\pathsearch_{scc}(G)}$ return query annotation directly as in line:4-5.
-% \\
-% If not, then the 
-For the SCC containing at least one edge, 
-we compute the adaptivity for each path 
-on the fly of searching for the paths 
-in the
-% design a 
-recursion algorithm $\kw{dfs}$. It is designed based on 
-a deep first search strategy 
-% of this algorithm is described as follows,
-from line: 6-16.
-% searching for the paths 
-% starting from every vertex as step 1. 
-% In the meantime, it computes the adaptivity for each path during the path searching procedure, which is the step 2.
-% with special parameter 
-% searching for the finite walk having the longest query length
-% we are searching for the finite walk having the longest query length through a deep first search strategy.
-% The difficulty is, the visiting times of every vertex on this walk should be no more than its weight, which is a symbolic expression.
-% As the two challenges discussed above, 
-% we want to guarantee the visiting time of each vertex smaller than 
-% its weight and compute the adaptivity accurately, in the meantime guarantee the algorithm termination. 
-% It use a capacity limitation and  special parameters to achieve it,
-% specifically as follows.
-% Additionally, we are computing the query length rather than sum of the weights.
-% We design a deep first search strategy
-% % of this algorithm is described as follows,
-% from line: 6-16 in Alg.~\ref{alg:adaptscc}, 
-% searching for the finite walk having the longest query length
-%  through a deep first search strategy
-% with a capacity limitation and use special parameter to compute the adaptivity.
-% for every path.
-% So we cannot simply search for the longest weight path where the visiting times of the vertex on it could possibly exceed its weights.
-% We can neither simply traverse on this graph by decreasing the weight of every node by 1 after every visiting,
-% because the weight is symbolic and simply traversing leads to non-termination.
-% \\
-% We will explain some interesting part of the algorithm, which is related to solving the challenges.
-% In order to
-% guarantee the termination, 
-% % this algorithm 
-% $\kw{\pathsearch_{scc}(G)}$
-% terminates the recursion if monitored a cycle, as in line:8 and line:14, through a $\{0, 1\}$ list $\kw{visited}$.
-% This 
-% % guaranteed the termination and 
-% solved the \textbf{Non-Termination Challenge}.
-% \todo{solve the challenge 2} 
-% search for finite walk  
-% So we use the dfs to search for the 
-% \\
-In order to guarantee the visiting times of each vertex by its weight
-and compute the adaptivity accurately, 
-we use a special parameter $\kw{flowcapacity}$  to track the minimum weight
-along the path during the 
-% dfs process, 
-% deep first 
-searching procedure, 
-and a parameter $\kw{querynum}$
-% to compute the query length of this walk
-to track the total number of vertices with query annotation $1$
-% which are query vertices 
-along the path.
-% 
-% \todo{solve the challenge 1, specifically in the dfs strategy
-% of this algorithm is described as follows,
-% from line: 6-16 in Alg.~\ref{alg:adaptscc}. } 
-% \\
-% Then, to compute the query length of this walk, 
-% we use another parameter $\kw{querynum}$
-% to track the total number of vertices which are query vertices along the walk.
-
-% The detail steps of this dfs strategy
-% % of this algorithm is described as follows,
-% from line: 3-16 in Alg.~\ref{alg:adaptscc},
-% particularly from line: 7-15 on how to 
-% use these two special parameters to resolve \textbf{Challenge I}
-%  is described as follows.
-% searching for the finite walk having the longest query length through a deep first search strategy
-% with a capacity limitation and use special parameter to compute the adaptivity
-% for every path.
-% \\
-% We first initialize some parameters:
-% \\
-% $\kw{visited}$ is initialized as a list of $0$ for every vertex on this SCC, in order to guarantee the termination;
-% \\ 
-% $\kw{r}$ is initialized  as a list of integer with length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex. The adaptivity reaching each vertex.
-% \\ 
-$\kw{flowcapacity}$ is a list of arithmeitc expression $\mathcal{A}_{in}$ 
-% for every vertex,
-recording the minimum weight when the path reaches that vertex, which is initialized by $\infty$.
-% , inside a cycle\}
-
-$\kw{querynum}$ is a list of integer
-% of all the vertices, which is 
-initialized by query annotation $\qflag(v)$ for every vertex. 
-% For every vertex, 
-% % recording the query numbers when the path reaching.
-% % in order to 
-% it records the total query numbers when the path reaching this vertex.
-
-% We maintain the minimum weight for the 
-% $\kw{flowcapacity}$, 
-% number of query vertices 
-% $\kw{querynum}$ 
-% and update the adaptivity for this path $\kw{r}$
-% alone the path and update the adaptivity reaching 
-% this vertex, 
-% when traversing on this graph, as in Alg.~\ref{alg:adaptscc} from line: 8-13.
-% % and then recursively dfs on all vertices heading out from this vertex.
-% % \\
-% At line: 15 where this vertex is visited, i.e., this path 
-% going back to its starting node,
-% we only update the adaptivity $\kw{r}$ reaching this vertex.
-% and neither recursion nor update the $\kw{flowcapacity}$  and 
-% $\kw{querynum}$.
-
-% Again, Non-recursion in the second branch
-% % in order to 
-% guarantees the termination and resolves \textbf{Non-Termination Challenge}.
-% \\
-The updating operations
-during the traverse 
-(line: 8) and 
-at the end of the traverse (line: 11) are interesting,
-% in these two branches, 
-specifically $\kw{flowcapacity[v] \times querynum[v]}$ 
-% in line: 11 and line: 15 
-computes the query length for this path. 
-it guarantees 
-the visiting times of each vertex on the path reaching a vertex $v$ is no more than 
-the maximum visiting times it can be on a qualified walk, through $\kw{flowcapacity[v]}$,
-and in the same time  compute the query length instead of weighted length accurately through 
-$\kw{ querynum[v]}$.
-%  its minimum visiting time, 
-In this way, we resolve the \textbf{Approximation Challenge} without losing the soundness, formally in the appendix.
-This step also guaranteed the termination, as in line:8 and line:14, through a boolean list $\kw{visited}$.
-% and solved the \textbf{Challenge II.} discussed above.
-% % \todo{solve the challenge 2} 
-% % search for finite walk  
-% % So we use the dfs to search for the 
-% \\
-% % In order to
-% % solve the \textbf{Challenge I},
-% % specifically guarantee the visiting times of each vertex by its weight, 
-% % we use a special parameter $\kw{flowcapacity}$  to track the minimum weight during the 
-% % % dfs process, 
-% % deep first searching along the walk, 
-% % also a parameter $\kw{querynum}$
-% % % to compute the query length of this walk
-% % to track the total number of vertices which are query vertices along the walk in order to compute the query length of this walk.
-% In order to
-% solve the \textbf{Approximation Challenge},
-% specifically guarantee the visiting times of each vertex by its weight
-% and compute the adaptivity accurately, 
-% we use a special parameter $\kw{flowcapacity}$  to track the minimum weight
-% along the path during the 
-% % dfs process, 
-% % deep first 
-% searching procedure, 
-% and a parameter $\kw{querynum}$
-% % to compute the query length of this walk
-% to track the total number of vertices with query annotation $1$
-% % which are query vertices 
-% along the path 
-% in order to compute the query length.
-% 
-% \todo{solve the challenge 1, specifically in the dfs strategy
-% of this algorithm is described as follows,
-% from line: 6-16 in Algorithm~\ref{alg:adaptscc}. } 
-% \\
-% Then, to compute the query length of this walk, 
-% we use another parameter $\kw{querynum}$
-% to track the total number of vertices which are query vertices along the walk.
-
 \highlight{Algorithm Detail Steps}
-The detail steps of this dfs strategy
-% of this algorithm is described as follows,
-from line: 3-16 in Algorithm~\ref{alg:adaptscc},
-particularly from line: 7-15 on how to 
-use these two special parameters to resolve \textbf{Approximation Challenge}
- is described as follows.
+The detail steps of $\kw{dfs}$
+from line: 3-16 in Algorithm~\ref{alg:adaptscc}
+% on how to 
+% use these two special parameters to resolve \textbf{Approximation Challenge}
+is described as follows.
  %
- $\kw{flowcapacity}$ is a list of symbolic expressions for every vertex, recording the minimum weight when the path reaches that vertex, which is initialized by $\infty$.
+ Line:3 initialize parameters:
+1. 
+ $\kw{flowcapacity}$ is a list of arithmetic expressions with length $|\progV(c)_i|$ and the initial value $\infty$ for every element. For every vertex, it records the minimum weight when the path traverses to this vertex.
 % , inside a cycle\}
 
-$\kw{querynum}$ is a list of integer with length $|\vertxs|$, which is initialized with $\qflag(v)$ for every vertex. 
+2. $\kw{querynum}$ is a list of integer with length $|\progV(c)_i|$ and the initial value $\qflag(v)$ for every element. 
 For every vertex, 
 % recording the query numbers when the path reaching.
 % in order to 
-it records the total query numbers when the path reaching this vertex.
+it records the total query numbers when the path traverses to this vertex.
 
-We maintain the minimum weight for the 
-$\kw{flowcapacity}$, 
+3. The $\kw{visited}$ is initialized by $0$ for every element and has length $|\progV(c)_i|$ as well. It is used to guarantee the termination during recursion.
+
+4. $\kw{r}$ is a list of $\mathcal{A}_{\lin}$ initialized with query annotation for each vertex. For each vertex, it maintains the longest query length when the recursion reaches it.
+
+Line:8-13 updates the parameters and recursively traverses for every unvisited vertex heading out from $v$.
+In each recursion,
+Line:9 maintains the minimum weight for the 
+$\kw{flowcapacity}$ and Line:10 updates the 
 number of query vertices 
-$\kw{querynum}$ 
-and update the adaptivity for this path $\kw{r}$
-alone the path and update the adaptivity reaching 
-this vertex, 
-when traversing on this graph, as in Algorithm~\ref{alg:adaptscc} from line: 8-13.
-% and then recursively dfs on all vertices heading out from this vertex.
+$\kw{querynum}$ so far when the traversing reaches $v$.
+Line:11
+updates the longest query length $\kw{r}$
+alone the path when the traverse arrives vertex $v$ by $\kw{flowcapacity[v] \times querynum[v]}$.
+This computation guarantees: 
+1. The visiting times of each vertex on the walk reaching $v$ is no more than 
+the maximum visiting it can be on this walk;
+2. Only the vertices have annotation $1$ are counted in adaptivity.
+In this way, we accurately approximate a walk using this path and computes the query length of this walk safely.
+This addresses the \textbf{Approximation Challenge} and in the same time without losing the soundness.
+
+At line: 15, if this vertex $v$ is visited, 
+i.e., the traverse of this path goes back to its starting point,
+we only update the longest query length $\kw{r}[v]$ for $v$ in the same way as Line:11.
 % \\
-At line: 15 where this vertex is visited, i.e., this path 
-going back to its starting node,
-we only update the adaptivity $\kw{r}$ reaching this vertex.
-% and neither recursion nor update the $\kw{flowcapacity}$  and 
-% $\kw{querynum}$.
-\\
-% Again, Non-recursion in the second branch
-% % in order to 
-% guarantees the termination and resolves \textbf{Non-Termination Challenge}.
-% \\
-The updating operations
-during the traversing 
-(in line: 11) and 
-at the end of the traverse (in line: 15),
-% in these two branches, 
-specifically the $\kw{flowcapacity[v] \times querynum[v]}$ 
-% in line: 11 and line: 15 
-computes the query length for this path. 
-it guarantees 
-the visiting times of each vertex on the path reaching a vertex $v$ is no more than 
-the maximum visiting it can be on a qualified walk, through $\kw{flowcapacity[v]}$,
-and in the same time  compute the query length instead of weighted length accurately through 
-$\kw{ querynum[v]}$.
-%  its minimum visiting time, 
-In this way, we resolve the \textbf{Approximation Challenge} and in the same time without losing the soundness,
-% searching for the finite walk having the longest query length through a deep first search strategy
-% with a capacity limitation and use special parameter to compute the adaptivity
-% for every path.
-\\
-We first initialize some parameters:
-\\
-$\kw{visited}$ is initialized as a list of $0$ for every vertex on this SCC, in order to guarantee the termination;
-\\ 
-$\kw{r}$ is initialized  as a list of integer with length $|\vertxs|$, initialize with $\qflag(v)$ for every vertex. The adaptivity reaching each vertex.
-\\ 
-$\kw{flowcapacity}$ a list of symbolic expressions for every vertex, recording the minimum weight when the walk reaching that vertex, which  is initialized by $\infty$.
-% , inside a cycle\}
-\\ 
-$\kw{querynum}$ is a list of integer with length $|\vertxs|$, which is initialized with $\qflag(v)$ for every vertex. 
-For every vertex, 
-% recording the query numbers when the path reaching.
-in order to record the total query numbers when the walk reaches a vertex.
-\\
-Then from line: 5-11, we record the minimum weight and number of query vertices alone the path and update the adaptivity reaching 
-this vertex, and then recursively dfs on all vertices heading out from this vertex.
-\\
-At line: 12 where this vertex is visited, 
-we only update the adaptivity reaching this vertex and neither recursion nor update the $\kw{flowcapacity}$  and 
-$\kw{querynum}$.
-% \\
-% Again, Non-recursion in the second branch
-% % in order to 
-% guarantees the termination and resolves \textbf{Challenge I}.
-\\
-The updating operation in these two branches, 
-specifically $\kw{flowcapacity[v] \times querynum[v]}$ in line: 11 and line: 15 
-guarantees 
-1.the visiting times of each vertex on the walk reaching $v$ is no more than 
-the maximum visiting it can be on this walk, through $\kw{flowcapacity[v]}$. 
-%  its minimum visiting time, 
-In this way, we resolve the \textbf{Approximation Challenge}  and in the same time without losing the soundness 
-% this 
-% 2. then 
-by using $\kw{flowcapacity[v] \times querynum[v]}$ to compute the query length. 
-% without lose the adaptivity.
-%
-\\
-Notice here, another special operation we have in the second branch is Non-updating of
+However, we do not update
 % Non-updating the 
-$\kw{querynum}$ and $\kw{flowcapacity}$.
-This guarantees both the accuracy and the soundness, formally in Lemma~\ref{thm:sound_adaptalg} in Appendix~\ref{apdx:adaptalg_soundness}.
+$\kw{querynum}$ and $\kw{flowcapacity}$ in this case.
+This improves the accuracy and still guarantees the soundness, formally in Lemma~\ref{thm:sound_adaptalg} in Appendix~\ref{apdx:adaptalg_soundness}.
 
 \highlight{Example}
-Now, we show an example illustrating how our two updating operations for adaptivity 
-for each path can guarantee both the accuracy and the soundness. 
-Look at a Nested While Loop example program in Figure~\ref{fig:alg_adaptsearch_nestedwhile}.
-% Notice here, another special operation we have in the second branch is Non-updating of
-% % Non-updating the 
-% $\kw{querynum}$ and $\kw{flowcapacity}$.
-% This guarantees both the accuracy and the soundness.
-% Specifically,
-% % because a second visiting of the same vertex 
-% if this vertex is visited, it indicates that a cycle is monitored and  
-% % indicates there is a cycle goes back to this vertex, 
-% the traversing on this cycle is finished by going back to this vertex.
-% %
-% % then, when 
-% When we continuously search for walks heading out of this vertex, 
-% the minimum weight on this cycle does not affect the walks going out of this vertex that not pass this cycle.
-% However, if we keep recording the minimum weight, then we
-% %  are restricting 
-% restrict the visiting times of vertices on a walk by
-%  using the minimum weight of vertices not on this walk.
-% %  , it is unsound anymore.
-% Then, it is obviously that this leads to unsoundness.
-% \todo{example} 
-% To under stand how the two operations 
+The example program in Figure~\ref{fig:alg_adaptsearch_nestedwhile} illustrates how our two updating operations for adaptivity 
 We first search for a path: $y^6 \to y^6$, and compute the adaptivity for this path as 
 $k$.
-Notice here, another special operation we have in the second branch is Non-updating of
-% Non-updating the 
-$\kw{querynum}$ and $\kw{flowcapacity}$.
-This guarantees both the accuracy and the soundness.
-Specifically,
+We do not update
+$\kw{querynum}$ and $\kw{flowcapacity}$ at line:15.
+This improves the accuracy and still guarantees the soundness.
+Because
 % because a second visiting of the same vertex 
-if this vertex is visited, it indicates that a cycle is monitored and  
+if a vertex $v$ is visited, then a cycle is identified and  
 % indicates there is a cycle goes back to this vertex, 
-the traversing on this cycle is finished by going back to this vertex.
+the traverse on this cycle is finished.
 %
 % then, when 
-When we continuously search for walks heading out of this vertex, 
-the minimum weight on this cycle does not affect the walks going out of this vertex that not pass this cycle.
+In the following recursion, when we continuously search for walks heading out from $v$, 
+the minimum weight on this cycle does not affect the walks going out of this vertex that do not interleave this cycle.
 However, if we keep recording the minimum weight, then we
 %  are restricting 
 restrict the visiting times of vertices on a walk by
@@ -3694,108 +2631,15 @@ a qualified walk, and exactly the longest walk we aim to find. So, by Non-updati
 visiting $y$ again, we guarantee that the visiting times og vertices on every searched walk will not be restricted by weights not on this walk,
 i.e., the soundness.
 \\
-In the last line of this dfs algorithm, line: 16, it returns the adaptivity heading out from its input vertex.
+Line: 16, it returns the adaptivity heading out from its input vertex.
 \\
-By applying this deep first search strategy on every vertex on this SCC, 
-we compute the adaptivity of this SCC by taking the maximum 
+Line:17 applies $\kw{dfs}$ on every vertex of this SCC and 
+computes the adaptivity of this SCC by taking the maximum 
 % adaptivity reaching every vertex on this SCC.
 value over every vertex.
 %
 The soundness is formally guaranteed in Lemma~\ref{lem:sound_adaptalg_scc} in Appendix~\ref{apdx:adaptalg_soundness}.
-
-% Look at a Nested While Loop example program in Figure~\ref{fig:alg_adaptsearch_nestedwhile}.
-% Specifically,
-% % because a second visiting of the same vertex 
-% if this vertex is visited, it indicates that a cycle is monitored and  
-% % indicates there is a cycle goes back to this vertex, 
-% the traversing on this cycle is finished by going back to this vertex.
-% %
-% % then, when 
-% When we continuously search for walks heading out of this vertex, 
-% the minimum weight on this cycle does not affect the walks going out of this vertex that not pass this cycle.
-% However, if we keep recording the minimum weight, then we
-% %  are restricting 
-% restrict the visiting times of vertices on a walk by
-%  using the minimum weight of vertices not on this walk.
-% %  , it is unsound anymore.
-% Then, it is obviously that this leads to unsoundness.
- %
-  %
-  \begin{figure}
-    \centering
-    {\footnotesize
-    \begin{subfigure}{.4\textwidth}
-    \begin{centering}
-    % 
-    $ 
-    \begin{array}{l}
-      \kw{nestedWhileMultiVarRecAcross}(k) \triangleq \\
-      \clabel{\assign{i}{k} }^{0} ; \\
-      \clabel{ \assign{x}{\query(\chi[0])}}^{1} ; \\
-      \clabel{ \assign{y}{\query(\chi[1])}}^{2} ; \\
-          \ewhile ~ \clabel{i > 0}^{3} ~ \edo ~ \\
-          \Big(
-           \clabel{\assign{i}{i-1}}^{4} ;\\
-           \clabel{\assign{j}{k}}^{5} ;\\
-           \clabel{\assign{y}{\query(\chi(\ln(x) + y))} }^{6}  ; \\
-           \ewhile ~ \clabel{j > 0}^{7} ~ \edo ~ \\
-           \Big(
-            \clabel{\assign{j}{j-1}}^{8};\\
-            \clabel{\assign{x}{\query(\chi(\ln(y))+\chi[x])} }^{9}
-            \Big) \Big)
-      \end{array}
-    %       
-    $
-    \caption{}
-    \end{centering}
-    \end{subfigure}
-    \quad
-    \begin{subfigure}{.52\textwidth}
-      \begin{centering}
-      \begin{tikzpicture}[scale=\textwidth/18cm,samples=200]
-      % Variables Initialization
-      \draw[] (-5, 1) circle (0pt) node{{ $a^0: {}^1_{0}$}};
-      \draw[] (-5, 7) circle (0pt) node{{ $x^1: {}^{1}_{0}$}};
-      % Variables Inside the Loop
-      \draw[] (0, 7) circle (0pt) node{{ $y^6: {}^{k}_{0}$}};
-      \draw[] (0, 1) circle (0pt) node{{ $x^9: {}^{k}_{0}$}};
-      % Counter Variables
-      \draw[] (5, 9) circle (0pt) node {{$i^0: {}^{1}_{0}$}};
-      \draw[] (5, 6) circle (0pt) node {{ $i^4: {}^{k}_{0}$}};
-      \draw[] (5, 3) circle (0pt) node {{$j^0: {}^{1}_{0}$}};
-      \draw[] (5, 0) circle (0pt) node {{ $j^8: {}^{k}_{0}$}};
-      % Value Dependency Edges:
-      \draw[ ultra thick, -latex, densely dotted,] (0, 7.5) arc (220:-100:1.5);
-      \draw[] (1, 8) node [] {\highlight{$k$}};
-      \draw[ thick, -latex] (5, 6.5)  -- node[left]{\highlight{{$k$}}}(5, 8.5) ;
-      \draw[ thick, -latex] (5, 0.5)  -- node[left]{\highlight{{$k$}}}(5, 2.5) ;
-      \draw[ ultra thick, -latex, densely dotted,] (1., 0.5) arc (120:-200:1.5);
-      \draw[] (1, 0) node [] {\highlight{$k$}};
-      % Value Dependency Edges on Initial Values:
-      \draw[ thick, -latex,] (-0.5, 1)  -- node[above]{\highlight{{$k$}}}(-4.5, 1) ;
-      \draw[ thick, -latex,] (-0.5, 7)  -- node[above]{\highlight{{$k$}}}(-4.5, 7) ;
-      %
-      \draw[ ultra thick, -latex, densely dotted,] (-0.5, 1.5)  to  [out=-220,in=220]  
-      node[left]{\highlight{{$k$}}}(-0.5, 7);
-      \draw[ ultra thick, -latex, densely dotted,]  (0.5, 7) to  [out=-60,in=60] 
-      node[right]{\highlight{{$k$}}}(0.5, 1) ;
-      % Control Dependency
-      \draw[ thick, -latex, ] (6.5, 6.5) arc (150:-150:1);
-      \draw[] (7.5, 6) node [] {\highlight{$k$}};
-      \draw[ thick, -latex, ] (6.5, 0.5) arc (150:-150:1);
-      \draw[] (7.5, 0) node [] {\highlight{$k$}};
-      \draw[ thick,-latex] (1.5, 7)  -- node[below]{\highlight{{$k$}}}(4, 6) ;
-      \draw[ thick,-latex] (1.5, 1)  -- node[right]{\highlight{{$k$}}}(4, 6) ;
-      \draw[ thick,-latex] (1.5, 1)  -- node[above]{\highlight{{$k$}}}(4, 1) ;
-   \end{tikzpicture}
-   \caption{}
-      \end{centering}
-      \end{subfigure}
-    }
-     \caption{(a) Nested While Loop Example, (b) Execution-Based Dependency Graph, (c) The Static Program-Based Dependency graph.}
-    \label{fig:alg_adaptsearch_nestedwhile}
-    \vspace{-0.5cm}
-    \end{figure}
+\input{examples/nestedWhile_alg.tex}
     %
 %     When we searched for a walk: $y^6 \to y^6$,
 %   if we update the $\kw{flowcapacity}[y^6]$ as $k$ after visiting $y^6$ the second time 
@@ -3817,7 +2661,7 @@ The soundness is formally guaranteed in Lemma~\ref{lem:sound_adaptalg_scc} in Ap
 %  \\
 % In the last line of this dfs algorithm, line: 16, it returns the adaptivity heading out from its input vertex.
 % \\
-% By applying this deep first search strategy on every vertex on this SCC, 
+% By applying this depth first search strategy on every vertex on this SCC, 
 % we compute the adaptivity of this SCC by taking the maximum 
 % % adaptivity reaching every vertex on this SCC.
 % value over every vertex.
@@ -4446,12 +3290,12 @@ The soundness is formally guaranteed in Lemma~\ref{lem:sound_adaptalg_scc} in Ap
 
 % By specifying the departure and destination vertices $s$ and $t$, the $\pathssearch(\progG, s, t)$ algorithm will 
 % give the number of query vertices on a finite walk from $s$ to $t$, which contains the maximum number of query vertices.
-% The pseudo-code of $\pathssearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adpt_alg}.
+% The pseudo-code of $\pathssearch(\progG, s, t)$ algorithm is defined in the Algorithm \ref{alg:adapt}.
 % %
 % \begin{algorithm}
 % \caption{
 % {Walk Search Algorithm ($\pathssearch$)}
-% \label{alg:adpt_alg}
+% \label{alg:adapt}
 % }
 % \begin{algorithmic}
 % \REQUIRE Weighted Directed Graph $G = (\vertxs, \edges, \weights, \flag)$ with a start vertex $s$ and destination vertex $t$ .
