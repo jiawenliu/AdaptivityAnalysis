@@ -1,7 +1,7 @@
 \begin{example}[Multiple Rounds Algorithm]
-\label{ex:multiplerounds}
+\label{ex:multipleRounds}
 %
-We look at an advanced adaptive data analysis algorithm - multiple rounds algorithm, as in Figure~\ref{fig:multi_graphs}(a).
+We look at an advanced adaptive data analysis algorithm - $\kw{multipleRounds}$ algorithm in Figure~\ref{fig:multi_graphs}(a).
 %
 %
 %   We have seen the two round algorithm in Section~\ref{subsec:loop-syntax}. We show the multiple-round algorithm, which is an advanced algorithm.
@@ -22,6 +22,7 @@ We look at an advanced adaptive data analysis algorithm - multiple rounds algori
 % The algorithm is written in the {\tt Query While} language as $\kw{multipleRounds(k)} $ taking 
 % two parameters $k$ and $c$ for 
 % number of iterations and the distribution sampling primitive $c$.
+This is a simplified version of the \emph{Monitor Augment} from \cite{RogersRSSTW20} with complete implementation in Appendix.
 It takes the user input $k$ which decides the 
 number of iterations.
 % and the distribution sampling primitive $c$.
@@ -35,8 +36,7 @@ After $r$ rounds, the algorithm returns the columns of the hidden database $D$ n
 % The $\mathrel{\mathsf{update}} ( {I}, (a, p))$ function takes $I, a, p$ as input and compute the updated results for $I$.
 % $\mathsf{update}$ function is used here to simplify the complex update computation of Nscore, Cscore and the tracking list $I$.
 We use functions $\kw{updnscore}(p,a)$,
-$\kw{updcscore}(p,a)$,$\kw{update}(I,ns,cs)$ to simplify the complex update computations of $Nscore$, $Cscore$ and the tracking list $I$, 
-which will not affect our analysis.%
+$\kw{updcscore}(p,a)$, $\kw{update}(I,ns,cs)$ to simplify the computations of updating $ns$, $cs$ and $I$.%
 }
 % It uses a loop for the $k$ rounds computation and. 
 % We use functions $\kw{updnscore}(p,a)$,
@@ -47,27 +47,23 @@ which will not affect our analysis.%
 % and the tracking list $I$. It will not change our analysis because these functions provides enough information through their arguments.
 % As described in the two round algorithm, the multi-round algorithm has a loop as well.
 % compare to two round algorithm
-{The interesting part here is the query asked in each iteration is not independent any more. 
-The query in one iteration $j$ now depends on the tracking list $I$ from its previous iteration $j-1$, which is updated by the query result in the same iteration $j-1$. The connection between queries from different iterations, 
- which means these queries are adaptively chosen according to our discussion in overview.
+{The interesting part here is that the query request in each iteration is not independent. 
+The query in the $j^{th}$ iteration now depends on the tracking list $I$ from the previous  $(j - 1)^{th}$ iteration, 
+$I$ is updated by all the query results in the previous $j-1$ iterations. 
+In this sense, all these $k$ queries are adaptively chosen according to our discussion in overview.
 }
-% in comparison with the two rounds one, is that the query asked in each iteration is not independent(non-adaptive) anymore.
-% For example, the query $q^{j}$ at iteration $j$ now may depend on the tracking list $I$, which comes from the previous iteration $j-1$. Additionally, this list $I$ at iteration $j-1$ is updated by the query result $q^{j-1}$ at the same iteration. Intuitively, we can see the connection between queries from different iterations, which means these queries are adaptively chosen according to our Theorem~\ref{thm:gaussiannoise2}.
-
-% the result of the query from previous iteration,
-% so that the query ask at the $j^{th}$ iteration is
-% $q(p, I)$.
+The program-based dependency graph is presented  in Figure~\ref{fig:multi_graphs}(b). 
+We omitted its execution-based dependency graph $\traceG(\kw{multipleRounds(k)})$ because they have the same graph topology and only differ in weights.
+%  so we do not show it again. 
+For the vertices in Figure~\ref{fig:multi_graphs}(b) that have the weight $k$,
+their weights in $\traceG(\kw{multipleRounds(k)})$ are 
+% the weights of the vertices $k$ with 
+the function $f_k$. $f_k$ takes an initial trace as input and returns the value of $k$ from the initial trace. 
+And the vertices with weight $1$ have the constant function $f_1 : \tdom_0(\kw{twoRounds(k)}) \to \{1\}$ 
+in  $\traceG(\kw{multipleRounds(k)})$. 
+For simplicity, we abuse the same symbols, $f_k$ and $f_1$ for all the following examples in their execution-based dependency graph
+to denote the weight function of a vertex. $f_k$ and $f_1$ compute the same value as defined above with the input initial trace w.r.t. different examples.
 %
-% In $MR$, the tracking list $I$ is initialized to an empty list. It appears inside the function of query $q(f(p,I))$ and updated in each iteration. 
-% by the result of query in that iteration. It uses an update function $\eupdt$. 
-% The input of this function is $a, p$, where $a$ is the result of the query in current iteration.
-% \\
-% By assuming a specific database $D = [[1, 1], [0, 0], [1, 1], [1, 1]]$,
-% \todo{The adaptivity through dependency graph}
-% \jl{
-% We first show its query-based dependency graph in Figure~\ref{fig:multi_graphs}(a), the execution trace $t_{mr}$ is generated as follows.}
-
-The program-based dependency graph is presented  in Figure~\ref{fig:multi_graphs}(b). Its execution-based dependency graph has the same graph, except different weight so we do not show it again. We can simply replaces $k$ with a function $w_k$ which takes a trace and returns the value of $k$ in this trace. The weight $1$ is replaced as a constant function $w_1$ taking whatever trace and returns $1$ for the execution-based dependency graph. For consistence, we use $w_k$ and $w_1$ for all the examples in this section.
 % Each vertex corresponds to a labeled variable in program,
 % and annotated with its weights and query annotation. 
 % For example the vertex on the top of the graph, $a^6:{}^k_1$
@@ -156,12 +152,19 @@ The program-based dependency graph is presented  in Figure~\ref{fig:multi_graphs
 As the adaptivity definition in our formal adaptivity model in Definition~\ref{def:trace_adapt},
 there is a finite walk along the dashed arrows,
 $a^{6} \to I^9 \to ns^{7} \to  \cdots \to ns^7$ , 
-where every vertex is visited $w_k(\trace_0)$ times for an initial trace $\trace_0 \in \mathcal{T}_0(c)$.
-There is one vertex $a^{6}$ visited $w_k(\trace_0)$ times with query annotation 1, 
-So we have the adaptivity with $\trace_0$ for this program as $w_k(\trace_0)$.
-
+where every vertex is visited $f_k(\trace_0)$ times given input $\trace_0$.
+The vertex $a^{6}$ has query annotation $1$, and it is visited $f_k(\trace_0)$ times.
+In this sense, the adaptivity of this program is
+$f_k(\trace_0)$ given input $\trace_0$.
+Since $f_k(\trace_0)$ computes the value of input variable $k$ from $\trace_0$, we have
+\begin{equation}
+    \label{eq:adapt_multipleRounds}
+    \forall \trace_0 \in \tdom_0(\kw{multipleRounds(k)}) \st  A(\kw{multipleRounds(k)})(\trace_0) = \env(\trace_0) k
+\end{equation} 
+where $\env$ is the environment operator.
+%  we have the adaptivity with $\trace_0$ for this program as $w_k(\trace_0)$.
 {
-Next, we show {$\THESYSTEM$} providing the tight upper bound for this example.
+Next, we show that {$\THESYSTEM$} provides a tight upper bound for this example by $\pathsearch(\kw{multipleRounds(k)})$.
 % variable-based weighted dependency graph in Figure\ref{fig:multi_graphs}(b). We use a short in the graph, such as $a_1^{3}$ for $a_1^{(5, [4:3])}$ and so on. We show the most weighted path in the graph, which is the red dashed path as usual. Along the red dashed path, $3$ weighted nodes $a_1^{3},a_1^{2},a_1^{1} $, correspond to our queries $q_c, q_b$ and $q_a$ respectively. This is our intuition to estimate one graph in Figure~\ref{fig:multi_graphs}(b), to upper bound another graph(Figure~\ref{fig:multi_graphs})(a). Here, we simplify the estimated graph by omitting some variables such $ns_1$, $cs_1$ in  Figure~\ref{fig:multi_graphs}(b).  Every query node in the query-based dependency graph has a corresponding node(variable the query is associated) in the variable-based dependency graph generated by our analysis algorithm {\THESYSTEM}. 
 % program-based dependency graph Graph as an approximation of the graph in Figure~\ref{fig:multi_graphs}(b).
 % We omit the program-based dependency graph Graph for this example, because it 
@@ -175,22 +178,15 @@ Next, we show {$\THESYSTEM$} providing the tight upper bound for this example.
 % as shown in the superscript on the vertex.
 % ant this graph has identical topology to the Execution-Based dependency graph as in Figure\ref{fig:multi_graphs}(b). 
 % We use a short in the graph, such as $a_1^{3}$ for $a_1^{(5, [4:3])}$ and so on. We show the most weighted path in the graph, which is the red dashed path as usual. 
-If first finds a path  
+It first finds a path on $\progG(\kw{multipleRounds(k)})$ 
 % along 
-$a^{6}: {}^k_1 \to I^9:{}^k_0 \to ns^7:{}^k_0$ with three weighted vertices, and then $\pathsearch$ approximate this path to a walk, in which $a^6,I^9, ns^{7}$ is visited $k$ times. So the estimated adaptivity is $k$. We know for any initial trace $\trace_0$ where $\config{\trace_0, k} \earrow v$ and 
-$w_k(\trace_0) = v$. So $k$ from {$\THESYSTEM$} is a tight bound.
-% correspond to our queries $q_c, q_b$ and $q_a$ respectively. 
-% This is our intuition to estimate one graph in Figure~\ref{fig:multi_graphs}(b), to upper bound another graph(Figure~\ref{fig:multi_graphs})(a). 
-% Here, we simplify the estimated graph by omitting some variables such $ns_1$, $cs_1$ in  Figure~\ref{fig:multi_graphs}(b).  
-% Every query node in the query-based dependency graph has a corresponding node(variable the query is associated) in the variable-based dependency graph generated by our analysis algorithm {\THESYSTEM}. 
-% And this path corresponds to the finite walk where 
-% and every vertex is visited $w$ times where $\config{\trace_0, k} \earrow w$,
-% is the longest finite walk with the 
-% maximal query length.
-% % Then, by summing up the number of query vertices showing up in this walk,
-% % the query length is $k$, where $k$ is the program's adaptivity.
-% % we have the maximal query length 
-% $\THESYSTEM$ computes $k$ as upper bound for program's adaptivity $k$ and we have
+$a^{6}: {}^k_1 \to I^9:{}^k_0 \to ns^7:{}^k_0$ with three weighted vertices. 
+Then $\pathsearch$ approximates this path to a walk $a^{6}: {}^k_1 \to I^9:{}^k_0 \to ns^7:{}^k_0 \to a^{6}: {}^k_1 \cdots$.
+In this walk, $a^6, I^9, ns^{7}$ are all visited $k$ times respectively. 
+So $\progA(\kw{multipleRounds(k)}) = k$.
+We know for any initial trace $\trace_0$, $\inferrule{\env(\trace_0) = v}{\config{\trace_0, k} \earrow v}$.
+So we have $A(\kw{multipleRounds(k)})(\trace_0) = v$ for any $\trace_0$ by Equation.~\ref{eq:adapt_multipleRounds} above
+and $k$ is a tight bound.
 }
 \end{example}
 
@@ -201,7 +197,7 @@ $w_k(\trace_0) = v$. So $k$ from {$\THESYSTEM$} is a tight bound.
     \small{
     $
 \begin{array}{l}
-\kw{multipleRounds(k, c)} \triangleq\\
+\kw{multipleRounds(k)} \triangleq\\
     \clabel{\assign{j}{k}}^0;
     \clabel{\assign{I}{[]}}^1; \\
     \clabel{\assign{ns}{0}}^2; 

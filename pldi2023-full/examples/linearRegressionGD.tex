@@ -27,12 +27,12 @@
                    %
 \begin{figure}
 \centering
-\begin{subfigure}{0.45\textwidth}
+\begin{subfigure}{0.4\textwidth}
     \centering
     {\small
         \[
         \begin{array}{l}
-            \kw{linearRegressionGD(k, rate)} \triangleq \\
+            \kw{linearRegressionGD(k, r)} \triangleq \\
                    \clabel{ a \leftarrow 0}^{0} ; 
                    \clabel{ c \leftarrow 0}^{1} ; 
                     \clabel{\assign{j}{\kw{k}} }^{2} ; \\
@@ -41,8 +41,8 @@
                     \Big(
                         \clabel{\assign{da}{\query(-2 * (\chi[1] - (\chi[0]\times a + c)) \times (\chi[0]))} }^{4}  ; \\
                         \clabel{\assign{dc}{\query(-2 * (\chi[1] - (\chi[0]\times a + c)))} }^{5}  ; \\
-                        \clabel{\assign{a}{a - \kw{rate} * da} }^{6}  ; 
-                        \clabel{\assign{c}{c - \kw{rate} * dc} }^{7}  ; \\
+                        \clabel{\assign{a}{a - \kw{r} * da} }^{6}  ; 
+                        \clabel{\assign{c}{c - \kw{r} * dc} }^{7}  ; \\
                      \clabel{\assign{j}{j-1}}^{8} 
                   %   \clabel{a \leftarrow x :: a}^{6} 
                     \Big);
@@ -51,9 +51,9 @@
         }
      \caption{}
         \end{subfigure}
-        \begin{subfigure}{.5\textwidth}
+        \begin{subfigure}{.55\textwidth}
             \begin{centering}
-            \begin{tikzpicture}[scale=\textwidth/25cm,samples=200]
+            \begin{tikzpicture}[scale=\textwidth/24cm,samples=200]
     % Variables Initialization
     \draw[] (-6, 1) circle (0pt) node{{ $a^0: {}^1_{0}$}};
     \draw[] (-6, 4) circle (0pt) node{{ $c^1: {}^{1}_{0}$}};
@@ -98,47 +98,62 @@
     \label{fig:linear_regression}
 \end{figure}
 %
-Analysis Result: $ \progA(\kw{linearRegressionGD(k, rate)}) = k$
+It computes $ \progA(\kw{linearRegressionGD(k, rate)}) = k$.
 \end{example} 
 %
- 
 This linear regression algorithm 
 % in order to
 aims to
-model a linear relationship between a dependent variable $y$,
+find a linear relationship, $y = a \times x + c$ between a dependent variable $y$
 % corresponding to the observed value in the column $\chi[1]$ in database, 
-and an independent variable $x$, $y = a \times x + c$, specifically approximating the 
+and an independent variable $x$, by approximating the 
 model parameter $a$ and $c$.
 In order to have a good approximation on the model parameter 
 $a$ and $c$, 
 % corresponding to the observed value in the column $\chi[0]$ in database, 
-it sends query to a training data set adaptively in every iteration.
-This training data set contains two columns (can extend to higher dimensional data sets), first column is used as the observed value for the independent variable $x$,
-second column is used as the observed label value for the dependent variable $y$.
-This algorithm is written in our {\tt Query While} language in Figure~\ref{fig:linear_regression}(a) as $\kw{linearRegressionGD(k, rate)}$.
+it sends query to a training data set adaptively in each iteration.
+This training data set contains two columns (can extend to higher dimensional data sets), 
+the first column contains the observed values of the independent variable $x$ and the
+second column for the dependent variable $y$.
+$\kw{linearRegressionGD(k, r)}$ is the program of this example written in our language model in Figure~\ref{fig:linear_regression}(a)
+with input variables $k$ and $r$.
 % taking the iteration number $\kw{step}$ 
 
-This linear regression algorithm starts from initializing the linear model parameters and the counter variable,
-and then goes into the training iterations.
+$\kw{linearRegressionGD(k, r)}$ starts from initializing the linear model parameters and the counter variable in commands $0, 1, 2$,
+and then goes into the while iterations.
 In each iteration, it computes the differential value w.r.t. parameter
 $a$ and $c$ respectively,
-through requesting two queries, $\query(-2 * (\chi[1] - (\chi[0]\times a + c)) \times (\chi[0]))$ and 
+through two query requests, 
+$\query(-2 * (\chi[1] - (\chi[0]\times a + c)) \times (\chi[0]))$ and 
 $\query(-2 * (\chi[1] - (\chi[0]\times a + c)))$
-at line 4 and 5.
-Then, it uses these two differential values stored in variable $da$ and $dc$ to update the linear model parameters $a$ and $c$.
+in commands of label $4$ and $5$.
+Then, it uses these two differential values stored in variables $da$ and $dc$
+to update the model parameters $a$ and $c$.
+In this sense, the two query requests in each iteration depends on queries in the previous iterations and the intuitive adaptivity rounds is $k$.
 %
-Its the program-based dependency graph is shown in Figure~\ref{fig:linear_regression}(b). Its execution-based dependency graph share the same graph, only needs to change the weight, $k$ into $w_k$ and $1$ for $w_1$ as we do in the previous example.
+Its program-based dependency graph, $\progG(\kw{linearRegressionGD(k, r)})$ is shown in Figure~\ref{fig:linear_regression}(b),
+and $\traceG(\kw{linearRegressionGD(k, r)})$ is omitted for the same reason as Example~\ref{ex:multipleRounds}.
 % We omit the detail of how to 
 % generate this graph, which is similar to the generation procedure in 
 % Example~\ref{alg:multiRound}.
-In the execution-based dependency graph, there are multiple walks having the same longest query length.
-For example, the walk $c^7 \to dc^6 : \to c^7 \to \cdots \to dc^6$ along the 
-dotted arrows, where each vertex is visited $w_k(\trace_0)$ times for an initial trace $\trace_0$.
+Given an input $\trace_0$, there are multiple walks having the same longest query length in $\traceG(\kw{linearRegressionGD(k, r)})$,
+such as the walks 
+$c^7 \to dc^6 : \to c^7 \to \cdots \to dc^6$ and
+$a^7 \to da^6  \to a^7 \to \cdots \to da^6 $ along the 
+dotted arrows.
+Each vertex in the two walks is visited $f_k(\trace_0)$ times, where $f_k(\trace_0)$ still computes the value of the input variable $k$
+from $\trace_0$ the same as Example~\ref{ex:multipleRounds}.
 % By counting the total occurrence time of vertices with annotation $1$ in this walk, we have this program's adaptivity $k$.
-There is actually other walks having the same query length $k$, the 
-walk $a^7 \to da^6  \to a^7 \to \cdots \to da^6 $ along the 
-dotted arrows, where each vertex is visited $w_k(\trace_0)$ times.
+% There is actually other walks having the same query length $k$, the 
+% walk $a^7 \to da^6  \to a^7 \to \cdots \to da^6 $ along the 
+% dotted arrows, where each vertex is visited $w_k(\trace_0)$ times.
 % the dotted path corresponds to a finite walk with the longest query length and its adaptivity on this walk is $k$.
-But it doesn't affect the adaptivity for this program, which is still the maximal query length $w_k(\trace_0)$ with respect to initial trace $\trace_0$.
-Also, $\THESYSTEM$, estimates the adaptivity $k$ for this example. Similarly as the multiple round example, we can show it is a tight bound.
+Since they have the same query length for all inputs, the adaptivity defined for this program is 
+\begin{equation}
+  \label{eq:adapt_linearRegressGD}
+  \forall \trace_0 \in \tdom_0(\kw{linearRegressionGD(k, r)}) \st A(\kw{linearRegressionGD(k, r)})(\trace_0) = \env(\trace_0) k
+\end{equation} 
+% But it doesn't affect the adaptivity for this program, which is still the maximal query length $w_k(\trace_0)$ with respect to initial trace $\trace_0$.
+Similar to Example~\ref{ex:multipleRounds}, $\THESYSTEM$ estimates the tight adaptivity bound, $k$ for this example.
+
 %
