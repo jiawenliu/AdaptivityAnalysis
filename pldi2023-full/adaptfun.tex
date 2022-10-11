@@ -6,16 +6,18 @@
 % \mg{
 % In this section, we present our static program analysis for computing an upper bound on the adaptivity a program $c$
 % }
-In this section, we present our static program analysis for computing an upper bound on the adaptivity of an arbitrary program $c$, as we define in last section. 
+In this section, we present our static program analysis for computing an upper bound on the \emph{adaptivity} of a given program $c$. 
 %
 \subsection{A guide to {\THESYSTEM} }
 In order to have a sound and accurate upper bound on the  adaptivity of a program $c$,
 we design a program analysis framework named {\THESYSTEM}.
-This framework composes two major algorithms as shown in Fig.~\ref{fig:adaptfun}.
-The first algorithm is a combined quantitative dependency analysis algorithm in the double-stroke box in Fig.~\ref{fig:adaptfun}.
-It produces an estimated quantitative dependency graph for a program.
-The second algorithm is a walk length estimation algorithm in the dashed box in Fig.~\ref{fig:adaptfun}.
-It computes the upper bound on the \emph{adaptivity} over the estimated quantitative dependency of an adaptive data analysis program $c$.
+This framework composes two algorithms as shown in the double-stroke box and the dashed box in Fig.~\ref{fig:adaptfun}.
+The first algorithm in the double-stroke box combines the quantitative and dependency analysis techniques.
+It produces an estimated \emph{data-dependency graph} for a program.
+The second algorithm in the dashed box is a walk length estimation algorithm.
+%  in the dashed box in Fig.~\ref{fig:adaptfun}.
+It computes the upper bound on the program's \emph{adaptivity} over the estimated graph.
+%  of the adaptive data analysis program $c$.
 \begin{figure}
   \centering    
 \includegraphics[width=1.0\columnwidth]{adapfun.png}
@@ -29,12 +31,17 @@ Below is the outline of the {\THESYSTEM}.
 % through Section~\ref{sec:alg_vertexgen}, Section~\ref{sec:alg_weightedgegen} and~\ref{sec:alg_graphgen}:
 \begin{enumerate}
   \item \textbf{Graph Estimation}
-  Because adaptivity is defined over a program's quantitative dependency graph (in Definition~\ref{def:trace_graph}), this algorithm first estimates this graph for the program statically.
+  Because adaptivity is defined over a program's \emph{quantitative dependency graph} (in Definition~\ref{def:trace_graph}),
+  this algorithm first estimates this graph for the program statically
+  in Section~\ref{sec:alg_graphgen}.
   % execution-based dependency graph (in Definition~\ref{def:trace_graph})
   % Execution-Based Dependency Graph (in Definition~\ref{def:trace_graph}). 
-  It estimates the four components of this graph in two steps and then compose the four components into a quantitative dependency graph for a program in the last step.
+  It estimates the four components of this graph in two steps and then composes them into an estimated dependency graph
+  %  for a program 
+  in the last step.
   %  Firvertices, edges, and the weight of every node, as well as some annotations which marks the query usage. 
-  The algorithm is presented in Section~\ref{sec:alg_graphgen} as follows.
+  % The algorithm is presented in Section~\ref{sec:alg_graphgen} as follows.
+  The steps are summarized  as follows.
 \begin{enumerate}
   \item \textbf{Vertex and Query Annotation Estimation}
   Vertices and query annotations in this graph are the assigned variables with unique labels. These are extracted directly from the program as in Section~\ref{sec:alg_vertexgen}.
@@ -46,21 +53,27 @@ Below is the outline of the {\THESYSTEM}.
   \textbf{Abstract Control Flow Graph.}
   In order to perform the dependency analysis and quantitative analysis, this step first generates an \emph{abstract control flow graph} for a program in Section~\ref{sec:abscfg}.
   \\
-  \textbf{Edges Estimation via Combined Flows Analysis.} 
-  This step performs over \emph{abstract control flow graph} combining both control flow and data flow analysis in
-  Section~\ref{sec:alg_edgegen}.
-  It estimates the data dependency relation for each pair of labeled variables in a program. Then it uses the estimated data dependency relation to approximate the edge of the quantitative dependency graph between each pair of vertices.
+  \textbf{Edges Estimation via Combined Flow Analysis.} 
+  The step is presented in
+  Section~\ref{sec:alg_edgegen}. It performs over the \emph{abstract control flow graph}, which combines both control flow and data flow analysis.
+  It estimates the \emph{dependency relation} between each pair of the labeled variables in a program by considering both the control flow and data flow.
+  Then it uses the estimated dependency relation to approximate the edge
+  %  of the quantitative dependency graph 
+  between each pair of vertices.
   \\
   \textbf{Weights Estimation via Quantitative Analysis.} 
-  This step computes the upper bound on the maximal visiting times of each labeled variable for a program in Section~\ref{sec:alg_weightgen}.
+  This step is presented in Section~\ref{sec:alg_weightgen}. 
+  It performs over the same \emph{abstract control flow graph} and computes the upper bound on the maximal visiting times of each labeled variable for a program.
   %  can be visited during execution. 
-  It performs over the same \emph{abstract control flow graph} as well. It first estimates the reachability bound for every vertex over this graph.
-  Then, this reachability bound is used to estimate the maximal visiting times of each labeled variable for a program as the estimated weight.
+  % It performs over the same \emph{abstract control flow graph} as well. 
+  It estimates the reachability bound for every vertex over the \emph{abstract control flow graph},
+  and this reachability bound is used to estimate the maximal visiting times of each labeled variable in a program and the weight of the corresponding vertex.
   %  of this quantitative dependency graph.
 \item  \textbf{Graph Estimation.} 
-Then with all the ingredients ready, we construct the final approximated graph in Section~\ref{sec:alg_graphgen}, named program-based dependency graph. 
-Overall, this program-based graph has a similar topology structure as 
-the Execution-Based Dependency Graph. It has the same
+In Section~\ref{sec:alg_graphgen}, we construct the final approximated graph,
+named \emph{program-based dependency graph} by simply composing the four estimated ingredients. 
+Overall, this \emph{program-based dependency graph} has a similar topology structure as 
+the \emph{execution-based dependency graph}. It has the same
 vertices and query annotations, but approximated edges and weights. 
 % The edge between vertices considers both control flow and data flow, See
 % Section~\ref{sec:alg_edgegen}
@@ -69,7 +82,9 @@ vertices and query annotations, but approximated edges and weights.
 \end{enumerate}
 
 \item \textbf{Adaptivity Computation.} 
-Likewise the adaptivity is defined as a finite walk in the execution based dependency graph, our static estimation on this adaptivity also relies on finding a walk in the program-based dependency graph.  
+Likewise the adaptivity in Definition~\ref{def:trace_adapt},
+%  is defined as a finite walk in the \emph{execution based dependency graph}, 
+the static estimation on the \emph{adaptivity} also relies on finding a walk in the \emph{program-based dependency graph}.  
 % The construction of the stastic analysis dependency graph is of great value of showing some useful properties of the target program, such as dependency between variables, the execution upper bound of a certian command, while the key novelty is our path searching algorithm, which connects all the information we need in the static anlaysis dependency graph and provides us a sound over-estimation of adaptivity! In order to get a sound but precise upper bound,
 We discuss some challenges in finding the 'appropriate' walk in the graph, and how our algorithm responds to these challenges as
 % . We present the path searching algorithm 
@@ -81,11 +96,13 @@ in Section~\ref{sec:alg_adaptcompute}.
 \subsection{Vertex and Query Annotation Estimation}
 \label{sec:alg_vertexgen}
 \paragraph{Vertex Estimation}
-The first component of every vertex in the static analysis dependency graph are actually identical as the  Execution-Based Dependency Graph, which are assigned variables in the program annotated with the unique label(line number). 
-These vertices are collected by statically scanning the program, like what we do for vertices of its Execution-Based Dependency Graph. 
-The vertices are defined formally as follows.
-
-  \highlight{
+The first component of the \emph{program-based dependency graph} is the vertex set, which is identical to the 
+\emph{execution-based dependency graph}.
+% of every vertex in the static analysis dependency graph are actually identical as the  Execution-Based Dependency Graph, 
+Every vertex is an assigned variable in the program, which comes from an assignment command or query request command with a unique label. 
+These vertices are collected by statically scanning the program, like what we do for vertices of the \emph{execution-based dependency graph}, as follows.
+%
+\highlight{
 \[
     \progV(c) \triangleq \left\{ 
   x^l \in \mathcal{LV}
@@ -98,12 +115,18 @@ The vertices are defined formally as follows.
 where $\mathcal{A}_{\lin}$ is the set of arithmetic expressions over $\mathbb{N}$ and program's input variables. 
 
 \paragraph{Query Annotation Computation}
-The static scanning of the programs also tells us whether one vertex(assigned variable) is assigned by a query request. We have similar definition when defining the Execution-Based Dependency Graph, 
+The static scanning of the programs also tells us whether one vertex(assigned variable) is assigned by a query request.
+% We have similar definition when defining the Execution-Based Dependency Graph, 
+Identically to the 
+\emph{execution-based dependency graph}, $\progF(c)$ is
 a set of pairs $\progF(c) \in \mathcal{P}(\mathcal{LV} \times \{0, 1\} )$ 
 % is the set of pairs 
 % The weight for each vertex in $\progV(c)$ is computed 
-mapping each $x^l \in \progV(c)$ to a flag, either $0$ or $1$, where $1$  means $x^{l}$ is a member of $ \qvar_{c}$, a set of those variables assigned with query requests, and $0$ means $x^{l}$ not in this set. It is defined formally below.
-
+mapping each $x^l \in \progV(c)$ to either $0$ or $1$. 
+$1$ denotes $x^{l}$ is a member of $ \qvar_{c}$, which is the set of program's variables assigned with query requests, 
+and $0$ means $x^{l}$ not in this set. 
+It is defined formally below.
+%
 \[\progF(c) =\left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
 ~ \middle\vert ~
 x^l \in \lvar_{c},
@@ -113,8 +136,9 @@ n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \not\in \qvar_{c} .
 \subsection{Edge and Weight Estimation}
 \label{sec:alg_weightedgegen}
 The edges and weight are estimated through a combined control, data flow, and loop bound analysis.
-Because these analyses are all performed on basis of an \emph{Abstract Transition Graph} of the program, we first introduce how to generate this \emph{abstract transition graph} for a given program in Section~\ref{sec:abscfg}.
-Then Section~\ref{sec:alg_edgegen} presents the edge estimation based a combined control and data flow analysis algorithm, and Section~\ref{sec:alg_weightgen}
+Because these analyses are all performed on basis of the \emph{Abstract Transition Graph} of the program, we first introduce how to generate this \emph{abstract transition graph} in Section~\ref{sec:abscfg}.
+Then Section~\ref{sec:alg_edgegen} presents the edge estimation based on a combined control and data flow analysis algorithm,
+and Section~\ref{sec:alg_weightgen}
 computes the weight through a loop bound analysis.
 
 \subsubsection{Abstract Execution Control Flow graph}
@@ -129,8 +153,10 @@ a vertex set $\absV(c)$ and an edge set $\absE(c)$, $\absG(c) \triangleq (\absV(
 %
 \\
 Every 
-vertex $l \in \absV(c)$ corresponds to a program point $l$, which is a unique
-label of a command in this program.
+vertex $l \in \absV(c)$ is the label of a labeled command in $c$, which is unique.
+We also call the unique label as program point.
+% corresponds to a program point $l$, which is a unique
+% label of a command in this program.
 % $\absV(c)$ is the set of $c$'s all program points,
 \\
 Each edge $(l \xrightarrow{dc} l') \in \absE(c)$ is an abstract transition
@@ -138,7 +164,7 @@ between two program points $l, l'$.
 There is an edge from $l$ to $l'$ if and only if
 the command with label $l'$ can execute right after the execution of the command with label $l$.
 % if and only if there is a control flow between two program points.
-Each edge is annotated by a constraint $dc \in \dcdom^{\booldom}$ generated from the command with label $l$.
+Each edge is annotated by a constraint $dc \in \dcdom^{\top}$, which is generated from the command with label $l$.
 This constraint describes the abstract execution of the command with $l$. 
 %  before the introduction of the edge and weight estimation.  
 % We discuss the vertices and edge of the
@@ -163,7 +189,7 @@ between two program points $l, l'$.
 There is an edge from $l$ to $l'$ if and only if
 the command with label $l'$ can execute right after the execution of the command with label $l$.
 % if and only if there is a control flow between two program points.
-Each edge is annotated by a constraint $dc \in \dcdom^{\booldom}$ generated from the command with label $l$.
+Each edge is annotated by a constraint $dc \in \dcdom^{\top}$ generated from the command with label $l$.
 This constraint describes the abstract execution of the command with $l$. 
 This step shows how to generate the abstract transition graph $\absG(c)$ of a
 program $c$ through constructing its vertices and edges.
@@ -215,7 +241,7 @@ is transformed into a constraint.
 \begin{itemize}
 \item Operator: $\absexpr : \mathcal{A} \cup \mathcal{B} \to DC(\mathcal{VAR}  \cup \constdom)\cup \booldom \cup \{\top\}$
 %
-\item Constrains: $\dcdom^{\booldom}$ is composed of the \emph{Difference Constraints} $DC(\mathcal{VAR}  \cup \constdom)$ and the \emph{Boolean Expressions} $\booldom$.
+\item Constrains, $\dcdom^{\top}$ is composed of the \emph{Difference Constraints} $DC(\mathcal{VAR}  \cup \constdom)$, the \emph{Boolean Expressions} $\booldom$ and $\top$.
 %
 \begin{itemize}
 \item The difference constraints $DC(\mathcal{VAR}  \cup \constdom)$ is the set of all the inequality of
@@ -234,7 +260,12 @@ after executing the command at $l$ is at most
 the value of variable $y$ plus $v$ before the execution.
 For every expression in each of the label command, it is computed in three steps via program abstraction method adopted from the Section~6 in \cite{sinn2017complexity}. 
 %
-\item The boolean expressions from the set $\booldom$
+\item The Boolean Expressions $b$ from the set $\booldom$.
+$b$ on an edge $l \xrightarrow{b} l'$ describes
+that after evaluating the guard with label $l$,
+$b$ holds and the command with label $l$ will execute right after.
+%
+\item The top constraint, $\top$ denotes true. It is preserved for $\eskip$ command.
 %
 \end{itemize}
 \end{itemize}
@@ -557,17 +588,23 @@ considers both the control flow and data flow and
 is a sound approximation of the edges in the execution based dependency graph.
 The three steps in this algorithm is summarized as follows,
 \begin{enumerate}
-  \item The \textbf{Reaching Definition} analysis computes a set of labeled variables, $\live(l, c)$ for every label $l$ in the program $c$ through the reaching definition analysis. 
+  \item The \textbf{Reaching Definition} analysis computes a set of labeled variables, $\live(l, c)$ for every label $l$ in $c$
+  over its abstract control flow graph, $\absG(c)$.
+  The computation performs the standard reaching definition analysis and working-list algorithm over the abstract control flow graph, $\absG(c)$. 
   % as $\live(l, c)$ for every label $l$ in a program $c$. 
-  $\live(l, c)$ contains all the labeled variables reachable at program point $l$. 
+  $\live(l, c)$ contains all the labeled variables which are reachable at program point $l$. 
   % The computation details for $\live(l, c)$ are standard and omitted here, they can be found in Appendix.
-  \item The \textbf{Feasible Data-Flow} computation combines the $\live(l, c)$, $\absG(c)$ and data flow analysis. It estimates the data dependency relation, $\flowsto(x^i, y^j, c)$ for each pair of the program's labeled variables, $x^i, y^j \in \lvar(c)$ in Definition~\ref{def:feasible_flowsto}. This \emph{feasible data-flow} is a sound approximation 
-  of the \emph{variable may-Dependency} relation over labeled variables for every program.
+  \item The \textbf{Feasible Data-Flow} computation combines the $\live(l, c)$, $\absG(c)$ and data flow analysis. 
+  It computes the \emph{feasible data-flow} relation,
+  % estimates the data dependency relation, 
+  $\flowsto(x^i, y^j, c)$ for each pair of the $c$'s labeled variables, $x^i, y^j \in \lvar(c)$ in Definition~\ref{def:feasible_flowsto}. $\flowsto(x^i, y^j, c)$ is a sound approximation 
+  of the \emph{variable may-dependency} relation, $\vardep(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$.
+  %  over labeled variables for every program.
   The formal proof is in the Appendix. We also discuss that the combined analysis gives more precise approximation on the \emph{data may-dependency} than single analysis in Appendix.
 \item \textbf{Edge Estimation}
 Using the $\flowsto(x^i, y^j, c)$ relation, we define the estimated directed edges
 % for each vertex in $\progV(c)$,
-between each pair of vertices $x^i, y^j$ in $\progV(c)$,
+as set of pairs of vertices $x^i, y^j\in \progV(c)$,
 % as a set of pairs 
 % $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
 $\progE(c) \in \mathcal{P}( \mathcal{LV} \times \mathcal{LV})$.
@@ -612,7 +649,7 @@ The $\live(l, c)$ represent the analysis result, which is the set of
 reachable labeled variables in program $c$ at the location of label $l$.
 For every labelled variable $x^l$ in this set, 
 the value assigned to that variable
-in the assignment command associated to that label is reachable at the entry point of  executing the command of label $l$.
+in the assignment command associated to that label is reachable at the point of  executing the command of label $l$.
 It is computed in five steps as follows,
 \begin{enumerate}
 \item The block, 
@@ -647,21 +684,22 @@ We use $\live(l,c)$ to represent
 % $\live_{in}(l,c)$ in the other part of the paper.
 denote the stabilized result of $in(l)$ at label $l$ in program $c$. 
 % The $\live_{in}(l,c)$ and $\live_{out}(l, c)$ is computed by the Standard worklist algorithm. (For simplicity, we use $\live(l,c)$ to represent $\live_{in}(l,c)$ in the other part of the paper.}
-\\
+% \\
 % The $\live_{in}(l,c)$ and $\live_{out}(l, c)$ 
 \item The stabilized $in(l)$ and $out(l)$ for program $c$, as well as $\live(l, c)$,
-is computed by the standard worklist algorithm with detail as below. 
+is computed by the standard work-list algorithm with detail as below. 
 % For simplicity, we use $\live(l,c)$ to represent $\live_{in}(l,c)$ in the other part of the paper.
 \begin{enumerate}
-    \item initial in[l]=out[l]=$\emptyset$
-    \item initial in[entry label] = $\emptyset$
-    \item initialize a work queue, contains all the blocks in C
-    \item while |W| != 0 \\
-         pop l in W\\
-          old = out[l]\\
-          in(l) =  out(l') where $(l',\_, l) \in \absE(c)$\\
-           out(l) = gen($b^l$) $\cup$ (in(l) - kill($b^l$) ) where $b^l$ in $\mathsf{blk}(c)$   \\
-          if (old != out(l)) W= W $\cup$ \{l'| (l,l') in $(l',\_, l) \in \absE(c)$\}\\
+    \item \textbf{initialize} in[l]=out[l]=$\emptyset$;
+    % \item 
+     in[0] = $\emptyset$
+    \item \textbf{initialize} a work queue $W$, contains all the blocks in $c$
+    \item while $|W|$ != 0 \\
+          pop $l$ in $W$ \\
+          old = out[l] \\
+          $in(l)$ =  $out(l')$ where $(l',\_, l) \in \absE(c)$\\
+          $out(l)$ = $\mathsf{gen}(b^l)$ $\cup$ ($in(l) - kill(b^l)$ ), where $b^l \in \mathsf{blk}(c)$   \\
+          \textbf{if} (old != out(l)) $W = W \cup \{l'| (l,l') \in (l',\_, l) \in \absE(c)\}$ \\
           end while
 \end{enumerate}
 \end{enumerate}
@@ -721,17 +759,31 @@ tells us that both the labeled variable $x^{1}$ and $x${2} may flow to $y^{3}$, 
 can help us eliminate this kind of edge by telling us, at line $3$, only variable $x^{2}$ is reachable. 
 % \paragraph*{Edges Estimation}
 \paragraph{Edge Estimation}
-Using the $\flowsto(x^i, y^j, c)$ relation, we define the estimated directed edges
+The \textbf{Edge Estimation}
+is based on the $\flowsto(x^i, y^j, c)$ relation.
+% We define the estimated directed edges
 % for each vertex in $\progV(c)$,
-between each pair of vertices $x^i, y^j$ in $\progV(c)$,
+% between 
+For each pair of vertices $x^i, y^j$ in $\progV(c)$,
 % as a set of pairs 
 % $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
-$\progE(c) \in \mathcal{P}( \mathcal{LV} \times \mathcal{LV})$.
+% $\progE(c) \in \mathcal{P}( \mathcal{LV} \times \mathcal{LV})$.
 % is the set of pairs 
 % The weight for each vertex in $\progV(c)$ is computed 
 % indicating 
-Every $\flowsto(x^i, y^j, c)$ relation indicates a directed edge from the $x^i$ to $y^j$ if and only if it is true
-formally as follows,
+% Every $\flowsto(x^i, y^j, c)$ relation indicates 
+there is a directed edge from the $x^i$ to $y^j$ if and only if they have
+\emph{feasible flows-to} relation, i.e., $\flowsto(x^i, y^j, c)$ is true.
+Using the $\flowsto(x^i, y^j, c)$ relation, we define the estimated directed edges as a set which contains all
+pair of vertices $x^i, y^j$ in $\progV(c)$, 
+% as a set of pairs 
+% $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \mathcal{LV} \times EXPR(\constdom))$ 
+$\progE(c) \in \mathcal{P}( \mathcal{LV} \times \mathcal{LV})$
+% is the set of pairs 
+% The weight for each vertex in $\progV(c)$ is computed 
+% indicating 
+% Every $\flowsto(x^i, y^j, c)$ relation indicates a directed edge from the $x^i$ to $y^j$ if and only if it is true
+satisfying this relation formally as follows,
 \highlight{
   \[
     \begin{array}{ll}
@@ -813,42 +865,57 @@ in the appendix.
 % Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $(l^6, a^5)$.
 % And same way for constructing the rest edges.
 %
-Still looking at the Figure~3(c) in main paper, 
-and taking the edge $l^6 \to a^5$ for example.
-By $\flowsto(l^6, a^5, c)$, we can see $a$ is used directly in the query expression $\chi[k]*a$,
-in the assignment command $\clabel{\assign{l}{\query(\chi[k]*a)}}^6$,
+As in the Figure~3(c), 
+% and taking the edge $l^6 \to a^5$ for example.
+the edge $l^6 \to a^5$ is built by $\flowsto(l^6, a^5, c)$ relation because
+% By $\flowsto(l^6, a^5, c)$, we can see 
+$a$ is used directly in the query expression $\chi[k]*a$
+in the command $\clabel{\assign{l}{\query(\chi[k]*a)}}^6$,
 i.e., $a \in FV(\chi[k]*a)$.
-Also, from the Reaching definition analysis, we know $a^5 \in \live(6, \kw{twoRounds})$.
-Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $l^6 \to a^5$.
-Another edge $x^3 \to j^5$ in the same graph represents the control flow, caught by our $\flowsto$ relation.
+And we also have $a^5 \in \live(6, \kw{twoRounds(k)})$ from the reaching definition analysis.
+% Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $l^6 \to a^5$.
+Another edge $x^3 \to j^5$ in the same graph represents the control flow from $j^5$ to $x^3$, which is soundly caught by our $\flowsto$ relation.
 %
 
 \subsubsection{Weight Estimation via Quantitative Analysis}
 \label{sec:alg_weightgen}
 %
 This section presents the quantitative analysis algorithm, which performs over the same \emph{abstract control flow graph}, $\absG(c)$ of a program $c$ as well. 
-It first computes a reachability bound on every vertex $l \in \absV(c)$.
+As the $\traceW(c)$ defined in Definition~\ref{def:trace_graph}, the weight of every $x^l \in \progV(c)$ is
+%   To estimate the weight for every vertex $x^i \in \progV(c)$
+%   we need to compute the upper bound on the maximum visiting times of each labeled variable.
+% According to Definition~\ref{def:trace_graph},
+% the visiting times of each labeled variable $x^i \in \progV(c)$ corresponds to 
+the execution times of the command with label $l$. 
+In this sense, to estimate weight of $x^l$, this step first computes an upper bound, the \emph{reachability-bound}\cite{GulwaniZ10} for every $l \in \absV(c)$
+%  in the abstract control flow graph 
+on the execution times of the command with label $l$. 
+% It first computes a \emph{reachability-bound}\cite{GulwaniZ10} on every vertex $l \in \absV(c)$.
 %  over the program's \emph{abstract control flow graph}.
 Then,
-this reachability bound is used to estimate the maximal visiting times of each labeled variable $x^i \in \progV(c)$ as well as the weight of this vertex $x^i$.
+the \emph{reachability-bound} is used to estimate the maximal visiting times of the labeled variable $x^l \in \lvar(c)$
+and 
+% as well as 
+the weight of the vertex $x^l \in \progV(c)$.
 The computation steps are summarized as follows,
 \begin{enumerate}
   \item \textbf{Reachability Bound Analysis}
-  {
-    To estimate the weight for every vertex $x^i \in \progV(c)$
-    we need to compute the upper bound on the maximum visiting times of each labeled variable.
-  According to Definition~\ref{def:trace_graph},
-  the visiting times of each labeled variable $x^i \in \progV(c)$ corresponds to the execution times of the command with label $l$.
-In this sense, this step first computes an upper bound for every vertex $l \in \absV(c)$
-%  in the abstract control flow graph 
-on the execution times of the command with label $l$. 
-Then,
-the reachability bound on $l \in \absV(c)$ is used to estimate the weight of the vertex $x^i \in \progV(c) $
-  }
+%   As the $\traceW(c)$ defined in Definition~\ref{def:trace_graph}, the weight of every $x^l \in \progV(c)$ is
+%   %   To estimate the weight for every vertex $x^i \in \progV(c)$
+%   %   we need to compute the upper bound on the maximum visiting times of each labeled variable.
+%   % According to Definition~\ref{def:trace_graph},
+%   % the visiting times of each labeled variable $x^i \in \progV(c)$ corresponds to 
+%   the execution times of the command with label $l$. 
+% In this sense, to estimate weight of $x^l$, this step first computes an upper bound, the \emph{reachability-bound} for every $l \in \absV(c)$
+% %  in the abstract control flow graph 
+% on the execution times of the command with label $l$. 
+% Then,
+% the reachability bound on $l \in \absV(c)$ is used to estimate the weight of the vertex $x^l \in \progV(c) $
+
     \item \textbf{Weight Estimation}
     Because
     the vertex in program's $\absG(c)$ shares the same unique label with the vertex in $\progV(c)$, 
-    we use the reachability bound on vertex in $\absG(c)$ directly to estimate the weight of the vertex in $\progV(c)$.
+    we use the \emph{reachability-bound} on the vertex $l \in \absV(c)$ directly as the weight of the vertex $x^l$ in $\progV(c)$.
 \end{enumerate}
 
 \paragraph{Reachability Bound Analysis}
@@ -867,7 +934,10 @@ Then the \emph{reachability bound} for edge $l \xrightarrow{dc} l'$ is used as t
 % % , and
 % the bound on the iteration times of the corresponding edge.
 %  in a path-insensitive manner.
-This algorithm is summarized as follows,
+It is a sound upper bound on the visiting times
+of every label $l \in \absV(c)$, named \emph{reachability-bound}.
+The computation steps are 
+summarized as follows,
 \begin{enumerate}
   \item It first collects three edge sets for each variable,
 in which the variable increases, decreases and reset respectively.
@@ -875,11 +945,12 @@ in which the variable increases, decreases and reset respectively.
 Then, for each edge  $l \xrightarrow{dc} l' \in \absE(c)$, it assigns a variable $x$ (or a symbolic constant $c \in \constdom$) if $x$ (or $c$) decreases in $dc$, as this edge's local bound.
 \item
 It then computes the bound on the maximum value of the local bound for each edge,
-and the \emph{reachability bound} on the execution
+and the \emph{reachability-bound} on the execution
 times of the corresponding edge recursively.
 %  but path-insensitively.
-\item In the last step, the \emph{reachability bound} for edge $l \xrightarrow{dc} l'$ is used as the bound on the maximum visiting times of the vertex $l \in \absV(c)$.
+\item The last step uses \emph{reachability-bound} $w$ for edge $l \xrightarrow{dc} l'$ as the bound on the maximum visiting times of the vertex $l \in \absV(c)$ and generates a set $\absW(c)$ contains a pair $(l, w)$ for every $l \in \absV(c)$.
 \end{enumerate}
+
 The algorithm in this step is inspired from the Algorithm.2 in paper~\cite{SinnZV14},
 % which assigns a variable to each edge on which this variable decrease as its ranking function.
 the Algorithm.3 in paper~\cite{ZulegerGSV11},
@@ -1285,9 +1356,9 @@ while the key novelty is our path searching algorithm, which connects all the in
 This phase computes the adaptivity upper bound for a program $c$.
 % Given a program ${c}$, we generate
 \\
-With
+Based on
 % its 
-$c$'s program-based data dependency graph $\progG({c})$ approximated above,
+$c$'s program-based dependency graph, $\progG({c})$ approximated above,
 %
 its adaptivity upper bound 
 % Defined in Definition~\ref{def:prog_adapt} as 
@@ -1298,19 +1369,17 @@ and computed
 % is computed as the maximum query length over all finite walks in $\walks(\progG({c}))$, and computed 
 by Algorithm~\ref{alg:adapt}.
 %
-
 % We use $\walks(\progG(c))$ represents the walks over the program-based dependency graph for $c$.
-Different from the finite walk on a program $c$'s execution based graph,
-%  $\traceG(c)$, 
-% $k \in \walks(\progG(c))$ 
-the finite walk in $\progG(c)$ doesn't rely on initial trace.
-The occurrence times of every $v_i$ in $k$'s vertex sequence is bound by 
-an arithmetic expression $a_i$ which is $v_i$'s estimated weight, i.e., $(v_i, a_i) \in \progW(c)$. 
-% Then $\qlen(k) \in \mathcal{A}_{in}$ as well. 
-% The full definition for $\walks(\progG(c))$ and $\qlen$ over $\walks(\progG(c))$ is in Appendix.
+$\walks(\progG(c))$ represents the set of all finite walks on
+% the program-based dependency graph for $c$
+ $\progG({c})$.
+Different from the finite walk on $\traceG(c)$, the $\kappa \in \walks(\progG(c))$ doesn't rely on the initial trace.
+The occurrence time of every $v_i$ in $\kappa$'s vertices sequence is bound by 
+an arithmetic expression $w_i$ where $(v_i, w_i) \in \progW(c)$ is $v_i$'s estimated weight.
+Then its query length $\qlen(\kappa)$ and the estimated adaptivity $\progA(c)$ are both arithmetic expression as well.
 %
-Formally defined as follows.
-\begin{defn}[Finite Walk on Program-Based Dependency Graph ($k$)].
+They are formally defined as follows.
+\begin{defn}[Finite Walk on Program-Based Dependency Graph ($\kappa$)].
   \label{def:prog_finitewalk}
   \\
   Given a program $c$'s program-based dependency graph 
@@ -1393,18 +1462,17 @@ an arithmetic expression $w_i$ where $(v_i, w_i) \in \progV(c)$, is $v_i$'s esti
 %
 %
 \begin{defn}
-[{Program-Based Adaptivity}].
+[{Program-Based Adaptivity}]
 \label{def:prog_adapt}
-\\
 {
-Given a program ${c}$ and its program-based graph 
+Given a program ${c}$ and its program-based dependency graph 
 $\progG({c})$
 %  = (\vertxs, \edges, \weights, \qflag)$,
 %
-the program-based adaptivity for $c$ is 
+the estimated adaptivity for $c$ is 
 % a function $\progA({c}): \mathcal{T} \to\mathbb{N} $,
 % for an initial trace $\trace_0 \in \mathcal{T}$,
-defined as%
+% defined as%
 \[
 \progA({c})
 \triangleq \max
@@ -1412,21 +1480,33 @@ defined as%
 \]
 }
 \end{defn}
-Based on our soundness of the program-based adaptivity, our program-based adaptivity is a sound upper bound of its adaptivity in Definition~\ref{def:trace_adapt}. 
+Based on the soundness of the program-based dependency graph, our estimated adaptivity is a sound upper bound of its adaptivity in Definition~\ref{def:trace_adapt}. 
 \begin{thm}[Soundness of \THESYSTEM]
-    \label{thm:sound_progadapt}
+    % \label{thm:sound_progadapt}
     For every program $c$, 
     % for any initial trace $\trace_0$, 
-    its program-based adaptivity is a sound upper bound of its adaptivity.
+    its estimated adaptivity is a sound upper bound of its adaptivity.
      $$  \progA(c) \geq A(c)$$
 \end{thm}
 For $\progA(c) \geq A(c)$ comparing between function and arithmetic expression,
 we are specifically comparing, $\forall \trace \in \mathcal{T} \st 
 \config{A(c), \trace} \earrow n \implies n \geq A(c)(\trace) $.
-
-To estimate a sound and precise upper bound on adaptivity, we develop an adaptivity estimation algorithm called $\pathsearch$ (in Appendix Algorithm~I).
-It uses combines the depth first search and breath first search strategies and computes a sound upper bound on $\progA(c)$.
-$\pathsearch$ also involves another algorithm $\pathsearch_{\kw{SCC}}$ in \ref{alg:adaptscc} recursively, which finds the longest walk for a strong connected component of $\progG(c)$.
+%
+\begin{thm}[Soundness of $\progA(c)$]
+  \label{thm:sound_progadapt}
+  For every program $c$, 
+  % for any initial trace $\trace_0$, 
+  its estimated adaptivity is a sound upper bound of its adaptivity.
+   \[
+   \forall \trace_0 \in \mathcal{T}_{0}(c), v \in \mathbb{N}^{\infty} \st 
+\config{\progA(c), \trace_0} \earrow v \implies A(c)(\trace_0) \leq c
+\] 
+\end{thm}
+%
+To compute $\progA(c)$ accurately and soundly, we develop an adaptivity computation algorithm named $\pathsearch$.
+% (in Appendix Algorithm~1).
+It combines the depth first search and breath first search strategies and computes a sound upper bound on $\progA(c)$.
+$\pathsearch$ also involves another algorithm $\pathsearch_{\kw{SCC}}$ in \ref{alg:adaptscc} recursively, which finds the longest walk for a strong connected component (SCC) (SCC is the maximal strongly connected subgraph) of $\progG(c)$.
 % We also show that the estimated adaptivity from our $\pathsearch$ is sound with respect to the program-based adaptivity as in 
 Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of this algorithm with proof in Appendix~\ref{apdx:adaptalg_soundness}.
 \begin{thm}[Soundness of $\pathsearch$]
@@ -1591,10 +1671,11 @@ Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of t
 % \\
 By Definition~\ref{def:prog_adapt}, the key point is to find the walks in the program-based dependency graph. 
 % We develop two walk-finding algorithms, 
-% Algorithm~\ref{alg:adapt} and Algorithm~\ref{alg:adaptscc}, which use both the depth first search and breath first search strategy.  
+% Algorithm~$\pathsearch$ and Algorithm~\ref{alg:adaptscc}, which use both the depth first search and breath first search strategy.  
 % By Definition~\ref{def:finitewalk}, this finite walk isn't easy to find. 
-We first discuss two challenges when we try to find the walks in the dependency graph, and then show that how we solve them using our algorithms.
-
+We first discuss two challenges when we try to find the walks,
+% in the dependency graph, 
+and then show that how we solve them using our algorithms.
 
 \textbf{Non-Termination Challenge:}
 % Moreover, b
@@ -1912,28 +1993,32 @@ $\kw{querynum}$ and $\kw{flowcapacity}$ in this case.
 This improves the accuracy and still guarantees the soundness. The soundness is formally proved in Lemma~\ref{thm:sound_adaptalg} in Appendix~\ref{apdx:adaptalg_soundness}. We also discuss how these computations guarantee the soundness and improves the accuracy in the following example.
 
 \textbf{Example}
-The example program in Figure~\ref{fig:alg_adaptsearch_nestedwhile} illustrates how our two updating operations for adaptivity 
-We first search for a path: $y^6 \to y^6$, and compute the adaptivity for this path as 
+The example program in Figure~\ref{fig:alg_adaptsearch_nestedwhile} illustrates how these special
+operations computes accurate and sound adaptivity for the program.
+$\pathsearch$ first find the SCC contains vertices $y^6$ and $x^9$, $\kw{SCC} = (\vertxs, \edges)$ where $\vertxs = \{y^6, x^9\}$ and
+$\edges = \{(y^6, y^6), (x^9, x^9), (x^9, y^6), (y^6, x^9)\}$.
+Then $\kw{\pathsearch_{SCC}(SCC, nestedW)}$ takes this SCC as input.
+When start from vertex $y^6$, it first finds the path $y^6 \to y^6$. By updating parameters through Line:10 and 14, it computes the longest query length for this path as 
 $k$.
-As highlighted above, we do not update
-$\kw{querynum}$ and $\kw{flowcapacity}$ at line:15.
+As highlighted in Line:14, we do not update
+$\kw{querynum}$ and $\kw{flowcapacity}$ when we identify the simple cycle $y^6 \to y^6$.
 This improves the accuracy and still guarantees the soundness.
-Because
-% because a second visiting of the same vertex 
-if a vertex $v$ is visited, then a cycle is identified and  
-% indicates there is a cycle goes back to this vertex, 
-the traverse on this cycle is finished.
+% Because
+% % because a second visiting of the same vertex 
+% if a vertex $v$ is visited, then a cycle is identified and  
+% % indicates there is a cycle goes back to this vertex, 
+% the traverse on this cycle is finished.
 %
 % then, when 
-In the following recursion, when we continuously search for walks heading out from $v$, 
-the minimum weight on this cycle does not affect the walks going out of this vertex that do not interleave this cycle.
-However, if we keep recording the minimum weight, then we
+Because in the following recursions, we continuously search for walks heading out from $y^6$, 
+the $\kw{flowcapacity}$ of this simple cycle does not restrict the walks going out of this vertex that do not interleave with the cycle $y^6 \to y^6$.
+However, if we keep updating the minimum weight, then we
 %  are restricting 
 restrict the visiting times of vertices on a walk by
-using the minimum weight of vertices not on this walk.
+using the minimum weight of vertices that do not on this walk.
 %  , it is unsound anymore.
-Then, it is obviously that this leads to unsoundness.
-If we update the $\kw{flowcapacity}[y^6]$ as $k$ after visiting $y^6$ the second time 
+This leads to the unsoundness in computing adpativity.
+Concretely, if we update the $\kw{flowcapacity}[y^6]$ as $k$ after visiting $y^6$ the second time 
 on this walk,
 % the walk $y^6 \to y^6$,
 and continuously visit $x^9$,
@@ -1947,7 +2032,7 @@ This restriction excludes the finite walk $y^6 \to y^6 \to x^9 \to x^9$ where $y
 in the computation. 
 However, the finite walk $y^6 \to y^6 \to x^9 \to x^9$ where $y^6$ is visited $k$ times and $x^9$ $k^2$ times is 
 a qualified walk, and exactly the longest walk we aim to find. So, by Non-updating the $\kw{flowcapacity}$ after 
-visiting $y$ again, we guarantee that the visiting times og vertices on every searched walk will not be restricted by weights not on this walk,
+visiting $y$ again, we guarantee that the visiting times of vertices on every searched walk will not be restricted by weights not on this walk,
 i.e., the soundness.
 Line: 15 returns the adaptivity heading out from its input vertex.
 Line:16-18 applies $\kw{dfs}$ on every vertex of this SCC and 
