@@ -1,4 +1,4 @@
-(* (* open Core
+(* open Core
 open Syntax
 open Format
 
@@ -106,7 +106,7 @@ let _ =
       List.fold_left ~f:( fun () (lvar_x, lvar_y) -> 
         Printf.printf "%s -> %s\n" (print_lvar lvar_x) (print_lvar lvar_y) ) ~init:() dcdg_result;
       Out_channel.close oc *)
- *)
+
 
 
 (* ******************  ABSCFG TESTING CODE: ****************** *)
@@ -150,7 +150,7 @@ let parse_prog file =
                   let string_result = print_lcommand result in
                   Printf.printf "The input program is : %s" string_result;
                   print_newline();
-                  let aflow = Abs.abs_flow (Seq (result, Skip)) in
+                  let aflow = Abs.abs_flow (Seq (result, (Skip Bot))) in
                   print_abs_flow aflow;
                   print_newline();
         
@@ -169,7 +169,7 @@ let parse_prog file =
 
 
 (*******************  COMPLETE TESTING CODE: *******************)
-(* 
+
                   open Core
                   open Syntax
                   open Format
@@ -303,4 +303,4 @@ let parse_prog file =
                           print_out_abs_flow oc aflow;
                   
                           (* Close Channel *)
-                          Out_channel.close oc                     *)
+                          Out_channel.close oc                    

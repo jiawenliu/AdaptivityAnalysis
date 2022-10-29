@@ -1,87 +1,72 @@
 \subsection{Implementation Results}
 We implemented $\THESYSTEM$ as a tool which takes a labeled command as input  
-% labeled command 
-and outputs an upper bound on the program adaptivity and on the number of query requests.
+and outputs two upper bounds on the program adaptivity and the number of query requests respectively.
 This implementation consists of an 
-abstract control flow graph generation, weight estimation (as presented in Section~\ref{sec:alg_weightgen}),
-edge estimation (as presented in Section~\ref{sec:alg_edgegen}) in Ocaml, 
+abstract control flow graph generation,
+edge estimation (as presented in Section~\ref{sec:alg_edgegen}), and weight estimation (as presented in Section~\ref{sec:alg_weightgen}) in Ocaml, 
 and the adaptivity computation algorithm shown in Section~\ref{sec:alg_adaptcompute} in Python.
-The OCaml program takes the labeled command as input and outputs the program-based dependency graph,
+The OCaml program takes the labeled command as input and outputs the program-based dependency graph and
+the abstract transition graph,
 feeds into the python program and the python program provides the adaptivity upper bound and the query number as the final output.
 
-We evaluated this implementation on $17$ example programs with the evaluation results shown  in Table~\ref{tb:adapt-imp}.
+We evaluated this implementation on $17$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
 In this table,
 the first column is the name of each program.
 For each program $c$, the second column is its intuitive adaptivity rounds,
 the third column is the adaptivity $A(c)(\trace_0)$ w.r.t the input initial trace $\trace_0 \in \mathcal{T}_0(c)$ as definition~\ref{def:trace_adapt}.
-($\env(\trace_0) k$ computes $k$'s value in $\trace_0$)
-% we defined through our formal semantic model above.
-% in Section~\ref{sec:dep_adaptivity}.
-% % In the third column, we use $k$ represent the weight function $w_k$ 
-% $A(c)$ is a function takes an initial trace $\trace_0 \in \mathcal{T}_0(c)$, 
-% the adaptivity w.r.t. $\trace_0$ is represented in this column.
-% (in program's execution-based dependency graph) which return value of variable $k$ 
-% from an initial trace $\trace_0$, same for natural numbers.
-The last column is the output of the $\THESYSTEM$ implementation, which consists of two expressions.
+In all these examples, the input variable $k$ specifies the loop iteration numbers.
+Since $A(c)(\trace_0)$ by definition~\ref{def:trace_adapt} will count the execution times of
+query request command in the loop, which is indeed same as  the loop iteration numbers,
+we use $\env(\trace_0) k$ in the third column represent this number, which computes the $k$'s initial value from input initial trace $\trace_0$.
+The fifth column is the output of the $\THESYSTEM$ implementation, which consists of two expressions.
 The first one is the upper bound for adaptivity and the second one is the 
-upper bound for the total number of query requests in the program.
+upper bound for the total number of query requests in the program. And the last column is the performance evaluation w.r.t. the program size.
 
-The first 3 programs we evaluated are $\kw{twoRounds(k)}$, $ \kw{multiRounds(k)}$, 
-and the $\kw{linearRegressGD(k, rate)}$ which we discussed in overview and above section.
-% Section~\ref{sec:examples}.
-% The same for the third programprograms in the table row 
-For these examples, $A(c)$ 
-% based dynamic analysis 
-give the accurate adaptivity definition, 
-simultaneously the $\THESYSTEM$ outputs the tight bounds for both of the adaptivity and query requesting number as expected.
-% Look at 
-% the $ \kw{linearRegressionGD(k)}$ which we discussed in Section~\ref{sec:examples}, the $\THESYSTEM$ outputs the accurate bound $k$ as expected.
-But for the forth program $\kw{multiRoundOdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $1 + 2*k$ for the $A(c)$, 
-which is consistent with our expectation as discussed in Example~\ref{ex:multipleRoundSingle}. 
-The fifth program is the evaluation results for the example in Example~\ref{ex:multipleRoundSingle}, where $\THESYSTEM$ outputs
-the tight bound for $A(c)$ but $A(c)$ is a loose definition of the program's actual adaptivity rounds.
+For the forth program $\kw{multiRoundsO(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $1 + 2*k$ for the $A(c)$, which is consistent with our expectation as discussed in Example~\ref{ex:multiRoundsO}. 
+The fifth program is the evaluation results for the example in Example~\ref{ex:multiRoundsS}, where $\THESYSTEM$ outputs the tight bound for $A(c)$ but $A(c)$ is a loose definition of the program's actual adaptivity rounds.
 %
-The programs in the table from  $\kw{seq()}$ to $ \kw{nestedWhileMPRV(k)}$ are 
+The first two programs $\kw{twoRounds(k)}$, $ \kw{multiRounds(k)}$ are the same as Figure~\ref{fig:overview-example}(a) and Figure~\ref{fig:multipleRounds}(a).
+The other programs in the table from  $\kw{seq()}$ to $ \kw{nestWhileMPRV(k)}$ are 
 designed for testing the programs under different possible situations.
-These programs contain control dependency, data value dependency,
-the nested while, dependency through multiple variables, dependency across nested loops, and so on. 
-Overall for these examples, our system gives both the accurate adaptivity definition and 
-adaptivity upper bound simultaneously through the dynamic analysis and 
-static analysis.
-The full programs are defined below from Example~\ref{ex:twoRoundsComplete} to Example~\ref{ex:nestedWhileMPRV}.
-%
-For the other programs, the complete program can be found in Appendix, and the implementation in GitHub.
+They contain control dependency, data value dependency,
+the nested while, dependency through multiple variables, dependency across nested loops. 
+Overall for these examples, our system gives both the accurate adaptivity definition and estimated
+adaptivity upper bound through our formalization and analysis framework $\THESYSTEM$.
+The complete programs are defined below from Example~\ref{ex:twoRoundsComplete} to Example~\ref{ex:nestedWhileMPRV},
+and the implementations are in GitHub.
 \begin {table}[H]
     \caption{Experimental results of {\THESYSTEM} implementation}
         \label{tb:adapt-imp}
         \begin{center}
         \centering
 {\footnotesize
-        \begin{tabular}{ r | p{12mm} | c | p{25mm} | l}
-         Program $c$ & adaptive \newline rounds 
-         & $A(c) (\trace_0)$ 
-         & $\THESYSTEM$ \newline $\progA(c)$, $\# \query$ 
-         & performance \\ 
-         \hline
-         \hline
-         $  \kw{twoRounds(k)}$ & $2$ & $2$ & $2$, $k$ &  \\
-         $  \kw{multiRounds(k)}$ & $k$ & $ \env(\trace_0) k $ & $k$, $k$  &    \\
-         $  \kw{linearRegressGD(k, r)}$ & $k$ & $\env(\trace_0) k$ & $k$, $2 * \env(\trace_0) k$  &    \\
-         $  \kw{multiRoundsOdd(k)}$ & $1 + k$ & $1 + (\env(\trace_0) k) $  & $1 +2 * k$, $1 + 2*k$  &    \\
-         $  \kw{multiRoundsSin(k)}$    & $2$ & $2 + (\env(\trace_0) k) $ & $2 + k$, $2 + k$  &    \\
-         $\kw{seq()}$ & $4$ & $4$ & $4$, $4$  \\ 
-         $\kw{seqRV()}$ & $4$ & $4$ & $4$, $4$ \\  
-         $ \kw{ifVD}$ & $3$ & $3$ & $3$, $3$ \\
-         $\kw{ifCD()}$ & $3$ & $3$ & $3$, $3$  &    \\
-         $ \kw{whileNested(k)}$ & $1+k$ & $1+ (\env(\trace_0) k)$ & $1+k$  &    \\
-         $ \kw{whileM(k)}$ & $1 + k$ & $1 +2 * \lfloor \frac{\env(\trace_0) k}{2} \rfloor$ & $1 +2 * \lfloor \frac{k}{2} \rfloor$, $1 + 2 * k$  &    \\
-         $ \kw{whileRV(k)}$ & $1 + 2*k$ & $1 + 2*(\env(\trace_0) k)$ & $1 + 2*k$, $2 + 3 * k$  &    \\
-         $ \kw{whileVCD(k)}$ & $1 + 2*k$ & $1 + 2*(\env(\trace_0) k)$ & $1 + 2 * k$, $2 + 2 * k$  &    \\
-         $ \kw{whileMPVCD(k)}$ & $2 + k$ & $2 + (\env(\trace_0) k)$  & $2 + k$, $1 + 2 * k$   &    \\
-         $ \kw{nestWhileVD(k)}$ & $2 + k^2$ & $2 + (\env(\trace_0) k)^2$  & $2 + k^2$, $1 + k + k^2$   &    \\
-         $ \kw{nestedWhileRV(k)}$ & $1 + 2*k$ & $1 + 2*(\env(\trace_0) k)$ & $1 + 2*k$,  $1 + k + k^2$   &    \\
-         $ \kw{nestedWhileMR(k)}$ & $1 + k + k^2$ & $1 + (\env(\trace_0) k) + (\env(\trace_0) k)^2$  & $1 + k + k^2$,  $2 + k + k^2$  &    \\
-         $ \kw{nestedWhileMPRV(k)}$ & $1 + k + k^2$ & $1 + (\env(\trace_0) k) + (\env(\trace_0) k)^2$  & $1 + k + k^2$,  $2 + k + k^2$  &    \\
+        \begin{tabular}{ r | c | c | c | c | c | c }
+        \multirow{2}{*}{Program $c$} & 
+        \multirow{2}{*}{\emph{adaptivity}} 
+         & \multirow{2}{*}{$A(c) (\trace_0)$} 
+         & \multicolumn{2}{c|}{$\THESYSTEM$}
+         & \multicolumn{2}{c}{performance} \\ 
+         \cline{4-7}
+         & & & $\progA(c)$ & $\query$ \# & size & time \\
+         \hline \hline
+         $  \kw{twoRounds(k)}$ & $2$ & $2$ & $2$ & $k$ &  \\
+         $  \kw{multipleRounds(k)}$ & $k$ & $ \env(\trace_0) k $ & $k$ & $k$  &    \\
+         $  \kw{lRGD(k, r)}$ & $k$ & $\env(\trace_0) k$ & $k$ & $2 * \env(\trace_0) k$  &    \\
+         $  \kw{multiRoundsO(k)}$ & $1 + k$ & $1 + (\env(\trace_0) k) $  & $1 +2 * k$ & $1 + 2*k$  &    \\
+         $  \kw{multiRoundsS(k)}$    & $2$ & $2 + (\env(\trace_0) k) $ & $2 + k$ & $2 + k$  &    \\
+         $  \kw{seq()}$ & $4$ & $4$ & $4$ & $4$ & \\ 
+         $  \kw{seqRV()}$ & $4$ & $4$ & $4$ & $4$ & \\  
+         $  \kw{ifVD()}$ & $3$ & $3$ & $3$ & $3$ & \\
+         $  \kw{ifCD()}$ & $3$ & $3$ & $3$ & $3$  &    \\
+         $  \kw{whileNested(k)}$ & $1+k$ & $1+ (\env(\trace_0) k)$ & $1+k$  &  $1+k$ &  \\
+         $  \kw{whileM(k)}$ & $1 + k$ & $1 +2 * \lfloor \frac{\env(\trace_0) k}{2} \rfloor$ & $1 +2 * \lfloor \frac{k}{2} \rfloor$ & $1 + 2 * k$  &    \\
+         $  \kw{whileRV(k)}$ & $1 + 2*k$ & $1 + 2*(\env(\trace_0) k)$ & $1 + 2*k$ & $2 + 3 * k$  &    \\
+         $  \kw{whileVCD(k)}$ & $1 + 2*k$ & $1 + 2*(\env(\trace_0) k)$ & $1 + 2 * k$ & $2 + 2 * k$  &    \\
+         $  \kw{whileMPVCD(k)}$ & $2 + k$ & $2 + (\env(\trace_0) k)$  & $2 + k$ & $1 + 2 * k$   &    \\
+         $  \kw{nestWhileVD(k)}$ & $2 + k^2$ & $2 + (\env(\trace_0) k)^2$  & $2 + k^2$ & $1 + k + k^2$   &    \\
+         $  \kw{nestWhileRV(k)}$ & $1 + 2*k$ & $1 + 2*(\env(\trace_0) k)$ & $1 + 2*k$ &  $1 + k + k^2$   &    \\
+         $  \kw{nestWhileMR(k)}$ & $1 + k + k^2$ & $1 + (\env(\trace_0) k) + (\env(\trace_0) k)^2$  & $1 + k + k^2$ &  $2 + k + k^2$  &    \\
+         $  \kw{nestWhileMPRV(k)}$ & $1 + k + k^2$ & $1 + (\env(\trace_0) k) + (\env(\trace_0) k)^2$  & $1 + k + k^2$ &  $2 + k + k^2$  &    \\
         \end{tabular}
 }        
 \end{center}

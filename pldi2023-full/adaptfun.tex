@@ -1,11 +1,3 @@
-% In this section, we present our algorithm for computing the upper bound for a program $c$'s adaptivity
-% $A(c)$ defined~\ref{def:trace_adapt} through static program analysis.
-% This section presents the key definitions
-% for the static analysis algorithm in Section~\ref{sec:algorithm-keys} before going into the detail of the algorithm,
-% then shows the complete static analysis algorithm.
-% \mg{
-% In this section, we present our static program analysis for computing an upper bound on the adaptivity a program $c$
-% }
 In this section, we present our static program analysis for computing an upper bound on the \emph{adaptivity} of a given program $c$. 
 %
 \subsection{A guide to {\THESYSTEM} }
@@ -93,7 +85,7 @@ in Section~\ref{sec:alg_adaptcompute}.
 % \item  Finally, with all the ingredients ready, we construct the final approximated program-based dependency graph in Section~\ref{sec:alg_graphgen}
 \end{enumerate}
 
-\subsection{Vertex and Query Annotation Estimation}
+\subsection{Vertex and Query Annotation Estimations}
 \label{sec:alg_vertexgen}
 \paragraph{Vertex Estimation}
 The first component of the \emph{program-based dependency graph} is the vertex set, which is identical to the 
@@ -141,7 +133,7 @@ Then Section~\ref{sec:alg_edgegen} presents the edge estimation based on a combi
 and Section~\ref{sec:alg_weightgen}
 computes the weight through a loop bound analysis.
 
-\subsubsection{Abstract Execution Control Flow graph}
+\subsubsection{Abstract Transition Graph}
 \label{sec:abscfg}
 This section shows how to generate the abstract transition graph $\absG(c)$ of a
 program $c$ through constructing its vertices and edges.
@@ -339,7 +331,7 @@ over $\constdom$.
 \end{defn}
 The symbolic expression set is a subset of arithmetic expressions over $\mathbb{N}$ with input variables, 
 i.e., $\mathcal{A}_{S} \subseteq \mathcal{A}_{\lin}$.
-% \subsubsection{Abstract Transition Graph through an Example}
+
 \paragraph{Abstract Initial and Final State Computation}
 This step computes two sets for each command. 
 The initial state is a set that contains the
@@ -483,18 +475,17 @@ Then, we compute the $\absflow(c) = \absflow'(c')$ for $c'$ as follows,
    \]
    }
    Notice $\absflow'([x := \expr]^{l})$, $\absflow'([x := \query(\qexpr)]^{l})$ and $\absflow'([\eskip]^{l})$ are all empty set. 
-   For every event $\event$ with label $l$ in an execution trace $\trace$ of program $c$, 
-   there is an abstract event in program's abstract execution trace of form $(l, \_, \_)$.  
-   We also show the soundness of the abstract events computation in Appendix.
-
+   
  \highlight{Theorem Guarantee:}
-   \begin{lem}[Soundness of the Abstract Events Computation]
+   For every event $\event$ with label $l$ in an execution trace $\trace$ of program $c$, 
+   there is an abstract event in program's abstract execution trace of form $(l, \_, \_)$.  Our soundness is presented below
+   with the proof in Appendix~\ref{apdx:abscfg_sound}
+   \begin{lem}[Soundness of the Abstract Events]
      \label{lem:abscfg_sound}
      For every program $c$ and
      an execution trace $\trace \in \mathcal{T}$ that is generated w.r.t.
      an initial trace  $\vtrace_0 \in \mathcal{T}_0(c)$,
      there is an abstract event $\absevent = (l, \_, \_) \in \absflow(c)$ 
-     % with initial label $l$
      for every event $\event \in \trace$ having the label $l$, i.e., $\event = (\_, l, \_, \_)$.
       %
    \[
@@ -508,13 +499,8 @@ Then, we compute the $\absflow(c) = \absflow'(c')$ for $c'$ as follows,
    \end{array}
    \]
    \end{lem}
-%    This lemma is proved formally in Appendix~\ref{apdx:rb_soundness}.
-% For every event $\event$ with label $l$ in an execution trace $\trace$ of program $c$, 
-% there is an abstract event in program's abstract events computation of form $(l, \_, \_)$. 
-This lemma is proved formally in Appendix~\ref{apdx:reachability_soundness}.
-\\
+
 For every program point $l$ corresponding to an assignment command in a program $c$,
-%  $x^l \in \lvar_c$, 
 there is a unique abstract event in the program's abstract events set $\absevent \in \absflow(c)$ of form $(l, \_, \_)$. 
 \begin{lem}[Uniqueness of the Abstract Events Computation]
   \label{lem:abscfg_uniquex}
@@ -522,7 +508,6 @@ there is a unique abstract event in the program's abstract events set $\absevent
   an execution trace $\trace \in \mathcal{T}$ that is generated w.r.t.
   an initial trace  $\vtrace_0 \in \mathcal{T}_0(c)$,
   there is a unique abstract event $\absevent = (l, \_, \_) \in \absflow(c)$ 
-  % with initial label $l$
   for every assignment event $\event \in \eventset^{\asn}$ in the
   execution trace having the label $l$, i.e., $\event = (\_, l, \_, \_)$ and  $\event \in \trace$.
 %
@@ -537,21 +522,13 @@ there is a unique abstract event in the program's abstract events set $\absevent
 \end{array}
 \]
 \end{lem}
-This lemma and proof is also 
-formalized in Appendix~\ref{apdx:reachability_soundness}.
+This lemma is proved in Appendix~\ref{apdx:abscfg_uniquex}.
 
   \paragraph{Edge Construction}
 The edge for $c$'s abstract transition graph is constructed simply by computing the program's abstract events set, $\absflow(c)$ as follows,
   \[
     \absE(c) = \{(l_1, dc, l_2) | (l_1, dc, l_2) \in \absflow(c)\}
   \]
-% The edge set is constructed simply by computing the program's abstract events set, $\absflow(c)$.
-%   Each abstract event $(l_1, dc, l_2)$ in this set represents an edge in $\absE(c)$.
-%   % Then, every abstract transition in the abstraction execution trace corresponds to an edge in the abstract transition graph. In another word, the edge $(l_1, dc, l_2)$ in the abstract transition graph, represents an abstract transition 
-% %  from $l_1$ to $l_2$, with a set of difference constraints $dc$. 
-%  The constraints generated in the abstract event appears in the edge as annotation.
-% We have a pre-processing algorithm to go through the programs and returns the list of labels associating with a loop and whose visiting times need to be analyzed.
-%
 \paragraph{Abstract Transition Graph Construction} 
 With the vertices $\absV(c)$ and edges $\absE(c)$ ready, we construct the abstract transition graph, formally in
 % Through a program $c$'s abstract events computation, its abstract transition graph is computed in 
@@ -573,7 +550,7 @@ $\absV(c) = \lvar(c)\cup\{\lex\}$
 %
 \input{examples/abscfg_tworound}
 %
-\subsubsection{Edge Estimation via Dependency Analysis Algorithm}
+\subsubsection{Edge Estimation}
 \label{sec:alg_edgegen}
 Since the edges of the execution-based graph of a program relies on the dependency relation, it contains both control flow and data flow. 
 In this sense, We first develop a \emph{feasible data-flow} relation to estimate the data dependency relation, which catches these two flows.
@@ -609,30 +586,6 @@ $\progE(c) \in \mathcal{P}( \mathcal{LV} \times \mathcal{LV})$.
 % indicating 
 Every $\flowsto(x^i, y^j, c)$ relation indicates a directed edge from the $x^i$ to $y^j$ if and only if it is true.
 \end{enumerate} 
-%   Also, worth to mention, we use the result of reaching definition on the abstract control flow graph in feasible 
-% data-flow generation to have a more precise approximation. Let us see a simple example, a program $ [x = 0]^{1}; [x=2]^{2};  [y = x+1]^{3}$. 
-% The standard data flow analysis 
-% tells us that both the labeled variable $x^{1}$ and $x${2} may flow to $y^{3}$, which will result in an unnecessary edge ($x^{1}, y^{3}$). The result of reaching definition 
-% can help us eliminate this kind of edge by telling us, at line $3$, only variable $x^{2}$ is reachable. 
-% }
-
-% In this step, through 
-% % the vertices and edges in 
-% $c$'s abstract contrl flow graph $\absG(c)$,
-%  $\THESYSTEM$ performs a feasible data-flow analysis 
-%  using the reachable definition algorithm,
-% %  and then Then we generated the set of feasible data-flow between labeled variables based on that.
-% and generates the 
-% %set of 
-% feasible data-flow relation between labeled variables.
-% \\
-%  By generating set of all the reachable variables at location of label $l$ in the program $c$.
-% For every labelled variable $x^l$ in this set, 
-% the value assigned to that variable
-% in the assignment command associated to that label is reachable at the entry point of  executing the command of label $l$.
-% \\
-% Then it generates the set of feasible data-flow between labeled variables with detail in Definition~\ref{def:feasible_flowsto}, 
-% based on $\live(l, c)$ for every label in a program $c$ and its blocks $\mathsf{blocks}$.
 The details are as follows.
 %
 \paragraph{Reaching definition analysis}
@@ -811,58 +764,10 @@ satisfying this relation formally as follows,
 }
 We prove that this estimated directed edge set $\progE(c)$ is a sound approximation of the 
 edge set in $c$'s execution-based dependency graph 
-in the appendix.
-%  \begin{defn}[Feasible Data-Flow]
-%   \label{def:feasible_flowsto}
-%     {\footnotesize
-%     \[
-%    \begin{array}{ll}
-%       dcdg(\clabel{\assign{x}{\expr}}{}^l)  & = \{ (y^i, x^l) | y \in FV(e) \land (y,i) \in \live_{in}(l, \clabel{\assign{x}{\expr}}^l) \}  \\
-%        dcdg(\clabel{\assign{x}{\query(\qexpr)}}{}^l)  & = \{ (y^i, x^l) | y \in FV(e) \land (y,i) \in \live_{in}(l,\clabel{\assign{x}{\query(\qexpr)}}^l) \}  \\
-%        dcdg([\eskip]^{l})  & = \emptyset \\
-%        dcdg([\eif [b]^l \ethen c_1 \eelse c_2)  & =  dcdg(c_1) \cup dcdg(c_2)\\ & \cup 
-%        \{(x^i,y^j) | x \in FV(b) \land (x,i) \in \live_{in}(l) \land ([y = \_]^j) \in blocks(c_1) \} \\
-%        &\cup \{(x^i,y^j) | x \in FV(b) \land (x,i) \in \live_{in}(l) \land ([y = \_]^j) \in blocks(c_2) \} \\
-%        dcdg([\ewhile [b]^l \edo c)  & =  dcdg(c) \cup \{(x^i,y^j) | x \in FV(b) \land (x,i) \in \live_{in}(l) \land ([y = \_]^j) \in blocks(C) \} \\
-%        dcdg(c_1 ;c_2)  & = dcdg(c_1) \cup  dcdg(c_2) \\
-%    \end{array}
-%    \]
-%    }
-%    \end{defn}
-%    For any two labeled variables $x^i, y^j$ in a program $c$, 
-%   %  it is easy to see that there is a one-on-one correspondence between 
-%   %  $\flowsto$ relation of the two variables, and the $dcdg$ analysis result on $c$.
-%   we use $\flowsto()$ denote if they have a feasible data-flow relation in Definition~\ref{def:flowsto}.
-%    \begin{defn}[Feasible Data-Flow ($\flowsto$)]
-%    \label{def:flowsto}
-%    \[
-%    \forall c \in \cdom, x^i, y^j \in \lvar_c \st 
-%    \flowsto(x^i, y^j, c) \iff (x^i, y^j) \in dcdg(c)
-%    \]
-%    \end{defn}
-  %  This soundness is proved in Proof~\ref{pf:rd_soundness} in Appendix~\ref{apdx:rd_soundness}.
-  %  For any two labeled variables in a program $c$, it is easy to see that there is a one-on-one correspondence between 
-  %  $\flowsto$ relation of the two variables, and the $dcdg$ analysis result on $c$.
-  %  \begin{thm}[Soundness of the Feasible Data-Flow Analysis]
-  %  \label{thm:rd_soundness}
-  %  \[
-  %  \forall c \in \cdom, x^i, y^j \in \lvar_c \st 
-  %  \flowsto(x^i, y^j, c) \iff (x^i, y^j) \in dcdg(c)
-  %  \]
-  %  \end{thm}
-  %  This soundness is proved in Proof~\ref{pf:rd_soundness} in Appendix~\ref{apdx:rd_soundness}.
+by Lemma~\ref{lem:edge_map}in Appendix~\ref{apdx:adapt_soundness} .
   \paragraph*{Example}
-% Still looking at the Figure~\ref{fig:adapfun_tworound}(c), 
-% and taking the edge $(l^6, a^5)$ for example.
-% By $\flowsto(l^6, a^5, c)$, we can see $a$ is used directly in the query expression $\chi[k]*a$,
-% in the assignment command $\clabel{\assign{l}{\query(\chi[k]*a)}}^l$,
-% i.e., $a \in FV(\chi[k]*a)$.
-% Also, from the Reaching definition analysis, we know $a^5 \in \live(6, two-round)$.
-% Then we have $\flowsto(l^6, a^5, c)$ and construct the edge $(l^6, a^5)$.
-% And same way for constructing the rest edges.
-%
+  %
 As in the Figure~3(c), 
-% and taking the edge $l^6 \to a^5$ for example.
 the edge $l^6 \to a^5$ is built by $\flowsto(l^6, a^5, c)$ relation because
 % By $\flowsto(l^6, a^5, c)$, we can see 
 $a$ is used directly in the query expression $\chi[k]*a$
@@ -873,15 +778,11 @@ And we also have $a^5 \in \live(6, \kw{twoRounds(k)})$ from the reaching definit
 Another edge $x^3 \to j^5$ in the same graph represents the control flow from $j^5$ to $x^3$, which is soundly caught by our $\flowsto$ relation.
 %
 
-\subsubsection{Weight Estimation via Quantitative Analysis}
+\subsubsection{Weight Estimation}
 \label{sec:alg_weightgen}
 %
 This section presents the quantitative analysis algorithm, which performs over the same \emph{abstract control flow graph}, $\absG(c)$ of a program $c$ as well. 
 As the $\traceW(c)$ defined in Definition~\ref{def:trace_graph}, the weight of every $x^l \in \progV(c)$ is
-%   To estimate the weight for every vertex $x^i \in \progV(c)$
-%   we need to compute the upper bound on the maximum visiting times of each labeled variable.
-% According to Definition~\ref{def:trace_graph},
-% the visiting times of each labeled variable $x^i \in \progV(c)$ corresponds to 
 the execution times of the command with label $l$. 
 In this sense, to estimate weight of $x^l$, this step first computes an upper bound, the \emph{reachability-bound}\cite{GulwaniZ10} for every $l \in \absV(c)$
 %  in the abstract control flow graph 
@@ -893,20 +794,16 @@ the \emph{reachability-bound} is used to estimate the maximal visiting times of 
 and 
 % as well as 
 the weight of the vertex $x^l \in \progV(c)$.
-The computation steps are summarized as follows,
+The two computation steps are summarized as follows,
 \begin{enumerate}
   \item \textbf{Reachability Bound Analysis}
-%   As the $\traceW(c)$ defined in Definition~\ref{def:trace_graph}, the weight of every $x^l \in \progV(c)$ is
-%   %   To estimate the weight for every vertex $x^i \in \progV(c)$
-%   %   we need to compute the upper bound on the maximum visiting times of each labeled variable.
-%   % According to Definition~\ref{def:trace_graph},
-%   % the visiting times of each labeled variable $x^i \in \progV(c)$ corresponds to 
-%   the execution times of the command with label $l$. 
-% In this sense, to estimate weight of $x^l$, this step first computes an upper bound, the \emph{reachability-bound} for every $l \in \absV(c)$
-% %  in the abstract control flow graph 
-% on the execution times of the command with label $l$. 
-% Then,
-% the reachability bound on $l \in \absV(c)$ is used to estimate the weight of the vertex $x^l \in \progV(c) $
+  As the $\traceW(c)$ defined in Definition~\ref{def:trace_graph}, the weight of every $x^l \in \progV(c)$ is
+  the execution times of the command with label $l$. 
+In this sense, to estimate weight of $x^l$, this step first computes an upper bound, the \emph{reachability-bound} for every $l \in \absV(c)$
+%  in the abstract control flow graph 
+on the execution times of the command with label $l$. 
+Then,
+the reachability bound on $l \in \absV(c)$ is used to estimate the weight of the vertex $x^l \in \progV(c) $
 
     \item \textbf{Weight Estimation}
     Because
@@ -914,22 +811,13 @@ The computation steps are summarized as follows,
     we use the \emph{reachability-bound} on the vertex $l \in \absV(c)$ directly as the weight of the vertex $x^l$ in $\progV(c)$.
 \end{enumerate}
 
-\paragraph{Reachability Bound Analysis}
+\paragraph{Step-1: Reachability Bound Analysis}
 This symbolic reachability bound analysis performs over the same \emph{abstract control flow graph}, $\absG(c)$ of a program $c$. 
 % through the edges in $\absG(c)$, which correspond to $c$'s abstract transition between labels.
 It first computes a \emph{reachability bound} for every edge $l \xrightarrow{dc} l' \in \absE(c)$,
 which is a symbolic bound on the maximum execution times of the command with label $l$ of $c$.
 %  when executing the program $c$.
 Then the \emph{reachability bound} for edge $l \xrightarrow{dc} l'$ is used as the bound on the maximum visiting times of the vertex $l \in \absV(c)$.
-% We infer the invariant for every variable, and compute the transition closure for every abstract transition. By solving the closure
-% with the invariants of variables involved in this closure for every transition, we compute
-% the symbolic reachability bound of every commands corresponding to this transition. 
-% This step computes a local bound
-% for each edge in the abstract transition graph $\absG(c)$ of a program $c$.
-% Then it estimates the bound on the maximum value of each local bound  as well as
-% % , and
-% the bound on the iteration times of the corresponding edge.
-%  in a path-insensitive manner.
 It is a sound upper bound on the visiting times
 of every label $l \in \absV(c)$, named \emph{reachability-bound}.
 The computation steps are 
@@ -1003,9 +891,6 @@ $x$ is reset on the first edge $e_0$ of every sequence in $\resetchain(c, x)$.
 \highlight{Rephrase: Each edge $e_i$ in a sequence $(e_0, \cdots, e_m) \in \resetchain(c, x)$
 resets a variable $x_i$ by another variable $x_{i + 1}$ such that $x_{i + 1}$
 is reset on edge $e_{i + 1}$ recursively. The first edge $e_0$ of each sequence resets the variable $x$.}
-% 
-% Each chain in this set is  where a given variable is reset by the 
-% variables of the abstract events through the chain.
 %
 \\
 In the following steps, $c$ is omitted in $\inc(x)$,
@@ -1044,7 +929,7 @@ $SCC(\absG(c))$ is the set of all the strong connected components of $\absG(c)$.
   evaluated at most once. 
   % we do not need to analyze the visiting times of every node in the graph from phase 1.
   The second and third cases are guaranteed by the \emph{Discussion on Soundness} in Section 4 in~\cite{sinn2017complexity}.
-  The formal soundness proof is in Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
+  We formalized the soundness and proof by Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
 \item \textbf{Local Bound Estimation}
 This step estimates the upper bound, $\varinvar(x, c) \in \mathcal{A}_{\lin}$
 on the maximum value for each local bound  $x \in  \mathcal{VAR} \cup \constdom$.
@@ -1095,10 +980,6 @@ $\incrs(x, c) \triangleq \sum\limits_{\absevent \in \inc(v)}\{\absclr(\absevent,
   For a program $c$ and an edge $\absevent \in \absE(c)$, the \emph{path-insensitive transition bound},
   $\absclr(\absevent, c) \in \mathcal{A}_{\lin}$ 
 for this edge is
-% $\absevent \in \absG(c)$,
-% is the bound on the iteration times of this edge,
-% $\locbound(\absevent)  \in \mathcal{VAR} \cup \constdom $,
-% assigned to the edge $\absevent \in \absG(c)$, 
 computed as follows,
 \[ 
 \begin{array}{lll}
@@ -1118,52 +999,16 @@ computed as follows,
   \]
  where $in(ch)$ is the variable on the last edge on the reset chain $ch$.
 \end{defn}
-  %
-% \\
-\begin{defn}[Reachability-Bound]
-  \label{def:rb}
-  For each program ${c}$ and a program point $l$ in this program,
-   the \emph{reachability-bound},
-  $RB(l, c) \in \mathcal{A}_{\lin}$ is computed as
-\[ 
-  RB(l, c) = \sum\limits_{\absevent = (l, \_, \_) \in \absflow(c)} \absclr(\absevent, c).
-  \]
-\end{defn}
+
+Then we construct the set of reachability bound $w$ for every program point $l$, as $\absW(c)$.
+For each pair $(l, w) \in \absW(c)$, $w = \sum\left\{  \absclr(\absevent, c) \middle\vert \absevent = (l, \_, \_) \right\}$.
 
 \highlight{Theorem Guarantee}
 For a program $c$ and an edge $\absevent \in \absE(c)$,
 $\absclr(\absevent)$ is a sound upper bound
-%  for every label $l$ in this program 
-on the execution times of this transition,
-formally in Theorem~\ref{thm:vertexweight_soundness}. 
-Proof of this theorem is in Appendix~\ref{apdx:reachability_soundness}.
+on the execution times of this transition by paper~\cite{sinn2017complexity}.
+The soundness theorem is attached in Theorem~\ref{thm:transition_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
 %
-\begin{lem}[Soundness of the Transition Bound]
-  \label{lem:edge_bound_soundness}
-For each program ${c}$ and an edge $\absevent = (l, \_, \_) \in \absG(c)$, if $l$ is the label of an assignment command,
-%  label $l \in \lvar(c)$,
-then its \emph{path-insensitive transition bound} $\absclr(\absevent, c)$ 
- is a sound upper bound on 
-%  execution-based reachability bound $w^t$ 
-the execution times of this assignment command in $c$.
-% $w_t$ of the command with label $l_1$,
-% %  where $(l, w^p) \in \absW(c)$ and  
-% where $(l_1, w_t) \in \exeRB(c)$.
-% $\traceG = (\traceV, \traceE, \traceW, \traceF)$, 
-% we have:
-  %
-  \[
-    \begin{array}{l}
-      \forall c \in \cdom, l \in \lvar(c),\trace_0 \in \mathcal{T}_0(c), 
-      \trace \in \mathcal{T}, v \in \mathbb{N}
-       \st 
-       \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\vtrace} 
-       \land \config{\absclr(\absevent, c), \trace_0} \aarrow v
-      \implies
-      \vcounter(\trace, l) \leq v
-    \end{array}
-    \]
-\end{lem}
 %
 \paragraph*{Example}
 We perform the symbolic reachability bound analysis on the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b) and compute the result in Figure~\ref{fig:abscfg_tworound}(c).
@@ -1185,7 +1030,7 @@ The same way for the rest weights' computation.
 
 \paragraph{Vertex Weight Computation}
 Because
-the vertices in the two graph share the same unique label, the line number. W
+the vertices in the two graph share the same unique label, the line number.
 We use the reachability bound on each program label from $\absW(c)$ to estimate the maximal visiting times of each labeled variable.
 We show that the reachability bound on one vertex of $\absW(c)$ is also the upper bound for the corresponding vertex in the static analysis dependency graph, both vertices share the same unique line number.
 
@@ -1211,33 +1056,9 @@ x^l \in \progV(c) \land (l, w) \in \absW(c)
 %
 % Since 
 We prove that this 
-% symbolic expression is the upper bound for $x^l$'s 
 symbolic expression for $x^l \in \progV(c)$ is a sound upper bound of 
-the weight for the same vertex $x^l$ in Program's execution-based dependency graph in Appendix~\ref{apdx:reachability_soundness}.
-The maximum visiting times of $x^l$ over all execution traces of $c$ in Appendix~\ref{apdx:reachability_soundness}. 
-%
-\begin{thm}[Soundness of the Vertex Weight Estimation]
-  \label{thm:vertexweight_soundness}
-Given a program ${c}$ with its program-based dependency graph 
-$\progG = (\progV, \progE)$,
-$\traceG = (\traceV, \traceE)$, we have:
-%
-\[
-  \begin{array}{l}
-  \forall (x^l, w_{t}) \in \traceV,
-  (x^l, w_{p}) \in \progV, 
-  \trace_0 \in \mathcal{T}_0(c), 
-  \trace' \in \mathcal{T}, v \in \mathbb{N} \st
-  \\ \quad
-  \config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\vtrace'} 
-  \land 
-  \config{w^{p}, \trace_0} \earrow v
-  \implies
-  % \right\} 
-  w_{t}(\trace_0) \leq v
-  \end{array}
-\]
-\end{thm}
+the weight for the same vertex $x^l$ in Program's execution-based dependency graph by Lemma~\ref{lem:weights_map}
+in Appendix~\ref{apdx:adapt_soundness}.
 \paragraph*{Example}
 Going back to the
 quantitative dependency graph for two-round example in
@@ -1259,7 +1080,7 @@ So, we estimate the visiting time for  labeled variable $a^5$ in Program-Based D
 The same way for the rest weights' computation.
 %
 %
-\subsubsection{Graph Estimation}
+\subsection{Graph Construction}
    \label{sec:alg_graphgen}
    With the four components $\progV(c), \progE(c), \progW(c)$, and $\progF(c)$
    computed in each steps above, this step simply combine the four components into the quantitative dependency graph for program $c$ as follows,
@@ -1476,20 +1297,9 @@ the estimated adaptivity for $c$ is
 \]
 }
 \end{defn}
-Based on the soundness of the program-based dependency graph, our estimated adaptivity is a sound upper bound of its adaptivity in Definition~\ref{def:trace_adapt}. 
-\begin{thm}[Soundness of \THESYSTEM]
-    % \label{thm:sound_progadapt}
-    For every program $c$, 
-    % for any initial trace $\trace_0$, 
-    its estimated adaptivity is a sound upper bound of its adaptivity.
-     $$  \progA(c) \geq A(c)$$
-\end{thm}
-For $\progA(c) \geq A(c)$ comparing between function and arithmetic expression,
-we are specifically comparing, $\forall \trace \in \mathcal{T} \st 
-\config{A(c), \trace} \earrow n \implies n \geq A(c)(\trace) $.
-%
-\begin{thm}[Soundness of $\progA(c)$]
-  \label{thm:sound_progadapt}
+Based on the soundness of the program-based dependency graph, our estimated adaptivity is a sound upper bound of its adaptivity in Definition~\ref{def:trace_adapt}.
+\begin{thm}[Soundness of  \THESYSTEM]
+  \label{thm:adaptfun_sound}
   For every program $c$, 
   % for any initial trace $\trace_0$, 
   its estimated adaptivity is a sound upper bound of its adaptivity.
@@ -1498,6 +1308,7 @@ we are specifically comparing, $\forall \trace \in \mathcal{T} \st
 \config{\progA(c), \trace_0} \earrow v \implies A(c)(\trace_0) \leq c
 \] 
 \end{thm}
+The proof is in Appendix~\ref{apdx:adapt_soundness}.
 %
 To compute $\progA(c)$ accurately and soundly, we develop an adaptivity computation algorithm named $\pathsearch$.
 % (in Appendix Algorithm~1).
