@@ -95,18 +95,18 @@ let kildall (cfg : Cfg.t) : rd_results * rd_results =
         | n :: ns -> (* take node n off of the worklist *)
            (* let block = Int.Map.find_exn cfg.node_map n in *)
            let old = Int.Map.find_exn inputs_out n in
-           let _ = Printf.printf "old %d\n" n in
+           (* let _ = Printf.printf "old %d\n" n in
            let () = print_sigma old in
-           let _ = Printf.printf "end old %d\n" n in
+           let _ = Printf.printf "end old %d\n" n in *)
            let in_l = in_f n inputs_out cfg in
-           let _ = Printf.printf "in_l %d\n" n in
+           (* let _ = Printf.printf "in_l %d\n" n in
            let _ = print_sigma in_l in
-           let _ = Printf.printf "in_l end %d\n" n in
+           let _ = Printf.printf "in_l end %d\n" n in *)
            let inputs_in' = Int.Map.set inputs_in ~key:n ~data:in_l in
            let out_l = out n in_l cfg in
-           let _ = Printf.printf "out_l %d\n" n in
+           (* let _ = Printf.printf "out_l %d\n" n in
            let _ = print_sigma out_l in
-           let _ = Printf.printf "end out_l %d\n" n in
+           let _ = Printf.printf "end out_l %d\n" n in *)
            let inputs_out' = Int.Map.set inputs_out ~key:n ~data:out_l in 
            let worklist' = 
              if (sigma_ne old out_l) then 
