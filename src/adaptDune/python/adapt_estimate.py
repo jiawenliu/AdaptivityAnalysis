@@ -86,9 +86,8 @@ class AdaptEstimate():
     def adapt_estimate(unweighted_graph, abs_transition_graph):
         weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(unweighted_graph, abs_transition_graph)
         weight_infer.weight_estimate()
-        # weight_infer.vertex_weights_estimate()
         weight_infer.print_weights()
 
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
         adapt_search.search_adapt()
-        adapt_search.print_adapt()        
+        # adapt_search.print_adapt()        

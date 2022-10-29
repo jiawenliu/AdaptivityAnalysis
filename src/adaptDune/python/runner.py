@@ -1,5 +1,6 @@
 from adapt_estimate import AdaptEstimate
 from graph_parse import GraphParser
+import time
 
 
 class Runner:
@@ -13,8 +14,10 @@ class Runner:
         abscf_graph = graph_parser.abscfg_parse()
         AdaptEstimate.adapt_estimate(dcf_graph, abscf_graph)
 
+start_time = time.time()
 runner = Runner()
 runner.main()
+print("--- ADAPTIVITY COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
 
 class TestUnits:
 

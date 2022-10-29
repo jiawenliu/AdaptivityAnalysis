@@ -66,6 +66,11 @@ type block =
 
 type lvar = LabelVar of string * int
 
+let get_label_from_lvar lvar =
+  match lvar with
+  | LabelVar (_,i) ->  i
+
+
 let print_lvar lvar =
   match lvar with
     | LabelVar (s,i) -> sprintf "(%s)^{%d}" s i
@@ -152,3 +157,6 @@ let rec print_lcommand lcom =
   
     let print_out_flow oc flow =
       List.fold_left (fun () (x,  y) -> Printf.fprintf oc "%d,%d;" (print_label x) (print_label y)  ) () flow   
+
+    let print_out_dcdg oc edges =
+        List.fold_left (fun () (lx,  ly) -> Printf.fprintf oc "%d,%d;" (get_label_from_lvar lx) (get_label_from_lvar ly)  ) () edges   
