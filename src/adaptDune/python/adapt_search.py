@@ -33,7 +33,6 @@ class AdaptSearchAlg:
     def create_edges (self):
         for e in self.graph.edges:
             self.edges.append(self.Edge(e[1], self.head[e[0]]))
-            # print(self.edges[-1].to, self.edges[-1].next)
             self.head[e[0]] = len(self.edges) - 1
             # print(self.head)
 
@@ -81,21 +80,21 @@ class AdaptSearchAlg:
         for i in range(0, self.vertex_no):
             if not self.first_visit[i]:
                 self.two_direction_dfs(i)
-        print("The SCC adaptivity: ", list(map(lambda a: a.value, self.scc_adapt)))
+        # print("The SCC adaptivity: ", list(map(lambda a: a.value, self.scc_adapt)))
 
 
     def build_scc(self):
         self.scc_graph = [[] for _ in range(self.vertex_no+1)]
         for u in range(0, self.vertex_no):
-            print("vertex ", u, " is the head of edge # ", self.head[u], "to the node: ", self.edges[self.head[u]].to)
+            # print("vertex ", u, " is the head of edge # ", self.head[u], "to the node: ", self.edges[self.head[u]].to)
             i = self.head[u]
-            print("vertex ", u, "belongs to the scc # ", self.scc_id[u])
+            # print("vertex ", u, "belongs to the scc # ", self.scc_id[u])
             while i != -1:
                 v = self.edges[i].to
                 if not self.scc_id[u] == self.scc_id[v]:
                     self.scc_graph[self.scc_id[u]].append(self.scc_id[v])
                 i = self.edges[i].next
-        print("The SCC graph: ", self.scc_graph)
+        # print("The SCC graph: ", self.scc_graph)
 
   
 
@@ -137,7 +136,7 @@ class AdaptSearchAlg:
                 if not visited[v]:
                     visited[v] = True 
                     bfs_q.append(v)
-        print("Adaptivity of each SCC: ", list(map(lambda a: a.value, self.adapt)) )
+        # print("Adaptivity of each SCC: ", list(map(lambda a: a.value, self.adapt)) )
 
     def print_adapt(self):
         print("The Adaptivity From This Graph is: ", self.get_adapt())

@@ -42,8 +42,8 @@ class TransitionBound:
         self.transition_bounds = [""]*len(transition_graph.transitions)
         self.transition_local_bounds = LocalBound.compute_local_bounds(transition_graph)
         print("THE LOCAL BOUNDS ARE: ", self.transition_local_bounds)
-        for t,lb in enumerate(self.transition_local_bounds):
-            print(self.transition_graph.transitions[t], "has local bound", lb)
+        # for t,lb in enumerate(self.transition_local_bounds):
+            # print(self.transition_graph.transitions[t], "has local bound", lb)
         self.var_invariant = defaultdict(str)
         self.var_incs = defaultdict(list)
         self.var_incs_bound = defaultdict(str)
@@ -70,14 +70,14 @@ class TransitionBound:
                     self.var_decs[var].append((transition_index, var, (dc.dc_const)) )
 
     def dfs_var_inc_and_reset_chains(self, v):
-        print("computing the reset chain of: ", v)
+        # print("computing the reset chain of: ", v)
         for (transition_index, dc_var, dc_const) in self.var_resets[v]:
             if dc_var and (dc_var not in self.reset_vars[v]) and (not (dc_var == v)):
                 self.reset_vars[v].add(dc_var)
                 if (not self.var_reset_chains[dc_var]):
                     # self.var_reset_chains[dc_var] = []
                     self.dfs_var_inc_and_reset_chains(dc_var)
-                print("the nested reset chain of " , v, "are: ", self.var_reset_chains[dc_var])
+                # print("the nested reset chain of " , v, "are: ", self.var_reset_chains[dc_var])
                 for dc_var_rchain in self.var_reset_chains[dc_var]:
                     # tmp = [(transition_index, dc_var, dc_const)] + [(t, v, c) if (not t == transition_index) for (t, v, c) in dc_var_rchain]
                     self.var_reset_chains[v].append(list(filter(lambda x: (x[0] != transition_index and x[1] != v), dc_var_rchain))+[(transition_index, dc_var, dc_const)])
@@ -85,8 +85,8 @@ class TransitionBound:
                     self.reset_vars[v].add(rv)
             else:
                 self.var_reset_chains[v].append([(transition_index, dc_var, dc_const)])
-        print("computed the reset chain of: ", v, self.var_reset_chains[v])
-        print("computed the reset vars of: ", v, self.reset_vars[v])
+        # print("computed the reset chain of: ", v, self.var_reset_chains[v])
+        # print("computed the reset vars of: ", v, self.reset_vars[v])
         # self.var_reset_chains[v]=(reset_chains)
         
         return
