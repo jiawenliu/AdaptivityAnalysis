@@ -1,4 +1,5 @@
 from collections import defaultdict
+import time
 from abstract_transition_graph import TransitionGraph, DifferenceConstraint
 from bound_infer import TransitionBound
 from adapt_lib import AdaptType, Graph
@@ -85,9 +86,13 @@ class AdaptEstimate():
     @staticmethod
     def adapt_estimate(unweighted_graph, abs_transition_graph):
         weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(unweighted_graph, abs_transition_graph)
+        start_time = time.time()
         weight_infer.weight_estimate()
+        print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         # weight_infer.print_weights()
 
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
+        start_time = time.time()
         adapt_search.search_adapt()
+        print("--- ADAPTIVITY COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         adapt_search.print_adapt()        

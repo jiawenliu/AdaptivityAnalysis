@@ -129,7 +129,6 @@ class AdaptSearchAlg:
         bfs_q.append(self.scc_id[start_v])
         while bfs_q != []:
             u = bfs_q.pop(0)
-            # print(u)
             visited[u] = False
             for v in self.scc_graph[u]:
                 self.adapt[v] = (self.adapt[v].adapt_max(self.adapt[u] + self.scc_adapt[v]))
@@ -211,7 +210,7 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
                     break
             # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
             # print(self.scc_id)
-            print(scc_iddes)
+            # print(scc_iddes)
 
             # for x in scc_iddes:
             #     self.refined_adapt_visited[x] = True
