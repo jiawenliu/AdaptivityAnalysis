@@ -309,5 +309,7 @@ let _ =
         Printf.fprintf oc "\n";
         print_out_abs_flow oc aflow;
         Printf.printf "computation of the abscfg total time:%fs\n" (Caml_unix.gettimeofday () -. time_abscfg) ;
+
+        Printf.printf "computation of the total parsing and graph generation time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
         (* Close Channel *)
         Out_channel.close oc                    
