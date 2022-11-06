@@ -7,50 +7,51 @@ class GraphParser(argparse.ArgumentParser):
         super().__init__(description='Process the Abstract Control Flow Graph and Data Dependency Graph')
         self.add_argument('-d', '--dcfg',
         type=str, 
-        default= "AdaptivityAnalysis/implementation/bound_infer/examples_dcfg/seq.br", 
+        default= "./dcfg/seq.br", 
         help='The input file name for the Data Control Flow Graph')
 
         self.add_argument('-a', '--abs_cfg',
         type=str, 
-        default= "AdaptivityAnalysis/implementation/bound_infer/examples_abscfg/seq.br", 
+        default= "./abscfg/seq.br", 
         help='The input file name for the Abstract Control Flow Graph')
+
+        self.add_argument('-w', '--weight',
+        type=str, 
+        default= "./weight/seq.br", 
+        help='The input file name of the Weight')
+
 
         self.add_argument('-e', '--example',
         type=str, 
-        default= "seq.br", 
+        default= "./examples/seq.br", 
         help='The example name for the Abstract Control Flow Graph')
 
-        if example:
-            self.example_path = example
-        else:
-            self.args = self.parse_args()
-            self.example_path = self.args.example
 
-        # Just for simplicity of testing, using the same name in different folder
-        # Will be removed when lauching
-        # self.args.dcfg = "./dcfg/" + self.args.example[11:]
-        # self.args.abs_cfg = "./abscfg/" + self.args.example[11:]
-        # self.example_path = self.args.example
-        self.dcfg_file = "./dcfg/" + self.example_path[11:]
-        self.abs_cfg_file = "./abscfg/" + self.example_path[11:]
+        self.args = self.parse_args()
+        self.example_name = self.args.example.split("/")[-1]
+        self.dcfg_file = "./dcfg/" + self.example_name
+        self.abs_cfg_file = "./abscfg/" + self.example_name
 
+    def weight_parse(self):
+        with open(self.dcfg_file, "r") as weightdata:
+            return [int(l) if isinstance(l, int) else l.strip("\n") for l in weightdata.readlines()]
 
     def dcfg_parse(self):
         with open(self.dcfg_file, "r") as graphdata:
             n = int(graphdata.readline())
             query = [int(q) for q in graphdata.readline().strip("\n").split(",")[:-1]]
             edges = [([int(v) for v in e.split(",")]) for e in graphdata.readline().split(";")[:-1]]
-
-            print(n, query, edges)
-            return Graph(edges, [AdaptType(0)]*n, query)
-
-    def blockl_to_lvar(self):
-        pass
-
+            weights_line = graphdata.readline()
+            if weights_line:
+                weights = [AdaptType(int(l)) if isinstance(l, int) else AdaptType(l) for l in weights_line.strip("\n").split(",")]
+                print("The Input DCFG: ", n, query, edges, weights)
+                return Graph(edges, weights, query)               
+            else:
+                print("The Input DCFG: ", n, query, edges)
+                return Graph(edges, None, query)
 
     def abscfg_parse(self):
         with open(self.abs_cfg_file, "r") as graphdata:
-            # _ = [graphdata.readline() for _ in range(3)]
             n = int( graphdata.readline())
             edges = [[(n - 1) if int(v) == -1 else int(v) for v in e.split(",")] for e in graphdata.readline().split(";")[:-1]]
             transitions = []
@@ -70,7 +71,7 @@ class GraphParser(argparse.ArgumentParser):
                 transitions.append((int(l1), dc_set, int(l2), v_set))
             transitions.sort(key=lambda y: y[0]) 
             edges.sort(key=lambda y: y[0])   
-            print(n, edges, transitions)
+            print("The Input ABS Transition Graph: ", n, edges, transitions)
             return TransitionGraph(edges, transitions, n)
 
         pass
