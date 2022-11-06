@@ -223,6 +223,10 @@ let _ =
     let oc = Out_channel.create outfile_dcfg in
         (******************** run dcfg and parser code  ********************)
         let result = parse_prog infile in
+         Weight_infer.print_lcom_list result ;
+         let weight_list  = Weight_infer.infer result in 
+      Weight_infer.print_weight_list  weight_list ;
+
       let cfg_result = Cfg.generate_cfg result in 
       let blocks = cfg_result.nodes in
       let _ =  Printf.fprintf oc "%d\n" (List.length blocks) in 
