@@ -128,9 +128,10 @@ class Mechanism:
 ###################################### Debugging Code: ######################################
                 
                 self.max_q = len(self.data[0])
-                # print("Max Query #:", self.max_q)
-                self.samp_per_q = int((self.n / self.max_q))  # number of samples available for each query
-                # print("Splitted Sample Size:", self.samp_per_q)
+                print("Max Query #:", self.max_q)
+                self.samp_per_q = int((self.n / (self.max_q - 1)))  # number of samples available for each query
+                # self.samp_per_q = int((self.n / (self.max_q)))  # number of samples available for each query
+                print("Splitted Sample Size:", self.samp_per_q)
 
 ###################################### Debugging Code ^^ ######################################
 
@@ -155,17 +156,19 @@ class Mechanism:
             if self.curr_q < self.max_q:
                 ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
                 ans_list = []
-                num_queries = len(ans)
-                for i in range(min(num_queries, self.max_q - self.curr_q)):  # Continue until current batch of queries,
-                    # or until max. possible queries are answered
-                    ans_list.append({"answer": ans[i]})
-                    self.curr_q += 1
-                    ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
-                    # print("SPLITTED SAMPLE INDEX: ", i , "QUERY: ", query, "Q_CNT: ", self.curr_q, "ANS: ", ans)
-                # print("THE RETURNED ANS LIST: ", ans_list)
+                num_queries = min(len(ans), self.max_q - self.curr_q)
+                # print("SIZE OF DATA FOR 1 BATCH", num_queries * self.samp_per_q)
+                ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + num_queries) * self.samp_per_q])
+                self.curr_q += len(ans)
+                ans_list = [{"answer": ans[i]} for i in range(len(ans))]
+                
+
+                # for i in range(num_queries):  # Continue until current batch of queries,
+                #     # or until max. possible queries are answered
+                #     ans_list.append({"answer": ans[i]})
+                #     self.curr_q += 1
+                #     ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
 ###################################### Debugging Code ^^ ######################################
-
-
             else:
                 return [{"answer": None}]
         return ans_list
@@ -349,13 +352,39 @@ class Guess_and_Check_Mechanism:
                                        "tau_multiplier" not in kwargs["multiply_tau"])
                                else kwargs["multiply_tau"]["tau_multiplier"])  # Multiplication factor for tau at
         # every failure. Default = 1.0
-
-        self.q_encoding_param = -2 if "q_encoding_param" not in kwargs else kwargs["q_encoding_param"]  # If provided,
+        self.q_encoding_param = -3 if "q_encoding_param" not in kwargs else kwargs["q_encoding_param"]  # If provided,
         # use kwargs["q_encoding_param"] for calculating terms for union bound over number of queries.
         # Default = -2 (inverse quadratic series)
-        self.f_encoding_param = -2 if "f_encoding_param" not in kwargs else kwargs["f_encoding_param"]   # If provided,
+        self.f_encoding_param = -3 if "f_encoding_param" not in kwargs else kwargs["f_encoding_param"]   # If provided,
         # use power kwargs["f_encoding_param"] for calculating terms for union bound over number of failures.
         # Default = -2 (inverse quadratic series)
+
+
+
+        ###################################### Debugging Code: ######################################
+        '''
+        Testing Different default value for parameters
+        '''
+        self.start_tau = (0.0 if ("multiply_tau" not in kwargs or kwargs["multiply_tau"] is None or
+                                  "start_tau" not in kwargs["multiply_tau"])
+                          else kwargs["multiply_tau"]["start_tau"])  # Start value of tau. Default = 0.0
+        self.max_tau = (0.5 if ("multiply_tau" not in kwargs or kwargs["multiply_tau"] is None or
+                                "max_tau" not in kwargs["multiply_tau"])
+                        else kwargs["multiply_tau"]["max_tau"])  # Max. value of tau. Default = 0.5
+        self.tau_multiplier = (1.0 if ("multiply_tau" not in kwargs or kwargs["multiply_tau"] is None or
+                                       "tau_multiplier" not in kwargs["multiply_tau"])
+                               else kwargs["multiply_tau"]["tau_multiplier"])  # Multiplication factor for tau at
+        # every failure. Default = 1.0
+
+        self.q_encoding_param = -5 if "q_encoding_param" not in kwargs else kwargs["q_encoding_param"]  # If provided,
+        # use kwargs["q_encoding_param"] for calculating terms for union bound over number of queries.
+        # Default = -2 (inverse quadratic series)
+        self.f_encoding_param = -5 if "f_encoding_param" not in kwargs else kwargs["f_encoding_param"]   # If provided,
+        # use power kwargs["f_encoding_param"] for calculating terms for union bound over number of failures.
+        # Default = -2 (inverse quadratic series)
+    
+    ###################################### Debugging Code: ######################################
+
 
         self.check_data = None
         self.check_n = None

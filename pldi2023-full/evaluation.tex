@@ -124,13 +124,16 @@ designed for testing the programs under different possible situations.
 They contain control dependency, data value dependency,
 the nested while, dependency through multiple variables, dependency across nested loops. 
 The last six programs are composed of some programs above in order to test the performance limitation when the input program is large. 
-From the evaluation, the performance bottleneck comes from our $\pathsearch(c)$ algorithm and reachability bound analysis.
-This will be our next step improvement. }
+From the evaluation results, the performance bottleneck is the reachability bound analysis algorithm.
+By implementing the bound analysis algorithm in Section~\ref{sec:alg_weightgen} (adapted from \cite{sinn2017complexity}), we are unable to evaluate the $\kw{Jumbo}$ in a reasonable time period.
+Alternatively, we implement another light reachability bound analysis algorithm and compute the \emph{adaptivity} for
+$\kw{jumboS}, \kw{jumbo}$ and $\kw{big}$ effectively.}
 
 Overall for these examples, our system gives both the accurate adaptivity definition and estimated
 adaptivity upper bound through our formalization and analysis framework $\THESYSTEM$.
 The complete programs are defined below from Example~\ref{ex:twoRoundsComplete} to Example~\ref{ex:nestedWhileMPRV},
 and the implementations are in GitHub.
+{\tiny
 \begin {table}[H]
     \caption{Experimental results of {\THESYSTEM} implementation}
         \label{tb:adapt-imp}
@@ -143,39 +146,40 @@ and the implementations are in GitHub.
          & \multicolumn{2}{c|}{$\THESYSTEM$}
          & \multicolumn{4}{c}{performance} \\ 
          \cline{3-8}
-         & & \multirow{2}{*}{$\progA(c)$} & \multirow{2}{*}{$\query$ \#} & \multirow{2}{*}{line of code} & \multicolumn{3}{c}{time (second)} \\ 
+         & & \multirow{2}{*}{$\progA(c)$} & \multirow{2}{*}{$\query$ \#} & \multirow{2}{*}{line of code} & \multicolumn{3}{c}{running time (second)} \\ 
          \cline{6-8}
          & & & &  & Ocaml & Bound Analysis & $\pathsearch$  \\
          \hline \hline
-         $  \kw{twoRounds(k)}$ & $2$ &  $2$ & $k$ & 8 & & 0.014 \\
-         $  \kw{multiRounds(k)}$ & $k$ &  $k$ & $k$  &  10 & & 0.017 \\
-         $  \kw{lRGD(k, r)}$ & $k$ & $k$ & $2 * \env(\trace_0) k$  &  10 & & 0.017  \\
-         $  \kw{mROdd(k)}$ & $1 + k$ &  $1 +2 * k$ & $1 + 2*k$  &  10 & & 0.019  \\
-         $  \kw{mRSingle(k)}$    & $2$ &  $2 + k$ & $2 + k$  &  9 & & 0.017  \\
-         $  \kw{seq()}$ & $4$ & $4$ & $4$ & 4 & & 0.011 \\ 
-         $  \kw{seqRV()}$ & $4$ & $4$ &  $4$ & 4 & & 0.011\\  
-         $  \kw{ifVD()}$ & $3$ & $3$ &  $3$ & 5 & & 0.012 \\
-         $  \kw{ifCD()}$ & $3$ & $3$ &   $3$  & 5 & & 0.009   \\
+         $  \kw{twoRounds(k)}$ & $2$ &  $2$ & $k$ & 8 & 0.00051 & 0.0017 & 0.00024 \\
+         $  \kw{multiRounds(k)}$ & $k$ &  $k$ & $k$  &  10 & 0.001129 & 0.001678 & 0.00019 \\
+         $  \kw{lRGD(k, r)}$ & $k$ & $k$ & $2 * \env(\trace_0) k$  &  10 & 0.001457 & 0.0071489 & 0.000207  \\
+         $  \kw{mROdd(k)}$ & $1 + k$ &  $1 +2 * k$ & $1 + 2*k$  &  10 & 0.00144 & 0.00602 & 0.00018 \\
+         $  \kw{mRSingle(k)}$    & $2$ &  $2 + k$ & $2 + k$  &  9 & 0.000959 & 0.00751 & 0.0001709 \\
+         $  \kw{seq()}$ & $4$ & $4$ & $4$ & 4 & 0.001602 & 0.0001568 & 0.00006 \\ 
+         $  \kw{seqRV()}$ & $4$ & $4$ &  $4$ & 4 & 0.001115 & 0.0002579 & 0.000053\\  
+         $  \kw{ifVD()}$ & $3$ & $3$ &  $3$ & 5 & 0.00099 & 0.00045  & 0.00005 \\
+         $  \kw{ifCD()}$ & $3$ & $3$ &   $3$  & 5 & 0.00049 & 0.00034  & 0.00004 \\
          $  \kw{while(k)}$ & $1+k$ &   $1+k$  &  $1+k$ & 7 & & 0.015 \\
          $  \kw{whileM(k)}$ & $1 + k$ &  $1 +2 * \lfloor \frac{k}{2} \rfloor$ & $1 + 2 * k$  &  9 & & 0.0139  \\
          $  \kw{whileRV(k)}$ & $1 + 2*k$ &  $1 + 2*k$ & $2 + 3 * k$  &  9 & & 0.014  \\
          $  \kw{whileVCD(k)}$ & $1 + 2*k$ &   $1 + 2 * k$ & $2 + 2 * k$  &  6 & & 0.007  \\
-         $  \kw{whileMPVCD(k)}$ & $2 + k$ &  $2 + k$ & $1 + 2 * k$   &   9 & & 0.013 \\
-         $  \kw{nestWhileVD(k)}$ & $2 + k^2$ &   $2 + k^2$ & $1 + k + k^2$   &  10 &  & 0.022  \\
-         $  \kw{nestWhileRV(k)}$ & $1 + 2*k$ &   $1 + 2*k$ &  $1 + k + k^2$   &  10 & & 0.019  \\
-         $  \kw{nestWhileMR(k)}$ & $1 + k + k^2$ & $1 + k + k^2$ &  $2 + k + k^2$  & 10 & & 0.039  \\
-         $  \kw{nestWhileMPRV(k)}$ & $1 + k + k^2$ &  $1 + k + k^2$ &  $2 + k + k^2$  &  10 & & 0.148  \\
-         $  \kw{mRComplete(k)}$ & $k$ & $k$ & $k$   &  30 & & 408.998 \\
-         $  \kw{mRComposed(k)}$ & $k$ & $k$ & $k$   &  50 & & 22539.638\\
-         $  \kw{tRComposed(k)}$ & $k$ &  $k$ & $k$  &  49 & & * \\
-         $  \kw{seqComposed(k)}$ & $k$ & $k$ & $k$  &  502 & & * \\
-         $  \kw{jumboS(k)}$ & $k$ & $k$ & $k$  &  70 & & *  \\
-         $  \kw{jumbo(k)}$ & $k$ &  $k$ & $k$  &  521 & & * \\
-         $  \kw{big(k)}$ & $k$ &  $k$ & $k$  &  214 & & *
+         $  \kw{whileMPVCD(k)}$ & $2 + k$ &  $2 + k$ & $1 + 2 * k$   &   9 & & & 0.013 \\
+         $  \kw{nestWhileVD(k)}$ & $2 + k^2$ &   $2 + k^2$ & $1 + k + k^2$   &  10 &  & & 0.022  \\
+         $  \kw{nestWhileRV(k)}$ & $1 + 2*k$ &   $1 + 2*k$ &  $1 + k + k^2$   &  10 & & & 0.019  \\
+         $  \kw{nestWhileMR(k)}$ & $1 + k + k^2$ & $1 + k + k^2$ &  $2 + k + k^2$  & 10 & & & 0.039  \\
+         $  \kw{nestWhileMPRV(k)}$ & $1 + k + k^2$ &  $1 + k + k^2$ &  $2 + k + k^2$  &  10 & & &  \\
+         $  \kw{mRComplete(k)}$ & $k$ & $k$ & $k$   &  30 & & 87.998 & 0.013 \\
+         $  \kw{mRComposed(k)}$ & $k$ & $*$ & $*$   &  50 & & 22539.638\\
+         $  \kw{tRComposed(k)}$ & $k$ &  $*$ & $*$  &  49 & & * & *\\
+         $  \kw{seqComposed(k)}$ & ** & $**$ & $326$  &  502 & 0.1541 & *  & 0.0253629684\\
+         $  \kw{jumboS(k)}$ & $**$ & $**$ & $34$  &  70 & & * &  0.0182 \\
+         $  \kw{jumbo(k)}$ & $**$ &  $**$ & $310$  &  521 & & * & 0.46\\
+         $  \kw{big(k)}$ & $**$ &  $**$ & $124$  &  214 & & * & 0.147
         \end{tabular}
 }        
 \end{center}
 \end{table}
+}
 
  \subsection{The Evaluated Examples}  
  \paragraph{The complete algorithm for the data analysis example with two adaptivity rounds} 
