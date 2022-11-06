@@ -31,6 +31,7 @@ class AdaptEstimate():
             return
 
         def vertex_weights_estimate(self):
+            self.graph.weights = [AdaptType(0)]*self.graph.get_vertice_num()
             for (t_index, b) in enumerate(self.reachability_bound):
                 transition = self.transition_graph.transitions[t_index]
                 for var_vertex in transition[3] :
@@ -98,14 +99,13 @@ class AdaptEstimate():
     # @staticmethod
 
     @staticmethod
-    def adapt_estimate(unweighted_graph, abs_transition_graph):
-        weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(unweighted_graph, abs_transition_graph)
-        start_time = time.time()
-        # weight_infer.weight_estimate()
-        weight_infer.weight_estimate2()
-        # weight_infer.weight_estimate3()
-        print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
-        # weight_infer.print_weights()
+    def adapt_estimate(dcf_graph, abs_transition_graph):
+        weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abs_transition_graph)
+        if dcf_graph.weights is None:
+            start_time = time.time()
+            weight_infer.weight_estimate()
+            print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
+        weight_infer.print_weights()
 
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
         start_time = time.time()
