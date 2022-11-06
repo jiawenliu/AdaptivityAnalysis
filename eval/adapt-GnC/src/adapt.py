@@ -57,9 +57,11 @@ class Runner():
 	    return rmse_list
 
 	def runandplot_with_one_mech(self, q_max_list = [240], q_adapt_list = [20], mech_name = "Baseline"):
-		runs = 20
-		n_list = [8000]
+		runs = 10
+		n_list = [500]
 		beta, tau = 0.05, 0.3
+		hold_frac, threshold, sigma = 0.4, 0.05, 0.01
+		check_data_frac = 0.5
 
 
 		def plot(x_list, rmse_list, fig_name = "test"):
@@ -68,7 +70,7 @@ class Runner():
 			plt.ylabel("RMSE (Generalization Error) for adaptive queries")
 			plt.legend()
 			plt.grid()
-			plt.savefig("../plots/test" + fig_name + ".png")
+			plt.savefig("../plots/test-" + fig_name + ".png")
 			plt.show()
 
 	##################################################################################################################
@@ -85,89 +87,84 @@ class Runner():
 		GnC_DataSplit : 'Guess and Check' (GnC) query-answering mechanism instantiated by the Naive Data Splitting Mechanism (2nd mechanism above)
 		GnC_Baseline : 'Guess and Check' (GnC) query-answering mechanism instantiated by the Empirical Query Answer Mechanism (1st mechanism above)
 		'''
-		mech_name, Mech_para, Mech_rmse = mech_name, mech_name, [[0.0] * (q_max_list[i] / q_adapt_list[i]) for i in range(len(q_max_list))]
+		mech_name, mech_para, mech_rmse = mech_name, mech_name, [[0.0] * (q_max_list[i] / q_adapt_list[i]) for i in range(len(q_max_list))]
 		f = open('../results/test-'+ mech_name + ".txt", 'rb+')
 	# ###################################### Emperical Result: ######################################
 		if mech_name == "Baseline":
 			Baseline = mech.Mechanism()
 			Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
 			Baseline_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Baseline)
-			Mech_para = mech_name
-			Mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Baseline)
-			print(Mech_para, Mech_rmse)
-			f.write(Mech_para + ": " + str(Mech_rmse) + '\n')
+			mech_para = mech_name
+			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Baseline)
+			print(mech_para, mech_rmse)
+			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 	# # ###################################### Data Splitting Mechanism: ######################################
 		elif mech_name == "DataSplit":
 			DataSplit = mech.Mechanism()
 			DataSplit.add_params(beta=beta, tau=tau)
-			Mech_rmse = self.runs_one_mech(np.array(n_list)*20, q_max_list, q_adapt_list, runs, DataSplit)
-			Mech_para = "DATA SPLIT : BETA: {}, TAU: {}".format(beta, tau)
-			print(Mech_para, Mech_rmse)
-			f.write(Mech_para + ": " + str(Mech_rmse) + '\n')
+			mech_rmse = self.runs_one_mech(np.array(n_list)*20, q_max_list, q_adapt_list, runs, DataSplit)
+			mech_para = "DATA SPLIT : BETA: {}, TAU: {}".format(beta, tau)
+			print(mech_para, mech_rmse)
+			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 	# # ###################################### Thresholdout Mechanism: ######################################
 
 		elif mech_name == "Thresh":
-			hold_frac, threshold, sigma = 0.4, 0.05, 0.01
 			Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 			Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
-			Thresh_rmse = self.runs_one_mech([10000], q_max_list, q_adapt_list, runs, Thresh)
-			Thresh_name = "THRESH : HOLD_FRAC: {}, T: {}, SIGMA: {}, BETA: {}, TAU: {}".format(hold_frac, threshold, sigma, beta, tau)
-			Mech_rmse = self.runs_one_mech([10000], q_max_list, q_adapt_list, runs, Thresh)
-			Mech_para = "THRESH : HOLD_FRAC: {}, T: {}, SIGMA: {}, BETA: {}, TAU: {}".format(hold_frac, threshold, sigma, beta, tau)
-			print(Mech_para, Mech_rmse)
-			f.write(Mech_para + ": " + str(Mech_rmse) + '\n')
+			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Thresh)
+			mech_para = "THRESH : HOLD_FRAC: {}, T: {}, SIGMA: {}, BETA: {}, TAU: {}".format(hold_frac, threshold, sigma, beta, tau)
+			print(mech_para, mech_rmse)
+			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 	# # ###################################### Gaussian Mechanism: ######################################
 
 		elif mech_name == "Gauss":
-			sigma = 0.009
 			Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 			Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
-			Mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Gauss)
-			Mech_para = "GAUSS : SIGMA: {}, BETA: {}, TAU: {}".format(sigma, beta, tau)
-			print(Mech_para, Mech_rmse)
-			f.write(Mech_para + ": " + str(Mech_rmse) + '\n')
+			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Gauss)
+			mech_para = "GAUSS : SIGMA: {}, BETA: {}, TAU: {}".format(sigma, beta, tau)
+			print(mech_para, mech_rmse)
+			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 	# # ###################################### Guess and Check Mechanism instantiated by Gaussian Mechanism: ######################################
 
 		elif mech_name == "GnC_gauss":
 		# # TODO: Tuning the parameter
-			sigma, check_data_frac = 0.01, 0.5
 			GnC_gauss = mech.Guess_and_Check_Mechanism(mech_guess = mech.Gaussian_Mechanism(sigma=sigma),
 			    check_data_frac = check_data_frac,
 			    use_mgf_width=False)
 			GnC_gauss.add_params(beta = beta, tau = tau)
-			Mech_rmse = self.runs_one_mech(np.array(n_list)*2, q_max_list, q_adapt_list, runs, GnC_gauss)
-			Mech_para = "GnC_gauss : SIGMA: {}, CHECK_FRAC: {}, BETA: {}, TAU: {}".format(sigma, check_data_frac, beta, tau)
-			print(Mech_para, Mech_rmse)
-			f.write(Mech_para + ": " + str(Mech_rmse) + '\n')
+			mech_rmse = self.runs_one_mech(np.array(n_list)*2, q_max_list, q_adapt_list, runs, GnC_gauss)
+			mech_para = "GnC_gauss : SIGMA: {}, CHECK_FRAC: {}, BETA: {}, TAU: {}".format(sigma, check_data_frac, beta, tau)
+			print(mech_para, mech_rmse)
+			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 	# ###################################### Guess and Check Mechanism instantiated by Thresholdout Mechanism: ######################################
 
@@ -178,52 +175,50 @@ class Runner():
 			        check_data_frac = check_data_frac,
 			        use_mgf_width=False)
 			GnC_thresh.add_params(beta = beta, tau = tau)
-			Mech_rmse = self.runs_one_mech(np.array(n_list)*4, q_max_list, q_adapt_list, runs, GnC_thresh)
-			Mech_para = "GnC_thresh : HOLD_FRAC: {}, T: {}, SIGMA: {}, CHECK_FRAC: {}, BETA: {}, TAU: {}".format(hold_frac, threshold, sigma, check_data_frac, beta, tau)
+			mech_rmse = self.runs_one_mech(np.array(n_list)*4, q_max_list, q_adapt_list, runs, GnC_thresh)
+			mech_para = "GnC_thresh : HOLD_FRAC: {}, T: {}, SIGMA: {}, CHECK_FRAC: {}, BETA: {}, TAU: {}".format(hold_frac, threshold, sigma, check_data_frac, beta, tau)
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 	# ###################################### Guess and Check Mechanism instantiated by Data Split Mechanism: ######################################
 
 		## TODO: DEBUG
 		elif mech_name == "GnC_DataSplit":
-			check_data_frac = 0.5
 			GnC_DataSplit = mech.Guess_and_Check_Mechanism(mech_guess = mech.Mechanism(),
 			        check_data_frac = check_data_frac,
 			        use_mgf_width=False)
 			GnC_DataSplit.add_params(beta = beta, tau = tau)
-			Mech_rmse = self.runs_one_mech(np.array(n_list)*20, q_max_list, q_adapt_list, runs, GnC_DataSplit)
-			Mech_para = "GnC_DataSplit : BETA: {}, TAU: {}".format(check_data_frac, beta, tau)
-			print(Mech_para, Mech_rmse)
-			f.write(Mech_para + ": " + str(Mech_rmse) + '\n')
+			mech_rmse = self.runs_one_mech(np.array(n_list)*20, q_max_list, q_adapt_list, runs, GnC_DataSplit)
+			mech_para = "GnC_DataSplit : BETA: {}, TAU: {}".format(check_data_frac, beta, tau)
+			print(mech_para, mech_rmse)
+			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 
 	###################################### Guess and Check Mechanism instantiated by Baseline Mechanism: ######################################
 
 		## TODO: DEBUG
 		elif mech_name == "GnC_Baseline":
-			check_data_frac = 0.5
 			GnC_Baseline = mech.Guess_and_Check_Mechanism(mech_guess = mech.Mechanism(),
 			        check_data_frac = check_data_frac,
 			        use_mgf_width=False)
 			GnC_Baseline.add_params(beta = beta, tau = tau)
-			Mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, GnC_Baseline)
-			Mech_para = "GnC_Baseline : BETA: {}, TAU: {}".format(check_data_frac, beta, tau)
-			print(Mech_para, Mech_rmse)
-			f.write(Mech_para + ": " + str(Mech_rmse) + '\n')
+			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, GnC_Baseline)
+			mech_para = "GnC_Baseline : BETA: {}, TAU: {}".format(check_data_frac, beta, tau)
+			print(mech_para, mech_rmse)
+			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
-				l = min(len(Mech_rmse[i]), len(querys))
-				plot(querys[:l], Mech_rmse[i][:l], mech_name)
-			return Mech_rmse
+				l = min(len(mech_rmse[i]), len(querys))
+				plot(querys[:l], mech_rmse[i][:l], mech_name)
+			return mech_rmse
 
 	###################################### Switching Mechanisms Above ######################################
 		f.close()
@@ -232,8 +227,8 @@ class Runner():
 
 
 	def main(self):
-		q_max_list = [240]
-		q_adapt_list = [20]
+		q_max_list = [5000]
+		q_adapt_list = [200]
 	        
 	##################################################################################################################
 	###################################### Switching Mechanisms: ######################################
@@ -262,7 +257,7 @@ class Runner():
 		plt.ylabel("RMSE (Generalization Error) for adaptive queries")
 		plt.legend()
 		plt.grid()
-		plt.savefig("../plots/combined" + str(mechs) + ".png")
+		plt.savefig("../plots/combined-test-" + str(mechs) + ".png")
 		plt.show()
 
 

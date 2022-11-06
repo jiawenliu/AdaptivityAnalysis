@@ -98,7 +98,8 @@ class Strategy:
         # So the maximum query we want to ask is indeed more than q_max.
         # In this sense, the last bath of the data base is never used, and we cannot instantiate the set up with only 1 bath.
 
-        self.q_max += self.q_max/self.ada_method_param
+        # self.q_max += self.q_max/self.ada_method_param
+        self.q_max += 1
 
 ###################################### Debugging Code ^^ ######################################
         
