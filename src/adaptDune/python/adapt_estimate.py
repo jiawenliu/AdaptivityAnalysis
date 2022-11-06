@@ -79,15 +79,6 @@ class AdaptEstimate():
             self.edge_weights_estimate()
             self.vertex_weights_estimate()
 
-        def weight_estimate3(self):
-            weight_file, n, i = "./weight/seq.br", self.graph.get_vertice_num(), 0
-            with open(weight_file, "r") as weights_from_file:
-                assert i <= n, "lines number should smaller than vertex number"
-                for l in weights_from_file.readlines():
-                    if isinstance(l, int):  
-                        self.graph.weights[i] = AdaptType(int(l))
-                    else:
-                        self.graph.weights[i] = AdaptType(l.strip('\n'))
 
         def weight_estimate2(self):
             for i in range(self.graph.get_vertice_num()):
@@ -100,11 +91,13 @@ class AdaptEstimate():
 
     @staticmethod
     def adapt_estimate(dcf_graph, abs_transition_graph):
+        start_time = time.time()
         weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abs_transition_graph)
         if dcf_graph.weights is None:
-            start_time = time.time()
             weight_infer.weight_estimate()
             print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
+        else:
+            print("--- REACHABILITY BOUNDS ARE PARSED FROM File ---" % (time.time() - start_time))
         weight_infer.print_weights()
 
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
