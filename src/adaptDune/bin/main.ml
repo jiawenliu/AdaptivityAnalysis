@@ -228,13 +228,13 @@ let _ =
       let cfg_result = Cfg.generate_cfg result in 
       let blocks = cfg_result.nodes in
       let _ =  Printf.fprintf oc "%d\n" (List.length blocks) in 
-      let blocksmap = cfg_result.node_map in
-      Int.Map.iter_keys blocksmap
+      let _ = cfg_result.node_map in
+      (* Int.Map.iter_keys blocksmap
       ~f: (fun k -> let node = Int.Map.find blocksmap k in
        match node with
        | Some bk ->   Printf.printf "key %d, node is %s ; \n" k (Syntax.print_block bk)
       | None ->   Printf.printf " No node for key %d; \n" k
-       ) ;
+       ) ; *)
       List.fold_left ~f:( fun () block -> Printf.fprintf oc "%d," (Syntax.isQuery block) ) ~init:() blocks;
       (* Printf.fprintf oc "\n"; *)
       let string_result = print_lcommand result in
@@ -259,10 +259,10 @@ let _ =
       (* print_flow flow; *)
       (*We do not need to write the CFG flow into file Below*)
       (* print_out_flow oc flow; *)
-      let kill_result = Df.kill result (List.nth_exn blocks 1) in
+      let _ = Df.kill result (List.nth_exn blocks 1) in
       (* Printf.printf "kill of 2nd block with size : %d \n" (List.length kill_result) ; *)
-      List.fold_left ~f:( fun () (x, v) -> 
-        Printf.printf "%s : %d\n" x v ) ~init:() kill_result;
+      (* List.fold_left ~f:( fun () (x, v) -> 
+        Printf.printf "%s : %d\n" x v ) ~init:() kill_result; *)
       print_newline();
       (* let in_init = Df.in_init result in *)
       (* List.fold_left ~f:( fun () (x, v) -> 
@@ -284,15 +284,17 @@ let _ =
       Printf.printf "DCDG result:\n";
       let dcdg_result =Dcdg.dcdg result cfg_result rd_in in
       Printf.printf "computation of the DCDG total time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
-      List.fold_left ~f:( fun () (lvar_x, lvar_y) -> 
-      Printf.printf "%s -> %s\n" (print_lvar lvar_x) (print_lvar lvar_y) ) ~init:() dcdg_result; 
+      (* List.fold_left ~f:( fun () (lvar_x, lvar_y) -> 
+      Printf.printf "%s -> %s\n" (print_lvar lvar_x) (print_lvar lvar_y) ) ~init:() dcdg_result;  *)
       Printf.fprintf oc "\n";
       print_out_dcdg oc dcdg_result;    
       (*add weight line **) 
       Printf.fprintf oc "\n";
-      Weight_infer.print_lcom_list result ;
+      let weight_time = Caml_unix.gettimeofday () in
+      (* Weight_infer.print_lcom_list result ; *)
       let weight_list  = Weight_infer.infer result  oc blocks in 
      Weight_infer.print_weight_list  weight_list ;
+     Printf.printf "computation of the weight infer time:%fs\n" (Caml_unix.gettimeofday () -. weight_time) ;
         (* Close Channel *)
       Out_channel.close oc;  
 
@@ -302,14 +304,14 @@ let _ =
       let oc = Out_channel.create outfile_abscfg in
       Printf.printf "ABSCFG result:\n";
       let aflow = Abs.abs_flow (Seq (result, (Skip (Label (-1))))) in
-        print_abs_flow aflow;
+        (* print_abs_flow aflow;
         print_newline();
 
         print_abs_flow_label aflow;
         print_newline();
 
         print_abs_flow_constraints aflow;
-        print_newline();
+        print_newline(); *)
         let blocks = Cfg.blocks result in
         let _ =  Printf.fprintf oc "%d\n" (List.length blocks + 1)  in 
         print_out_abs_flow_edges oc aflow;

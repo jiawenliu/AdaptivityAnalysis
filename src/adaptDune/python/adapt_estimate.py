@@ -98,7 +98,7 @@ class AdaptEstimate():
             print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         else:
             print("--- REACHABILITY BOUNDS ARE PARSED FROM FILE: %s seconds ---" % (time.time() - start_time))
-        weight_infer.print_weights()
+        # weight_infer.print_weights()
 
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
         start_time = time.time()

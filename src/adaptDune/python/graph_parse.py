@@ -44,10 +44,10 @@ class GraphParser(argparse.ArgumentParser):
             weights_line = graphdata.readline()
             if weights_line:
                 weights = [AdaptType(int(l)) if isinstance(l, int) else AdaptType(l) for l in weights_line.strip("\n").split(",")]
-                print("The Input DCFG: ", n, query, edges, weights)
+                # print("The Input DCFG: ", n, query, edges, weights)
                 return Graph(edges, weights, query)               
             else:
-                print("The Input DCFG: ", n, query, edges)
+                # print("The Input DCFG: ", n, query, edges)
                 return Graph(edges, None, query)
 
     def abscfg_parse(self):
@@ -71,7 +71,7 @@ class GraphParser(argparse.ArgumentParser):
                 transitions.append((int(l1), dc_set, int(l2), v_set))
             transitions.sort(key=lambda y: y[0]) 
             edges.sort(key=lambda y: y[0])   
-            print("The Input ABS Transition Graph: ", n, edges, transitions)
+            # print("The Input ABS Transition Graph: ", n, edges, transitions)
             return TransitionGraph(edges, transitions, n)
 
         pass

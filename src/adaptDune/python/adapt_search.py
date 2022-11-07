@@ -235,8 +235,8 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
             self.flow_capacity[v] = self.flow_capacity[u].adapt_min(self.graph.weights[v])
             self.query_num[v] = self.query_num[u] + self.graph.query[v]
             self.refined_adapt[v] = self.refined_adapt[u]
-            print("visiting vertex", v, "from vertex", u, " with its query annotation: ",  self.graph.query[v],
-            "and accumulated query number ",  self.query_num[u])
+            # print("visiting vertex", v, "from vertex", u, " with its query annotation: ",  self.graph.query[v],
+            # "and accumulated query number ",  self.query_num[u])
             if not self.refined_adapt_visited[v]:
                 self.refined_adapt_visited[v] = True
                 self.refined_adapt_calculation_dfs(v)
