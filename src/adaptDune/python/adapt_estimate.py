@@ -93,6 +93,7 @@ class AdaptEstimate():
     def adapt_estimate(dcf_graph, abs_transition_graph):
         start_time = time.time()
         weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abs_transition_graph)
+        # dcf_graph.weights = [AdaptType(1)]* dcf_graph.get_vertice_num()
         if dcf_graph.weights is None:
             weight_infer.weight_estimate()
             print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
