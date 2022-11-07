@@ -78,7 +78,7 @@ let print_lvar lvar =
 let print_label l = 
   match l with
   | Label n ->  n
-  | _ -> 0
+  | _ -> -10
   
 let print_aop aop =
   match aop  with
@@ -150,6 +150,13 @@ let rec print_lcommand lcom =
   | Seq (lc_1,  lc_2 )-> sprintf "%s ; \n %s" (print_lcommand lc_1) (print_lcommand lc_2)
   | If ( b, lc_1 , lc_2,  l) -> sprintf " If [ %s ]^{%d} \n then {%s} else { %s }"  (print_bexpr b) (print_label l) (print_lcommand lc_1)  (print_lcommand lc_2)
 
+
+  let get_label_from_block block =
+    match block with
+    | Skipblock l ->  (print_label l)
+    | Assignblock (_, _, l) -> (print_label l)
+    | Queryblock (_, _, l) -> (print_label l)
+    | Testblock (_, l) ->  (print_label l)
 
   let print_flow flow =
     List.fold_left (fun () (x,  y) -> Printf.printf "edge from %d to %d \n" (print_label x) (print_label y)  ) () flow 

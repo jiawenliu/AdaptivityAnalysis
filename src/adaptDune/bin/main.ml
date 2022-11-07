@@ -223,9 +223,7 @@ let _ =
     let oc = Out_channel.create outfile_dcfg in
         (******************** run dcfg and parser code  ********************)
         let result = parse_prog infile in
-         Weight_infer.print_lcom_list result ;
-         let weight_list  = Weight_infer.infer result in 
-      Weight_infer.print_weight_list  weight_list ;
+
 
       let cfg_result = Cfg.generate_cfg result in 
       let blocks = cfg_result.nodes in
@@ -289,7 +287,12 @@ let _ =
       List.fold_left ~f:( fun () (lvar_x, lvar_y) -> 
       Printf.printf "%s -> %s\n" (print_lvar lvar_x) (print_lvar lvar_y) ) ~init:() dcdg_result; 
       Printf.fprintf oc "\n";
-      print_out_dcdg oc dcdg_result;                 
+      print_out_dcdg oc dcdg_result;    
+      (*add weight line **) 
+      Printf.fprintf oc "\n";
+      Weight_infer.print_lcom_list result ;
+      let weight_list  = Weight_infer.infer result  oc blocks in 
+     Weight_infer.print_weight_list  weight_list ;
         (* Close Channel *)
       Out_channel.close oc;  
 

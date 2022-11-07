@@ -72,7 +72,7 @@ let decide_condition_pattern b env =
         let i = extract_var_from_aexpr a_2 in
         let i_init_value = Hashtbl.find_opt env i |> Option.value ~default:i
       in 
-       (i, i_init_value^"-"^constant )
+       (i, simplify_gap i_init_value constant )
       | Geq
       | GreaterThan 
       | Equal ->   (* > j  0*) 
@@ -115,7 +115,8 @@ let variance_of_i_in_loop_body i body env  =
       let variance = get_variance_of_i_in_expr i e tmp_env in 
           let v = eval e tmp_env in 
           Hashtbl.add tmp_env i v;
-      acc^"+"^variance , tmp_env
+          let result = if (String.equal acc "") then variance else acc^"+"^variance in 
+          result , tmp_env
  | Assign ( var , e , _) -> 
           let x = var.v_name in  
           let v = eval e tmp_env in 
@@ -133,13 +134,15 @@ let variance_of_i_in_loop_body i body env  =
                 let tmp_env_2 = Hashtbl.copy tmp_env in 
         let acc_1, _ = scan lc_1 acc tmp_env_1 in
         let acc_2, _ = scan lc_2 acc tmp_env_2 in 
-       (sprintf "(%s || %s)" acc_1 acc_2), tmp_env     
+        let combined_acc =  
+        if (String.equal acc_1 acc_2) then acc_1 else (sprintf "(%s || %s)" acc_1 acc_2) in 
+        combined_acc , tmp_env     
   in 
   let variance, _ = scan body "" tenv  in 
     variance 
 
 
-let infer program = 
+let infer program oc blocks = 
   (*store the result of label -> weight*)
   let weight_table = Hashtbl.create 500 in
   (* store x -> k, y ->2 ....**)
@@ -159,7 +162,17 @@ let infer program =
             let label_int = print_label l in
             Hashtbl.add env x "*";
             Hashtbl.add weight_table label_int inferred_occurence 
-    | While ( _ , _ , _ ) -> () (*we do not support nested while now*)
+    | While ( b , lc , l ) ->  (*we do not support nested while now*)
+           let i, initial_gap = decide_condition_pattern b env in 
+           let variance = variance_of_i_in_loop_body i lc env in 
+           let inferred_occurence_of_while = 
+            if (String.equal variance "1") then initial_gap else
+            sprintf "(%s)/(%s)" initial_gap variance in 
+            let combined_occurence = sprintf "(%s)*(%s)" inferred_occurence inferred_occurence_of_while in
+            let label_int = print_label l in
+           Hashtbl.add weight_table label_int combined_occurence; 
+          update_weight_table_in_while_body lc combined_occurence 
+
     | Seq ( l_1,  l_2 ) -> update_weight_table_in_while_body l_1 inferred_occurence ; 
                          update_weight_table_in_while_body l_2 inferred_occurence  
     | If ( b , lc_1 , lc_2 , l ) -> 
@@ -175,7 +188,9 @@ let infer program =
     let i, initial_gap = decide_condition_pattern b env in 
     let variance = variance_of_i_in_loop_body i lc env in 
     Printf.printf "\ninfer weight handle while, i:%s, initia_gap:%s, variance:%s" i initial_gap variance ;
-    let inferred_occurence_of_while = sprintf "(%s)/(%s)" initial_gap variance in 
+    let inferred_occurence_of_while = 
+      if (String.equal variance "1") then initial_gap else
+      sprintf "(%s)/(%s)" initial_gap variance in 
     let _ = print_lcommand lc in 
     let _ = print_bexpr b in 
     let label_int = print_label l in
@@ -236,7 +251,12 @@ let infer program =
     | Seq ( _,  _ ) -> ()
     | If ( b , lc_1 , lc_2 , l ) -> handle_if lc_1 lc_2 b l
   in
-  List.iter handle_toplevel_lcom lcom_list ; 
+  List.iter handle_toplevel_lcom lcom_list; 
+  let get_weight block = 
+    let x = get_label_from_block block in
+    Hashtbl.find_opt weight_table x |> Option.value ~default:"Unknown weight" 
+  in 
+  List.fold_left ( fun () block -> Printf.fprintf oc "%s," (get_weight block ) ) () blocks;            
   Hashtbl.fold (fun x v acc -> (x,v)::acc) weight_table []
 
  let print_weight_list wl = 
