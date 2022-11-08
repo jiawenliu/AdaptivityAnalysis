@@ -1,10 +1,11 @@
 from adapt_lib import AdaptType, Graph
 from adapt_search import AdaptSearchAlgRefined
+from graph_parse import GraphParser
 
 
 class TestUnits:
 
-    def __init__(self, ALG) -> None:
+    def __init__(self, ALG):
         self.ALG = ALG
 
     # the example with only sequence, 
@@ -167,6 +168,14 @@ class TestUnits:
         print("The Adaptivity Expected for This Graph is: 6 ")
         print("The Adaptivity From This Graph is: ", adapt_search.get_adapt())
     
+    def test_disconnected_graphs(self):
+
+        adapt_search = self.ALG(GraphParser().dcfg_parse())
+        adapt_search.search_adapt()
+        print("The Adaptivity Expected for the {} is: {} ".format("Disconnected Graph", 8))
+        print("Estimated Adaptivity is : {} ".format(adapt_search.get_adapt()))
+
+
     def run_tests(self):
         self.test_seq()
         self.test_if_val()
@@ -188,6 +197,4 @@ class TestUnits:
 # test_naive.run_tests()
 
 
-test_refined = TestUnits(AdaptSearchAlgRefined)
-test_refined.run_tests()
-test_refined.test_multiple_round()
+TestUnits(AdaptSearchAlgRefined).test_disconnected_graphs()

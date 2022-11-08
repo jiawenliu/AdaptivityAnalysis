@@ -96,10 +96,10 @@ class AdaptEstimate():
         # dcf_graph.weights = [AdaptType(1)]* dcf_graph.get_vertice_num()
         if dcf_graph.weights is None:
             weight_infer.weight_estimate()
+            weight_infer.print_weights()
             print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         else:
             print("--- REACHABILITY BOUNDS ARE PARSED FROM FILE: %s seconds ---" % (time.time() - start_time))
-        # weight_infer.print_weights()
 
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
         start_time = time.time()
