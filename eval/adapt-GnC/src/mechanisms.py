@@ -130,7 +130,7 @@ class Mechanism:
                 self.max_q = len(self.data[0])
                 print("Max Query #:", self.max_q)
                 self.samp_per_q = int((self.n / (self.max_q - 1)))  # number of samples available for each query
-                # self.samp_per_q = int((self.n / (self.max_q)))  # number of samples available for each query
+                # self.samp_per_q = int((self.n / 2))  # number of samples available for each query
                 print("Splitted Sample Size:", self.samp_per_q)
 
 ###################################### Debugging Code ^^ ######################################
@@ -151,7 +151,15 @@ class Mechanism:
 
 ###################################### Original Code ^^ ######################################
 
-###################################### Debugging Code: ######################################
+###################################### Debugging Code 3: ######################################
+
+            # if self.curr_q < self.max_q:
+            #     ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
+            #     self.curr_q += len(ans)
+            #     ans_list = [{"answer": ans[i]} for i in range(len(ans))]
+
+
+###################################### Debugging Code 2: ######################################
                 
             if self.curr_q < self.max_q:
                 ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
@@ -228,6 +236,7 @@ class Gaussian_Mechanism(Mechanism):
                 omit_ans = max(0, self.curr_q - self.max_q)
             else:
                 return [{"answer": None}]
+        # print("GAUSS")
 
         return [{"answer": min(1.0, max(0.0, ans[i] + noise_to_add[i]))} for i in range(len(ans) - omit_ans)]
 
@@ -320,6 +329,7 @@ class Thresholdout_Mechanism(Mechanism):
             else:
                 ans_list.append({"answer": None})
                 break
+        # print("THRESHOLDOUT")
         return ans_list
 
 
@@ -368,7 +378,7 @@ class Guess_and_Check_Mechanism:
         self.start_tau = (0.0 if ("multiply_tau" not in kwargs or kwargs["multiply_tau"] is None or
                                   "start_tau" not in kwargs["multiply_tau"])
                           else kwargs["multiply_tau"]["start_tau"])  # Start value of tau. Default = 0.0
-        self.max_tau = (0.5 if ("multiply_tau" not in kwargs or kwargs["multiply_tau"] is None or
+        self.max_tau = (1.0 if ("multiply_tau" not in kwargs or kwargs["multiply_tau"] is None or
                                 "max_tau" not in kwargs["multiply_tau"])
                         else kwargs["multiply_tau"]["max_tau"])  # Max. value of tau. Default = 0.5
         self.tau_multiplier = (1.0 if ("multiply_tau" not in kwargs or kwargs["multiply_tau"] is None or
@@ -376,10 +386,10 @@ class Guess_and_Check_Mechanism:
                                else kwargs["multiply_tau"]["tau_multiplier"])  # Multiplication factor for tau at
         # every failure. Default = 1.0
 
-        self.q_encoding_param = -5 if "q_encoding_param" not in kwargs else kwargs["q_encoding_param"]  # If provided,
+        self.q_encoding_param = -3 if "q_encoding_param" not in kwargs else kwargs["q_encoding_param"]  # If provided,
         # use kwargs["q_encoding_param"] for calculating terms for union bound over number of queries.
         # Default = -2 (inverse quadratic series)
-        self.f_encoding_param = -5 if "f_encoding_param" not in kwargs else kwargs["f_encoding_param"]   # If provided,
+        self.f_encoding_param = -3 if "f_encoding_param" not in kwargs else kwargs["f_encoding_param"]   # If provided,
         # use power kwargs["f_encoding_param"] for calculating terms for union bound over number of failures.
         # Default = -2 (inverse quadratic series)
     
