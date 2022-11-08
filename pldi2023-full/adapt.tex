@@ -1,15 +1,15 @@
-In this section, we formally present the definition of adaptivity of a program, which is the length of the 'longest' walk with most queries involved in the execution-based dependency graph of this program. We first present the construction of the execution-based dependency graph before the introduction of the formal definition of adaptivity. 
+In this section, we formally present the definition of adaptivity of a program, which is the length of the 'longest' walk with most queries involved in the semantics-based dependency graph of this program. We first present the construction of the semantics-based dependency graph before the introduction of the formal definition of adaptivity. 
 
-\subsection{Execution-based Dependency Graph}
+\subsection{Semantics-based Dependency Graph}
 \label{sec:design_choice}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Introducing The Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% we formally define the execution-based dependency graph as follows. There are some notations used in the definition. The labeled variables of a program $c$  
+% we formally define the semantics-based dependency graph as follows. There are some notations used in the definition. The labeled variables of a program $c$  
 % is a subset of the labeled  variables $\mathcal{LV}$, denoted by $\lvar(c) \in \mathcal{P}(\mathcal{VAR} \times \mathcal{L}) \subseteq \mathcal{LV}$.
 % \wq{I think LV(c) means all the labeled assigned variables, because in Fig.3.b, j2 is not in the graph so j2 is not in LV(tworounds), please verify. If so, maybe LV(c) is not a good name, people may think it means all the label variables, instead of just assigned ones.}
 % The set of query-associated variables (in query request assignments) for a program $c$ is denoted as $\qvar(c)$, where $\qvar: \cdom \to 
 % \mathcal{P}(\mathcal{LV})$. The set of initial traces of a program $c$ is a subset of the  trace universe $\trace$, in which every initial trace contains the value for all the input variables of $c$. For instance, the initial trace $\trace_0$ contains the value of input variable $k$ in the $\kw{twoRounds(k)}$ example.
 \jl{
-The \emph{execution-based dependency graph} is formally defined in Definition~\ref{def:trace_graph}. 
+The \emph{semantics-based dependency graph} is formally defined in Definition~\ref{def:trace_graph}. 
 For a program $c$, there are some notations used in the definition.
 The labeled variables of $c$,
 $\lvar(c) \subseteq \mathcal{LV}$ contains all the variables in $c$'s assignment commands, with the command labels as superscripts. 
@@ -21,10 +21,10 @@ contains all possible initial trace of $c$.
 Each initial trace,  $\trace_0 \in \mathcal{T}_0(c)$ contains the initial values of all input variables of $c$. 
 For instance, the initial trace of $\kw{twoRounds(k)}$ example contains the initial value of the input variable $k$.
 }
-\begin{defn}[Execution-based Dependency Graph]
+\begin{defn}[Semantics-based Dependency Graph]
 \label{def:trace_graph}
 Given a program ${c}$,
-its \emph{execution-based dependency graph} 
+its \emph{semantics-based dependency graph} 
 $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is defined as follows,
 {\small
 \[
@@ -77,13 +77,13 @@ which counts the occurrence of of a labeled variable in the trace. All the defin
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Explanation of Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \wq{ The occurrence time is computed by the counter operator $w(\trace) = \vcounter(\trace', l)$. As an instance, in the execution-based dependency graph of $\kw{twoRounds}$ in Figure~\ref{fig:overview-example}(b), the weight of vertices in the while loop $w_k$ is a function which returns the value $n$ of variable $k$ in the starting trace $\tau$, and the commands in the loop are indeed executed $n$ times when starting with $\trace$.}
+% \wq{ The occurrence time is computed by the counter operator $w(\trace) = \vcounter(\trace', l)$. As an instance, in the semantics-based dependency graph of $\kw{twoRounds}$ in Figure~\ref{fig:overview-example}(b), the weight of vertices in the while loop $w_k$ is a function which returns the value $n$ of variable $k$ in the starting trace $\tau$, and the commands in the loop are indeed executed $n$ times when starting with $\trace$.}
 % Every vertex also has a query annotation, mapping each $x^l \in \traceV(c)$ to $0$ or $1$, 
 % indicating whether the vertex comes from a query request assignment (1) or not (0) by checking if the labeled variable $x^l$ of the vertex is in $\qvar(c)$.
 % One interesting point is that instead of building a graph whose vertices are just variables coming from query request assignments, we choose the combination of all the labeled assigned variables of the program and the query annotations. The reason is that the results of previous queries can be stored or used in variables
 % which aren't associated to the query request,
 % it is necessary to track the dependency between all the assigned variables of the program. 
-% The main novelty is the combination of the quantitative and dependency information on the execution-based dependency graph, which means this graph can tell both the dependency between queries and the times they depend on each other.
+% The main novelty is the combination of the quantitative and dependency information on the semantics-based dependency graph, which means this graph can tell both the dependency between queries and the times they depend on each other.
 % The vertices $\traceV({c})$ of a program $c$ are the labeled assigned variables, which are statically collected. The weight function on every vertex $w : \mathcal{T} \to \mathbb{N}$
 % mapping from a starting trace $\trace \in \mathcal{T}_0(c)$ to a natural number, tracks the occurrence times of this vertex in the newly generated trace $\trace'$ when the program $c$ is evaluated from the starting trace $\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\trace'} $.
 % One interesting point is that instead of building a graph whose vertices are just variables coming from query request assignments, we choose the combination of all the labeled assigned variables of the program and the query annotations. The reason is that the results of previous queries can be stored or used in variables
@@ -102,10 +102,10 @@ maps from a starting trace $\trace_0 \in \mathcal{T}_0(c)$ to a natural number.
 For each vertex $x^l$, it tracks its visiting times (i.e., the evaluation times of the command with the label $l$) when the program $c$ is evaluated from the initial trace $\trace_0$ into $\eskip$, $\config{{c}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\trace'} $.
 The visiting times is computed by the counter operator $\vcounter(\trace', l)$
 by counting the occurrence of the label $l$ in $\trace'$.
-As an instance, in the execution-based dependency graph of $\kw{twoRounds}$ in Figure~\ref{fig:overview-example}(b), the weight, $w_k$ of the vertex $x^3$ is a function of type $\mathcal{T}_0(\kw{twoRound(k)}) \to \mathbb{N}$.
+As an instance, in the semantics-based dependency graph of $\kw{twoRounds}$ in Figure~\ref{fig:overview-example}(b), the weight, $w_k$ of the vertex $x^3$ is a function of type $\mathcal{T}_0(\kw{twoRound(k)}) \to \mathbb{N}$.
 Given input $\trace_0$, we execute the program under $\trace_0$ as $\config{\kw{twoRound(k)}, \trace_0} \to^{*} \config{\eskip, \trace_0\tracecat\trace'} $. Then $w_k(\trace_0)$ outputs the occurrence time of the label $3$ in $\trace'$.
 \end{enumerate}
-The main novelty of  the execution-based dependency graph is the combination of the quantitative and dependency information. 
+The main novelty of  the semantics-based dependency graph is the combination of the quantitative and dependency information. 
 It can tell both the dependency between queries via the directed edge, and the times they depend on each other via the weight.
 }
 
@@ -324,7 +324,7 @@ satisfy the \emph{event may-dependency} relation under a witness trace $\trace$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Trace-Based Adaptivity%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Trace-based Adaptivity}
 Given 
-a program $c$'s execution-based dependency graph 
+a program $c$'s semantics-based dependency graph 
 $\traceG({c})$,
 we define adaptivity 
 with respect to an initial trace $\trace_0 \in \mathcal{T}_0(c)$ by the finite walk in the graph, which has the most query requests along the walk.
@@ -332,7 +332,7 @@ We show the definition of a finite walk as follows.
 
 \begin{defn}[Finite Walk (k)]
 \label{def:finitewalk}
-Given the execution-based dependency graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$ of a program $c$, a \emph{finite walk} $k$ in $\traceG({c})$ is a function $k$.
+Given the semantics-based dependency graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$ of a program $c$, a \emph{finite walk} $k$ in $\traceG({c})$ is a function $k$.
 Given an input initial trace $\trace_0 \in \mathcal{T}_0(c)$, $k(\trace_0)$ is a sequence of edges $(e_1 \ldots e_{n - 1})$ 
 for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
 \begin{itemize}
@@ -351,7 +351,7 @@ corresponding to queries. This is formally defined below.}
 \begin{defn}[Query Length of the Finite Walk($\qlen$)]
 \label{def:qlen}
 Given 
-the execution-based dependency graph $\traceG({c})$ of a program $c$,
+the semantics-based dependency graph $\traceG({c})$ of a program $c$,
  and a \emph{finite walk} 
  $k \in \walks(\traceG(c))$. 
 The query length of $k$, $\qlen(k)$ is a function $\mathcal{T}_0(c) \to \mathbb{N}$, such that given an input initial trace $\trace_0$, $\qlen(k)(\trace_0)$ is

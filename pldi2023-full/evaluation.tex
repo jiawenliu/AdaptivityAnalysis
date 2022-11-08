@@ -133,63 +133,20 @@ Overall for these examples, our system gives both the accurate adaptivity defini
 adaptivity upper bound through our formalization and analysis framework $\THESYSTEM$.
 The complete programs are defined below from Example~\ref{ex:twoRoundsComplete} to Example~\ref{ex:nestedWhileMPRV},
 and the implementations are in GitHub.
-{\tiny
-\begin {table}[H]
-    \caption{Experimental results of {\THESYSTEM} implementation}
-        \label{tb:adapt-imp}
-        \begin{center}
-        \centering
-{\footnotesize
-        \begin{tabular}{ r | c | c | c | c | c | c | c  }
-        \multirow{3}{*}{Program $c$} & 
-        \multirow{3}{*}{\emph{adaptivity}}
-         & \multicolumn{2}{c|}{$\THESYSTEM$}
-         & \multicolumn{4}{c}{performance} \\ 
-         \cline{3-8}
-         & & \multirow{2}{*}{$\progA(c)$} & \multirow{2}{*}{$\query$ \#} & \multirow{2}{*}{line of code} & \multicolumn{3}{c}{running time (second)} \\ 
-         \cline{6-8}
-         & & & &  & Ocaml & Bound Analysis & $\pathsearch$  \\
-         \hline \hline
-         $  \kw{twoRounds(k)}$ & $2$ &  $2$ & $k$ & 8 & 0.0005 & 0.0017 & 0.0003 \\
-         $  \kw{multiRounds(k)}$ & $k$ &  $k$ & $k$  &  10 & 0.0012 & 0.0017 & 0.0002 \\
-         $  \kw{lRGD(k, r)}$ & $k$ & $k$ & $2 * \env(\trace_0) k$  &  10 & 0.0015 & 0.0072& 0.0002  \\
-         $  \kw{mROdd(k)}$ & $1 + k$ &  $1 +2 * k$ & $1 + 2*k$  &  10 & 0.0015 & 0.0061 & 0.0002 \\
-         $  \kw{mRSingle(k)}$    & $2$ &  $2 + k$ & $2 + k$  &  9 & 0.0011 & 0.0075 & 0.0002 \\
-         $  \kw{seq()}$ & $4$ & $4$ & $4$ & 4 & 0.0016 & 0.0002 & 0.0001 \\ 
-         $  \kw{seqRV()}$ & $4$ & $4$ &  $4$ & 4 & 0.0011 & 0.0003 & 0.0001 \\  
-         $  \kw{ifVD()}$ & $3$ & $3$ &  $3$ & 5 & 0.0010 & 0.0005  & 0.0001 \\
-         $  \kw{ifCD()}$ & $3$ & $3$ &   $3$  & 5 & 0.0005 & 0.0003  & 0.0001 \\
-         $  \kw{while(k)}$ & $1+k$ &   $1+k$  &  $1+k$ & 7 & 0.0021 & 0.0015 &  0.0001 \\
-         $  \kw{whileM(k)}$ & $1 + k$ &  $1 +2 * \lfloor \frac{k}{2} \rfloor$ & $1 + 2 * k$  &  9 & 0.0017 & 0.0062 & 0.0001  \\
-         $  \kw{whileRV(k)}$ & $1 + 2*k$ &  $1 + 2*k$ & $2 + 3 * k$  &  9 & 0.0016 & 0.0056 & 0.0001  \\
-         $  \kw{whileVCD(k)}$ & $1 + 2*k$ &   $1 + 2 * k$ & $2 + 2 * k$  &  6 & 0.0016 & 0.0007 & 0.0001 \\
-         $  \kw{whileMPVCD(k)}$ & $2 + k$ &  $2 + k$ & $1 + 2 * k$   &   9 & 0.0017 & 0.0043 & 0.0001 \\
-         $  \kw{nestWhileVD(k)}$ & $2 + k^2$ &   $2 + k^2$ & $1 + k + k^2$   &  10 & 0.0018 & 0.0126 & 0.0001  \\
-         $  \kw{nestWhileRV(k)}$ & $1 + 2*k$ &   $1 + 2*k$ &  $1 + k + k^2$   &  10 & 0.0017 & 0.0186 & 0.0001  \\
-         $  \kw{nestWhileMV(k)}$ & $1 + k + k^2$ & $1 + k + k^2$ &  $2 + k + k^2$  & 10 & 0.0016 & 0.0071 & 0.0001 \\
-         $  \kw{nestWhileMPRV(k)}$ & $1 + k + k^2$ &  $1 + k + k^2$ &  $2 + k + k^2$  &  10 & 0.019 & 0.0999 & 0.0002 \\
-         $  \kw{mRComplete(k)}$ & $k$ & $k$ & $k$   &  27 & 0.0026 & 85.9017 & 0.0004 \\
-         $  \kw{mRCompose(k)}$ & $1$ & $1$ & $4*k$   &  46 & 0.0036 & 5104.3510 &  0.0013\\
-         $  \kw{tRCompose(k)}$ & $2$ &  $2$ & $2 + 5* k + 2 * k*k$  &  42 & 0.0026 & * & *\\
-         $  \kw{seqCompose(k)}$ & $12$ & $12$ & $326$  &  502 & 0.0426 & 1.2743  & 0.0223 \\
-         $  \kw{jumboS(k)}$ & $6 + 4*k + k^2$ & $6 + 4*k + k^2$ & $29 + 4*k + k^2$  &  71 & 0.0035 & * &  0.0012 \\
-         $  \kw{jumbo(k)}$ & $**$ &  $**$ & $310$  &  502 & 0.0691 & * & * \\
-         $  \kw{big(k)}$ & $**$ &  $**$ & $124$  &  214 & 0.0175 & * & * 
-        \end{tabular}
-}        
-\end{center}
-\end{table}
-}
+\input{eval-table}
 
- \subsection{The Evaluated Examples}  
- \paragraph{The complete algorithm for the data analysis example with two adaptivity rounds} 
+ \subsection{More Discussions on The Evaluated Examples}  
+ \subsubsection{More on The Two Rounds Adaptive Data Analysis} 
  \input{examples/twoRoundsComplete}
  %
- \paragraph{The complete algorithm for the data analysis example with multiple adaptivity rounds} 
+ \subsubsection{$\kw{mRComplete}$} 
  \input{examples/multipleRoundsComplete}
  %
-\paragraph{The complete Linear Regression Algorithm with Gradient Decent Optimization}
+\subsubsection{$\kw{lRGD}$}
 \input{examples/linearRegressionGD}
  %          
-\paragraph*{The complete Programs for Examples from line:6 - 17 in Table.\ref{tb:adapt-imp}}
-\input{examples/implementation-examples}
+% \subsubsection{The Programs for Examples from line:6 - 15 in Table.\ref{tb:adapt-imp}}
+% \input{examples/evaluated_examples-prog}
+
+% \subsubsection{The Programs for Examples from line:16 - 20 in Table.\ref{tb:adapt-imp}}
+% \input{examples/evaluated_examples-code}

@@ -26,8 +26,8 @@ Below is the outline of the {\THESYSTEM}.
   Because adaptivity is defined over a program's \emph{quantitative dependency graph} (in Definition~\ref{def:trace_graph}),
   this algorithm first estimates this graph for the program statically
   in Section~\ref{sec:alg_graphgen}.
-  % execution-based dependency graph (in Definition~\ref{def:trace_graph})
-  % Execution-Based Dependency Graph (in Definition~\ref{def:trace_graph}). 
+  % semantics-based dependency graph (in Definition~\ref{def:trace_graph})
+  % Semantics-based Dependency Graph (in Definition~\ref{def:trace_graph}). 
   It estimates the four components of this graph in two steps and then composes them into an estimated dependency graph
   %  for a program 
   in the last step.
@@ -63,9 +63,9 @@ Below is the outline of the {\THESYSTEM}.
   %  of this quantitative dependency graph.
 \item  \textbf{Graph Estimation.} 
 In Section~\ref{sec:alg_graphgen}, we construct the final approximated graph,
-named \emph{program-based dependency graph} by simply composing the four estimated ingredients. 
-Overall, this \emph{program-based dependency graph} has a similar topology structure as 
-the \emph{execution-based dependency graph}. It has the same
+named \emph{estimated dependency graph} by simply composing the four estimated ingredients. 
+Overall, this \emph{estimated dependency graph} has a similar topology structure as 
+the \emph{semantics-based dependency graph}. It has the same
 vertices and query annotations, but approximated edges and weights. 
 % The edge between vertices considers both control flow and data flow, See
 % Section~\ref{sec:alg_edgegen}
@@ -75,24 +75,24 @@ vertices and query annotations, but approximated edges and weights.
 
 \item \textbf{Adaptivity Computation.} 
 Likewise the adaptivity in Definition~\ref{def:trace_adapt},
-%  is defined as a finite walk in the \emph{execution based dependency graph}, 
-the static estimation on the \emph{adaptivity} also relies on finding a walk in the \emph{program-based dependency graph}.  
+%  is defined as a finite walk in the \emph{semantics based dependency graph}, 
+the static estimation on the \emph{adaptivity} also relies on finding a walk in the \emph{estimated dependency graph}.  
 % The construction of the stastic analysis dependency graph is of great value of showing some useful properties of the target program, such as dependency between variables, the execution upper bound of a certian command, while the key novelty is our path searching algorithm, which connects all the information we need in the static anlaysis dependency graph and provides us a sound over-estimation of adaptivity! In order to get a sound but precise upper bound,
 We discuss some challenges in finding the 'appropriate' walk in the graph, and how our algorithm responds to these challenges as
 % . We present the path searching algorithm 
 in Section~\ref{sec:alg_adaptcompute}.
 % % Section~\ref{sec:alg_edgegen}
-% \item  Finally, with all the ingredients ready, we construct the final approximated program-based dependency graph in Section~\ref{sec:alg_graphgen}
+% \item  Finally, with all the ingredients ready, we construct the final approximated estimated dependency graph in Section~\ref{sec:alg_graphgen}
 \end{enumerate}
 
 \subsection{Vertex and Query Annotation Estimations}
 \label{sec:alg_vertexgen}
 \paragraph{Vertex Estimation}
-The first component of the \emph{program-based dependency graph} is the vertex set, which is identical to the 
-\emph{execution-based dependency graph}.
-% of every vertex in the static analysis dependency graph are actually identical as the  Execution-Based Dependency Graph, 
+The first component of the \emph{estimated dependency graph} is the vertex set, which is identical to the 
+\emph{semantics-based dependency graph}.
+% of every vertex in the static analysis dependency graph are actually identical as the  Semantics-based Dependency Graph, 
 Every vertex is an assigned variable in the program, which comes from an assignment command or query request command with a unique label. 
-These vertices are collected by statically scanning the program, like what we do for vertices of the \emph{execution-based dependency graph}, as follows.
+These vertices are collected by statically scanning the program, like what we do for vertices of the \emph{semantics-based dependency graph}, as follows.
 %
 \highlight{
 \[
@@ -108,9 +108,9 @@ where $\mathcal{A}_{\lin}$ is the set of arithmetic expressions over $\mathbb{N}
 
 \paragraph{Query Annotation Computation}
 The static scanning of the programs also tells us whether one vertex(assigned variable) is assigned by a query request.
-% We have similar definition when defining the Execution-Based Dependency Graph, 
+% We have similar definition when defining the Semantics-based Dependency Graph, 
 Identically to the 
-\emph{execution-based dependency graph}, $\progF(c)$ is
+\emph{semantics-based dependency graph}, $\progF(c)$ is
 a set of pairs $\progF(c) \in \mathcal{P}(\mathcal{LV} \times \{0, 1\} )$ 
 % is the set of pairs 
 % The weight for each vertex in $\progV(c)$ is computed 
@@ -552,13 +552,13 @@ $\absV(c) = \lvar(c)\cup\{\lex\}$
 %
 \subsubsection{Edge Estimation}
 \label{sec:alg_edgegen}
-Since the edges of the execution-based graph of a program relies on the dependency relation, it contains both control flow and data flow. 
+Since the edges of the semantics-based graph of a program relies on the dependency relation, it contains both control flow and data flow. 
 In this sense, We first develop a \emph{feasible data-flow} relation to estimate the data dependency relation, which catches these two flows.
 Then we construct the edges for $\progG(c)$ based on this \emph{feasible data-flow} relation.
 %  of our static analysis dependency graph also covers these two kind of flows. 
 This algorithm named Feasible Data-Flow Generation. It 
 considers both the control flow and data flow and
-is a sound approximation of the edges in the execution based dependency graph.
+is a sound approximation of the edges in the semantics based dependency graph.
 The three steps in this algorithm is summarized as follows,
 \begin{enumerate}
   \item The \textbf{Reaching Definition} analysis computes a set of labeled variables, $\live(l, c)$ for every label $l$ in $c$
@@ -763,7 +763,7 @@ satisfying this relation formally as follows,
     \]
 }
 We prove that this estimated directed edge set $\progE(c)$ is a sound approximation of the 
-edge set in $c$'s execution-based dependency graph 
+edge set in $c$'s semantics-based dependency graph 
 by Lemma~\ref{lem:edge_map}in Appendix~\ref{apdx:adapt_soundness} .
   \paragraph*{Example}
   %
@@ -954,10 +954,10 @@ $\absclr: (\absevent \times \cdom) \to \mathcal{A}_{\lin}$
 % \\
 % Then, the bound on the maximum value of each variable,
 % as well as the symbolic bound on the iteration times of each edge is calculated recursively as follows, path-insensitively.
-\begin{defn}[Local BoundBound Computation]
+\begin{defn}[Local Bound Computation]
   \label{def:ranking_bound}
 For a program $c$ and an edge $\absevent \in \absE(c)$,
-the \emph{local boundbound}, $\varinvar(\locbound(\absevent, c))$ for the local bound$\locbound(\absevent, c)$
+the \emph{local bound}, $\varinvar(\locbound(\absevent, c))$ for the local bound $\locbound(\absevent, c)$
 of this edge
 % %  \in \mathcal{A}_{\lin}$ 
 % for $\locbound(\absevent) \in \mathcal{VAR} \cup \constdom$,
@@ -1057,7 +1057,7 @@ x^l \in \progV(c) \land (l, w) \in \absW(c)
 % Since 
 We prove that this 
 symbolic expression for $x^l \in \progV(c)$ is a sound upper bound of 
-the weight for the same vertex $x^l$ in Program's execution-based dependency graph by Lemma~\ref{lem:weights_map}
+the weight for the same vertex $x^l$ in Program's semantics-based dependency graph by Lemma~\ref{lem:weights_map}
 in Appendix~\ref{apdx:adapt_soundness}.
 \paragraph*{Example}
 Going back to the
@@ -1075,7 +1075,7 @@ is also the maximum visiting times bound of the labeled variable $a^5$.
 % is computed as $k$ as well through Definition~\ref{def:abs_trace}.
 % In this abstract control flow graph, every vertex is a label,
 % corresponding to a label command in the program.
-So, we estimate the visiting time for  labeled variable $a^5$ in Program-Based Dependency Graph in Figrue~\ref{fig:abscfg_tworound}(c) as $k$ as well.
+So, we estimate the visiting time for  labeled variable $a^5$ in estimated dependency graph in Figrue~\ref{fig:abscfg_tworound}(c) as $k$ as well.
 %
 The same way for the rest weights' computation.
 %
@@ -1091,12 +1091,12 @@ The same way for the rest weights' computation.
        \progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c)).
        \]
    }
-   We prove that this graph is a sound approximation of the program's execution-based dependency graph by soundness of each component formally in Appendix.
+   We prove that this graph is a sound approximation of the program's semantics-based dependency graph by soundness of each component formally in Appendix.
 
-This program-based graph program-based graph has a similar topology structure as 
+This estimated graph estimated graph has a similar topology structure as 
 % the one
 % of 
-the Execution-Based Dependency Graph. It has the same
+the Semantics-based Dependency Graph. It has the same
 vertices 
 % and query annotations, 
 but approximated edges and weights.  
@@ -1108,12 +1108,10 @@ It is formally defined in Definition~\ref{def:prog_graph} as follows.
 % we remove the edges between labels where the variables associated to that labeled command isn't reachable from the second location.
 %\absG(c) =(\absV, \absE, \absW)
 \begin{defn}
-  [Program-Based Quantitative Dependency Graph]
+  [Estimated Dependency Graph]
   \label{def:prog_graph}
-  % [Program-Based Weighted Data Dependency Graph Generation Algorithm]
-% \label{def:analyz_dcfg}
 Given a program $c$, with its abstract weighted control flow graph $\absG(c) = (\absV, \absE)$ and 
-feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$, its Program-Based Quantitative Dependency Graph
+feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$, its estimated dependency graph
 is generated as follows,
 $$\progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))$$
 {\footnotesize
@@ -1175,7 +1173,7 @@ This phase computes the adaptivity upper bound for a program $c$.
 \\
 Based on
 % its 
-$c$'s program-based dependency graph, $\progG({c})$ approximated above,
+$c$'s estimated dependency graph, $\progG({c})$ approximated above,
 %
 its adaptivity upper bound 
 % Defined in Definition~\ref{def:prog_adapt} as 
@@ -1186,9 +1184,9 @@ and computed
 % is computed as the maximum query length over all finite walks in $\walks(\progG({c}))$, and computed 
 by Algorithm~\ref{alg:adapt}.
 %
-% We use $\walks(\progG(c))$ represents the walks over the program-based dependency graph for $c$.
+% We use $\walks(\progG(c))$ represents the walks over the estimated dependency graph for $c$.
 $\walks(\progG(c))$ represents the set of all finite walks on
-% the program-based dependency graph for $c$
+% the estimated dependency graph for $c$
  $\progG({c})$.
 Different from the finite walk on $\traceG(c)$, the $\kappa \in \walks(\progG(c))$ doesn't rely on the initial trace.
 The occurrence time of every $v_i$ in $\kappa$'s vertices sequence is bound by 
@@ -1196,10 +1194,10 @@ an arithmetic expression $w_i$ where $(v_i, w_i) \in \progW(c)$ is $v_i$'s estim
 Then its query length $\qlen(\kappa)$ and the estimated adaptivity $\progA(c)$ are both arithmetic expression as well.
 %
 They are formally defined as follows.
-\begin{defn}[Finite Walk on Program-Based Dependency Graph ($\kappa$)].
+\begin{defn}[Finite Walk on estimated dependency graph ($\kappa$)].
   \label{def:prog_finitewalk}
   \\
-  Given a program $c$'s program-based dependency graph 
+  Given a program $c$'s estimated dependency graph 
   $\progG({c}) = (\progV(c), \progE(c), \progW(c), \progF(c))$, 
   a \emph{finite walk} $k$ in $\traceG({c})$ is
   % function $k: \mathcal{T} \to $ 
@@ -1221,8 +1219,8 @@ They are formally defined as follows.
   %
   The length of $k$ is the number of vertices in its vertex sequence, i.e., $\len(k) = a$.
  \end{defn}
-  We abuse the notation $\walks(\progG(c))$ represents the walks over the program-based dependency graph for $c$.
-Different from the walks on a program $c$'s execution based graph,
+  We abuse the notation $\walks(\progG(c))$ represents the walks over the estimated dependency graph for $c$.
+Different from the walks on a program $c$'s semantics based graph,
  $k \in \walks(\traceG(c))$, 
 $k \in \walks(\progG(c))$ doesn't rely on initial trace.
 The occurrence times of every $v_i $ in $k$'s vertex sequence is bound by 
@@ -1242,11 +1240,11 @@ an arithmetic expression $w_i$ where $(v_i, w_i) \in \progV(c)$, is $v_i$'s esti
 % \item the number of query vertices on this walk is maximum
 % \item the visiting times of each vertex $v$ on this walk is bound by its reachability bound $\weights(v)$.
 % \end{itemize}
-\begin{defn}[Query Length of the Finite Walk on Program-Based Dependency Graph ($\qlen$)]
+\begin{defn}[Query Length of the Finite Walk on estimated dependency graph ($\qlen$)]
   \label{def:qlen}
   % Given 
   % % labelled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
-  % a program $c$'s execution-based dependency graph $\traceG(c)(\trace)$
+  % a program $c$'s semantics-based dependency graph $\traceG(c)(\trace)$
   %  and a \emph{finite walk} $k$ in $\traceG(c)(\trace)$ with its vertex sequence $(v_1, \ldots, v_{n})$, 
   % %  the length of $k$ w.r.t query is defined as:
   % The query length of $k$ is the number of vertices which correspond to query variables in $(v_1, \ldots, v_{n})$ as follows, 
@@ -1256,7 +1254,7 @@ an arithmetic expression $w_i$ where $(v_i, w_i) \in \progV(c)$, is $v_i$'s esti
   % , where $\big(v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 1 \big)$ is a subsequence of $(v_1, \ldots, v_{n})$.
   Given 
   % labelled weighted graph $G = (\vertxs, \edges, \weights, \qflag)$, 
-  a program $c$'s execution-based dependency graph 
+  a program $c$'s semantics-based dependency graph 
   $\progG({c}) = (\progV(c), \progE(c), \progW(c), \progF(c))$, 
    and a \emph{finite walk} $k \in \walks(\progG(c))$,
   %  $k$ in $\traceG(c)(\trace)$
@@ -1279,10 +1277,10 @@ an arithmetic expression $w_i$ where $(v_i, w_i) \in \progV(c)$, is $v_i$'s esti
 %
 %
 \begin{defn}
-[{Program-Based Adaptivity}]
+[{estimated Adaptivity}]
 \label{def:prog_adapt}
 {
-Given a program ${c}$ and its program-based dependency graph 
+Given a program ${c}$ and its estimated dependency graph 
 $\progG({c})$
 %  = (\vertxs, \edges, \weights, \qflag)$,
 %
@@ -1297,7 +1295,7 @@ the estimated adaptivity for $c$ is
 \]
 }
 \end{defn}
-Based on the soundness of the program-based dependency graph, our estimated adaptivity is a sound upper bound of its adaptivity in Definition~\ref{def:trace_adapt}.
+Based on the soundness of the estimated dependency graph, our estimated adaptivity is a sound upper bound of its adaptivity in Definition~\ref{def:trace_adapt}.
 \begin{thm}[Soundness of  \THESYSTEM]
   \label{thm:adaptfun_sound}
   For every program $c$, 
@@ -1314,7 +1312,7 @@ To compute $\progA(c)$ accurately and soundly, we develop an adaptivity computat
 % (in Appendix Algorithm~1).
 It combines the depth first search and breath first search strategies and computes a sound upper bound on $\progA(c)$.
 $\pathsearch$ also involves another algorithm $\pathsearch_{\kw{SCC}}$ in \ref{alg:adaptscc} recursively, which finds the longest walk for a strong connected component (SCC) (SCC is the maximal strongly connected subgraph) of $\progG(c)$.
-% We also show that the estimated adaptivity from our $\pathsearch$ is sound with respect to the program-based adaptivity as in 
+% We also show that the estimated adaptivity from our $\pathsearch$ is sound with respect to the estimated adaptivity as in 
 Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of this algorithm with proof in Appendix~\ref{apdx:adaptalg_soundness}.
 \begin{thm}[Soundness of $\pathsearch$]
     \label{thm:adaptalg_soundness}
@@ -1322,7 +1320,7 @@ Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of t
      $$\pathsearch(\progG({c})) \geq \progA(c).$$
 \end{thm}
 % The formal proof is in Appendix~\ref{apdx:adaptalg_soundness}.
-% The following algorithm finds the walk with the longest query length on a program $c$'s execution-based dependency graph 
+% The following algorithm finds the walk with the longest query length on a program $c$'s semantics-based dependency graph 
 % $\progG(c)$
 % %  = (\vertxs, \edges, \weights, \qflag)$, 
 % through a combination of 
@@ -1332,11 +1330,11 @@ Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of t
 % in Algorithm~\ref{alg:adapt} and Algorithm~\ref{alg:adaptscc}.
 
 % \paragraph*{Challenges}
-% Following is the challenge of computing the adaptivity on a program based dependency graph.
+% Following is the challenge of computing the adaptivity on a estimated dependency graph.
 % \\
 % In order to 
 % % search for the finite walk having the longest query length, which isn't a simple longest weighted path.
-% compute the adaptivity for a program $c$ on its estimated Program-Based Dependency Graph $\progG(c)$, we need to 
+% compute the adaptivity for a program $c$ on its estimated estimated dependency graph $\progG(c)$, we need to 
 % search for the finite walk having the longest query length.
 % \\
 % % However, the finite walk isn't a simple weighted path by Definition~\ref{def:finitewalk}, there are two challenges in order to find this walk.
@@ -1347,11 +1345,11 @@ Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of t
 % We can neither simply traverse on this graph by decreasing the weight of every node by one after every visiting. 
 % The simple 
 % traversing strategy leads to non-termination for most programs. 
-% Specifically, this challenge comes from the weight of each vertex estimated in program's Program-Based Dependency Graph,
+% Specifically, this challenge comes from the weight of each vertex estimated in program's estimated dependency graph,
 % which isn't a number but a symbolic expression. 
 % % because the weight is symbolic and simply traversing leads to non-termination.
 % It is difficult to tell when to terminate the recursion when the domain of this symbolic expression isn't finite,
-% while, in most of our cases, the programs' Program-Based Dependency Graphs are having symbolic weights with infinite domains on vertices.
+% while, in most of our cases, the programs' estimated dependency graphs are having symbolic weights with infinite domains on vertices.
 % \todo{for example:}
 % Look at the simple example in Figure~\ref{fig:kadaptwhile_alg}, where $k$ is the input variable from domain $\mathbb{N}$,
 % %  in Figure~\ref{} in Section~\ref{sec:overview},
@@ -1404,7 +1402,7 @@ Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of t
 % % \end{wrapfigure}
 % % \end{equation*}
 % \vspace{-0.4cm}
-%  \caption{(a) Simple While Loop Example, (b) Execution-Based Dependency Graph, (c) The Static Program-Based Dependency graph.}
+%  \caption{(a) Simple While Loop Example, (b) Semantics-based Dependency Graph, (c) The Static estimated Dependency graph.}
 % \label{fig:kadaptwhile_alg}
 % \vspace{-0.5cm}
 % \end{figure}
@@ -1476,7 +1474,7 @@ Theorem~\ref{thm:adaptalg_soundness} below formally describes the soundness of t
 % %  for this program, 
 % % that 
 % \\
-By Definition~\ref{def:prog_adapt}, the key point is to find the walks in the program-based dependency graph. 
+By Definition~\ref{def:prog_adapt}, the key point is to find the walks in the estimated dependency graph. 
 % We develop two walk-finding algorithms, 
 % Algorithm~$\pathsearch$ and Algorithm~\ref{alg:adaptscc}, which use both the depth first search and breath first search strategy.  
 % By Definition~\ref{def:finitewalk}, this finite walk isn't easy to find. 
@@ -1488,7 +1486,7 @@ and then show that how we solve them using our algorithms.
 % Moreover, b
 One naive walk finding method is to simply traverse on this graph and decrease the weight of every node by one after every visiting. However, this simple 
 traversing strategy leads to non-termination dilemma for most programs which we are interested in. 
-Because the weight of each vertex in a program's program-based dependency graph,
+Because the weight of each vertex in a program's estimated dependency graph,
 which is an arithmetic expression containing input variables. 
 In this sense, the simple traversing could never terminate when domain of the input variables isn't finite.
 % because the weight is symbolic and simply traversing leads to non-termination.
@@ -1496,7 +1494,7 @@ In this sense, the simple traversing could never terminate when domain of the in
 However, it is very common that the domain of program's input variables is infinite such as natural number $\mathbb{N}$, real number $\mathbb{R}$, or etc. As the simple while loop example program in Figure~\ref{fig:kadaptwhile_alg} with k adaptivity rounds, the input variable $k$ has domain $\mathbb{N}$.
 % Analysis Results: $ \progA(\kw{whileRec}(k)) = 1 + k$
 %
-If we traverse on the program-based dependency graph, and decrease the weight of $x^3$ (the weight $k$ is symbolic) by one after every visit,
+If we traverse on the estimated dependency graph, and decrease the weight of $x^3$ (the weight $k$ is symbolic) by one after every visit,
 % We can simply adopt either a depth first strategy to estimate the adaptivity as the length of the longest weight path, as 
 % in Algorithm~\ref{alg:overadp_alg}.
 we will never terminate because we only know $k \in \mathbb{N}$.
@@ -1504,7 +1502,7 @@ we will never terminate because we only know $k \in \mathbb{N}$.
 \input{examples/kRoundsWhileSim_alg}
 
 To solve this non-termination challenge, we switch to another walk finding approach:
-finding the longest path in the program-based dependency graph via depth first search and then use this path as the estimated longest walk.
+finding the longest path in the estimated dependency graph via depth first search and then use this path as the estimated longest walk.
 Through a simple depth first search algorithm, we find the longest weighted path as the dotted arrow in Figure~\ref{fig:kadaptwhile_alg}(c),
 $x^3: {}^k_1 \to x^1: {}^1_1 $.
 Then, by summing up the weights on this path where the vertices have query annotations $1$, depth first search algorithm gives the adaptivity bound $k$.
@@ -1560,13 +1558,13 @@ depth first search and breath first search strategies in our longest walk estima
 Our algorithm reduces the task of computing the longest walk into the computation of local adaptivity and the composition of
 local adaptivity into global adaptivity.
 %
-We exploit the structure of the program-based dependency graph $\progG(c)$ for a program $c$: 
+We exploit the structure of the estimated dependency graph $\progG(c)$ for a program $c$: 
 1). Partitioning the PDG of programs into its strongly connected components (SCCs) (SCCs are maximal strongly connected subgraphs).
 2). Then, for each SCC, we compute an adaptivity bound
 3). In the last, we compose these local bounds to an overall adaptivity bound.
 %
-$\pathsearch(c, \progG(c))$ algorithm in Algorithm~\ref{alg:adapt} arranges the program-based dependency graph $\progG(c)$ into SCCs ($\kw{SCC_1}, \cdots, \kw{SCC_n}$) and obtains the adaptivity local bound of each SCC from $\kw{\pathsearch_{SCC}(c, SCC_i)}$ algorithm in Algorithm~\ref{alg:adaptscc}.
-Then $\pathsearch$ shrinks the program-based dependency graph into a directed acyclic graph (DAG) by reducing each SCC into a vertex with the weight equal to its adaptivity local bound.
+$\pathsearch(c, \progG(c))$ algorithm in Algorithm~\ref{alg:adapt} arranges the estimated dependency graph $\progG(c)$ into SCCs ($\kw{SCC_1}, \cdots, \kw{SCC_n}$) and obtains the adaptivity local bound of each SCC from $\kw{\pathsearch_{SCC}(c, SCC_i)}$ algorithm in Algorithm~\ref{alg:adaptscc}.
+Then $\pathsearch$ shrinks the estimated dependency graph into a directed acyclic graph (DAG) by reducing each SCC into a vertex with the weight equal to its adaptivity local bound.
 In this way, it simply computes the length of the longest path over this DAG.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1580,7 +1578,7 @@ In this way, it simply computes the length of the longest path over this DAG.
     }
     \begin{algorithmic}[1]
     \REQUIRE The program $c$, 
-    Its program based dependency graph: $\progG(c) = (\vertxs, \edges, \weights, \qflag)$
+    Its estimated dependency graph: $\progG(c) = (\vertxs, \edges, \weights, \qflag)$
     \STATE {\bf init} 
     % \\
     % current node: $c$, 
@@ -1639,12 +1637,12 @@ In this way, it simply computes the length of the longest path over this DAG.
     % as well as 
     and this longest weighted path is a sound computation of the finite walk having the longest query length 
     % on this graph, in Theorem~\ref{thm:sound_adaptalg}
-    on $c$'s program-based dependency graph in Theorem~\ref{thm:sound_adaptalg}
+    on $c$'s estimated dependency graph in Theorem~\ref{thm:sound_adaptalg}
     in Appendix
     ~\ref{apdx:adaptalg_soundness}.
     %
 If a program
-$c$'s program-based dependency graph $\progG(c)$ is a DAG, then we prove that the adaptivity upper bound by Algorithm~\ref{alg:adapt} is tight formally in Theorem~\ref{thm:adaptalg_pcomplete} in Appendix~\ref{apdx:adaptalg_completeness}.
+$c$'s estimated dependency graph $\progG(c)$ is a DAG, then we prove that the adaptivity upper bound by Algorithm~\ref{alg:adapt} is tight formally in Theorem~\ref{thm:adaptalg_pcomplete} in Appendix~\ref{apdx:adaptalg_completeness}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 1: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1703,7 +1701,7 @@ $c$'s program-based dependency graph $\progG(c)$ is a DAG, then we prove that th
   \end{algorithm}
 
   This algorithm takes the program, and an SCC (a subgraph), 
-  $\kw{SCC_i}$ of a program's program-based dependency graph $\progG(c)$ as input
+  $\kw{SCC_i}$ of a program's estimated dependency graph $\progG(c)$ as input
 % to be precise, the input graph is SCC, and 
 and outputs the adaptivity local bound of $\kw{SCC_i}$. 
 For an SCC containing only one vertex without any edge, it returns the query annotation of this vertex as adaptivity.
@@ -1870,6 +1868,6 @@ The soundness is formally guaranteed in Lemma~\ref{lem:sound_adaptalg_scc} in Ap
           %
 \begin{thm}[Soundness of $\pathsearch$]
     \label{thm:sound_adaptalg}
-    For every program $c$, given its \emph{Program-Based Dependency Graph} $\progG$,
+    For every program $c$, given its \emph{estimated dependency graph} $\progG$,
      $$\pathsearch(\progG) \geq \progA(\progG).$$
 \end{thm}
