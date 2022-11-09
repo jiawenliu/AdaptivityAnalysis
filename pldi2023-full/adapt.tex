@@ -172,32 +172,35 @@ Since both of the two ``influences'' are passing through labeled variables, we c
 relation over all labeled variables, and then recover the query requests from query-associated variables, $\qvar(c)$.
 It relies on formal observation of the ``influence'' via events in Definition~\ref{def:diff} and the \emph{may-dependency} between events in Definition~\ref{def:event_dep}.
 }
-\begin{defn}[Events Different up to Value ($\diff$)]
-\label{def:diff}
-Two events $\event_1, \event_2 \in \eventset$ are  \emph{Different up to Value},
-denoted as $\diff(\event_1, \event_2)$ if and only if:
-\begin{subequations}
-\begin{align}
-& \pi_1(\event_1) = \pi_1(\event_2) 
-  \land  
-  \pi_2(\event_1) = \pi_2(\event_2) \\
-& \land  
-  \big(
-   (\pi_3(\event_1) \neq \pi_3(\event_2)
-  \land 
-  \pi_{4}(\event_1) =_q \pi_{4}(\event_2) = \bullet )
-  \lor 
-  (\pi_4(\event_1) \neq \bullet
-  \land 
-  \pi_4(\event_2) \neq \bullet
-  \land 
-  \pi_{4}(\event_1) \neq_q \pi_{4}(\event_2)) 
-  \big)
-\end{align}
-\label{eq:diff}
-\end{subequations}
-where the projection operators $\pi_1,\pi_2,\pi_3$ and $\pi_4$ project the corresponding element from the quadruple of an event.
-\end{defn}
+  \begin{defn}[Events Differ in Value ($\diff$)]
+    \label{def:diff}
+    Two events $\event_1, \event_2 \in \eventset$ differ in their value, or query value,
+    denoted as $\diff(\event_1, \event_2)$, if and only if:
+    {\small
+    \begin{subequations}
+    \begin{align}
+    & \pi_1(\event_1) = \pi_1(\event_2) 
+      \land  
+      \pi_2(\event_1) = \pi_2(\event_2) \\
+    & \land  
+      \big(
+       (\pi_3(\event_1) \neq \pi_3(\event_2)
+      \land 
+      \pi_{4}(\event_1) = \pi_{4}(\event_2) = \bullet )
+      \lor 
+      (\pi_4(\event_1) \neq \bullet
+      \land 
+      \pi_4(\event_2) \neq \bullet
+      \land 
+      \pi_{4}(\event_1) \neq_q \pi_{4}(\event_2)) 
+      \big)
+    \end{align}
+    \label{eq:diff}
+    \end{subequations}
+    }
+    where $\qexpr_1 =_{q} \qexpr_2$ denotes the semantics equivalence between query values,
+    and $\pi_i$ projects the $i$-th element from the quadruple of an event.
+    \end{defn}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The "Detail" (I think redundant) Explanation of Variable May-Dependency and Motivation on How to define it %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % We use $\qexpr_1 =_{q} \qexpr_2$ and $\qexpr_1 \neq_{q} \qexpr_2$ to notate query expression equivalence and in-equivalence, distinct from standard equality. 
 % First of all, $\diff(\event_1, \event_2)$ only compares the 'value' assigned to the same labeled variable so the two events share the same labeled variable (the first two elements of the event quadruple). If the labeled variable are not the same, it is trivially false. Next, the 'value' has different meaning according to the type of the assignment. If the two assignment events both are generated from a standard assignment command (by checking whether the fourth element of the event is $\bullet$), we think they are different up to their value if the value assigned to the variable (the third element of the event) varies. On the other hand, if they both come from query request assignment commands, we directly compare the query function (the fourth element of the event). We do not consider the case when one event is generated from the standard assignment and the other comes from the query request assignment, which will not hold. The motivation of defining  $\diff(\event_1, \event_2)$ is that it allows us to check whether the value assigned to a specific variable is changed or not in two runs, which is very important in our dependency case 1. 
