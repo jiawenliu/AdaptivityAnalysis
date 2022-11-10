@@ -236,28 +236,37 @@ is transformed into a constraint.
 \item Constrains, $\dcdom^{\top}$ is composed of the \emph{Difference Constraints} $DC(\mathcal{VAR}  \cup \constdom)$, the \emph{Boolean Expressions} $\booldom$ and $\top$.
 %
 \begin{itemize}
-\item The difference constraints $DC(\mathcal{VAR}  \cup \constdom)$ is the set of all the inequality of
-form $x' \leq y + v$ where $x \in \mathcal{VAR} $, 
+\item 
+\jl{
+The difference constraints $DC(\mathcal{VAR}  \cup \constdom)$ is the set of all the inequality of
+form $x' \leq y + v$ or $x' \leq v$ where $x \in \mathcal{VAR} $, 
 $y \in \mathcal{VAR}$ and $v \in \constdom$.
 The \emph{Symbolic Constant} set $\constdom = \mathbb{N} \cup \inpvar \cup{\infty \cup{Q_m}}$
 is the set of natural numbers with $\infty$, the input variables, and a symbol $Q_m$ representing the abstract value of a query request.
 An inequality $x' \leq y + v$ describes that the value of $x$ in the current state is
-at most the value of $y$ in the previous state plus some constant $v$.
+at most the value of $y$ in the previous state plus the symbolic constant $v$.
+An inequality $x' \leq v$ describes that the value of $x$ in the current state is
+at most the value $v$.
 When a difference constrain shows up as an edge annotation, $l \xrightarrow{x' \leq y + v} l'$,
 % Then $x'$ 
 it denotes that
 the value of variable $x$
 after executing the command at $l$ is at most
 % and the right-hand side describes 
-the value of variable $y$ plus $v$ before the execution.
+the value of variable $y$ plus $v$ before the execution,
+and $l \xrightarrow{x' \leq v} l'$ respectively denotes value of variable $x$
+after executing the command at $l$ is at most
+% and the right-hand side describes 
+the value of the symbolic constant $v$ before the execution.
 For every expression in each of the label command, it is computed in three steps via program abstraction method adopted from the Section~6 in \cite{sinn2017complexity}. 
+}
 %
 \item The Boolean Expressions $b$ from the set $\booldom$.
 $b$ on an edge $l \xrightarrow{b} l'$ describes
 that after evaluating the guard with label $l$,
 $b$ holds and the command with label $l$ will execute right after.
 %
-\item The top constraint, $\top$ denotes true. It is preserved for $\eskip$ command.
+\item The top constraint, $\top$ denotes true. It is preserved for $\eskip$ command, or commands that don't involve any counter variable.
 %
 \end{itemize}
 \end{itemize}
@@ -275,13 +284,13 @@ $b$ holds and the command with label $l$ will execute right after.
     \begin{array}{ll} 
       \absexpr(x - v, x)  = x' \leq x - v  & x \in \grdvar \land v \in \mathbb{N} \\
       \absexpr(y + v, x)  = x' \leq y + v  & x \in \grdvar \land v \in \mathbb{Z} \land y \in (\grdvar \cup \constdom) \\
-      \absexpr(v, x)  = x' \leq v + 0  & x \in \grdvar \land v \in (\grdvar \cup \constdom) \\
+      \absexpr(v, x)  = x' \leq v  & x \in \grdvar \land v \in (\grdvar \cup \constdom) \\
       \absexpr(y + v, x)  = x' \leq y + v & \\
       \grdvar = \grdvar \cup \{y\} & x \in \grdvar \land v \in \mathbb{Z} \land y \notin (\grdvar \cup \constdom)  \\
-      \absexpr(\qexpr, x)  = x' \leq 0 + Q_m & x \in \grdvar \land \qexpr \text{ is a query expression}  \\
+      \absexpr(\qexpr, x)  = x' \leq Q_m & x \in \grdvar \land \qexpr \text{ is a query expression}  \\
       \absexpr(\expr, x) = x' \leq \infty  &  x \in \grdvar \land \expr \text{ doesn't have any of the forms as above} \\
       % \absexpr(\qexpr, x)  = x' \leq 0 + Q_m & x \in \grdvar \land \qexpr \text{ is a query expression}  \\
-      \absexpr(\expr, x) = \etrue  &  x \notin \grdvar \\
+      \absexpr(\expr, x) = \top  &  x \notin \grdvar \\
       \absexpr(\bexpr, \_) = \bexpr   & \\
       % \absexpr(y + v, x)  = x' \leq y + v & \\
       \grdvar = \grdvar \cup FV(\bexpr) &  x \in \grdvar \land \bexpr \text{ is a boolean expression} \\
@@ -957,7 +966,7 @@ $\absclr: (\absevent \times \cdom) \to \mathcal{A}_{\lin}$
 \begin{defn}[Local Bound Computation]
   \label{def:ranking_bound}
 For a program $c$ and an edge $\absevent \in \absE(c)$,
-the \emph{local bound}, $\varinvar(\locbound(\absevent, c))$ for the local bound $\locbound(\absevent, c)$
+the \emph{local bound}, $\varinvar(\locbound(\absevent, c), c)$ for the local bound $\locbound(\absevent, c)$
 of this edge
 % %  \in \mathcal{A}_{\lin}$ 
 % for $\locbound(\absevent) \in \mathcal{VAR} \cup \constdom$,
@@ -968,13 +977,40 @@ is computed as follows,
   \[ 
 \begin{array}{lll}
   \varinvar(x, c) & \triangleq x & x \in \constdom \\
-  \varinvar(x, c) & \triangleq \incrs(x, c) + \max(\{\varinvar(y, c) + c ~\mid~ (l, x' \leq y + c, l') \in \reset(x)\}) & c \notin \constdom
+  \varinvar(x, c) & \triangleq \incrs(x, c) + 
+  \max(\{\varinvar(y, c) + v ~\mid~ (l, x' \leq y + v, l') \in \reset(x)\}) & x \notin \constdom
 \end{array}
 \]
 %
-$\incrs(x, c) \triangleq \sum\limits_{\absevent \in \inc(v)}\{\absclr(\absevent, c) \times c ~\mid~ \absevent = (l, x' \leq x + c, l')\}$
+$\incrs(x, c) \triangleq \sum\limits_{\absevent \in \inc(x)}\{\absclr(\absevent, c) \times v ~\mid~ 
+\absevent = (l, x' \leq x + v, l')\}$
 \end{defn}
 %
+% \begin{defn}[Transition Bound]
+%   \label{def:edge_pathinsensitivebound}
+%   For a program $c$ and an edge $\absevent \in \absE(c)$, the \emph{path-insensitive transition bound},
+%   $\absclr(\absevent, c) \in \mathcal{A}_{\lin}$ 
+% for this edge is
+% computed as follows,
+% \[ 
+% \begin{array}{lll}
+%   \absclr(\absevent, c) 
+%   & \triangleq \varinvar(\locbound(\absevent, c), c)  & \\
+%   & \quad \locbound(\absevent, c) \in \constdom & \\
+%   \absclr(\absevent, c) 
+%   & \triangleq \Big(
+%     \sum\limits_{y \in \{ y ~|~ 
+%     ch \in \resetchain(x), (l_1, x, y, v, l_2) \in ch \} } \incrs(y, c) & \\
+%     & \quad + 
+%   \sum\limits_{ch \in \resetchain(x, c)}
+%   \big( \min\left\{\absclr(\absevent', c) ~\mid~ \absevent' \in ch\right\} \times 
+%   \max\left\{\varinvar(in(ch), c) + \sum\limits_{(l_1, x, y, v, l_2) \in ch } v, 0 \right\}\big) \Big)  & \\
+%   &  \quad \locbound(\absevent, c) = x \land x \notin \constdom & ,
+% \end{array}
+%   \]
+%  where $in(ch)$ is the variable on the last edge on the reset chain $ch$.
+% \end{defn}
+
 \begin{defn}[Transition Bound]
   \label{def:edge_pathinsensitivebound}
   For a program $c$ and an edge $\absevent \in \absE(c)$, the \emph{path-insensitive transition bound},
@@ -984,20 +1020,16 @@ computed as follows,
 \[ 
 \begin{array}{lll}
   \absclr(\absevent, c) 
-  & \triangleq \varinvar(\locbound(\absevent, c))  & \\
-  & \quad \locbound(\absevent, c) \in \constdom & \\
+  & \triangleq \varinvar(\locbound(\absevent, c), c)   \qquad \qquad  \text{if} \quad  \locbound(\absevent, c) \in \constdom & \\
   \absclr(\absevent, c) 
-  & \triangleq \Big(
-    \sum\limits_{y \in \{ y ~|~ 
-    ch \in \resetchain(x), (l_1, x, y, v, l_2) \in ch \} } \incrs(y, c) & \\
-    & \quad + 
-  \sum\limits_{ch \in \resetchain(x, c)}
-  \big( \min\left\{\absclr(\absevent', c) ~\mid~ \absevent' \in ch\right\} \times 
-  \max\left\{\varinvar(in(ch), c) + \sum\limits_{(l_1, x, y, v, l_2) \in ch } v, 0 \right\}\big) \Big)  & \\
-  &  \quad \locbound(\absevent, c) = x \land x \notin \constdom & ,
+  & \triangleq \incrs(x, c) 
+   + 
+  \sum\limits_{\absevent' \in \reset(x, c) \land \absevent' = (l, x \leq y + v, l') }
+  \Big( \absclr(\absevent', c) \times \big( \varinvar(y, c) + v \big) \Big)
+  & \\
+  &  \text{if} \quad  \locbound(\absevent, c) = x \land x \notin \constdom & ,
 \end{array}
   \]
- where $in(ch)$ is the variable on the last edge on the reset chain $ch$.
 \end{defn}
 
 Then we construct the set of reachability bound $w$ for every program point $l$, as $\absW(c)$.
