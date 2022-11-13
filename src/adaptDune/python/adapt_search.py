@@ -36,41 +36,41 @@ class AdaptSearchAlg:
             self.head[e[0]] = len(self.edges) - 1
             # print(self.head)
 
-    def two_direction_dfs (self, u: int):
-        self.dfs_clock += 1
-        self.first_visit[u] = self.last_visit[u] = self.dfs_clock
-        self.scc_stack.append(u)
-        i = self.head[u]
-        while i != -1:
-            v = self.edges[i].to
-            # print("in visiting vertex: ", u, "in the visiting #: ", self.dfs_clock, 
-            #     ". before visit vertex ", v, "the first visit is: ", self.first_visit[u], 
-            #         "the last visit is: ", self.last_visit[u])
-            # print("the vertex #: ", v, "is assigned a SCC number or not", (not self.scc_id[v]))
-            if not self.first_visit[v]:
-                self.two_direction_dfs(v)
-                self.last_visit[u] = min(self.last_visit[u], self.last_visit[v])
-                # print("in the visiting #: ", self.dfs_clock, ". after visit vertex ", v, "the first visit is: ", self.first_visit[v], 
-                #     "the last visit is: ", self.last_visit[v])
-            elif not self.scc_id[v]:
-                self.last_visit[u] = min(self.last_visit[u], self.first_visit[v])
-                # print("in the visiting #: ", self.dfs_clock, "the visited vertex ", v, ", whoes first visit is: ", self.first_visit[v], 
-                #     "the last visit is: ", self.last_visit[v])
-            i = self.edges[i].next
+    # def two_direction_dfs (self, u: int):
+    #     self.dfs_clock += 1
+    #     self.first_visit[u] = self.last_visit[u] = self.dfs_clock
+    #     self.scc_stack.append(u)
+    #     i = self.head[u]
+    #     while i != -1:
+    #         v = self.edges[i].to
+    #         # print("in visiting vertex: ", u, "in the visiting #: ", self.dfs_clock, 
+    #         #     ". before visit vertex ", v, "the first visit is: ", self.first_visit[u], 
+    #         #         "the last visit is: ", self.last_visit[u])
+    #         # print("the vertex #: ", v, "is assigned a SCC number or not", (not self.scc_id[v]))
+    #         if not self.first_visit[v]:
+    #             self.two_direction_dfs(v)
+    #             self.last_visit[u] = min(self.last_visit[u], self.last_visit[v])
+    #             # print("in the visiting #: ", self.dfs_clock, ". after visit vertex ", v, "the first visit is: ", self.first_visit[v], 
+    #             #     "the last visit is: ", self.last_visit[v])
+    #         elif not self.scc_id[v]:
+    #             self.last_visit[u] = min(self.last_visit[u], self.first_visit[v])
+    #             # print("in the visiting #: ", self.dfs_clock, "the visited vertex ", v, ", whoes first visit is: ", self.first_visit[v], 
+    #             #     "the last visit is: ", self.last_visit[v])
+    #         i = self.edges[i].next
         
-        if self.first_visit[u] == self.last_visit[u]:
-            self.scc_cnt += 1
-            # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
-            while True:
-                x = self.scc_stack.pop()
-                # print(x)
-                self.scc_id[x] = self.scc_cnt
-                self.scc_adapt[self.scc_cnt] = (self.scc_adapt[self.scc_cnt] + self.graph.weights[x]) if self.graph.query[x] else self.scc_adapt[self.scc_cnt]
-                # print(self.scc_adapt)
-                if x == u:
-                    break
-            # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
-            # print(self.scc_id)
+    #     if self.first_visit[u] == self.last_visit[u]:
+    #         self.scc_cnt += 1
+    #         # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
+    #         while True:
+    #             x = self.scc_stack.pop()
+    #             # print(x)
+    #             self.scc_id[x] = self.scc_cnt
+    #             self.scc_adapt[self.scc_cnt] = (self.scc_adapt[self.scc_cnt] + self.graph.weights[x]) if self.graph.query[x] else self.scc_adapt[self.scc_cnt]
+    #             # print(self.scc_adapt)
+    #             if x == u:
+    #                 break
+    #         # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
+    #         # print(self.scc_id)
 
     def find_scc(self):
         self.scc_id = [0]*self.vertex_no
@@ -105,14 +105,17 @@ class AdaptSearchAlg:
         visited = [False]*(self.vertex_no + 1)
 
         def bfs(start_scc, visited):
+
             bfs_q = [start_scc]
             while bfs_q != []:
                 scc_v = bfs_q.pop(0)
                 for scc_u in self.scc_graph[scc_v]:
-                    self.adapt[scc_u] = (self.adapt[scc_u].adapt_max(self.adapt[scc_v] + self.scc_adapt[scc_u]))
+                    print("SCC {} is connected to the unvisited SCC {}".format(scc_v, scc_u))
                     if not visited[scc_u]:
                         visited[scc_u] = True 
                         bfs_q.append(scc_u)
+                    self.adapt[scc_u] = (self.adapt[scc_u].adapt_max(self.adapt[scc_v] + self.scc_adapt[scc_u]))
+
 
         # BFS For each SCC
         for v in range(self.vertex_no):
@@ -121,8 +124,8 @@ class AdaptSearchAlg:
                 visited[scc_v] = True
                 self.adapt[scc_v] = self.scc_adapt[scc_v]
                 bfs(scc_v, visited)
-                # print("After bfs from the vertex : {}, the Visited Status Are: {}".format(v, visited))
-                # print("the Updated Adaptivity Are: {}".format(self.adapt))
+                print("After bfs from the vertex : {}, the Visited Status Are: {}".format(v, visited))
+                print("the Updated Adaptivity Are: {}".format(self.adapt))
 
         # print("Adaptivity of each SCC: ", list(map(lambda a: a.value, self.adapt)) )
 
@@ -183,30 +186,16 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
         
         if self.first_visit[u] == self.last_visit[u]:
             self.scc_cnt += 1
-            # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
             scc_iddes = []
             while True:
                 x = self.scc_stack.pop()
-                # print(x)
                 self.scc_id[x] = self.scc_cnt
                 scc_iddes.append(x)
-                # self.refined_adapt_visited[x] = True
-                # self.refined_adapt_calculation_dfs(x)
-                # self.scc_adapt[self.scc_cnt] = self.scc_adapt[self.scc_cnt].adapt_max(self.refined_adapt[x])
-                # print(self.scc_adapt)
                 if x == u:
                     break
-            # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
-            # print(self.scc_id)
-            # print(scc_iddes)
-
-            # for x in scc_iddes:
-            #     self.refined_adapt_visited[x] = True
-            #     self.refined_adapt_calculation_dfs(x)
-            #     self.scc_adapt[self.scc_cnt] = self.scc_adapt[self.scc_cnt].adapt_max(self.refined_adapt[x])
+            print("new scc # : ", self.scc_cnt, "with vetices: ", scc_iddes)
 
             self.refined_adapt_visited[min(scc_iddes)] = True
-            # self.flow_capacity[min(scc_iddes)] = self.graph.weights[min(scc_iddes)]
             self.refined_adapt_calculation_dfs(min(scc_iddes))
             self.scc_adapt[self.scc_cnt] = self.refined_adapt[min(scc_iddes)]
 
@@ -245,8 +234,6 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
                     self.query_num[v] = self.query_num[u]
                 self.flow_capacity[v] = flow_capacity_temp
                 self.query_num[v] = query_num_temp
-                # self.flow_capacity[v] = self.flow_capacity[u]
-                # self.query_num[v] = self.query_num[u]
                 # print("in the visiting #: ", self.dfs_clock, "the visited vertex ", v, ", whoes first visit is: ", self.first_visit[v], 
                 #     "the last visit is: ", self.last_visit[v])
             i = self.edges[i].next
