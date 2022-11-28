@@ -1,56 +1,29 @@
 %
-\subsection{Trace}
+Based on the event recording all the program's evaluations for expressions, 
+ the trace designed in the new trace-based operational semantics
+ now tracks all these events.
+
+The trace $\trace \in \mathcal{T} $ is a list of events, 
+collecting the events generated along the program execution. 
+\[
+\begin{array}{llll}
+\mbox{Trace} & \trace
+& ::= & [] ~|~ \trace :: \event
+\end{array}
+\]
+$\mathcal{T} $ represents the set of traces. 
+A trace can be regarded as the program history, 
+which records all the evaluations for assignment commands and guards in $\eif$ and $\ewhile$ command.
+This includes queries asked by the analyst during the execution of the program as well. 
+I collect the trace with a trace-based operational semantics based on transitions 
+of the form $ \config{c, \trace} \to \config{c', \trace'} $. 
+It states that a configuration $\config{c, \trace}$,
+which consists of a command $c$ to be evaluated and a starting trace $\trace$, 
+evaluates to another configuration with the trace updated along with the evaluation of the command $c$ to the normal form of the command $\eskip$.
 %
-% An event $\event \in \eventset$ belongs to a trace $\trace$, i.e., $\event \eventin \trace$ are defined as follows:
-% %
-% \begin{equation}
-%   \event \eventin \trace  
-%   \triangleq \left\{
-%   \begin{array}{ll} 
-%     \etrue                  & \trace =  (\trace' \tracecate \event') \land (\event \eventeq \event') \\
-%     \event \eventin \trace' & \trace =  (\trace' \tracecate \event') \land (\event \eventneq \event') \\ 
-%     \efalse                 & o.w.
-%   \end{array}
-%   \right.
-% \end{equation}
-% %
-% A well-formed event $\event \in \eventset$ belongs to a trace $\trace$ in signature, 
-% i.e., $\event \sigin \trace$ are defined as follows:
-%   %
-% \begin{equation}
-%   \event \sigin \trace  
-%   \triangleq \left\{
-%   \begin{array}{ll} 
-%     \etrue                  & \trace =  (\trace' \tracecate \event') \land (\event \sigeq \event') \\
-%     \event \sigin \trace'   & \trace =  (\trace' \tracecate \event') \land (\event \signeq \event') \\ 
-%     \efalse                 & o.w.
-%   \end{array}
-%   \right.
-% \end{equation}
-%
-%
-%
-%
-% \todo{
-% \[
-% \mbox{Post-Processed Trace} \qquad \trace \qquad ::= \qquad \tracecate | \trace \tracecate \event
-% % %
-% \]
-% Trace appending: $\tracecate: \mathcal{T} \to \eventset \to \mathcal{T}$
-% \[
-%   \trace \tracecate \event \triangleq
-%   \left\{
-%   \begin{array}{ll} 
-%     {} \tracecate \event           & \trace =  \tracecate \\
-%     \trace \tracecate \event    & \trace =  \trace' \tracecate \event\\ 
-%   \end{array}
-%   \right.
-% \]
-%
-% \mg{I suggest to use more definition environments throughout this section.}
-% \mg{Is ++ a constructor or a defined operation? It is in the grammar
-%   but it seems that you are actually defining it here.}
-%   \jl{It is a defined operator, I mixed them wrongly.}
+\\
+Some useful operators are defined below w.r.t. the trace.
+
   \begin{defn}[Trace Concatenation, $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$]
 Given two traces $\trace_1, \trace_2 \in \mathcal{T}$, the trace concatenation operator 
 $\tracecat$ is defined as:
@@ -345,42 +318,3 @@ Its behavior is defined as follows,
 \tlabel({[ ]}) \triangleq \{\}
 % \end{array}
 \]
-
-If we observe the operational semantics rules, we can find that no rule will shrink the trace. 
-So we have the Lemma~\ref{lem:tracenondec} with proof in Appendix~\ref{apdx:tracenondec}, 
-specifically the trace has the property that its length never decreases during the program execution.
-\begin{lem}
-[Trace Non-Decreasing]
-\label{lem:tracenondec}
-For every program $c \in \cdom$ and traces $\trace, \trace' \in \mathcal{T}$, if 
-$\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'}$,
-then there exists a trace $\trace'' \in \mathcal{T}$ with $\trace \tracecat \trace'' = \trace'$
-%
-$$
-\forall \trace, \trace' \in \mathcal{T}, c \st
-\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
-\implies \exists \trace'' \in \mathcal{T} \st \trace \tracecat \trace'' = \trace'
-$$
-\end{lem}
-
-Since the equivalence over two events is defined over the query value equivalence, 
-when there is an event belonging to a trace, 
-if this event is a query assignment event, 
-it is possible that 
-the event showing up in this trace has a different form of query value, 
-but they are equivalent by Definition~\ref{def:query_equal}.
-So we have the following Corollary~\ref{coro:aqintrace} with proof in Appendix~\ref{apdx:aqintrace}.
-\begin{coro}
-\label{coro:aqintrace}
-For every event and a trace $\trace \in \mathcal{T}$,
-if $\event \in \trace$, 
-then there exist another event $\event' \in \eventset$ and traces $\trace_1, \trace_2 \in \mathcal{T}$
-such that $\trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace $
-with 
-$\event$ and $\event'$ equivalent but may differ in their query value.
-\[
-  \forall \event \in \eventset, \trace \in \mathcal{T} \st
-\event \in \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
-\event' \in \eventset \st (\event \in \event') \land \trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace  
-\]
-\end{coro}

@@ -1,106 +1,28 @@
 %
 %
-\subsection{Event}
+We have two kinds of events: \emph{assignment events} and \emph{testing events}. 
+Each event consists of a quadruple,
+and we use $\eventset^{\asn}$ and $\eventset^{\test}$ to denote the set of all assignment events and testing events, respectively.
+\begin{center}
+$ \begin{array}{lllll}
+\mbox{Event} 
+& \event & ::= & 
+({x}, l, v, \bullet) ~|~ ({x}, l, v, \qval)  & \mbox{Assignment Event} \\
+&&& ~|~(\bexpr, l, v, \bullet)  & \mbox{Testing Event}
+\\
+\end{array}$
+\end{center}
+An assignment event tracks the execution of an assignment  or a query request and consists of the assigned variable, the label of the command that generates it, the value assigned to the variable, and the normal form of the query expression, $\qval$ if this command is a query request, otherwise a default value $\bullet$.
+A testing event tracks the execution of if and while commands and consists of the guard of the command, the label of the command, the result of evaluating the guard, while the last element is $\bullet$.
 %
-% \todo{
-% \[
-% \begin{array}{llll}
-% \mbox{Post-Processed Event} & \event & ::= & 
-%       ({x}, l, n, v) | ({x}, l, n, \qval, v)  ~~~~~~~ \mbox{Post-Processed Assignment Event} \\
-% &&& | (\bexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Post-Processed Testing Event}
-% \end{array}
-% \]
-% %
-% Informally, $n$ marks the number of times this label appears in a trace including itself. Informally, the n-th appearance of this label.
-% \\
-% Below we use the same notation $\eventset$, $\eventset^{\asn}$ and $\eventset^{\test} $ represent the 
-% set of post-processed events, assignment events and testing events.
-% \[
-% \begin{array}{lll}
-% %
-% \eventset  & : & \mbox{Set of Post-Processed Events}  
-% \\
-% %
-% \eventset^{\asn}  & : & \mbox{Set of Post-Processed Assignment Events}  
-% \\
-% %
-% \eventset^{\test}  & : & \mbox{Set of Post-Processed Testing Events}  
-% \end{array}
-% \]
-% %
-% Event Processor : $ \circ : \mbox{Event} \to \mbox{Post-Processed Events}$
-% \[
-% \begin{array}{lll}
-% (x, l, v) \circ n \triangleq (x, l, n, v)
-% &
-% (x, l, \qval, v) \circ n \triangleq (x, l, n, \qval, v)
-% &
-% (b, l, v) \circ n  \triangleq (b, l, n, v)
-% \end{array}
-% \]
-% }
-% %
-%
-% Given a trace $\ostrace$ and $\osevent$, the corresponding well-formed event $\event$ 
-% \[
-%   \event \triangleq 
-%   \left\{
-%   \begin{array}{ll}
-%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
-%   (x, l, \vcounter(\ostrace) l, v, \qval) & \osevent = (x, l, v)\\
-%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
-%   \end{array}
-%   \right.
-% \]
-%
-% \\
-% Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
-% \[
-% \begin{array}{lll}
-% \pi_v((x, l, n, v)) \triangleq v
-% &
-% \pi_v (x, l, n, \qval, v) \triangleq v
-% &
-% \pi_v (b, l, n, v)  \triangleq v
-% \end{array}
-% \]
-% %
-% %
-% Event Distinguishable Value : $\pi_{q} : \eventset \to \mathcal{QVAL}$ 
-% \[
-% \begin{array}{lll}
-% \pi_{q} (x, l, n, v) \triangleq v
-% &
-% \pi_{q} (x, l, n, \qval, v) \triangleq \qval
-% &
-% \pi_{q} (b, l, n, v)  \triangleq v
-% \end{array}
-% \]%
-% 
+
 Event projection operators $\pi_i$ projects the $i$th element from an event: 
 \\
 $\pi_i : 
 \eventset \to \mathcal{VAR}\cup \mbox{Boolean Expression}  \cup \mathbb{N} \cup \mathcal{VAL} \cup \mathcal{QVAL} $ 
 % \wqside{use b for Boolean expression?}
-\\
-% $\pi_{(i,j)} (\event) \triangleq (\pi_i(\event), \pi_j(\event)) $
-% %
-% \\
-% Event Signature : $\pi_{\sig} : \eventset \to (\mathcal{VAR}\cup \mbox{Boolean Expression}) \times\mathbb{N}\times \mathbb{N}$
-% \[
-% \begin{array}{lll}
-% \pi_{\sig} (x, l, n, v) \triangleq (x, l, n)
-% &
-% \pi_{\sig} (x, l, n, \qval, v) \triangleq (x, l, n, \query)
-% &
-% \pi_{\sig} (b, l, n, v)  \triangleq (b, l, n)
-% \end{array}
-% \]
+
 %
-%
-Free Variables: $FV: \expr \to \mathcal{P}(\mathcal{VAR})$, the set of free variables in an expression.
-\\
-$FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
 \begin{defn}[Equivalence of Query Expression]
 %
 \label{def:query_equal}
@@ -138,7 +60,7 @@ $$
 % $$
 % }
  %
- where $r \in D$ is a record in the database domain $D$. 
+ where $r \in D$ is a row of the hidden database $\chi$, and $\chi$ is in the database domain $D$. 
  As usual, we will denote by $\qexpr_1 \neq_{q} \qexpr_2$  the negation of the equivalence.
 % \\ 
 % where $r \in D$ is a record in the database domain $D$,

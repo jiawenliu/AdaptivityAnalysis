@@ -1,6 +1,6 @@
 %
 %
-\subsection{Labeled Language}
+\subsection{Syntax}
 \[
 \begin{array}{llll}
 \mbox{Arithmetic Operators} 
@@ -67,7 +67,7 @@ n \in \mathbb{N}^{\infty} ~|~ {x} ~|~ \aexpr \oplus_a \aexpr
 We use following notations to represent the set of corresponding terms:
 \[
 \begin{array}{lll}
-\mathcal{VAR} & : & \mbox{Set of Variables}  
+\mathcal{V} & : & \mbox{Set of Variables}  
 \\ 
 %
 \mathcal{VAL} & : & \mbox{Set of Values} 
@@ -104,9 +104,159 @@ We use following notations to represent the set of corresponding terms:
 \end{array}
 \]
 %
+The labeled variables and assigned variables are set of variables annotated by a label. 
+We use  
+$\mathcal{LV}$ represents the universe of all the labeled variables and 
+$\lvar(c) \in \mathcal{P}(\mathcal{V} \times \mathcal{L}) \subseteq \mathcal{LV}$,
+represents the set of labeled variables in program $c$,
+defined in Definition~\ref{def:lvar}.
+Labeled variables in $c$ is the set of assigned variables.
 %
 %
-Environment $ \env : {\mathcal{T}}  \to \mathcal{VAR} \to \mathcal{VAL} \cup \{\bot\}$
+\begin{defn}[labelled Variables $\lvar$]
+  \label{def:lvar}
+  {\footnotesize
+  $$
+    \lvar(c) \triangleq
+    \left\{
+    \begin{array}{ll}
+        \{{x}^l\}           
+        & {c} = [{\assign x e}]^{l} 
+        \\
+        \{{x}^l\}            
+        & {c} = [{\assign x \query(\qexpr)}]^{l} 
+        \\
+        \lvar(c_1) \cup \lvar(c_2) 
+        & {c} = {c_1};{c_2}
+        \\
+        \lvar(c) \cup \lvar(c_2)
+        & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
+        \\
+        \lvar(c')
+        & {c}   = \ewhile ([\bexpr]^{l}, {c}')
+  \end{array}
+  \right.
+  $$
+  }
+  \end{defn}
+  $FV: \expr \to \mathcal{P}(\mathcal{V})$, computes the set of free variables in an expression. To be precise,
+  $FV(\aexpr)$, $FV(\bexpr)$ and $FV(\qexpr)$ represent the set of free variables in arithmetic
+  expression $\aexpr$, boolean expression $\bexpr$ and query expression $\qexpr$ respectively.
+  The free variables
+  showing up in $c$, which aren't defined before using, are actually the input variables of this program.
+  
+% \begin{defn}[Assigned Variables ($\avar : \cdom \to \mathcal{P}(\mathcal{V} \times \mathbb{N})$)]
+% \label{def:avar}
+% {\footnotesize
+% $$ \avar_{c} \triangleq
+%   \left\{
+%   \begin{array}{ll}
+%       \{{x}^l\}                   
+%       & {c} = [{\assign x e}]^{l} 
+%       \\
+%       \{{x}^l\}                   
+%       & {c} = [{\assign x \query(\qexpr)}]^{l} 
+%       \\
+%       \avar_{{c_1}} \cup \avar_{{c_2}}  
+%       & {c} = {c_1};{c_2}
+%       \\
+%       \avar_{{c}} \cup \avar_{{c_2}} 
+%       & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
+%       \\
+%       \avar_{{c}'}
+%       & {c}   = \ewhile ([\bexpr]^{l}, {c}')
+% \end{array}
+% \right.
+% $$
+% }
+% \end{defn}
+%
+
+% \begin{defn}[labelled Variables $\lvar$]
+% \label{def:lvar}
+% {\footnotesize
+% $$
+%   \lvar_{c} \triangleq
+%   \left\{
+%   \begin{array}{ll}
+%       \{{x}^l\} \cup FV(\expr)^{\lin}                  
+%       & {c} = [{\assign x e}]^{l} 
+%       \\
+%       \{{x}^l\}   \cup FV(\qexpr)^{\lin}                
+%       & {c} = [{\assign x \query(\qexpr)}]^{l} 
+%       \\
+%       \lvar_{{c_1}} \cup \lvar_{{c_2}}  
+%       & {c} = {c_1};{c_2}
+%       \\
+%       \lvar_{{c}} \cup \lvar_{{c_2}} \cup FV(\bexpr)^{\lin}
+%       & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
+%       \\
+%       \lvar_{{c}'} \cup FV(\bexpr)^{\lin}
+%       & {c}   = \ewhile ([\bexpr]^{l}, {c}')
+% \end{array}
+% \right.
+% $$
+% }
+% \end{defn}
+%
+We also defined the set of query variables for a program $c$,
+it is the set of variables set to the result of a query in the program formally in Definition~\ref{def:qvar}.
+\begin{defn}[Query Variables ($\qvar: \cdom \to \mathcal{P}(\mathcal{LV})$)] 
+  \label{def:qvar}
+Given a program $c$, its query variables 
+$\qvar(c)$ is the set of variables set to the result of a query in the program.
+It is defined as follows:
+{\footnotesize
+$$
+  \qvar(c) \triangleq
+  \left\{
+  \begin{array}{ll}
+      \{\}                  
+      & {c} = [{\assign x \expr}]^{l} 
+      \\
+      \{{x}^l\}                  
+      & {c} = [{\assign x \query(\qexpr)}]^{l} 
+      \\
+      \qvar(c_1) \cup \qvar(c_2)  
+      & {c} = {c_1};{c_2}
+      \\
+      \qvar(c_1) \cup \qvar(c_2) 
+      & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
+      \\
+      \qvar(c')
+      & {c}   = \ewhile ([\bexpr]^{l}, {c}')
+\end{array}
+\right.
+$$
+}
+\end{defn}
+%
+It is easy to see that a program $c$'s query variables is a subset of 
+its labeled variables, $\qvar(c) \subseteq \lvar(c)$.
+%
+%
+Every labeled variable in a program is unique, formally as follows with proof in Appendix~\ref{apdx:lvar_unique}.
+\begin{lem}[Uniqueness of the Labeled Variables]
+  \label{lem:lvar_unique}
+  For every program $c \in \cdom$ and every two labeled variables such that
+  $x^i, y^j \in \lvar(c)$, then $x^i \neq y^j$.
+  \[
+    \forall c \in \cdom, x^i, y^j \in \mathcal{L} \st x^i, y^j \in \lvar(c)\implies x^i \neq y^j.
+    \]
+\end{lem}
+%
+%
+
+\subsection{Trace-based Operational Semantics for {\tt Query While} Language}
+
+\subsubsection{Event}
+\input{event}
+
+\subsubsection{Trace}
+\input{trace}
+
+\subsubsection{Environment} 
+$ \env : {\mathcal{T}}  \to \mathcal{V} \to \mathcal{VAL} \cup \{\bot\}$
 \[
 \begin{array}{lll}
 \env(\trace  \traceadd (x, l, v, \bullet)) x \triangleq v
@@ -123,7 +273,7 @@ Environment $ \env : {\mathcal{T}}  \to \mathcal{VAR} \to \mathcal{VAL} \cup \{\
 \end{array}
 \]
 
-\subsection{Trace-based Operational Semantics for {\tt Labeled While} Language}
+\subsubsection{Operational Semantics Rules}
 {
 \begin{mathpar}
 \boxed{ \config{\trace,\aexpr} \aarrow v \, : \, \mbox{Trace  $\times$ Arithmetic Expr $\Rightarrow$ Arithmetic Value} }
@@ -174,8 +324,6 @@ Environment $ \env : {\mathcal{T}}  \to \mathcal{VAR} \to \mathcal{VAL} \cup \{\
 \\
 \boxed{ \config{\trace, \bexpr} \barrow v \, : \, \mbox{Trace $\times$ Boolean Expr $\Rightarrow$ Boolean Value} }
 \\
-% \text{\mg{Missing. Without these rules it is difficult to understand why we need a trace to evaluate expressions.}}
-% \\
 \inferrule{ 
   \empty
 }{
@@ -450,124 +598,44 @@ c; \ewhile [b]^{l} \edo c),
     \caption{Trace-based Operational Semantics for Language.}
     \label{fig:os}
 \end{figure}
-\\
-The labeled variables and assigned variables are set of variables annotated by a label. 
-We use  
-$\mathcal{LV}$ represents the universe of all the labeled variables and 
-$\avar_c \in \mathcal{P}(\mathcal{VAR} \times \mathbb{N}) \subset \mathcal{LV}$ and 
-$\lvar_c \in \mathcal{P}(\mathcal{VAR} \times \mathcal{L}) \subseteq \mathcal{LV}$,
-represents the set of assigned variables and labeled variables for a labeled command $c$,
-defined in Definition~\ref{def:avar} and \ref{def:lvar}.
 %
-\\
-$FV: \expr \to \mathcal{P}(\mathcal{VAR})$, computes the set of free variables in an expression. To be precise,
-$FV(\aexpr)$, $FV(\bexpr)$ and $FV(\qexpr)$ represent the set of free variables in arithmetic
-expression $\aexpr$, boolean expression $\bexpr$ and query expression $\qexpr$ respectively.
-Labeled variables in $c$ is the set of assigned variables and all the free variables
-showing up in $c$ with a default label $in$. 
-The free variables
-showing up in $c$, which aren't defined before be used, are actually the input variables of this program.
 %
-\begin{defn}[Assigned Variables ($\avar : \cdom \to \mathcal{P}(\mathcal{VAR} \times \mathbb{N})$)]
-\label{def:avar}
-{\footnotesize
-$$ \avar_{c} \triangleq
-  \left\{
-  \begin{array}{ll}
-      \{{x}^l\}                   
-      & {c} = [{\assign x e}]^{l} 
-      \\
-      \{{x}^l\}                   
-      & {c} = [{\assign x \query(\qexpr)}]^{l} 
-      \\
-      \avar_{{c_1}} \cup \avar_{{c_2}}  
-      & {c} = {c_1};{c_2}
-      \\
-      \avar_{{c}} \cup \avar_{{c_2}} 
-      & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
-      \\
-      \avar_{{c}'}
-      & {c}   = \ewhile ([\bexpr]^{l}, {c}')
-\end{array}
-\right.
+If we observe the operational semantics rules, we can find that no rule will shrink the trace. 
+So we have the Lemma~\ref{lem:tracenondec} with proof in Appendix~\ref{apdx:tracenondec}, 
+specifically the trace has the property that its length never decreases during the program execution.
+\begin{lem}
+[Trace Non-Decreasing]
+\label{lem:tracenondec}
+For every program $c \in \cdom$ and traces $\trace, \trace' \in \mathcal{T}$, if 
+$\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'}$,
+then there exists a trace $\trace'' \in \mathcal{T}$ with $\trace \tracecat \trace'' = \trace'$
+%
 $$
-}
-\end{defn}
-%
-
-\begin{defn}[labelled Variables $\lvar$]
-\label{def:lvar}
-{\footnotesize
+\forall \trace, \trace' \in \mathcal{T}, c \st
+\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
+\implies \exists \trace'' \in \mathcal{T} \st \trace \tracecat \trace'' = \trace'
 $$
-  \lvar_{c} \triangleq
-  \left\{
-  \begin{array}{ll}
-      \{{x}^l\} \cup FV(\expr)^{\lin}                  
-      & {c} = [{\assign x e}]^{l} 
-      \\
-      \{{x}^l\}   \cup FV(\qexpr)^{\lin}                
-      & {c} = [{\assign x \query(\qexpr)}]^{l} 
-      \\
-      \lvar_{{c_1}} \cup \lvar_{{c_2}}  
-      & {c} = {c_1};{c_2}
-      \\
-      \lvar_{{c}} \cup \lvar_{{c_2}} \cup FV(\bexpr)^{\lin}
-      & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
-      \\
-      \lvar_{{c}'} \cup FV(\bexpr)^{\lin}
-      & {c}   = \ewhile ([\bexpr]^{l}, {c}')
-\end{array}
-\right.
-$$
-}
-\end{defn}
-%
-We also defined the set of query variables for a program $c$,
-it is the set of variables set to the result of a query in the program formally in Definition~\ref{def:qvar}.
-\begin{defn}[Query Variables ($\qvar: \cdom \to \mathcal{P}(\mathcal{LV})$)] 
-  \label{def:qvar}
-Given a program $c$, its query variables 
-$\qvar(c)$ is the set of variables set to the result of a query in the program.
-It is defined as follows:
-{\footnotesize
-$$
-  \qvar(c) \triangleq
-  \left\{
-  \begin{array}{ll}
-      \{\}                  
-      & {c} = [{\assign x \expr}]^{l} 
-      \\
-      \{{x}^l\}                  
-      & {c} = [{\assign x \query(\qexpr)}]^{l} 
-      \\
-      \qvar(c_1) \cup \qvar(c_2)  
-      & {c} = {c_1};{c_2}
-      \\
-      \qvar(c_1) \cup \qvar(c_2) 
-      & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
-      \\
-      \qvar(c')
-      & {c}   = \ewhile ([\bexpr]^{l}, {c}')
-\end{array}
-\right.
-$$
-}
-\end{defn}
-%
-It is easy to see that a program $c$'s query variables is a subset of 
-its labeled variables, $\qvar(c) \subseteq \lvar(c)$.
-%
-%
-Every labeled variable in a program is unique, formally as follows with proof in Appendix~\ref{apdx:lvar_unique}.
-\begin{lem}[Uniqueness of the Labeled Variables]
-  \label{lem:lvar_unique}
-  For every program $c \in \cdom$ and every two labeled variables such that
-  $x^i, y^j \in \lvar(c)$, then $x^i \neq y^j$.
-  \[
-    \forall c \in \cdom, x^i, y^j \in \mathcal{L} \st x^i, y^j \in \lvar(c)\implies x^i \neq y^j.
-    \]
 \end{lem}
+
+Since the equivalence over two events is defined over the query value equivalence, 
+when there is an event belonging to a trace, 
+if this event is a query assignment event, 
+it is possible that 
+the event showing up in this trace has a different form of query value, 
+but they are equivalent by Definition~\ref{def:query_equal}.
+So we have the following Corollary~\ref{coro:aqintrace} with proof in Appendix~\ref{apdx:aqintrace}.
+\begin{coro}
+\label{coro:aqintrace}
+For every event and a trace $\trace \in \mathcal{T}$,
+if $\event \in \trace$, 
+then there exist another event $\event' \in \eventset$ and traces $\trace_1, \trace_2 \in \mathcal{T}$
+such that $\trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace $
+with 
+$\event$ and $\event'$ equivalent but may differ in their query value.
+\[
+  \forall \event \in \eventset, \trace \in \mathcal{T} \st
+\event \in \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
+\event' \in \eventset \st (\event \in \event') \land \trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace  
+\]
+\end{coro}
 %
-%
-%
-\clearpage
