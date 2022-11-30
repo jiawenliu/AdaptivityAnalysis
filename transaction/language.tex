@@ -1,0 +1,654 @@
+%
+%
+\subsection{Syntax}
+\[
+\begin{array}{llll}
+\mbox{Arithmetic Operators} 
+& \oplus_a & ::= & + ~|~ - ~|~ \times 
+%
+~|~ \div ~|~ \max ~|~ \min\\  
+\mbox{Boolean Operators} 
+& \oplus_b & ::= & \lor ~|~ \land
+\\
+%
+\mbox{Relational Operators} 
+& \sim & ::= & < ~|~ \leq ~|~ == 
+\\  
+%
+\mbox{Label} 
+& l & \in & \mathbb{N} \cup \{\lin, \lex\} 
+\\ 
+%
+\mbox{Arithmetic Expression} 
+& \aexpr & ::= & 
+n \in \mathbb{N}^{\infty} ~|~ {x} ~|~ \aexpr \oplus_a \aexpr 
+ ~|~ \elog \aexpr  ~|~ \esign \aexpr
+\\
+%
+\mbox{Boolean Expression} & \bexpr & ::= & 
+%
+\etrue ~|~ \efalse  ~|~ \neg \bexpr
+ ~|~ \bexpr \oplus_b \bexpr
+%
+~|~ \aexpr \sim \aexpr 
+\\
+%
+\mbox{Expression} & \expr & ::= & v ~|~ \aexpr ~|~ \bexpr ~|~ [\expr, \dots, \expr]
+\\  
+%
+\mbox{Value} 
+& v & ::= & { n ~|~ \etrue ~|~ \efalse ~|~ [] ~|~ [v, \dots, v]}  
+\\
+&&&
+\highlight
+{
+~|~ (r, x_1, \ldots, x_n) := c
+}
+\\
+%
+\mbox{Query Expression} 
+& {\qexpr} & ::= 
+& { \qval ~|~ \aexpr ~|~ \qexpr \oplus_a \qexpr ~|~ \chi[\aexpr]} 
+\\
+%
+\mbox{Query Value} & \qval & ::= 
+& {n ~|~ \chi[n] ~|~ \qval \oplus_a  \qval ~|~ n \oplus_a  \chi[n]
+    ~|~ \chi[n] \oplus_a  n}
+    \\
+\mbox{Labeled Command} 
+& {c} & ::= &   [\assign {{x}}{ {\expr}}]^{l} ~|~  [\assign {{x} } {{\query(\qexpr)}}]^{l}
+~|~ {\ewhile [ \bexpr ]^{l} \edo {c} }
+\\
+&&&
+~|~ {c};{c}  
+~|~ \eif([\bexpr]{}^l , {c}, {c}) 
+~|~ [\eskip]^l\\ 
+&&&
+\highlight
+{
+~|~ \clabel{\efun}^l: x(r, x_1, \ldots, x_n) := c
+~|~ \clabel{\assign{x}{\ecall(x, e_1, \ldots, e_n)}}^l
+}
+~|~ {c};{c}  
+\\ 
+\mbox{Event} 
+& \event & ::= & 
+    ({x}, l, v, \bullet) ~|~ ({x}, l, v, \qval)  ~~~~~~~~~~~ \mbox{Assignment Event} \\
+&&& ~|~(\bexpr, l, v, \bullet)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Testing Event}
+\\
+\end{array}
+\]
+We use following notations to represent the set of corresponding terms:
+\[
+\begin{array}{lll}
+\mathcal{V} & : & \mbox{Set of Variables}  
+\\ 
+%
+\mathcal{VAL} & : & \mbox{Set of Values} 
+\\ 
+%
+\mathcal{QVAL} & : & \mbox{Set of Query Values} 
+\\ 
+%
+\cdom & : & \mbox{Set of Commands} 
+\\ 
+%
+\eventset  & : & \mbox{Set of Events}  
+\\
+%
+\eventset^{\asn}  & : & \mbox{Set of Assignment Events}  
+\\
+%
+\eventset^{\test}  & : & \mbox{Set of Testing Events}  
+\\
+%
+\ldom  & : & \mbox{Set of Labels}  
+\\
+%%
+\mathcal{VAL}  & : & \mbox{Set of Labeled Variables}  
+\\
+%%
+\dbdom  & : & \mbox{{Set of Databases}} 
+\\
+%
+{\mathcal{T}} & : & \mbox{Set of Traces}
+\\
+%
+\qdom & : & \mbox{{Domain of Query Results}}\\
+\end{array}
+\]
+%
+The labeled variables and assigned variables are set of variables annotated by a label. 
+We use  
+$\mathcal{LV}$ to represent the universe of all the labeled variables and 
+$\lvar(c) \in \mathcal{P}(\mathcal{V} \times \mathcal{L}) \subseteq \mathcal{LV}$,
+to represent the set of labeled variables in the program $c$,
+defined in Definition~\ref{def:lvar}.
+Labeled variables in $c$ is the set of assigned variables.
+%
+%
+\begin{defn}[labelled Variables $\lvar$]
+  \label{def:lvar}
+  {\footnotesize
+  $$
+    \lvar(c) \triangleq
+    \left\{
+    \begin{array}{ll}
+      \{ \}           
+        & {c} = [{\eskip}]^{l} 
+        \\
+      \{{x}^l\}           
+        & {c} = [{\assign x e}]^{l} 
+        \\
+        \{{x}^l\}            
+        & {c} = [{\assign x \query(\qexpr)}]^{l} 
+        \\
+        \lvar(c_1) \cup \lvar(c_2) 
+        & {c} = {c_1};{c_2}
+        \\
+        \lvar(c) \cup \lvar(c_2)
+        & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
+        \\
+        \lvar(c')
+        & {c}   = \ewhile ([\bexpr]^{l}, {c}')
+  \end{array}
+  \right.
+  $$
+  }
+  \end{defn}
+  $FV: \expr \to \mathcal{P}(\mathcal{V})$, computes the set of free variables in an expression. To be precise,
+  $FV(\aexpr)$, $FV(\bexpr)$ and $FV(\qexpr)$ represent the set of
+  free variables in the arithmetic
+  expression $\aexpr$, boolean expression $\bexpr$ and query expression $\qexpr$ respectively.
+  The free variables
+  showing up in $c$, which aren't defined before using, are actually the input variables of this program.
+  
+We also defined the set of query variables for a program $c$,
+it is the set of variables set to the result of a query in the program formally in Definition~\ref{def:qvar}.
+\begin{defn}[Query Variables ($\qvar: \cdom \to \mathcal{P}(\mathcal{LV})$)] 
+  \label{def:qvar}
+Given a program $c$, its query variables 
+$\qvar(c)$ is the set of variables set to the result of a query in the program.
+It is defined as follows:
+{\footnotesize
+$$
+  \qvar(c) \triangleq
+  \left\{
+    \begin{array}{ll}
+      \{\}           
+        & {c} = [{\eskip}]^{l} 
+        \\
+      \{\}                  
+      & {c} = [{\assign x \expr}]^{l} 
+      \\
+      \{{x}^l\}                  
+      & {c} = [{\assign x \query(\qexpr)}]^{l} 
+      \\
+      \qvar(c_1) \cup \qvar(c_2)  
+      & {c} = {c_1};{c_2}
+      \\
+      \qvar(c_1) \cup \qvar(c_2) 
+      & {c} =\eif([\bexpr]^{l}, c_1, c_2) 
+      \\
+      \qvar(c')
+      & {c}   = \ewhile ([\bexpr]^{l}, {c}')
+\end{array}
+\right.
+$$
+}
+\end{defn}
+%
+It is easy to see that a program $c$'s query variables is a subset of 
+its labeled variables, $\qvar(c) \subseteq \lvar(c)$.
+%
+%
+Every labeled variable in a program is unique, formally as follows with proof in Appendix~\ref{apdx:lvar_unique}.
+\begin{lem}[Uniqueness of the Labeled Variables]
+  \label{lem:lvar_unique}
+  Given any program $c \in \cdom$ with its label variable set $\lvar(c)$,
+  every two labeled variables in this set are different.
+  \[
+    \forall c \in \cdom, x^i, y^j \in \lvar(c) \st x^i \neq y^j.
+    \]
+\end{lem}
+%
+%
+
+\subsection{Trace-based Operational Semantics for {\tt Query While} Language}
+
+\subsubsection{Event}
+\input{event}
+
+\subsubsection{Trace}
+\input{trace}
+
+\subsubsection{Environment} 
+$ \env : {\mathcal{T}}  \to \mathcal{V} \to \mathcal{VAL} \cup \{\bot\}$
+\[
+\begin{array}{lll}
+\env(\trace  \traceadd (x, l, v, \bullet)) x \triangleq v
+&
+\env(\trace \traceadd (y, l, v, \bullet)) x \triangleq \env(\trace) x, y \neq x
+&
+\env(\trace \traceadd (b, l, v, \bullet)) x \triangleq \env(\trace) x
+\\
+\env(\trace \traceadd (x, l, v, \qval)) x \triangleq v
+&
+\env(\trace \traceadd (y, l, v, \qval)) x \triangleq \env(\trace) x, y \neq x
+&
+\env({[]} ) x \triangleq \bot
+\end{array}
+\]
+
+\subsubsection{Operational Semantics Rules}
+{
+\begin{mathpar}
+\boxed{ \config{\trace,\aexpr} \aarrow v \, : \, \mbox{Trace  $\times$ Arithmetic Expr $\Rightarrow$ Arithmetic Value} }
+\\
+% \\
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  n} 
+ \aarrow n
+}
+\and
+\inferrule{ 
+  \env(\trace) x = v
+}{
+ \config{\trace,  x} 
+ \aarrow v
+}
+\and
+\inferrule{ 
+  \config{\trace, \aexpr_1} \aarrow v_1
+  \and 
+  \config{\trace, \aexpr_2} \aarrow v_2
+  \and 
+   v_1 \oplus_a v_2 = v
+}{
+ \config{\trace,  \aexpr_1 \oplus_a \aexpr_2} 
+ \aarrow v
+}
+\and
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow v'
+  \and 
+  \elog v' = v
+}{
+ \config{\trace,  \elog \aexpr} 
+ \aarrow v
+}
+\and
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow v'
+  \and 
+  \esign v' = v
+}{
+ \config{\trace,  \esign \aexpr} 
+ \aarrow v
+}
+\\
+\boxed{ \config{\trace, \bexpr} \barrow v \, : \, \mbox{Trace $\times$ Boolean Expr $\Rightarrow$ Boolean Value} }
+\\
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  \efalse} 
+ \barrow \efalse
+}
+\and 
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  \etrue} 
+ \barrow \etrue
+}
+\and 
+\inferrule{ 
+  \config{\trace, \bexpr} \barrow v'
+  \and 
+  \neg v' = v
+}{
+ \config{\trace,  \neg \bexpr} 
+ \barrow v
+}
+\and 
+\inferrule{ 
+  \config{\trace, \bexpr_1} \barrow v_1
+  \and 
+  \config{\trace, \bexpr_2} \barrow v_2
+  \and 
+   v_1 \oplus_b v_2 = v
+}{
+ \config{\trace,  \bexpr_1 \oplus_b \bexpr_2} 
+ \barrow v
+}
+\and 
+\inferrule{ 
+  \config{\trace, \aexpr_1} \aarrow v_1
+  \and 
+  \config{\trace, \aexpr_2} \aarrow v_2
+  \and 
+   v_1 \sim v_2 = v
+}{
+ \config{\trace,  \aexpr_1 \sim \aexpr_2} 
+ \barrow v
+}
+\\
+\boxed{ \config{\trace, \expr} \earrow v \, : \, \mbox{Trace $\times$ Expression $\Rightarrow$ Value} }
+\\
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow v
+}{
+ \config{\trace,  \aexpr} 
+ \earrow v
+}
+\and
+\inferrule{ 
+  \config{\trace, \bexpr} \barrow v
+}{
+ \config{\trace,  \bexpr} 
+ \earrow v
+}
+\and
+\inferrule{ 
+  \config{\trace, \expr_1} \earrow v_1
+  \cdots
+  \config{\trace, \expr_n} \earrow v_n
+}{
+ \config{\trace,  [\expr_1, \cdots, \expr_n]} 
+ \earrow [v_1, \cdots, v_n]
+}
+\and
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  v} 
+ \earrow v
+}
+\\
+\boxed{ \config{\trace, \qexpr} \qarrow \qval \, : \, \mbox{Trace  $\times$ Query Expr $\Rightarrow$ Query Value} }
+\\
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow n
+}{
+ \config{\trace,  \aexpr} 
+ \qarrow n
+}
+\and
+\inferrule{ 
+  \config{\trace, \qexpr_1} \qarrow \qval_1
+  \and
+  \config{\trace, \qexpr_2} \qarrow \qval_2
+}{
+ \config{\trace,  \qexpr_1 \oplus_a \qexpr_2} 
+ \qarrow \qval_1 \oplus_a \qval_2
+}
+\and
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow n
+}{
+ \config{\trace, \chi[\aexpr]} \qarrow \chi[n]
+}
+\and
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  \qval} 
+ \qarrow \qval
+}
+ \end{mathpar}
+%
+The trace based operational semantics rules are defined in Figure \ref{fig:os}.
+%
+\begin{figure}
+{
+\begin{mathpar}
+\boxed{
+\mbox{Command $\times$ Trace}
+\xrightarrow{}
+\mbox{Command $\times$ Trace}
+}
+\and
+\boxed{\config{{c, \trace}}
+\xrightarrow{} 
+\config{{c',  \trace'}}
+}
+\\
+\inferrule
+{
+\empty
+}
+{
+\config{\clabel{\eskip}^l,  \trace } 
+\xrightarrow{} 
+\config{\clabel{\eskip}^l, \trace}
+}
+~\textbf{skip}
+%
+\and
+%
+\inferrule
+{
+\event = ({x}, l, v, \bullet)
+}
+{
+\config{[\assign{{x}}{\aexpr}]^{l},  \trace } 
+\xrightarrow{} 
+\config{\clabel{\eskip}^l, \trace \traceadd \event}
+}
+~\textbf{assn}
+%
+\and
+%
+{
+\inferrule
+{
+ \trace, \qexpr \qarrow \qval
+ \and 
+\query(\qval) = v
+\and 
+\event = ({x}, l, v, \qval)
+}
+{
+\config{{[\assign{x}{\query(\qexpr)}]^l, \trace}}
+\xrightarrow{} 
+\config{{\clabel{\eskip}^l,  \trace \traceadd \event} }
+}
+~\textbf{query}
+}
+%
+\and
+%
+\inferrule
+{
+ \trace, b \barrow \etrue
+ \and 
+ \event = (b, l, \etrue, \bullet)
+}
+{
+\config{{\ewhile [b]^{l} \edo c, \trace}}
+\xrightarrow{} 
+\config{{
+c; \ewhile [b]^{l} \edo c),
+\trace \traceadd \event}}
+}
+~\textbf{while-t}
+%
+%
+\and
+%
+\inferrule
+{
+ \trace, b \barrow \efalse
+ \and 
+ \event = (b, l, \efalse, \bullet)
+}
+{
+\config{{\ewhile [b]^{l} \edo c, \trace}}
+\xrightarrow{} 
+\config{{
+  \clabel{\eskip}^l,
+\trace \traceadd \event}}
+}
+~\textbf{while-f}
+%
+%
+\and
+%
+%
+\inferrule
+{
+\config{{c_1, \trace}}
+\xrightarrow{}
+\config{{c_1',  \trace'}}
+}
+{
+\config{{c_1; c_2, \trace}} 
+\xrightarrow{} 
+\config{{c_1'; c_2, \trace'}}
+}
+~\textbf{seq1}
+%
+\and
+%
+\inferrule
+{
+  \config{{c_2, \trace}}
+  \xrightarrow{}
+  \config{{c_2',  \trace'}}
+}
+{
+\config{{\clabel{\eskip}^l; c_2, \trace}} \xrightarrow{} \config{{ c_2', \trace'}}
+}
+~\textbf{seq2}
+%
+\and
+%
+%
+\inferrule
+{
+   \trace, b \barrow \etrue
+ \and 
+ \event = (b, l, \etrue, \bullet)
+}
+{
+ \config{{
+\eif([b]^{l}, c_1, c_2), 
+\trace}}
+\xrightarrow{} 
+\config{{c_1, \trace \traceadd \event}}
+}
+~\textbf{if-t}
+%
+\and
+%
+\inferrule
+{
+ \trace, b \barrow \efalse
+ \and 
+ \event = (b, l, \efalse, \bullet)
+}
+{
+\config{{\eif([b]^{l}, c_1, c_2), \trace}}
+\xrightarrow{} 
+\config{{c_2, \trace \traceadd \event}}
+}
+~\textbf{if-f}
+% %
+\and
+%
+\highlight{
+\inferrule
+{
+ c' = (c)^{+n}
+ \and 
+ \event = (f, l, (r, x_1, \ldots, x_n) := c', \bullet)
+}
+{
+\config{{
+  [\efun]^l: f(r, x_1, \ldots, x_n) := c, \trace}}
+\xrightarrow{} 
+\config{{\clabel{\eskip}^l, \trace \traceadd \event}}
+}
+~\textbf{fun-def}
+%
+}
+\\
+\highlight{
+%
+\inferrule
+{
+  \config{ \trace, f} \earrow (r, x_1, \ldots, x_n) := c
+\and 
+\config{{
+  \clabel{\assign{x_1}{e_1}}^{(l, 1)}; \ldots;
+  \clabel{\assign{x_n}{e_n}}^{(l, n)}, \trace}} 
+  \xrightarrow{}^* 
+  \config{{\clabel{\eskip}^{(l, n)}, \trace_1}}
+  \\ 
+  \config{{\clabel{c}^{(l)}, \trace_1}}
+  \xrightarrow{}^* 
+  \config{{\clabel{\eskip}^{l}, \trace'}}
+  \and
+  \config{\trace', r } \earrow v
+  \and
+ \event = (x, l, v, \bullet)
+}
+{
+\config{{
+  \clabel{\assign{x}{\ecall(f, e_1, \ldots, e_n)}}^l, \trace}}
+\xrightarrow{} 
+\config{{\clabel{\eskip}^l, \trace' :: \event}}
+}
+~\textbf{fun-call}
+}
+%
+\end{mathpar}
+}
+% \end{subfigure}
+    \caption{Trace-based Operational Semantics for Language.}
+    \label{fig:os}
+\end{figure}
+%
+%
+If we observe the operational semantics rules, we can find that no rule will shrink the trace. 
+So we have the Lemma~\ref{lem:tracenondec} with proof in Appendix~\ref{apdx:tracenondec}, 
+specifically the trace has the property that its length never decreases during the program execution.
+\begin{lem}
+[Trace Non-Decreasing]
+\label{lem:tracenondec}
+For every program $c \in \cdom$ and traces $\trace, \trace' \in \mathcal{T}$, if 
+$\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'}$,
+then there exists a trace $\trace'' \in \mathcal{T}$ with $\trace \tracecat \trace'' = \trace'$
+%
+$$
+\forall \trace, \trace' \in \mathcal{T}, c \st
+\config{c, \trace} \rightarrow^{*} \config{\eskip, \trace'} 
+\implies \exists \trace'' \in \mathcal{T} \st \trace \tracecat \trace'' = \trace'
+$$
+\end{lem}
+
+Since the equivalence over two events is defined over the query value equivalence, 
+when there is an event belonging to a trace, 
+if this event is a query assignment event, 
+it is possible that 
+the event showing up in this trace has a different form of query value, 
+but they are equivalent by Definition~\ref{def:query_equal}.
+So we have the following Corollary~\ref{coro:aqintrace} with proof in Appendix~\ref{apdx:aqintrace}.
+\begin{coro}
+\label{coro:aqintrace}
+For every event and a trace $\trace \in \mathcal{T}$,
+if $\event \in \trace$, 
+then there exist another event $\event' \in \eventset$ and traces $\trace_1, \trace_2 \in \mathcal{T}$
+such that $\trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace $
+with 
+$\event$ and $\event'$ equivalent but may differ in their query value.
+\[
+  \forall \event \in \eventset, \trace \in \mathcal{T} \st
+\event \in \trace \implies \exists \trace_1, \trace_2 \in \mathcal{T}, 
+\event' \in \eventset \st (\event \in \trace') \land \trace_1 \tracecat [\event'] \tracecat \trace_2 = \trace  
+\]
+\end{coro}
+%
