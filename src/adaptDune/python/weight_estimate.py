@@ -3,11 +3,9 @@ import time
 from abstract_transition_graph import TransitionGraph, DifferenceConstraint
 from bound_infer import TransitionBound
 from adapt_lib import AdaptType, Graph
-from adapt_search import AdaptSearchAlgRefined
-from program_refine import ProgramRefine
 from rechability_bound_pathsensitive import PathSensitiveReachabilityBound
 
-class AdaptEstimate():
+class WeightEstimate():
     def __init__(self) -> None:
         pass
 
@@ -23,11 +21,6 @@ class AdaptEstimate():
             # Path-Insensitive Version:
             self.reachability_bound = TransitionBound(self.transition_graph).compute_transition_bounds()
 
-            # # Path-Sensitive Version:
-            # reachability_bound_path = PathSensitiveReachabilityBound(self.transition_graph).compute_rb(ProgramRefine(self.transition_graph).get_result())
-            # for transition_path, bound in reachability_bound_path.items():
-            #     for transition_id in [int(id) for id in (transition_path[1:-1].split(", "))]:
-            #         self.reachability_bound[transition_id] = bound
             return
 
         def vertex_weights_estimate(self):
@@ -80,7 +73,7 @@ class AdaptEstimate():
             self.vertex_weights_estimate()
 
 
-        def weight_estimate2(self):
+        def weight_estimate_without_reachability_bound(self):
             for i in range(self.graph.get_vertice_num()):
                 self.graph.weights[i] = AdaptType(1)
 
@@ -89,20 +82,20 @@ class AdaptEstimate():
             self.print_edge_weights()
     # @staticmethod
 
-    @staticmethod
-    def adapt_estimate(dcf_graph, abs_transition_graph):
-        start_time = time.time()
-        weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abs_transition_graph)
-        # dcf_graph.weights = [AdaptType(1)]* dcf_graph.get_vertice_num()
-        if dcf_graph.weights is None:
-            weight_infer.weight_estimate()
-            weight_infer.print_weights()
-            print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
-        else:
-            print("--- REACHABILITY BOUNDS ARE PARSED FROM FILE: %s seconds ---" % (time.time() - start_time))
+    # @staticmethod
+    # def adapt_estimate(dcf_graph, abs_transition_graph):
+    #     start_time = time.time()
+    #     weight_infer = AdaptEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abs_transition_graph)
+    #     # dcf_graph.weights = [AdaptType(1)]* dcf_graph.get_vertice_num()
+    #     if dcf_graph.weights is None:
+    #         weight_infer.weight_estimate()
+    #         weight_infer.print_weights()
+    #         print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
+    #     else:
+    #         print("--- REACHABILITY BOUNDS ARE PARSED FROM FILE: %s seconds ---" % (time.time() - start_time))
 
-        adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
-        start_time = time.time()
-        adapt_search.search_adapt()
-        print("--- ADAPTIVITY COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
-        adapt_search.print_adapt()        
+    #     adapt_search = AdaptSearchAlgRefined(weight_infer.graph)
+    #     start_time = time.time()
+    #     adapt_search.search_adapt()
+    #     print("--- ADAPTIVITY COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
+    #     adapt_search.print_adapt()        
