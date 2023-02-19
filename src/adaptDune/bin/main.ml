@@ -322,3 +322,5 @@ let _ =
         Printf.printf "computation of the total parsing and graph generation time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
         (* Close Channel *)
         Out_channel.close oc                    
+
+
