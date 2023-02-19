@@ -38,7 +38,6 @@ class MechanizedSequential(tf.keras.Sequential):
         return super(MechanizedSequential, self).compute_metrics(
         x, y, y_pred, sample_weight)
       elif self.mechanism == Mechanism.GAUSSIAN:
-         print("mechanized by gaussian noise")
          return self.compute_metrics_gaussin(x, y, y_pred, sample_weight)
       else:
          self.compiled_metrics.update_state(y, y_pred, sample_weight)
