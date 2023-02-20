@@ -4,6 +4,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.cluster import KMeans
 from sklearn.model_selection import GridSearchCV
+from sklearn import preprocessing
 
 import math
 import numpy as np
@@ -14,7 +15,6 @@ class Mechanism(Enum):
    GAUSSIAN = 1
    DATASPLIT = 2
    THRESHOLD = 3
-
 
 class MechanizedLogisticRegression(LogisticRegression):
 
@@ -39,17 +39,45 @@ class MechanizedLogisticRegression(LogisticRegression):
 
     def fit(self, x_train, y_train):
         if self.mechanism == None:
-            super(MechanizedLogisticRegression, self).fit(x_train, y_train)
+            result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
+            if isinstance(result, LogisticRegression):
+                return self
+            else:
+                return result
         elif self.mechanism == Mechanism.GAUSSIAN:
-            print("in gaussian mechanism")
+            print("in gaussian mechanism MechanizedLogisticRegression")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            super(MechanizedLogisticRegression, self).fit(x_train + x_noise, y_train + y_noise)
+            noised_x = x_train + x_noise
+            
+            ################ Gaussian Noise Added to Labels ################
+            # y_noise = np.random.normal(0, 0.1, y_train.shape) 
+            # noised_y = y_train + y_noise
+            # lab = preprocessing.LabelEncoder()
+            # y_transformed = pd.Series(
+            # lab.fit_transform(noised_y), 
+            # y_train.index,
+            # y_train.dtype,
+            # y_train.name,
+            # y_train.copy
+            # )
+            # y_transformed = lab.fit_transform(noised_y)
+
+            result = super(MechanizedLogisticRegression, self).fit(noised_x, y_train)
+            if isinstance(result, GridSearchCV):
+                return self
+            else:
+                return result
+            
         else:
-            super(MechanizedLogisticRegression, self).fit(x_train, y_train)
-    
+            result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
+            if isinstance(result, LogisticRegression):
+                return self
+            else:
+                return result
+           
     def choose_mechanism(self, mech):
         self.mechanism = mech
+
 
 
 
@@ -60,14 +88,40 @@ class MechanizedGridSearchCV(GridSearchCV):
 
     def fit(self, x_train, y_train):
         if self.mechanism == None:
-            super(MechanizedGridSearchCV, self).fit(x_train, y_train)
+            result = super(MechanizedGridSearchCV, self).fit(x_train, y_train)
+            if isinstance(result, GridSearchCV):
+                return self
+            else:
+                return result
         elif self.mechanism == Mechanism.GAUSSIAN:
-            print("in gaussian mechanism")
+            print("in gaussian mechanism GridSearchCV")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            super(MechanizedGridSearchCV, self).fit(x_train + x_noise, y_train + y_noise)
+            noised_x = x_train + x_noise
+            
+            ################ Gaussian Noise Added to Labels ################
+            # y_noise = np.random.normal(0, 0.1, y_train.shape) 
+            # noised_y = y_train + y_noise
+            # lab = preprocessing.LabelEncoder()
+            # y_transformed = pd.Series(
+            # lab.fit_transform(noised_y), 
+            # y_train.index,
+            # y_train.dtype,
+            # y_train.name,
+            # y_train.copy
+            # )
+            # y_transformed = lab.fit_transform(noised_y)
+
+            result = super(MechanizedGridSearchCV, self).fit(noised_x, y_train)
+            if isinstance(result, GridSearchCV):
+                return self
+            else:
+                return result
         else:
-            super(MechanizedGridSearchCV, self).fit(x_train, y_train)
+            result = super(MechanizedGridSearchCV, self).fit(x_train, y_train)
+            if isinstance(result, GridSearchCV):
+                return self
+            else:
+                return result
     
     def choose_mechanism(self, mech):
         self.mechanism = mech
