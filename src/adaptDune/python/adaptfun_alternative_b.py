@@ -6,7 +6,7 @@ from adapt_search import AdaptSearchAlgRefined
 
 class Adaptfun:
     @staticmethod
-    def adaptfun(dcf_graph, abs_transition_graph):
+    def adaptfun_A(dcf_graph, abs_transition_graph):
         start_time = time.time()
         weight_infer = WeightEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abs_transition_graph)
 

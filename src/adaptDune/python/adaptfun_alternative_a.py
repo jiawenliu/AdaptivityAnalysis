@@ -6,7 +6,14 @@ from adapt_search import AdaptSearchAlgRefined
 
 class Adaptfun:
     @staticmethod
-    def adaptfun(dcf_graph, abs_transition_graph):
+    def adaptfun_B():
+        
+        dependency_file = "./dcfg/" + self.program
+        abs_cfg_file = "./abscfg/" + self.program
+        graph_parser = GraphParser(program, dependency_graph, abs_cfg_graph)
+        dcf_graph = graph_parser.dcfg_parse()
+        abscf_graph = graph_parser.abscfg_parse()
+
         start_time = time.time()
         weight_infer = WeightEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abs_transition_graph)
         # dcf_graph.weights = [AdaptType(1)]* dcf_graph.get_vertice_num()
@@ -23,10 +30,8 @@ class Adaptfun:
         pass
     
     def main(self):
-        graph_parser = GraphParser()
-        dcf_graph = graph_parser.dcfg_parse()
-        abscf_graph = graph_parser.abscfg_parse()
-        Adaptfun.adaptfun(dcf_graph, abscf_graph)
+
+        Adaptfun.adaptfun(version)
 
 start_time = time.time()
 runner = Adaptfun()

@@ -1,36 +1,10 @@
 from abstract_transition_graph import TransitionGraph, DifferenceConstraint
 from adapt_lib import AdaptType, Graph
-import argparse
 
-class GraphParser(argparse.ArgumentParser):
-    def __init__(self, example = None) -> None:
-        super().__init__(description='Process the Abstract Control Flow Graph and Data Dependency Graph')
-        self.add_argument('-d', '--dcfg',
-        type=str, 
-        default= "./dcfg/seq.br", 
-        help='The input file name for the Data Control Flow Graph')
-
-        self.add_argument('-a', '--abs_cfg',
-        type=str, 
-        default= "./abscfg/seq.br", 
-        help='The input file name for the Abstract Control Flow Graph')
-
-        self.add_argument('-w', '--weight',
-        type=str, 
-        default= "./weight/seq.br", 
-        help='The input file name of the Weight')
-
-
-        self.add_argument('-e', '--example',
-        type=str, 
-        default= "./examples/seq.br", 
-        help='The example name for the Abstract Control Flow Graph')
-
-
-        self.args = self.parse_args()
-        self.example_name = self.args.example.split("/")[-1]
-        self.dcfg_file = "./dcfg/" + self.example_name
-        self.abs_cfg_file = "./abscfg/" + self.example_name
+class GraphParser():
+    def __init__(self, program = None, dependency_graph = None, abscf_graph = None) -> None:
+        self.dcfg_file = dependency_graph
+        self.abs_cfg_file = abscf_graph
 
     def weight_parse(self):
         with open(self.dcfg_file, "r") as weightdata:
