@@ -179,6 +179,7 @@ class MechanizedKMeans(KMeans):
         self.mechanism = mech
 
 
+
 class MechanizedDecisionTree(DecisionTreeClassifier):
     def __init__(self, *, criterion="gini", splitter="best", max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0, class_weight=None, ccp_alpha=0):
         super(MechanizedDecisionTree, self).__init__(
@@ -190,9 +191,8 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
             min_impurity_decrease = min_impurity_decrease, 
             class_weight = class_weight, 
             ccp_alpha = ccp_alpha)
-        
         self.mechanism = None
-
+        
 
     def fit(self, x_train, y_train):
         if self.mechanism == None:
