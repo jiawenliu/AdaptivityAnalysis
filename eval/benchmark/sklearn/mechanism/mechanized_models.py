@@ -135,13 +135,26 @@ class MechanizedGaussianNB(GaussianNB):
 
     def fit(self, x_train, y_train):
         if self.mechanism == None:
-            super(MechanizedGaussianNB, self).fit(x_train, y_train)
+            result = super(MechanizedGaussianNB, self).fit(x_train, y_train)
+            if isinstance(result, GaussianNB):
+                return self
+            else:
+                return result
         elif self.mechanism == Mechanism.GAUSSIAN:
+            print("in gaussian mechanism MechanizedGaussianNB")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            super(MechanizedGaussianNB, self).fit(x_train + x_noise, y_train + y_noise)
+            noised_x = x_train + x_noise
+            result = super(MechanizedGaussianNB, self).fit(noised_x, y_train)
+            if isinstance(result, GaussianNB):
+                return self
+            else:
+                return result
         else:
-            super(MechanizedGaussianNB, self).fit(x_train, y_train)
+            result = super(MechanizedGaussianNB, self).fit(x_train, y_train)
+            if isinstance(result, GaussianNB):
+                return self
+            else:
+                return result
 
     def choose_mechanism(self, mech):
         self.mechanism = mech
@@ -168,23 +181,41 @@ class MechanizedKMeans(KMeans):
 
 class MechanizedDecisionTree(DecisionTreeClassifier):
     def __init__(self, *, criterion="gini", splitter="best", max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0, class_weight=None, ccp_alpha=0):
-        super().__init__(criterion, 
-                         splitter, max_depth, 
-                         min_samples_split, 
-                         min_samples_leaf, min_weight_fraction_leaf, 
-                         max_features, random_state, max_leaf_nodes, 
-                         min_impurity_decrease, class_weight, 
-                         ccp_alpha)
+        super(MechanizedDecisionTree, self).__init__(
+            criterion = criterion, 
+            splitter = splitter, max_depth = max_depth, 
+            min_samples_split = min_samples_split, 
+            min_samples_leaf = min_samples_leaf, min_weight_fraction_leaf = min_weight_fraction_leaf, 
+            max_features = max_features, random_state = random_state, max_leaf_nodes = max_leaf_nodes, 
+            min_impurity_decrease = min_impurity_decrease, 
+            class_weight = class_weight, 
+            ccp_alpha = ccp_alpha)
+        
+        self.mechanism = None
+
 
     def fit(self, x_train, y_train):
         if self.mechanism == None:
-            super(MechanizedDecisionTree, self).fit(x_train, y_train)
+            result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+            if isinstance(result, DecisionTreeClassifier):
+                return self
+            else:
+                return result
         elif self.mechanism == Mechanism.GAUSSIAN:
+            print("in gaussian mechanism MechanizedDecisionTree")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            super(MechanizedDecisionTree, self).fit(x_train + x_noise, y_train + y_noise)
+            noised_x = x_train + x_noise
+            result = super(MechanizedDecisionTree, self).fit(noised_x, y_train)
+            if isinstance(result, DecisionTreeClassifier):
+                return self
+            else:
+                return result
         else:
-            super(MechanizedDecisionTree, self).fit(x_train, y_train)
+            result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+            if isinstance(result, DecisionTreeClassifier):
+                return self
+            else:
+                return result
 
     def choose_mechanism(self, mech):
         self.mechanism = mech
