@@ -81,9 +81,18 @@ class MechanizedLogisticRegression(LogisticRegression):
 
 
 
-class MechanizedGridSearchCV(GridSearchCV):
-    def __init__(self, *args, **kwargs):
-        super(MechanizedGridSearchCV, self).__init__(*args, **kwargs)
+class MechanizedGridSearchCV(GridSearchCV):    
+    def __init__(self, estimator, param_grid, *, scoring=None, n_jobs=None, refit=True, cv=None, verbose=0, pre_dispatch="2*n_jobs", error_score=np.nan, return_train_score=False):
+        super().__init__(estimator = estimator, 
+                         param_grid = param_grid, 
+                         scoring=scoring, 
+                         n_jobs = n_jobs,
+                         refit = refit, 
+                         cv = cv, 
+                         verbose = verbose, 
+                         pre_dispatch = pre_dispatch, 
+                         error_score = error_score, 
+                         return_train_score = return_train_score)
         self.mechanism = None
 
     def fit(self, x_train, y_train):
@@ -162,18 +171,42 @@ class MechanizedGaussianNB(GaussianNB):
 
 class MechanizedKMeans(KMeans):
     def __init__(self, n_clusters=8, *, init="k-means++", n_init="warn", max_iter=300, tol=0.0001, verbose=0, random_state=None, copy_x=True, algorithm="lloyd"):
-        super(MechanizedKMeans, self).__init__(n_clusters, init, n_init, max_iter, tol, verbose, random_state, copy_x, algorithm)
+        super(MechanizedKMeans, self).__init__(
+            n_clusters = n_clusters, 
+            init = init, 
+            n_init = n_init, 
+            max_iter = max_iter, 
+            tol = tol, 
+            verbose = verbose, 
+            random_state = random_state, 
+            copy_x = copy_x, 
+            algorithm = algorithm)
+        
+        self.mechanism = None
 
 
-    def fit(self, x_train, y_train):
+    def fit(self, x_train):
         if self.mechanism == None:
-            super(MechanizedKMeans, self).fit(x_train, y_train)
+            result = super(MechanizedKMeans, self).fit(x_train)
+            if isinstance(result, KMeans):
+                return self
+            else:
+                return result
         elif self.mechanism == Mechanism.GAUSSIAN:
+            print("in gaussian mechanism MechanizedGaussianNB")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            super(MechanizedKMeans, self).fit(x_train + x_noise, y_train + y_noise)
+            noised_x = x_train + x_noise
+            result = super(MechanizedKMeans, self).fit(noised_x)
+            if isinstance(result, KMeans):
+                return self
+            else:
+                return result
         else:
-            super(MechanizedKMeans, self).fit(x_train, y_train)
+            result = super(MechanizedKMeans, self).fit(x_train)
+            if isinstance(result, KMeans):
+                return self
+            else:
+                return result
 
     def choose_mechanism(self, mech):
         self.mechanism = mech
@@ -223,18 +256,32 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
 class MechanizedOneVSRest(OneVsRestClassifier):
     
     def __init__(self, estimator, *, n_jobs=None, verbose=0):
-        super(MechanizedOneVSRest, self).__init__(estimator, n_jobs, verbose)
-
+        super(MechanizedOneVSRest, self).__init__(estimator = estimator, n_jobs = n_jobs, verbose = verbose)
+        self.mechanism = None
+        
 
     def fit(self, x_train, y_train):
         if self.mechanism == None:
-            super(MechanizedOneVSRest, self).fit(x_train, y_train)
+            result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
+            if isinstance(result, OneVsRestClassifier):
+                return self
+            else:
+                return result
         elif self.mechanism == Mechanism.GAUSSIAN:
+            print("in gaussian mechanism MechanizedDecisionTree")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            super(MechanizedOneVSRest, self).fit(x_train + x_noise, y_train + y_noise)
+            noised_x = x_train + x_noise
+            result = super(MechanizedOneVSRest, self).fit(noised_x, y_train)
+            if isinstance(result, OneVsRestClassifier):
+                return self
+            else:
+                return result
         else:
-            super(MechanizedOneVSRest, self).fit(x_train, y_train)
+            result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
+            if isinstance(result, OneVsRestClassifier):
+                return self
+            else:
+                return result
 
     def choose_mechanism(self, mech):
         self.mechanism = mech
