@@ -189,11 +189,10 @@ let _ =
       let cfg_result = Cfg.generate_cfg result in 
       let _ =  Printf.printf  "%d\n" (List.length cfg_result.nodes ) in   
       let (_, rd_in) = Df.kildall cfg_result in
-      Printf.printf "DCDG result:\n";
-      let dcdg_result =Dfg.ddg result rd_in in
-      Printf.printf "computation of the DCDG total time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
+      let dfg_result =Dfg.ddg result rd_in in
+      Printf.printf "computation of the DFG total time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
       Printf.fprintf oc "\n";
-      print_out_dcdg oc dcdg_result;    
+      print_out_dcdg oc dfg_result;    
       (*add weight line **) 
       Printf.fprintf oc "\n";
       (* Close Channel *)
@@ -201,7 +200,7 @@ let _ =
 
 
                 (******************** run dcfg and parser code  ********************)
-                let outfile_dcfg = "./dcfg/"^(String.sub outfile ~pos:(11) ~len:((String.length outfile) - 11)) in
+                let outfile_dcfg = "./dcfg/"^(String.sub outfile ~pos:(9) ~len:((String.length outfile) - 9)) in
                 let oc = Out_channel.create outfile_dcfg in
                 let result = parse_prog infile in            
                 let cfg_result = Cfg.generate_cfg result in 
@@ -229,7 +228,7 @@ let _ =
 
       (******************** run abscfg code  ********************)
       let time_abscfg = Caml_unix.gettimeofday () in
-      let outfile_abscfg = "./abscfg/"^(String.sub outfile ~pos:(11) ~len:((String.length outfile) - 11)) in 
+      let outfile_abscfg = "./abscfg/"^(String.sub outfile ~pos:(9) ~len:((String.length outfile) - 9)) in 
       let oc = Out_channel.create outfile_abscfg in
       Printf.printf "ABSCFG result:\n";
       let aflow = Abs.abs_flow (Seq (result, (Skip (Label (-1))))) in
