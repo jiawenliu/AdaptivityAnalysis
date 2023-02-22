@@ -13,15 +13,21 @@ class MechanizedSequential(tf.keras.Sequential):
   def __init__(self, *args, **kwargs):
     super(MechanizedSequential, self).__init__(*args, **kwargs)
     self.mechanism = None
-  
+    self.mu = 0.0
+    self.sigma = 0.03
+     
   def choose_mech(self, mech = None):
      self.mechanism = mech
+  
+  def set_gaussian_para(self, mu, sigma):
+     self.mu = mu
+     self.sigma = sigma
 
   def compute_metrics_gaussin(self, x, y, y_pred, sample_weight):
       noise = tf.random.normal(
         tf.shape(y_pred),
-        mean=0.0,
-        stddev=0.03,
+        mean=self.mu,
+        stddev=self.sigma,
         dtype=tf.dtypes.float32,
         seed=None,
         name=None
