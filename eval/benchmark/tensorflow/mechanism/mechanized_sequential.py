@@ -1,7 +1,8 @@
 import tensorflow as tf
-import cw_funcs as cw
+# from cw_funcs import cw_funcs as cw
 import numpy as np
 from enum import Enum
+import tensorflow_probability as tfp
 
 class Mechanism(Enum):
    GAUSSIAN = 1
@@ -50,10 +51,9 @@ class MechanizedSequential(tf.keras.Sequential):
      self.mechanism = mech
   
   def set_gaussian_para(self, mu, sigma):
-     self.mu = mu
-     self.sigma = sigma
+     self.set_mechanism_para(mu, sigma)
 
-  def set_mechanism_para(self, mu, sigma, beta, tau, hold_frac, threshold, check_for_width=cw.bounds_Thresh):
+  def set_mechanism_para(self, mu = 0.0, sigma = None, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
       self.mu = mu
       self.sigma = sigma
       self.beta = beta
@@ -197,15 +197,14 @@ class MechanizedSequential(tf.keras.Sequential):
   def thresholdout_train_step(self, data):
       # Unpack the data. Its structure depends on your model and
       # on what you pass to `fit()`.
-      x, y = data[:self.hold_frac]
-      x_hold, y_hold = data[self.hold_frac:]
+      x, y = data
+
+      hold_size, train_size = int(x.shape[0]  * (self.hold_frac)), int(x.shape[0]  * (1.0 - self.hold_frac))
+      x_train, y_train, x_hold, y_hold = x[hold_size:], y[hold_size:], x[:hold_size], y[:hold_size]
       with tf.GradientTape() as tape:
 
-         y_pred = self(x, training=True)  # Forward pass
-
+         y_pred_train = self(x_train, training=True)  # Forward pass
          y_pred_hold = self(x_hold, training = True)
-         
-
          '''
          TODO: Need to consider one of the following model as one shot of query:
           model-1. one step of training, the result of the logistic is a query
@@ -213,27 +212,20 @@ class MechanizedSequential(tf.keras.Sequential):
          '''
 
          '''
-         model-1:
+         model-1.
          drawback: the query result isn't unform data type, the trained logistic has different size dependents on the databse size.
          '''
          #TODO: subtraction between the tensors of different size
-         if np.abs(y_pred - y_pred_hold) >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
+         abs_diff = abs(np.sum(y_pred_train, axis = 0) / train_size - np.sum(y_pred_hold, axis = 0) / hold_size)
+         mean_abs_diff = sum(abs_diff) / y.shape[1]
+         print(mean_abs_diff)
+         if mean_abs_diff >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
             self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
-
-            #TODO: subtraction between the tensors of different size
-            y_noise = tf.random.laplace(
-                        tf.shape(y),
-                        mean=self.mu,
-                        stddev=self.sigma,
-                        dtype = y.dtype,
-                        seed=None,
-                        name=None
-                        )
-            y_pred_hold = y_pred_hold + y_noise
-
-            # y_pred = min(1.0, max(0.0, y_pred_hold + np.random.laplace(0, self.sigma)))
+            y_true, y_pred = y_hold, y_pred_hold + tfp.distributions.Laplace(self.mu, self.sigma).sample(tf.shape(y_pred_hold))
             loss = self.compiled_loss(y_hold, y_pred_hold, regularization_losses=self.losses)
+         else:
+            y_true, y_pred = y_train, y_pred_train
+            loss = self.compiled_loss(y_train, y_pred_train, regularization_losses=self.losses)
 
          '''
          model-2:
@@ -241,22 +233,29 @@ class MechanizedSequential(tf.keras.Sequential):
           query on the data. 
          advantage: the losses in different steps or different size of database always have the same type.
          '''
-         loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+         loss = self.compiled_loss(y_train, y_pred_train, regularization_losses=self.losses)
          loss_hold = self.compiled_loss(y_hold, y_pred_hold, regularization_losses=self.losses)
-         if np.abs(loss - loss_hold) >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
-            self.cost_q += 1
-            self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
-            loss = min(1.0, max(0.0, loss_hold + np.random.laplace(0, self.sigma)))
 
+         if np.abs(loss - loss_hold) >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
+            self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
+
+            loss = loss_hold + tfp.distributions.Laplace(self.mu, self.sigma).sample(tf.shape(loss_hold))
+            # min(1.0, max(0.0, loss_hold + np.random.laplace(0, self.sigma)))
+            y_true, y_pred = y_hold, y_pred_hold
+         else:
+            y_true, y_pred = y_train, y_pred_train
+            loss = self.compiled_loss(y_train, y_pred_train, regularization_losses=self.losses)
+
+      
+      
       # Compute gradients
       trainable_vars = self.trainable_variables
       gradients = tape.gradient(loss, trainable_vars)
-
       # Update weights
       self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
       # Update metrics (includes the metric that tracks the loss)
-      self.compiled_metrics.update_state(y, y_pred)
+      self.compiled_metrics.update_state(y_true, y_pred)
 
       # Return a dict mapping metric names to current value
       return {m.name: m.result() for m in self.metrics}
