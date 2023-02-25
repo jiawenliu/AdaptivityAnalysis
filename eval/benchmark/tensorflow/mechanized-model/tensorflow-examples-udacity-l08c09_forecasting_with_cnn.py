@@ -139,9 +139,9 @@ mechanized_model.compile(loss=keras.losses.Huber(),
               run_eagerly=True)
 threshold_history = mechanized_model.fit(train_set, epochs = 2, callbacks=[lr_schedule])
 
-# print(mechanized_history.history["loss"])
-# print(mechanized_history.history["lr"])
-
+'''
+Plot the Comparison of the Three Model
+'''
 plt.semilogx(empirical_history.history["lr"], empirical_history.history["loss"], label = "Baseline")
 plt.semilogx(gaussian_history.history["lr"], gaussian_history.history["loss"], label = "Gaussian")
 plt.semilogx(threshold_history.history["lr"], threshold_history.history["loss"], label = "Thresholdout")
@@ -149,50 +149,113 @@ plt.semilogx(threshold_history.history["lr"], threshold_history.history["loss"],
 plt.legend()
 plt.show()
 
-# keras.backend.clear_session()
-# tf.random.set_seed(42)
-# np.random.seed(42)
 
-# window_size = 30
-# train_set = seq2seq_window_dataset(x_train, window_size,
-#                                    batch_size=128)
-# valid_set = seq2seq_window_dataset(x_valid, window_size,
-#                                    batch_size=128)
+'''
+Evaluating the LSTM Forecasting with Checkpoint
+'''
 
-# mechanized_model = MechanizedSequential([
-#   keras.layers.Conv1D(filters=32, kernel_size=5,
-#                       strides=1, padding="causal",
-#                       activation="relu",
-#                       input_shape=[None, 1]),
-#   keras.layers.LSTM(32, return_sequences=True),
-#   keras.layers.LSTM(32, return_sequences=True),
-#   keras.layers.Dense(1),
-#   keras.layers.Lambda(lambda x: x * 200)
-# ])
+keras.backend.clear_session()
+tf.random.set_seed(42)
+np.random.seed(42)
 
-# mechanized_model.choose_mech(Mechanism.GAUSSIAN)
-# mechanized_model.set_mechanized_para(0, 0.05)
+window_size = 30
+train_set = seq2seq_window_dataset(x_train, window_size,
+                                   batch_size=128)
+valid_set = seq2seq_window_dataset(x_valid, window_size,
+                                   batch_size=128)
 
-# optimizer = keras.optimizers.SGD(lr=1e-5, momentum=0.9)
-# mechanized_model.compile(loss=keras.losses.Huber(),
-#               optimizer=optimizer,
-#               metrics=["mae"])
+mechanized_model = MechanizedSequential([
+  keras.layers.Conv1D(filters=32, kernel_size=5,
+                      strides=1, padding="causal",
+                      activation="relu",
+                      input_shape=[None, 1]),
+  keras.layers.LSTM(32, return_sequences=True),
+  keras.layers.LSTM(32, return_sequences=True),
+  keras.layers.Dense(1),
+  keras.layers.Lambda(lambda x: x * 200)
+])
 
-# mechanized_model_checkpoint = keras.callbacks.ModelCheckpoint(
-#     "mechanized_checkpoint.h5", save_best_only=True)
-# early_stopping = keras.callbacks.EarlyStopping(patience=50)
-# mechanized_model.fit(train_set, epochs=500,
-#           validation_data=valid_set,
-#           callbacks=[early_stopping, mechanized_model_checkpoint])
 
-# mechanized_model = keras.models.load_model("mechanized_checkpoint.h5",
-#                                          custom_objects={'MechanizedSequential':MechanizedSequential})
+optimizer = keras.optimizers.SGD(lr=1e-5, momentum=0.9)
+mechanized_model.compile(loss=keras.losses.Huber(),
+              optimizer=optimizer,
+              metrics=["mae"],
+              run_eagerly = True)
 
-# mechanized_rnn_forecast = model_forecast(mechanized_model, series[:,  np.newaxis], window_size)
-# mechanized_rnn_forecast = mechanized_rnn_forecast[split_time - window_size:-1, -1, 0]
+mechanized_model_checkpoint = keras.callbacks.ModelCheckpoint(
+    "mechanized_checkpoint.h5", save_best_only=True)
+early_stopping = keras.callbacks.EarlyStopping(patience=50)
 
-# plt.figure(figsize=(10, 6))
-# plot_series(time_valid, x_valid, label = "True")
-# plot_series(time_valid, mechanized_rnn_forecast, label = "Gaussian")
 
-# keras.metrics.mean_absolute_error(x_valid, mechanized_rnn_forecast).numpy()
+''' Compile and fit the empirical model as baseline'''
+
+mechanized_model.fit(train_set, epochs= 2,
+          validation_data=valid_set,
+          callbacks=[early_stopping, mechanized_model_checkpoint])
+
+empirical_model = keras.models.load_model("mechanized_checkpoint.h5",
+                                         custom_objects={'MechanizedSequential':MechanizedSequential})
+
+empirical_rnn_forecast = model_forecast(empirical_model, series[:,  np.newaxis], window_size)
+empirical_rnn_forecast = empirical_rnn_forecast[split_time - window_size:-1, -1, 0]
+
+
+
+
+''' Compile and fit the Gaussian model as baseline'''
+mechanized_model.choose_mech(Mechanism.GAUSSIAN)
+mechanized_model.set_mechanism_para(0, 0.05)
+
+optimizer = keras.optimizers.SGD(lr=1e-5, momentum=0.9)
+mechanized_model.compile(loss=keras.losses.Huber(),
+              optimizer=optimizer,
+              metrics=["mae"],
+              run_eagerly = True)
+
+mechanized_model_checkpoint = keras.callbacks.ModelCheckpoint(
+    "mechanized_checkpoint.h5", save_best_only=True)
+early_stopping = keras.callbacks.EarlyStopping(patience=50)
+mechanized_model.fit(train_set, epochs = 2,
+          validation_data=valid_set,
+          callbacks=[early_stopping, mechanized_model_checkpoint])
+
+gaussian_model = keras.models.load_model("mechanized_checkpoint.h5",
+                                         custom_objects={'MechanizedSequential':MechanizedSequential})
+
+gaussian_rnn_forecast = model_forecast(gaussian_model, series[:,  np.newaxis], window_size)
+gaussian_rnn_forecast = gaussian_rnn_forecast[split_time - window_size:-1, -1, 0]
+
+
+''' Compile and fit the Thresholdout model as baseline'''
+mechanized_model.choose_mech(Mechanism.THRESHOLD)
+mechanized_model.set_mechanism_para(sigma = 0.1, hold_frac = 0.4, threshold = 0.5)
+
+optimizer = keras.optimizers.SGD(lr=1e-5, momentum=0.9)
+mechanized_model.compile(loss=keras.losses.Huber(),
+              optimizer=optimizer,
+              metrics=["mae"],
+              run_eagerly = True)
+
+mechanized_model_checkpoint = keras.callbacks.ModelCheckpoint(
+    "mechanized_checkpoint.h5", save_best_only=True)
+early_stopping = keras.callbacks.EarlyStopping(patience=50)
+mechanized_model.fit(train_set, epochs = 2,
+          validation_data=valid_set,
+          callbacks=[early_stopping, mechanized_model_checkpoint])
+
+threshold_model = keras.models.load_model("mechanized_checkpoint.h5",
+                                         custom_objects={'MechanizedSequential':MechanizedSequential})
+
+threshold_rnn_forecast = model_forecast(threshold_model, series[:,  np.newaxis], window_size)
+threshold_rnn_forecast = threshold_rnn_forecast[split_time - window_size:-1, -1, 0]
+
+
+
+plt.figure(figsize=(10, 6))
+plot_series(time_valid, x_valid, label = "True")
+plot_series(time_valid, gaussian_rnn_forecast, label = "Gaussian")
+
+plot_series(time_valid, threshold_rnn_forecast, label = "Threshold")
+plot_series(time_valid, empirical_rnn_forecast, label = "Baseline")
+plt.show()
+keras.metrics.mean_absolute_error(x_valid, gaussian_rnn_forecast).numpy()
