@@ -129,7 +129,7 @@ class MechanizedSequential(tf.keras.Sequential):
       # on what you pass to `fit()`.
       x, y = data
       with tf.GradientTape() as tape:
-         print("Create noise when accessing the training data")
+         print("Create Gaussian noise when accessing the training data")
          x_noise = tf.random.normal(
                tf.shape(x),
                mean=self.mu,
@@ -140,8 +140,7 @@ class MechanizedSequential(tf.keras.Sequential):
                )
          noised_x = x_noise + x
          y_pred = self(noised_x, training=True)  # Forward pass
-         # Compute the loss value
-         # (the loss function is configured in `compile()`)
+
          noise = tf.random.normal(
                tf.shape(y_pred),
                mean=self.mu,
