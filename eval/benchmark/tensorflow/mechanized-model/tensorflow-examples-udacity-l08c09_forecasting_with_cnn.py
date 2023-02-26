@@ -161,6 +161,7 @@ np.random.seed(42)
 window_size = 30
 train_set = seq2seq_window_dataset(x_train, window_size,
                                    batch_size=128)
+
 valid_set = seq2seq_window_dataset(x_valid, window_size,
                                    batch_size=128)
 
