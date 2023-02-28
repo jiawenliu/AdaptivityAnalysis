@@ -131,16 +131,20 @@ class MechanizedSequential(tf.keras.Sequential):
       x, y = data
       with tf.GradientTape() as tape:
          print("Create Gaussian noise when accessing the training data")
-         x_noise = tf.random.normal(
-               tf.shape(x),
-               mean=self.mu,
-               stddev=self.sigma,
-               dtype=x.dtype,
-               seed=None,
-               name=None
-               )
-         noised_x = x_noise + x
-         y_pred = self(noised_x, training=True)  # Forward pass
+         if x.dtype == string:
+            print("Create Gaussian noise when accessing the training data")
+            x_train = x
+         else:
+            x_noise = tf.random.normal(
+                  tf.shape(x),
+                  mean=self.mu,
+                  stddev=self.sigma,
+                  dtype=x.dtype,
+                  seed=None,
+                  name=None
+                  )
+            x_train = x_noise + x
+         y_pred = self(x_train, training=True)  # Forward pass
 
          noise = tf.random.normal(
                tf.shape(y_pred),
