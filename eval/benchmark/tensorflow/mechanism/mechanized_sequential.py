@@ -131,8 +131,8 @@ class MechanizedSequential(tf.keras.Sequential):
       x, y = data
       with tf.GradientTape() as tape:
          print("Create Gaussian noise when accessing the training data")
-         if x.dtype == string:
-            print("Create Gaussian noise when accessing the training data")
+         if (x.dtype == tf.string or x.dtype == tf.complex64) :
+            print("Cannot create Gaussian noise for non-numeric data")
             x_train = x
          else:
             x_noise = tf.random.normal(
