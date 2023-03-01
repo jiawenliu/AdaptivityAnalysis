@@ -223,7 +223,6 @@ class MechanizedSequential(tf.keras.Sequential):
          model-1.
          drawback: the query result isn't unform data type, the trained logistic has different size dependents on the databse size.
          '''
-         #TODO: subtraction between the tensors of different size
          diff = (np.sum(y_pred_train, axis = 0) / train_size - np.sum(y_pred_hold, axis = 0) / hold_size)
          mean_abs_diff = np.absolute(diff).mean()
          print(mean_abs_diff)
