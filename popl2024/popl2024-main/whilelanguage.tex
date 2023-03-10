@@ -1,0 +1,325 @@
+The language of {\THESYSTEM} is a standard while language with labels to identify different components and with primitives for queries, and equipped with a  trace-based operational semantics which is the main technical tool we will use to define the program's adaptivity.
+
+%\subsection{Syntax}
+\label{sec:syntax}
+{\small
+\[
+\begin{array}{llll}
+\mbox{Arithmetic Expression} 
+& \aexpr & ::= & 
+n ~|~ {x} ~|~ \aexpr \oplus_a \aexpr 
+~|~ \elog \aexpr  ~|~ \esign \aexpr ~|~ \max(a, a) ~|~ \min(a, a)
+\\
+\mbox{Boolean Expression} & \bexpr & ::= & 
+%
+\etrue ~|~ \efalse  ~|~ \neg \bexpr
+ ~|~ \bexpr \oplus_b \bexpr
+%
+~|~ \aexpr \sim \aexpr 
+\\
+%
+\mbox{Expression} & \expr & ::= & v ~|~ \aexpr \sep \bexpr ~|~ [\expr, \dots, \expr]
+\\  
+%
+\mbox{Value} 
+& v & ::= & { n \sep \etrue \sep \efalse ~|~ [] ~|~ [v, \dots, v]}  
+\\
+%
+\mbox{Query Expression} 
+& {\qexpr} & ::= 
+& { \qval ~|~ \aexpr ~|~ \qexpr \oplus_a \qexpr ~|~ \chi[\aexpr]} 
+\\
+%
+\mbox{Query Value} & \qval & ::= 
+& {n ~|~ \chi[n] ~|~ \qval \oplus_a  \qval ~|~ n \oplus_a  \chi[n]
+    ~|~ \chi[n] \oplus_a  n}\\
+\mbox{Label} 
+& l & \in & \mathbb{N} \cup \{\lin, \lex\} \\
+\mbox{Labeled Command} 
+& {c} & ::= &   [\assign {{x}}{ {\expr}}]^{l} ~|~  [\assign {{x} } {{\query(\qexpr)}}]^{l}
+~|~ {\ewhile [ \bexpr ]^{l} \edo {c} }
+ \\
+ &&&
+~|~ {c};{c}  
+~|~ \eif([\bexpr]{}^l , {c}, {c}) 
+~|~ [\eskip]^l 
+\end{array}
+\]
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Details on Explaining the Syntax and Operational Semantics,
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% that might be useful when others are making passes %%%%%%%%%%%%%%%%%
+% \wq{As we have seen in the $\kw{twoRounds(k)}$ example in Fig.~\ref{fig:overview-example}(a), a program is expressed by labeled commands $c$. Our language supports the composition of labeled commands $c;c$, $[skip]^l$, the if condition $\eif([\bexpr]^l, c, c)$, the while command $\ewhile [\bexpr]^l \edo {c} $. The label $l$ records the location of this command, as a nature number $\mathbb{N}$ indicating the line number. Besides, it can also be $in$ or $ex$, used for annotating input variables and results and will not show up in labeled commands.} \wqside{Is it true that in and ex will not appear in the l in command?} 
+%
+% The boolean condition $b$ of the if and while commands is a standard boolean expression, which covers {\tt true} or {\tt false}, basic boolean connectives such as logical and logical or denoted by $\oplus_b$, logical negation $\neg$, and also comparison between arithmetic expressions $a \sim a$,  where $\sim$ stands for the basic operations such as $\leq,=,<,$ etc.  The arithmetic expression $a$ can be a constant $n$ denoting integer, a variable $x$ from some countable variable set $\mathcal{VAR}$, binary operation $\oplus_a$ such as addition, product, subtraction, etc, over arithmetic expressions, log and sign operation, minimal and maximum of two arithmetic expressions. An expression $e$ is then either a standard arithmetic expression or a boolean expression, or a list of expressions.
+%
+% \wq{As a reminder, the vertices of either the execution-based or program-based graphs in Fig.~\ref{fig:overview-example}(b) or Fig.~\ref{fig:overview-example}(c) are assigned variables and these assigned variables come from our two assignment commands: the standard assignment $[\assign{x}{\expr}]^l$, and our main novelty, the query request assignment $[\assign{x}{q(\qexpr)}]^l$.  The query is specified by a query expression $\qexpr$, which contains the necessary information for a query request. The query expression can be either the normal form $\alpha$, or just an arithmetic expression $a$ to express constant queries, or $\chi[\aexpr]$ representing the values at a certain index $\aexpr$ in a row $\chi$ of the database. Besides, we also allow combined access to the database in query expressions by means of $\qexpr \oplus \qexpr$.} For example, $\chi[3] + 5$ represents a query which asks the value from the column 3 of each database raw $\chi$, adds 5 to each of these values, and then computes the average of these values.
+% In reality, if a data analyst wants to ask a simple linear query which returns the first element of the row, they can simply use the command $ \assign{x}{q(\chi[1])}$ in their data analysis program.
+Expressions include
+standard arithmetic (with value $n \in \mathbb{N}^{\infty}$) and boolean expression, ($\aexpr$ and $\bexpr$) and extended query expressions $\qexpr$.
+A query expression $\qexpr$ can be either a simple arithmetic expression $a$, an expression of the form $\chi[\aexpr]$ where $\chi$ represents a row of the database  and  $\aexpr$ represents an index used to identify a specific attribute of the row $\chi$, a combination of two query expressions, $\qexpr \oplus_{a} \qexpr$, or a normal form $\qval$.
+For example, the query expression $\chi[3] + 5$  denotes the computation that
+obtains
+the value in the $3$rd column of $\chi$ in one row and then add $5$ to it.
+\\
+Command are the typical ones from while languages with an additional command $\assign{x}{\query(\qexpr)}$ for query requests which can be used to interrogate the database and compute the linear query corresponding to $\qexpr$.
+Each command is annotated with a label $l$, we will use natural numbers as labels and we will use them to record
+the location of each command, so that we can uniquely identify them.
+We also have a set $\mathcal{LV}$  of labeled variables, these are simply variables with a label.
+We denote by $\mathbb{LV}(c)$ the set of labeled variables which are assigned in an assignment command in the program $c$.  
+We denote by  $\qvar(c)$ the set of labeled variables that are assigned to the result of a query in the program $c$. 
+% \mg{Please double check this notation.}
+
+
+% In this the command, the query expression $\qexpr$ is sent to the database server as a request.
+% Then the server will compute the average value of $\qexpr$ over each row of the hidden database $\chi$ and return us the result.
+% For instance, when we execute the command $\assign{x}{\query(\chi[3] + 5)}$,
+% the server will receive query request in form of $\chi[3] + 5$,
+% then compute the average value of $\chi[3] + 5$ over each raw of $\chi$, and return the result to us. 
+% The server is used as external API for computing the results over the hidden database $\chi$.
+
+\subsection{ Trace-based Operational Semantics}
+%  \wq{Our operational semantics uses the trace $\trace \in \mathcal{T}$ to track the history of the program execution, we use $\mathcal{T} $ for the set of traces. To be precise, the trace is a list of events and an event tracks the useful information about one step of the evaluation. When a program $c$ is evaluated in our operational semantics$\config{c, \trace} \to \config{c', \trace'} $, it starts with an initial trace $\trace$, evaluates to $c'$ , and along with the program evaluation, events are collected in the evaluation order and appended to $\trace$, and then we get the result trace $\trace'$. We can easily get the history of the evaluation of the program $c$ by looking at these newly added events in $\trace$ with respect to the initial trace $\trace$.  }
+We use a trace based operational semantics tracking the history of programs execution. The operational semantics is parameterized by a database that can be access only through queries. Since this database is fixed, we omit it from the semantics but it is important to keep in mind that this database exists and it is what allow us to evaluate queries.
+A \emph{trace}
+$\trace$ is a list of \emph{events} generated when executing specific commands. We denote by $\mathcal{T}$ the set of traces and we will use list notation for traces, where $[]$ is the empty trace, the operator $\traceadd$ combines an event and a trace in a new event, 
+and the operator $\tracecat$ concatenates two traces. 
+
+We have two kinds of events: \emph{assignment events} and \emph{testing events}. 
+Each event consists of a quadruple,
+and we use $\eventset^{\asn}$ and $\eventset^{\test}$ to denote the set of all assignment events and testing events, respectively.
+\begin{center}
+$ \begin{array}{lllll}
+\mbox{Event} 
+& \event & ::= & 
+({x}, l, v, \bullet) ~|~ ({x}, l, v, \qval)  & \mbox{Assignment Event} \\
+&&& ~|~(\bexpr, l, v, \bullet)  & \mbox{Testing Event}
+\\
+\end{array}$
+\end{center}
+An assignment event tracks the execution of an assignment  or a query request and consists of the assigned variable, the label of the command that generates it, the value assigned to the variable, and the normal form of the query expression, $\qval$ if this command is a query request, otherwise a default value $\bullet$.
+A testing event tracks the execution of if and while commands and consists of the guard of the command, the label of the command, the result of evaluating the guard, while the last element is $\bullet$.  We use the operator $\env (\trace) x$ to fetch the latest value assigned to  $x$ in the trace $\trace$. We use the operator
+$\vcounter$ to count the occurrence of a labeled variable in the trace.
+We denote by $\tlabel(\trace) \subseteq \ldom$ the set of the labels occurring in $\trace$.
+Finally, we use $\mathcal{T}_0(c) \subseteq \mathcal{T}$ to denote the set of \emph{initial traces}, the ones
+which assign a value to the input variables. 
+
+
+
+
+The trace based operational semantics is described in terms of a small step evaluation relation
+$\config{c, \trace} \to \config{c', \trace}'$  describing how a configuration program-trace evaluates to another
+configuration program-state. The rules for the operational semantics are described in Fig.~\ref{fig:os}.
+The rules for assignment and query generate assignment events, while the rules for while and if generate testing events. 
+The rules for the standard while language constructs correspond to the usual rules extended to deal with traces. 
+We have relations $\config{\trace, \expr} \earrow v $  and $\config{\trace, \bexpr} \barrow v $  to evaluate expressions and boolean expressions, respectively. Their definitions are in the supplementary material.
+%   \mg{Can you please confirm that this is true?} Yes
+The only rule that is non-standard is the $\textbf{query}$ rule. When evaluating a query, the query expression $\qexpr$ is first simplified to its normal form $\alpha$ using an evaluation relation $\config{\trace, \qexpr} \qarrow \qval$. 
+Then normal form $\qval$ characterize the linear query that is run against the database. The query result $v$ is the expected value of the function $\lambda \chi.\qval$ applied to each row of the dataset. We summarize this process with the notation $\query(\qval) = v$ which we use in the rule $\textbf{query}$. Once the answer of the query is computed, the rules record all the needed information in the trace. As usual, we will use $\to^*$ for the reflexive and transitive closure of $\to$. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Explaining the Event %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% First of all, as the key component of the program evaluation history, an event $\event$ stores necessary information on the evaluation results of commands. Depending on the types of commands, there are two kinds of events: the assignment event which is generated in the standard assignment and query request assignment commands, and the testing event which is generated in an if or while command. Both assignment and testing events are quadruples, but store different contents. 
+%\jl{
+% The key component of the program evaluation history is the event $\event$,
+% which stores necessary information on the evaluation results of commands.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Explaining the Assignment evaluation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The assignment event 
+% targets the assignment so it needs to maintain the mapping between labeled assigning variable and the result assigned, to this end, the first three elements of the quadruple of an assignment event are the variable, the label, and the result $v$ of the assigned expression. Look at the rule $\textbf{assn}$ and rule $\textbf{query}$ in Fig.~\ref{fig:os}, the result $v$ is different: in the standard assignment, $v$ is the evaluation result of the assigned expression $e$ by the standard expression evaluation $\config{\trace, \expr} \earrow v $; in the query request assignment, the query expression $\qexpr$ is evaluated to its normal form $\alpha$ by the query expression evaluation $\config{\trace, \qexpr} 
+% \qarrow \qval$ and is sent to a hidden mechanism, $query(\alpha) = v$ means that the return result of this query represented by $\alpha$ from the mechanism is $v$. Another difference of the generated assignment events in these two rules lands in the last element of the quadruple, which stores the query information. In the rule $\textbf{query}$, the fourth element is the query normal form $\alpha$ which is sent to the mechanism, while in the standard assignment rule $\textbf{assn}$, we use $\bullet$ to show this event is not directly related to a query request.
+% \jl{The assignment event is generated when evaluating an assignment command or query request. It stores the value assigned to each variable and tracks the query request.
+% The first three elements are the variable, the label of this command, and the value assigned to this variable.
+% The forth element is the normal form of a query expression, $\qval$ if this command is a query request, otherwise a default value $\bullet$.
+% As in rule $\textbf{assn}$ and rule $\textbf{query}$ in Fig.~\ref{fig:os}.
+% When evaluating a query request, the query expression $\qexpr$ is first simplified to its normal form $\alpha$ by the evaluation rule $\config{\trace, \qexpr} \qarrow \qval$. 
+% Then $\qval$ is sent to the hidden database on unknown server, which computes the query result and send back to us.
+% This computation process is simplified into $\query(\qval) = v$ in the rule $\textbf{query}$.
+% }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Explaining the Expression Evaluation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \detailed{
+% The expression evaluation $\config{\trace, \expr} \earrow v $ relies on the evaluation of arithmetic expressions $\config{\trace,\aexpr} \aarrow v $ and boolean expressions $\config{\trace, \bexpr} \barrow v $, they are standard and we leave The full rules in the appendix. The evaluation rules of query expressions are presented below.}
+The query expression evaluation relation  $\config{\trace, \qexpr} \qarrow \qval$ is defined by the following rules which reduce a query expression to its normal form.
+{\small
+\begin{mathpar}
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow n
+}{
+ \config{\trace,  \aexpr} 
+ \qarrow n
+}
+\and
+\inferrule{ 
+  \config{\trace, \qexpr_1} \qarrow \qval_1
+  \and
+  \config{\trace, \qexpr_2} \qarrow \qval_2
+}{
+ \config{\trace,  \qexpr_1 \oplus_a \qexpr_2} 
+ \qarrow \qval_1 \oplus_a \qval_2
+}
+\and
+\inferrule{ 
+  \config{\trace, \aexpr} \aarrow n
+}{
+ \config{\trace, \chi[\aexpr]} \qarrow \chi[n]
+}
+\and
+\inferrule{ 
+  \empty
+}{
+ \config{\trace,  \qval} 
+ \qarrow \qval
+}
+ \end{mathpar}
+ }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Explaining the Testing Event %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% The testing event is generated when evaluating if and while commands. To record the control flow information, the first element of the event is the guard $b$ in both if and while rules $\textbf{if-t,if-f}$ and rule $\textbf{while-t, while-f}$. The third element then stores the evaluation results of this guard, either true or false. Since the guard can not be a query request, the last element is $\bullet$. 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Details for The If and While Evaluation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \detailed{The rules for if hand while both have two versions, when the guard evaluates to true and false, respectively. In these rules, the evaluation of the guard also generates testing event and our trace is updated as well. }
+% The rules for if and while both have two versions, 
+% when the boolean expressions in the guards are evaluated to true and false, respectively. 
+% In these rules, the evaluation of the guard generates a testing event and the trace is updated as well by appending this event.
+% The rule $\textbf{query}$ evaluates the argument of a query request to a normal form and obtain the answer $v_q$ of the query $\query(v)$ from the mechanism. 
+% Then the trace expanded by appending the query expression $\query(v)$ with the current annotation $(l,w)$. 
+% The rule for assignment is standard and the trace remains unchanged. The sequence rule keeps tracking the modification of the trace, and the evaluation rule for if conditional 
+
+%By the operational semantics rules, we prove no rule will shrink the trace in Appendix.
+{\footnotesize %
+\begin{figure}
+\begin{mathpar}
+\boxed{
+\mbox{Command $\times$ Trace}
+\xrightarrow{}
+\mbox{Command $\times$ Trace}
+}
+\and
+\boxed{\config{{c, \trace}}
+\xrightarrow{} 
+\config{{c',  \trace'}}
+}
+\\
+\inferrule
+{
+\config{\trace, \expr} \earrow v 
+\and
+\event = ({x}, l, v, \bullet)
+}
+{
+\config{[\assign{{x}}{\expr}]^{l},  \trace } 
+\xrightarrow{} 
+\config{\clabel{\eskip}^l, \trace \traceadd \event}
+}
+~\textbf{assn}
+%
+\and
+%
+{
+\inferrule
+{
+ \trace, \qexpr \qarrow \qval
+ \and 
+\query(\qval) = v
+\and 
+\event = ({x}, l, v, \qval)
+}
+{
+\config{{[\assign{x}{\query(\qexpr)}]^l, \trace}}
+\xrightarrow{} 
+\config{{\clabel{\eskip}^l,  \trace \traceadd \event} }
+}
+~\textbf{query}
+}
+%
+\and
+%
+\inferrule
+{
+ \trace, b \barrow \etrue
+ \and 
+ \event = (b, l, \etrue, \bullet)
+}
+{
+\config{{\ewhile [b]^{l} \edo c, \trace}}
+\xrightarrow{} 
+\config{{
+c; \ewhile [b]^{l} \edo c),
+\trace \traceadd \event}}
+}
+~\textbf{while-t}
+%
+%
+\quad
+%
+\inferrule
+{
+ \trace, b \barrow \efalse
+ \and 
+ \event = (b, l, \efalse, \bullet)
+}
+{
+\config{{\ewhile [b]^{l}, \edo c, \trace}}
+\xrightarrow{} 
+\config{{
+  \clabel{\eskip}^l,
+\trace \traceadd \event}}
+}
+~\textbf{while-f}
+%
+%
+\and
+\inferrule
+{
+\config{{c_1, \trace}}
+\xrightarrow{}
+\config{{c_1',  \trace'}}
+}
+{
+\config{{c_1; c_2, \trace}} 
+\xrightarrow{} 
+\config{{c_1'; c_2, \trace'}}
+}
+~\textbf{seq1}
+\and
+\inferrule
+{
+  \config{{c_2, \trace}}
+  \xrightarrow{}
+  \config{{c_2',  \trace'}}
+}
+{
+\config{{\clabel{\eskip}^l; c_2, \trace}} \xrightarrow{} \config{{ c_2', \trace'}}
+}
+~\textbf{seq2}
+\quad
+\inferrule
+{
+ \trace, b \barrow \etrue \and \event = (b, l, \etrue, \bullet)
+}
+{
+ \config{{
+\eif([b]^{l}, c_1, c_2), 
+\trace}}
+\xrightarrow{} 
+\config{{c_1, \trace \traceadd \event}}
+}
+~\textbf{if-t}
+% \and
+% %
+% \inferrule
+% {
+%  \trace, b \barrow \efalse
+%  \and 
+%  \event = (b, l, \efalse, \bullet)
+% }
+% {
+% \config{{\eif([b]^{l}, c_1, c_2), \trace}}
+% \xrightarrow{} 
+% \config{{c_2, \trace \traceadd \event}}
+% }
+~\textbf{if-f}
+\end{mathpar}
+  \vspace{-0.5cm}
+    \caption{Trace-based Operational Semantics for Language.}
+    \label{fig:os}
+  \vspace{-0.5cm}
+\end{figure}
+}
