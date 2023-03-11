@@ -202,11 +202,14 @@ class MechanizedSequential(tf.keras.Sequential):
       # Unpack the data. Its structure depends on your model and
       # on what you pass to `fit()`.
       x, y = data
-      if(x.shape[0] > 1):
-         hold_size, train_size = int(x.shape[0]  * (self.hold_frac)), int(x.shape[0]  * (1.0 - self.hold_frac))
+      for _, l in enumerate(x.shape):
+         if l:
+            length = l
+      if(length > 1):
+         hold_size, train_size = int(length  * (self.hold_frac)), int(length  * (1.0 - self.hold_frac))
          x_train, y_train, x_hold, y_hold = x[hold_size:], y[hold_size:], x[:hold_size], y[:hold_size]
       else:
-         hold_size, train_size = x.shape[0], x.shape[0]
+         hold_size, train_size = length, length
          x_train, y_train, x_hold, y_hold = x, y, x, y
          
       with tf.GradientTape() as tape:
@@ -223,7 +226,7 @@ class MechanizedSequential(tf.keras.Sequential):
          model-1.
          drawback: the query result isn't unform data type, the trained logistic has different size dependents on the databse size.
          '''
-         diff = (np.sum(y_pred_train, axis = 0) / train_size - np.sum(y_pred_hold, axis = 0) / hold_size)
+         diff = (np.sum(y_pred_train.numpy(), axis = 0) / train_size - np.sum(y_pred_hold.numpy(), axis = 0) / hold_size)
          mean_abs_diff = np.absolute(diff).mean()
          print(mean_abs_diff)
          if mean_abs_diff >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
