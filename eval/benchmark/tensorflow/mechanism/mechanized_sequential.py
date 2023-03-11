@@ -228,7 +228,6 @@ class MechanizedSequential(tf.keras.Sequential):
          '''
          diff = (np.sum(y_pred_train.numpy(), axis = 0) / train_size - np.sum(y_pred_hold.numpy(), axis = 0) / hold_size)
          mean_abs_diff = np.absolute(diff).mean()
-         print(mean_abs_diff)
          if mean_abs_diff >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
             self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
             y_true, y_pred = y_hold, y_pred_hold + tfp.distributions.Laplace(self.mu, self.sigma).sample(tf.shape(y_pred_hold))

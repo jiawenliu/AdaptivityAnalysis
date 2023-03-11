@@ -5,6 +5,7 @@ from sklearn.multiclass import OneVsRestClassifier
 from sklearn.cluster import KMeans
 from sklearn.model_selection import GridSearchCV
 from sklearn import preprocessing
+from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix, RocCurveDisplay
 
 import math
 import numpy as np
@@ -37,6 +38,9 @@ class MechanizedLogisticRegression(LogisticRegression):
                                                            l1_ratio = l1_ratio)
         self.mechanism = None
 
+    def fit_threshold(self, x_train, y_train):
+        pass
+
     def fit(self, x_train, y_train):
         if self.mechanism == None:
             result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
@@ -63,7 +67,7 @@ class MechanizedLogisticRegression(LogisticRegression):
             # y_transformed = lab.fit_transform(noised_y)
 
             result = super(MechanizedLogisticRegression, self).fit(noised_x, y_train)
-            if isinstance(result, GridSearchCV):
+            if isinstance(result, LogisticRegression):
                 return self
             else:
                 return result
@@ -225,7 +229,66 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
             class_weight = class_weight, 
             ccp_alpha = ccp_alpha)
         self.mechanism = None
+        '''
+        Parameters for the GnC mechanism 
+        '''
+        self.mu = 0.0
+        self.sigma = 0.03
+
+        '''
+        Parameters for the GnC mechanism 
+        '''      
+        self.beta = None
+        self.tau = None
+        self.check_for_width = None   
+
+
+        '''
+        Parameters for the Naive Data Splitting mechanism 
+        '''
+        self.split_size = None
+
+
+        '''
+        Parameters for the Thresholdout mechanism 
+        '''
+        self.hold_size = None
+        self.train_size = None
+        self.hold_frac = None
+        self.threshold = None
+        self.noisy_thresh = None
+            
+    def choose_mech(self, mech = None):
+        self.mechanism = mech
+
+
+    def set_mechanism_para(self, mu = 0.0, sigma = None, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
+        self.mu = mu
+        self.sigma = sigma
+        self.beta = beta
+        self.tau = tau
+        self.check_for_width = check_for_width
+        assert 0.0 < hold_frac <= 1.0, "hold_frac should take a value in (0, 1]."
+        self.hold_frac = hold_frac
+        self.threshold = threshold
+        self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
         
+
+    def fit_threshold(self, x_train, y_train):
+        size = len(x_train.shape[0])
+        hold_size, train_size = int(size  * (self.hold_frac)), int(size  * (1.0 - self.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedDecisionTree, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
+            self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
+            
+
+            pass
+        pass
+
 
     def fit(self, x_train, y_train):
         if self.mechanism == None:

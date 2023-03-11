@@ -327,9 +327,8 @@ def fit_with_earlystop_and_checkpoint():
 
     plt.figure(figsize=(10, 6))
     plot_series(time_valid, x_valid, label = "True")
-    plot_series(time_valid, gaussian_rnn_forecast, label = "Gaussian")
-
-    plot_series(time_valid, threshold_rnn_forecast, label = "Threshold")
+    plot_series(time_valid, gaussian_rnn_forecast, label = "AdaptFun")
+    # plot_series(time_valid, threshold_rnn_forecast, label = "Threshold")
     plot_series(time_valid, empirical_rnn_forecast, label = "Baseline")
     plt.show()
     keras.metrics.mean_absolute_error(x_valid, gaussian_rnn_forecast).numpy()
