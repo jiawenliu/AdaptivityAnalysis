@@ -1,0 +1,187 @@
+%
+%
+\subsection{Event}
+%
+% \todo{
+% \[
+% \begin{array}{llll}
+% \mbox{Post-Processed Event} & \event & ::= & 
+%       ({x}, l, n, v) | ({x}, l, n, \qval, v)  ~~~~~~~ \mbox{Post-Processed Assignment Event} \\
+% &&& | (\bexpr, l, n, v)   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ \mbox{Post-Processed Testing Event}
+% \end{array}
+% \]
+% %
+% Informally, $n$ marks the number of times this label appears in a trace including itself. Informally, the n-th appearance of this label.
+% \\
+% Below we use the same notation $\eventset$, $\eventset^{\asn}$ and $\eventset^{\test} $ represent the 
+% set of post-processed events, assignment events and testing events.
+% \[
+% \begin{array}{lll}
+% %
+% \eventset  & : & \mbox{Set of Post-Processed Events}  
+% \\
+% %
+% \eventset^{\asn}  & : & \mbox{Set of Post-Processed Assignment Events}  
+% \\
+% %
+% \eventset^{\test}  & : & \mbox{Set of Post-Processed Testing Events}  
+% \end{array}
+% \]
+% %
+% Event Processor : $ \circ : \mbox{Event} \to \mbox{Post-Processed Events}$
+% \[
+% \begin{array}{lll}
+% (x, l, v) \circ n \triangleq (x, l, n, v)
+% &
+% (x, l, \qval, v) \circ n \triangleq (x, l, n, \qval, v)
+% &
+% (b, l, v) \circ n  \triangleq (b, l, n, v)
+% \end{array}
+% \]
+% }
+% %
+%
+% Given a trace $\ostrace$ and $\osevent$, the corresponding well-formed event $\event$ 
+% \[
+%   \event \triangleq 
+%   \left\{
+%   \begin{array}{ll}
+%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
+%   (x, l, \vcounter(\ostrace) l, v, \qval) & \osevent = (x, l, v)\\
+%   (x, l, \vcounter(\ostrace) l, v) & \osevent = (x, l, v)\\
+%   \end{array}
+%   \right.
+% \]
+%
+% \\
+% Event Value : $\pi_v : \eventset \to \mathcal{VAL}$
+% \[
+% \begin{array}{lll}
+% \pi_v((x, l, n, v)) \triangleq v
+% &
+% \pi_v (x, l, n, \qval, v) \triangleq v
+% &
+% \pi_v (b, l, n, v)  \triangleq v
+% \end{array}
+% \]
+% %
+% %
+% Event Distinguishable Value : $\pi_{q} : \eventset \to \mathcal{QVAL}$ 
+% \[
+% \begin{array}{lll}
+% \pi_{q} (x, l, n, v) \triangleq v
+% &
+% \pi_{q} (x, l, n, \qval, v) \triangleq \qval
+% &
+% \pi_{q} (b, l, n, v)  \triangleq v
+% \end{array}
+% \]%
+% 
+Event projection operators $\pi_i$ projects the $i$th element from an event: 
+\\
+$\pi_i : 
+\eventset \to \mathcal{VAR}\cup \mbox{Boolean Expression}  \cup \mathbb{N} \cup \mathcal{VAL} \cup \mathcal{QVAL} $ 
+% \wqside{use b for Boolean expression?}
+\\
+% $\pi_{(i,j)} (\event) \triangleq (\pi_i(\event), \pi_j(\event)) $
+% %
+% \\
+% Event Signature : $\pi_{\sig} : \eventset \to (\mathcal{VAR}\cup \mbox{Boolean Expression}) \times\mathbb{N}\times \mathbb{N}$
+% \[
+% \begin{array}{lll}
+% \pi_{\sig} (x, l, n, v) \triangleq (x, l, n)
+% &
+% \pi_{\sig} (x, l, n, \qval, v) \triangleq (x, l, n, \query)
+% &
+% \pi_{\sig} (b, l, n, v)  \triangleq (b, l, n)
+% \end{array}
+% \]
+%
+%
+Free Variables: $FV: \expr \to \mathcal{P}(\mathcal{VAR})$, the set of free variables in an expression.
+\\
+$FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
+\begin{defn}[Equivalence of Query Expression]
+%
+\label{def:query_equal}
+% \mg{Two} \sout{2} 
+Two query expressions $\qexpr_1$, $\qexpr_2$ are equivalent, denoted as $\qexpr_1 =_{q} \qexpr_2$, if and only if
+% $$
+%  \begin{array}{l} 
+%   \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st \forall \trace \in \mathcal{T} \st
+%     (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+%     \\
+%     \quad \land (\forall D \in \dbdom, r \in D \st 
+%     \exists v \in \mathcal{VAL} \st 
+%           \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+%   \end{array}.
+% $$
+$$
+ \begin{array}{l} 
+   \forall \trace \in \mathcal{T} \st \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st
+    (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+    \\
+    \quad \land (\forall D \in \dbdom, r \in D \st 
+    \exists v \in \mathcal{VAL} \st 
+          \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+  \end{array}.
+$$
+% \mg{$$
+%  \begin{array}{l} 
+%    \forall \trace \in \mathcal{T} \st \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st
+%     (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
+%     \\
+%     \quad \land (\forall D \in \dbdom, r \in D \st 
+%     \exists v \in \mathcal{VAL} \st 
+%           \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
+%   \end{array}.
+% $$
+% }
+ %
+ where $r \in D$ is a record in the database domain $D$. 
+ As usual, we will denote by $\qexpr_1 \neq_{q} \qexpr_2$  the negation of the equivalence.
+% \\ 
+% where $r \in D$ is a record in the database domain $D$,
+% \mg{is  $FV(\qexpr)$ being defined here? If yes, I suggest to put it in a different place, rather than in the middle of another definition.} 
+% $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
+% \sout{$\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  is defined vice versa.}
+% \mg{As usual, we will denote by $\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  the negation of the equivalence.}
+%
+\end{defn}
+%
+% \mg{In the next definition you don’t need the subscript e, it is clear that it is equivalence of events by the fact that the elements on the two sides of = are events. That is also true for query expressions. Also, I am confused by this definition. What happen for two query events?}
+% \\
+% \jl{The last component of the event is equal based on Query equivalence, $\pi_{4}(\event_1) =_q \pi_{4}(\event_2)$.
+% In the previous version, the query expression is in the third component and I defined $v \neq \qexpr$ for all $v$ that isn't a query value.}
+% \begin{defn}[Event Equivalence $\eventeq$]
+% Two events $\event_1, \event_2 \in \eventset$ \mg{are equivalent, \sout{is in \emph{Equivalence} relation,}} denoted as $\event_1 \eventeq \event_2$ if and only if:
+% \[
+% \pi_1(\event_1) = \pi_1(\event_2) 
+% \land  
+% \pi_2(\event_1) = \pi_2(\event_2) 
+% \land
+% \pi_{3}(\event_1) = \pi_{3}(\event_2)
+% \land 
+% \pi_{4}(\event_1) =_q \pi_{4}(\event_2)
+% \]
+% %
+% % \sout{The $\event_1 \eventneq \event_2$ is defined as vice versa.}
+% % \mg{As usual, we will denote by $\event_1 \eventneq \event_2$  the negation of the equivalence.}
+% \end{defn}
+\begin{defn}[Event Equivalence]
+  Two events $\event_1, \event_2 \in \eventset$ are equivalent, 
+  % denoted as $\event_1 \eventeq \event_2$ 
+  denoted as $\event_1 = \event_2$ 
+  if and only if:
+  \[
+  \pi_1(\event_1) = \pi_1(\event_2) 
+  \land  
+  \pi_2(\event_1) = \pi_2(\event_2) 
+  \land
+  \pi_{3}(\event_1) = \pi_{3}(\event_2)
+  \land 
+  \pi_{4}(\event_1) =_q \pi_{4}(\event_2)
+  \]
+  %
+  As usual, we will denote by $\event_1 \neq \event_2$  the negation of the equivalence.
+\end{defn}
