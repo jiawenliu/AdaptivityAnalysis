@@ -4,18 +4,56 @@ import numpy as np
 from enum import Enum
 import tensorflow_probability as tfp
 
-class Mechanism(Enum):
-   GAUSSIAN = 1
-   DATASPLIT = 2
-   THRESHOLD = 3
-   PLAIN = 0
+
+
+class Mechanism():
+   class MechanismType(Enum):
+        NONE = 0
+        GAUSSIAN = 1
+        DATASPLIT = 2
+        THRESHOLD = 3
+
+   def __init__(self, mechanism_type = MechanismType.NONE, mu = 0.0, sigma = 0.1, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
+
+        super().__init__()
+        self.mechanism_type = mechanism_type
+        '''
+        Parameters for the Gaussian mechanism 
+        '''
+        self.mu = mu
+        self.sigma = sigma
+
+        '''
+        Parameters for the GnC mechanism 
+        '''      
+        self.beta = beta
+        self.tau = tau
+        self.check_for_width = check_for_width
+
+
+        '''
+        Parameters for the Naive Data Splitting mechanism 
+        '''
+        self.split_size = None
+
+
+        '''
+        Parameters for the Thresholdout mechanism 
+        '''
+        self.hold_size = None
+        self.train_size = None 
+        assert 0.0 < hold_frac <= 1.0, "hold_frac should take a value in (0, 1]."
+        self.hold_frac = hold_frac
+        self.threshold = threshold
+        self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
+
 
 class MechanizedSequential(tf.keras.Sequential):
 
 
   def __init__(self, *args, **kwargs):
       super(MechanizedSequential, self).__init__(*args, **kwargs)
-      self.mechanism = None
+      self.mechanism = (Mechanism.MechanismType.NONE)
 
 
       '''
@@ -97,7 +135,7 @@ class MechanizedSequential(tf.keras.Sequential):
         self.compiled_metrics.update_state(y, y_pred, sample_weight)
         return super(MechanizedSequential, self).compute_metrics(
         x, y, y_pred, sample_weight)
-      elif self.mechanism == Mechanism.GAUSSIAN:
+      elif self.mechanism == Mechanism.MechanismType.GAUSSIAN:
          return super(MechanizedSequential, self).compute_metrics(
         x, y, y_pred, sample_weight)
          # return self.compute_metrics_gaussin(x, y, y_pred, sample_weight)
@@ -111,13 +149,13 @@ class MechanizedSequential(tf.keras.Sequential):
       # on what you pass to `fit()`.
       if self.mechanism is None:
         return super(MechanizedSequential, self).train_step(data)
-      elif self.mechanism == Mechanism.GAUSSIAN:
+      elif self.mechanism == Mechanism.MechanismType.GAUSSIAN:
          print("In Gaussian Mechanism")
          return self.gaussian_train_step(data)
-      elif self.mechanism == Mechanism.DATASPLIT:
+      elif self.mechanism == Mechanism.MechanismType.DATASPLIT:
          print("In Naive Data Splitting Mechanism")
          return self.data_split_train_step(data)
-      elif self.mechanism == Mechanism.THRESHOLD:
+      elif self.mechanism == Mechanism.MechanismType.THRESHOLD:
          print("In Threshold out Mechanism")
          return self.thresholdout_train_step(data)
       else:
@@ -146,14 +184,6 @@ class MechanizedSequential(tf.keras.Sequential):
             x_train = x_noise + x
          y_pred = self(x_train, training=True)  # Forward pass
 
-         noise = tf.random.normal(
-               tf.shape(y_pred),
-               mean=self.mu,
-               stddev=self.sigma,
-               dtype = y_pred.dtype,
-               seed=None,
-               name=None
-               )
          
          loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
 
