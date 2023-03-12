@@ -12,10 +12,48 @@ import numpy as np
 
 from enum import Enum
 
-class Mechanism(Enum):
-   GAUSSIAN = 1
-   DATASPLIT = 2
-   THRESHOLD = 3
+
+
+class Mechanism():
+   class MechanismType(Enum):
+        NONE = 0
+        GAUSSIAN = 1
+        DATASPLIT = 2
+        THRESHOLD = 3
+
+   def __init__(self, mechanism_type = MechanismType.NONE, mu = 0.0, sigma = 0.1, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
+
+        super().__init__()
+        self.mechanism_type = mechanism_type
+        '''
+        Parameters for the Gaussian mechanism 
+        '''
+        self.mu = mu
+        self.sigma = sigma
+
+        '''
+        Parameters for the GnC mechanism 
+        '''      
+        self.beta = beta
+        self.tau = tau
+        self.check_for_width = check_for_width
+
+
+        '''
+        Parameters for the Naive Data Splitting mechanism 
+        '''
+        self.split_size = None
+
+
+        '''
+        Parameters for the Thresholdout mechanism 
+        '''
+        self.hold_size = None
+        self.train_size = None 
+        assert 0.0 < hold_frac <= 1.0, "hold_frac should take a value in (0, 1]."
+        self.hold_frac = hold_frac
+        self.threshold = threshold
+        self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
 
 class MechanizedLogisticRegression(LogisticRegression):
 
@@ -23,7 +61,8 @@ class MechanizedLogisticRegression(LogisticRegression):
                  fit_intercept=True, intercept_scaling=1, class_weight=None,
                  random_state=None, solver="lbfgs", max_iter=100, multi_class="auto", 
                  verbose=0, warm_start=False, n_jobs=None, 
-                 l1_ratio=None):
+                 l1_ratio=None,
+                 mechanism = Mechanism(Mechanism.MechanismType.NONE)):
         super(MechanizedLogisticRegression, self).__init__(penalty, dual=dual, 
                                                            tol = tol, C = C, fit_intercept = fit_intercept, 
                                                            intercept_scaling = intercept_scaling,
@@ -36,21 +75,22 @@ class MechanizedLogisticRegression(LogisticRegression):
                                                            warm_start = warm_start, 
                                                            n_jobs = n_jobs, 
                                                            l1_ratio = l1_ratio)
-        self.mechanism = None
+        self.mechanism = mechanism
 
     def fit_threshold(self, x_train, y_train):
         pass
 
     def fit(self, x_train, y_train):
-        if self.mechanism == None:
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
+            print("in Baseline Logistic Regression")
             result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
             if isinstance(result, LogisticRegression):
                 return self
             else:
                 return result
-        elif self.mechanism == Mechanism.GAUSSIAN:
-            print("in gaussian mechanism MechanizedLogisticRegression")
-            x_noise = np.random.normal(0, 0.1, x_train.shape) 
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
+            print("in gaussian Mechanized Logistic Regression")
+            x_noise = np.random.normal(0, self.mechanism.sigma, x_train.shape) 
             noised_x = x_train + x_noise
             
             ################ Gaussian Noise Added to Labels ################
@@ -97,16 +137,16 @@ class MechanizedGridSearchCV(GridSearchCV):
                          pre_dispatch = pre_dispatch, 
                          error_score = error_score, 
                          return_train_score = return_train_score)
-        self.mechanism = None
+        self.mechanism = Mechanism.MechanismType.NONE
 
     def fit(self, x_train, y_train):
-        if self.mechanism == None:
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
             result = super(MechanizedGridSearchCV, self).fit(x_train, y_train)
             if isinstance(result, GridSearchCV):
                 return self
             else:
                 return result
-        elif self.mechanism == Mechanism.GAUSSIAN:
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
             print("in gaussian mechanism GridSearchCV")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
             noised_x = x_train + x_noise
@@ -143,18 +183,18 @@ class MechanizedGridSearchCV(GridSearchCV):
 class MechanizedGaussianNB(GaussianNB):
     def __init__(self, *, priors=None, var_smoothing=1e-9):
         super(MechanizedGaussianNB, self).__init__(priors=priors, var_smoothing = var_smoothing) 
-        self.mechanism = None
+        self.mechanism = Mechanism.MechanismType.NONE
 
 
     def fit(self, x_train, y_train):
-        if self.mechanism == None:
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
             result = super(MechanizedGaussianNB, self).fit(x_train, y_train)
             if isinstance(result, GaussianNB):
                 return self
             else:
                 return result
-        elif self.mechanism == Mechanism.GAUSSIAN:
-            print("in gaussian mechanism MechanizedGaussianNB")
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
+            print("in Gaussian MechanizedGaussianNB")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
             noised_x = x_train + x_noise
             result = super(MechanizedGaussianNB, self).fit(noised_x, y_train)
@@ -186,18 +226,18 @@ class MechanizedKMeans(KMeans):
             copy_x = copy_x, 
             algorithm = algorithm)
         
-        self.mechanism = None
+        self.mechanism = Mechanism.MechanismType.NONE
 
 
     def fit(self, x_train):
-        if self.mechanism == None:
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
             result = super(MechanizedKMeans, self).fit(x_train)
             if isinstance(result, KMeans):
                 return self
             else:
                 return result
-        elif self.mechanism == Mechanism.GAUSSIAN:
-            print("in gaussian mechanism MechanizedGaussianNB")
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
+            print("in gaussian MechanizedGaussianNB")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
             noised_x = x_train + x_noise
             result = super(MechanizedKMeans, self).fit(noised_x)
@@ -228,35 +268,8 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
             min_impurity_decrease = min_impurity_decrease, 
             class_weight = class_weight, 
             ccp_alpha = ccp_alpha)
-        self.mechanism = None
-        '''
-        Parameters for the GnC mechanism 
-        '''
-        self.mu = 0.0
-        self.sigma = 0.03
+        self.mechanism = Mechanism.MechanismType.NONE
 
-        '''
-        Parameters for the GnC mechanism 
-        '''      
-        self.beta = None
-        self.tau = None
-        self.check_for_width = None   
-
-
-        '''
-        Parameters for the Naive Data Splitting mechanism 
-        '''
-        self.split_size = None
-
-
-        '''
-        Parameters for the Thresholdout mechanism 
-        '''
-        self.hold_size = None
-        self.train_size = None
-        self.hold_frac = None
-        self.threshold = None
-        self.noisy_thresh = None
             
     def choose_mech(self, mech = None):
         self.mechanism = mech
@@ -291,14 +304,14 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
 
 
     def fit(self, x_train, y_train):
-        if self.mechanism == None:
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
             result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
             if isinstance(result, DecisionTreeClassifier):
                 return self
             else:
                 return result
-        elif self.mechanism == Mechanism.GAUSSIAN:
-            print("in gaussian mechanism MechanizedDecisionTree")
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
+            print("in Gaussian MechanizedDecisionTree")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
             noised_x = x_train + x_noise
             result = super(MechanizedDecisionTree, self).fit(noised_x, y_train)
@@ -318,20 +331,22 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
 
 class MechanizedOneVSRest(OneVsRestClassifier):
     
-    def __init__(self, estimator, *, n_jobs=None, verbose=0):
+    def __init__(self, estimator, *, n_jobs=None, verbose=0,
+                 mechanism = Mechanism(Mechanism.MechanismType.NONE)):
         super(MechanizedOneVSRest, self).__init__(estimator = estimator, n_jobs = n_jobs, verbose = verbose)
-        self.mechanism = None
+        self.mechanism = mechanism
         
 
     def fit(self, x_train, y_train):
-        if self.mechanism == None:
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
+            print("in Baseline Mechanized One v.s. Rest")
             result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
             if isinstance(result, OneVsRestClassifier):
                 return self
             else:
                 return result
-        elif self.mechanism == Mechanism.GAUSSIAN:
-            print("in gaussian mechanism MechanizedDecisionTree")
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
+            print("in Gaussian Mechanized One v.s. Rest")
             x_noise = np.random.normal(0, 0.1, x_train.shape) 
             noised_x = x_train + x_noise
             result = super(MechanizedOneVSRest, self).fit(noised_x, y_train)
