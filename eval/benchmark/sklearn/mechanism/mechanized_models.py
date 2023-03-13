@@ -337,7 +337,20 @@ class MechanizedOneVSRest(OneVsRestClassifier):
                  mechanism = Mechanism(Mechanism.MechanismType.NONE)):
         super(MechanizedOneVSRest, self).__init__(estimator = estimator, n_jobs = n_jobs, verbose = verbose)
         self.mechanism = mechanism
-        
+    
+    def fit_threshold(self, x_train, y_train):
+        size = len(x_train)
+        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedOneVSRest, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
+            return hold_result
+        else:
+            return train_result        
 
     def fit(self, x_train, y_train):
         if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
@@ -356,6 +369,9 @@ class MechanizedOneVSRest(OneVsRestClassifier):
                 return self
             else:
                 return result
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
+            print("in Threshold Mechanized Logistic Regression")
+            return self.fit_threshold(x_train, y_train)
         else:
             result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
             if isinstance(result, OneVsRestClassifier):
