@@ -50,11 +50,11 @@ def seq2seq_window_dataset(series, WINDOW_SIZE, batch_size=32,
     return ds.batch(batch_size).prefetch(1)
   
 
-def model_forecast(model, series, WINDOW_SIZE):
+def model_forecast(model, series, WINDOW_SIZE, batch_size=32):
     ds = tf.data.Dataset.from_tensor_slices(series)
     ds = ds.window(WINDOW_SIZE, shift=1, drop_remainder=True)
     ds = ds.flat_map(lambda w: w.batch(WINDOW_SIZE))
-    ds = ds.batch(32).prefetch(1)
+    ds = ds.batch(batch_size).prefetch(1)
     forecast = model.predict(ds)
     return forecast
 
@@ -127,9 +127,9 @@ def eval_model(step, mechanism = None, sigma = 0.1, hold_frac = 0.4, threshold =
     keras.layers.Dense(1),
     keras.layers.Lambda(lambda x: x * 200)
     ])    
-
+    batch_size = math.floor(TRAIN_SIZE/step)
     train_set = seq2seq_window_dataset(x_train, WINDOW_SIZE,
-                                    batch_size = math.floor(TRAIN_SIZE/step))
+                                    batch_size)
     
     if mechanism:
         model.choose_mech(mechanism)
@@ -141,25 +141,26 @@ def eval_model(step, mechanism = None, sigma = 0.1, hold_frac = 0.4, threshold =
 
     ''' Validate the result'''
     model.choose_mech(None)
-    predict = model_forecast(model, series[:,  np.newaxis], WINDOW_SIZE)
+    predict = model_forecast(model, series[:,  np.newaxis], WINDOW_SIZE, batch_size)
     predict = predict[TRAIN_SIZE - WINDOW_SIZE:-1, -1, 0]
-    return history, predict
+    # predict = model.predict(time_valid)
+    error = generalization_error(x_valid, predict)
+    return history, predict, error
 
 
-def generalization_error(predict):
+def generalization_error(true_val, predict_val):
     error = keras.metrics.RootMeanSquaredError()
-    error.update_state(x_valid, predict)
-    print(error.result().numpy())
+    error.update_state(true_val, predict_val)
     return error.result().numpy()
 
 
 def eval_multiple_rounds(rounds, mechanism = None, sigma = 0.1, hold_frac = 0.4, threshold = 0.5):
     history_list, predict_list, generalization_error_list = [], [], []
     for r in rounds:
-        history, predict = eval_model(step = r, mechanism = mechanism, sigma = sigma, hold_frac = hold_frac, threshold = threshold)
+        history, predict, error = eval_model(step = r, mechanism = mechanism, sigma = sigma, hold_frac = hold_frac, threshold = threshold)
         history_list.append(history)
         predict_list.append(predict)
-        generalization_error_list.append(generalization_error(predict)) 
+        generalization_error_list.append(error) 
 
     return history_list, predict_list, generalization_error_list
 

@@ -7,12 +7,12 @@ from sklearn.model_selection import train_test_split, KFold, GridSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
-from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_matrix, RocCurveDisplay
+from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
 
-
+import math
 
 
 # Basic preprocessing
@@ -160,7 +160,7 @@ def eval(estimator, mechanism, splits):
     # Predict
     y_pred = model.predict(x_val)
 
-    return accuracy_score(y_val, y_pred)
+    return mean_squared_error(y_val, y_pred)
 
 
 def eval_multiple_rounds(stepped_rounds, mechanism, non_adaptive_num):

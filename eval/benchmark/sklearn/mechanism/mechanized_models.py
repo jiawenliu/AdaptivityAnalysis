@@ -81,15 +81,39 @@ class MechanizedLogisticRegression(LogisticRegression):
         size = len(x_train)
         hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
         x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
-        train_result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+        train_result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
         train_pred = train_result.predict(x_train)
-        hold_result = super(MechanizedDecisionTree, self).fit(x_hold, y_hold)
+        hold_result = super(MechanizedLogisticRegression, self).fit(x_hold, y_hold)
         hold_pred = hold_result.predict(x_hold)
-        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
-            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.sigma)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
             return hold_result
         else:
             return train_result
+
+    def fit_gaussian(self, x_train, y_train):
+        x_noise = np.random.normal(0, self.mechanism.sigma, x_train.shape) 
+        noised_x = x_train + x_noise
+        print(noised_x)
+        
+        ################ Gaussian Noise Added to Labels ################
+        # y_noise = np.random.normal(0, 0.1, y_train.shape) 
+        # noised_y = y_train + y_noise
+        # lab = preprocessing.LabelEncoder()
+        # y_transformed = pd.Series(
+        # lab.fit_transform(noised_y), 
+        # y_train.index,
+        # y_train.dtype,
+        # y_train.name,
+        # y_train.copy
+        # )
+        # y_transformed = lab.fit_transform(noised_y)
+
+        result = super(MechanizedLogisticRegression, self).fit(noised_x, y_train)
+        if isinstance(result, LogisticRegression):
+            return self
+        else:
+            return result
 
 
 
@@ -103,27 +127,7 @@ class MechanizedLogisticRegression(LogisticRegression):
                 return result
         elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
             print("in gaussian Mechanized Logistic Regression")
-            x_noise = np.random.normal(0, self.mechanism.sigma, x_train.shape) 
-            noised_x = x_train + x_noise
-            
-            ################ Gaussian Noise Added to Labels ################
-            # y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            # noised_y = y_train + y_noise
-            # lab = preprocessing.LabelEncoder()
-            # y_transformed = pd.Series(
-            # lab.fit_transform(noised_y), 
-            # y_train.index,
-            # y_train.dtype,
-            # y_train.name,
-            # y_train.copy
-            # )
-            # y_transformed = lab.fit_transform(noised_y)
-
-            result = super(MechanizedLogisticRegression, self).fit(noised_x, y_train)
-            if isinstance(result, LogisticRegression):
-                return self
-            else:
-                return result
+            return self.fit_gaussian(x_train, y_train)
         
         elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
             print("in Threshold Mechanized Logistic Regression")
@@ -140,7 +144,57 @@ class MechanizedLogisticRegression(LogisticRegression):
         self.mechanism = mech
 
 
+class MechanizedOneVSRest(OneVsRestClassifier):
+    
+    def __init__(self, estimator, *, n_jobs=None, verbose=0,
+                 mechanism = Mechanism(Mechanism.MechanismType.NONE)):
+        super(MechanizedOneVSRest, self).__init__(estimator = estimator, n_jobs = n_jobs, verbose = verbose)
+        self.mechanism = mechanism
+    
+    def fit_threshold(self, x_train, y_train):
+        size = len(x_train)
+        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedOneVSRest, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
+            return hold_result
+        else:
+            return train_result        
 
+    def fit(self, x_train, y_train):
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
+            print("in Baseline Mechanized One v.s. Rest")
+            result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
+            if isinstance(result, OneVsRestClassifier):
+                return self
+            else:
+                return result
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
+            print("in Gaussian Mechanized One v.s. Rest")
+            x_noise = np.random.normal(0, 0.1, x_train.shape) 
+            noised_x = x_train + x_noise
+            result = super(MechanizedOneVSRest, self).fit(noised_x, y_train)
+            if isinstance(result, OneVsRestClassifier):
+                return self
+            else:
+                return result
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
+            print("in Threshold Mechanized One v.s. Rest")
+            return self.fit_threshold(x_train, y_train)
+        else:
+            result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
+            if isinstance(result, OneVsRestClassifier):
+                return self
+            else:
+                return result
+
+    def choose_mechanism(self, mech):
+        self.mechanism = mech
+   
 
 class MechanizedGridSearchCV(GridSearchCV):    
     def __init__(self, estimator, param_grid, *, scoring=None, n_jobs=None, refit=True, cv=None, verbose=0, pre_dispatch="2*n_jobs", error_score=np.nan, return_train_score=False):
@@ -196,6 +250,7 @@ class MechanizedGridSearchCV(GridSearchCV):
     def choose_mechanism(self, mech):
         self.mechanism = mech
 
+     
 
 class MechanizedGaussianNB(GaussianNB):
     def __init__(self, *, priors=None, var_smoothing=1e-9):
@@ -331,53 +386,4 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
     def choose_mechanism(self, mech):
         self.mechanism = mech
 
-class MechanizedOneVSRest(OneVsRestClassifier):
-    
-    def __init__(self, estimator, *, n_jobs=None, verbose=0,
-                 mechanism = Mechanism(Mechanism.MechanismType.NONE)):
-        super(MechanizedOneVSRest, self).__init__(estimator = estimator, n_jobs = n_jobs, verbose = verbose)
-        self.mechanism = mechanism
-    
-    def fit_threshold(self, x_train, y_train):
-        size = len(x_train)
-        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
-        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
-        train_result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
-        train_pred = train_result.predict(x_train)
-        hold_result = super(MechanizedOneVSRest, self).fit(x_hold, y_hold)
-        hold_pred = hold_result.predict(x_hold)
-        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
-            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
-            return hold_result
-        else:
-            return train_result        
 
-    def fit(self, x_train, y_train):
-        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
-            print("in Baseline Mechanized One v.s. Rest")
-            result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
-            if isinstance(result, OneVsRestClassifier):
-                return self
-            else:
-                return result
-        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
-            print("in Gaussian Mechanized One v.s. Rest")
-            x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            noised_x = x_train + x_noise
-            result = super(MechanizedOneVSRest, self).fit(noised_x, y_train)
-            if isinstance(result, OneVsRestClassifier):
-                return self
-            else:
-                return result
-        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
-            print("in Threshold Mechanized Logistic Regression")
-            return self.fit_threshold(x_train, y_train)
-        else:
-            result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
-            if isinstance(result, OneVsRestClassifier):
-                return self
-            else:
-                return result
-
-    def choose_mechanism(self, mech):
-        self.mechanism = mech
