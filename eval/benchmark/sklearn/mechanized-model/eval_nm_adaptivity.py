@@ -102,9 +102,9 @@ def load_and_process_data():
 
     return data_x, data_y
 
-def create_splits(data_x, data_y):
+def create_splits(data_x, data_y, n_splits):
     # 5-fold cross validation
-    kf = KFold(n_splits=5, shuffle=True, random_state=42)
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
     splits = []
     for train_idx, val_idx in kf.split(data_x, data_y):
         # Apply split
@@ -144,14 +144,13 @@ BEST_C = 1.5848931924611134
 C=1.5848931924611134, max_iter=1500
 '''
 
+X_DATA, Y_DATA = load_and_process_data()
 
-x_data, y_data = load_and_process_data()
-splits = create_splits(x_data, y_data)
-x_train, x_val, y_train, y_val = splits[0]
+print(len(X_DATA))
 
-def eval(estimator, mechanism):
+def eval(estimator, mechanism, splits):
     # f1_scores, acc_scores, models = [], [], [], [], []
-
+    x_train, x_val, y_train, y_val = splits[0]
     estimator = estimator
     
     model = MechanizedOneVSRest(estimator, mechanism = mechanism)
@@ -164,21 +163,32 @@ def eval(estimator, mechanism):
     return accuracy_score(y_val, y_pred)
 
 
-def eval_multiple_rounds(stepped_rounds, mechanism):
+def eval_multiple_rounds(stepped_rounds, mechanism, non_adaptive_num):
+    splits = create_splits(X_DATA, Y_DATA, non_adaptive_num)
     generalization_error_list = []
     for r in stepped_rounds:
         estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = r, mechanism = mechanism)
-        generalization_error_list.append(eval(estimator, mechanism))
+        generalization_error_list.append(eval(estimator, mechanism, splits))
+    return generalization_error_list
+
+def eval_const_rounds(round, mechanism, stepped_non_adaptive_num):
+    generalization_error_list = []
+    for n_splits in stepped_non_adaptive_num:
+        splits = create_splits(X_DATA, Y_DATA, n_splits)
+        estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = round, mechanism = mechanism)
+        generalization_error_list.append(eval(estimator, mechanism, splits))
     return generalization_error_list
 
 stepped_rounds = range(20, 50, 2)
+non_adaptive_num = 5
 mechanism = Mechanism(mechanism_type = Mechanism.MechanismType.GAUSSIAN, sigma = 0.03)
-eval_multiple_rounds(stepped_rounds, mechanism)
 
-baseline_generalization_error_list = eval_multiple_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.NONE))
+eval_multiple_rounds(stepped_rounds, mechanism, non_adaptive_num)
+
+baseline_generalization_error_list = eval_multiple_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.NONE), non_adaptive_num)
 baseline_generalization_error_list = [0.47190818773552584, 0.473107228502912, 0.473792394655704, 0.47070914696813976, 0.4659129838985954, 0.4720794792737239, 0.47447756080849607, 0.473107228502912, 0.4775608084960603, 0.47619047619047616, 0.4712230215827338, 0.47447756080849607, 0.47567660157588215, 0.473792394655704, 0.47533401849948614]
 
-gaussian_generalization_error_list = eval_multiple_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.GAUSSIAN, sigma = 0.03))
+gaussian_generalization_error_list = eval_multiple_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.GAUSSIAN, sigma = 0.03), non_adaptive_num)
 gaussian_generalization_error_list = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
 
 def plot_error(rounds, generalization_error, mechanism):

@@ -115,7 +115,7 @@ def compile_and_fit_model(model, train_set, eager = False):
     history = model.fit(train_set, epochs = EPOCH, callbacks=[lr_schedule])
     return history
 
-def eval_model(model, step, mechanism = None, sigma = 0.1, hold_frac = 0.4, threshold = 0.5):
+def eval_model(step, mechanism = None, sigma = 0.1, hold_frac = 0.4, threshold = 0.5):
     ''' Compile and fit the empirical model as baseline'''
     model = MechanizedSequential([
     keras.layers.Conv1D(filters = 32, kernel_size = 5,
@@ -176,7 +176,7 @@ def plot_error(rounds, generalization_error, mechanism):
     plt.legend()
     plt.grid()
 
-max_rounds = 20
+max_rounds = 2
 
 stepped_rounds = range(math.floor(max_rounds/2), max_rounds, 2)
 

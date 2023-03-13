@@ -17,11 +17,11 @@ from mechanism.mechanized_sequential import MechanizedSequential
 from mechanism.mechanized_sequential import Mechanism
 import math
 
-gdown.download(
-    url='https://drive.google.com/uc?id=1Ag0jd21oRwJhVFIBohmX_ogeojVtapLy',
-    output='bard.zip',
-    quiet=True
-)
+# gdown.download(
+#     url='https://drive.google.com/uc?id=1Ag0jd21oRwJhVFIBohmX_ogeojVtapLy',
+#     output='bard.zip',
+#     quiet=True
+# )
 
 module_path = "text_module"
 embedding_layer = hub.KerasLayer(module_path, trainable=False)
@@ -53,6 +53,7 @@ def load_file(path, label):
     return tf.io.read_file(path), label
 
 def make_datasets(step):
+  
   train_size = int(len(file_paths) * train_frac)
   batch_size = train_size/step
 
@@ -91,7 +92,7 @@ def compile_and_fit_model(model, train_data, eager = False):
 
 def eval_model(step, mechanism = None, sigma = 0.1, hold_frac = 0.4, threshold = 0.5):
     ''' Compile and fit the empirical model as baseline'''
-    model = tf.keras.Sequential([
+    model = MechanizedSequential([
         tf.keras.layers.Input(shape=[], dtype=tf.string),
         embedding_layer,
         tf.keras.layers.Dense(64, activation="relu"),
