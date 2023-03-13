@@ -78,7 +78,20 @@ class MechanizedLogisticRegression(LogisticRegression):
         self.mechanism = mechanism
 
     def fit_threshold(self, x_train, y_train):
-        pass
+        size = len(x_train)
+        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedDecisionTree, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.sigma)
+            return hold_result
+        else:
+            return train_result
+
+
 
     def fit(self, x_train, y_train):
         if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
@@ -111,6 +124,10 @@ class MechanizedLogisticRegression(LogisticRegression):
                 return self
             else:
                 return result
+        
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
+            print("in Threshold Mechanized Logistic Regression")
+            return self.fit_threshold(x_train, y_train)
             
         else:
             result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
@@ -286,21 +303,6 @@ class MechanizedDecisionTree(DecisionTreeClassifier):
         self.threshold = threshold
         self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
         
-
-    def fit_threshold(self, x_train, y_train):
-        size = len(x_train.shape[0])
-        hold_size, train_size = int(size  * (self.hold_frac)), int(size  * (1.0 - self.hold_frac))
-        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
-        train_result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
-        train_pred = train_result.predict(x_train)
-        hold_result = super(MechanizedDecisionTree, self).fit(x_hold, y_hold)
-        hold_pred = hold_result.predict(x_hold)
-        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
-            self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
-            
-
-            pass
-        pass
 
 
     def fit(self, x_train, y_train):
