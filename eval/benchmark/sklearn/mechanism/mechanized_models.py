@@ -15,13 +15,13 @@ from enum import Enum
 
 
 class Mechanism():
-   class MechanismType(Enum):
+    class MechanismType(Enum):
         NONE = 0
         GAUSSIAN = 1
         DATASPLIT = 2
         THRESHOLD = 3
 
-   def __init__(self, mechanism_type = MechanismType.NONE, mu = 0.0, sigma = 0.1, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
+    def __init__(self, mechanism_type = MechanismType.NONE, mu = 0.0, sigma = 0.1, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
 
         super().__init__()
         self.mechanism_type = mechanism_type
@@ -54,6 +54,18 @@ class Mechanism():
         self.hold_frac = hold_frac
         self.threshold = threshold
         self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
+
+    def initialize_with_str_seed(init_str):
+        """
+        Initializes random number generator with seed corresponding to given input string init_str.
+        :param init_str: Initialization string according to which seed will be computed. Seed is the sum of the ASCII
+                        values of each character in init_str.
+        """
+        rnd_val = 0
+        if init_str:
+            for c in init_str:
+                rnd_val += ord(c)
+        np.random.seed(rnd_val)
 
 class MechanizedLogisticRegression(LogisticRegression):
 
