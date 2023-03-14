@@ -102,6 +102,7 @@ def get_from_file(filename, key, log=True):
     return val
 
 
+
 def initialize_with_str_seed(init_str):
     """
     Initializes random number generator with seed corresponding to given input string init_str.
