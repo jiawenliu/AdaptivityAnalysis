@@ -99,15 +99,14 @@ class MechanizedLogisticRegression(LogisticRegression):
         hold_pred = hold_result.predict(x_hold)
         if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
             self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
-            return hold_result
+            x_noise =  np.random.laplace(0, 2 * self.mechanism.sigma, x_hold.shape)
+            return super(MechanizedLogisticRegression, self).fit(x_hold + x_noise, y_hold)
         else:
             return train_result
 
     def fit_gaussian(self, x_train, y_train):
         x_noise = np.random.normal(0, self.mechanism.sigma, x_train.shape) 
-        noised_x = x_train + x_noise
-        print(noised_x)
-        
+        noised_x = x_train + x_noise        
         ################ Gaussian Noise Added to Labels ################
         # y_noise = np.random.normal(0, 0.1, y_train.shape) 
         # noised_y = y_train + y_noise
@@ -171,9 +170,10 @@ class MechanizedOneVSRest(OneVsRestClassifier):
         train_pred = train_result.predict(x_train)
         hold_result = super(MechanizedOneVSRest, self).fit(x_hold, y_hold)
         hold_pred = hold_result.predict(x_hold)
-        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
-            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
-            return hold_result
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(self.mechanism.mu, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(self.mechanism.mu, 2 * self.mechanism.sigma)
+            x_noise =  np.random.laplace(self.mechanism.mu, self.mechanism.sigma, x_hold.shape)
+            return super(MechanizedOneVSRest, self).fit(x_hold + x_noise, y_hold)
         else:
             return train_result        
 
