@@ -50,9 +50,9 @@ class Mechanism():
 class MechanizedSequential(tf.keras.Sequential):
 
 
-  def __init__(self, mechanism = Mechanism(Mechanism.MechanismType.NONE), *args, **kwargs):
+  def __init__(self, *args, **kwargs):
       super(MechanizedSequential, self).__init__(*args, **kwargs)
-      self.mechanism = mechanism
+      self.mechanism = Mechanism(Mechanism.MechanismType.NONE)
 
 
       '''
@@ -82,11 +82,13 @@ class MechanizedSequential(tf.keras.Sequential):
       self.train_size = None
       self.hold_frac = None
       self.threshold = None
-      self.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
+      self.noisy_thresh = None
+      # self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma) if self.mechanism.mechanism_type == Mechanism.MechanismType.THRESHOLD else None
          
-  def choose_mech(self, mech = Mechanism(Mechanism.MechanismType.NONE)):
-     self.mechanism = mech
-  
+  def choose_mech(self, mechanism = Mechanism(Mechanism.MechanismType.NONE)):
+     self.mechanism = mechanism
+     self.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma) if self.mechanism.mechanism_type == Mechanism.MechanismType.THRESHOLD else None
+
   def set_gaussian_para(self, mu, sigma):
      return
      self.set_mechanism_para(mu, sigma)
@@ -186,10 +188,10 @@ class MechanizedSequential(tf.keras.Sequential):
          x_train = x
          y_pred_original = self(x_train, training=True)  # Forward pass
          y_noise =  tf.random.normal(
-                  tf.shape(y_pred),
+                  tf.shape(y_pred_original),
                   mean=self.mechanism.mu,
                   stddev=self.mechanism.sigma,
-                  dtype=y_pred.dtype,
+                  dtype=y_pred_original.dtype,
                   seed=None,
                   name=None
                   )
@@ -270,7 +272,7 @@ class MechanizedSequential(tf.keras.Sequential):
          diff = (np.sum(y_pred_train.numpy(), axis = 0) / train_size - np.sum(y_pred_hold.numpy(), axis = 0) / hold_size)
          mean_abs_diff = np.absolute(diff).mean()
          if mean_abs_diff >= self.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
-            self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
+            self.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
             y_true, y_pred = y_hold, y_pred_hold + tfp.distributions.Laplace(self.mechanism.mu, self.mechanism.sigma).sample(tf.shape(y_pred_hold))
             loss = self.compiled_loss(y_hold, y_pred_hold, regularization_losses=self.losses)
          else:
@@ -287,7 +289,7 @@ class MechanizedSequential(tf.keras.Sequential):
          loss_hold = self.compiled_loss(y_hold, y_pred_hold, regularization_losses=self.losses)
 
          if np.abs(loss - loss_hold) >= self.noisy_thresh + np.random.laplace(0, 4 * self.sigma):
-            self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
+            self.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.sigma)
 
             loss = loss_hold + tfp.distributions.Laplace(self.mu, self.sigma).sample(tf.shape(loss_hold))
             # min(1.0, max(0.0, loss_hold + np.random.laplace(0, self.sigma)))
