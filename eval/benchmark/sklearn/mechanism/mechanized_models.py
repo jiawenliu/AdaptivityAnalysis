@@ -66,6 +66,7 @@ class Mechanism():
             for c in init_str:
                 rnd_val += ord(c)
         np.random.seed(rnd_val)
+from sklearn.multiclass import OneVsRestClassifier
 
 class MechanizedLogisticRegression(LogisticRegression):
 
@@ -177,6 +178,22 @@ class MechanizedOneVSRest(OneVsRestClassifier):
         else:
             return train_result        
 
+    def fit_data_split(self, x_train, y_train):
+        size = len(x_train)
+        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedOneVSRest, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(self.mechanism.mu, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(self.mechanism.mu, 2 * self.mechanism.sigma)
+            x_noise =  np.random.laplace(self.mechanism.mu, self.mechanism.sigma, x_hold.shape)
+            return super(MechanizedOneVSRest, self).fit(x_hold + x_noise, y_hold)
+        else:
+            return train_result        
+
+
     def fit(self, x_train, y_train):
         if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
             print("in Baseline Mechanized One v.s. Rest")
@@ -206,7 +223,6 @@ class MechanizedOneVSRest(OneVsRestClassifier):
 
     def choose_mechanism(self, mech):
         self.mechanism = mech
-   
 
 class MechanizedGridSearchCV(GridSearchCV):    
     def __init__(self, estimator, param_grid, *, scoring=None, n_jobs=None, refit=True, cv=None, verbose=0, pre_dispatch="2*n_jobs", error_score=np.nan, return_train_score=False):
