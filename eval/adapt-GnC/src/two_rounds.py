@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
-class Runner():
+class twoRounds():
 	"""
 	Base class which runs the analyst strategies. 
 	Compatible with the Quandaric-Strategy and the mechanisms having fixed
@@ -158,7 +158,7 @@ class Runner():
 			# Gauss.add_params(beta=beta, tau=tau)
 			GnC_gauss = mech.Guess_and_Check_Mechanism(mech_guess = mech.Gaussian_Mechanism(sigma=sigma),
 				check_data_frac = check_data_frac,
-				use_mgf_width=False)
+				use_mgf_width = False)
 			GnC_gauss.add_params(beta = beta, tau = tau)
 			mech_rmse = self.runs_one_mech(np.array(n_list), q_max_list, q_adapt_list, runs, GnC_gauss)
 			mech_para = "GnC_gauss : SIGMA: {}, CHECK_FRAC: {}, BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(sigma, check_data_frac, beta, tau, n_list, runs)
@@ -300,7 +300,7 @@ class Runner():
 		plt.show()
 
 
-r = Runner()
+r = twoRounds()
 r.runandplot_with_one_mech(q_max_list = [200], q_adapt_list = [10], mech_name = "Baseline")
 # r.plot_from_data()
 

@@ -10,7 +10,7 @@ class Strategy:
     dataset size n, desired significance beta (coverage should be at least 1-beta), and tolerance width tau.
     """
 
-    def __init__(self, n, q_mean=0.5, ada_freq=None, q_max=None):
+    def __init__(self, n, q_mean = 0.5, ada_freq = None, q_max = None, cardinality = None):
         """
         Initializer for the strategy.
         :param n: dataset size
@@ -37,8 +37,8 @@ class Strategy:
 
         assert "method" in ada_freq and "method_param" in ada_freq, ("Adaptive query frequency should have method"
                                                                      + " type and method parameter.")
-        assert ada_freq["method"] in {"additive", "power"}, ("Adaptive query frequency method should be in " +
-                                                             "{additive, power}")
+        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine"}, ("Adaptive query frequency method should be in " +
+                                                             "{additive, power, repeated_query_subroutine}")
         assert ada_freq["method_param"] > 1, "Adaptive query frequency should be greater than 1."
 
         self.ada_method = ada_freq["method"]
@@ -48,19 +48,20 @@ class Strategy:
             if q_max is None:
                 q_max = int(np.floor(self.n/self.ada_method_param)) * self.ada_method_param
             else:
-                assert q_max % self.ada_method_param == 0, ("q_max should be divisible by additive frequency of " +
-                                                            "adaptive queries.")
+                assert q_max % self.ada_method_param == 0, ("q_max should be divisible by additive frequency of adaptive queries.")
             self.next_ada_q_at = self.ada_method_param
-        else:
+        elif self.ada_method == "power":
             if q_max is None:
                 n_root = int(np.floor(pow(n, 1.0 / self.ada_method_param)))
                 q_max = pow(n_root, self.ada_method_param)
             else:
                 q_max_root = int(np.floor(pow(q_max, 1.0 / self.ada_method_param)))
-                assert pow(q_max_root, self.ada_method_param) == q_max, ("q_max should be divisible by power " +
-                                                                         str(self.ada_method_param) +
-                                                                         " frequency of adaptive queries.")
+                assert pow(q_max_root, self.ada_method_param) == q_max, ("q_max should be divisible by power " + str(self.ada_method_param) +  " frequency of adaptive queries.")
             self.next_ada_q_at = pow(self.ada_ctr + 2, self.ada_method_param)
+        else:
+            if q_max is None:
+                q_max = self.n - 2
+
 
         self.q_max = q_max
         self.cur_q = 0  # stores the number of queries asked by the strategy
@@ -78,6 +79,15 @@ class Strategy:
         if self.q_max != 40000:
             self.name = self.name + "_qmax_" + str(self.q_max)
         self.data_name = None
+
+
+        if cardinality is None:
+            self.cardinality = self.q_max
+        else:
+            self.cardinality = cardinality
+
+
+
 
     def gen_data(self, data_name=None):
         """
@@ -100,13 +110,14 @@ class Strategy:
 
         # self.q_max += self.q_max/self.ada_method_param
         self.q_max += 1
+        self.cardinality += 1
 
 ###################################### Debugging Code ^^ ######################################
         
         if data_name is not None:
             self.data_name = data_name
             hf.initialize_with_str_seed(data_name)
-        data = np.random.choice([-1, 1], (self.n, self.q_max), p=[1 - self.pr_1, self.pr_1])
+        data = np.random.choice([-1, 1], (self.n, self.cardinality), p=[1 - self.pr_1, self.pr_1])
 
         return data
 
@@ -121,6 +132,8 @@ class Strategy:
                   number of allowable queries is exhausted, or the mechanism responds None to previously asked query,
                   then returns None.
         """
+
+        # def get_
 
         def get_corr(data):
             """
@@ -149,6 +162,7 @@ class Strategy:
             return (corr + 1) / 2.0  # each answer in [0.0, 1.0]
 
 ###################################### Debugging Code ^^ ######################################
+
 
 
         def get_acc(data):
@@ -182,8 +196,35 @@ class Strategy:
                 ret_ans *= self.q_mean/max(self.pr_1, 1 - self.pr_1)  # scaling answer if self.q_mean != 0.5
             return [ret_ans]
 
+        # def get_lil_ucb_query(data):
+        #     return 1.0 / gate * sum(data[:gate]) + (1 + beta) * (1 + math.sqrt(epsilon)) * math.sqrt(2 * (sigma**2) * (1 + epsilon) * math.log(math.log((1 + epsilon) * gate)/confidential_interval) / gate)
+
+        def get_repeated_query_subroutine(data):
+            data_size, _ = data.shape
+            x = np.random.choice(data_size)
+            y = np.random.choice(data_size)
+
+            compare = (np.sum(data[x, :]) 
+                       - np.sum(data[y, :]))   # each answer in [-1.0, 1.0]
+
+            return [compare]  # each answer in [0.0, 1.0]
+
+        if self.ada_method == "repeated_query_subroutine":
+            if self.cur_q >= self.q_max:
+                if prev_ans:
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                return None
+            true_ans = (-1) * (1 - self.pr_1) + 1 * self.pr_1
+            self.cur_q += 1
+            self.true_ans_list.append(true_ans) 
+            if prev_ans:
+                self.mech_ans_list.append(prev_ans[0]["answer"])
+            return {"query": get_repeated_query_subroutine, "true_answer": true_ans}
+
+
         if self.cur_q < self.q_max and (self.cur_q == 0 or prev_ans):  # continue as long as number of queries asked
             # doesn't exceed self.q_max, and one of either the mechanism provided an answer to the previous query, or
+
             # it is the first query
             if prev_ans:  # append mechanism answer to appropriate list
                 if self.cur_q == self.prev_ada_q_at:
@@ -214,4 +255,8 @@ class Strategy:
                 # asking the next batch of non-adaptive queries
                 return {"query": get_corr, "true_answer": true_ans}
 
+
+
         return None  # if exhausted number of allowable queries, or mechanism responded None for previous query
+
+
