@@ -205,7 +205,7 @@ class Strategy:
             y = np.random.choice(data_size)
 
             compare = (np.sum(data[x, :]) 
-                       - np.sum(data[y, :]))   # each answer in [-1.0, 1.0]
+                       - np.sum(data[y, :]))/data_size   # each answer in [-1.0, 1.0]
 
             return [compare]  # each answer in [0.0, 1.0]
 

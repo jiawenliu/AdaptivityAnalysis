@@ -58,13 +58,16 @@ dimension = 100
 q_max = 10000
 runs = 10
 
+stepped_q_mx = range(q_max/2, q_max, 10)
+
 beta, tau = 0.05, 1.0
 sigma = 0.03
 hold_frac, threshold, check_data_frac = 0.5, 0.05, 0.05
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
-Baseline_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Baseline)[-1] for _ in range(runs)]
+Baseline_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Baseline)[-1] for q_max in stepped_q_mx]
+Baseline_rmse = eval_repeated_query_subroutine(0.1, n, dimension, q_max, Baseline)
 
 # DataSplit = mech.Mechanism()
 # DataSplit.add_params(beta=beta, tau=tau)
@@ -72,11 +75,15 @@ Baseline_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Baseli
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
-Thresh_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Thresh)[-1] for _ in range(runs)]
+Thresh_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Thresh)[-1] for q_max in stepped_q_mx]
+
+Thresh_rmse = eval_repeated_query_subroutine(0.1, n, dimension, q_max, Thresh)
+
 
 Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
-Gauss_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Gauss)[-1] for _ in range(runs)]
+Gauss_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Gauss)[-1] for q_max in stepped_q_mx]
+Gauss_rmse = eval_repeated_query_subroutine(0.1, n, dimension, q_max, Gauss)
 
 
 plt.figure()
@@ -84,7 +91,7 @@ x_list = range(10, 101, 10)
 
 plt.plot(Baseline_rmse, 'g', label= "empirical")
 # plt.plot(x_list, DataSplit_rmse, 'y', label= "DataSplit")
-plt.plot( Thresh_rmse, 'y', label= "Threshold")
+plt.plot(Thresh_rmse, 'y', label= "Threshold")
 plt.plot(Gauss_rmse, 'r', label= "Gaussian - Adaptfun")
 # plt.plot(x_list, GnC_gauss_rmse, 'm', label= "GnC_gauss")
 # plt.plot(x_list, GnC_thresh_rmse, 'c', label= "GnC_thresh")
@@ -93,5 +100,5 @@ plt.xlabel("Queries")
 plt.ylabel("RMSE (Generalization Error) for adaptive queries")
 plt.legend()
 plt.grid()
-plt.savefig("../../plots/repeated_query_subroutine.png")
+plt.savefig("../../plots/repeated_query_subroutine-test2.png")
 plt.show()
