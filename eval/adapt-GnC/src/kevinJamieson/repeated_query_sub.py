@@ -13,30 +13,35 @@ import strategies as stg
 import mechanisms as mech
 
 # strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, q_max=q_max)
+DATA_SIZE = 1000
+CARDINALITY = 1000
+MAX_QUERY_NUM = 1000
+MAX_EPOCH = 100
 
-def repeated_query_subroutine(delta, strategy, mechanism):
+def repeated_query_subroutine(delta, strategy, mechanism, epoch = MAX_EPOCH):
     l, queried_set = 0, []
     q = strategy.next_query()
-    print(q)
     a = -1
-    while q and a < 0:
-        delta_l = np.sqrt((l + 1) * np.log(2/delta) / (2**l))
-        for _ in range(2**l):
+    ans_list, true_ans_list = [], []
+    while q and l < epoch:
+        delta_l = np.sqrt((l + 1) * np.log(2 / delta) / (2**l))
+        for _ in range(2 ** l):
+            if q is None:
+                break
             r = mechanism.get_answer(q["query"])
             if r[0]["answer"] is not None:
                 queried_set.append(r[0]["answer"] * 2.0 - 1)
                 pre_ans = [{"answer": np.sum((queried_set)).mean()}]
                 q = strategy.next_query(pre_ans)
+                true_ans_list = strategy.true_ans_list[-1]
             else:
                 q = None
                 break
+            ans_list.append(strategy.mech_ans_list[-1])
         l = l + 1
         a = abs(np.sum(np.sign(queried_set))) - delta_l
-    return 
+    return true_ans_list, ans_list
 
-DATA_SIZE = 1000
-CARDINALITY = 1000
-MAX_QUERY_NUM = 1000
 
 
 
@@ -45,24 +50,21 @@ def eval_repeated_query_subroutine(delta, n = DATA_SIZE, cardinality = CARDINALI
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data()})
 
-    repeated_query_subroutine(delta, strategy, mechanism)
-    mse = np.square(np.subtract(strategy.true_ans_list[:-1],strategy.mech_ans_list))
-    print(strategy.true_ans_list, strategy.mech_ans_list)
-    # print(mse)
-    # print(np.sqrt(mse))
+    true_ans_list, mech_ans_list = repeated_query_subroutine(delta, strategy, mechanism)
+    mse = np.square(np.subtract(strategy.true_ans_list, strategy.mech_ans_list))
 
     return np.sqrt(mse)
 
 n = 100
 dimension = 100
-q_max = 10000
+q_max = 1000
 runs = 10
 
 stepped_q_max = range(q_max/2, q_max, 10)
 
 beta, tau = 0.05, 1.0
-sigma = 0.03
-hold_frac, threshold, check_data_frac = 0.5, 0.05, 0.05
+sigma = 3.5
+hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 repeated_query_sub_delta = 0.1
 
@@ -101,5 +103,5 @@ plt.xlabel("Queries")
 plt.ylabel("RMSE (Generalization Error) for adaptive queries")
 plt.legend()
 plt.grid()
-plt.savefig("../../plots/repeated_query_subroutine-test2.png")
+plt.savefig("../../plots/repeated_query_subroutine-test.png")
 plt.show()

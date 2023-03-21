@@ -168,7 +168,7 @@ class Mechanism:
                 # print("SIZE OF DATA FOR 1 BATCH", num_queries * self.samp_per_q)
                 ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + num_queries) * self.samp_per_q])
                 self.curr_q += len(ans)
-                ans_list = [{"answer": ans[i]} for i in range(len(ans))]
+                ans_list = [{"answer": ans[i] } for i in range(len(ans))]
                 
 
                 # for i in range(num_queries):  # Continue until current batch of queries,
@@ -238,7 +238,7 @@ class Gaussian_Mechanism(Mechanism):
                 return [{"answer": None}]
         # print("GAUSS")
 
-        return [{"answer": min(1.0, max(0.0, ans[i] + noise_to_add[i]))} for i in range(len(ans) - omit_ans)]
+        return [{"answer": min(1.0, max(0.0, ans[i] + noise_to_add[i])), "empirical_answer": ans[i]} for i in range(len(ans) - omit_ans)]
 
 
 class Thresholdout_Mechanism(Mechanism):
@@ -322,12 +322,12 @@ class Thresholdout_Mechanism(Mechanism):
                         q=self.curr_q, 
                         b=self.cost_q,
                         sigma=self.sigma, beta=self.beta) <= self.tau):
-                ans_list.append({"answer": ans})
+                ans_list.append({"answer": ans, "empirical_answer": (train_ans[i])})
 
 ###################################### Debugging Code ######################################
 
             else:
-                ans_list.append({"answer": None})
+                ans_list.append({"answer": None, "empirical_answer": None})
                 break
         # print("THRESHOLDOUT")
         return ans_list
