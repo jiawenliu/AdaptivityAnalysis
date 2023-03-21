@@ -58,6 +58,7 @@ rule main =
   | "-"                 { SUB }
   | "+"                 { ADD }
   | "*"                 { MUL }
+  | "**"                { MUL }
   | "/"                 { DIV }
   | "<"                 { LESS }
   | "<="                { LEQ }

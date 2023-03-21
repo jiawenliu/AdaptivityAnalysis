@@ -51,6 +51,20 @@ class TransitionBound:
         self.var_reset_chains = defaultdict(list)
         self.reset_vars = defaultdict(set)
         self.var_decs = defaultdict(list)
+        self.vars = []
+        self.intialize_vars()
+
+    def intialize_vars(self):
+        for transition_index in range(len(self.transition_graph.transitions)):
+            (_, dc_set, _, _) = self.transition_graph.transitions[transition_index]
+            # (_, dc_set, _, _) = t
+            for dc in dc_set:
+                if dc.dc_type != DifferenceConstraint.DCType.ASUM: 
+                    var = dc.get_var()  
+                    self.vars.append(var) 
+                    self.var_incs[var]
+                    self.var_decs[var]
+                    self.var_resets[var]     
 
         
 
@@ -60,7 +74,8 @@ class TransitionBound:
             (_, dc_set, _, _) = self.transition_graph.transitions[transition_index]
             # (_, dc_set, _, _) = t
             for dc in dc_set:
-                if dc.dc_type == DifferenceConstraint.DCType.ASUM: continue
+                if dc.dc_type == DifferenceConstraint.DCType.ASUM: 
+                    continue
                 var = dc.get_var()
                 if dc.dc_type == DifferenceConstraint.DCType.INC:
                     self.var_incs[var].append((transition_index, dc.dc_const))
@@ -198,8 +213,9 @@ class TransitionBound:
 
     def compute_transition_bounds(self):
         self.collect_var_modifications()
+        print(self.var_resets)
         # visited = {v:False for v in self.var_resets.keys()}
-        for v in self.var_resets.keys():
+        for v in self.vars:
             if v not in self.var_reset_chains.keys():
                self.dfs_var_inc_and_reset_chains(v)
         for transition_index in reversed(range(len(self.transition_graph.transitions))):
