@@ -133,7 +133,7 @@ class Adaptfun:
     def main(self):
         arg_parser = ArgParser()
         if( arg_parser.version == 0 ):
-            print("--- ADAPTFUN : THE LIGHT AND LOOSE REACHABILITY BOUND COMPUTATION ---")
+            print("--- ADAPTFUN ---")
             Adaptfun.adaptfun(arg_parser.program)
 
         elif( arg_parser.version == 1 ):
