@@ -1,8 +1,9 @@
 ## Execution command
 
-** $sh adapftun.sh filename version_number
+$sh adapftun.sh filename version_number
 
 filename : string of the program name, path should be under the same folder
+
 version_number : integer range from [0, 3]
 
 * 0: ADAPTFUN
@@ -11,3 +12,4 @@ version_number : integer range from [0, 3]
 
 * 2: ALTERNATIVE-B : NO REACHABILITY BOUND COMPUTATION 
 * 3: ALTERNATIVE-C : NO CONTROL DEPENDENCY ANALYSIS 
+
