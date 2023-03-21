@@ -24,7 +24,7 @@ def repeated_query_subroutine(delta, strategy, mechanism):
         for _ in range(2**l):
             r = mechanism.get_answer(q["query"])
             if r[0]["answer"] is not None:
-                queried_set.append(r[0]["answer"])
+                queried_set.append(r[0]["answer"] * 2.0 - 1)
                 pre_ans = [{"answer": np.sum((queried_set)).mean()}]
                 q = strategy.next_query(pre_ans)
             else:
@@ -58,32 +58,33 @@ dimension = 100
 q_max = 10000
 runs = 10
 
-stepped_q_mx = range(q_max/2, q_max, 10)
+stepped_q_max = range(q_max/2, q_max, 10)
 
 beta, tau = 0.05, 1.0
 sigma = 0.03
 hold_frac, threshold, check_data_frac = 0.5, 0.05, 0.05
 
+repeated_query_sub_delta = 0.1
+
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
-Baseline_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Baseline)[-1] for q_max in stepped_q_mx]
-Baseline_rmse = eval_repeated_query_subroutine(0.1, n, dimension, q_max, Baseline)
+# Baseline_rmse = [eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
+Baseline_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Baseline)
 
 # DataSplit = mech.Mechanism()
 # DataSplit.add_params(beta=beta, tau=tau)
-# DataSplit_rmse = eval_repeated_query_subroutine(0.1, n*10, dimension, q_max, DataSplit)
+# DataSplit_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n*10, dimension, q_max, DataSplit)
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
-Thresh_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Thresh)[-1] for q_max in stepped_q_mx]
-
-Thresh_rmse = eval_repeated_query_subroutine(0.1, n, dimension, q_max, Thresh)
+# Thresh_rmse = [eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
+Thresh_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Thresh)
 
 
 Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
-Gauss_rmse = [eval_repeated_query_subroutine(0.1, n, dimension, q_max, Gauss)[-1] for q_max in stepped_q_mx]
-Gauss_rmse = eval_repeated_query_subroutine(0.1, n, dimension, q_max, Gauss)
+# Gauss_rmse = [eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
+Gauss_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Gauss)
 
 
 plt.figure()

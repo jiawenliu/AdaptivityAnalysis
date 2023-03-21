@@ -200,14 +200,14 @@ class Strategy:
         #     return 1.0 / gate * sum(data[:gate]) + (1 + beta) * (1 + math.sqrt(epsilon)) * math.sqrt(2 * (sigma**2) * (1 + epsilon) * math.log(math.log((1 + epsilon) * gate)/confidential_interval) / gate)
 
         def get_repeated_query_subroutine(data):
-            data_size, _ = data.shape
+            data_size, dimension = data.shape
             x = np.random.choice(data_size)
             y = np.random.choice(data_size)
 
-            compare = (np.sum(data[x, :]) 
-                       - np.sum(data[y, :]))/data_size   # each answer in [-1.0, 1.0]
+            compare = ((np.sum(data[x, :]) 
+                       - np.sum(data[y, :])) / dimension) / 2.0   # each answer in [-1.0, 1.0]
 
-            return [compare]  # each answer in [0.0, 1.0]
+            return [(compare + 1) / 2.0]  # each answer in [0.0, 1.0]
 
         if self.ada_method == "repeated_query_subroutine":
             if self.cur_q >= self.q_max:

@@ -51,20 +51,19 @@ class AdaptPlot():
 
 		l = min(len(Baseline_rmse), len(DataSplit_rmse), len(Thresh_rmse), len(Gauss_rmse), len(GnC_gauss_rmse), len(GnC_thresh_rmse), len(GnC_DataSplit_rmse))
 		x_list = range(10, 2001, 10)[:l]
-		plt.plot(x_list, Baseline_rmse[:l], 'r', label= "Baseline")
-		plt.plot(x_list, DataSplit_rmse[:l], 'y', label= "DataSplit")
-		plt.plot(x_list, Thresh_rmse[:l], 'g', label= "Thresh")
-		plt.plot(x_list, Gauss_rmse[:l], 'b', label= "Gauss")
-		plt.plot(x_list, GnC_gauss_rmse[:l], 'm', label= "GnC_gauss")
-		plt.plot(x_list, GnC_thresh_rmse[:l], 'c', label= "GnC_thresh")
-		plt.plot(x_list, GnC_DataSplit_rmse[:l], label= "GnC_DataSplit")
+		plt.plot(x_list, Baseline_rmse[:l], 'g', label= "empirical")
+		# plt.plot(x_list, DataSplit_rmse[:l], 'y', label= "DataSplit")
+		plt.plot(x_list, Thresh_rmse[:l], 'y', label= "Thresh")
+		plt.plot(x_list, Gauss_rmse[:l], 'r', label= "Gauss")
+		# plt.plot(x_list, GnC_gauss_rmse[:l], 'm', label= "GnC_gauss")
+		# plt.plot(x_list, GnC_thresh_rmse[:l], 'c', label= "GnC_thresh")
+		# plt.plot(x_list, GnC_DataSplit_rmse[:l], label= "GnC_DataSplit")
 		plt.xlabel("Queries")
 		plt.ylabel("RMSE (Generalization Error) for adaptive queries")
 		plt.legend()
 		plt.grid()
-		plt.savefig("../plots/combined.png")
+		plt.savefig("../plots/n_adaptivity.png")
 		plt.show()
-
 
 r = AdaptPlot()
 r.plot_from_data()

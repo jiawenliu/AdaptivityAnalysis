@@ -285,24 +285,24 @@ class twoRounds():
 
 		GnC_DataSplit_rmse = [0.00017313600000000033, 0.027749999999999997, 0.03300000000000001, 0.03125000000000001, 0.01675000000000001, 0.01000000000000002, 0.01000000000000002, 0.01000000000000002, 0.01000000000000002, 0.01000000000000002]
 
-		plt.plot(x_list, Baseline_rmse, 'r', label= "Baseline")
-		plt.plot(x_list, DataSplit_rmse, 'y', label= "DataSplit")
-		plt.plot(x_list, Thresh_rmse, 'g', label= "Thresh")
-		plt.plot(x_list, Gauss_rmse, 'b', label= "Gauss")
-		plt.plot(x_list, GnC_gauss_rmse, 'm', label= "GnC_gauss")
-		plt.plot(x_list, GnC_thresh_rmse, 'c', label= "GnC_thresh")
-		plt.plot(x_list, GnC_DataSplit_rmse, label= "GnC_DataSplit")
+		plt.plot(x_list, Baseline_rmse, 'g', label= "empirical")
+		# plt.plot(x_list, DataSplit_rmse, 'y', label= "DataSplit")
+		plt.plot(x_list, Thresh_rmse, 'y', label= "Thresh")
+		plt.plot(x_list, Gauss_rmse, 'r', label= "Gauss")
+		# plt.plot(x_list, GnC_gauss_rmse, 'm', label= "GnC_gauss")
+		# plt.plot(x_list, GnC_thresh_rmse, 'c', label= "GnC_thresh")
+		# plt.plot(x_list, GnC_DataSplit_rmse, label= "GnC_DataSplit")
 		plt.xlabel("Queries")
 		plt.ylabel("RMSE (Generalization Error) for adaptive queries")
 		plt.legend()
 		plt.grid()
-		plt.savefig("../plots/combined-tuning2.png")
+		plt.savefig("../plots/n_adaptivity.png")
 		plt.show()
 
 
 r = twoRounds()
-r.runandplot_with_one_mech(q_max_list = [200], q_adapt_list = [10], mech_name = "Baseline")
-# r.plot_from_data()
+# r.runandplot_with_one_mech(q_max_list = [200], q_adapt_list = [10], mech_name = "Baseline")
+r.plot_from_data()
 
 
 		
