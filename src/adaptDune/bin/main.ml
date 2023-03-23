@@ -49,7 +49,7 @@ let _ =
       let cfg_result = Cfg.generate_cfg result in 
       let blocks = cfg_result.nodes in
 
-    (******************** DFG VERSION - ADPTFUN ********************)    
+    (******************** DATA FLOW GRAPH VERSION - ADPTFUN ********************)    
       let t = Caml_unix.gettimeofday () in
       let outfile_dfg = "./dfg/"^prog_name in
       let dfg_output_channel = Out_channel.create outfile_dfg in
@@ -73,11 +73,9 @@ let _ =
       Out_channel.close dfg_output_channel;  
 
 
-      (******************** DFG VERSION - ADPTFUN  ********************)
+      (******************** DATA AND CONTROL FLOW GRAPH VERSION - ADPTFUN  ********************)
       let outfile_dcfg = "./dcfg/"^prog_name in
       let oc = Out_channel.create outfile_dcfg in
-      (* let cfg_result = Cfg.generate_cfg result in 
-      let blocks = cfg_result.nodes in *)
       let _ =  Printf.fprintf oc "%d\n" (List.length blocks) in 
       let _ = cfg_result.node_map in
       List.fold_left ~f:( fun () block -> Printf.fprintf oc "%d," (Syntax.isQuery block) ) ~init:() blocks;
