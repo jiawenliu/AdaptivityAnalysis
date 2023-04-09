@@ -51,11 +51,12 @@ def eval_repeated_query_subroutine(delta, n = DATA_SIZE, cardinality = CARDINALI
     mechanism.add_data({'data': strategy.gen_data()})
 
     true_ans_list, mech_ans_list = repeated_query_subroutine(delta, strategy, mechanism)
-    mse = np.square(np.subtract(strategy.true_ans_list, strategy.mech_ans_list))
+    q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))
+    mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
 
     return np.sqrt(mse)
 
-n = 100
+n = 1000
 dimension = 100
 q_max = 1000
 runs = 10
@@ -73,9 +74,9 @@ Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
 # Baseline_rmse = [eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
 Baseline_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Baseline)
 
-# DataSplit = mech.Mechanism()
-# DataSplit.add_params(beta=beta, tau=tau)
-# DataSplit_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n*10, dimension, q_max, DataSplit)
+DataSplit = mech.Mechanism()
+DataSplit.add_params(beta=beta, tau=tau)
+DataSplit_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, DataSplit)
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
@@ -88,20 +89,46 @@ Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
 Gauss_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Gauss)
 
+print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
 
-plt.figure()
-x_list = range(10, 101, 10)
+# plt.figure()
+# x_list = range(10, 101, 10)
 
-plt.plot(Baseline_rmse, 'g', label= "empirical")
-# plt.plot(x_list, DataSplit_rmse, 'y', label= "DataSplit")
-plt.plot(Thresh_rmse, 'y', label= "Threshold")
-plt.plot(Gauss_rmse, 'r', label= "Gaussian - Adaptfun")
-# plt.plot(x_list, GnC_gauss_rmse, 'm', label= "GnC_gauss")
-# plt.plot(x_list, GnC_thresh_rmse, 'c', label= "GnC_thresh")
-# plt.plot(x_list, GnC_DataSplit_rmse, label= "GnC_DataSplit")
-plt.xlabel("Queries")
-plt.ylabel("RMSE (Generalization Error) for adaptive queries")
-plt.legend()
-plt.grid()
-plt.savefig("../../plots/repeated_query_subroutine-test.png")
-plt.show()
+# plt.plot(Baseline_rmse, 'g', label= "empirical")
+# # plt.plot(x_list, DataSplit_rmse, 'y', label= "DataSplit")
+# plt.plot(Thresh_rmse, 'y', label= "Threshold")
+# plt.plot(Gauss_rmse, 'r', label= "Gaussian - Adaptfun")
+# # plt.plot(x_list, GnC_gauss_rmse, 'm', label= "GnC_gauss")
+# # plt.plot(x_list, GnC_thresh_rmse, 'c', label= "GnC_thresh")
+# # plt.plot(x_list, GnC_DataSplit_rmse, label= "GnC_DataSplit")
+# plt.xlabel("Queries")
+# plt.ylabel("RMSE (Generalization Error) for adaptive queries")
+# plt.legend()
+# plt.grid()
+# plt.savefig("../../plots/repeated_query_subroutine-test-2.png")
+# plt.show()
+
+
+# DataSplit = mech.Mechanism()
+# DataSplit.add_params(beta=beta, tau=tau)
+# DataSplit_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, DataSplit)
+
+# print(DataSplit_rmse)
+
+'''
+(array([  0. ,   0.5,   0.5, ..., 242. , 242.5, 243. ]), 
+array([ 0.5,  0.5,  0.5,  0.5,  0.5,  1. ,  1. ,  1. ,  1.5,  2. ,  2. ,
+        2. ,  2.5,  3. ,  3. ,  3. ,  3. ,  3. ,  3. ,  3.5,  4. ,  4.5,
+        5. ,  5. ,  5.5,  6. ,  6. ,  6.5,  6.5,  7. ,  7. ,  7. ,  7. ,
+        7.5,  8. ,  8. ,  8. ,  8. ,  8. ,  8.5,  8.5,  8.5,  9. ,  9.5,
+       10. , 10.5, 11. , 11.5, 11.5, 12. , 12.5, 13. , 13. , 13.5, 13.5,
+       13.5, 14. , 14. , 14.5, 14.5, 15. , 15. , 15.5, 16. , 16.5, 16.5,
+       17. , 17. , 17. , 17. , 17. , 17. , 17. , 17. , 17. , 17.5, 18. ,
+       18. , 18.5, 18.5, 18.5, 19. , 19.5, 20. , 20. , 20. , 20. , 20. ,
+       20. , 20. , 20. , 20. , 20. , 20.5, 20.5, 20.5, 21. , 21.5, 21.5,
+       21.5]), 
+array([ 1.        ,  0.        ,  1.        , ..., 18.11323378,
+       19.11323378, 18.55692376]), 
+array([  0.        ,   1.        ,   2.        , ..., 186.47238279,
+       187.47238279, 187.47238279]))
+'''

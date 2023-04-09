@@ -75,9 +75,9 @@ Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
 # Baseline_rmse = eval_c_adaptivity(repeated_query_sub_delta, n, dimension, q_max, Baseline) 
 Baseline_rmse = np.mean([eval_c_adaptivity(repeated_query_sub_delta, n, dimension, q_max, Baseline) for _ in range(runs)], axis = 0)
 
-# DataSplit = mech.Mechanism()
-# DataSplit.add_params(beta=beta, tau=tau)
-# DataSplit_rmse = eval_c_adaptivity(repeated_query_sub_delta, n*10, dimension, q_max, DataSplit)
+DataSplit = mech.Mechanism()
+DataSplit.add_params(beta=beta, tau=tau)
+DataSplit_rmse = eval_c_adaptivity(repeated_query_sub_delta, n*10, dimension, q_max, DataSplit)
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=laplace_sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)

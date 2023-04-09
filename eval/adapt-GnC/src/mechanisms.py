@@ -116,67 +116,23 @@ class Mechanism:
                 self.name = "Naive Data Split"
                 assert self.beta is not None and self.tau is not None, "No params added. Add params by calling " \
                                                                        "the function add_params."
-###################################### Original Code: ######################################
 
-                # self.max_q = self.get_worst_case_bound({'n': self.n, 'beta': self.beta}, self.tau)
-                # print("Max Query #:", self.max_q)
-                # self.samp_per_q = int(np.ceil(self.n / self.max_q))  # number of samples available for each query
-                # print("Splitted Sample Size:", self.samp_per_q)
-
-###################################### Original Code ^^ ######################################
-
-###################################### Debugging Code: ######################################
+            ###################################### Debugging Code: ######################################
                 
                 self.max_q = len(self.data[0])
                 print("Max Query #:", self.max_q)
                 self.samp_per_q = int((self.n / (self.max_q - 1)))  # number of samples available for each query
                 # self.samp_per_q = int((self.n / 2))  # number of samples available for each query
                 print("Splitted Sample Size:", self.samp_per_q)
-
-###################################### Debugging Code ^^ ######################################
-
-###################################### Original Code: ######################################
-
-# The original code isn't compatible with the strategy.
-
-            # if self.curr_q < self.max_q:
-            #     ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
-            #     ans_list = []
-            #     num_queries = len(ans)
-            #     for i in range(min(num_queries, self.max_q - self.curr_q)):  # Continue until current batch of queries,
-            #         # or until max. possible queries are answered
-            #         ans_list.append({"answer": ans[i]})
-            #         self.curr_q += 1
-            #         ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
-
-###################################### Original Code ^^ ######################################
-
-###################################### Debugging Code 3: ######################################
-
-            # if self.curr_q < self.max_q:
-            #     ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
-            #     self.curr_q += len(ans)
-            #     ans_list = [{"answer": ans[i]} for i in range(len(ans))]
-
-
-###################################### Debugging Code 2: ######################################
                 
-            if self.curr_q < self.max_q:
+            if self.curr_q < self.max_q - 1:
                 ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
                 ans_list = []
-                num_queries = min(len(ans), self.max_q - self.curr_q)
-                # print("SIZE OF DATA FOR 1 BATCH", num_queries * self.samp_per_q)
-                ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + num_queries) * self.samp_per_q])
+                # num_queries = min(len(ans), self.max_q - self.curr_q)
+                # # print("SIZE OF DATA FOR 1 BATCH", num_queries * self.samp_per_q)
+                # ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + num_queries) * self.samp_per_q])
                 self.curr_q += len(ans)
                 ans_list = [{"answer": ans[i] } for i in range(len(ans))]
-                
-
-                # for i in range(num_queries):  # Continue until current batch of queries,
-                #     # or until max. possible queries are answered
-                #     ans_list.append({"answer": ans[i]})
-                #     self.curr_q += 1
-                #     ans = query(self.data[self.curr_q * self.samp_per_q: (self.curr_q + 1) * self.samp_per_q])
-###################################### Debugging Code ^^ ######################################
             else:
                 return [{"answer": None}]
         return ans_list

@@ -9,7 +9,6 @@ class Strategy:
     Base class which defines the structure for analyst strategies. Compatible with mechanisms having fixed
     dataset size n, desired significance beta (coverage should be at least 1-beta), and tolerance width tau.
     """
-
     def __init__(self, n, q_mean = 0.5, ada_freq = None, q_max = None, cardinality = None):
         """
         Initializer for the strategy.
@@ -106,7 +105,7 @@ class Strategy:
         # non-adaptive queries will be 
         # batchs * ada_method_param = (column number / ada_method_param) * ada_method_param = q_max / ada_method_param) * ada_method_param = q_max.
         # So the maximum query we want to ask is indeed more than q_max.
-        # In this sense, the last bath of the data base is never used, and we cannot instantiate the set up with only 1 bath.
+        # In this sense, the last batch of the data base is never used, and we cannot instantiate the set up with only 1 bath.
 
         # self.q_max += self.q_max/self.ada_method_param
         self.q_max += 1
