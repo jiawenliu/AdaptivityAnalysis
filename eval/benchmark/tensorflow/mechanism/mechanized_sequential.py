@@ -4,6 +4,7 @@ import numpy as np
 from enum import Enum
 import tensorflow_probability as tfp
 
+Q_MEAN = 0.5
 
 
 class Mechanism():
@@ -222,7 +223,11 @@ class MechanizedSequential(tf.keras.Sequential):
   def data_split_train_step(self, data):
       # Unpack the data. Its structure depends on your model and
       # on what you pass to `fit()`.
-
+      p = (1.0 + np.sqrt(max(2 * Q_MEAN - 1, 1 - 2 * Q_MEAN))) / 2 
+      n, d = data.shape
+      data = np.random.choice([-1, 1], (n, d), p=[1 -p, p])
+      data_y = np.random.choice([0, 1], n, p=[1 -p, p])
+ 
       x, y = data
       with tf.GradientTape() as tape:
          print("In Naive Data Split")
