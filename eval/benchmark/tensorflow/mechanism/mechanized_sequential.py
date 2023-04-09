@@ -250,9 +250,8 @@ class MechanizedSequential(tf.keras.Sequential):
       # Unpack the data. Its structure depends on your model and
       # on what you pass to `fit()`.
       x, y = data
-      for _, l in enumerate(x.shape):
-         if l:
-            length = l
+      shape = tf.shape(x)
+      length = shape[0]
       if(length > 1):
          hold_size, train_size = int(length  * (self.mechanism.hold_frac)), int(length  * (1.0 - self.mechanism.hold_frac))
          x_train, y_train, x_hold, y_hold = x[hold_size:], y[hold_size:], x[:hold_size], y[:hold_size]
