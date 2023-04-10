@@ -90,7 +90,6 @@ class Mechanism():
       data_y = tf.cast(data_y, y.dtype)
       data_x =tf.cast(data_x, x.dtype)
       n = tf.cast(n, tf.int64)
-      print(n.dtype)
       return tf.convert_to_tensor(data_x), tf.convert_to_tensor(data_y)
 
 
