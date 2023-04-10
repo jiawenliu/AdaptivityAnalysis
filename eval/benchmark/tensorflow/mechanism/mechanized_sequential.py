@@ -46,6 +46,54 @@ class Mechanism():
         assert 0.0 < hold_frac <= 1.0, "hold_frac should take a value in (0, 1]."
         self.hold_frac = hold_frac
         self.threshold = threshold
+   
+   def initialize_with_str_seed(self, init_str):
+      """
+      Initializes random number generator with seed corresponding to given input string init_str.
+      :param init_str: Initialization string according to which seed will be computed. Seed is the sum of the ASCII
+                        values of each character in init_str.
+      """
+      rnd_val = 0
+      if init_str:
+         for c in init_str:
+               rnd_val += ord(c)
+      np.random.seed(rnd_val)
+
+
+   def gen_data(self, n, d, seed = None):
+      if seed:
+         self.initialize_with_str_seed(seed)
+      p = (1.0 + np.sqrt(max(2 * Q_MEAN - 1, 1 - 2 * Q_MEAN))) / 2 
+      data = np.random.choice([-1, 1], (n, d), p=[1 -p, p])
+      data_y = np.random.choice([0, 1], n, p=[1 -p, p])
+      return data, data_y
+
+   def gen_valid(self, n, d, seed = None):
+      if seed:
+         self.initialize_with_str_seed(seed)
+      
+      n = int(n/10)
+      
+      p = (1.0 + np.sqrt(max(2 * Q_MEAN - 1, 1 - 2 * Q_MEAN))) / 2 
+      data = np.random.choice([-1, 1], (n, d), p=[1 -p, p])
+      data_y = np.random.choice([0, 1], n, p=[1 -p, p])
+      return data, data_y
+   
+   # def gen_batch(self):
+   #    train_set = tf.data.Dataset.from_tensor_slices((x_train[:train_size], y_train[:train_size])).batch(batch_size)
+   
+   def gen_fresh_batch(self, data):
+      x, y = data
+      shape = tf.shape(x)
+      n, d = shape[0], shape[1]
+      data_x, data_y = self.gen_data(n, d)
+      data_y = tf.cast(data_y, y.dtype)
+      data_x =tf.cast(data_x, x.dtype)
+      n = tf.cast(n, tf.int64)
+      print(n.dtype)
+      return tf.convert_to_tensor(data_x), tf.convert_to_tensor(data_y)
+
+
 
 
 class MechanizedSequential(tf.keras.Sequential):
@@ -96,16 +144,7 @@ class MechanizedSequential(tf.keras.Sequential):
 
   def set_mechanism_para(self, mu = 0.0, sigma = None, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
       return
-      self.mu = mu
-      self.sigma = sigma
-      self.beta = beta
-      self.tau = tau
-      self.check_for_width = check_for_width
-      assert 0.0 < hold_frac <= 1.0, "hold_frac should take a value in (0, 1]."
-      self.hold_frac = hold_frac
-      self.threshold = threshold
-      self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
-     
+    
   def compute_metrics_gaussin(self, x, y, y_pred, sample_weight):
       x_noise = tf.random.normal(
             tf.shape(x),
@@ -173,19 +212,6 @@ class MechanizedSequential(tf.keras.Sequential):
       x, y = data
       with tf.GradientTape() as tape:
          print("Create Gaussian noise when accessing the training data")
-         # if (x.dtype == tf.string or x.dtype == tf.complex64) :
-         #    print("Cannot create Gaussian noise for non-numeric data")
-         #    x_train = x
-         # else:
-         #    x_noise = tf.random.normal(
-         #          tf.shape(x),
-         #          mean=self.mechanism.mu,
-         #          stddev=self.mechanism.sigma,
-         #          dtype=x.dtype,
-         #          seed=None,
-         #          name=None
-         #          )
-         #    x_train = x_noise + x
          x_train = x
          y_pred_original = self(x_train, training=True)  # Forward pass
          y_noise =  tf.random.normal(
@@ -223,12 +249,11 @@ class MechanizedSequential(tf.keras.Sequential):
   def data_split_train_step(self, data):
       # Unpack the data. Its structure depends on your model and
       # on what you pass to `fit()`.
-      p = (1.0 + np.sqrt(max(2 * Q_MEAN - 1, 1 - 2 * Q_MEAN))) / 2 
-      n, d = data.shape
-      data = np.random.choice([-1, 1], (n, d), p=[1 -p, p])
-      data_y = np.random.choice([0, 1], n, p=[1 -p, p])
  
-      x, y = data
+      # x, y = self.mechanism.gen_fresh_batch(data)
+      x, y = self.mechanism.gen_fresh_batch(data)
+      print(x, y)
+      # x, y = fresh_data
       with tf.GradientTape() as tape:
          print("In Naive Data Split")
          y_pred = self(x, training=True)  # Forward pass
