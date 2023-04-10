@@ -252,7 +252,6 @@ class MechanizedSequential(tf.keras.Sequential):
  
       # x, y = self.mechanism.gen_fresh_batch(data)
       x, y = self.mechanism.gen_fresh_batch(data)
-      print(x, y)
       # x, y = fresh_data
       with tf.GradientTape() as tape:
          print("In Naive Data Split")
@@ -277,19 +276,21 @@ class MechanizedSequential(tf.keras.Sequential):
       x, y = data
       shape = tf.shape(x)
       length = shape[0]
-      if(length > 1):
-         hold_size, train_size = int(length  * (self.mechanism.hold_frac)), int(length  * (1.0 - self.mechanism.hold_frac))
+      if(length.numpy() > 1):
+         hold_size, train_size = int(length.numpy()  * (self.mechanism.hold_frac)), int(length.numpy()  * (1.0 - self.mechanism.hold_frac))
          x_train, y_train, x_hold, y_hold = x[hold_size:], y[hold_size:], x[:hold_size], y[:hold_size]
       else:
          hold_size, train_size = length, length
          x_train, y_train, x_hold, y_hold = x, y, x, y
+      x_train, y_train = x, y
+      x_hold, y_hold = self.mechanism.gen_fresh_batch(data)
+
          
       with tf.GradientTape() as tape:
-
          y_pred_train = self(x_train, training=True)  # Forward pass
          y_pred_hold = self(x_hold, training = True)
+         
          '''
-         TODO: Need to consider one of the following model as one shot of query:
           model-1. one step of training, the result of the logistic is a query
           model-2. one step of training, the losse of the trained logistic v.s. the true logistic.
          '''
