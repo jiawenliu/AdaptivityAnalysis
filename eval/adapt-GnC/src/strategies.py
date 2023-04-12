@@ -37,7 +37,7 @@ class Strategy:
         assert "method" in ada_freq and "method_param" in ada_freq, ("Adaptive query frequency should have method"
                                                                      + " type and method parameter.")
         assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity"}, ("Adaptive query frequency method should be in " +
-                                                             "{additive, power, repeated_query_subroutine}")
+                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise}")
         assert ada_freq["method_param"] > 1, "Adaptive query frequency should be greater than 1."
 
         self.ada_method = ada_freq["method"]
@@ -277,11 +277,11 @@ class Strategy:
             true_ans = self.q_mean
             self.cur_q += 1
             self.true_ans_list.append(true_ans) 
-            # if prev_ans:
-            #     accumulated_answer = prev_ans[0]["answer"] if self.cur_q <= 2 else self.mech_ans_list[-1] * len(self.mech_ans_list) + prev_ans[0]["answer"]
-            #     self.mech_ans_list.append(accumulated_answer / self.cur_q)
             if prev_ans:
-                self.mech_ans_list.append(prev_ans[0]["answer"])
+                accumulated_answer = prev_ans[0]["answer"] if self.cur_q <= 2 else self.mech_ans_list[-1] * len(self.mech_ans_list) + prev_ans[0]["answer"]
+                self.mech_ans_list.append(accumulated_answer / self.cur_q)
+            # if prev_ans:
+            #     self.mech_ans_list.append(prev_ans[0]["answer"])
             return {"query": n_dim_pairwise_query, "true_answer": true_ans}
 
         if self.ada_method == "repeated_query_subroutine":
