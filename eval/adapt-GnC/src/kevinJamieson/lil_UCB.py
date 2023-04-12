@@ -21,9 +21,10 @@ import sys
 sys.path.append("..")
 
 DATA_SIZE = 1000
-CARDINALITY = 1000
+CARDINALITY = 1
 MAX_QUERY_NUM = 1000
 MAX_EPOCH = 100
+
 EPS = 0.1
 EPS = 0.1 
 BETA = 0.1
@@ -58,15 +59,15 @@ def lil_ucb (strategy, mechanism, para = Para()):
 	
 	while gate_thresh(time_gate):
 		query_result = []
-		pre_ans = [{}]
-		for i in range(n):
-			pre_ans["gata"] = time_gate[i]
+		pre_ans = [{"para" : para}]
+		for i in range(data_size):
+			pre_ans[0]["gate"] = time_gate[i]
 			q = strategy.next_query(pre_ans)
 			r = mechanism.get_answer(q["query"])
 			if r[0]["answer"] is not None:
 				query_result.append(r[0]["answer"])
 				pre_ans = [{"answer": r[0]["answer"], "para" : para}]
-				true_ans_list = strategy.true_ans_list[-1]
+				# true_ans_list = strategy.true_ans_list[-1]
 			else:
 				q = None
 				break
@@ -81,19 +82,19 @@ def lil_ucb (strategy, mechanism, para = Para()):
 
 
 
-def eval_lil_ucb(delta, n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
+def eval_lil_ucb(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
     strategy = stg.Strategy(n, q_mean = 0.5, ada_freq = {"method": "lil_ucb", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
     mechanism.reset()
-    mechanism.add_data({'data': strategy.gen_data()})
-
-    true_ans_list, mech_ans_list = lil_ucb(delta, strategy, mechanism)
+    mechanism.add_data({'data': strategy.gen_data_bsetarm()})
+    para = Para(0.5, 0.5, 0.5, 0.5, 0.2)
+    lil_ucb(strategy, mechanism, para)
     q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
 
     return np.sqrt(mse)
 
 n = 1000
-dimension = 100
+dimension = 1
 q_max = 1000
 runs = 10
 
@@ -107,22 +108,22 @@ repeated_query_sub_delta = 0.1
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
-# Baseline_rmse = [eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
-Baseline_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Baseline)
+# Baseline_rmse = [eval_lil_ucb(n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
+Baseline_rmse = eval_lil_ucb(n, dimension, q_max, Baseline)
 
-DataSplit = mech.Mechanism()
+DataSplit = mech.Mechanism(q_max)
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, DataSplit)
+DataSplit_rmse = eval_lil_ucb(n, dimension, q_max, DataSplit)
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
-# Thresh_rmse = [eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
-Thresh_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Thresh)
+# Thresh_rmse = [eval_lil_ucb(n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
+Thresh_rmse = eval_lil_ucb(n, dimension, q_max, Thresh)
 
 
 Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
-# Gauss_rmse = [eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
-Gauss_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Gauss)
+# Gauss_rmse = [eval_lil_ucb(n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
+Gauss_rmse = eval_lil_ucb(n, dimension, q_max, Gauss)
 
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)

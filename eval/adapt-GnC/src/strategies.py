@@ -120,6 +120,39 @@ class Strategy:
 
         return data
 
+    def gen_data_bsetarm(self, data_name=None):
+        """
+        Generates data for the strategy.
+        :param data_name: name for the generated data
+        :returns: an (self.n x self.q_max) array, with each entry in {-1, 1}
+        """
+
+        # If data_name is not None, generate data after initializing random number generator with a seed corresponding
+        # to data_name, so that the same data is generated each time for a given data_name (for consistency across
+        # multiple runs of the strategy).
+
+###################################### Debugging Code: ######################################
+        # If column number = q_max, and q_max % ada_method_param == 0,
+        # Then the maximum query number we will ask in total is non-adaptive queries + adaptive queries.
+        # non-adaptive queries will be 
+        # batchs * ada_method_param = (column number / ada_method_param) * ada_method_param = q_max / ada_method_param) * ada_method_param = q_max.
+        # So the maximum query we want to ask is indeed more than q_max.
+        # In this sense, the last batch of the data base is never used, and we cannot instantiate the set up with only 1 bath.
+
+        # self.q_max += self.q_max/self.ada_method_param
+        self.q_max += 1
+        self.cardinality += 1
+
+###################################### Debugging Code ^^ ######################################
+        
+        if data_name is not None:
+            self.data_name = data_name
+            hf.initialize_with_str_seed(data_name)
+        data = np.random.rand((self.n))
+
+        return data
+
+
     def next_query(self, prev_ans=None):
         """
         Computes the next query for the strategy.
@@ -195,8 +228,6 @@ class Strategy:
                 ret_ans *= self.q_mean/max(self.pr_1, 1 - self.pr_1)  # scaling answer if self.q_mean != 0.5
             return [ret_ans]
 
-        # def get_lil_ucb_query(data):
-        #     return 1.0 / gate * sum(data[:gate]) + (1 + beta) * (1 + math.sqrt(epsilon)) * math.sqrt(2 * (sigma**2) * (1 + epsilon) * math.log(math.log((1 + epsilon) * gate)/confidential_interval) / gate)
 
         def get_repeated_query_subroutine(data):
             data_size, dimension = data.shape
@@ -217,6 +248,12 @@ class Strategy:
                        - np.sum(data[y, :])) / dimension) / 2.0   # each answer in [-1.0, 1.0]
 
             return [(compare + 1) / 2.0]  # each answer in [0.0, 1.0]
+        def lil_ucb_query(gate, para):
+            def lil_ubc_query_sub(data):
+                ans = 1.0 / gate * sum(data[:gate]) + (1.0 + para.beta) * (1.0 + math.sqrt(para.epsilon)) * math.sqrt(2.0 * (para.sigma**2) * (1.0 + para.epsilon) * math.log(math.log((1.0 + para.epsilon) * gate)/para.confidential_interval) / gate)
+                return [ans] 
+
+            return  lil_ubc_query_sub # each answer in [0.0, 1.0]
 
 
         def c_adaptivity_query(data):
@@ -243,26 +280,25 @@ class Strategy:
                 self.mech_ans_list.append(prev_ans[0]["answer"])
             return {"query": c_adaptivity_query, "true_answer": true_ans}
 
-        def lil_ucb_query(gate, para):
-            def lil_ubc_query_sub(data):
-                1.0 / gate * sum(data[:gate]) + (1 + para.beta) * (1 + math.sqrt(para.epsilon)) * math.sqrt(2 * (para.sigma**2) * (1 + para.epsilon) * math.log(math.log((1 + para.epsilon) * gate)/para.confidential_interval) / gate)
-                return sum(data[:gate]) 
-
-            return  lil_ubc_query_sub # each answer in [0.0, 1.0]
 
         if self.ada_method == "lil_ucb":
             if self.cur_q >= self.q_max:
                 if prev_ans:
                     self.mech_ans_list.append(prev_ans[0]["answer"])
                 return None
-
-            true_ans = np.random.choice([-1, 1], p=[1 - self.pr_1, self.pr_1])
-            self.cur_q += 1
-            self.true_ans_list.append(true_ans) 
             if prev_ans:
-                self.mech_ans_list.append(prev_ans[0]["answer"])
+                if "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
                 gate = prev_ans[0]["gate"]
                 para = prev_ans[0]["para"]
+            else:
+                gate = 0 
+                para = None
+
+            true_ans = self.q_mean * gate
+            self.cur_q += 1
+            self.true_ans_list.append(true_ans) 
+
             return {"query": lil_ucb_query(gate, para), "true_answer": true_ans}
 
 

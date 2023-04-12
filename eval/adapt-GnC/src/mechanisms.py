@@ -13,7 +13,7 @@ class Mechanism:
     Base class which defines the structure for query-answering mechanisms having fixed dataset size n,
     desired significance beta (coverage should be at least 1-beta), and tolerance width tau.
     """
-    def __init__(self):
+    def __init__(self, max_q = None):
         """
         Initializer for the mechanism.
         """
@@ -24,7 +24,7 @@ class Mechanism:
         self.curr_q = 0
         self.beta = None
         self.tau = None
-        self.max_q = None
+        self.max_q = max_q
         self.samp_per_q = None
         self.check_for_width = None
 
@@ -112,17 +112,15 @@ class Mechanism:
             self.curr_q += len(ans)
             ans_list = [{"answer": ans[i]} for i in range(len(ans))]
         else:
+            self.name = "Naive Data Split"
             if self.max_q is None:
-                self.name = "Naive Data Split"
+                
                 assert self.beta is not None and self.tau is not None, "No params added. Add params by calling " \
                                                                        "the function add_params."
-
-            ###################################### Debugging Code: ######################################
-                
                 self.max_q = len(self.data[0])
-                print("Max Query #:", self.max_q)
+                print("Max Query #:", self.max_q)    
+            if  self.samp_per_q is None:
                 self.samp_per_q = int((self.n / (self.max_q - 1)))  # number of samples available for each query
-                # self.samp_per_q = int((self.n / 2))  # number of samples available for each query
                 print("Splitted Sample Size:", self.samp_per_q)
                 
             if self.curr_q < self.max_q - 1:
