@@ -1,20 +1,29 @@
 # -*- coding: utf-8 -*-
 
-from collections import OrderedDict
+
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+from enum import Enum
+import sys
+sys.path.append("..")
+
 import cw_funcs as cw
 import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
-import numpy as np
-import os
-import scipy as sc
-import math
-import matplotlib.pyplot as plt
+
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
 import sys
 sys.path.append("..")
+
+DATA_SIZE = 1000
+CARDINALITY = 1000
+MAX_QUERY_NUM = 1000
+MAX_EPOCH = 100
 
 
 def lil_ucb (epsilon, lam, beta, sigma, confidential_interval,  n, data):
@@ -47,12 +56,12 @@ def lil_ucb (epsilon, lam, beta, sigma, confidential_interval,  n, data):
 
 
 
-def eval_lil_UCB(delta, n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
-    strategy = stg.Strategy(n, q_mean = 0.5, ada_freq = {"method": "lil_UCB", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
+def eval_lil_ucb(delta, n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
+    strategy = stg.Strategy(n, q_mean = 0.5, ada_freq = {"method": "lil_ucb", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data()})
 
-    true_ans_list, mech_ans_list = lil_UCB(delta, strategy, mechanism)
+    true_ans_list, mech_ans_list = lil_ucb(delta, strategy, mechanism)
     q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
 
@@ -73,22 +82,22 @@ repeated_query_sub_delta = 0.1
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
-# Baseline_rmse = [eval_lil_UCB(repeated_query_sub_delta, n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
-Baseline_rmse = eval_lil_UCB(repeated_query_sub_delta, n, dimension, q_max, Baseline)
+# Baseline_rmse = [eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
+Baseline_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Baseline)
 
 DataSplit = mech.Mechanism()
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = eval_lil_UCB(repeated_query_sub_delta, n, dimension, q_max, DataSplit)
+DataSplit_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, DataSplit)
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
-# Thresh_rmse = [eval_lil_UCB(repeated_query_sub_delta, n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
-Thresh_rmse = eval_lil_UCB(repeated_query_sub_delta, n, dimension, q_max, Thresh)
+# Thresh_rmse = [eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
+Thresh_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Thresh)
 
 
 Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
-# Gauss_rmse = [eval_lil_UCB(repeated_query_sub_delta, n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
-Gauss_rmse = eval_lil_UCB(repeated_query_sub_delta, n, dimension, q_max, Gauss)
+# Gauss_rmse = [eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
+Gauss_rmse = eval_lil_ucb(repeated_query_sub_delta, n, dimension, q_max, Gauss)
 
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)

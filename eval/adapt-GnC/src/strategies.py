@@ -36,7 +36,7 @@ class Strategy:
 
         assert "method" in ada_freq and "method_param" in ada_freq, ("Adaptive query frequency should have method"
                                                                      + " type and method parameter.")
-        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_UCB", "lrgd", "n_dim_pairwise", "c_adaptivity"}, ("Adaptive query frequency method should be in " +
+        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity"}, ("Adaptive query frequency method should be in " +
                                                              "{additive, power, repeated_query_subroutine}")
         assert ada_freq["method_param"] > 1, "Adaptive query frequency should be greater than 1."
 
@@ -242,7 +242,7 @@ class Strategy:
                 self.mech_ans_list.append(prev_ans[0]["answer"])
             return {"query": c_adaptivity_query, "true_answer": true_ans}
 
-        def lil_UCB_query(data):
+        def lil_ucb_query(data):
             data_size, dimension = data.shape
             x = np.random.choice(data_size)
             y = np.random.choice(data_size)
@@ -252,7 +252,7 @@ class Strategy:
 
             return [(compare + 1) / 2.0]  # each answer in [0.0, 1.0]
 
-        if self.ada_method == "lil_UCB":
+        if self.ada_method == "lil_ucb":
             if self.cur_q >= self.q_max:
                 if prev_ans:
                     self.mech_ans_list.append(prev_ans[0]["answer"])
@@ -264,7 +264,7 @@ class Strategy:
             self.true_ans_list.append(true_ans) 
             if prev_ans:
                 self.mech_ans_list.append(prev_ans[0]["answer"])
-            return {"query": lil_UCB_query, "true_answer": true_ans}
+            return {"query": lil_ucb_query, "true_answer": true_ans}
 
 
 
