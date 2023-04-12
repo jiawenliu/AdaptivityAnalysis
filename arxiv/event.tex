@@ -1,5 +1,3 @@
-%
-%
 We have two kinds of events: \emph{assignment events} and \emph{testing events}. 
 Each event consists of a quadruple,
 and we use $\eventset^{\asn}$ and $\eventset^{\test}$ to denote the set of all assignment events and testing events, respectively.
@@ -7,104 +5,25 @@ and we use $\eventset^{\asn}$ and $\eventset^{\test}$ to denote the set of all a
 $ \begin{array}{lllll}
 \mbox{Event} 
 & \event & ::= & 
-({x}, l, v, \bullet) ~|~ ({x}, l, v, \qval)  & \mbox{Assignment Event} \\
-&&& ~|~(\bexpr, l, v, \bullet)  & \mbox{Testing Event}
+({x}, l, v, \bullet) ~|~ ({x}, l, v, \qval) & \mbox{Assignment Event} \\
+&&& ~|~(\bexpr, l, v, \bullet) & \mbox{Testing Event}
 \\
 \end{array}$
 \end{center}
-An assignment event tracks the execution of an assignment  or a query request and consists of the assigned variable, the label of the command that generates it, the value assigned to the variable, and the normal form of the query expression, $\qval$ if this command is a query request, otherwise a default value $\bullet$.
-A testing event tracks the execution of if and while commands and consists of the guard of the command, the label of the command, the result of evaluating the guard, while the last element is $\bullet$.
-%
+An assignment event tracks the execution of an assignment or a query request and consists of the variable name, the label of the command that generates it, the value assigned to the variable.
+The fourth element is the normal form of the query request, $\qval$ if this command is a query request, otherwise a default value $\bullet$.
 
-Event projection operator $\pi_i$ projects the $i$th element from an event: 
+A testing event tracks the execution of if and while commands and consists of the guard of the command, the label of the command, and the result of evaluating the guard, while the last element is $\bullet$.
+
+The event projection operators $\pi_i$ projects the $i^{th}$ element from an event:
+$ \pi_i : 
+\eventset \to \vardom \cup \booldom \cup \ldom \cup \valuedom \cup \qdom \cup\{\bullet\} $.
+Its computation is as follows,
 \\
-$\pi_i : 
-\eventset \to \mathcal{VAR}\cup \mbox{Boolean Expression}  \cup \mathbb{N} \cup \mathcal{VAL} \cup \mathcal{QVAL} $ 
-% \wqside{use b for Boolean expression?}
-
-%
-\begin{defn}[Equivalence of Query Expression]
-%
-\label{def:query_equal}
-% \mg{Two} \sout{2} 
-Two query expressions $\qexpr_1$, $\qexpr_2$ are equivalent, denoted as $\qexpr_1 =_{q} \qexpr_2$, if and only if
-% $$
-%  \begin{array}{l} 
-%   \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st \forall \trace \in \mathcal{T} \st
-%     (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
-%     \\
-%     \quad \land (\forall D \in \dbdom, r \in D \st 
-%     \exists v \in \mathcal{VAL} \st 
-%           \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
-%   \end{array}.
-% $$
-$$
- \begin{array}{l} 
-   \forall \trace \in \mathcal{T} \st \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st
-    (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
-    \\
-    \quad \land (\forall D \in \dbdom, r \in D \st 
-    \exists v \in \mathcal{VAL} \st 
-          \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
-  \end{array}.
-$$
-% \mg{$$
-%  \begin{array}{l} 
-%    \forall \trace \in \mathcal{T} \st \exists \qval_1, \qval_2 \in \mathcal{QVAL} \st
-%     (\config{\trace,  \qexpr_1} \qarrow \qval_1 \land \config{\trace,  \qexpr_2 } \qarrow \qval_2) 
-%     \\
-%     \quad \land (\forall D \in \dbdom, r \in D \st 
-%     \exists v \in \mathcal{VAL} \st 
-%           \config{\trace, \qval_1[r/\chi]} \aarrow v \land \config{\trace,  \qval_2[r/\chi] } \aarrow v)  
-%   \end{array}.
-% $$
-% }
- %
- where $r \in D$ is a row of the hidden database $\chi$, and $\chi$ is in the database domain $D$. 
- As usual, we will denote by $\qexpr_1 \neq_{q} \qexpr_2$  the negation of the equivalence.
-% \\ 
-% where $r \in D$ is a record in the database domain $D$,
-% \mg{is  $FV(\qexpr)$ being defined here? If yes, I suggest to put it in a different place, rather than in the middle of another definition.} 
-% $FV(\qexpr)$ is the set of free variables in the query expression $\qexpr$.
-% \sout{$\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  is defined vice versa.}
-% \mg{As usual, we will denote by $\qexpr_1 \neq_{q}^{\trace} \qexpr_2$  the negation of the equivalence.}
-%
-\end{defn}
-%
-% \mg{In the next definition you don’t need the subscript e, it is clear that it is equivalence of events by the fact that the elements on the two sides of = are events. That is also true for query expressions. Also, I am confused by this definition. What happen for two query events?}
-% \\
-% \jl{The last component of the event is equal based on Query equivalence, $\pi_{4}(\event_1) =_q \pi_{4}(\event_2)$.
-% In the previous version, the query expression is in the third component and I defined $v \neq \qexpr$ for all $v$ that isn't a query value.}
-% \begin{defn}[Event Equivalence $\eventeq$]
-% Two events $\event_1, \event_2 \in \eventset$ \mg{are equivalent, \sout{is in \emph{Equivalence} relation,}} denoted as $\event_1 \eventeq \event_2$ if and only if:
-% \[
-% \pi_1(\event_1) = \pi_1(\event_2) 
-% \land  
-% \pi_2(\event_1) = \pi_2(\event_2) 
-% \land
-% \pi_{3}(\event_1) = \pi_{3}(\event_2)
-% \land 
-% \pi_{4}(\event_1) =_q \pi_{4}(\event_2)
-% \]
-% %
-% % \sout{The $\event_1 \eventneq \event_2$ is defined as vice versa.}
-% % \mg{As usual, we will denote by $\event_1 \eventneq \event_2$  the negation of the equivalence.}
-% \end{defn}
-\begin{defn}[Event Equivalence]
-  Two events $\event_1, \event_2 \in \eventset$ are equivalent, 
-  % denoted as $\event_1 \eventeq \event_2$ 
-  denoted as $\event_1 = \event_2$ 
-  if and only if:
-  \[
-    \pi_1(\event_1) = \pi_1(\event_2) 
-    \land  
-    \pi_2(\event_1) = \pi_2(\event_2) 
-    \land
-    \pi_{3}(\event_1) = \pi_{3}(\event_2)
-    \land 
-    (\pi_{4}(\event_1) = \pi_{4}(\event_2) = \bullet
-    \lor \pi_{4}(\event_1) =_q \pi_{4}(\event_2))
-    \]
-  %
-  As usual, we will denote by $\event_1 \neq \event_2$  the negation of the equivalence.
-\end{defn}
+$\pi_1(x, l, v, \bullet) = x $ \qquad $\pi_1({x}, l, v, \qval) = x$ \qquad $ \pi_1(\bexpr, l, v, \bullet) = \bexpr$
+\\
+$\pi_2(\_, l, \_, \_ ) = l$
+\qquad
+$\pi_3(\_, \_, v, \_) = v$
+\qquad
+$\pi_4(\_, \_, \_, \qval) = \qval$ \qquad $\pi_4(\_, \_, \_, \bullet) = \bullet$
