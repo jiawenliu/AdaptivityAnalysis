@@ -24,30 +24,55 @@ DATA_SIZE = 1000
 CARDINALITY = 1000
 MAX_QUERY_NUM = 1000
 MAX_EPOCH = 100
+EPS = 0.1
+EPS = 0.1 
+BETA = 0.1
+CONFIDENTIAL_INTERVAL = 0.9
+SIGMA = 0.1
 
+'''
+Default Value:
+EPS = 0.1
+LAM = 0.1 
+BETA = 0.1
+CONFIDENTIAL_INTERVAL = 0.9
+SIGMA = 0.1
+'''
+class Para:
+	def __init__(self, epsilon = EPS, lam = EPS, beta = BETA, sigma = SIGMA, confidential_interval = CONFIDENTIAL_INTERVAL):
+		self.epsilon = epsilon
+		self.lam = lam
+		self.beta = beta
+		self.sigma = sigma
+		self.confidential_interval = confidential_interval
 
-def lil_ucb (epsilon, lam, beta, sigma, confidential_interval,  n, data):
-	time_gate = [1]*n
+def lil_ucb (strategy, mechanism, para = Para()):
+	data_size = strategy.n
+	time_gate = [1]*data_size
 	def gate_thresh(curr_time_gate):
-		for i in range(n):
+		for i in range(data_size):
 			gate = curr_time_gate[i]
-			if gate > 1 + lam * (sum(curr_time_gate) - gate):
+			if gate > 1 + para.lam * (sum(curr_time_gate) - gate):
 				return False
 		return True
 	
 	while gate_thresh(time_gate):
 		query_result = []
+		pre_ans = [{}]
 		for i in range(n):
-			gate = time_gate[i]
-			
-			def query(data):
-				return 1.0 / gate * sum(data[:gate]) + (1 + beta) * (1 + math.sqrt(epsilon)) * math.sqrt(2 * (sigma**2) * (1 + epsilon) * math.log(math.log((1 + epsilon) * gate)/confidential_interval) / gate)
-			
-			query_result.append(query(data)) 
+			pre_ans["gata"] = time_gate[i]
+			q = strategy.next_query(pre_ans)
+			r = mechanism.get_answer(q["query"])
+			if r[0]["answer"] is not None:
+				query_result.append(r[0]["answer"])
+				pre_ans = [{"answer": r[0]["answer"], "para" : para}]
+				true_ans_list = strategy.true_ans_list[-1]
+			else:
+				q = None
+				break
 
 		arm = np.argmax(query_result)
 		for i in range(n):
-
 			if arm == i:
 				time_gate[i] = time_gate[i] + 1
 	return np.argmax(time_gate)

@@ -2,7 +2,7 @@
 
 import helper_funcs as hf
 import numpy as np
-
+import math
 
 class Strategy:
     """
@@ -218,6 +218,7 @@ class Strategy:
 
             return [(compare + 1) / 2.0]  # each answer in [0.0, 1.0]
 
+
         def c_adaptivity_query(data):
             data_size, dimension = data.shape
             x = np.random.choice(data_size)
@@ -242,29 +243,27 @@ class Strategy:
                 self.mech_ans_list.append(prev_ans[0]["answer"])
             return {"query": c_adaptivity_query, "true_answer": true_ans}
 
-        def lil_ucb_query(data):
-            data_size, dimension = data.shape
-            x = np.random.choice(data_size)
-            y = np.random.choice(data_size)
+        def lil_ucb_query(gate, para):
+            def lil_ubc_query_sub(data):
+                1.0 / gate * sum(data[:gate]) + (1 + para.beta) * (1 + math.sqrt(para.epsilon)) * math.sqrt(2 * (para.sigma**2) * (1 + para.epsilon) * math.log(math.log((1 + para.epsilon) * gate)/para.confidential_interval) / gate)
+                return sum(data[:gate]) 
 
-            compare = ((np.sum(data[x, :]) 
-                       - np.sum(data[y, :])) / dimension) / 2.0   # each answer in [-1.0, 1.0]
-
-            return [(compare + 1) / 2.0]  # each answer in [0.0, 1.0]
+            return  lil_ubc_query_sub # each answer in [0.0, 1.0]
 
         if self.ada_method == "lil_ucb":
             if self.cur_q >= self.q_max:
                 if prev_ans:
                     self.mech_ans_list.append(prev_ans[0]["answer"])
                 return None
-            # if prev_ans[0]["true_answer"]:
-            #      self.true_ans_list.append(prev_ans[0]["true_answer"]) 
+
             true_ans = np.random.choice([-1, 1], p=[1 - self.pr_1, self.pr_1])
             self.cur_q += 1
             self.true_ans_list.append(true_ans) 
             if prev_ans:
                 self.mech_ans_list.append(prev_ans[0]["answer"])
-            return {"query": lil_ucb_query, "true_answer": true_ans}
+                gate = prev_ans[0]["gate"]
+                para = prev_ans[0]["para"]
+            return {"query": lil_ucb_query(gate, para), "true_answer": true_ans}
 
 
 
@@ -280,8 +279,7 @@ class Strategy:
             if prev_ans:
                 accumulated_answer = prev_ans[0]["answer"] if self.cur_q <= 2 else self.mech_ans_list[-1] * len(self.mech_ans_list) + prev_ans[0]["answer"]
                 self.mech_ans_list.append(accumulated_answer / self.cur_q)
-            # if prev_ans:
-            #     self.mech_ans_list.append(prev_ans[0]["answer"])
+
             return {"query": n_dim_pairwise_query, "true_answer": true_ans}
 
         if self.ada_method == "repeated_query_subroutine":
