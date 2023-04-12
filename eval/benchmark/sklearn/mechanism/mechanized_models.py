@@ -90,6 +90,21 @@ class MechanizedLogisticRegression(LogisticRegression):
                                                            l1_ratio = l1_ratio)
         self.mechanism = mechanism
 
+    def fit_data_split(self, x_train, y_train):
+        size = len(x_train)
+        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedLogisticRegression, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
+            x_noise =  np.random.laplace(0, 2 * self.mechanism.sigma, x_hold.shape)
+            return super(MechanizedLogisticRegression, self).fit(x_hold + x_noise, y_hold)
+        else:
+            return train_result
+
     def fit_threshold(self, x_train, y_train):
         size = len(x_train)
         hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
@@ -104,6 +119,7 @@ class MechanizedLogisticRegression(LogisticRegression):
             return super(MechanizedLogisticRegression, self).fit(x_hold + x_noise, y_hold)
         else:
             return train_result
+
 
     def fit_gaussian(self, x_train, y_train):
         x_noise = np.random.normal(0, self.mechanism.sigma, x_train.shape) 
