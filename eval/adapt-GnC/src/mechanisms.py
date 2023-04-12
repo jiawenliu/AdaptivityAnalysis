@@ -32,7 +32,6 @@ class Mechanism:
         self.data = None
         self.n = None
         self.curr_q = 0
-        self.max_q = None
         self.samp_per_q = None
 
 

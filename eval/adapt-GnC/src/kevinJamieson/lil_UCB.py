@@ -56,13 +56,14 @@ def lil_ucb (strategy, mechanism, para = Para()):
 			if gate > 1 + para.lam * (sum(curr_time_gate) - gate):
 				return False
 		return True
-	
+	pre_ans = [{"para" : para}]
 	while gate_thresh(time_gate):
 		query_result = []
-		pre_ans = [{"para" : para}]
 		for i in range(data_size):
 			pre_ans[0]["gate"] = time_gate[i]
 			q = strategy.next_query(pre_ans)
+			if q is None:
+				break
 			r = mechanism.get_answer(q["query"])
 			if r[0]["answer"] is not None:
 				query_result.append(r[0]["answer"])
@@ -71,6 +72,8 @@ def lil_ucb (strategy, mechanism, para = Para()):
 			else:
 				q = None
 				break
+		if q is None:
+			break
 
 		arm = np.argmax(query_result)
 		for i in range(n):
@@ -84,7 +87,6 @@ def lil_ucb (strategy, mechanism, para = Para()):
 
 def eval_lil_ucb(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
     strategy = stg.Strategy(n, q_mean = 0.5, ada_freq = {"method": "lil_ucb", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
-    mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_bsetarm()})
     para = Para(0.5, 0.5, 0.5, 0.5, 0.2)
     lil_ucb(strategy, mechanism, para)
@@ -111,7 +113,7 @@ Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
 # Baseline_rmse = [eval_lil_ucb(n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
 Baseline_rmse = eval_lil_ucb(n, dimension, q_max, Baseline)
 
-DataSplit = mech.Mechanism(q_max)
+DataSplit = mech.Mechanism(max_q = q_max)
 DataSplit.add_params(beta=beta, tau=tau)
 DataSplit_rmse = eval_lil_ucb(n, dimension, q_max, DataSplit)
 
@@ -127,3 +129,8 @@ Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 Gauss_rmse = eval_lil_ucb(n, dimension, q_max, Gauss)
 
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
+print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
+
+'''
+(2.2879070854805676, 1.8580622429961056, 0.47574304704756065, 1.4555054821829276)
+'''
