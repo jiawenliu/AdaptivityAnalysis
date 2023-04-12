@@ -274,12 +274,9 @@ class Strategy:
                     accumulated_answer = self.mech_ans_list[-1] * len(self.mech_ans_list) + prev_ans[0]["answer"]
                     self.mech_ans_list.append(accumulated_answer/(self.cur_q))
                 return None
-
-
             true_ans = self.q_mean
             self.cur_q += 1
             self.true_ans_list.append(true_ans) 
-            
             # if prev_ans:
             #     accumulated_answer = prev_ans[0]["answer"] if self.cur_q <= 2 else self.mech_ans_list[-1] * len(self.mech_ans_list) + prev_ans[0]["answer"]
             #     self.mech_ans_list.append(accumulated_answer / self.cur_q)
