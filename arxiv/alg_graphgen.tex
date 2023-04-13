@@ -1,19 +1,16 @@
 With the four components $\progV(c), \progE(c), \progW(c)$, and $\progF(c)$
-computed in each steps above, this step simply combine the four components into the quantitative dependency graph for program $c$ as follows,
-%
-% \\
-\highlight{
-  \[
-    \progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c)).
-    \]
-}
-We prove that this graph is a sound approximation of the program's semantics-based dependency graph by soundness of each component formally in Appendix.
+computed in each step above, this step simply combines the four components into the quantitative dependency graph for program $c$ as follows,
+ \[
+ \progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c)).
+ \]
+
+ We prove that this graph is a sound approximation of the program's semantics-based dependency graph by the soundness of each component formally in the Appendix.
 
 This estimated graph has a similar topology structure as 
 the Semantics-based Dependency Graph. It has the same
 vertices 
-% and query annotations, 
-but approximated edges and weights.  
+% and query annotations 
+but approximated edges and weights. 
 This graph is a sound approximation of the quantitative dependency graph for a program $c$.
 
 It is formally defined in Definition~\ref{def:prog_graph} as follows.
@@ -21,55 +18,63 @@ It is formally defined in Definition~\ref{def:prog_graph} as follows.
 \begin{defn}
 [Estimated Dependency Graph]
 \label{def:prog_graph}
-Given a program $c$, with its abstract weighted control flow graph $\absG(c) = (\absV, \absE)$ and 
-feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$, its estimated dependency graph
+Given a program $c$ 
+% with its abstract control flow graph $\absG(c) = (\absV, \absE)$
+% and 
+% 
+with the feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$, 
+and the $\absW(c)$ as the set of estimsted weight for every program label $l$,
+its estimated dependency graph
 is generated as follows.
-
 \[\progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))\]
-
-{
+Each of the four components is defined as follows.
+{\small
 \[
-\begin{array}{rlcl}
-\text{Vertices} &
+\begin{array}{lll}
 \progV & := & \left\{ 
-x^l \in \mathcal{LV} 
+x^l
 ~ \middle\vert ~
-x^l \in \lvar_{c}
+x^l \in \lvar(c)
 \right\}
 \\
-\text{Directed Edges} &
 \progE & := & 
 \left\{ 
-(x^i, y^j) \in \mathcal{LV} \times \mathcal{LV}
+(x^i, y^j) 
 ~ \middle\vert ~
 \begin{array}{l}
 x^i, y^j \in \vertxs
 \land
-\exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st 
+\exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar(c) \st
 n \geq 0 \land
 \\
-\flowsto(y^j,  z_1^{r_1}, c) 
-\land \cdots \land \flowsto(z_n^{r_n}, x^i, c) 
+\flowsto(y^j, z_1^{r_1}, c) 
+\land \ldots \land \flowsto(z_n^{r_n}, x^i, c) 
 \end{array}
 \right\}
 \\
-\text{Weights} &
 \progW & := &
-\left\{ (x^l, w) \in  \mathcal{LV} \times \mathcal{A}_{in}
+\left\{ (x^l, \hat{w}) 
+% \in \lvar(c) \times \scexprdom
 \mid
-x^l \in \lvar_{{c}} \land (l, w) \in \absW(c)
+x^l \in \progV(c) \land 
+\hat{w} = 
+\sum\left\{ \absclr(\absevent, c) \middle\vert \absevent \in \absflow(c) \land \absevent = (l, \_, \_) \right\}
 \right\}
 \\
-\text{Query Annotations} &
 \progF & := & 
-\left\{(x^l, n)  \in  \mathcal{LV} \times \{0, 1\} 
+\left\{(x^l, n) 
+% \in \lvar(c) \times \{0, 1\} 
 ~ \middle\vert ~
-x^l \in \lvar_{c},
-n = 1 \iff x^l \in \qvar_{c} \land n = 0 \iff  x^l \in \qvar_{c} .
+\begin{array}{l}
+ x^l \in \lvar(c) \land
+ n = 1 \iff x^l \in \qvar(c) \\
+\land n = 0 \iff x^l \in \qvar(c) .
+\end{array}
 \right\}
 \end{array}
 \] }
 \end{defn}
-The construction of the static analysis dependency graph is of great value of showing some useful properties of the target program,
+The construction of the static analysis dependency graph is of great value in showing some useful properties of the target program,
 such as dependency between variables, the execution upper bound of a certain command,
-while the key novelty is our path searching algorithm, which connects all the information we need in the static anlaysis dependency graph and provides us a sound over-estimation of adaptivity.
+while the key novelty is our path-searching algorithm, which connects all the information we need in the static analysis dependency graph and provides us with a sound estimation of adaptivity.
+
