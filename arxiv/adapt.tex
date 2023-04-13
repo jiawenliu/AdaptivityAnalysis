@@ -1,6 +1,7 @@
 In this section, we formally present the definition of adaptivity for a given program.
 As we discussed in Section~\ref{sec:adaptivity-informal}, we first define a dependency relation between program variables,
 we then define a semantics-based dependency graph, and finally look at longest walks in this graph. 
+
 \subsection{May-dependency between Variables}
 \label{sec:dep}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detail Explanation of Variable May-Dependency and Motivation on How to define it %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -214,10 +215,101 @@ Notice that in the definition above we can also have that the two variables are 
 this allow us to capture self-dependencies
 }
 
+\subsection{Weight of Labeled Variables}
+\label{sec:dep}
+Since the \emph{adaptivity} is also related to the quantity of
+the \emph{variable may-dependency} relation
+we define 
+the weight of
+every labeled variable in a program as follows.
+
+\begin{defn}[Weight of Labeled Variable]
+ \label{def:lvar_weight} For ta labeled variable $x^l$ in a program $c$,
+$f({c}, x^l): \ftdom_0(c) \to (\mathbb{N})$ is a \emph{weight function} of this labeled
+variable $x^l$ if and only if,
+\[
+ \begin{array}{l}
+ \forall \trace_0 \in \ftdom_0(c), \trace' \in \ftdom, l' \st 
+ \\ \qquad 
+ \config{{c}, \trace_0} \to^{*} 
+ \config{\clabel{\eskip}^{l'}, \trace_0 \tracecat \trace'} 
+ \land w(\trace_0) = \vcounter(\trace', l) \}. 
+ \end{array}
+ \]
+\end{defn}
+% A weight function $w \in \traceW(c)$ is a function that 
+Specifically, for every initial trace $\trace_0 \in \ftdom_0(c)$,
+the weight for a labeled variable $x^l$ under this initial trace, $w(\trace_0)$
+gives the number of times that the command with the label $l$ is evaluated.
+% the corresponding vertex $x^l$ is visited. 
+% For each vertex $x^l$, 
+In other words, it tracks for each vertex $x^l$ its visiting times 
+% (i.e., the evaluation times of the command with the label $l$)
+ when the program $c$ is executing under the initial trace $\trace_0$.
+ The weight functions are total and with range $\mathbb{N}$. 
+ As discussed above in Definition~\ref{def:adaptfun-wfprog}, since a well-formed program $c$ is always terminating, we have
+ for any initial trace $\trace_0 \in \ftdom_0(c)$ a terminating execution 
+ $\config{{c}, \trace_0} \to^{*} \config{\clabel{\eskip}^{l'}, \trace_0\tracecat\trace'} $
+ which produce a finite execution trace $\trace \in \ftdom$.
+The visiting times are computed by the counter operator $\vcounter(\trace', l)$
+by counting the occurrence of the label $l$ in $\trace'$.
+
+If the program is not a well-formed program by Definition~\ref{def:adaptfun-wfprog}, the program does not terminate.
+As a result, every labeled variable of this program does not have a weight function.
+
+\textbf{Example.} 
+As an instance, in Figure~\ref{fig:overview-example}(b), the weight of the labeled variable $x^3$ is 
+$\lambda \trace_0 \st \env(\trace_0) k$, i.e.
+a function of type $\ftdom_0(\kw{twoRound(k)}) \to \mathbb{N}$.
+$\env(\trace_0) k$ fetch the initial value assigned to variable $k$ from the initial trace $\trace_0$.
+This function means when 
+% given input $\trace_0$, 
+we execute the $\kw{twoRound(k)}$ program under input $\trace_0$, 
+$\config{\kw{twoRound(k)}, \trace_0} \to^{*} \config{\clabel{\eskip}^{l'}, \trace_0\tracecat\trace'} $,
+we have an execution trace $\trace'$.
+Then $w_k(\trace_0)$ outputs the occurrences of the label $3$ in $\trace'$, which is 
+the same as the iteration numbers of the loop,
+% always
+i.e., the value of $k$ in the initial trace, $\env(\trace_0) k$.
 
 
 \subsection{Semantics-based Dependency Graph}
 \label{sec:design_choice}
+In order to track the adaptivity with respect to the query,
+we also define the set of query variables for a program $c$, $\qvar(c)$ as below.
+It is the set of query-associated variables (in query request assignments) that contains all labeled variables in $c$'s query requests, and $\qvar(c) \subseteq \lvar(c)$.
+% as below.
+% formally in Definition~\ref{def:qvar}.
+\begin{defn}[Query Variables a program $c$, $\qvar(c)$] 
+ \label{def:qvar}
+Given a program $c$, its query variables 
+$\qvar(c)$ is the set of variables set to the result of a query in the program.
+It is defined as follows:
+{
+\[
+ \qvar(c) \triangleq
+ \left\{
+ \begin{array}{ll}
+ \{\} 
+ & {c} = \clabel{\assign x \expr}^{l} 
+ \\
+ \{{x}^l\} 
+ & {c} = \clabel{\assign x \query(\qexpr)}^{l} 
+ \\
+ \qvar(c_1) \cup \qvar(c_2) 
+ & {c} = {c_1};{c_2}
+ \\
+ \qvar(c_1) \cup \qvar(c_2) 
+ & {c} =\eif(\clabel{\bexpr}^{l}, c_1, c_2) 
+ \\
+ \qvar(c_w)
+ & {c} = \ewhile \clabel{\bexpr}^{l} \edo (c_w)
+\end{array}
+\right.
+\]
+}
+\end{defn}
+
 Then, we use the \emph{variable may-dependency} relation, the query variables and the \emph{weight function}
 of each labeled variable to 
 define the semantics-based dependency graph for a well-formed program,
