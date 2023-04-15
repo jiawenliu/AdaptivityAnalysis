@@ -112,3 +112,6 @@ Gauss_rmse = np.mean([eval_n_adaptivity(n, dimension, q_max, Gauss) for _ in ran
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
 print(Baseline_rmse[1:].mean(), DataSplit_rmse[1:].mean(), Gauss_rmse[1:].mean(), Thresh_rmse[1:].mean())
 
+'''
+1.0, 1.0, 0.9998998998998999, 1.0015015015015014
+'''
