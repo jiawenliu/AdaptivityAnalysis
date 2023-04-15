@@ -1,0 +1,518 @@
+\subsection{SSA form Language with Different DEPENDENCY Graph}
+\[
+\begin{array}{llll}
+%
+\mbox{While Map} 
+& w & ::= & [] ~|~  w[l \to n]
+\\
+%
+\mbox{Annotated Query} 
+& \aq & ::= & (\qval, l , w )
+\\
+%
+\mbox{Annotated Variable} 
+& \av & ::= & (\ssa{x}, v, l , w )
+\\
+%
+\mbox{Query Trace} & \qtrace
+& ::= & [] | \aq :: \qtrace
+\\
+%
+\mbox{Variable Trace} & \vtrace
+& ::= & [] | \av :: \qtrace
+\end{array}
+\]
+%
+We use $\mathcal{SVAR}$ and $\mathcal{SM}$ to denote the set of SSA Variables and SSA Memories respectively.
+%
+\[
+\begin{array}{llll}
+%
+\mbox{Annotated Variable} 
+& \av & ::= & (\ssa{x}, v, n)
+\\
+%
+\mbox{Variable Trace} & \vtrace
+& ::= & [] | \av :: \vtrace
+\\
+%
+\mbox{Variable Visits} & t
+& ::= & \mathcal{SVAR} \to \mathbb{N}
+\end{array}
+\]
+%
+We use $\mathcal{SVAR}$ and $\mathcal{SM}$ to denote the set of SSA Variables and SSA Memories respectively.
+
+\todo{
+\begin{defn}[Assigned Variables ($\avar$)]
+Given a program $\ssa{c}$, its assigned variables $\avar_{\ssa{c}}$ is a vector containing all variables newly assigned in the program preserving the order, $\forall \ssa{x} \in \avar, \ssa{x} \in \mathcal{SVAR}$.
+It is defined as follows:
+$$
+  \avar_{\ssa{c}} \triangleq
+  \left\{
+  \begin{array}{ll}
+   		[\ssa{x}] 									
+   		& \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
+   		\\
+     	\left[ \ssa{x} \right] 									
+     	& \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
+     	\\
+     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} 	
+     	& \ssa{c} = \ssa{c_1};\ssa{c_2}
+     	\\
+     	\avar_{\ssa{c_1}} ++ \avar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+     	& \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
+     	[\bar{y}, \bar{y_2}, \bar{y_3}], 
+     	[\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
+     	\\
+     	\avar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+     	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
+\end{array}
+\right.
+$$
+\end{defn}
+%
+\begin{defn}[Query Variables ($\qvar$)].
+\\
+Given a program $\ssa{c}$, its query variables $\qvar$ is a vector containing all variables newly assigned by a query in the programm, $\qvar \subset \mathcal{SVAR}$.
+It is defined as follows:
+$$
+  \qvar_{\ssa{c}} \triangleq
+  \left\{
+  \begin{array}{ll}
+   		[] 									
+   		& \ssa{c} = [\ssa{\assign x e}]^{(l, w)} 
+   		\\
+     	\left[ \ssa{x} \right] 									
+     	& \ssa{c} = [\ssa{\assign x \query(\qexpr)}]^{(l, w)} 
+     	\\
+     	\qvar_{\ssa{c_1}} ++ \qvar_{\ssa{c_2}} 	
+     	& \ssa{c} = \ssa{c_1};\ssa{c_2}
+     	\\
+     	\qvar_{\ssa{c_1}} ++ \qvar_{\ssa{c_2}} ++ \ssa{[\bar{x}, \bar{y}, \bar{z}]} 
+     	& \ssa{c} =\eif([\sbexpr]^{(l, w)} , \ssa{[\bar{x}, \bar{x_2}, \bar{x_2}], 
+     	[\bar{y}, \bar{y_2}, \bar{y_3}], 
+     	[\bar{z}, \bar{z_2}, \bar{z_3}], c_1, c_2}) 
+     	\\
+     	\qvar_{\ssa{c}'} ++ [\ssa{\bar{x}}]
+     	& \ssa{c} 	= \ewhile ([\sbexpr]^{(l, w)}, [\ssa{\bar{x}, \bar{x_2}, \bar{x_2}}], \ssa{c}')
+\end{array}
+\right.
+$$
+\end{defn}
+%
+We are abusing the notations and operators from list here. 
+The notation $[]$ represents an empty vector
+and $x::A$ represents add an element $x$ to the head of the vector $A$.
+The concatenation operation between 2 vectors $A_1$ and $A_2$, i.e., $A_1 ++ A_2$ is mimic the standard list concatenation operations as follows:
+%
+\begin{equation}
+		A_1 ++ A_2  
+		\triangleq \left\{
+		\begin{array}{ll} 
+			A_2 				& A_1 = []\\
+			x::(A_1' ++ A_2)	& A_1 = x::A_1'
+		\end{array}
+		\right.
+\end{equation}
+%
+We use index within parenthesis to denote the access to the element of corresponding location,
+$A(i)$ denotes the element at location $i$ in the vector $A$ and 
+$M(i, j)$ denotes the element at location $i$-th raw, $i$-th column in the matrix $M$. 
+}
+}
+%
+%
+%
+%
+{
+\begin{figure}
+\todo{
+\begin{mathpar}
+\boxed{\config{\ssa{m, a}} \xrightarrow{} \config{\ssa{a}} \;} 
+\and
+\boxed{ \config{\ssa{m, c}, t} \xrightarrow{} \config{\ssa{ m', c'},  t'}}
+\and
+{Memory \times Command  \times QTrace \times VTrace \times While Map 
+\Rightarrow^{}  Memory \times Command  \times QTrace \times VTrace \times While Map}
+\\
+{
+	\inferrule
+	{
+		\ssa{\config{m,\qexpr} \qarrow \qexpr'}
+	}
+	{
+	\config{\ssa{m, [\assign{x}{\query(\qexpr)}]^l, \qtrace, \vtrace, w } }
+	\xrightarrow{} 
+	\config{\ssa{m, [\assign{x}{\query(\qexpr')}]^l, \qtrace, \vtrace, w }}
+	}
+	~\textbf{ssa-query-e}}
+%
+\and
+{
+\inferrule
+{
+{
+\ssa{\query(\qval)(D) = v}}
+}
+{
+\config{\ssa{m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, \qtrace, \vtrace, w}} 
+\xrightarrow{} 
+\config{\ssa{ (x \mapsto v)::m, \eskip, \qtrace ++ [(\qval, l, w)], \vtrace ++ [(\ssa{x}, v, l, w)], w}}}
+~\textbf{ssa-query-v}
+}
+%
+\and
+%
+{
+\inferrule
+{
+t'(\ssa{x}) = t(\ssa{x}) + 1
+}
+{
+\config{\ssa{ m, [\assign x v]^{l}, \qtrace, \vtrace, w} } 
+\xrightarrow{} 
+\config{\ssa{(x \mapsto v)::m, [\eskip]^{l}, \qtrace, \vtrace ++ [(\ssa{x}, v, l, w)], w} }
+}
+~\textbf{ssa-assn}
+}
+%
+\end{mathpar}
+}
+\todo{
+\begin{mathpar}
+\boxed{\config{\ssa{m, a}} \xrightarrow{} \config{\ssa{a}} \;} 
+\and
+\boxed{ \config{\ssa{m, c}, t} \xrightarrow{} \config{\ssa{ m', c'},  t'}}
+\and
+{Memory \times Command  \times VTrace \times Visits
+\Rightarrow^{}  
+Memory \times Command  \times VTrace \times Visits}
+\\
+{
+  \inferrule
+  {
+    \ssa{\config{m,\qexpr} \qarrow \qexpr'}
+  }
+  {
+  \config{\ssa{m, [\assign{x}{\query(\qexpr)}]^l, \vtrace, t } }
+  \xrightarrow{} 
+  \config{\ssa{m, [\assign{x}{\query(\qexpr')}]^l, \vtrace, t }}
+  }
+  ~\textbf{ssa-query-e}}
+%
+\and
+{
+\inferrule
+{
+{
+\ssa{\query(\qval)(D) = v}}
+\and 
+t'[\ssa{x}]  = t[\ssa{x}] + 1
+}
+{
+\config{\ssa{m, [\assign{\ssa{x}}{\ssa{\query(\qval)}}]^l, \vtrace, t}} 
+\xrightarrow{} 
+\config{\ssa{ (x \mapsto v)::m, \eskip, \vtrace ++ [(\ssa{x}, \qval, t'[\ssa{x}])], t'}}}
+~\textbf{ssa-query-v}
+}
+%
+\and
+%
+{
+\inferrule
+{
+t'(\ssa{x}) = t(\ssa{x}) + 1
+}
+{
+\config{\ssa{ m, [\assign x v]^{l}, t, w} } 
+\xrightarrow{} 
+\config{\ssa{(x \mapsto v)::m, [\eskip]^{l}, \vtrace ++ [(\ssa{x}, v, t'[\ssa{x}])], t'} }
+}
+~\textbf{ssa-assn}
+}
+%
+\end{mathpar}
+}
+    \caption{Operational Semantics for the SSA Language}
+\end{figure}
+%
+%
+%
+%
+\subsection{Trace-based Adaptivity in SSA Language}
+%
+\begin{defn}
+[remove :?: Query May Dependency in SSA Language].
+\\
+{
+One annotated query $\aq_1 = ({\qval}_1, l_1, w_1)$ may depend on another query $\aq_2 = ({\qval}_2,l_2, w_2)$ in a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
+%
+$\qdep^{ssa}(\aq_1, \aq_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
+%
+%
+\[
+\begin{array}{l}
+\exists \ssa{m}_1,\ssa{m}_3,t_1,t_3,\ssa{c}_2,v_1.\\
+  \left (\begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}}{\query({\qval}_1)}]^{l_1} ; c_2,
+  t_1, w_1} 
+\rightarrow^{\textbf{{ssa-query-v}}} 
+\\ 
+\config{\ssa{m}_1[v_1/\ssa{x}], c_2, t_1 ++ [\aq_1], w_1} 
+\rightarrow^{*} \config{\ssa{m}_3, \eskip, t_3,w_3}
+  % 
+ \\ \bigwedge
+  \left( 
+  \begin{array}{l}
+  \aq_2 \aqin (t_3 - (t_1 ++ [\aq_1])) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'.  
+  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{\ssa{m}_3', \eskip, t_3', w_3'} 
+  \land 
+  \aq_2 \not \aqin (t_3'-(t_1 ++ [\aq_1])))
+\end{array} \right )
+\\\bigwedge
+\left( 
+  \begin{array}{l}
+  	\aq_2 \not\aqin (t_3 - (t_1 ++ [\aq_1]))
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', t_3', w_3'. 
+	\config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, t_1 ++ [\aq_1], w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{\ssa{m}_3', \eskip, t_3', w_3'} 
+	\land 
+	\aq_2  \aqin (t_3' - (t_1 ++ [\aq_1])))
+\end{array} \right )
+\end{array} \right )
+\end{array}
+\]
+}
+\end{defn}
+%
+%
+\begin{defn}
+[remove :?: Query Variable May Dependency].
+\label{def:qvar_dep}
+\\
+{
+One annotated ssa variable $\av_2 = (\ssa{x}_2,l_2, w_2)$ may depend on another one 
+$\av_1 = (\ssa{x}_1, l_1, w_1)$ in a program $c$,
+with a starting memory $m$ and a hidden database $D$, denoted as 
+%
+$\vardep^{ssa}(\av_1, \av_2, c, m, D)$ is defined below. 
+%
+\[
+\exists \qval_1, \qval_2. ~
+\aq_1 = (\qval_1, l_1, w_1)
+\land
+\aq_2 = (\qval_2, l_2, w_2)
+\land 
+\qdep^{ssa}(\aq_1, \aq_2, c, m, D)
+\]
+}
+\end{defn}
+%
+\begin{defn}
+[Annotated Variables May Dependency in SSA Language]
+\label{def:avar_dep}.
+\\
+{
+One annotated variable $\av_2 = (\ssa{x}_2, v_2, l_2, w_2)$ may depend on another one  $\av_1 = (\ssa{x}_1, v_1, l_1, w_1)$in a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and  hidden database $D$, denoted as 
+%
+$\avdep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
+%
+%
+\[
+\begin{array}{l}
+\exists \ssa{m}_1, \ssa{m}_3, \vtrace_1, \vtrace_3, \ssa{c}_2, v_1, ({\qval}_1 \lor \sexpr_1).\\
+  \left (\begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, [], []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \qtrace_1,  \vtrace_1, w_1} 
+\rightarrow^{\textbf{ssa-query-v (/ assn-v)}} 
+\\ 
+\config{\ssa{m}_1[v_1/\ssa{x}], c_2, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
+\rightarrow^{*} \config{\ssa{m}_3, \eskip, \qtrace_3, \vtrace_3, w_3}
+  % 
+ \\ \bigwedge
+  \left( 
+  \begin{array}{l}
+  \av_2 \in (\vtrace_3'-(\vtrace_1 ++ [\av_1])) 
+  % 
+  \\
+  \implies 
+  \exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'.  
+  \config{\ssa{m}_1[v/\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1} 
+  \\ 
+  \quad \quad 
+  \rightarrow^{*}
+  (\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
+		\\ 
+		\quad \quad 
+  \land 
+  \av_2 \not\in (\vtrace_3'-(\vtrace_1 ++ [\av_1])))
+\end{array} \right )
+\\\bigwedge
+\left( 
+  \begin{array}{l}
+  	\av_2 \notin (\vtrace_3 - (\vtrace_1 ++ [\av_1]))
+  	% 
+  	\\
+  	\implies 
+	\exists v \in \qdom, v \neq v_1, \ssa{m}_3', \qtrace_3', \vtrace_3', w_3'. 
+	\config{\ssa{m}_1[v /\ssa{x}], {\ssa{c}_2}, \qtrace_1', \vtrace_1 ++ [\av_1], w_1}
+	\\ 
+	\quad \quad 
+	\rightarrow^{*} 
+	(\config{\ssa{m}_3', \eskip, \qtrace_3', \vtrace_3', w_3'} 
+		\\ 
+		\quad \quad 
+	\land 
+	\av_2  \in (\vtrace_3' - (\vtrace_1 ++ [\av_1])))
+\end{array} \right )
+\end{array} \right )
+\end{array}
+\]
+%
+}
+\end{defn}
+
+\begin{defn}
+[Annotated Variables May Dependency in SSA Language -- Version 2]
+\label{def:avar_dep2}.
+\\
+{
+One annotated variable $\av_2 = (\ssa{x}_2, v_2, n_2)$ may depend on another one  $\av_1 = (\ssa{x}_1, v_1, n_1)$in a program $\ssa{c}$,
+with a starting memory $\ssa{m}$ and hidden database $D$, denoted as 
+%
+$\avdep(\av_1, \av_2, \ssa{c}, \ssa{m}, D)$ is defined below. 
+%
+\[
+\begin{array}{l}
+\exists \ssa{m}, \ssa{m}_1, \ssa{m}_2, \ssa{m}_3, \ssa{m}_2', \ssa{m}_3', 
+\vtrace_1, \vtrace_2, \vtrace_2', t_1, t_2, t_2', \ssa{c}_1, \ssa{c}_2, v_1'.\\
+  \left (\begin{array}{l}   
+\config{\ssa{m}, \ssa{c}, []} \rightarrow^{*} 
+\config{\ssa{m}_1, [\assign{\ssa{x}_1}{\query({\qval}_1) (/ \sexpr_1)}]^{l_1} ; \ssa{c}_1, \vtrace_1, t_1} 
+\\ 
+\config{\ssa{m}_1[v_1/\ssa{x}_1], c_1, \vtrace_1 ++ [\av_1], t_1[\ssa{x}_1]++} 
+\rightarrow^{*} 
+\config{\ssa{m}_2, [\assign{\ssa{x}_2}{\query({\qval}_2) (/ \sexpr_2)}]^{l_2} ; \ssa{c}_2, \vtrace_2, t_2} 
+\rightarrow^{\textbf{{ssa-query-v} (/ assn-v)}} 
+\config{\ssa{m}_3, \ssa{c}_2,  \vtrace_2 ++ [\av_2], t_2[\ssa{x}_2]++} 
+  % 
+ \\ 
+ \bigwedge
+ \config{\ssa{m}_1[v_1'/\ssa{x}_1], \ssa{c}_1, \vtrace_1, t_1} 
+\rightarrow^{*} 
+\config{\ssa{m}_2', \ssa{c}_2,  \vtrace_2', t_2'}
+\\
+\bigwedge
+\av_2 \notin \vtrace_2'
+\end{array}
+\right)
+\end{array}
+ \]
+where $\ssa{m}(x) = \kw{null}$ if $x \notin \kw{dom}(\ssa{m})$.
+}
+\end{defn}
+%
+\todo{
+\begin{defn}[Variable May Dependency]
+\label{def:var_dep}.
+\\
+Given a program $\ssa{c}$ with its assigned variables $\avar_{\ssa{c}}$, 
+one variable $\ssa{x}_2 \in \avar_{\ssa{c}}$ may depend on another variable 
+$\ssa{x}_1 \in \avar_{\ssa{c}}$ in $\ssa{c}$ denoted as 
+%
+$\vardep(\ssa{x}_1, \ssa{x}_2, \ssa{c})$ is defined below.
+%
+\[
+\exists v_1, v_2, n_1, n_2, m, D. ~
+\av_1 = (\ssa{x}_1, v_1, n_1)
+\land
+\av_2 = (\ssa{x}_2, v_2, n_2)
+\land 
+\avdep(\av_1, \av_2, c, m, D)
+\] 
+%
+%
+\end{defn}
+%
+%
+\begin{defn}[Execution Based Dependency Graph].
+\\
+Given a program $\ssa{c}$, a database $D$, a starting memory $\ssa{m}$ with its corresponding execution:
+$\config{\ssa{m}, \ssa{c}, [], [], []} 
+\to^{*}
+\config{\ssa{m'}, \eskip, \qtrace, \vtrace, []}$,
+the dependency graph $\traceG(\ssa{c},\text{D},\ssa{m}) = (\vertxs, \edges)$ is defined as: \\
+\[
+\begin{array}{rlcl}
+	\text{Vertices} &
+	\vertxs & := & \left\{ 
+	x \in \mathcal{SVAR}
+	~ \middle\vert ~
+	x \in \avar_{\ssa{c}}
+	\right\}
+	\\
+	\text{Directed Edges} &
+	\edges & := & 
+	\left\{ 
+	(x, x') \in \mathcal{SVAR} \times \mathcal{SVAR}
+	~ \middle\vert ~
+	\vardep(x, x', \ssa{c}) 
+	\right\}
+	\\
+	\text{Query Vertices} &
+	\qvertxs & := & 
+	\left\{ 
+	x \in \mathcal{SVAR}
+	~ \middle\vert ~
+	x \in \qvar_{\ssa{c}}
+	\right\}
+	\\
+	\text{Weights} &
+	\weights & := & 
+	\left\{ 
+	(x, n) \in \mathcal{SVAR} \times \mathbb{N}
+	~ \middle\vert ~
+	\len(\{\av \mid \av \in \vtrace \land \projl{\av} = x\}) = n, \forall x \in \qvar_{\ssa{c}}
+	\right\}
+\end{array}
+\]
+\end{defn}
+}
+%
+%
+%
+\begin{defn}
+[Adaptivity of A Program in SSA Language].
+\\
+Given a program $\ssa{c}$ in SSA language, 
+its adaptivity is defined as the length of the longest path in its trace-based dependency graph in SSA language 
+$\traceG(\ssa{c}, \text{D},\ssa{m}) = (\vertxs, \edges)$, 
+for all possible starting SSA memory $\ssa{m}$ and database $D$.
+%
+%
+$$
+A(\ssa{c}) = \max \big 
+\{ \qlen(k) \mid \ssa{m} \in \mathcal{SM},D \in \dbdom , k \in \walks(\traceG(\ssa{c}, \text{D}, \ssa{m}) \big \} 
+$$
+\end{defn}
+%
+
+
