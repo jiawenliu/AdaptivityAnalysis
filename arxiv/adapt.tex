@@ -70,7 +70,7 @@ we are comparing their query expressions by $\pi_{4}(\event_1) \neq_q \pi_{4}(\e
 This matches the intuitive data dependency between queries, where one query is influenced by others as long as the query request is changed.
 }
 
-{Below is the \emph{event may-dependency} between events based on formally observing their differences via $\diff$.}
+{Below is the \emph{event may-dependency} between events based on observing their differences via $\diff$.}
 \begin{defn}[Event May-Dependency]
 \label{def:event_dep}
 An event $\event_2$ is in the \emph{event may-dependency} relation with an assignment event $\event_1 \in \eventset^{\asn}$ in a program ${c}$  with a hidden database $D$ and a witness trace $\trace \in \mathcal{T}$,
@@ -149,7 +149,7 @@ $\event_2 \in \trace_3 \land \event_2 \not\in \trace_3'$ in Equation~\ref{eq:eve
 $\vcounter(\trace', \pi_2(\event_b)) = \vcounter(\trace, \pi_2(\event_b))$ is used to make sure the two executions are
 in the same loop iteration as well.
 Different from Equation~\ref{eq:eventdep}(b) line:3,
-I use a testing event, $\event_b$ here because checking only $\event_2$'s occurrence and the
+we want to find a testing event, $\event_b$ in the execution trace because checking only $\event_2$'s occurrence and the
 $\vcounter(\trace, \pi_2(\event_2)) = \vcounter(\trace', \pi_2(\event_2'))$
 causes false positives
 when there is no influence through control dependency. 
@@ -176,7 +176,7 @@ To find the dependency relation between $(x, 1, v, \chi[0])$ and $(y, 3, v_1, \c
  \rightarrow^{*}
  \config{\ewhile \clabel{i \geq 0}^{2} \edo ( \clabel{\assign{y}{\query(\chi[i])}}^3; \clabel{\assign{i}{ i - 1}}^{4}),
  \\ \qquad \quad \trace_1 \tracecat [(x, 1, v', \chi[0]), (i \geq 0, 2, \etrue, \bullet), (y, 3, v_1, \chi[0])] 
- \\ \qquad \quad \tracecat[]}.
+  \tracecat[]}.
  \end{array} 
  \]
 Without looking into a testing event, we can always say $(y, 3, v_1, \chi[1]) \not\in []$ and they have event may-dependency relation.
@@ -312,10 +312,8 @@ It is defined as follows:
 
 Then, we use the \emph{variable may-dependency} relation, the query variables and the \emph{weight function}
 of each labeled variable to 
-define the semantics-based dependency graph for a well-formed program,
-and we define as below the
-weight of each vertex on this graph as the \emph{quantitative} sub-property.
-% of \emph{adaptivity} as the 
+define the semantics-based dependency graph for a well-formed program.
+
 \begin{defn}[Semantics-based Dependency Graph]
 \label{def:trace_graph}
 For a well-formed program ${c} \in \cdom$,
@@ -377,18 +375,20 @@ As a result, the weight set is empty.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Explanation of Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Below we discuss in detail the four components of the semantics-based dependency graph for a program $c$.
 \begin{enumerate}
- \item The vertices set, $\traceV({c})$ contains all its labeled variables, $\lvar(c)$ which are statically collected.
- \item $\traceF(c)$ contains the \emph{query annotation} for 
- every vertex $x^l \in \traceV(c)$. It indicates whether $x^l$ comes from a query request (1) or not (0) by checking if the labeled variable $x^l$ of the vertex is in $\qvar(c)$.
+ \item The vertices set, $\traceV({c})$ contains all the labeled variables of program $c$,
+ which are statically collected.
+ \item $\traceF(c)$ contains pairs of a labeled variable and a query annotation (either $1$ or $0$).
+  In each pair, the annotation indicates whether $x^l$ comes from a query request ($1$) or not ($0$) by checking if the labeled variable $x^l$ of the vertex is in $\qvar(c)$.
  \item Edges in $\traceE(c)$ are all directed.
  They are built from the \emph{variable may-dependency} relation, i.e. $\vardep(x^i, y^j, c)$ in Definition~\ref{def:var_dep} between two labeled variables.
  There is an edge from $y^j$ to $x^i$ if and only if they are in the \emph{variable may-dependency} relation, $\vardep(x^i, y^j, c)$. 
- This is the key definition in order to formalize the intuitive \emph{adaptivity}. We use this to ingredient the \emph{reachability} sub-property of \emph{adaptivity} into this graph.
+ This is the key definition in order to formalize the intuitive \emph{adaptivity}. We use this to ingredient the dependency relation between queries into this graph.
  \item 
 The weight function in $\traceW(c)$ for each vertex (also a labeled variable), $w : \ftdom_0(c) \to \mathbb{N}$
 maps from an initial trace $\trace_0 \in \ftdom_0(c)$ to a natural number as defined in Definition~\ref{def:lvar_weight}.
-
+This is also an important component in order to capture the dependency quantity between queries.
 \end{enumerate}
+
 The main novelty of the semantics-based dependency graph is the combination of the quantitative and reachability sub-properties. 
 It can tell both the dependency between queries via the directed edge, and the times they depend on each other via the weight.
 Then we can utilize them, together with the query annotation to precisely define the \emph{adaptivity} for a program.
