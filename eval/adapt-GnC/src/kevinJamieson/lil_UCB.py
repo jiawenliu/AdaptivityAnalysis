@@ -30,6 +30,8 @@ EPS = 0.1
 BETA = 0.1
 CONFIDENTIAL_INTERVAL = 0.9
 SIGMA = 0.1
+MEAN = 0.1
+
 
 '''
 Default Value:
@@ -86,7 +88,7 @@ def lil_ucb (strategy, mechanism, para = Para()):
 
 
 def eval_lil_ucb(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
-    strategy = stg.Strategy(n, q_mean = 0.5, ada_freq = {"method": "lil_ucb", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "lil_ucb", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
     mechanism.add_data({'data': strategy.gen_data_bsetarm()})
     para = Para(0.5, 0.5, 0.5, 0.5, 0.2)
     lil_ucb(strategy, mechanism, para)
@@ -133,4 +135,8 @@ print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rms
 
 '''
 (2.2879070854805676, 1.8580622429961056, 0.47574304704756065, 1.4555054821829276)
+'''
+
+'''
+(2.1425024651952835, 2.2669679225188535, 0.6714195040422586, 1.353000656266134)
 '''

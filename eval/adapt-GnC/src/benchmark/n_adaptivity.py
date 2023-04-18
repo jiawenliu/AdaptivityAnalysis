@@ -17,6 +17,7 @@ DATA_SIZE = 1000
 CARDINALITY = 1000
 MAX_QUERY_NUM = 1000
 MAX_EPOCH = 1000
+MEAN = 0.1
 
 def n_adaptivity(strategy, mechanism, epoch = MAX_EPOCH):
     l, queried_set = 0, []

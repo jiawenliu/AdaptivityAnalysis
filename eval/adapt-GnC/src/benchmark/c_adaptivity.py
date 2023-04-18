@@ -16,6 +16,8 @@ DATA_SIZE = 1000
 CARDINALITY = 1000
 MAX_QUERY_NUM = 1000
 MAX_EPOCH = 100
+MEAN = 0.1
+
 
 def c_adaptivity(strategy, mechanism, epoch = MAX_EPOCH):
     l, queried_set = 0, []
@@ -38,7 +40,7 @@ def c_adaptivity(strategy, mechanism, epoch = MAX_EPOCH):
 
 
 def eval_c_adaptivity(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
-    strategy = stg.Strategy(n, q_mean = 0.5, ada_freq = {"method": "c_adaptivity", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "c_adaptivity", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data()})
 
