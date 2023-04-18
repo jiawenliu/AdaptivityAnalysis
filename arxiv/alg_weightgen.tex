@@ -1,4 +1,4 @@
-This section presents the quantitative analysis algorithm, which performs over the same \emph{abstract control flow graph}, $\absG(c)$ of a program $c$ as well. 
+This section presents the quantitative analysis algorithm, which performs over the same \emph{abstract transition graph}, $\absG(c)$ of a program $c$ as well. 
 As the $\traceW(c)$ defined in Definition~\ref{def:trace_graph}, the weight of every $x^l \in \progV(c)$ is
 the execution times of the command with label $l$. 
 In this sense, to estimate weight of $x^l$, this step first computes an upper bound, the \emph{reachability-bound}~\cite{GulwaniZ10} for every $l \in \absV(c)$
@@ -9,58 +9,71 @@ Then, the \emph{reachability-bound} is used
 % as well as 
 as the estimated weight of the vertex $x^l \in \progV(c)$.
 The two computation steps are summarized as follows,
-\begin{enumerate}
- \item \textbf{Reachability Bound Analysis}
- This analysis estimate for each program point $l \in \absV(c)$ a symbolic upper bounds on the execution times of the command with label $l$ during the program execution.
- These symbolic upper bounds are symbolic expressions, $\scexpr(c)$ containing the input variables,
+% \begin{enumerate}
+%  \item \textbf{Reachability Bound Analysis}
+%  This analysis estimate for each program point $l \in \absV(c)$ a symbolic upper bounds on the execution times of the command with label $l$ during the program execution.
+%  These symbolic upper bounds are symbolic expressions, $\scexpr(c)$ containing the input variables,
+% %   with the input variables as free variables, 
+% hence they can soundly approximate the weight functions in the semantics-based dependency graphs. 
+%  Our reachability-bound algorithm adapts to our setting ideas from previous work~\cite{ZulegerGSV11,SinnZV14,SinnZV17}.
+%  Specifically, it provides an upper bound on the number of times every command can be executed.
+%  \item \textbf{Weight Estimation}
+%  Because
+%  the vertex in program's $\absG(c)$ shares the same unique label with the vertex in $\progV(c)$, 
+%  we use the \emph{reachability-bound} on the vertex $l \in \absV(c)$ directly as the weight of the vertex $x^l$ in $\progV(c)$.
+% \end{enumerate}
+
+\paragraph{Reachability Bound Analysis}
+This analysis estimate for each program point $l \in \absV(c)$ a symbolic upper bounds on the execution times of the command with label $l$ during the program execution.
+These symbolic upper bounds are symbolic expressions, $\scexpr(c)$ containing the input variables,
 %   with the input variables as free variables, 
 hence they can soundly approximate the weight functions in the semantics-based dependency graphs. 
- Our reachability-bound algorithm adapts to our setting ideas from previous work~\cite{ZulegerGSV11,SinnZV14,SinnZV17}.
- Specifically, it provides an upper bound on the number of times every command can be executed.
- \item \textbf{Weight Estimation}
- Because
- the vertex in program's $\absG(c)$ shares the same unique label with the vertex in $\progV(c)$, 
- we use the \emph{reachability-bound} on the vertex $l \in \absV(c)$ directly as the weight of the vertex $x^l$ in $\progV(c)$.
-\end{enumerate}
+Our reachability-bound algorithm adapts to our setting ideas from previous work~\cite{ZulegerGSV11,SinnZV14,SinnZV17}.
+Specifically, it provides an upper bound on the number of times every command can be executed.
 
-\paragraph{Step-1: Reachability Bound Analysis}
-This symbolic reachability bound analysis performs over the same \emph{abstract control flow graph}, $\absG(c)$ of a program $c$. 
-It first computes a \emph{reachability bound} for every edge $l \xrightarrow{dc} l' \in \absE(c)$,
+
+Based on the same \emph{abstract transition graph}, $\absG(c)$ of a program $c$, we first compute a \emph{reachability bound} for every edge $l \xrightarrow{dc} l' \in \absE(c)$,
 which is a symbolic bound on the maximum execution times of the command with label $l$ of $c$.
 % when executing the program $c$.
 Then the \emph{reachability bound} for edge $l \xrightarrow{dc} l'$ is used as the bound on the maximum visiting times of the vertex $l \in \absV(c)$.
-It is a sound upper bound on the visiting times
-of every label $l \in \absV(c)$, named \emph{reachability-bound}.
-The computation steps are 
-summarized as follows,
-\begin{enumerate}
- \item It first collects three edge sets for each variable,
-in which the variable increases, decreases, and is reset respectively.
-\item
-Then, for each edge $l \xrightarrow{dc} l' \in \absE(c)$, it assigns a variable $x$ (or a symbolic constant $v \in \constdom$) if $x$ (or $v$) decreases in $dc$, as this edge's local bound.
-\item
-It then computes the bound on the maximum value of the local bound for each edge,
-and the \emph{reachability-bound} on the execution
-times of the corresponding edge recursively.
-% but path-insensitively.
-\item The last step uses \emph{reachability-bound} $w$ for edge $l \xrightarrow{dc} l'$ as the bound on the maximum visiting times of the vertex $l \in \absV(c)$ and generates a set $\absW(c)$ contains a pair $(l, w)$ for every $l \in \absV(c)$.
-\end{enumerate}
+% It is a sound upper bound on the visiting times
+% of every label $l \in \absV(c)$, named \emph{reachability-bound}.
+% The computation steps are 
+% summarized as follows,
 
-The algorithm in this step is inspired from the Algorithm~2 in paper~\cite{SinnZV14},
-the Algorithm~3 in paper~\cite{ZulegerGSV11},
-and the Definition~25 in Section 4 of paper~\cite{SinnZV17}.
-\begin{itemize}
-\item Algorithm~3 in paper~\cite{ZulegerGSV11} assigns a set of variables to each transition in which these variables decrease as the local bound
-and estimates the maximum value of each variable in this set.
-\item Algorithm~2 in paper~\cite{SinnZV14} assigns a variable to each edge on which this variable decreases as its ranking function
-and then estimates the maximum value for the ranking function.
-\item The Definition~25 in paper~\cite{SinnZV17}
-assigns each transition with a variable that decreases in this transition, as the local bound and computes the bound similarly.
-\end{itemize}
+% \begin{enumerate}
+%  \item It first collects three edge sets for each variable,
+% in which the variable increases, decreases, and is reset respectively.
+% \item
+% Then, for each edge $l \xrightarrow{dc} l' \in \absE(c)$, it assigns a variable $x$ (or a symbolic constant $v \in \constdom$) if $x$ (or $v$) decreases in $dc$, as this edge's local bound.
+% \item
+% It then computes the bound on the maximum value of the local bound for each edge,
+% and the \emph{reachability-bound} on the execution
+% times of the corresponding edge recursively.
+% % but path-insensitively.
+% \item The last step uses \emph{reachability-bound} $w$ for edge $l \xrightarrow{dc} l'$ as the bound on the maximum visiting times of the vertex $l \in \absV(c)$ and generates a set $\absW(c)$ contains a pair $(l, w)$ for every $l \in \absV(c)$.
+% \end{enumerate}
+
+% The algorithm in this step is inspired from the Algorithm~2 in paper~\cite{SinnZV14},
+% the Algorithm~3 in paper~\cite{ZulegerGSV11},
+% and the Definition~25 in Section 4 of paper~\cite{SinnZV17}.
+% \begin{itemize}
+% \item Algorithm~3 in paper~\cite{ZulegerGSV11} assigns a set of variables to each transition in which these variables decrease as the local bound
+% and estimates the maximum value of each variable in this set.
+% \item Algorithm~2 in paper~\cite{SinnZV14} assigns a variable to each edge on which this variable decreases as its ranking function
+% and then estimates the maximum value for the ranking function.
+% \item The Definition~25 in paper~\cite{SinnZV17}
+% assigns each transition with a variable that decreases in this transition, as the local bound and computes the bound similarly.
+% \end{itemize}
 %
 The computation steps are as follows,
 \begin{enumerate}
-\item \textbf{Variable Modifications}.
+    
+\item \textbf{Variable Modifications.}
+
+We first collect three edge sets for each variable,
+in which the variable increases, decreases, and is reset respectively.
+
 For each variable $x$ in a program $c$, this step computes three edge sets, $\inc(c, x)$, $\dec(c, x)$,
  and $\reset(c, x)$ for $x$.
  \begin{defn}[Variable Modification]
@@ -93,7 +106,10 @@ For each variable $x$ in a program $c$, this step computes three edge sets, $\in
  In the following steps, $c$ is omitted in $\inc(x)$,
 $\dec(x)$ and $\reset(x)$ for concise when the reference of a program $c$ is clear in the context.
 
-\item \textbf{Local Bound Computation.}
+\item \textbf{Local Bound Computation}
+
+Then, for each edge $l \xrightarrow{dc} l' \in \absE(c)$, it assigns a variable $x$ (or a symbolic constant $v \in \constdom$) if $x$ (or $v$) decreases in $dc$, as this edge's local bound.
+
 This step adopts the local bound computation method in Section 4 of \cite{SinnZV17}.
 It assigns to each edge $l \xrightarrow{dc} l'\in \absE(c)$ a \emph{local bound} as follows.
 \begin{defn}[Local Bound Generatation]
@@ -119,9 +135,10 @@ is the variable that decreases on this edge, computed as follows,
 $\kw{SCC}(\absG(c))$ is the set of all the non-trivial strongly connected components of $\absG(c)$.
 \end{defn}
 We look at the non-trivial strongly connected components of $\absG(c)$, which contains at least one edge.
-If the edge does not belong to any strongly connected components, then the local bound is $1$, representing the fact that the edge is not in a loop and so it gets executed at most once.
-If the edge belongs to a strongly connected component and one of the variables $x$ in $dc$ decreases, then the local bound is $x$.
-Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and if by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$.
+If an edge does not belong to any strongly connected components, then its local bound is $1$, representing the fact that the edge is not in a loop and so it gets executed at most once.
+If the edge belongs to a strongly connected component and the variable $x$ in the $dc$ of this edge
+decreases, then the local bound is $x$.
+Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$.
 Otherwise, the local bound is $\infty$. 
 Notice that the output is either a symbolic constant in $\constdom$ or a variable that is not an input variable.
 
@@ -132,7 +149,25 @@ Notice that the output is either a symbolic constant in $\constdom$ or a variabl
  evaluated at most once. 
  The second and third cases are guaranteed by the \emph{Discussion on Soundness} in Section 4 in~\cite{SinnZV17}.
  We formalized the soundness and proof by Lemma~\ref{lem:local_bound_sound} in Appendix~\ref{apdx:reachability_soundness}.
-\item \textbf{Reachability-bound Estimation.}
+
+ The algorithm in this step is inspired from the Algorithm~2 in paper~\cite{SinnZV14},
+ the Algorithm~3 in paper~\cite{ZulegerGSV11},
+ and the Definition~25 in Section 4 of paper~\cite{SinnZV17}.
+ \begin{itemize}
+ \item Algorithm~3 in paper~\cite{ZulegerGSV11} assigns a set of variables to each transition in which these variables decrease as the local bound
+ and estimates the maximum value of each variable in this set.
+ \item Algorithm~2 in paper~\cite{SinnZV14} assigns a variable to each edge on which this variable decreases as its ranking function
+ and then estimates the maximum value for the ranking function.
+ \item The Definition~25 in paper~\cite{SinnZV17}
+ assigns each transition with a variable that decreases in this transition, as the local bound and computes the bound similarly.
+ \end{itemize}
+
+
+ \item \textbf{Reachability-bound Estimation.}
+ The last step computes the bound on the maximum value of the local bound for each edge,
+ and the \emph{reachability-bound} on the execution
+ times of the corresponding edge using a mutual recursion procedure.
+%   uses \emph{reachability-bound} $w$ for edge $l \xrightarrow{dc} l'$ as the bound on the maximum visiting times of the vertex $l \in \absV(c)$ and generates a set $\absW(c)$ contains a pair $(l, w)$ for every $l \in \absV(c)$.
 
 This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e\in \progE(c)$.
 Every bound is a symbolic expression built out of symbols in $\constdom$ and the operations $+, *, \max$.
@@ -173,7 +208,7 @@ This computation involves mutual recursion of computing the \emph{transition bou
 
 \begin{defn}[Transition Bound\footnotemark]
  \label{def:edge_pathinsensitivebound}
- For a program $c$ and an edge $\absevent \in \absE(c)$, the \emph{path-insensitive transition bound},
+ For a program $c$ and an edge $\absevent \in \absE(c)$, the \emph{transition bound},
  $\absclr(\absevent, c) \in \mathcal{A}_{\lin}$ 
 for this edge is
 computed as follows,
@@ -240,23 +275,38 @@ initial trace $\trace_0 \in \ftdom_0(c)$.
 
 
 \paragraph{Example}
-We perform the symbolic reachability bound analysis on the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b) and compute the result in Figure~\ref{fig:abscfg_tworound}(c).
-We would like to generate the closure of every edge, which is an equality relation between variables. Solving this closure gives us the reachability bound for this edge. With all the bound for all the edges in the abstract control flow graph, we can calculate the weight for every vertex in this graph. For example, we show the closure generated for the edge 
-$4 \xrightarrow{j' \leq j - 1} 5$, 
-$\absclr(4 \xrightarrow{j' \leq j - 1} 5) = \varinvar(j)$. The invariant for variable $j$, $\varinvar(j)$ used here is 
-$\varinvar(j) = k * \absclr(1 \xrightarrow{i' \leq k} 2)$, 
-which is generated by all the different constraints involving $j$ in the graph.
+We perform the bound analysis on the abstract transition graph in Figure~\ref{fig:abscfg_tworound}(b) and compute the result in Figure~\ref{fig:abscfg_tworound}(c).
+% We would like to generate the closure of every edge, which is an equality relation between variables. Solving this closure gives us the reachability bound for this edge. With all the bound for all the edges in the abstract transition graph, we can calculate the weight for every vertex in this graph. 
+For example, for the edge 
+$4 \xrightarrow{j' \leq j - 1} 5$, we first compute local bound for this edge, which is $j$
+because the variable $j$ decreases on this edge.
+Then we compute $\absclr(4 \xrightarrow{j' \leq j - 1} 5)$ and $\varinvar(j)$ through mutual recursion.
+% $\absclr(4 \xrightarrow{j' \leq j - 1} 5) = \varinvar(j)$. The invariant for variable $j$, $\varinvar(j)$ used here is 
+We first compute $\varinvar(j) = k * \absclr(1 \xrightarrow{j' \leq k} 2)$, 
+because variable $j$ is reset on the edge $1 \xrightarrow{j' \leq k} 2$ and the value is reset by $k$.
+We also have $\absclr(1 \xrightarrow{j' \leq k} 2) = 1$ because edge $1 \xrightarrow{j' \leq k} 2$ does not belong to any strongly connected component.
+So we compute $\varinvar(j) = k$.
+% which is generated by all the different constraints involving $j$ in the graph.
 Notice the $k$ in $\varinvar(j)$ comes from considering both difference constraint $j' \leq k$ from edge
 $1 \xrightarrow{j' \leq k} 2$ and $j'\leq j - 1$ from $4 \xrightarrow{j' \leq j - 1} 5$, which intuitively reflects the while loop whose counter is set to $k$ at the beginning and decreases by 1 at each iteration. 
-With all the closures for all the edges of the abstract control flow graph, we can solve them to obtain the reachability bound of every edge. We decide the weight for every vertex in the abstract control flow graph by using the bound of the edges which head out from this vertex, by taking the max of the bound from these involving edges. For instance, 
-By the constraint on the edge $4 \xrightarrow{j' \leq j - 1} 5$, we get bound $k$ for this edge.
+Now we compute $\absclr(4 \xrightarrow{j' \leq j - 1} 5) = \varinvar(j) = k$,
+which is a tight bound on the number of times that the transition $4 \xrightarrow{j' \leq j - 1} 5$ will be evaluated during the program execution.
+
+
+Then we decide the weight for every vertex in the abstract transition graph by using the bound of the edges which head out from this vertex, by taking the max of the bound from these involving edges. 
+For instance, 
+by the transition bound on the edge $\absclr(4 \xrightarrow{j' \leq j - 1} 5) = k$, we get bound $k$ for this edge.
 Then, we assign vertex $4$ by reachability bound $k$, as in Figure~\ref{fig:abscfg_tworound}(c). 
-Another interesting vertex is $2$, which has more than one edge heading out from it,$2 \xrightarrow{j \geq 0} 3$ and 
-$2 \xrightarrow{j \leq 0} 6$. For the weight for vertex $2$, 
-we choose the max between the bound $k$ from $2 \xrightarrow{j \geq 0} 3$ and $1$ from $2 \xrightarrow{j \leq 0} 6$.
-The same way for the rest weights' computation.
+
+For the vertex that has more than one edge heading out from it,
+we choose the maximum value over the transition bounds of these edges as weight of this vertex.
+For example, vertex $2$ has two edges heading out from it, $2 \xrightarrow{j \geq 0} 3$ and 
+$2 \xrightarrow{j \leq 0} 6$. 
+We use the maximum value over the transition bounds of $2 \xrightarrow{j \geq 0} 3$ and $2 \xrightarrow{j \leq 0} 6$,
+which is $k$.
+
 We use $\absW(c)$ for the set of weights we just computed 
-for each label in the abstract control flow graph of $c$.
+for each label in the abstract transition graph of $c$.
 %
 The same way for the rest weights' computation.
 
@@ -324,7 +374,7 @@ estimated dependency graph for the two-round example in
 Figure~\ref{fig:kadaptwhile_alg}(c), which we aim to estimate.
 %
 Every vertex from $\progV(c)$ in this graph corresponds to a labeled variable, for example, $a^5$,
-and this label $5$ is also a vertex $5$ in the abstract control flow graph in Figure~\ref{fig:abscfg_tworound}(b).
+and this label $5$ is also a vertex $5$ in the abstract transition graph in Figure~\ref{fig:abscfg_tworound}(b).
 %
 Then, it is straightforward, 
 that the reachability bound for the label $5$, 
