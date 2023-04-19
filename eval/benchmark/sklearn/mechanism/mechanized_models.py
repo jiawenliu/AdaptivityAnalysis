@@ -124,20 +124,14 @@ class MechanizedLogisticRegression(LogisticRegression):
     def fit_gaussian(self, x_train, y_train):
         x_noise = np.random.normal(0, self.mechanism.sigma, x_train.shape) 
         noised_x = x_train + x_noise        
+        
         ################ Gaussian Noise Added to Labels ################
-        # y_noise = np.random.normal(0, 0.1, y_train.shape) 
-        # noised_y = y_train + y_noise
-        # lab = preprocessing.LabelEncoder()
-        # y_transformed = pd.Series(
-        # lab.fit_transform(noised_y), 
-        # y_train.index,
-        # y_train.dtype,
-        # y_train.name,
-        # y_train.copy
-        # )
-        # y_transformed = lab.fit_transform(noised_y)
+        y_noise = np.random.normal(0, self.mechanism.sigma, y_train.shape) 
+        noised_y = y_train + y_noise
+        print(noised_y)
 
-        result = super(MechanizedLogisticRegression, self).fit(noised_x, y_train)
+
+        result = super(MechanizedLogisticRegression, self).fit(noised_x, noised_y)
         if isinstance(result, LogisticRegression):
             return self
         else:
@@ -154,7 +148,7 @@ class MechanizedLogisticRegression(LogisticRegression):
             else:
                 return result
         elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
-            print("in gaussian Mechanized Logistic Regression")
+            print("in Gaussian Mechanized Logistic Regression")
             return self.fit_gaussian(x_train, y_train)
         
         elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
@@ -268,16 +262,7 @@ class MechanizedGridSearchCV(GridSearchCV):
             
             ################ Gaussian Noise Added to Labels ################
             # y_noise = np.random.normal(0, 0.1, y_train.shape) 
-            # noised_y = y_train + y_noise
-            # lab = preprocessing.LabelEncoder()
-            # y_transformed = pd.Series(
-            # lab.fit_transform(noised_y), 
-            # y_train.index,
-            # y_train.dtype,
-            # y_train.name,
-            # y_train.copy
-            # )
-            # y_transformed = lab.fit_transform(noised_y)
+
 
             result = super(MechanizedGridSearchCV, self).fit(noised_x, y_train)
             if isinstance(result, GridSearchCV):

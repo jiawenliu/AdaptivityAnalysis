@@ -45,7 +45,7 @@ def n_adaptivity(strategy, mechanism, epoch = MAX_EPOCH):
 
 
 def eval_n_adaptivity(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
-    strategy = stg.Strategy(n, q_mean = 0.5, ada_freq = {"method": "n_adaptivity", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "n_adaptivity", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data()})
 
@@ -115,4 +115,8 @@ print(Baseline_rmse[1:].mean(), DataSplit_rmse[1:].mean(), Gauss_rmse[1:].mean()
 
 '''
 1.0, 1.0, 0.9998998998998999, 1.0015015015015014
+'''
+
+'''
+(1.0, 1.0, 0.9606606606606607, 0.995995995995996)
 '''

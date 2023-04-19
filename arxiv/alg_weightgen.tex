@@ -164,20 +164,14 @@ Notice that the output is either a symbolic constant in $\constdom$ or a variabl
 
 
  \item \textbf{Reachability-bound Estimation.}
- The last step computes the bound on the maximum value of the local bound for each edge,
- and the \emph{reachability-bound} on the execution
- times of the corresponding edge using a mutual recursion procedure.
-%   uses \emph{reachability-bound} $w$ for edge $l \xrightarrow{dc} l'$ as the bound on the maximum visiting times of the vertex $l \in \absV(c)$ and generates a set $\absW(c)$ contains a pair $(l, w)$ for every $l \in \absV(c)$.
-
+ 
 This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e\in \progE(c)$.
-Every bound is a symbolic expression built out of symbols in $\constdom$ and the operations $+, *, \max$.
-For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. 
-If instead, the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression.
-In order to do this, this steps will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment;
-second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached.
+To compute the \emph{reachability-bound} on the execution
+times of the corresponding edge, we use a mutual recursion procedure.
+This procedure computes an upper-bound invariant on the maximum value of the local bound in the meantime.
 
-To compute these two quantities we use two mutually recursive procedures in a path-insensitive manner
-in Definition~\ref{def:ranking_bound} and Definition~\ref{def:edge_pathinsensitivebound}.
+% To compute these two quantities we use a mutually recursive procedures in a path-insensitive manner
+% in Definition~\ref{def:ranking_bound} and Definition~\ref{def:edge_pathinsensitivebound}.
 \begin{defn}[Upper Bound Invaraint of Local Bound]
  \label{def:ranking_bound}
 For a program $c$ and an edge $\absevent \in \absE(c)$,
@@ -197,15 +191,15 @@ $\incrs(x, c) \triangleq \sum\limits_{\absevent \in \inc(x)}\{\absclr(\absevent,
 \absevent = (l, x' \leq x + v, l')\}$
 \end{defn}
 
-Definition~\ref{def:ranking_bound} estimates the upper bound invariant, $\varinvar(x, c) \in \mathcal{A}_{\lin}$
-on the maximum value of each local bound $x \in \mathcal{V} \cup \constdom$.
-% For a program $c$, the \emph{local bound} of a
-% $\varinvar(\locbound(\absevent, c)) \in \mathcal{A}_{\lin}$ is 
-% the bound on the maximum value of the local bound 
-% assigned to the edge $\absevent \in \absE(c)$.
-This computation involves mutual recursion of computing the \emph{transition bound} $\absclr(\absevent, c)$ of an edge $\absevent$ as below.
+% Definition~\ref{def:ranking_bound} estimates the upper bound invariant, $\varinvar(x, c) \in \mathcal{A}_{\lin}$
+% on the maximum value of each local bound $x \in \mathcal{V} \cup \constdom$.
+% % For a program $c$, the \emph{local bound} of a
+% % $\varinvar(\locbound(\absevent, c)) \in \mathcal{A}_{\lin}$ is 
+% % the bound on the maximum value of the local bound 
+% % assigned to the edge $\absevent \in \absE(c)$.
+% This computation involves mutual recursion of computing the \emph{transition bound} $\absclr(\absevent, c)$ of an edge $\absevent$ as below.
 % , formally in Definition~\ref{def:ranking_bound} and~\ref{def:edge_pathinsensitivebound}.
-
+The mutual recursion involved in this computation is defined as below.
 \begin{defn}[Transition Bound\footnotemark]
  \label{def:edge_pathinsensitivebound}
  For a program $c$ and an edge $\absevent \in \absE(c)$, the \emph{transition bound},
@@ -226,14 +220,22 @@ computed as follows,
 \end{array}
  \]
 \end{defn}
-% \footnotetext{We only present the computation based on the variable reset set ($\reset$) instead of the reset chain ($\resetchain$)
-% for easier understanding of the concept.
-% In the implementation, we use the one based on $\resetchain$ in Definition 21 from \cite{SinnZV17} achieving more accurate results.}
-% Then we construct the set of reachability bound $w$ for every program point $l$, as $\absW(c)$.
-% For each pair $(l, \hat{w}) \in \absW(c)$, 
-% $\hat{w} = \sum\left\{ \absclr(\absevent, c) \middle\vert \absevent = (l, \_, \_) \right\}$.
+% Every bound is a symbolic expression built out of symbols in $\constdom$ and the operations $+, *, \max$.
+% For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. 
+% If instead, the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression.
+% In order to do this, this steps will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment;
+% second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached.
 
-% \emph{Soundness Informal}
+For every edge, if the local bound of this edge computed at the previous step is a symbol, specifically an input variable, then this is already the transition bound.
+If instead, the local bound of the edge is a variable $x$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. 
+In order to do this, these steps will compute two quantities: first, it will recursively sum up the increments of the variable $y$ on the reset chain of $x$ over all the edges whose constraint may increase $y$;
+second, it will recursively compute the transition bound of all the edges on the rest chain and take the minimum value, multiplying the value reset the first variable on the reset chain.
+% whose difference constraint may reset the variable $y$ and take the maximum value. 
+The sum of these two quantities provides the symbolic expression that is an upper-bound on the
+number of times that this edge will be executed during the program execution.
+
+If a local bound is increased in an edge of its nested loop, then this mutual recursion is non-terminating. In this case, we identify a cycle and produce infinity as the bound.
+In this sense,
 Definition~\ref{def:edge_pathinsensitivebound} computes $\infty$ for the program that
 have non-terminating behavior.
 However, by the well-formedness of the program in Definition~\ref{def:adaptfun-wfprog}, 
@@ -242,6 +244,9 @@ $\absclr(\absevent)$ is a sound upper bound
 on the execution times of this transition by~\cite{SinnZV17}.
 The soundness is formally stated in Theorem~\ref{thm:transition_bound_sound}, and the proof is in Appendix~\ref{apdx:reachability_soundness}.
 %
+
+
+
 \begin{thm}[Soundness of the Transition Bound]
  \label{thm:transition_bound_sound}
 For a program ${c}$ with its abstract transition graph $\absG(c)$, if $l$ is the label of an assignment 
