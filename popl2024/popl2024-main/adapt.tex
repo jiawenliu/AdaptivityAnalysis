@@ -303,64 +303,28 @@ $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is def
 \]
 A semantics-based dependency graph $\traceG({c})= (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is \emph{well-formed} if and only if $ \{x^l \ |\ (x^l,w)\in \traceW({c})\} = \traceV({c}) $.
 }
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Explaining the Trace Operators %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% There are some operators: the trace concatenation operator $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$, combines two traces; the counting operator $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$, 
-% which counts the occurrence of of a labeled variable in the trace. The full definitions of these above operators can be found in the appendix.
-% \\
-% \jl{where $\tracecat: \mathcal{T} \to \mathcal{T} \to \mathcal{T}$ is the trace concatenation operator combining two traces, 
-% and $\vcounter : \mathcal{T} \to \mathbb{N} \to \mathbb{N}$ is the counting operator counting the occurrence of a labeled variable in the trace.}
 \end{defn}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Explanation of Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% \wq{ The occurrence time is computed by the counter operator $w(\trace) = \vcounter(\trace', l)$. As an instance, in the semantics-based dependency graph of $\kw{twoRounds}$ in Figure~\ref{fig:overview-example}(b), the weight of vertices in the while loop $w_k$ is a function which returns the value $n$ of variable $k$ in the starting trace $\tau$, and the commands in the loop are indeed executed $n$ times when starting with $\trace$.}
-% Every vertex also has a query annotation, mapping each $x^l \in \traceV(c)$ to $0$ or $1$, 
-% indicating whether the vertex comes from a query request assignment (1) or not (0) by checking if the labeled variable $x^l$ of the vertex is in $\qvar(c)$.
-% One interesting point is that instead of building a graph whose vertices are just variables coming from query request assignments, we choose the combination of all the labeled assigned variables of the program and the query annotations. The reason is that the results of previous queries can be stored or used in variables
-% which aren't associated to the query request,
-% it is necessary to track the dependency between all the assigned variables of the program. 
-% The main novelty is the combination of the quantitative and dependency information on the semantics-based dependency graph, which means this graph can tell both the dependency between queries and the times they depend on each other.
-% The vertices $\traceV({c})$ of a program $c$ are the labeled assigned variables, which are statically collected. The weight function on every vertex $w : \mathcal{T} \to \mathbb{N}$
-% mapping from a starting trace $\trace \in \mathcal{T}_0(c)$ to a natural number, tracks the occurrence times of this vertex in the newly generated trace $\trace'$ when the program $c$ is evaluated from the starting trace $\config{{c}, \trace} \to^{*} \config{\eskip, \trace\tracecat\trace'} $.
-% One interesting point is that instead of building a graph whose vertices are just variables coming from query request assignments, we choose the combination of all the labeled assigned variables of the program and the query annotations. The reason is that the results of previous queries can be stored or used in variables
-% % which aren't associated to the query request,
-% it is necessary to track the dependency between all the assigned variables of the program.
-% (1). $\traceV({c})$ is simply the $\lvar(c)$ collecting statically.
-%     % \item
-% %   \\  
-% (2). $\traceF(c)$ is the \emph{query annotation} for 
-%     every vertex $x^l \in \traceV(c)$, indicating whether $x^l$ comes from a query request (1) or not (0).
-As we discussed before, vertices and query annotations are just read out from the program $c$. We have an edge in $\traceE(c)$ if we have a may dependency between two labeled variables in $c$.
+As we discussed before, vertices and query annotations are just read out from the program $c$. We have an edge in $\traceE(c)$ if we have a may-dependency between two labeled variables in $c$.
 A weight function $w \in \traceW(c)$ is a function that for every starting trace $\trace_0 \in \mathcal{T}_0(c)$ 
-gives the number of times the assignment of the corresponding vertex $x^l$ is visited. Notice that weight functions are total and with range $\mathbb{N}$. This means that if a program $c$ has some non-terminating behavior, the set $\traceW(c)$ will be empty. To rule out this situation, we consider as well-formed only graphs which have a weight for every vertex. 
+gives the number of times the assignment of the corresponding vertex $x^l$ is visited. Notice that weight functions are total and with range $\mathbb{N}$. This means that if a program $c$ has some non-terminating behavior, the set $\traceW(c)$ will be empty. 
+To rule out this situation, we consider as well-formed only graphs which have a weight for every vertex. 
+\highlight{This is also because programs that have non-terminating behaviors do not have the intuitive adaptivity.}
 In the rest of the paper we will implicitly consider only well-formed semantics-based dependency graphs. 
-% \end{enumerate}
-% One interesting point is that instead of building a graph whose vertices are just variables coming from query request assignments, we choose the combination of all the labeled assigned variables of the program and the query annotations. The reason is that the results of previous queries can be stored or used in variables
-% which aren't associated to the query request,
-% it is necessary to track the dependency between all the assigned variables of the program.
 
-
-\subsection{Trace-based Adaptivity}
+\highlight{
+  \subsection{Trace-based Adaptivity}
 We can now define the adaptivity of a program formally. This notion is formulated in terms of an initial trace, specifying the value of the input variables, as the walk on the graph $\traceG({c})$, which has the largest number of query requests.
-
-
-% Given 
-% the program $c$'s
-% $\traceG({c})$,
-% we define adaptivity 
-% with respect to an initial trace $\trace_0 \in \mathcal{T}_0(c)$ via a finite walk in $\traceG({c})$, which has the most query requests.
-% We show the definition of a finite walk as follows.
-
-\begin{defn}[Walk on $\traceG({c})$]
+\begin{defn}[Walk]
 \label{def:finitewalk}
-Given the semantics-based dependency graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$ of a program $c$, a \emph{walk} $k:\mathcal{T}_0(c)\to \mathbb{N}$ on $\traceG({c})$ is a function that given as input an initial trace $\trace_0$ returns a sequence of edges $(e_1 \ldots e_{n - 1})$ 
-for which there is a sequence of vertices $(v_1, \ldots, v_{n})$ such that:
+Given a well-formed program $c$ with its semantics-based dependency graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$ of a program $c$, a \emph{walk} $k$ is a function that maps an initial trace $\trace_0$ to a sequence of vertices $(v_1, \ldots, v_{n})$
+for which there is a sequence of edges $(e_1 \ldots e_{n - 1})$  satisfying
 \begin{itemize}
-\item $e_i = (v_{i},v_{i + 1}) \in \traceE$ for every $1 \leq i < n$.
-\item every $v_i \in \traceV$ and $(v_i, w_i) \in \traceW$, $v_i$ appears in $(v_1, \ldots, v_{n})$ at most $w(\trace_0)$ times.  
+\item $e_i = (v_{i},v_{i + 1}) \in \traceE$ for every $1 \leq i < n$,
+\item and $v_i$ appears in $(v_1, \ldots, v_{n})$ at most $w_i(\trace_0)$ times for every $v_i \in \traceV$ and $(v_i, w_i) \in \traceW$.  
 \end{itemize}
-{$(v_1, \ldots, v_{n})$ is the vertex sequence of $k(\trace_0)$ and the length of $k(\trace_0)$ is the number of vertices in its vertex sequence, i.e., $|k(\trace_0)| = n$.}
-% The length of $k(\trace_0)$ is the number of vertices in its vertices sequence, i.e., $\len(k)(\trace_0) = n$.
-We denote by $\walks(\traceG(c))$
-the set of all the  walks $k$ in $\traceG(c)$.
+$k(\trace_0) = (v_1, \ldots, v_{n})$
+and we denote by $\walks(\traceG(c))$
+the set of all the walks $k$ in $\traceG(c)$.
 \end{defn} 
 Because for the adaptivity
 % is intuitively 
@@ -370,29 +334,39 @@ corresponding to queries.
 \begin{defn}[Query Length]
 \label{def:qlen}
 Given 
-the semantics-based dependency graph $\traceG({c})$ of a program $c$,
+the semantics-based dependency graph $\traceG({c})$ of a well-formed program $c$,
  and a \emph{walk} 
- $k \in \walks(\traceG(c))$, the \emph{query length} of $k$ is a function $\qlen(k):\mathcal{T}_0(c) \to \mathbb{N}$ that given an initial trace $\trace_0$ returns
-the number of vertices which correspond to query variables in the vertices sequence, $(v_1, \ldots, v_{n})$ as follows, 
+ $k \in \walks(\traceG(c))$ 
+%  with vertex sequence $(v_1, \ldots, v_{n})$, 
+the \emph{query length} of $k$ is a function $\qlen(k):\tdom_0(c) \to \mathbb{N}$ that 
+% given an initial trace $\trace_0$ 
+gives
+the number of vertices that correspond to query variables in the vertex sequence of $k(\trace_0)$
+for any initial trace $\trace_0 \in \tdom_0(c)$ as follows, 
 \begin{center}
    $
-  \qlen(k)(\trace_0) = |\big( v \mid v \in (v_1, \ldots, v_{n}) \land \qflag(v) = 1 \big)|.
+  \qlen(k) = \lambda \trace_0 \st |\big( v \mid v \in (v_1, \ldots, v_{n}) \land (v, 1) \in \traceF(c) 
+%   \land
+%   k \in \walks(\traceG(c)) 
+  \land k(\trace_0) = (v_1, \ldots, v_{n}) \big)|,
 $
 \end{center}
-% \mg{There is a problem here. The vertex sequence $(v_1, \ldots, v_{n})$ is not defined. The walk when provided with the initial trace gives you an edge sequence determining the vertex sequence but we need to do some work to extract it. In other words, this need to be rephrased, perhaps adding a definition of what is the vertex sequence associated with a walk applied to an initial state.}
+where the notation $| (\ldots) |$ gives the number of vertices in a sequence.
 \end{defn}
-% Then the definition of adaptivity is presented in Def.~\ref{def:trace_adapt} below.
+Then we define for a well-formed program its adaptivity as a function as below.
 \begin{defn}
     [Adaptivity of a Program]
     \label{def:trace_adapt}
-    Given a program ${c}$, 
-    its adaptivity $A(c)$ is function 
-    $A(c) : \mathcal{T}_0(c)\to \mathbb{N}$ such that for an
-    initial trace $\trace_0 \in \mathcal{T}_0(c)$, 
+    Given a well-formed program ${c}$, 
+    its adaptivity $A(c)$ is a function 
+    $A(c) : \tdom_0(c)\to \mathbb{N}$ such that for an
+    initial trace $\trace_0 \in \tdom_0(c)$, 
 \begin{center}
 $
-    A(c)(\trace_0) = \max \big 
+    A(c) = \lambda \trace_0 \st \max \big 
     \{ \qlen(k)(\trace_0) \mid k \in \walks(\traceG(c)) \big \} 
 $
 \end{center}
 \end{defn}
+Again, we define the adaptivity by considering only well-formed semantics-based dependency graphs.
+}
