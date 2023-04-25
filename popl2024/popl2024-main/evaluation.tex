@@ -1,6 +1,7 @@
 % \subsection{The Implementation Evaluation Results }
 % \label{sec:adapt-impleval}
 
+\paragraph{Set Up}
 We implemented $\THESYSTEM$ as a tool that takes a labeled command as input 
 and outputs two upper bounds on the program adaptivity and the number of query requests respectively.
 This implementation consists of an 
@@ -11,6 +12,8 @@ The OCaml program takes the labeled command as input and outputs the program-bas
 the abstract transition graph,
 feeds into the python program and the python program provides the adaptivity upper bound and the query number as the final output.
 
+
+\paragraph{Accuracy}
 We evaluated this implementation on $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
 \input{eval-table}
 
@@ -54,13 +57,24 @@ From the evaluation results, the performance bottleneck is the reachability boun
 
 
 By implementing the bound analysis algorithm in Section~\ref{sec:alg_weightgen} (adapted from \cite{SinnZV17}), we are unable to evaluate the $\kw{Jumbo}$ in a reasonable time period.
-Alternatively, we implement another light reachability bound analysis algorithm and compute the \emph{adaptivity} for
+
+\paragraph{Alternative Implementations}
+Alternatively, we implement three different versions of {\THESYSTEM} and show our alternative implement evaluation result in Table~\ref{tb:adapt-imp-alternatives}.
+ 
+1. In column {\THESYSTEM}-I, the implementation replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen} with a light reachability bound analysis algorithm and compute the \emph{adaptivity} for
 $\kw{jumboS}, \kw{jumbo}$ and $\kw{big}$ effectively.
-We also show our alternative implement evaluation result in Table~\ref{tb:adapt-imp-alternatives}.
-The alternative implementation computes the tight bound for all the examples from line:1 to line:14
+The results show that the alternative implementation computes the tight bound for all the examples from line:1 to line:14
 and over-approximate the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to path-insensitivity similar to the
 $\THESYSTEM$.
 For the $17^{th}$ example ($\kw{loop2RC}$), {\THESYSTEM} gives a tight bound while the alternative implementation gives a loose bound, so we keep both implementations.
+
+2. In {\THESYSTEM}-II, we remove the reaching definition analysis from Section~\ref{sec:alg_edgegen}.
+The Definition~\ref{def:feasible_flowsto} is replaced by a simple data flow analysis without looking into the variable liveness.
+As a result, the estimated data analysis result contains the data dependency relation between variables that is ``dead''. In the other words, 
+
+3. In {\THESYSTEM}-III, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
+The estimated data dependency only consider the data flow.
+However, the adaptivity should consider both the data and control flow, results produced from this version is unsound.
 
 Overall, {\THESYSTEM} gives the accurate estimated
 adaptivity upper bound and our adaptivity formalization also gives precise adaptivity definition w.r.t. the intuitive \emph{adaptivity rounds}.
@@ -68,6 +82,7 @@ adaptivity upper bound and our adaptivity formalization also gives precise adapt
 \input{eval-table-alternatives}
 
 
+\paragraph{Effectiveness Evaluation}
 We evaluate our framework also on the real-world programs from
 three benchmark sets, including thensorflow, sklearn and pytorch and research paper~\cite{Jamieson2015TheAO}.
 \input{eval-table-generalization}
