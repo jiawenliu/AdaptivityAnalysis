@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
+
 class twoRounds():
 	"""
 	Base class which runs the analyst strategies. 
@@ -72,7 +73,7 @@ class twoRounds():
 			plt.legend()
 			plt.grid()
 			# plt.savefig("../plots/" + mech_name + ".png")
-			plt.show()
+			# plt.show()
 
 	##################################################################################################################
 	################################################### Mechanisms: ##################################################
@@ -110,7 +111,7 @@ class twoRounds():
 
 			DataSplit = mech.Mechanism()
 			DataSplit.add_params(beta=beta, tau=tau)
-			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, DataSplit)
+			mech_rmse = self.runs_one_mech(np.array(n_list)*3, q_max_list, q_adapt_list, runs, DataSplit)
 			mech_para = "DATA SPLIT : BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(beta, tau, (n_list), runs)
 			print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
@@ -301,8 +302,11 @@ class twoRounds():
 
 
 r = twoRounds()
-# r.runandplot_with_one_mech(q_max_list = [200], q_adapt_list = [10], mech_name = "Baseline")
-r.plot_from_data()
+r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [1000], mech_name = "DataSplit")
+r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [1000], mech_name = "Baseline")
+r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [1000], mech_name = "Thresh")
+r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [1000], mech_name = "Gauss")
+# r.plot_from_data()
 
 
 		
