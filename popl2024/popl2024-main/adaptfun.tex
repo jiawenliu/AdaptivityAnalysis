@@ -386,7 +386,7 @@ Fig.~\ref{fig:overview-example}(c),
 the estimated weight for $a^5$ is $k$, and this is a sound estimation.
 % in estimated dependency Graph as $k$ as well.
 For an arbitrary $\trace_0 \in \mathcal{T}_0(c)$, we know that $\config{\trace_0, k} \earrow \env(\trace_0) k$ and
-by the weight $w_k$ for the vertex $a^5$ (as in Figure~\ref{fig:overview-example}(b)) we know 
+by the weight $w_k$ for the vertex $a^5$ (as in Fig.~\ref{fig:overview-example}(b)) we know 
 $w_k(\trace_0) = \env(\trace_0) k$. 
 %
 \subsection{Dependency Graph Estimation}
@@ -451,43 +451,6 @@ Depth First Search and Breadth First Search.
 The idea of this algorithm is to reduce the task of computing the longest walk to the task of computing local versions of the adaptivity on the maximal strongly connected components (SCC) of the graph $\progG(c)$ and then compose them into the program adaptivity. The algorithm  uses  
 another algorithm $\pathsearch_{\kw{SCC}}$  recursively, in order to  find the longest walk for a strong connected component (SCC)of $\progG(c)$. The pseudocode of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adaptscc}
 
-% $\pathsearch(c, \progG(c))$ arranges the $\progG(c)$ into $\kw{SCC_1}, \cdots, \kw{SCC_n}$ and obtains the $\kw{r_{scc_i}}$ of each SCC from $\kw{\pathsearch_{SCC}(c, SCC_i)}$ algorithm in Alg.~\ref{alg:adaptscc}.
-% Then $\pathsearch$ shrinks $\progG(c)$ into a DAG by reducing each SCC into a vertex with the weight equal to its $\kw{r_{scc_i}}$
-% and computes its longest path as adaptivity.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 1: Removed for Space Limitation%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% {\footnotesize 
-% \begin{algorithm}
-%     \caption{
-%     {Adaptivity Computation Algorithm ({$\kw{\pathsearch(c, \progG(c))}$})}
-%     \label{alg:adapt}
-%     }
-%     \begin{algorithmic}[1]
-%     \REQUIRE The program $c$, 
-%     Its program based dependency graph: $\progG(c) = (\vertxs, \edges, \weights, \qflag)$
-%     \STATE {\bf init} 
-%     $q$: empty queue;
-%     $\kw{adapt}$ : the adaptivity of this graph initialize with $0$;
-%     % \\
-%     \STATE Find all Strong Connected Components (SCC) in $\progG(c)$: $\kw{SCC_1}, \cdots, \kw{SCC_n}, 0 \leq n \leq |\vertxs|$, 
-%     \STATE {\bf for} each $\kw{SCC_i}$, compute its Adaptivity $\kw{SCC_i}$:
-%     \quad $\kw{adapt_{scc}[SCC_i] = \pathsearch_{scc}(c, SCC_i)}$;
-%     \STATE {\bf for} every $\kw{SCC_i}$:
-%     \quad $q.append(\kw{SCC_i})$; $\kw{adapt_{tmp}} = 0$;
-%     \STATE \qquad {\bf while} $q$ isn't empty:
-%     \quad $\kw{s} = q.pop()$;  $\kw{adapt_{tmp}}_0= \kw{adapt_{tmp}}$;  $\kw{SCC_{max}}$; 
-%     \STATE \qquad \qquad {\bf for} every 
-%     different SCC, $\kw{s'}$ connected by $\kw{s}$ by a directed edge from $\kw{s}$:
-%     \STATE \qquad \qquad \qquad {\bf if} $(\kw{adapt_{tmp}} < \kw{adapt_{tmp}}_0 + \kw{adapt_{scc}[s']})$:
-%     \quad $\kw{adapt_{tmp}} = \kw{adapt_{tmp}}_0 + \kw{adapt_{scc}[s']}$; 
-%     $\kw{SCC_{max} = s'} $;
-%     \STATE \qquad \qquad \qquad $q.append(\kw{SCC_{max}})$;
-%     \STATE \qquad $\kw{adapt} = \max(\kw{adapt}, \kw{adapt_{tmp}})$;    
-%     \RETURN $\kw{adapt}$.
-%     \end{algorithmic}
-%     \end{algorithm}
-% }
 %%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 1: %%%%%%%%%%%%%%%%%%%%%%
 % The ${\pathsearch}$ and  detail introduction is in supplementary material.
 %%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 2: %%%%%%%%%%%%%%%%%%%%%%
@@ -532,62 +495,6 @@ another algorithm $\pathsearch_{\kw{SCC}}$  recursively, in order to  find the l
             \end{algorithmic}
             \end{algorithm}
 }           
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version For Reference %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% The \emph{Adaptivity Computation Algorithm on An SCC ($\kw{\pathsearch_{scc}}$)}
-% takes the program, $c$ and an SCC (a subgraph), 
-%   $\kw{SCC_i}$ of
-% %   a program's estimated dependency graph 
-% $\progG(c)$ as input
-% % to be precise, the input graph is SCC, and 
-% and outputs the adaptivity local bound of $\kw{SCC_i}$. 
-% If $\kw{SCC_i}$ contains only one vertex, $x^l$ without any edge, $\kw{\pathsearch_{scc}}$ returns the query annotation of $x^l$ as the adaptivity.
-% If $\kw{SCC_i}$ contains at least one edge, 
-% $\kw{\pathsearch_{scc}}$ has three steps:
-% % in this algorithm: 
-% 1. It first collects all the paths on $\kw{SCC_i}$. 2. Then it calculates the adaptivity of every path by a novel adaptivity computation method, $\kw{dfs}$. 3. The maximal adaptivity among all paths is the adaptivity of $\kw{SCC_i}$ in the end.
-% By the property of SCC, when the algorithm starts to traverse from a vertex, it must go back to the same vertex.
-% In this sense, the paths collected in step 1 are all simple cycles with the same starting and ending vertex. 
-% The most interesting part is step 2. It recursively computes the adaptivity upper bound on the fly of paths collecting through a depth first search procedure $\kw{dfs}$ from line: 5-15.
-% It designs a novel adaptivity computation method, which guarantees the visiting times of each vertex by its weight and addresses the \textbf{Approximation Challenge}.
-% The guarantee is achieved by two special parameters $\kw{flowcapacity}$ and $\kw{querynum}$ and the updating operations in line:7 and line:10.
-% % 
-% \begin{itemize}
-% \item $\kw{flowcapacity}$ is a list of arithmetic expressions $\mathcal{A}_{in}$.
-% % for every vertex,
-% It tracks the minimum weight
-% along the path during the 
-% searching procedure. For each vertex, it updates the minimum weight when the path reaches that vertex with $\infty$ as the initial value.
-% % , inside a cycle\}
-% \item $\kw{querynum}$ is a list of integer
-% % of all the vertices, which is 
-% initialized by query annotation $\qflag_i(v)$ for every vertex. 
-% It tracks the total number of vertices with query annotation $1$
-% % which are query vertices 
-% along the path.
-% \item
-% % \\
-% The updating operation
-% during the traversal 
-% (line: 7) and 
-% at the end of the traverse (line: 10) is
-% % in these two branches, 
-% $\kw{flowcapacity[v] \times querynum[v]}$.
-% % in line: 11 and line: 15 
-% Because $\kw{querynum[v]}$ is the \# of the vertices with query annotation $1$ and $\kw{flowcapacity[v]}$ is the minimum weight over this path,
-% this number is the accurate query length of this path. 
-% It guarantees 
-% the visiting times of each vertex on the path reaching a vertex $v$ is no more than 
-% the maximum visiting times it can be on a qualified walk by $\kw{flowcapacity[v]}$,
-% and 
-% in the same time  compute the query length instead of weighted length through 
-% $\kw{ querynum[v]}$.
-% \end{itemize}
-% %  its minimum visiting time, 
-% In this way, we resolve the \textbf{Approximation Challenge} without losing the soundness, formally in Apdix..
-% % ~\ref{apdx:adaptalg_soundness}.
-% This step also guarantees the termination through a boolean list, $\kw{visited}$ in line:7 and line:13.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version Above %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 % The \emph{Adaptivity Computation Algorithm on An SCC ($\kw{\pathsearch_{scc}}$)}
 This algorithm takes as input the program $c$ and a $\kw{SCC_i}$ of
