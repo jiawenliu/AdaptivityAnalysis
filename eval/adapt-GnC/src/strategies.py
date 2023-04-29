@@ -36,14 +36,14 @@ class Strategy:
 
         assert "method" in ada_freq and "method_param" in ada_freq, ("Adaptive query frequency should have method"
                                                                      + " type and method parameter.")
-        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity"}, ("Adaptive query frequency method should be in " +
-                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise}")
-        assert ada_freq["method_param"] > 1, "Adaptive query frequency should be greater than 1."
+        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "mr_odd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity"}, ("Adaptive query frequency method should be in " +
+                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise, lrgd, mr_odd}")
 
         self.ada_method = ada_freq["method"]
         self.ada_method_param = ada_freq["method_param"]
         self.name = "Adaptive_every_" + self.ada_method + "_" + str(self.ada_method_param)
         if self.ada_method == "additive":
+            assert ada_freq["method_param"] > 1, "Adaptive query frequency should be greater than 1."
             if q_max is None:
                 q_max = int(np.floor(self.n/self.ada_method_param)) * self.ada_method_param
             else:
@@ -120,37 +120,22 @@ class Strategy:
 
         return data
 
-    def gen_data_bsetarm(self, data_name=None):
+    def gen_data_decimal(self, data_name=None):
         """
         Generates data for the strategy.
         :param data_name: name for the generated data
         :returns: an (self.n x self.q_max) array, with each entry in {-1, 1}
         """
-
-        # If data_name is not None, generate data after initializing random number generator with a seed corresponding
-        # to data_name, so that the same data is generated each time for a given data_name (for consistency across
-        # multiple runs of the strategy).
-
-###################################### Debugging Code: ######################################
-        # If column number = q_max, and q_max % ada_method_param == 0,
-        # Then the maximum query number we will ask in total is non-adaptive queries + adaptive queries.
-        # non-adaptive queries will be 
-        # batchs * ada_method_param = (column number / ada_method_param) * ada_method_param = q_max / ada_method_param) * ada_method_param = q_max.
-        # So the maximum query we want to ask is indeed more than q_max.
-        # In this sense, the last batch of the data base is never used, and we cannot instantiate the set up with only 1 bath.
-
-        # self.q_max += self.q_max/self.ada_method_param
         self.q_max += 1
         self.cardinality += 1
-
-###################################### Debugging Code ^^ ######################################
         
         if data_name is not None:
             self.data_name = data_name
             hf.initialize_with_str_seed(data_name)
-        data = np.random.rand((self.n))
+        data = np.random.rand(self.n, self.cardinality)
 
         return data
+
 
 
     def next_query(self, prev_ans=None):
@@ -266,6 +251,19 @@ class Strategy:
 
             return [(compare + 1) / 2.0]  # each answer in [0.0, 1.0]
 
+        def lrgd(para):
+            def lrgd_sub(data):
+                if para.degree == 0:
+                    ans = (-2) * (np.mean(data[:, 1]) - (np.mean(data[:,0]) * para.coefficient[0] + para.coefficient[1]))
+                elif para.degree == 1:
+                    ans = (-2) * (np.mean(data[:, 1]) - (np.mean(data[:,0]) * para.coefficient[0] + para.coefficient[1])) * np.mean(data[:,0])
+                else:
+                    ans = None
+                return [ans]
+
+            
+            return lrgd_sub
+
         if self.ada_method == "c_adaptivity":
             if self.cur_q >= self.q_max:
                 if prev_ans:
@@ -294,6 +292,41 @@ class Strategy:
                 self.mech_ans_list.append(prev_ans[0]["answer"])
             return {"query": c_adaptivity_query, "true_answer": true_ans}
 
+        if self.ada_method == "lrgd":
+            if self.cur_q >= self.q_max:
+                if prev_ans and "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                return None
+            if prev_ans:
+                if "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                para = prev_ans[0]["para"]
+            else:
+                para = None
+
+            true_ans = self.q_mean
+            self.cur_q += 1
+            self.true_ans_list.append(true_ans) 
+
+            return {"query": lrgd(para), "true_answer": true_ans}
+
+        if self.ada_method == "mr_odd":
+            if self.cur_q >= self.q_max:
+                if prev_ans:
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                return None
+            if prev_ans:
+                if "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                para = prev_ans[0]["para"]
+            else:
+                para = None
+
+            true_ans = self.q_mean * gate
+            self.cur_q += 1
+            self.true_ans_list.append(true_ans) 
+
+            return {"query": lil_ucb_query(gate, para), "true_answer": true_ans}
 
 
         if self.ada_method == "lil_ucb":

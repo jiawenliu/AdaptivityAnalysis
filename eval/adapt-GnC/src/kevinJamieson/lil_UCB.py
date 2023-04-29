@@ -89,7 +89,7 @@ def lil_ucb (strategy, mechanism, para = Para()):
 
 def eval_lil_ucb(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "lil_ucb", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
-    mechanism.add_data({'data': strategy.gen_data_bsetarm()})
+    mechanism.add_data({'data': strategy.gen_data_decimal()})
     para = Para(0.5, 0.5, 0.5, 0.5, 0.2)
     lil_ucb(strategy, mechanism, para)
     q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))

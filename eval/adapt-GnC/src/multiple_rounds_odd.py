@@ -1,3 +1,4 @@
+
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,99 +12,93 @@ import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
 
-
+# strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, para=para)
 DATA_SIZE = 1000
 CARDINALITY = 1000
 MAX_QUERY_NUM = 1000
 MAX_EPOCH = 100
-MEAN = 0.5
+MEAN = 0.1
+class Para:
+	def __init__(self, degree = 0, coefficient = None, max_degree = 0, learning_rate = 0.1, max_iteration = MAX_EPOCH):
+		self.degree = degree
+		self.coefficient = coefficient if coefficient else [0.0] * max_degree
+		self.max_degree = max_degree
+		self.learning_rate = learning_rate
+		self.max_iteration = max_iteration
+
+def mr_odd (strategy, mechanism, para = Para()):
+	data_size = strategy.n
+	para.degree = 0
+	pre_ans = [{"para" : para}]
+	k = 0
+	while k < para.max_iteration:
+		new_coefficient = pre_ans[0]["para"].coefficient
+		for i in range(para.max_degree):
+			pre_ans[0]["para"].degree = i
+			q = strategy.next_query(pre_ans)
+			if q is None:
+				break
+			r = mechanism.get_answer(q["query"])
+			if k % 2 == 0 and r[0]["answer"] is not None:
+				new_coefficient[i] = new_coefficient[i] - para.learning_rate * r[0]["answer"]
+			else:
+				q = None
+				break
+		pre_ans[0]["para"].coefficient = new_coefficient
 
 
-def c_adaptivity(strategy, mechanism, epoch = MAX_EPOCH):
-    l, queried_set = 0, []
-    q = strategy.next_query()
-    while q and l < epoch:
-        if q is None:
-            break
-        r = mechanism.get_answer(q["query"])
-        if r[0]["answer"] is not None:
-            queried_set.append((r[0]["answer"] * 2.0 - 1))
-            pre_ans = [{"answer": np.sign(np.sum((queried_set)))}]
-            q = strategy.next_query(pre_ans)
-        else:
-            q = None
-            break
-        l = l + 1
-    return 
+	return pre_ans[0]["para"].coefficient
 
 
 
 
-def eval_c_adaptivity(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
-    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "c_adaptivity", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
+def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechanism = mech.Mechanism()):
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "mr_odd", "method_param": para}, cardinality = cardinality)
     mechanism.reset()
-    mechanism.add_data({'data': strategy.gen_data()})
+    mechanism.add_data({'data': strategy.gen_data_decimal()})
 
-    c_adaptivity(strategy, mechanism)
-    q_done = len(strategy.mech_ans_list)
-    se = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list))
-    mse = [se[:i].mean() for i in range(q_done)]
+    coefficient = mr_odd(strategy, mechanism, para)
+    
+    pred_list = []
+    eval_data = strategy.gen_data()
+    for j in range(n):
+        pred = coefficient[0]
+        for i in range(1, para.max_degree):
+            pred += coefficient[i] * math.pow(eval_data[j, i], i)
+        pred_list.append(pred)
+    
+    mse = np.mean(np.square(np.subtract(eval_data[:, -1], pred_list)))
 
     return np.sqrt(mse)
 
-n = 100
-dimension = 100
-q_max = 100
+n = 1000
+dimension = 2
+para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = MAX_EPOCH)
 runs = 10
 
-stepped_q_max = range(q_max/2, q_max, 10)
-
 beta, tau = 0.05, 1.0
-gaussian_sigma, laplace_sigma = 0.7, 0.7
-hold_frac, threshold, check_data_frac = 0.5, 0.5, 0.05
+sigma = 3.5
+hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
-repeated_query_sub_delta = 0.1
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
-Baseline_rmse = np.mean([eval_c_adaptivity(n, dimension, q_max, Baseline) for _ in range(runs)], axis = 0)
+Baseline_rmse = eval_mr_odd(n, dimension, para, Baseline)
+print(Baseline_rmse)
 
-DataSplit = mech.Mechanism(q_max)
+DataSplit = mech.Mechanism()
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = eval_c_adaptivity(n*10, dimension, q_max, DataSplit)
+DataSplit_rmse = eval_mr_odd(n, dimension, para, DataSplit)
 
-Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=laplace_sigma)
+Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
-# Thresh_rmse = [eval_c_adaptivity(n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
-# Thresh_rmse = eval_c_adaptivity(n, dimension, q_max, Thresh)
-Thresh_rmse = np.mean([eval_c_adaptivity(n, dimension, q_max, Thresh) for _ in range(runs)], axis = 0)
+# Thresh_rmse = [eval_mr_odd(dimension, para, Thresh).mean() for para in stepped_para]
+Thresh_rmse = eval_mr_odd(dimension, para, Thresh)
 
 
-Gauss = mech.Gaussian_Mechanism(sigma=gaussian_sigma)
+Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
-# Gauss_rmse = [eval_c_adaptivity(n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
-# Gauss_rmse = eval_c_adaptivity(n, dimension, q_max, Gauss)
-Gauss_rmse = np.mean([eval_c_adaptivity(n, dimension, q_max, Gauss) for _ in range(runs)], axis = 0)
-
-
+# Gauss_rmse = [eval_mr_odd(dimension, para, Gauss).mean() for para in stepped_para]
+Gauss_rmse = eval_mr_odd(n, dimension, para, Gauss)
 
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
-print(Baseline_rmse[1:].mean(), DataSplit_rmse[1:].mean(), Gauss_rmse[1:].mean(), Thresh_rmse[1:].mean())
-
-
-plt.figure()
-x_list = range(10, 101, 10)
-
-plt.plot(Baseline_rmse, 'g', label= "empirical")
-# plt.plot(x_list, DataSplit_rmse, 'y', label= "DataSplit")
-plt.plot(Thresh_rmse, 'y', label= "Threshold - Adaptfun")
-plt.plot(Gauss_rmse, 'r', label= "Gaussian ")
-# plt.plot(x_list, GnC_gauss_rmse, 'm', label= "GnC_gauss")
-# plt.plot(x_list, GnC_thresh_rmse, 'c', label= "GnC_thresh")
-# plt.plot(x_list, GnC_DataSplit_rmse, label= "GnC_DataSplit")
-plt.xlabel("Queries")
-plt.ylabel("RMSE (Generalization Error) for adaptive queries")
-plt.legend()
-plt.grid()
-plt.savefig("../../plots/c_adaptivity-test.png")
-plt.show()

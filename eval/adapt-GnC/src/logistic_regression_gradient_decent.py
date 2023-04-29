@@ -1,80 +1,104 @@
-# -*- coding: utf-8 -*-
 
-from collections import OrderedDict
+import math
+import numpy as np
+import matplotlib.pyplot as plt
+
+from enum import Enum
+import sys
+sys.path.append("..")
+
 import cw_funcs as cw
 import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
-import numpy as np
-import os
-import scipy as sc
-import math
-import matplotlib.pyplot as plt
-from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE, SIG_DFL)
 
+# strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, para=para)
+DATA_SIZE = 1000
+CARDINALITY = 1000
+MAX_QUERY_NUM = 1000
+MAX_EPOCH = 100
+MEAN = 0.1
+class Para:
+	def __init__(self, degree = 0, coefficient = None, max_degree = 0, learning_rate = 0.1, max_iteration = MAX_EPOCH):
+		self.degree = degree
+		self.coefficient = coefficient if coefficient else [0.0] * max_degree
+		self.max_degree = max_degree
+		self.learning_rate = learning_rate
+		self.max_iteration = max_iteration
 
-class LRGD():
-	"""
-	Base class which runs the analyst strategies. 
-	Compatible with the Quandaric-Strategy and the mechanisms having fixed
-	dataset size n, desired significance beta (coverage should be at least 1-beta), and tolerance width tau.
-	""" 
-
-	def __init__(self):
-		self.q_cnt = 0
-
-	def one_run_one_mech(self, n, q_max = 1000, q_adapt = 1000, mechanism = mech.Mechanism()):
-		strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, q_max=q_max)
-		mechanism.reset()
-		mechanism.add_data({'data': strategy.gen_data()})
-
-		q = strategy.next_query()
-		while q:
+def lrgd (strategy, mechanism, para = Para()):
+	data_size = strategy.n
+	para.degree = 0
+	pre_ans = [{"para" : para}]
+	k = 0
+	while k < para.max_iteration:
+		new_coefficient = pre_ans[0]["para"].coefficient
+		for i in range(para.max_degree):
+			pre_ans[0]["para"].degree = i
+			q = strategy.next_query(pre_ans)
+			if q is None:
+				break
 			r = mechanism.get_answer(q["query"])
 			if r[0]["answer"] is not None:
-				q = strategy.next_query(r)
+				new_coefficient[i] = new_coefficient[i] - para.learning_rate * r[0]["answer"]
 			else:
 				q = None
-		q_done = len(strategy.mech_ans_list)
-		# print("ANS OF ADAPTIVE QUERYS:", strategy.mech_ans_list)
-		# print("TRUE ANSWER OF ADAPTIVE QUERYS:", strategy.true_ans_list)
-		square_errors = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list))
-		print("Complete one run, with Squre Errors: {}".format(square_errors))
-		return list(square_errors)
+				break
+		pre_ans[0]["para"].coefficient = new_coefficient
 
-	def runs_one_mech(self, n_list = range(500, 1001, 100), q_max_list = range(500, 1001, 100), q_adapt_list = range(500, 1001, 100), runs = 1, mechanism = mech.Mechanism()):
 
-		rmse_list = []
-		for n in n_list:
-			for i in range(len(q_max_list)):
-				se_matrix = [(self.one_run_one_mech(n, q_max_list[i], q_adapt_list[i], mechanism)) for _ in range(runs)]
-				rmse_pair_list = [np.array([[l[i],1] if len(l) > i else [0, 0] for l in se_matrix]).sum(0) for i in range(max([len(l) for l in se_matrix]))]
-				rmse = [pl[0] / pl[1] for pl in rmse_pair_list]
-				print("ROOT MEAN SQUARE ERROR: ", rmse)
-				rmse_list.append(rmse)
-
-		print("DATA SIZE RANGE: ", n_list)
-		print("RMSE: ", rmse_list)
-		return rmse_list
+	return pre_ans[0]["para"].coefficient
 
 
 
-q_max_list = [5000]
-q_adapt_list = [200]
 
-runs = 5
-n_list = [1000]
+def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechanism = mech.Mechanism()):
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "lrgd", "method_param": para}, cardinality = cardinality)
+    mechanism.reset()
+    mechanism.add_data({'data': strategy.gen_data_decimal()})
+
+    coefficient = lrgd(strategy, mechanism, para)
+    
+    pred_list = []
+    eval_data = strategy.gen_data()
+    for j in range(n):
+        pred = coefficient[0]
+        for i in range(1, para.max_degree):
+            pred += coefficient[i] * math.pow(eval_data[j, i], i)
+        pred_list.append(pred)
+    
+    mse = np.mean(np.square(np.subtract(eval_data[:, -1], pred_list)))
+
+    return np.sqrt(mse)
+
+n = 1000
+dimension = 2
+para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = MAX_EPOCH)
+runs = 10
+
 beta, tau = 0.05, 1.0
-sigma = 0.03
-hold_frac, threshold, check_data_frac = 0.5, 0.05, 0.05
+sigma = 3.5
+hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 
-r = LRGD()
+Baseline = mech.Mechanism()
+Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
+Baseline_rmse = eval_lrgd(n, dimension, para, Baseline)
+print(Baseline_rmse)
+
 DataSplit = mech.Mechanism()
 DataSplit.add_params(beta=beta, tau=tau)
-mech_rmse = r.runs_one_mech(np.array(n_list)*3, q_max_list, q_adapt_list, runs, DataSplit)
-r.runs_one_mech(q_max_list = [1000], q_adapt_list = [2], mechanism = DataSplit)
+DataSplit_rmse = eval_lrgd(n, dimension, para, DataSplit)
+
+Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
+Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
+# Thresh_rmse = [eval_lrgd(dimension, para, Thresh).mean() for para in stepped_para]
+Thresh_rmse = eval_lrgd(dimension, para, Thresh)
 
 
-		
+Gauss = mech.Gaussian_Mechanism(sigma=sigma)
+Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
+# Gauss_rmse = [eval_lrgd(dimension, para, Gauss).mean() for para in stepped_para]
+Gauss_rmse = eval_lrgd(n, dimension, para, Gauss)
+
+print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)

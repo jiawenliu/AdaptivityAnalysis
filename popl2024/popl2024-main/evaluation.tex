@@ -118,11 +118,12 @@ The average generalization error of each program is measured by root-mean-square
 The root-mean-square error without any mechanism is shown in column ``rmse without mechanism''.
 Then re-running all of them by equipping these program with different mechanisms, we present the result
 in the columns ``rmse with mechanisms''.
-After analyzing result by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
+After adaptivity analysis by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
 
-In general, all of these programs behave overfitting by running over random data set. 
-Training a data analysis program usually takes long time, to obtain good data analysis result with low generalization error,
+In short, all these data analysis programs behave overfitting by running over random data set. 
+To obtain good data analysis result with low generalization error,
 one needs to run programs multiple times with different mechanisms.
+This takes much longer time than just train a data analysis program with one run.
 However, by using our tool in the first step, analyst can directly equip the program with chosen mechanism to get good
 analysis result.
 
@@ -130,10 +131,12 @@ analysis result.
 We first evaluate four example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
 $\kw{twoRound}$ is trained to classifying a uniformly generated data set with $n$ features and a randomly selected label from $\{0, 1\}$. 
 With only two adaptive rounds, by instantiating $n = 1000$, this algorithm over-fitted and produce generalization error 
-$0.0502245$. As we showed in Figure~\ref{fig:generalization_errors}(a) and (c),
-DataSplit mechanism reduced the generalization error the most.
-The $2^{nd}$ to $4^{th}$ program are evaluated to fitting a random data 
-
+$0.0502245$. As shown in Figure~\ref{fig:generalization_errors}(a) and (c) already,
+the DataSplit mechanism reduced the generalization error the most.
+The $2^{nd}$ to $4^{th}$ program are evaluated to fitting a two-dimensional data set of size $n$ into a $1$ degree linear relation.
+The fitting depth is $k$.
+Our tool identified the adaptivity rounds are $O(k)$ for these programs and choose Gaussian mechanism.
+By instantiating $k = 1000$ and $n = 1000$, the evaluation results show that our chosen mechanism performs best among other mechanisms in reducing the generalization error.
 
 The next three data analysis programs are implemented from~\cite{Jamieson2015TheAO}.
 Program $\kw{repeatedQueryRoutine}$ is the
@@ -142,12 +145,11 @@ $\kw{lil-UCB}$ is the n-dimension pairwise algorithm with $n$ adaptivity rounds 
 and $\kw{nDimensionPairwise}$ is the lil-ucb algorithm with $n$ adaptivity rounds and $n^2$ queries.
 These three algorithms are implemented into the GnC~\cite{BassilyNSSSU16} framework for ranking
 a $1$-demensional dataset of size $n$.
-When running it, we are using the same mechanisms pre-defined in this framework.
-This framework is also used to evaluate the running example presented in overview section.
+When running it, we are using the same mechanisms pre-defined in this framework as evaluting the first three examples.
 
 By adaptivity analysis from our tool, they all have high adaptivity rounds.
 We instantiate $n = 10000$ and these programs produce large generalization error, which matches our intuition.
-According to the high generalization error, we choose Gaussian mechanism for these programs, which reduces the rmse the most
+According to the large adaptivity rounds and the query numbers, our tool choose Gaussian mechanism for these programs, which reduces the rmse the most
 among the other mechanisms.
 
 
