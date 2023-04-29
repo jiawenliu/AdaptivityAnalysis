@@ -14,8 +14,8 @@ feeds into the python program and the python program provides the adaptivity upp
 
 
 \paragraph{Effectiveness}
-We evaluated this implementation on $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
 \input{eval-table}
+We evaluated this implementation on $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
 
 In this table,
 the first column is the name of each program.
@@ -59,6 +59,7 @@ From the evaluation results, the performance bottleneck is the reachability boun
 By implementing the bound analysis algorithm in Section~\ref{sec:alg_weightgen} (adapted from \cite{SinnZV17}), we are unable to evaluate the $\kw{Jumbo}$ in a reasonable time period.
 
 \paragraph{Alternative Implementations}
+\input{eval-table-alternatives}
 Alternatively, we implement three different versions of {\THESYSTEM} and show our alternative implement evaluation result in Table~\ref{tb:adapt-imp-alternatives}.
  
 1. In column {\THESYSTEM}-I, the implementation replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen} with a light reachability bound analysis algorithm and compute the \emph{adaptivity} for
@@ -79,10 +80,10 @@ However, the adaptivity should consider both the data and control flow, results 
 Overall, {\THESYSTEM} gives the accurate estimated
 adaptivity upper bound and our adaptivity formalization also gives precise adaptivity definition w.r.t. the intuitive \emph{adaptivity rounds}.
 % and analysis framework $\THESYSTEM$.
-\input{eval-table-alternatives}
 
 
 \paragraph{Effectiveness Evaluation}
+\input{eval-table-generalization}
 We evaluate our framework also on the real-world programs from
 three benchmark sets, including thensorflow, sklearn and pytorch and research paper~\cite{Jamieson2015TheAO}.
 
@@ -113,24 +114,42 @@ and four programs from our examples in Table~\ref{tb:adapt-imp}.
 % the USA census database~\cite{CensusDatabase}.
 
 For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when run it without mechanism.
-\input{eval-table-generalization}
 The average generalization error of each program is measured by root-mean-square error over uniformly generated training data.
-The root-mean-square error without any mechanism is shown in colum ``rmse without mechanism''.
-Then we re-run all of them by equipping these program with different mechanisms and present the result
-in the colums ``rmse with mechanisms''.
+The root-mean-square error without any mechanism is shown in column ``rmse without mechanism''.
+Then re-running all of them by equipping these program with different mechanisms, we present the result
+in the columns ``rmse with mechanisms''.
 After analyzing result by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
 
-In general, all of these programs behave overfitting on training a random data size. 
-Training a program model takes long time, to obtain good data analysis result with low generalization error,
-one needs to run the program multiple times with different mechanisms.
+In general, all of these programs behave overfitting by running over random data set. 
+Training a data analysis program usually takes long time, to obtain good data analysis result with low generalization error,
+one needs to run programs multiple times with different mechanisms.
 However, by using our tool in the first step, analyst can directly equip the program with chosen mechanism to get good
 analysis result.
 
 
-The first four programs in the table are the example programs from Table~\ref{tb:adapt-imp}.
+We first evaluate four example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
 $\kw{twoRound}$ is trained to classifying a uniformly generated data set with $n$ features and a randomly selected label from $\{0, 1\}$. 
-With only two adaptive rounds, this algorithm over-fitted because 
-The $2^{nd}$ to $4^{th}$ are evaluated over randomly data for 
+With only two adaptive rounds, by instantiating $n = 1000$, this algorithm over-fitted and produce generalization error 
+$0.0502245$. As we showed in Figure~\ref{fig:generalization_errors}(a) and (c),
+DataSplit mechanism reduced the generalization error the most.
+The $2^{nd}$ to $4^{th}$ program are evaluated to fitting a random data 
+
+
+The next three data analysis programs are implemented from~\cite{Jamieson2015TheAO}.
+Program $\kw{repeatedQueryRoutine}$ is the
+repeated query subroutine algorithm with $n\times 2^n$ adaptivity rounds and $n\times 2^n$ query requests in total;
+$\kw{lil-UCB}$ is the n-dimension pairwise algorithm with $n$ adaptivity rounds and $n$ query requests in total;
+and $\kw{nDimensionPairwise}$ is the lil-ucb algorithm with $n$ adaptivity rounds and $n^2$ queries.
+These three algorithms are implemented into the GnC~\cite{BassilyNSSSU16} framework for ranking
+a $1$-demensional dataset of size $n$.
+When running it, we are using the same mechanisms pre-defined in this framework.
+This framework is also used to evaluate the running example presented in overview section.
+
+By adaptivity analysis from our tool, they all have high adaptivity rounds.
+We instantiate $n = 10000$ and these programs produce large generalization error, which matches our intuition.
+According to the high generalization error, we choose Gaussian mechanism for these programs, which reduces the rmse the most
+among the other mechanisms.
+
 
 For the four data analysis programs, 
 from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark,
@@ -141,13 +160,20 @@ with $O(n)$ fitting depth,
 and the grid search hyperparameter selecting algorithm for each classifier with 
 hyperparameter space of constant size $c$.
 
-The next two programs are
+The next two programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ are
 the implementations of the  decision tree, logistic regression, equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
 They are evaluated to classifying a uniformly generated data set with $m$ randomly selected classes label.
 
 For these program, we translate them manually into our syntax and evaluated their adaptivity.
-Without our tool, these programs behave over-fitting by wrongly classifying fresh generated data.
-$\kw{decisionTree}$  with only $5$ fitting depth has adaptivity rounds $5$,
+By adaptivity analysis, our tool identified that the fitting depth is indeed the adaptivity rounds for these programs.
+The program $\kw{decisionTree}$ with only $5$ fitting depth has adaptivity rounds $5$,
+the Thresholdout mechanism performs best in terms of reducing the generalization error.
+
+Programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ 
+have $n*m$ adaptivity rounds, by instantiating $n = 1000$ and $m = 500$,
+Gaussian mechanism performs best when reducing the generalization error.
+
+
 
 
 
@@ -176,29 +202,3 @@ weather forecasting and image classification.
 \\
 9 programs with two adaptivity rounds for text classification,
 article classification, action recognition over real world databases.
-
-We implement three data analysis algorithm from~\cite{Jamieson2015TheAO},
-which are:
-repeated query subroutine algorithm for ranking
-an $n$-demensional dataset with
-has $n\times 2^n$ adaptivity rounds;
-the n-dimension pairwise algorithm with $n$ adaptivity rounds and $n$ query requests in total;
-and the lil-ucb algorithm with $n$ adaptivity rounds and $n^2$ query number.
-These three algorithms are implemented into the GnC framework.
-When running it, we are using the mechanisms pre-defined in this framework.
-This framework is also used to evaluate the running example presented in overview section.
-
-We also evaluated four example programs from Table~\ref{tb:adapt-imp} into the GnC framework.
-We translate these programs into our syntax.
-
-
-
-
-% For the programs of the same adaptivity complexity, 
-% Then with our tool, we choose different mechanism and evaluate each over the same data.
-% We plot the evaluation result in Figure~\ref{fig:implementation_generalization_errors}.
-% The result shows that for the same data analysis program, the generalization error is reduced
-% by equipping with the proper mechanism chosen by our model.
-
-
-% \input{evaluation-plots}
