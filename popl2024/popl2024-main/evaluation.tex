@@ -85,35 +85,76 @@ adaptivity upper bound and our adaptivity formalization also gives precise adapt
 \paragraph{Effectiveness Evaluation}
 We evaluate our framework also on the real-world programs from
 three benchmark sets, including thensorflow, sklearn and pytorch and research paper~\cite{Jamieson2015TheAO}.
-\input{eval-table-generalization}
 
 These programs include  
-15 data analysis programs 
+4 data analysis programs 
 from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark,
-21 machine learning programs
-from \hyperlink{https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples}{tensorflow}~\cite{TensorflowBenchmark} 
+7 machine learning programs
+from \hyperlink{https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples}{tensorflow}~\cite{TensorflowBenchmark}
 and \hyperlink{https://github.com/pytorch/pytorch}{pytorch}~\cite{PytorchBenchmark}
 benchmarks,
-and {one program implementing the strategies from~\cite{Jamieson2015TheAO}}.
+{three programs implementing the strategies from~\cite{Jamieson2015TheAO}}
+and four programs from our examples in Table~\ref{tb:adapt-imp}.
 % \hyperlink{https://homes.cs.washington.edu/~jamieson/resources/kevinJamieson\_Dissertation.pdf}{thesis}.
 
-The 15 data analysis programs 
-from sklearn benchmark includes 12 programs with $O(n)$-adaptivity rounds
-and 3 programs with $O(n*m)$-adapvitiy rounds.
-% for the database classification.
-These $O(n)$-rounds adaptivity programs are
+% The 15 data analysis programs 
+% from sklearn benchmark includes 12 programs with $O(n)$-adaptivity rounds
+% and 3 programs with $O(n*m)$-adapvitiy rounds.
+% % for the database classification.
+% These $O(n)$-rounds adaptivity programs are
+% the
+% implementations of the decision tree, logistic regression, naive Gaussian inference classifiers
+% with $O(n)$ fitting depth,
+% and the grid search hyperparameter selecting algorithm for each classifier with 
+% hyperparameter space of constant size $c$.
+% The $O(n*m)$-rounds adaptivity programs are
+% the implementations of the  decision tree, logistic regression, naive Gaussian inference models equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
+% These programs are evaluated for classifying a demography dataset from 
+% the USA census database~\cite{CensusDatabase}.
+
+For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when run it without mechanism.
+\input{eval-table-generalization}
+The average generalization error of each program is measured by root-mean-square error over uniformly generated training data.
+The root-mean-square error without any mechanism is shown in colum ``rmse without mechanism''.
+Then we re-run all of them by equipping these program with different mechanisms and present the result
+in the colums ``rmse with mechanisms''.
+After analyzing result by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
+
+In general, all of these programs behave overfitting on training a random data size. 
+Training a program model takes long time, to obtain good data analysis result with low generalization error,
+one needs to run the program multiple times with different mechanisms.
+However, by using our tool in the first step, analyst can directly equip the program with chosen mechanism to get good
+analysis result.
+
+
+The first four programs in the table are the example programs from Table~\ref{tb:adapt-imp}.
+$\kw{twoRound}$ is trained to classifying a uniformly generated data set with $n$ features and a randomly selected label from $\{0, 1\}$. 
+With only two adaptive rounds, this algorithm over-fitted because 
+The $2^{nd}$ to $4^{th}$ are evaluated over randomly data for 
+
+For the four data analysis programs, 
+from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark,
+the first two programs, $\kw{decisionTree}$ and $\kw{logisticRegression}$ are
 the
-implementations of the decision tree, logistic regression, naive Gaussian inference classifiers
+implementations of the decision tree, logistic regression classifiers
 with $O(n)$ fitting depth,
 and the grid search hyperparameter selecting algorithm for each classifier with 
 hyperparameter space of constant size $c$.
-The $O(n*m)$-rounds adaptivity programs are
-the implementations of the  decision tree, logistic regression, naive Gaussian inference models equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
-These programs are evaluated for classifying a demography dataset from 
-the USA census database~\cite{CensusDatabase}.
+
+The next two programs are
+the implementations of the  decision tree, logistic regression, equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
+They are evaluated to classifying a uniformly generated data set with $m$ randomly selected classes label.
+
+For these program, we translate them manually into our syntax and evaluated their adaptivity.
+Without our tool, these programs behave over-fitting by wrongly classifying fresh generated data.
+$\kw{decisionTree}$  with only $5$ fitting depth has adaptivity rounds $5$,
 
 
-The 21 machine learning programs
+
+
+
+
+The 7 machine learning programs
 from \hyperlink{https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples}{tensorflow}
 and \hyperlink{https://github.com/pytorch/pytorch}{pytorch}
 benchmarks include:
@@ -147,11 +188,10 @@ These three algorithms are implemented into the GnC framework.
 When running it, we are using the mechanisms pre-defined in this framework.
 This framework is also used to evaluate the running example presented in overview section.
 
+We also evaluated four example programs from Table~\ref{tb:adapt-imp} into the GnC framework.
 We translate these programs into our syntax.
 
-We evaluate the average generalization error of each program measured by root-mean-square error over uniformly generated training data.
-For each program, we show in the table the generalization errors when run it without mechanism and with different mechanisms.
-Then we highlight the result of running it with the mechanism chosen by {\THESYSTEM}.
+
 
 
 % For the programs of the same adaptivity complexity, 
