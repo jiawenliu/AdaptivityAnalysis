@@ -253,10 +253,11 @@ class Strategy:
 
         def lrgd(para):
             def lrgd_sub(data):
+                data_size = len(data)
                 if para.degree == 0:
-                    ans = (-2) * (np.mean(data[:, 1]) - (np.mean(data[:,0]) * para.coefficient[0] + para.coefficient[1]))
+                    ans = (-2) *(np.mean([data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0]) for i in range(data_size)]))
                 elif para.degree == 1:
-                    ans = (-2) * (np.mean(data[:, 1]) - (np.mean(data[:,0]) * para.coefficient[0] + para.coefficient[1])) * np.mean(data[:,0])
+                    ans = (-2) * np.mean([ (data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0])) * data[i,0] for i in range(data_size)])
                 else:
                     ans = None
                 return [ans]
@@ -312,7 +313,7 @@ class Strategy:
 
         if self.ada_method == "mr_odd":
             if self.cur_q >= self.q_max:
-                if prev_ans:
+                if prev_ans and "answer"  in prev_ans[0].keys():
                     self.mech_ans_list.append(prev_ans[0]["answer"])
                 return None
             if prev_ans:
@@ -322,12 +323,11 @@ class Strategy:
             else:
                 para = None
 
-            true_ans = self.q_mean * gate
+            true_ans = self.q_mean
             self.cur_q += 1
             self.true_ans_list.append(true_ans) 
 
-            return {"query": lil_ucb_query(gate, para), "true_answer": true_ans}
-
+            return {"query": lrgd(para), "true_answer": true_ans}
 
         if self.ada_method == "lil_ucb":
             if self.cur_q >= self.q_max:

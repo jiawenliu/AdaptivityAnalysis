@@ -88,14 +88,15 @@ We evaluate our framework also on the real-world programs from
 three benchmark sets, including thensorflow, sklearn and pytorch and research paper~\cite{Jamieson2015TheAO}.
 
 These programs include  
+four programs from our examples in Table~\ref{tb:adapt-imp},
+three programs implementing the strategies from~\cite{Jamieson2015TheAO},
 4 data analysis programs 
-from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark,
+from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark
+and
 7 machine learning programs
 from \hyperlink{https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples}{tensorflow}~\cite{TensorflowBenchmark}
 and \hyperlink{https://github.com/pytorch/pytorch}{pytorch}~\cite{PytorchBenchmark}
-benchmarks,
-{three programs implementing the strategies from~\cite{Jamieson2015TheAO}}
-and four programs from our examples in Table~\ref{tb:adapt-imp}.
+benchmarks.
 % \hyperlink{https://homes.cs.washington.edu/~jamieson/resources/kevinJamieson\_Dissertation.pdf}{thesis}.
 
 % The 15 data analysis programs 
@@ -113,10 +114,11 @@ and four programs from our examples in Table~\ref{tb:adapt-imp}.
 % These programs are evaluated for classifying a demography dataset from 
 % the USA census database~\cite{CensusDatabase}.
 
-For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when run it without mechanism.
-The average generalization error of each program is measured by root-mean-square error over uniformly generated training data.
+For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when running without mechanism
+and running with different mechanisms over uniformly generated training data.
+The average generalization error of each program is measured by root-mean-square error.
 The root-mean-square error without any mechanism is shown in column ``rmse without mechanism''.
-Then re-running all of them by equipping these program with different mechanisms, we present the result
+Re-running these programs by equipping them with different mechanisms, we present the results
 in the columns ``rmse with mechanisms''.
 After adaptivity analysis by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
 
@@ -186,21 +188,24 @@ The 7 machine learning programs
 from \hyperlink{https://github.com/tensorflow/tensorflow/tree/master/tensorflow/examples}{tensorflow}
 and \hyperlink{https://github.com/pytorch/pytorch}{pytorch}
 benchmarks include:
-\\
 3 fully-adaptive progress data analysis
 strategy~\cite{ZrnicH19}.
-Specifically they are the implementation of the recurrent neural network, long short term models for 
-weather forecasting.
-\\
-9
+Specifically they are the implementation of the recurrent neural network, long short term models;
+and 4
 fully-adaptive conservative data analysis
 strategy~\cite{ZrnicH19}.
 Specifically they are the implementation of the convolutional neural network, transfer learning model,
-and multiple-dense layer neural networks equipped with gradient decedent optimizer for
-weather forecasting and image classification.
-%  over MNIST dataset
-% through fitting the  CNN, RNN, LSTM models for image classification and 
-% weather forecasting as well.
-\\
-9 programs with two adaptivity rounds for text classification,
-article classification, action recognition over real world databases.
+and multiple-dense layer neural networks equipped with gradient decedent optimizer.
+
+We evaluate them for classifying a uniformly generated data set of size $n$ and dimension $100$ with fitting steps
+$k$ and training epoch $m$.
+The computation in one fitting step is translated into a simple linear query in our language.
+In this sense, {\THESYSTEM} is only able to figure the dependency relation between each fitting steps and
+training epochs, which is $k \times m$.
+We instantiate the $n = 10000$, $k = 10$ and $m = 1$,
+and {\THESYSTEM} produces adaptivity estimation as $10$ for these programs.
+It chooses Thresholdout mechanism, which produces smaller generalization error than the result without any mechanism.
+However, in the evaluation results from this benchmark, Thresholdout mechanism is not always the best one among others.
+This is because each fitting step is not exactly a simple linear query in the neural network,
+{\THESYSTEM} fail to recognize the relation between layers of the neural networks in one fitting step.
+
