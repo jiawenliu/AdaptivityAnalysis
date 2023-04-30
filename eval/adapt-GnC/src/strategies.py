@@ -274,11 +274,12 @@ class Strategy:
 
         def mr(para):
             def mr_sub(data):
+                data_size = len(data)
                 ans = []
                 for d in data:
                     if d not in para.traced:
-                        ans.append(np.random.choice([0, 1], p =  [1 - self.pr_1, self.pr_1]))
-                return [np.mean(ans)]
+                        ans.append(np.random.choice([0, 1.0], p =  [1 - self.pr_1, self.pr_1]))
+                return [np.sum(ans) / data_size]
             return mr_sub
 
         if self.ada_method == "c_adaptivity":
