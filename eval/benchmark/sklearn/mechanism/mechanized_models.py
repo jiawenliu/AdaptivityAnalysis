@@ -68,6 +68,103 @@ class Mechanism():
         np.random.seed(rnd_val)
 from sklearn.multiclass import OneVsRestClassifier
 
+
+
+class MechanizedDecisionTree(DecisionTreeClassifier):
+    def __init__(self, *, criterion="gini", splitter="best", max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0, class_weight=None, ccp_alpha=0,
+                 mechanism = Mechanism(Mechanism.MechanismType.NONE)):
+        super(MechanizedDecisionTree, self).__init__(
+            criterion = criterion, 
+            splitter = splitter, max_depth = max_depth, 
+            min_samples_split = min_samples_split, 
+            min_samples_leaf = min_samples_leaf, min_weight_fraction_leaf = min_weight_fraction_leaf, 
+            max_features = max_features, random_state = random_state, max_leaf_nodes = max_leaf_nodes, 
+            min_impurity_decrease = min_impurity_decrease, 
+            class_weight = class_weight, 
+            ccp_alpha = ccp_alpha)
+        self.mechanism = mechanism
+
+            
+    def choose_mech(self, mech = None):
+        self.mechanism = mech
+
+
+    def fit_data_split(self, x_train, y_train):
+        size = len(x_train)
+        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedDecisionTree, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
+            x_noise =  np.random.laplace(0, 2 * self.mechanism.sigma, x_hold.shape)
+            return super(MechanizedDecisionTree, self).fit(x_hold + x_noise, y_hold)
+        else:
+            return train_result
+
+    def fit_threshold(self, x_train, y_train):
+        size = len(x_train)
+        hold_size, train_size = int(size  * (self.mechanism.hold_frac)), int(size  * (1.0 - self.mechanism.hold_frac))
+        x_train, y_train, x_hold, y_hold = x_train[hold_size:], y_train[hold_size:], x_train[:hold_size], y_train[:hold_size]
+        train_result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+        train_pred = train_result.predict(x_train)
+        hold_result = super(MechanizedDecisionTree, self).fit(x_hold, y_hold)
+        hold_pred = hold_result.predict(x_hold)
+        if abs(accuracy_score(train_pred, y_train) - accuracy_score(hold_pred, y_hold)) >= self.mechanism.noisy_thresh + np.random.laplace(0, 4 * self.mechanism.sigma):
+            self.mechanism.noisy_thresh = self.mechanism.threshold + np.random.laplace(0, 2 * self.mechanism.sigma)
+            x_noise =  np.random.laplace(0, 2 * self.mechanism.sigma, x_hold.shape)
+            return super(MechanizedDecisionTree, self).fit(x_hold + x_noise, y_hold)
+        else:
+            return train_result
+
+
+    def fit_gaussian(self, x_train, y_train):
+        x_noise = np.random.normal(0, self.mechanism.sigma, x_train.shape) 
+        noised_x = x_train + x_noise        
+        
+        ################ Gaussian Noise Added to Labels ################
+        y_noise = np.random.normal(0, self.mechanism.sigma, y_train.shape) 
+        noised_y = y_train
+
+
+        result = super(MechanizedDecisionTree, self).fit(noised_x, noised_y)
+        if isinstance(result, DecisionTreeClassifier):
+            return self
+        else:
+            return result
+
+
+
+    def fit(self, x_train, y_train):
+        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
+            print("in Baseline Logistic Regression")
+            result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+            if isinstance(result, DecisionTreeClassifier):
+                return self
+            else:
+                return result
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
+            print("in Gaussian Mechanized Logistic Regression")
+            return self.fit_gaussian(x_train, y_train)
+        
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
+            print("in Threshold Mechanized Logistic Regression")
+            return self.fit_threshold(x_train, y_train)
+            
+        else:
+            result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
+            if isinstance(result, DecisionTreeClassifier):
+                return self
+            else:
+                return result
+           
+    def choose_mechanism(self, mech):
+        self.mechanism = mech
+
+
+
 class MechanizedLogisticRegression(LogisticRegression):
 
     def __init__(self, penalty="l2", *, dual=False, tol=0.0001, C=1, 
@@ -355,64 +452,4 @@ class MechanizedKMeans(KMeans):
 
     def choose_mechanism(self, mech):
         self.mechanism = mech
-
-
-
-class MechanizedDecisionTree(DecisionTreeClassifier):
-    def __init__(self, *, criterion="gini", splitter="best", max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0, class_weight=None, ccp_alpha=0):
-        super(MechanizedDecisionTree, self).__init__(
-            criterion = criterion, 
-            splitter = splitter, max_depth = max_depth, 
-            min_samples_split = min_samples_split, 
-            min_samples_leaf = min_samples_leaf, min_weight_fraction_leaf = min_weight_fraction_leaf, 
-            max_features = max_features, random_state = random_state, max_leaf_nodes = max_leaf_nodes, 
-            min_impurity_decrease = min_impurity_decrease, 
-            class_weight = class_weight, 
-            ccp_alpha = ccp_alpha)
-        self.mechanism = Mechanism.MechanismType.NONE
-
-            
-    def choose_mech(self, mech = None):
-        self.mechanism = mech
-
-
-    def set_mechanism_para(self, mu = 0.0, sigma = None, hold_frac = 0.5, threshold = 0.5, beta = None, tau = None, check_for_width = None):
-        self.mu = mu
-        self.sigma = sigma
-        self.beta = beta
-        self.tau = tau
-        self.check_for_width = check_for_width
-        assert 0.0 < hold_frac <= 1.0, "hold_frac should take a value in (0, 1]."
-        self.hold_frac = hold_frac
-        self.threshold = threshold
-        self.noisy_thresh = self.threshold + np.random.laplace(0, 2 * self.sigma)
-        
-
-
-    def fit(self, x_train, y_train):
-        if self.mechanism.mechanism_type ==  Mechanism.MechanismType.NONE:
-            result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
-            if isinstance(result, DecisionTreeClassifier):
-                return self
-            else:
-                return result
-        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.GAUSSIAN:
-            print("in Gaussian MechanizedDecisionTree")
-            x_noise = np.random.normal(0, 0.1, x_train.shape) 
-            noised_x = x_train + x_noise
-            result = super(MechanizedDecisionTree, self).fit(noised_x, y_train)
-            if isinstance(result, DecisionTreeClassifier):
-                return self
-            else:
-                return result
-        else:
-            result = super(MechanizedDecisionTree, self).fit(x_train, y_train)
-            if isinstance(result, DecisionTreeClassifier):
-                return self
-            else:
-                return result
-
-    def choose_mechanism(self, mech):
-        self.mechanism = mech
-
 
