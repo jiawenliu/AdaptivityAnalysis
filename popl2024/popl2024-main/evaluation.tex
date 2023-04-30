@@ -10,7 +10,7 @@ edge estimation (as presented in Section~\ref{sec:alg_edgegen}), and weight esti
 and the adaptivity computation algorithm shown in Section~\ref{sec:alg_adaptcompute} in Python.
 The OCaml program takes the labeled command as input and outputs the program-based dependency graph and
 the abstract transition graph,
-feeds into the python program and the python program provides the adaptivity upper bound and the query number as the final output.
+feeds into the Python program and the Python program provides the adaptivity upper bound and the query number as the final output.
 
 
 \paragraph{Effectiveness}
@@ -42,7 +42,7 @@ The next eleven programs from Table~\ref{tb:adapt-imp} rows 7 to 18 are handcraf
 data, control dependency,
 the multiple paths nested loop with related counters, etc.
 The names of these programs obey the convention that,
-$\kw{if}$ means there is if control in the program;
+$\kw{if}$ means there is an if control in the program;
 $\kw{loop}$ means there is while loop and $\kw{loop2}$ represents two levels nested loop in the program;
 $\kw{C}$ denotes Control;
 $\kw{D}$ for Dependency; $\kw{V}$ for Variable;
@@ -62,19 +62,19 @@ By implementing the bound analysis algorithm in Section~\ref{sec:alg_weightgen} 
 \input{eval-table-alternatives}
 Alternatively, we implement three different versions of {\THESYSTEM} and show our alternative implement evaluation result in Table~\ref{tb:adapt-imp-alternatives}.
  
-1. In column {\THESYSTEM}-I, the implementation replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen} with a light reachability bound analysis algorithm and compute the \emph{adaptivity} for
+1. In column {\THESYSTEM}-I, the implementation replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen} with a light reachability bound analysis algorithm and computes the \emph{adaptivity} for
 $\kw{jumboS}, \kw{jumbo}$ and $\kw{big}$ effectively.
 The results show that the alternative implementation computes the tight bound for all the examples from line:1 to line:14
 and over-approximate the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to path-insensitivity similar to the
 $\THESYSTEM$.
-For the $17^{th}$ example ($\kw{loop2RC}$), {\THESYSTEM} gives a tight bound while the alternative implementation gives a loose bound, so we keep both implementations.
+For the $17^{th}$ example ($\kw{loop2RC}$), {\THESYSTEM} gives a tight upper bound while the alternative implementation gives a loose bound, so we keep both implementations.
 
 2. In {\THESYSTEM}-II, we remove the reaching definition analysis from Section~\ref{sec:alg_edgegen}.
 The Definition~\ref{def:feasible_flowsto} is replaced by a simple data flow analysis without looking into the variable liveness.
-As a result, the estimated data dependency result contains the dependency relation between variables that is ``dead''. In the other words, it over-approximates the variable may-dependency relation.
+As a result, the estimated data dependency result contains the dependency relation between variables that is ``dead''. In other words, it over-approximates the variable may-dependency relation.
 
 3. In {\THESYSTEM}-III, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
-The estimated data dependency only consider the data flow.
+The estimated data dependency only considers the data flow.
 However, the adaptivity should consider both the data and control flow, results produced from this version are unsound.
 
 Overall, {\THESYSTEM} gives the accurate estimated
@@ -84,10 +84,10 @@ adaptivity upper bound and our adaptivity formalization also gives precise adapt
 
 \paragraph{Effectiveness Evaluation}
 \input{eval-table-generalization}
-We evaluate our framework also on the real-world programs from
-three benchmark sets, including thensorflow, sklearn and pytorch and research paper~\cite{Jamieson2015TheAO}.
+We evaluate our framework also on real-world programs from
+three benchmark sets, including TensorFlow, Sklearn, Pytorch, and research paper~\cite{Jamieson2015TheAO}.
 
-These programs include  
+These programs include 
 four programs from our examples in Table~\ref{tb:adapt-imp},
 three programs implementing the strategies from~\cite{Jamieson2015TheAO},
 4 data analysis programs 
@@ -110,11 +110,11 @@ benchmarks.
 % and the grid search hyperparameter selecting algorithm for each classifier with 
 % hyperparameter space of constant size $c$.
 % The $O(n*m)$-rounds adaptivity programs are
-% the implementations of the  decision tree, logistic regression, naive Gaussian inference models equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
+% the implementations of the decision tree, logistic regression, naive Gaussian inference models equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
 % These programs are evaluated for classifying a demography dataset from 
 % the USA census database~\cite{CensusDatabase}.
 
-For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when running without mechanism
+For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when running without a mechanism
 and running with different mechanisms over uniformly generated training data.
 The average generalization error of each program is measured by root-mean-square error.
 The root-mean-square error without any mechanism is shown in column ``rmse without mechanism''.
@@ -122,22 +122,22 @@ Re-running these programs by equipping them with different mechanisms, we presen
 in the columns ``rmse with mechanisms''.
 After adaptivity analysis by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
 
-In short, all these data analysis programs behave overfitting by running over random data set. 
+In short, all these data analysis programs behave overfitting by running over randomly generated data sets. 
 To obtain good data analysis result with low generalization error,
 one needs to run programs multiple times with different mechanisms.
-This takes much longer time than just train a data analysis program with one run.
-However, by using our tool in the first step, analyst can directly equip the program with chosen mechanism to get good
-analysis result.
+This takes much longer time than just training a data analysis program with one run.
+However, by using our tool in the first step, an analyst can directly equip the program with a chosen mechanism to get good
+analysis results.
 
 
 We first evaluate four example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
 $\kw{twoRound}$ is trained to classifying a uniformly generated data set with $n$ features and a randomly selected label from $\{0, 1\}$. 
-With only two adaptive rounds, by instantiating $n = 1000$, this algorithm over-fitted and produce generalization error 
+With only two adaptive rounds, by instantiating $n = 1000$, this algorithm over-fitted and produce the generalization error 
 $0.0502245$. As shown in Figure~\ref{fig:generalization_errors}(a) and (c) already,
 the DataSplit mechanism reduced the generalization error the most.
-The $2^{nd}$ to $4^{th}$ program are evaluated to fitting a two-dimensional data set of size $n$ into a $1$ degree linear relation.
+The $2^{nd}$ to $4^{th}$ program is evaluated to fitting a two-dimensional data set of size $n$ into a $1$ degree linear relation.
 The fitting depth is $k$.
-Our tool identified the adaptivity rounds are $O(k)$ for these programs and choose Gaussian mechanism.
+Our tool identifies the adaptivity rounds are $O(k)$ for these programs and chooses the Gaussian mechanism.
 By instantiating $k = 1000$ and $n = 1000$, the evaluation results show that our chosen mechanism performs best among other mechanisms in reducing the generalization error.
 
 The next three data analysis programs are implemented from~\cite{Jamieson2015TheAO}.
@@ -145,13 +145,13 @@ Program $\kw{repeatedQueryRoutine}$ is the
 repeated query subroutine algorithm with $n\times 2^n$ adaptivity rounds and $n\times 2^n$ query requests in total;
 $\kw{lil-UCB}$ is the n-dimension pairwise algorithm with $n$ adaptivity rounds and $n$ query requests in total;
 and $\kw{nDimensionPairwise}$ is the lil-ucb algorithm with $n$ adaptivity rounds and $n^2$ queries.
-These three algorithms are implemented into the GnC~\cite{BassilyNSSSU16} framework for ranking
+These three algorithms are implemented into the \emph{Guess and Check}~\cite{RogersRSSTW20} framework for ranking
 a $1$-demensional dataset of size $n$.
-When running it, we are using the same mechanisms pre-defined in this framework as evaluting the first three examples.
+When running it, we are using the same mechanisms pre-defined in this framework as evaluating the first three examples.
 
 By adaptivity analysis from our tool, they all have high adaptivity rounds.
-We instantiate $n = 10000$ and these programs produce large generalization error, which matches our intuition.
-According to the large adaptivity rounds and the query numbers, our tool choose Gaussian mechanism for these programs, which reduces the rmse the most
+We instantiate $n = 10000$ and these programs produce large generalization errors, which matches our intuition.
+According to the large adaptivity rounds and the query numbers, our tool chooses the Gaussian mechanism for these programs, which reduces the rmse the most
 among the other mechanisms.
 
 
@@ -161,21 +161,21 @@ the first two programs, $\kw{decisionTree}$ and $\kw{logisticRegression}$ are
 the
 implementations of the decision tree, logistic regression classifiers
 with $O(n)$ fitting depth,
-and the grid search hyperparameter selecting algorithm for each classifier with 
+and the grid search hyperparameter selects an algorithm for each classifier with 
 hyperparameter space of constant size $c$.
 
 The next two programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ are
-the implementations of the  decision tree, logistic regression, equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
-They are evaluated to classifying a uniformly generated data set with $m$ randomly selected classes label.
+the implementations of the decision tree, logistic regression, equipped with one v.s. rest model with $n$ fitting depth for classifying the dataset with $m$ classes.
+They are evaluated to classify a uniformly generated data set with $m$ randomly selected classes label.
 
-For these program, we translate them manually into our syntax and evaluated their adaptivity.
+For these programs, we translate them manually into our syntax and evaluated their adaptivity.
 By adaptivity analysis, our tool identified that the fitting depth is indeed the adaptivity rounds for these programs.
 The program $\kw{decisionTree}$ with only $5$ fitting depth has adaptivity rounds $5$,
 the Thresholdout mechanism performs best in terms of reducing the generalization error.
 
 Programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ 
 have $n*m$ adaptivity rounds, by instantiating $n = 1000$ and $m = 500$,
-Gaussian mechanism performs best when reducing the generalization error.
+the Gaussian mechanism performs best when reducing the generalization error.
 
 
 
@@ -189,12 +189,12 @@ from \hyperlink{https://github.com/tensorflow/tensorflow/tree/master/tensorflow/
 and \hyperlink{https://github.com/pytorch/pytorch}{pytorch}
 benchmarks include:
 3 fully-adaptive progress data analysis
-strategy~\cite{ZrnicH19}.
-Specifically they are the implementation of the recurrent neural network, long short term models;
+strategy~\cite{ZrnicH19},
+specifically the implementation of the recurrent neural network, long-short-term models;
 and 4
 fully-adaptive conservative data analysis
-strategy~\cite{ZrnicH19}.
-Specifically they are the implementation of the convolutional neural network, transfer learning model,
+strategy~\cite{ZrnicH19},
+specifically the implementation of the convolutional neural network, transfer learning model,
 and multiple-dense layer neural networks equipped with gradient decedent optimizer.
 
 We evaluate them for classifying a uniformly generated data set of size $n$ and dimension $100$ with fitting steps
@@ -202,10 +202,10 @@ $k$ and training epoch $m$.
 The computation in one fitting step is translated into a simple linear query in our language.
 In this sense, {\THESYSTEM} is only able to figure the dependency relation between each fitting steps and
 training epochs, which is $k \times m$.
-We instantiate the $n = 10000$, $k = 10$ and $m = 1$,
+We instantiate the $n = 10000$, $k = 10$, and $m = 1$,
 and {\THESYSTEM} produces adaptivity estimation as $10$ for these programs.
-It chooses Thresholdout mechanism, which produces smaller generalization error than the result without any mechanism.
-However, in the evaluation results from this benchmark, Thresholdout mechanism is not always the best one among others.
+It chooses the Thresholdout mechanism, which produces a smaller generalization error than the result without any mechanism.
+However, in the evaluation results from this benchmark, the Thresholdout mechanism is not always the best one among others.
 This is because each fitting step is not exactly a simple linear query in the neural network,
-{\THESYSTEM} fail to recognize the relation between layers of the neural networks in one fitting step.
+{\THESYSTEM} fails to recognize the relation between layers of the neural networks in one fitting step.
 
