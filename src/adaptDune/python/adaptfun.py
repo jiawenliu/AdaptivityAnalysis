@@ -116,8 +116,8 @@ class Adaptfun:
 
         start_time = time.time()
         weight_infer = WeightEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abscf_graph)
-        weight_infer.weight_estimate()
-        weight_infer.print_weights()
+        # weight_infer.weight_estimate_without_reachability_bound()
+        # weight_infer.print_weights()
 
         print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         adapt_search = AdaptSearchAlgRefined(weight_infer.graph)

@@ -94,7 +94,6 @@ class TransitionBound:
                     self.dfs_var_inc_and_reset_chains(dc_var)
                 # print("the nested reset chain of " , v, "are: ", self.var_reset_chains[dc_var])
                 for dc_var_rchain in self.var_reset_chains[dc_var]:
-                    # tmp = [(transition_index, dc_var, dc_const)] + [(t, v, c) if (not t == transition_index) for (t, v, c) in dc_var_rchain]
                     self.var_reset_chains[v].append(list(filter(lambda x: (x[0] != transition_index and x[1] != v), dc_var_rchain))+[(transition_index, dc_var, dc_const)])
                 for rv in self.reset_vars[dc_var]:
                     self.reset_vars[v].add(rv)
@@ -108,11 +107,13 @@ class TransitionBound:
     # def compute_var_reset(self):
     #     self.var_resets = {}
     
-    # Input: a variable
-    # computes the symbolic invariant for this variable over the whole program
-    # Save this result into the global storage : self.var_invariant
-    # to avoid re-computation
     def compute_var_invariant(self, v):
+        '''    
+        Input: a variable
+        computes the symbolic invariant for this variable over the whole program
+        Save this result into the global storage : self.var_invariant
+        to avoid re-computation
+        '''
         var_inc = "0"
         var_reset = "0"
         # print(v, self.var_resets[v], self.var_incs[v])

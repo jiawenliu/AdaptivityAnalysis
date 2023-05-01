@@ -36,41 +36,6 @@ class AdaptSearchAlg:
             self.head[e[0]] = len(self.edges) - 1
             # print(self.head)
 
-    # def two_direction_dfs (self, u: int):
-    #     self.dfs_clock += 1
-    #     self.first_visit[u] = self.last_visit[u] = self.dfs_clock
-    #     self.scc_stack.append(u)
-    #     i = self.head[u]
-    #     while i != -1:
-    #         v = self.edges[i].to
-    #         # print("in visiting vertex: ", u, "in the visiting #: ", self.dfs_clock, 
-    #         #     ". before visit vertex ", v, "the first visit is: ", self.first_visit[u], 
-    #         #         "the last visit is: ", self.last_visit[u])
-    #         # print("the vertex #: ", v, "is assigned a SCC number or not", (not self.scc_id[v]))
-    #         if not self.first_visit[v]:
-    #             self.two_direction_dfs(v)
-    #             self.last_visit[u] = min(self.last_visit[u], self.last_visit[v])
-    #             # print("in the visiting #: ", self.dfs_clock, ". after visit vertex ", v, "the first visit is: ", self.first_visit[v], 
-    #             #     "the last visit is: ", self.last_visit[v])
-    #         elif not self.scc_id[v]:
-    #             self.last_visit[u] = min(self.last_visit[u], self.first_visit[v])
-    #             # print("in the visiting #: ", self.dfs_clock, "the visited vertex ", v, ", whoes first visit is: ", self.first_visit[v], 
-    #             #     "the last visit is: ", self.last_visit[v])
-    #         i = self.edges[i].next
-        
-    #     if self.first_visit[u] == self.last_visit[u]:
-    #         self.scc_cnt += 1
-    #         # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
-    #         while True:
-    #             x = self.scc_stack.pop()
-    #             # print(x)
-    #             self.scc_id[x] = self.scc_cnt
-    #             self.scc_adapt[self.scc_cnt] = (self.scc_adapt[self.scc_cnt] + self.graph.weights[x]) if self.graph.query[x] else self.scc_adapt[self.scc_cnt]
-    #             # print(self.scc_adapt)
-    #             if x == u:
-    #                 break
-    #         # print("new scc # : ", self.scc_cnt, "with vetices: ", self.scc_stack)
-    #         # print(self.scc_id)
 
     def find_scc(self):
         self.scc_id = [0]*self.vertex_no
@@ -80,7 +45,7 @@ class AdaptSearchAlg:
         for i in range(0, self.vertex_no):
             if not self.first_visit[i]:
                 self.two_direction_dfs(i)
-        print("The SCC adaptivity: ", list(map(lambda a: a.value, self.scc_adapt)))
+        # print("The SCC adaptivity: ", list(map(lambda a: a.value, self.scc_adapt)))
 
 
     def build_scc(self):
@@ -94,7 +59,7 @@ class AdaptSearchAlg:
                 if not self.scc_id[u] == self.scc_id[v]:
                     self.scc_graph[self.scc_id[u]].add(self.scc_id[v])
                 i = self.edges[i].next
-        print("The SCC graph: ", self.scc_graph)
+        # print("The SCC graph: ", self.scc_graph)
 
   
 
@@ -110,7 +75,7 @@ class AdaptSearchAlg:
             while bfs_q != []:
                 scc_v = bfs_q.pop(0)
                 for scc_u in self.scc_graph[scc_v]:
-                    print("SCC {} is connected to the unvisited SCC {}".format(scc_v, scc_u))
+                    # print("SCC {} is connected to the unvisited SCC {}".format(scc_v, scc_u))
                     if not visited[scc_u]:
                         visited[scc_u] = True 
                         bfs_q.append(scc_u)
@@ -124,8 +89,8 @@ class AdaptSearchAlg:
                 visited[scc_v] = True
                 self.adapt[scc_v] = self.scc_adapt[scc_v]
                 bfs(scc_v, visited)
-                print("After bfs from the vertex : {}, the Visited Status Are: {}".format(v, visited))
-                print("the Updated Adaptivity Are: {}".format(self.adapt))
+                # print("After bfs from the vertex : {}, the Visited Status Are: {}".format(v, visited))
+                # print("the Updated Adaptivity Are: {}".format(self.adapt))
 
         # print("Adaptivity of each SCC: ", list(map(lambda a: a.value, self.adapt)) )
 
@@ -134,9 +99,9 @@ class AdaptSearchAlg:
         query_num = AdaptType(0)
         for qn in [(AdaptType(self.graph.query[i]) * self.graph.weights[i]) for i in range(self.graph.get_vertice_num())]:
             query_num += qn
-        print("The Total Query Number For This Graph is: ", query_num.value)
-        print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O(", 
-        (self.adaptivity  * AdaptType((math.sqrt(sum(self.graph.query))))).value, "/"+f"√N )")
+        # print("The Total Query Number For This Graph is: ", query_num.value)
+        # print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O(", 
+        # (self.adaptivity  * AdaptType((math.sqrt(sum(self.graph.query))))).value, "/"+f"√N )")
 
 
     def get_adapt(self):
@@ -193,7 +158,7 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
                 scc_iddes.append(x)
                 if x == u:
                     break
-            print("new scc # : ", self.scc_cnt, "with vetices: ", scc_iddes)
+            # print("new scc # : ", self.scc_cnt, "with vetices: ", scc_iddes)
 
             self.refined_adapt_visited[min(scc_iddes)] = True
             self.refined_adapt_calculation_dfs(min(scc_iddes))

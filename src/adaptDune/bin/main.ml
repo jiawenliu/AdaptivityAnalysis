@@ -43,7 +43,7 @@ let _ =
     (* PARSE PROGRAM NAME *)
       let (infile , outfile) = parseArgs () in 
       let prog_name = parse_program_name outfile in
-
+      Printf.printf "\n ---- Adaptivity Analysis on Program : %s -----" prog_name;
     (* PARSE PROGRAM AND GENERATE THE BASIC CONTROL FLOW GRAPH *)
       let result = parse_prog infile in
       let cfg_result = Cfg.generate_cfg result in 
@@ -56,12 +56,12 @@ let _ =
       let _ =  Printf.fprintf dfg_output_channel "%d\n" (List.length blocks) in 
       let _ = cfg_result.node_map in
       List.fold_left ~f:( fun () block -> Printf.fprintf dfg_output_channel "%d," (Syntax.isQuery block) ) ~init:() blocks;
-      let string_result = print_lcommand result in
-      Printf.printf "The input program is : %s" string_result;
+      let _ = print_lcommand result in
+      (* Printf.printf "The input program is : %s" _; *)
       let _ = Df.kill result (List.nth_exn blocks 1) in
       print_newline();
       let cfg_result = Cfg.generate_cfg result in 
-      let _ =  Printf.printf  "%d\n" (List.length cfg_result.nodes ) in   
+      let _ =  Printf.printf  "Total Command Numbers: %d\n" (List.length cfg_result.nodes ) in   
       let (_, rd_in) = Df.kildall cfg_result in
       let dfg_result =Dfg.ddg result rd_in in
       Printf.printf "computation of the DFG total time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
@@ -69,6 +69,8 @@ let _ =
       print_out_dcdg dfg_output_channel dfg_result;    
       (*add weight line **) 
       Printf.fprintf dfg_output_channel "\n";
+      let weight_list  = Weight_infer.infer result dfg_output_channel blocks in 
+      Weight_infer.print_weight_list  weight_list ;
       (* Close Channel *)
       Out_channel.close dfg_output_channel;  
 
@@ -82,9 +84,8 @@ let _ =
       let _ = Df.kill result (List.nth_exn blocks 1) in
       print_newline();      
       let cfg_result = Cfg.generate_cfg result in 
-      let _ =  Printf.printf  "%d\n" (List.length cfg_result.nodes ) in   
       let (_, rd_in) = Df.kildall cfg_result in
-      Printf.printf "DCDG result:\n";
+      (* Printf.printf "DCDG result:\n"; *)
       let dcdg_result =Dcfg.dcdg result cfg_result rd_in in
       Printf.printf "computation of the DCDG total time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
       Printf.fprintf oc "\n";
@@ -101,7 +102,7 @@ let _ =
       let time_abscfg = Caml_unix.gettimeofday () in
       let outfile_abscfg = "./abscfg/"^prog_name in 
       let oc = Out_channel.create outfile_abscfg in
-      Printf.printf "ABSCFG result:\n";
+      (* Printf.printf "ABSCFG result:\n"; *)
       let aflow = Abs.abs_flow (Seq (result, (Skip (Label (-1))))) in
       let blocks = Cfg.blocks result in
       let _ =  Printf.fprintf oc "%d\n" (List.length blocks + 1)  in 
