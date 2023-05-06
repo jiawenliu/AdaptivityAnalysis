@@ -61,9 +61,8 @@ class Para:
 def best_arm (strategy, mechanism, para = Para()):
 	data_size = strategy.n
 	def gate_thresh(gate):
-		for i in range(data_size):
-			gate = gate[i]
-			if gate > 1 + para.lam * (sum(gate) - gate):
+		for g in gate:
+			if g > 1 + para.lam * (sum(gate) - g):
 				return False
 		return True
 	pre_ans = [{"para" : para}]
@@ -97,8 +96,8 @@ def best_arm (strategy, mechanism, para = Para()):
 
 def eval_best_arm(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "best_arm", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
-    mechanism.add_data({'data': strategy.gen_data_arm_samples(para.arms)})
     para = Para(cardinality, 0.5, 0.5, 0.5, 0.5, 0.2)
+    mechanism.add_data({'data': strategy.gen_data_arm_samples(para.arms)})
     best_arm(strategy, mechanism, para)
     q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
@@ -107,7 +106,7 @@ def eval_best_arm(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NU
 
 q_max = 1000
 n = q_max
-dimension = 1
+dimension = 100
 
 
 beta, tau = 0.05, 1.0
@@ -138,10 +137,6 @@ Gauss_rmse = eval_best_arm(n, dimension, q_max, Gauss)
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
-'''
-(2.2879070854805676, 1.8580622429961056, 0.47574304704756065, 1.4555054821829276)
-'''
 
 '''
-(2.1425024651952835, 2.2669679225188535, 0.6714195040422586, 1.353000656266134)
-'''
+1.8235091754167532, 1.3301193714302109, 0.4525140548253183, 1.3357693564662898'''

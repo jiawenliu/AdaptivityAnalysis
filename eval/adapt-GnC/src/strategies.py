@@ -36,8 +36,8 @@ class Strategy:
 
         assert "method" in ada_freq and "method_param" in ada_freq, ("Adaptive query frequency should have method"
                                                                      + " type and method parameter.")
-        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity", "multiple_rounds", "mr_odd", "mr_single"}, ("Adaptive query frequency method should be in " +
-                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise, lrgd, mr_odd, mr_single, multiple_rounds}")
+        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity", "multiple_rounds", "mr_odd", "mr_single", "best_arm"}, ("Adaptive query frequency method should be in " +
+                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise, lrgd, mr_odd, mr_single, multiple_rounds, best_arm}")
 
         self.ada_method = ada_freq["method"]
         self.ada_method_param = ada_freq["method_param"]
@@ -279,11 +279,11 @@ class Strategy:
 
         def lrgd(para):
             def lrgd_sub(data):
-                data_size = len(data)
+                data_size, _ = data.shape
                 if para.degree == 0:
-                    ans = (-2) *(np.mean([data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0]) for i in range(data_size)]))
+                    ans = (np.mean([data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0]) for i in range(data_size)]))
                 elif para.degree == 1:
-                    ans = (-2) * np.mean([ (data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0])) * data[i,0] for i in range(data_size)])
+                    ans = np.mean([ (data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0])) * data[i,0] for i in range(data_size)])
                 else:
                     ans = None
                 return [ans]
