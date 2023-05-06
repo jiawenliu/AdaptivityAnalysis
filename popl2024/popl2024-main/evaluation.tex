@@ -34,7 +34,7 @@ The first two programs $\kw{twoRounds(k)}$, $ \kw{multiRounds(k)}$ are the same 
 $\THESYSTEM$ computes tight adaptivity bound for the first three examples.
 For the fourth program $\kw{multiRoundsO(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $1 + 2*k$ 
 % for the $A(c)$, which is consistent with our expectation 
-as discussed in Example~\ref{ex:multiRoundsO}. 
+because of the path insensitivity. 
 The fifth program is the evaluation results for the example in Example~\ref{ex:multiRoundsS}, where $\THESYSTEM$ outputs the tightly bound for $A(c)$ but $A(c)$ is a loose definition of the program's actual adaptivity rounds.
 %
 
@@ -67,15 +67,28 @@ $\kw{jumboS}, \kw{jumbo}$ and $\kw{big}$ effectively.
 The results show that the alternative implementation computes the tight bound for all the examples from line:1 to line:14
 and over-approximate the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to path-insensitivity similar to the
 $\THESYSTEM$.
-For the $17^{th}$ example ($\kw{loop2RC}$), {\THESYSTEM} gives a tight upper bound while the alternative implementation gives a loose bound, so we keep both implementations.
+For the $17^{th}$ example ($\kw{loop2R}$), {\THESYSTEM} gives a tight upper bound while the alternative implementation gives a loose bound, so we keep both implementations.
 
-2. In {\THESYSTEM}-II, we remove the reaching definition analysis from Section~\ref{sec:alg_edgegen}.
-The Definition~\ref{def:feasible_flowsto} is replaced by a simple data flow analysis without looking into the variable liveness.
-As a result, the estimated data dependency result contains the dependency relation between variables that is ``dead''. In other words, it over-approximates the variable may-dependency relation.
-
-3. In {\THESYSTEM}-III, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
+2. In {\THESYSTEM}-II, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
 The estimated data dependency only considers the data flow.
 However, the adaptivity should consider both the data and control flow, results produced from this version are unsound.
+For example, program $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $ and $\kw{loopVCD(k)} $ all have control dependency.
+However, the alternative implementation II in Table~\ref{tb:adapt-imp-alternatives} estimates the adapvitiy rounds of $2$ because it fails to identify the dependency through control flow.
+
+% 3. In {\THESYSTEM}-III, we remove the reaching definition analysis from Section~\ref{sec:alg_edgegen}.
+% The Definition~\ref{def:feasible_flowsto} is replaced by a simple data flow analysis without looking into the variable liveness.
+% As a result, the estimated data dependency result contains the dependency relation between variables that is ``dead''. In other words, it over-approximates the variable may-dependency relation.
+
+3. In {\THESYSTEM}-III, we remove the reachability bound estimation from Section~\ref{sec:alg_weightgen}.
+We assign the weight $1$ to every labeled variable on the estimated dependency graph.
+The adaptivity estimation results are all integers and does not depend on any program inputs.
+When instantiating the input variable with different values, this estimated result is either greater than or smaller than the true adaptivity.
+
+In the last column, we present only the performance of the {\THESYSTEM}-I to compare the
+light reachability-bound analysis implementation with the original reachability-bound analysis.
+The performance of {\THESYSTEM}-II is similar to {\THESYSTEM} because they are based on the same
+reachability-bound analysis implementation. For the same reason, the {\THESYSTEM}-III has slightly better
+running time than {\THESYSTEM}-I.
 
 Overall, {\THESYSTEM} gives the accurate estimated
 adaptivity upper bound and our adaptivity formalization also gives precise adaptivity definition w.r.t. the intuitive \emph{adaptivity rounds}.
