@@ -42,27 +42,35 @@ CONFIDENTIAL_INTERVAL = 0.9
 SIGMA = 0.1
 '''
 class Para:
-	def __init__(self, epsilon = EPS, lam = EPS, beta = BETA, sigma = SIGMA, confidential_interval = CONFIDENTIAL_INTERVAL):
+	def __init__(self, arm_nums = CARDINALITY, epsilon = EPS, lam = EPS, beta = BETA, sigma = SIGMA, confidential_interval = CONFIDENTIAL_INTERVAL):
 		self.epsilon = epsilon
 		self.lam = lam
 		self.beta = beta
 		self.sigma = sigma
 		self.confidential_interval = confidential_interval
+		self.arm_nums = arm_nums
+		self.gate = [1] * self.arm_nums
+		self.curr_arm = 0
+		self.arms = np.random.rand(self.arm_nums)
 
-def lil_ucb (strategy, mechanism, para = Para()):
+	def reset_para(self):
+		self.gate = [1] * self.arm_nums
+		self.curr_arm = 0
+
+
+def best_arm (strategy, mechanism, para = Para()):
 	data_size = strategy.n
-	time_gate = [1]*data_size
-	def gate_thresh(curr_time_gate):
+	def gate_thresh(gate):
 		for i in range(data_size):
-			gate = curr_time_gate[i]
-			if gate > 1 + para.lam * (sum(curr_time_gate) - gate):
+			gate = gate[i]
+			if gate > 1 + para.lam * (sum(gate) - gate):
 				return False
 		return True
 	pre_ans = [{"para" : para}]
-	while gate_thresh(time_gate):
+	while gate_thresh(para.gate):
 		query_result = []
-		for i in range(data_size):
-			pre_ans[0]["gate"] = time_gate[i]
+		for i in range(para.arm_nums):
+			para.curr_arm = i
 			q = strategy.next_query(pre_ans)
 			if q is None:
 				break
@@ -80,36 +88,28 @@ def lil_ucb (strategy, mechanism, para = Para()):
 		arm = np.argmax(query_result)
 		for i in range(n):
 			if arm == i:
-				time_gate[i] = time_gate[i] + 1
-	return np.argmax(time_gate)
+				para.gate[i] = para.gate[i] + 1
+	return np.argmax(para.gate)
 
 
 
 
 
-def eval_lil_ucb(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
-    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "lil_ucb", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
-    mechanism.add_data({'data': strategy.gen_data_decimal()})
-    para = Para(0.5, 0.5, 0.5, 0.5, 0.2)
-    lil_ucb(strategy, mechanism, para)
+def eval_best_arm(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM, mechanism = mech.Mechanism()):
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "best_arm", "method_param": q_max}, q_max = q_max, cardinality = cardinality)
+    mechanism.add_data({'data': strategy.gen_data_arm_samples(para.arms)})
+    para = Para(cardinality, 0.5, 0.5, 0.5, 0.5, 0.2)
+    best_arm(strategy, mechanism, para)
     q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
 
     return np.sqrt(mse)
 
-
-
-'''
-Parameters of Strategies
-'''
-n = 1000
-dimension = 1
 q_max = 1000
+n = q_max
+dimension = 1
 
 
-'''
-Parameters of Mechanisms
-'''
 beta, tau = 0.05, 1.0
 sigma = 3.5
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
@@ -117,23 +117,23 @@ hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
-# Baseline_rmse = [eval_lil_ucb(n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
-Baseline_rmse = eval_lil_ucb(n, dimension, q_max, Baseline)
+# Baseline_rmse = [eval_best_arm(n, dimension, q_max, Baseline).mean() for q_max in stepped_q_max]
+Baseline_rmse = eval_best_arm(n, dimension, q_max, Baseline)
 
 DataSplit = mech.Mechanism(max_q = q_max)
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = eval_lil_ucb(n, dimension, q_max, DataSplit)
+DataSplit_rmse = eval_best_arm(n, dimension, q_max, DataSplit)
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
-# Thresh_rmse = [eval_lil_ucb(n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
-Thresh_rmse = eval_lil_ucb(n, dimension, q_max, Thresh)
+# Thresh_rmse = [eval_best_arm(n, dimension, q_max, Thresh).mean() for q_max in stepped_q_max]
+Thresh_rmse = eval_best_arm(n, dimension, q_max, Thresh)
 
 
 Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
-# Gauss_rmse = [eval_lil_ucb(n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
-Gauss_rmse = eval_lil_ucb(n, dimension, q_max, Gauss)
+# Gauss_rmse = [eval_best_arm(n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
+Gauss_rmse = eval_best_arm(n, dimension, q_max, Gauss)
 
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())

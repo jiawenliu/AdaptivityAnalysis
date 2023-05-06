@@ -36,8 +36,8 @@ class Strategy:
 
         assert "method" in ada_freq and "method_param" in ada_freq, ("Adaptive query frequency should have method"
                                                                      + " type and method parameter.")
-        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "mr_odd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity", "multiple_rounds"}, ("Adaptive query frequency method should be in " +
-                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise, lrgd, mr_odd, multiple_rounds}")
+        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity", "multiple_rounds", "mr_odd", "mr_single"}, ("Adaptive query frequency method should be in " +
+                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise, lrgd, mr_odd, mr_single, multiple_rounds}")
 
         self.ada_method = ada_freq["method"]
         self.ada_method_param = ada_freq["method_param"]
@@ -95,9 +95,6 @@ class Strategy:
         :returns: an (self.n x self.q_max) array, with each entry in {-1, 1}
         """
 
-        # If data_name is not None, generate data after initializing random number generator with a seed corresponding
-        # to data_name, so that the same data is generated each time for a given data_name (for consistency across
-        # multiple runs of the strategy).
         self.q_max += 1
         self.cardinality += 1
 
@@ -113,7 +110,7 @@ class Strategy:
         """
         Generates data for the strategy.
         :param data_name: name for the generated data
-        :returns: an (self.n x self.q_max) array, with each entry in {-1, 1}
+        :returns: an (self.n x self.cardinality) array, with each entry in (0, 1)
         """
         self.q_max += 1
         self.cardinality += 1
@@ -125,11 +122,28 @@ class Strategy:
 
         return data
 
+    def gen_data_arm_samples(self, arms, data_name=None):
+        """
+        Generates data for the strategy.
+        :param data_name: name for the generated data
+        :returns: an (self.n x self.cardinality) array, with each entry in (0, 1)
+        """
+        self.q_max += 1
+        self.cardinality += 1
+        
+        if data_name is not None:
+            self.data_name = data_name
+            hf.initialize_with_str_seed(data_name)
+        data = np.array([np.random.normal(arm, 1.0, self.n) for arm in arms]).transpose()
+
+        return data
+
+
     def gen_data_integer(self, data_name=None):
         """
         Generates data for the strategy.
         :param data_name: name for the generated data
-        :returns: an (self.n x self.q_max) array, with each entry in {-1, 1}
+        :returns: an (self.n x 1) array, with each entry in range [self.cardinality]
         """
 
         # If data_name is not None, generate data after initializing random number generator with a seed corresponding
@@ -207,17 +221,9 @@ class Strategy:
             # predicting last feature
             pred_x = (np.sign(np.sign(np.dot(data[:, : self.cur_corr], weight_arr)) + 1) * 2) - 1  # predictions in
             # [-1,1]^s
-###################################### Original Code: (is wrong) ######################################
-
-            # ret_ans = np.count_nonzero(pred_x == data[:, -1]) / s  # calculate accuracy of predictions
-
-###################################### Original Code ^^ ######################################
-
-###################################### Debugging Code: ######################################
 
             ret_ans = np.count_nonzero(pred_x == data[:, -1]) * 1.0 / s  # calculate accuracy of predictions
 
-###################################### Debugging Code ^^ ######################################
             if self.q_mean != 0.5:
                 ret_ans *= self.q_mean/max(self.pr_1, 1 - self.pr_1)  # scaling answer if self.q_mean != 0.5
             return [ret_ans]
@@ -242,12 +248,23 @@ class Strategy:
                        - np.sum(data[y, :])) / dimension) / 2.0   # each answer in [-1.0, 1.0]
 
             return [(compare + 1) / 2.0]  # each answer in [0.0, 1.0]
+        
         def lil_ucb_query(gate, para):
             def lil_ubc_query_sub(data):
-                ans = 1.0 / gate * sum(data[:gate]) + (1.0 + para.beta) * (1.0 + math.sqrt(para.epsilon)) * math.sqrt(2.0 * (para.sigma**2) * (1.0 + para.epsilon) * math.log(math.log((1.0 + para.epsilon) * gate)/para.confidential_interval) / gate)
+                ans = 1.0 / gate * sum(sum(data[:gate])) + (1.0 + para.beta) * (1.0 + math.sqrt(para.epsilon)) * math.sqrt(2.0 * (para.sigma**2) * (1.0 + para.epsilon) * math.log(math.log((1.0 + para.epsilon) * gate)/para.confidential_interval) / gate)
                 return [ans] 
 
             return  lil_ubc_query_sub # each answer in [0.0, 1.0]
+
+        def best_arm(para):
+            def best_arm_sub(data):
+                i = para.curr_arm
+                gate = para.gate[i] 
+                ans = (1.0 / gate * sum(data[1:(gate+1), i]) + (1.0 + para.beta) * (1.0 + math.sqrt(para.epsilon)) * math.sqrt(2.0 * (para.sigma**2) * (1.0 + para.epsilon) * math.log(math.log((1.0 + para.epsilon) * gate)/para.confidential_interval) / gate))
+                return [ans] 
+            
+
+            return  best_arm_sub # each answer in [0.0, 1.0]
 
 
         def c_adaptivity_query(data):
@@ -364,6 +381,43 @@ class Strategy:
             self.true_ans_list.append(true_ans) 
 
             return {"query": lrgd(para), "true_answer": true_ans}
+
+        if self.ada_method == "mr_single":
+            if self.cur_q >= self.q_max:
+                if prev_ans and "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                return None
+            if prev_ans:
+                if "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                para = prev_ans[0]["para"]
+            else:
+                para = None
+
+            true_ans = self.q_mean
+            self.cur_q += 1
+            self.true_ans_list.append(true_ans) 
+
+            return {"query": lrgd(para), "true_answer": true_ans}
+
+        if self.ada_method == "best_arm":
+            if self.cur_q >= self.q_max:
+                if prev_ans and "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                return None
+            if prev_ans:
+                if "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                para = prev_ans[0]["para"]
+            else:
+                para = None
+
+            true_ans = para.arms[para.curr_arm]
+            self.cur_q += 1
+            self.true_ans_list.append(true_ans) 
+
+            return {"query": best_arm(para), "true_answer": true_ans}
+
 
         if self.ada_method == "lil_ucb":
             if self.cur_q >= self.q_max:
