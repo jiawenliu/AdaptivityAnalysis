@@ -69,6 +69,7 @@ class Adaptfun:
         adapt_search.search_adapt()
         print("--- ADAPTIVITY COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         adapt_search.print_adapt()  
+        adapt_search.print_query_num()
 
     @staticmethod
     def adaptfun_a(program):
@@ -86,6 +87,7 @@ class Adaptfun:
         adapt_search.search_adapt()
         print("--- ADAPTIVITY COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         adapt_search.print_adapt()  
+        adapt_search.print_query_num()
 
     def adaptfun_b(program):
 
@@ -105,6 +107,7 @@ class Adaptfun:
         adapt_search.search_adapt()
         print("--- ADAPTIVITY COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
         adapt_search.print_adapt()  
+        adapt_search.print_query_num()
 
     def adaptfun_c(program):
         

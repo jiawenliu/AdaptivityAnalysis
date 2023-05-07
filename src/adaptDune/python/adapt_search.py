@@ -115,6 +115,18 @@ class AdaptSearchAlg:
         for adapt_value in self.adapt:
             self.adaptivity = self.adaptivity.adapt_max(adapt_value)
 
+    def comptue_total_query_num(self):
+        total_query = AdaptType(0)
+        for v in range(self.vertex_no):
+            total_query += self.graph.weights[v] if self.graph.query[v] else AdaptType(0)
+        return total_query
+
+    def print_query_num(self):
+        total_query = self.comptue_total_query_num()
+        print("The Total Query Number For This Graph is: ", total_query.value)
+        print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O(", 
+        "{} * √log({})/√N )".format(self.get_adapt(),total_query.value))
+
 
 class AdaptSearchAlgRefined(AdaptSearchAlg):       
 
@@ -124,7 +136,7 @@ class AdaptSearchAlgRefined(AdaptSearchAlg):
         self.query_num = [0] * (self.vertex_no + 1)
         self.refined_adapt = [AdaptType(1) if self.graph.query[v] else AdaptType(0) for v in range(self.vertex_no)]
         self.refined_adapt_visited = [False] * (self.vertex_no + 1)
-
+    
     # @Override: two_direction_dfs
     # with a More Precise Adaptivity calculation Method: refined_adapt_calculation_dfs
     def two_direction_dfs (self, u: int):
