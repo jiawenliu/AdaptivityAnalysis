@@ -41,7 +41,7 @@ def mr_single (strategy, mechanism, para = Para()):
 			r = mechanism.get_answer(q["query"])
 			if k == para.max_iteration - 2 and r[0]["answer"] is not None:
 				new_coefficient[i] = new_coefficient[i] - para.learning_rate * r[0]["answer"]
-			else:
+			elif r[0]["answer"] is None:
 				q = None
 				break
 		pre_ans[0]["para"].coefficient = new_coefficient

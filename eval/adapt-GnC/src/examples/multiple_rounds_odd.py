@@ -27,7 +27,6 @@ class Para:
 		self.max_iteration = max_iteration
 
 def mr_odd (strategy, mechanism, para = Para()):
-	data_size = strategy.n
 	para.degree = 0
 	pre_ans = [{"para" : para}]
 	k = 0
@@ -41,7 +40,7 @@ def mr_odd (strategy, mechanism, para = Para()):
 			r = mechanism.get_answer(q["query"])
 			if k % 2 == 0 and r[0]["answer"] is not None:
 				new_coefficient[i] = new_coefficient[i] - para.learning_rate * r[0]["answer"]
-			else:
+			elif r[0]["answer"] is None:
 				q = None
 				break
 		pre_ans[0]["para"].coefficient = new_coefficient

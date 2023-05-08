@@ -53,11 +53,11 @@ def multiple_rounds (strategy, mechanism, para = Para()):
 
 
 def eval_multiple_rounds(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechanism = mech.Mechanism()):
+    para = Para(max_iteration = 100, population = 200, control_size = 10)
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "multiple_rounds", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = para.population)
     mechanism.reset()
     mechanism.max_q = para.max_iteration
     mechanism.add_data({'data': strategy.gen_data_integer()})
-    para = Para(max_iteration = 500, population = 200, control_size = 10)
 
     multiple_rounds(strategy, mechanism, para)
     print(len(para.traced))
