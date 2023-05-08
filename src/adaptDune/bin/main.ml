@@ -109,6 +109,7 @@ let _ =
       print_out_abs_flow_edges oc aflow;
       Printf.fprintf oc "\n";
       print_out_abs_flow oc aflow;
+      Printf.printf "\n";
       Printf.printf "computation of the abscfg total time:%fs\n" (Caml_unix.gettimeofday () -. time_abscfg) ;
       Printf.printf "computation of the total parsing and graph generation time:%fs\n" (Caml_unix.gettimeofday () -. t) ;
       (* Close Channel *)

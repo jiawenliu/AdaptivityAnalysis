@@ -260,6 +260,6 @@ let infer program oc blocks =
   Hashtbl.fold (fun x v acc -> (x,v)::acc) weight_table []
 
  let print_weight_list wl = 
-  Printf.printf "\nStart of the program infered weight" ;
+  Printf.printf "Loose Weight Inference: \n" ;
     List.iter (fun (x,v) -> Printf.printf "(%d,%s)" x v)  wl;
-    Printf.printf "End of the program infered weight\n" ;
+           (* Printf.printf "End of the program infered weight\n" ; *)

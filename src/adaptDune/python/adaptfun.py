@@ -60,7 +60,7 @@ class Adaptfun:
         weight_infer = WeightEstimate.ProgramBasedDependencyGraphWeightsEstimation(dcf_graph, abscf_graph)
 
         weight_infer.weight_estimate()
-        weight_infer.print_weights()
+        # weight_infer.print_weights()
 
         print("--- REACHABILITY BOUND COMPUTATION TIME: %s seconds ---" % (time.time() - start_time))
 

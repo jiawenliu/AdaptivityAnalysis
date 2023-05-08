@@ -124,8 +124,7 @@ class AdaptSearchAlg:
     def print_query_num(self):
         total_query = self.comptue_total_query_num()
         print("The Total Query Number For This Graph is: ", total_query.value)
-        print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O(", 
-        "{} * √log({})/√N )".format(self.get_adapt(),total_query.value))
+        print("The Estimated Generalization Error with an Optimial qurey computation Mechanism is O({} * √log({})/√N )".format(self.get_adapt(),total_query.value))
 
 
 class AdaptSearchAlgRefined(AdaptSearchAlg):       
