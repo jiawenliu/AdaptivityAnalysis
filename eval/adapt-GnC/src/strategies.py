@@ -280,12 +280,13 @@ class Strategy:
         def lrgd(para):
             def lrgd_sub(data):
                 data_size, _ = data.shape
+                pred = [sum([para.coefficient[0] + math.pow(data[j, i-1], i) * para.coefficient[i] for i in range(1, para.max_degree)]) for j in range(data_size)]
                 if para.degree == 0:
-                    ans = (np.mean([data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0]) for i in range(data_size)]))
-                elif para.degree == 1:
-                    ans = np.mean([ (data[i, 1] - (data[i,0] * para.coefficient[1] + para.coefficient[0])) * data[i,0] for i in range(data_size)])
-                else:
+                    ans = (np.mean(np.subtract(data[:,-1], pred)))
+                elif para.degree >= para.max_degree:
                     ans = None
+                else:
+                    ans = ans = np.mean((np.subtract(data[:,-1], pred)) * data[:, para.degree - 1] )
                 return [ans]
             return lrgd_sub
 

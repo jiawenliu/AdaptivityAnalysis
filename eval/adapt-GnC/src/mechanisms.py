@@ -191,6 +191,7 @@ class Gaussian_Mechanism(Mechanism):
                 return [{"answer": None}]
         # print("GAUSS")
 
+        return [{"answer": ans[i] + noise_to_add[i], "empirical_answer": ans[i]} for i in range(len(ans) - omit_ans)]
         return [{"answer": min(1.0, max(0.0, ans[i] + noise_to_add[i])), "empirical_answer": ans[i]} for i in range(len(ans) - omit_ans)]
 
 
