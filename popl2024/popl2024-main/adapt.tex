@@ -116,26 +116,6 @@ $\pi_4(\event_1) \neq \bullet \land \pi_4(\event_1) \neq \bullet$ to guarantee
 both events are from query request.
 Then we check again the forth element $\pi_4(\event_1) \neq_q \pi_4(\event_2)$ to guarantee
 that the two events sent different query requests.}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The "Detail" (I think redundant) Explanation of Variable May-Dependency and Motivation on How to define it %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% We use $\qexpr_1 =_{q} \qexpr_2$ and $\qexpr_1 \neq_{q} \qexpr_2$ to notate query expression equivalence and in-equivalence, distinct from standard equality. 
-% First of all, $\diff(\event_1, \event_2)$ only compares the 'value' assigned to the same labeled variable so the two events share the same labeled variable (the first two elements of the event quadruple). If the labeled variable are not the same, it is trivially false. Next, the 'value' has different meaning according to the type of the assignment. If the two assignment events both are generated from a standard assignment command (by checking whether the fourth element of the event is $\bullet$), we think they are different up to their value if the value assigned to the variable (the third element of the event) varies. On the other hand, if they both come from query request assignment commands, we directly compare the query function (the fourth element of the event). We do not consider the case when one event is generated from the standard assignment and the other comes from the query request assignment, which will not hold. The motivation of defining  $\diff(\event_1, \event_2)$ is that it allows us to check whether the value assigned to a specific variable is changed or not in two runs, which is very important in our dependency case 1. 
-
-%This relation captures the fact that two events are generated from the same command, since they have the same variable name and label, but have either different value or different query expression. 
-
-% \jl{
-% $\pi_1(\event_1) = \pi_1(\event_2) 
-%   \land  
-%   \pi_2(\event_1) = \pi_2(\event_2)$ at Eq.\ref{eq:diff}(a)
-% requires that $\event_1$ and $\event_2$ have the same variable name and label, 
-% to guarantee that they are from the same command.
-% In Eq.\ref{eq:diff}(b),
-% two kinds of comparisons between the third and fourth element are for the non-query and query assignment separately.
-% For non-query events 
-% ( $\pi_{4}(\event_1) =_q \pi_{4}(\event_2) = \bullet$), we only compare their assigned values through $\pi_3(\event_1) \neq \pi_3(\event_2)$.
-% But for these query requests events ($\pi_{4}(\event_1) \neq \bullet \land \pi_{4}(\event_2) \neq \bullet$),
-% we are comparing their query requests by $\pi_{4}(\event_1) \neq_q \pi_{4}(\event_2)$ rather than the assigned value returned from the unknown database server.
-% Since one query is influenced by others as long as the query request is changed.
-% }
 
 We can now define when an event \emph{may depend} on another one\footnote{We consider here dependencies between assignment events. This simplifies the definition and is enough for the stating the following definitions. The full definition is in the supplementary material.}.
 \begin{defn}[Event May-Dependency]
@@ -217,8 +197,7 @@ Similarly to the previous condition, we additionally check that the two test eve
   in the execution trace where $v_1 \neq v_1'$.
   Continuously executing the program after this command,
   by the operational evaluation rules, the $6^{th}$ command generates $\event_2 = (l, 3, v_2, \chi[1] \cdot v_1' )$.
-  Since  $\diff(\event_2, \event_2')$ according to Definition~\ref{def:diff},
-  we have $\eventdep(\event_1, \event_2, \kw{twoRounds(k)})$.
+  Since $\pi_4(\event_2) \neq_1 \pi_4(\event_2')$, we have  $\diff(\event_2, \event_2')$ according to Definition~\ref{def:diff} and then the dependency relation $\eventdep(\event_1, \event_2, \kw{twoRounds(k)})$.
 }
 
 We can now extend the dependency relation to variables by considering all the assignment events generated during the program's execution. 
@@ -245,7 +224,7 @@ $
 Notice that in the definition above we can also have that the two variables are the same, this allows us to capture self-dependencies.
 
 \highlight{From previous analysis, $\event_1 = (x, 3, v_1, \chi[0] \cdot \chi[1])$ and $\event_2 = (l, 6, v_2, \chi[1] \cdot v_1 )$ are in the event may-dependency relation.
-Then by our definition, $x^3$ and $l^6$ are in the variable may-dependency relation.}
+The $x^3$ and $l^6$ are in the variable may-dependency relation by the Def.~\ref{def:var_dep}.}
 
 \subsection{Semantics-based Dependency Graph}
 \label{sec:design_choice}
@@ -336,8 +315,9 @@ and we denote by $\walks(\traceG(c))$
 the set of all the walks $k$ in $\traceG(c)$.
 \end{defn} 
 \highlight{
-In Fig.~\ref{fig:overview-example}(b), with the assumption that $k \geq 1$, $\lambda \trace_0 \st (l^6 \to \underbrace{a^4 \to \ldots}_{\env(\trace) k} \to x^3)$ is a walk where vertex $a^4$ is visited $\env(\trace) k$ times.
-$\lambda \trace_0 \st (l^6 \to a^4 \to x^3 \to x^3)$ is not a walk because there is not an edge from $x^3 \to x^3$.}
+In Fig.~\ref{fig:overview-example}(b), $\lambda \trace_0 \st (l^6 \to x^3)$ is a walk where each vertex is visited only once. 
+With the assumption that $k \geq 1$, $\lambda \trace_0 \st (l^6 \to \underbrace{a^4 \to \ldots}_{\env(\trace) k} \to x^3)$ is a walk where vertex $a^4$ is visited $\env(\trace) k$ times.
+However, $\lambda \trace_0 \st (l^6 \to a^4 \to x^3 \to x^3)$ is not a walk because there is not an edge from $x^3 \to x^3$.}
 
 Because for the adaptivity
 % is intuitively 
@@ -367,7 +347,8 @@ $
 where the notation $| (\ldots) |$ gives the number of vertices in a sequence.
 \end{defn}
 % \todo{Referring the running example}
-\highlight{The walk $\lambda \trace_0 \st (l^6 \to \underbrace{a^4 \to \ldots}_{\env(\trace) k} \to x^3)$ in Fig.~\ref{fig:overview-example}(b) has query length $2$ because only
+\highlight{
+  Still with the assumption that $k \geq 1$, both walks $\lambda \trace_0 \st (l^6 \to x^3)$ and  $\lambda \trace_0 \st (l^6 \to \underbrace{a^4 \to \ldots}_{\env(\trace) k} \to x^3)$ in Fig.~\ref{fig:overview-example}(b) have query length $\lambda\trace_0 \st 2$ because only
 vertices $x^3$ and $l^6$ come from query requests.}
 
 \highlight{
