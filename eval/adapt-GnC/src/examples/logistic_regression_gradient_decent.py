@@ -39,13 +39,11 @@ def lrgd (strategy, mechanism, para = Para()):
 				break
 			r = mechanism.get_answer(q["query"])
 			if r[0]["answer"] is not None:
-				print(r[0]["answer"])
 				new_coefficient[i] = new_coefficient[i] - (-2) * para.learning_rate * r[0]["answer"]
 			else:
 				q = None
 				break
 		pre_ans[0]["para"].coefficient = new_coefficient
-		print(pre_ans[0]["para"].coefficient)
 		k += 1
 
 	return pre_ans[0]["para"].coefficient
@@ -56,9 +54,10 @@ def lrgd (strategy, mechanism, para = Para()):
 
 def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechanism()):
     para = Para(0, None, max_degree = cardinality, learning_rate = 0.5, max_iteration = 1000)
-    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "mr_odd", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "lrgd", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
+    print(mechanism.data)
     coefficient = lrgd(strategy, mechanism, para)
     
     pred_list, eval_size = [], 1000
@@ -76,11 +75,11 @@ def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechani
     return np.sqrt(mse)
  
 n = 100
-cardinality = 4
-max_iteration = 50
+cardinality = 3
+max_iteration = 1000
 
 beta, tau = 0.05, 1.0
-sigma = 0.35
+sigma = 0.08
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 runs = range(10)
@@ -93,8 +92,8 @@ Baseline_rmse = np.array([eval_lrgd(n = n, cardinality = cardinality, mechanism 
 
 DataSplit = mech.Mechanism(max_q = max_iteration)
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = eval_lrgd(n = n, cardinality = cardinality, mechanism = DataSplit)
-DataSplit_rmse = np.array([eval_lrgd(n = n, cardinality = cardinality, mechanism = DataSplit).mean() for _ in runs])
+DataSplit_rmse = eval_lrgd(n = n * 100, cardinality = cardinality, mechanism = DataSplit)
+DataSplit_rmse = np.array([eval_lrgd(n = n * 10, cardinality = cardinality, mechanism = DataSplit).mean() for _ in runs])
 
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)

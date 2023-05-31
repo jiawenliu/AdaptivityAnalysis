@@ -36,8 +36,8 @@ class Strategy:
 
         assert "method" in ada_freq and "method_param" in ada_freq, ("Adaptive query frequency should have method"
                                                                      + " type and method parameter.")
-        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity", "multiple_rounds", "mr_odd", "mr_single", "best_arm"}, ("Adaptive query frequency method should be in " +
-                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise, lrgd, mr_odd, mr_single, multiple_rounds, best_arm}")
+        assert ada_freq["method"] in {"additive", "power", "repeated_query_subroutine", "lil_ucb", "lrgd", "n_dim_pairwise", "c_adaptivity", "n_adaptivity", "multiple_rounds", "mr_odd", "mr_single", "best_arm", "n_dim_lrgd"}, ("Adaptive query frequency method should be in " +
+                                                             "{additive, power, repeated_query_subroutine, n_dim_pairwise, lrgd, mr_odd, mr_single, multiple_rounds, best_arm, n_dim_lrgd}")
 
         self.ada_method = ada_freq["method"]
         self.ada_method_param = ada_freq["method_param"]
@@ -118,7 +118,9 @@ class Strategy:
         if data_name is not None:
             self.data_name = data_name
             hf.initialize_with_str_seed(data_name)
-        data = np.random.rand(self.n, self.cardinality)
+        data = np.random.rand(self.n, self.cardinality - 1)
+        data = np.append(data, np.array([0.5] * self.n).reshape(self.n, 1), axis = 1)
+        print( data )
 
         return data
 
@@ -280,7 +282,7 @@ class Strategy:
         def lrgd(para):
             def lrgd_sub(data):
                 data_size, _ = data.shape
-                pred = [sum([para.coefficient[0] + math.pow(data[j, i-1], i) * para.coefficient[i] for i in range(1, para.max_degree)]) for j in range(data_size)]
+                pred = [para.coefficient[0] + sum([math.pow(data[j, i-1], 1) * para.coefficient[i] for i in range(1, para.max_degree)]) for j in range(data_size)]
                 if para.degree == 0:
                     ans = (np.mean(np.subtract(data[:,-1], pred)))
                 elif para.degree >= para.max_degree:
@@ -290,6 +292,19 @@ class Strategy:
                 return [ans]
             return lrgd_sub
 
+        def n_dim_lrgd(para):
+            def n_dim_lrgd_sub(data):
+                data_size, _ = data.shape
+                pred = [para.coefficient[0] + sum([math.pow(data[j, i-1], i) * para.coefficient[i] for i in range(1, para.max_degree)]) for j in range(data_size)]
+                if para.degree == 0:
+                    ans = (np.mean(np.subtract(data[:,-1], pred)))
+                elif para.degree >= para.max_degree:
+                    ans = None
+                else:
+                    ans = ans = np.mean((np.subtract(data[:,-1], pred)) * data[:, para.degree - 1] )
+                return [ans]
+            return n_dim_lrgd_sub
+        
         def mr(para):
             def mr_sub(data):
                 data_size = len(data)
@@ -364,6 +379,25 @@ class Strategy:
             self.true_ans_list.append(true_ans) 
 
             return {"query": lrgd(para), "true_answer": true_ans}
+
+
+        if self.ada_method == "n_dim_lrgd":
+            if self.cur_q >= self.q_max:
+                if prev_ans and "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                return None
+            if prev_ans:
+                if "answer"  in prev_ans[0].keys():
+                    self.mech_ans_list.append(prev_ans[0]["answer"])
+                para = prev_ans[0]["para"]
+            else:
+                para = None
+
+            true_ans = self.q_mean
+            self.cur_q += 1
+            self.true_ans_list.append(true_ans) 
+
+            return {"query": n_dim_lrgd(para), "true_answer": true_ans}
 
         if self.ada_method == "mr_odd":
             if self.cur_q >= self.q_max:
