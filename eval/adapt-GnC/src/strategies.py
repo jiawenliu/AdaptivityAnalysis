@@ -119,10 +119,29 @@ class Strategy:
             self.data_name = data_name
             hf.initialize_with_str_seed(data_name)
         data = np.random.rand(self.n, self.cardinality - 1)
-        data = np.append(data, np.array([0.5] * self.n).reshape(self.n, 1), axis = 1)
-        print( data )
+        data = np.append(data, np.random.choice([-1, 1], (self.n, 1), p=[1 - self.pr_1, self.pr_1]), axis = 1)
 
         return data
+
+    def gen_data_fixed_label(self, data_name=None, label = None):
+        """
+        Generates data for the strategy.
+        :param data_name: name for the generated data
+        :returns: an (self.n x self.cardinality) array, with each entry in (0, 1)
+        """
+        self.q_max += 1
+        self.cardinality += 1
+        
+        if data_name is not None:
+            self.data_name = data_name
+            hf.initialize_with_str_seed(data_name)
+        if label is not None:
+            data = np.random.rand(self.n, self.cardinality - 1)
+            data = np.append(data, np.array([label] * self.n).reshape(self.n, 1), axis = 1)
+        else:
+            data = np.random.rand(self.n, self.cardinality)
+        return data
+
 
     def gen_data_arm_samples(self, arms, data_name=None):
         """
