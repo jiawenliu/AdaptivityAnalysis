@@ -39,13 +39,11 @@ def lrgd (strategy, mechanism, para = Para()):
 				break
 			r = mechanism.get_answer(q["query"])
 			if r[0]["answer"] is not None:
-				print(r[0]["answer"])
 				new_coefficient[i] = new_coefficient[i] - (-2) * para.learning_rate * r[0]["answer"]
 			else:
 				q = None
 				break
 		pre_ans[0]["para"].coefficient = new_coefficient
-		print(pre_ans[0]["para"].coefficient)
 		k += 1
 
 	return pre_ans[0]["para"].coefficient
@@ -56,32 +54,37 @@ def lrgd (strategy, mechanism, para = Para()):
 
 def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechanism()):
     para = Para(0, None, max_degree = cardinality, learning_rate = 0.5, max_iteration = 1000)
-    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "mr_odd", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
+    strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "lrgd", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
+    # print(mechanism.data)
     coefficient = lrgd(strategy, mechanism, para)
     
-    pred_list, eval_size = [], 1000
-    strategy.n = eval_size
-    eval_data = strategy.gen_data_decimal()
+    pred_list, eval_size = [], n
+    eval_data = mechanism.data
     
     for j in range(eval_size):
         pred = para.coefficient[0]
         for i in range(1, cardinality):
             pred += math.pow(eval_data[j, i-1], i) * para.coefficient[i]
         pred_list.append(pred)
-    
+    pred_list = np.sign(pred_list)
+    mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
+    return np.sqrt(mse)
+ 
+    pred_list = np.sign(pred_list)
     mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
     
     return np.sqrt(mse)
  
-n = 100
+n = 500
 cardinality = 4
-max_iteration = 50
+max_iteration = 10000
 
 beta, tau = 0.05, 1.0
-sigma = 0.35
-hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
+sigma = 0.025
+# delta = 0.1
+hold_frac, threshold, check_data_frac, delta = 0.5, 0.05, 0.05, 0.05
 
 runs = range(10)
 
@@ -93,11 +96,11 @@ Baseline_rmse = np.array([eval_lrgd(n = n, cardinality = cardinality, mechanism 
 
 DataSplit = mech.Mechanism(max_q = max_iteration)
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = eval_lrgd(n = n, cardinality = cardinality, mechanism = DataSplit)
-DataSplit_rmse = np.array([eval_lrgd(n = n, cardinality = cardinality, mechanism = DataSplit).mean() for _ in runs])
+DataSplit_rmse = eval_lrgd(n = n * 10000, cardinality = cardinality, mechanism = DataSplit)
+DataSplit_rmse = np.array([eval_lrgd(n = n * 10000, cardinality = cardinality, mechanism = DataSplit).mean() for _ in runs])
 
 
-Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
+Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=delta)
 Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
 # Thresh_rmse = [eval_lrgd(cardinality, para, Thresh).mean() for para in stepped_para]
 Thresh_rmse = eval_lrgd(n = n, cardinality = cardinality, mechanism = Thresh)
@@ -130,3 +133,8 @@ Degree 3:
 Degree 4:
 (7.26581290763821e+103, 21947.169727467335, 7.489180459211598e+102, 5179956471897.063)
 '''
+
+
+'''
+(0.11120000000000001, 0.10548492000000001, 0.096, 0.1092)'''
+
