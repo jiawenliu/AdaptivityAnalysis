@@ -111,7 +111,7 @@ q_max = 1000
 Parameters of Mechanisms
 '''
 beta, tau = 0.05, 1.0
-sigma = 3.5
+sigma = 1.0
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 
@@ -144,4 +144,8 @@ print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rms
 
 '''
 (2.1425024651952835, 2.2669679225188535, 0.6714195040422586, 1.353000656266134)
+'''
+
+'''
+3.0174285334885935 3.1370326709861 3.5245510505341158 2.386545799138394
 '''

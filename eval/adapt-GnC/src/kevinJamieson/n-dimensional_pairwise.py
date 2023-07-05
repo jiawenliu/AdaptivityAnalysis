@@ -68,7 +68,7 @@ runs = 10
 stepped_q_max = range(q_max/2, q_max, 10)
 
 beta, tau = 0.05, 1.0
-sigma = 3.5
+sigma = 0.35
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 repeated_query_sub_delta = 0.1
@@ -94,6 +94,7 @@ Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 Gauss_rmse = eval_n_dim_pairwise(repeated_query_sub_delta, n, dimension, q_max, Gauss)
 
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
+print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 '''
 ('Splitted Sample Size:', 10)
