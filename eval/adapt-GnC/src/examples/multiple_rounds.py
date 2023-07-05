@@ -66,7 +66,7 @@ def eval_multiple_rounds(n = DATA_SIZE, cardinality = CARDINALITY, para = Para()
     return np.sqrt(mse)[-1]
 
 
-n = 100
+n = 10
 cardinality = 2
 runs = 10
 

@@ -104,9 +104,9 @@ def eval_best_arm(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NU
 
     return np.sqrt(mse)
 
-q_max = 1000
+q_max = 10
 n = q_max
-dimension = 100
+dimension = 10
 
 
 beta, tau = 0.05, 1.0
@@ -142,4 +142,9 @@ print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rms
 1.8235091754167532, 1.3301193714302109, 0.4525140548253183, 1.3357693564662898'''
 '''
 2.045185043532168 1.3955280893970108 3.4147077795791225 1.2871059907866864
+'''
+
+'''
+k = 10
+(1.834027958216643, 1.4043519963057942, 4.423707992995791, 1.7522970547542975)
 '''

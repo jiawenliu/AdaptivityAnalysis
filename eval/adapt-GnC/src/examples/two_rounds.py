@@ -302,10 +302,10 @@ class twoRounds():
 
 
 r = twoRounds()
-r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [2], mech_name = "DataSplit")
-r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [2], mech_name = "Baseline")
-r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [2], mech_name = "Thresh")
-r.runandplot_with_one_mech(q_max_list = [1000], q_adapt_list = [2], mech_name = "Gauss")
+r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "DataSplit")
+r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Baseline")
+r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Thresh")
+r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Gauss")
 # r.plot_from_data()
 
 
