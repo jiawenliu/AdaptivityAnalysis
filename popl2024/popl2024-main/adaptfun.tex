@@ -6,7 +6,7 @@ an \emph{estimated dependency graph} \progG(c) of a program $c$
 semantics-based dependency graph in two dimensions: it
 overapproximates the dependencies between assigned variables (Section~\ref{sec:alg_edgegen}), and, it
 overapproximates the weights (Section~\ref{sec:alg_weightgen}). Then, {\THESYSTEM} uses a custom algorithm to estimate the 
-\highlight{walk of maximal query length} on this graph, providing in this way an upper bound on the adaptivity of the
+walk of maximal query length on this graph, providing in this way an upper bound on the adaptivity of the
 program.
 
 
@@ -326,16 +326,15 @@ Specifically, it provides an upper bound on the number of times every command ca
 \begin{enumerate}
 \item This steps assigns to each edge  $l \xrightarrow{dc} l'\in \absE(c)$ a \emph{local bound} as follows. We look at the strongly connected components of $\absG(c)$. If the edge does not belong to any strongly connected components, then the local bound is $1$, representing the fact that the edge is not in a loop and so it get executed at most once. If the edge belongs to a strongly connected component and one of the variables $x$ in $dc$ decreases, then the local bound is $x$. Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and if by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$. Otherwise, the local bound is $\infty$. Notice that the output is either a symbolic constant in $\constdom$ or a variable that is not an input variable.
 % assigns a local bound $c$ ($c \in \constdom \cup \mathcal{V}$), if $c$ decreases in $dc$.
-\item This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e \in \absE(c)$. Every bound is a symbolic expression \highlight{from the set $\mathcal{A}_{in}$} built out of symbols in $\constdom$ and the operations $+, *, \max$. For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. If instead the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. In order to do this, this steps will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment; second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached. To compute these two quantities we use two mutually recursive procedures.
+\item This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e \in \absE(c)$. Every bound is a symbolic expression from the set $\mathcal{A}_{in}$ built out of symbols in $\constdom$ and the operations $+, *, \max$. For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. If instead the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. In order to do this, this steps will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment; second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached. To compute these two quantities we use two mutually recursive procedures.
 \end{enumerate}
-\highlight{
   Using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$ we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
   which is also the estimated weight of this vertex.
 \begin{defn}[Weight Estimation]
  \label{def:adaptfun-weight}
 The estimated weight set $\progW(c)$ of program $c$ is a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \constdom)$.
 Each pair maps
-a vertex $x^l \in \lvar(c)$ to a symbolic expression over $\constdom$,
+a vertex $x^l \in\progV(c)\subseteq  \lvar(c)$ to a symbolic expression over $\constdom$,
 % is formally computed
 as follows.
  \[
@@ -350,6 +349,7 @@ x^l \in \progV(c)
 \]
 \end{defn}
 %
+
 Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$. In particular, it may contain the input variables and so it may effectively be used as a function of the input - and capture loop bounds in terms of these inputs.
 % We guarantee that $\hat{w}$ for $x^l \in \progV(c)$ is a sound upper bound of 
 % the weight for the same vertex $x^l$ in the program's semantics-based dependency graph
@@ -358,17 +358,18 @@ Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$
  \label{thm:addweight_soundness}
 Let ${c}$ be a program and $\progW(c)$ be its estimated weight set.
 Then, for every  $(x^l, w) \in \traceW(c) $,
-we have an estimated weight $(x^l, \hat{w}) \in \progW(c)$ and for every possible 
+we have a corresponding estimated weight $(x^l, \hat{w}) \in \progW(c)$ and for every possible 
 $\vtrace_0 \in \tdom_0(c),
 v \in \mathbb{N}$,
 if $\config{\vtrace_0, \hat{w}} \earrow v$,
-then $v$ is an upper bound on ${w}(\trace_0)$.
+then $v$ is an upper bound on ${w}(\trace_0)$. In symbols:
  %
 \[
  \begin{array}{l}
- \forall c \in \cdom, x^l \in \lvar(c),\trace_0 \in \tdom_0(c), \trace \in \tdom,
-v \in \mathbb{N}, l', (x^l, w) \in \traceW(c) \st
-\\ \qquad 
+ \forall c \in \cdom, x^l \in \lvar(c),w\in \tdom_0(c)\to \mathbb{N},\trace_0 \in \tdom_0(c), 
+v \in \mathbb{N}, 
+\\ \qquad
+(x^l, w) \in \traceW(c) \st \Longrightarrow
 \exists
 (x^l, \hat{w}) \in \progW(c) 
 \land
@@ -380,8 +381,8 @@ v \in \mathbb{N}, l', (x^l, w) \in \traceW(c) \st
 \end{array}
 \]
 \end{thm}
-Notice that in this theorem, the evaluation $\config{\vtrace_0, w} \earrow v$ is needed in order to obtain a concrete value $v$ from the symbolic weight $w$ by specifying a value for the input variables through $\vtrace_0$.
-}
+Notice that in this theorem, the evaluation $\config{\vtrace_0, \hat{w}} \earrow v$ is needed in order to obtain a concrete value $v$ from the symbolic weight $hat{w}$ by specifying a value for the input variables through $\vtrace_0$.
+
 
 \textbf{Example.} 
 Consider again
