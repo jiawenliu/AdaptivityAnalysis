@@ -55,7 +55,7 @@ class twoRounds():
 		return rmse_list
 
 	def runandplot_with_one_mech(self, q_max_list = [200], q_adapt_list = [20], mech_name = "Baseline"):
-		runs = 5
+		runs = 10
 		n_list = [1000]
 		beta, tau = 0.05, 1.0
 		sigma = 0.01
@@ -298,11 +298,12 @@ class twoRounds():
 
 
 r = twoRounds()
-r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "DataSplit")
-r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Baseline")
-r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Thresh")
-r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Gauss")
+DataSplit_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "DataSplit")
+Baseline_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Baseline")
+
+Thresh_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Thresh")
+Gauss_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Gauss")
 # r.plot_from_data()
 
 
-		
+print(np.array(Baseline_rmse).mean(), np.array(DataSplit_rmse).mean(), np.array(Gauss_rmse).mean(), np.array(Thresh_rmse).mean())
