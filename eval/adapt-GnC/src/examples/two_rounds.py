@@ -307,3 +307,7 @@ Gauss_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], m
 
 
 print(np.array(Baseline_rmse).mean(), np.array(DataSplit_rmse).mean(), np.array(Gauss_rmse).mean(), np.array(Thresh_rmse).mean())
+
+'''
+(0.00020216000000000035, 0.0008137777777777776, 0.0003171250886114413, 0.0004897894835889348)
+'''
