@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-
-from collections import OrderedDict
-import cw_funcs as cw
-import helper_funcs as hf
+import sys
+sys.path.append("..")
 import strategies as stg
 import mechanisms as mech
 import numpy as np
-import os
 import scipy as sc
-import math
 import matplotlib.pyplot as plt
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
@@ -62,7 +58,7 @@ class twoRounds():
 		runs = 5
 		n_list = [1000]
 		beta, tau = 0.05, 1.0
-		sigma = 0.03
+		sigma = 0.01
 		hold_frac, threshold, check_data_frac = 0.5, 0.05, 0.05
 
 
@@ -90,7 +86,7 @@ class twoRounds():
 		GnC_Baseline : 'Guess and Check' (GnC) query-answering mechanism instantiated by the Empirical Query Answer Mechanism (1st mechanism above)
 		'''
 		mech_name, mech_para, mech_rmse = mech_name, mech_name, [[0.0] * (q_max_list[i] / q_adapt_list[i]) for i in range(len(q_max_list))]
-		f = open('../results/'+ mech_name + "test.txt", 'w')
+		f = open('./'+ mech_name + "test.txt", 'w')
 	# ###################################### Emperical Result: ######################################
 		if mech_name == "Baseline":
 			Baseline = mech.Mechanism()
@@ -236,8 +232,8 @@ class twoRounds():
 
 
 	def main(self):
-		q_max_list = [5000]
-		q_adapt_list = [200]
+		q_max_list = [2]
+		q_adapt_list = [1]
 			
 	##################################################################################################################
 	###################################### Switching Mechanisms: ######################################
