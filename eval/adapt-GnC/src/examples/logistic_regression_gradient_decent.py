@@ -77,7 +77,7 @@ def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechani
     
     return np.sqrt(mse)
  
-n = 100
+n = 1000
 cardinality = 3
 max_iteration = 10
 
