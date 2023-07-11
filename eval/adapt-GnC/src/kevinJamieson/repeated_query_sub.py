@@ -58,12 +58,12 @@ def eval_repeated_query_subroutine(delta, n = DATA_SIZE, cardinality = CARDINALI
 
     return np.sqrt(mse)
 
-n = 1000
-dimension = 100
-q_max = 1000
+n = 7
+dimension = 7
+q_max = 7
 runs = 10
 
-stepped_q_max = range(q_max/2, q_max, 10)
+stepped_q_max = range(q_max//2, q_max, 10)
 
 beta, tau = 0.05, 1.0
 sigma = 3.5
@@ -91,7 +91,7 @@ Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
 Gauss_rmse = eval_repeated_query_subroutine(repeated_query_sub_delta, n, dimension, q_max, Gauss)
 
-print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
+print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 # plt.figure()
 # x_list = range(10, 101, 10)

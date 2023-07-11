@@ -102,9 +102,9 @@ def eval_lil_ucb(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM
 '''
 Parameters of Strategies
 '''
-n = 1000
+n = 10
 dimension = 1
-q_max = 1000
+q_max = 10
 
 
 '''

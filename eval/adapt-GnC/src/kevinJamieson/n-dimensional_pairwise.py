@@ -60,12 +60,12 @@ def eval_n_dim_pairwise(delta, n = DATA_SIZE, cardinality = CARDINALITY, q_max =
 
     return np.sqrt(mse)
 
-n = 1000
-dimension = 100
-q_max = 1000
+n = 10
+dimension = 10
+q_max = 10
 runs = 10
 
-stepped_q_max = range(q_max/2, q_max, 10)
+stepped_q_max = range(q_max//2, q_max, 10)
 
 beta, tau = 0.05, 1.0
 sigma = 0.35

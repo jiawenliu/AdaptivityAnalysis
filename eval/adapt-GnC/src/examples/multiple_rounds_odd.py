@@ -73,7 +73,7 @@ def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechani
 
     return np.sqrt(mse)
 
-n = 10
+n = 100
 cardinality = 2
 max_iteration = 500
 para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 5)
