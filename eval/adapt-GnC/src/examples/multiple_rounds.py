@@ -53,7 +53,7 @@ def multiple_rounds (strategy, mechanism, para = Para()):
 
 
 def eval_multiple_rounds(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechanism = mech.Mechanism()):
-    para = Para(max_iteration = 100, population = 200, control_size = 10)
+    para = Para(max_iteration = 10, population = 200, control_size = 10)
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "multiple_rounds", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = para.population)
     mechanism.reset()
     mechanism.max_q = para.max_iteration
@@ -71,7 +71,7 @@ cardinality = 2
 runs = 10
 
 beta, tau = 0.05, 1.0
-sigma = 0.035
+sigma = 0.015
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 
@@ -83,7 +83,7 @@ print(Baseline_rmse)
 
 DataSplit = mech.Mechanism()
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = np.mean([eval_multiple_rounds(n = n, cardinality = cardinality, mechanism = DataSplit) for _ in range(runs)])
+DataSplit_rmse = np.mean([eval_multiple_rounds(n = n*n, cardinality = cardinality, mechanism = DataSplit) for _ in range(runs)])
 # DataSplit_rmse = eval_multiple_rounds(n = n , cardinality = cardinality, para = para, mechanism = DataSplit)
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=sigma)
@@ -101,3 +101,7 @@ Gauss_rmse = np.mean([eval_multiple_rounds(n = n, cardinality = cardinality, mec
 print(Gauss_rmse)
 
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
+
+'''
+(0.16, 0.15454545454545454, 0.10867477551523193, 0.10350775295216555)
+'''

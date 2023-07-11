@@ -58,7 +58,7 @@ def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechani
     print (strategy.cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
-    para = Para(0, None, max_degree = cardinality, learning_rate = 0.1, max_iteration = 500)
+    para = Para(0, None, max_degree = cardinality, learning_rate = 0.1, max_iteration = 5)
     coefficient = mr_odd(strategy, mechanism, para)
     
     pred_list = []
@@ -73,19 +73,19 @@ def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechani
 
     return np.sqrt(mse)
 
-n = 1000
+n = 10
 cardinality = 2
 max_iteration = 500
-para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 500)
+para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 5)
 
 beta, tau = 0.05, 1.0
-sigma = 0.035
+sigma = 0.015
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
-Baseline_rmse = eval_mr_odd(n = n, cardinality = cardinality, para = para, mechanism = Baseline)
+Baseline_rmse = eval_mr_odd(n = n*n, cardinality = cardinality, para = para, mechanism = Baseline)
 print(Baseline_rmse)
 
 DataSplit = mech.Mechanism(max_q = max_iteration)
@@ -104,3 +104,7 @@ Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 Gauss_rmse = eval_mr_odd(n = n, cardinality = cardinality, para = para, mechanism = Gauss)
 
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
+
+'''
+(0.937570809358439, nan, 0.896298861791168, 0.5282592766496841)
+'''

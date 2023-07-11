@@ -53,7 +53,7 @@ def lrgd (strategy, mechanism, para = Para()):
 
 
 def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechanism()):
-    para = Para(0, None, max_degree = cardinality, learning_rate = 0.5, max_iteration = 1000)
+    para = Para(0, None, max_degree = cardinality, learning_rate = 0.5, max_iteration = 10)
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "lrgd", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
@@ -77,16 +77,16 @@ def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechani
     
     return np.sqrt(mse)
  
-n = 500
-cardinality = 4
-max_iteration = 10000
+n = 10
+cardinality = 3
+max_iteration = 10
 
 beta, tau = 0.05, 1.0
-sigma = 0.025
+sigma = 0.0035
 # delta = 0.1
 hold_frac, threshold, check_data_frac, delta = 0.5, 0.05, 0.05, 0.05
 
-runs = range(10)
+runs = range(100)
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
@@ -96,8 +96,8 @@ Baseline_rmse = np.array([eval_lrgd(n = n, cardinality = cardinality, mechanism 
 
 DataSplit = mech.Mechanism(max_q = max_iteration)
 DataSplit.add_params(beta=beta, tau=tau)
-DataSplit_rmse = eval_lrgd(n = n * 10000, cardinality = cardinality, mechanism = DataSplit)
-DataSplit_rmse = np.array([eval_lrgd(n = n * 10000, cardinality = cardinality, mechanism = DataSplit).mean() for _ in runs])
+DataSplit_rmse = eval_lrgd(n = n * n, cardinality = cardinality, mechanism = DataSplit)
+DataSplit_rmse = np.array([eval_lrgd(n = n * n, cardinality = cardinality, mechanism = DataSplit).mean() for _ in runs])
 
 
 Thresh = mech.Thresholdout_Mechanism(hold_frac=hold_frac, threshold=threshold, sigma=delta)
@@ -124,10 +124,18 @@ print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rms
 '''
 
 '''
+Degree 2:
+(0.12, 0.11600000000000002, 0.1, 0.06000000000000001)
+'''
+
+'''
 Degree 3:
 (1.7208879432323872e+52, 414.5756662924357, 2.2250276552173854e+50, 72.34362425773182)
 '''
 
+'''
+(0.11599999999999999, 0.1, 0.10799999999999998, 0.092)
+'''
 
 '''
 Degree 4:
@@ -138,3 +146,7 @@ Degree 4:
 '''
 (0.11120000000000001, 0.10548492000000001, 0.096, 0.1092)'''
 
+'''
+Degree 4:
+(0.6, 0.10400000000000001, 0.3, 0.13999999999999999)
+'''

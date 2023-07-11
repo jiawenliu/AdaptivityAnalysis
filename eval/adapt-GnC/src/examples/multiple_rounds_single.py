@@ -74,13 +74,13 @@ def eval_mr_single(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mech
 
     return np.sqrt(mse)
 
-n = 1000
+n = 10
 cardinality = 2
-para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 500)
+para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 10)
 runs = 10
 
 beta, tau = 0.05, 1.0
-sigma = 0.35
+sigma = 0.015
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 
@@ -109,4 +109,8 @@ print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rms
 
 '''
 (0.7607392222855243, 0.7584168918674784, 0.5094650217969, 0.5928537773348361)
+'''
+
+'''
+(0.8073530978577891, 0.5454927651049747, 0.750595997313868, 0.546063601423292)
 '''
