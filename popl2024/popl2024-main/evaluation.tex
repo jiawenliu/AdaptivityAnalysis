@@ -29,7 +29,7 @@ and the adaptivity computation algorithm, $\pathsearch(c)$.
 The examples show a wide range of values for their adaptivity. 
 The first two programs $\kw{twoRounds(k)}$, $ \kw{mR(k)}$ are the same as Fig.~\ref{fig:overview-example}(a) and Fig.~\ref{fig:multipleRounds}(a).
 $\THESYSTEM$ computes tight adaptivity bound for the first three examples.
-The third example is a logistic regression algorithm with gradient decent.
+The third example is a logistic regression algorithm with gradient decent (short for LRGD).
 For the fourth program $\kw{mROdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $2 + \max(1, 2k)$ 
 % for the $A(c)$, which is consistent with our expectation 
 because of the path insensitive nature of the weight estimation algorithm, as discussed in Section~\ref{sec:examples}. 
@@ -60,10 +60,10 @@ The reachability-bound analysis algorithm presented in Section~\ref{sec:alg_weig
 
 \paragraph{Alternative Implementations}
 \input{eval-table-alternatives}
-With our second evaluation we want to show the need of the different
-components of {\THESYSTEM}. To do this we implement three alternative
-versions of {\THESYSTEM} where the different components are omitted or
-replaced with components with weaker guarantees and we compare them with {\THESYSTEM}. We show the
+With our second evaluation we show the need of the 
+components of {\THESYSTEM}. For this, we implement three alternative
+versions of {\THESYSTEM} where different components are omitted or
+replaced with components with weaker guarantees. We show the
 results  of the comparison in
 Table~\ref{tb:adapt-imp-alternatives}. We use the same set of example programs as in
 Table~\ref{tb:adapt-imp} and present their estimated adaptivity
@@ -73,14 +73,14 @@ w.r.t. the true value.
 
 1. In column {\THESYSTEM}-I, the implementation replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen} with a light reachability bound analysis algorithm and computes the \emph{adaptivity} for
 $\kw{jumboS}, \kw{jumbo}$ and $\kw{big}$ effectively.
-The results show that the alternative implementation computes the tight bound for all the examples from line:1 to line:14
-and over-approximate the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to path-insensitivity similar to the
+The results show that the alternative one computes tight bounds for all the examples from line:1 to line:14
+and over-approximates the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to path-insensitivity similar to the
 $\THESYSTEM$.
-For the $17^{th}$ example ($\kw{loop2R}$), {\THESYSTEM} gives a tight upper bound while the alternative implementation gives a loose bound, so we keep both implementations.
+For the $17^{th}$ example ($\kw{loop2R}$), {\THESYSTEM} gives a tight upper bound while the alternative one gives a loose bound, so we keep both.
 
 2. In {\THESYSTEM}-II, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
 The estimated data dependency only considers the data flow.
-However, the adaptivity should consider both the data and control flow, and so results produced from this version are unsound.
+However, the adaptivity should consider both the data and control flow, so results here are unsound.
 For example, program $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $ and $\kw{loopVCD(k)} $ all have control dependency.
 However, the alternative implementation II in Table~\ref{tb:adapt-imp-alternatives} estimates the adapvitiy rounds of $2$ because it fails to identify the dependency through control flow.
 
@@ -133,8 +133,8 @@ from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}
 % the USA census database~\cite{CensusDatabase}.
 
 {We use acronyms for these programs to have a better presentation of our evaluation in a single table. We use
-mRsgl for mRSingle, 3(4)DeLRGD for 3(4)DegreeLRGD, RQ for repeatedQuery, nDPair for nDimPairwise,
-DT, DTOVR for decisionTree abd decisionTreeOVR, LR, LROVR for logisticRegression and logisticRegressionOVR. Similarly, we shorten the mechanisms: GS for Gaussian, DS for Data Split,
+ 3(4)DeLRGD for 3(4)DegreeLRGD, RQ for repeatedQuery, nDPair for nDimPairwise,
+DT, DTOVR for decisionTree(OVR), LR, LROVR for logisticRegression(OVR). Similarly, we shorten the mechanisms: GS for Gaussian, DS for Data Split,
 TS for ThresholdOut.  }
 
 For each program, we show in Table~\ref{tb:adapt-generalization} the
@@ -167,26 +167,25 @@ the best heuristic to future work.
 We first evaluate example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
 $\kw{twoRound}$ is trained to classify a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
 With only two adaptive rounds, by instantiating $k = 1000$ and $n = 1000$, this algorithm overfitted and produced the generalization error 
-$0.0502245$ (In the table, we approximate it to $0.050$).
+$0.050$.
 Since $2* \sqrt{\log(1000)} \ll \sqrt{1000}$, {\THESYSTEM} chooses the DataSplit mechanism.
-Evaluation result(the bold $0.028$ in the first row of the table) shows that we choose the best.
-Then by instantiating $k = 10$, we see that $10 * \sqrt{\log(10)}$ is close to $\sqrt{10}$ and our tool chooses ThresholdOut mechanism, while Gaussian mechanism and ThresholdOut both perform well.
+Evaluation result(\textbf{0.028}) shows that we choose the best.
+Then by instantiating $k = 10$, we see that $10 * \sqrt{\log(10)}$ is close to $\sqrt{10}$ and our tool chooses ThresholdOut, while Gaussian and ThresholdOut mechanism both perform well.
 
 The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
 The number of iterations is $k$ and our tool identifies this as the  adaptivity  for these programs.
 %  and chooses the Gaussian mechanism.
 By instantiating $k = 1000$ and $n = 1000$, we have
 $1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. 
-The evaluation results in Table~\ref{tb:adapt-generalization} shows again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
+The evaluation results in Table~\ref{tb:adapt-generalization} show again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
 
-$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of the logistic regression with gradient decedent
-algorithm into three-dimensional and four-dimensional data set of size $n$.
+$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of LRGD into 3D and 4D data set of size $n$.
 %$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
 %algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
-The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds are still $k$ for these two programs.
+The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds $k$ for these two programs.
 Instantiating $k$ and $n$ with $1000$ and $1000$,
 %  the heuristics in Theorem~\ref{thm:gaussiannoise} and Theorem~\ref{thm:gaussiannoise2},
-our tool chooses the Gaussian mechanism which still reduces the generalization error the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well as shown in Table~\ref{tb:adapt-generalization}. 
+our tool chooses the Gaussian mechanism which still reduces rmse the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well in Table~\ref{tb:adapt-generalization}. 
 
 We have four data analyses which are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
 % is the
