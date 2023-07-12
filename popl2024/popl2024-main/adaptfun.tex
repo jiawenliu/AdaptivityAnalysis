@@ -16,7 +16,7 @@ program.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 Given a program $c$, the set of vertices $\progV(c)$ and query annotations $\progF(c)$ of the \emph{estimated dependency graph} can be computed by simply
-scanning the program $c$. These set can be computed precisely and correspond to
+scanning the program $c$. These sets can be computed precisely and correspond to
 the same sets in the semantics-based dependency graph.
 This means that $\progG(c)$ has the same underlying vertex structure as 
 the semantics-based graph $\traceG(c)$. The differences will be in the sets of edges and weights. 
@@ -320,13 +320,13 @@ The edge $l^6 \to x^3$ is produced by the transitivity of $\flowsto(l^6, a^5, c)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Reachability Bound Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Weight Estimation}
 \label{sec:alg_weightgen}
-The set $\progW(c)$ of weights for the estimated dependency graph is estimated from the Abstract Transition Graph $\absG(c)$ of $c$ using \emph{reachability-bound analysis}~\cite{GulwaniZ10}. Specifically, we estimate as the weight of a node with label $l$ a symbolic upper bounds on the execution times of the command with label $l$ obtained by reachability-bound analysis. These symbolic upper bounds are expressions with the input variables as free variables, hence they correspond to the weight functions in the semantics-based dependency graphs. 
+The set $\progW(c)$ of weights for the estimated dependency graph is estimated from the Abstract Transition Graph $\absG(c)$ of $c$ using \emph{reachability-bound analysis}~\cite{GulwaniZ10}. Specifically, we estimate as the weight of a node with label $l$ a symbolic upper bound on the execution times of the command with label $l$ obtained by reachability-bound analysis. These symbolic upper bounds are expressions with the input variables as free variables, hence they correspond to the weight functions in the semantics-based dependency graphs. 
 Our reachability-bound algorithm adapts to our setting ideas from previous work~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity}.
 Specifically, it provides an upper bound on the number of times every command can be executed by using three steps.
 \begin{enumerate}
-\item This steps assigns to each edge  $l \xrightarrow{dc} l'\in \absE(c)$ a \emph{local bound} as follows. We look at the strongly connected components of $\absG(c)$. If the edge does not belong to any strongly connected components, then the local bound is $1$, representing the fact that the edge is not in a loop and so it get executed at most once. If the edge belongs to a strongly connected component and one of the variables $x$ in $dc$ decreases, then the local bound is $x$. Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and if by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$. Otherwise, the local bound is $\infty$. Notice that the output is either a symbolic constant in $\constdom$ or a variable that is not an input variable.
+\item This step assigns to each edge  $l \xrightarrow{dc} l'\in \absE(c)$ a \emph{local bound} as follows. We look at the strongly connected components of $\absG(c)$. If the edge does not belong to any strongly connected components, then the local bound is $1$, representing the fact that the edge is not in a loop and so it gets executed at most once. If the edge belongs to a strongly connected component and one of the variables $x$ in $dc$ decreases, then the local bound is $x$. Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and if by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$. Otherwise, the local bound is $\infty$. Notice that the output is either a symbolic constant in $\constdom$ or a variable that is not an input variable.
 % assigns a local bound $c$ ($c \in \constdom \cup \mathcal{V}$), if $c$ decreases in $dc$.
-\item This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e \in \absE(c)$. Every bound is a symbolic expression from the set $\mathcal{A}_{in}$ built out of symbols in $\constdom$ and the operations $+, *, \max$. For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. If instead the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. In order to do this, this steps will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment; second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached. To compute these two quantities we use two mutually recursive procedures.
+\item This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e \in \absE(c)$. Every bound is a symbolic expression from the set $\mathcal{A}_{in}$ built out of symbols in $\constdom$ and the operations $+, *, \max$. For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. If instead the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. In order to do this, this step will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment; second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached. To compute these two quantities we use two mutually recursive procedures.
 \end{enumerate}
   Using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$ we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
   which is also the estimated weight of this vertex.
@@ -381,7 +381,7 @@ v \in \mathbb{N}\cup \{\infty\},
 \end{array}
 \]
 \end{thm}
-Notice that in this theorem, the evaluation $\config{\vtrace_0, \hat{w}} \earrow v$ is needed in order to obtain a concrete value $v$ from the symbolic weight $hat{w}$ by specifying a value for the input variables through $\vtrace_0$.
+Notice that in this theorem, the evaluation $\config{\vtrace_0, \hat{w}} \earrow v$ is needed in order to obtain a concrete value $v$ from the symbolic weight $\hat{w}$ by specifying a value for the input variables through $\vtrace_0$.
 
 
 \textbf{Example.} 
@@ -455,7 +455,7 @@ Depth First Search and Breadth First Search.
 The idea of this algorithm is to reduce the task of computing the
 walk with the maximal query length to the task of computing local versions of the adaptivity on the maximal strongly connected components of the graph $\progG(c)$ and then compose them into the program adaptivity. 
 The algorithm  uses  
-another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which find the { walk} for a strong connected component of $\progG(c)$. The pseudocode of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adaptscc}
+another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which finds the {walk} for a strong connected component of $\progG(c)$. The pseudocode of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adaptscc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 1: %%%%%%%%%%%%%%%%%%%%%%
 % The ${\pathsearch}$ and  detail introduction is in supplementary material.
