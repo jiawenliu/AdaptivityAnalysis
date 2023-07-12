@@ -9,39 +9,37 @@ abstract control flow graph generation,
 edge estimation (as presented in Section~\ref{sec:alg_edgegen}), and weight estimation (as presented in Section~\ref{sec:alg_weightgen}) in Ocaml, 
 and the adaptivity computation algorithm shown in Section~\ref{sec:alg_adaptcompute} in Python.
 The OCaml program takes the labeled command as input and outputs the program-based dependency graph and
-the abstract transition graph,
-feeds into the Python program and the Python program provides the adaptivity upper bound and the query number as the final output.
+the abstract transition graph, which we
+feed into the Python program and the Python program provides the adaptivity upper bound and the query number as the final output.
 
 
 \paragraph{Accuracy and Performance}
 \input{eval-table}
-We evaluated this implementation on $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
+We first evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity. To do this we consider $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
 
 In this table,
-the first column is the name of each program.
-For each program $c$, the second column is its intuitive adaptivity rounds,
-and the third column is the output of the $\THESYSTEM$ implementation, which consists of two expressions.
-The first one is the upper bound for adaptivity and the second one is the 
-upper bound for the total number of query requests in the program. And the last column is the performance evaluation w.r.t. the program size.
-
-The last column is the performance evaluation.
-The time contains three parts. The first part is the running time of the Ocaml code, which parses the program and generates the $\progG(c)$.
+the first column is the name of each program, the second column is the program adaptivity,
+the third column is the output of the $\THESYSTEM$ implementation, which consists of two expressions:
+the first one is the upper bound for adaptivity and the second one is the 
+upper bound for the total number of query requests in the program. And the last column is the performance evaluation w.r.t. the program size in terms of lines of code.
+The performance evaluation contains three parts. The first part is the running time of the Ocaml code, which parses the program and generates the $\progG(c)$.
 The second and third parts are the running times of the reachability bound analysis algorithm
 and the adaptivity computation algorithm, $\pathsearch(c)$.
 
-The first five programs are adapted from real-world data analysis algorithms.
+The examples show a wide range of values for their adaptivity. 
 The first two programs $\kw{twoRounds(k)}$, $ \kw{mR(k)}$ are the same as Fig.~\ref{fig:overview-example}(a) and Fig.~\ref{fig:multipleRounds}(a).
 $\THESYSTEM$ computes tight adaptivity bound for the first three examples.
-For the fourth program $\kw{mROdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $1 + \max(1, 2k)$ 
+The third example is a logistic regression algorithm with gradient decent.
+For the fourth program $\kw{mROdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $2 + \max(1, 2k)$ 
 % for the $A(c)$, which is consistent with our expectation 
-because of the path insensitivity. 
+because of the path insensitive nature of the weight estimation algorithm, as discussed in Section~\ref{sec:examples}. 
 The $5^{th}$ program, $\kw{mRSingle(k)}$ is the example program in Fig.~\ref{ex:multiRoundsS}.
-$\THESYSTEM$ outputs the $ $, which is tight with respect to our adaptvitiy definition in Def.~\ref{def:trace_adapt}.
+$\THESYSTEM$ outputs $1 + \max(1, k) $, which is tight with respect to our adaptvitiy definition in Def.~\ref{def:trace_adapt}.
 However, because Def.~\ref{def:trace_adapt} is a loose definition of $\kw{mRSingle(k)}$'s actual adaptivity rounds,
-the result is still an over-approximation.
+%the result is still an over-approximation.
 %
 
-The next thirteen programs in Table~\ref{tb:adapt-imp} from $6^{th}$ to $19^{th}$ row are handcrafted programs based on the code pieces extracted from the C library. They all have small sizes but complex structures in order to test the programs under different situations including
+The next thirteen programs in Table~\ref{tb:adapt-imp} from $6^{th}$ to $19^{th}$ row are handcrafted programs based on benchmarks from the work by Gulwani et al.~\cite{GulwaniJK09}. They all have small sizes but complex structures in order to test the programs under different situations including
 data, control dependency,
 the multiple paths nested loop with related counters, etc.
 The names of these programs obey the convention that,
@@ -52,22 +50,26 @@ $\kw{D}$ for Dependency; $\kw{V}$ for Variable;
 $\kw{M}$ for Multiple; $\kw{P}$ for Path and $\kw{R}$ for Related.
 
 
-The algorithm computes the tight bound for the adaptivity of programs from row six, $\kw{seqRV()}$ to fourteen, $\kw{loop2MPRV(k)}$
-and over-approximate the \emph{adaptivity} for the $15^{th}$ and $16^{th}$ examples in the table due to path-insensitivity.
+Our algorithm computes tight bounds for the adaptivity of programs from row six, $\kw{seqRV()}$ to row fourteen, $\kw{loop2MPRV(k)}$
+and over-approximate the \emph{adaptivity} for the  examples in row fiften and sixteen because of the path-insensitive nature of the algorithm computing the weights.
 
 The last six programs are synthesized programs composed of the previous programs in order to test the performance limitation when the input program is large. 
-From the evaluation results, the performance bottleneck is the reachability bound analysis algorithm.
+From the evaluation results, the performance bottleneck is the reachability bound analysis algorithm used to compute the weights.
 
-
-By implementing the reachability-bound analysis algorithm in Section~\ref{sec:alg_weightgen}, we are timed out when evaluating the examples $\kw{tRCom(k)}$,  $\kw{jumbo}$ and ${\kw{big(k)}} $ in $5$ minutes.
+The reachability-bound analysis algorithm presented in Section~\ref{sec:alg_weightgen} time out after $5$ minutes when evaluating the examples $\kw{tRCom(k)}$,  $\kw{jumbo}$ and ${\kw{big(k)}}$.
 
 \paragraph{Alternative Implementations}
 \input{eval-table-alternatives}
-Alternatively, we implement three different versions of {\THESYSTEM} and show the alternative implement evaluation results in Table~\ref{tb:adapt-imp-alternatives}. To compare with {\THESYSTEM},
-we
-evaluate them using the same example programs as Table~\ref{tb:adapt-imp} and present
-their estimated adaptivity rounds, query numbers and the running time.
-For each alternative implementation, we marked the result in red if it is imprecise w.r.t. the true value.
+With our second evaluation we want to show the need of the different
+components of {\THESYSTEM}. To do this we implement three alternative
+versions of {\THESYSTEM} where the different components are omitted or
+replaced with components with weaker guarantees and we compare them with {\THESYSTEM}. We show the
+results  of the comparison in
+Table~\ref{tb:adapt-imp-alternatives}. We use the same set of example programs as in
+Table~\ref{tb:adapt-imp} and present their estimated adaptivity
+rounds, query numbers and the running time.  For each alternative
+implementation, we marked the result in red if it is imprecise
+w.r.t. the true value.
 
 1. In column {\THESYSTEM}-I, the implementation replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen} with a light reachability bound analysis algorithm and computes the \emph{adaptivity} for
 $\kw{jumboS}, \kw{jumbo}$ and $\kw{big}$ effectively.
@@ -78,7 +80,7 @@ For the $17^{th}$ example ($\kw{loop2R}$), {\THESYSTEM} gives a tight upper boun
 
 2. In {\THESYSTEM}-II, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
 The estimated data dependency only considers the data flow.
-However, the adaptivity should consider both the data and control flow, results produced from this version are unsound.
+However, the adaptivity should consider both the data and control flow, and so results produced from this version are unsound.
 For example, program $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $ and $\kw{loopVCD(k)} $ all have control dependency.
 However, the alternative implementation II in Table~\ref{tb:adapt-imp-alternatives} estimates the adapvitiy rounds of $2$ because it fails to identify the dependency through control flow.
 
@@ -97,8 +99,8 @@ The performance of {\THESYSTEM}-II is similar to {\THESYSTEM} because they are b
 reachability-bound analysis implementation. For the same reason, the {\THESYSTEM}-III has slightly better
 running time than {\THESYSTEM}-I.
 
-Overall, {\THESYSTEM} gives the accurate estimated
-adaptivity upper bound and our adaptivity formalization also gives precise adaptivity definition w.r.t. the intuitive \emph{adaptivity rounds}.
+Overall, {\THESYSTEM} gives accurate estimated
+adaptivity upper bounds.
 % and analysis framework $\THESYSTEM$.
 
 
