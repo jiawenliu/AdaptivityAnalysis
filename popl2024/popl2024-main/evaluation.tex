@@ -91,7 +91,7 @@ However, the alternative implementation II in Table~\ref{tb:adapt-imp-alternativ
 3. In {\THESYSTEM}-III, we remove the reachability bound estimation from Section~\ref{sec:alg_weightgen}.
 We assign the weight $1$ to every labeled variable on the estimated dependency graph.
 The adaptivity estimation results are all integers and does not depend on any program inputs.
-When instantiating the input variable with different values, this estimated result is either greater than or smaller than the true adaptivity.
+When instantiating the input variable with varied values, this estimated result is either greater or smaller than the true adaptivity.
 
 In the last column, we present only the performance of the {\THESYSTEM}-I to compare the
 light reachability-bound analysis implementation with the original reachability-bound analysis.
@@ -132,11 +132,10 @@ from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}
 % These programs are evaluated for classifying a demography dataset from 
 % the USA census database~\cite{CensusDatabase}.
 
-{We use acronyms for these programs to have a better presentation of our evaluation in a single table. We use tR for twoRounds,
-mRsgl for mRSingle, 3(4)DeLRGD for 3(4)DegreeLRGD,RQ for repeatedQuery, nDPair for nDimPairwise,
-DT for decisionTree, LR for logisticRegression, LROVR for logisticRegressionOVR and 
-DTOVR for decisionTreeOVR. Similarly, we shorten the mechanisms: GS for Gaussian, DS for Data Split,
-TS for Threshold.  }
+{We use acronyms for these programs to have a better presentation of our evaluation in a single table. We use
+mRsgl for mRSingle, 3(4)DeLRGD for 3(4)DegreeLRGD, RQ for repeatedQuery, nDPair for nDimPairwise,
+DT, DTOVR for decisionTree abd decisionTreeOVR, LR, LROVR for logisticRegression and logisticRegressionOVR. Similarly, we shorten the mechanisms: GS for Gaussian, DS for Data Split,
+TS for ThresholdOut.  }
 
 For each program, we show in Table~\ref{tb:adapt-generalization} the
 generalization errors when running without a mechanism and running
@@ -152,7 +151,7 @@ $\progA\sqrt{\log(\query \#)}$ and choose DataSplit if
 $\sqrt{\query \#} \gg \progA\sqrt{\log(\query \#)}$ and Gaussian
 mechanism if $\sqrt{\query \#} \ll \progA\sqrt{\log(\query \#)}$ and
 Thresholdout mechanism if these two quantities are close.  It is worth
-to stress that these are rough heuristics since we are omitting the
+stressing that these are rough heuristics since we are omitting the
 constants hidden in these theorems. We leave the problem to identify
 the best heuristic to future work.
 
@@ -167,18 +166,18 @@ the best heuristic to future work.
 
 We first evaluate example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
 $\kw{twoRound}$ is trained to classify a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
-With only two adaptive rounds, by instantiating $k = 1000$ and $n = 1000$, this algorithm overfitted and produce the generalization error 
-$0.0502245$.
-Since $2* \sqrt{\log(1000)} \ll \sqrt{1000}$, \THESYSTEM choose the DataSplit mechanism.
-Evaluation result shows that we choose the best.
-Then by instantiating $k = 1$, we have $2 * \sqrt{\log(2)} > \sqrt{2}$ and choose Gaussian mechanism, while Gaussian mechanism performs best.
+With only two adaptive rounds, by instantiating $k = 1000$ and $n = 1000$, this algorithm overfitted and produced the generalization error 
+$0.0502245$ (In the table, we approximate it to $0.050$).
+Since $2* \sqrt{\log(1000)} \ll \sqrt{1000}$, {\THESYSTEM} chooses the DataSplit mechanism.
+Evaluation result(the bold $0.028$ in the first row of the table) shows that we choose the best.
+Then by instantiating $k = 10$, we see that $10 * \sqrt{\log(10)}$ is close to $\sqrt{10}$ and our tool chooses ThresholdOut mechanism, while Gaussian mechanism and ThresholdOut both perform well.
 
 The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
 The number of iterations is $k$ and our tool identifies this as the  adaptivity  for these programs.
 %  and chooses the Gaussian mechanism.
 By instantiating $k = 1000$ and $n = 1000$, we have
-$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead our tool choses the ThresholdOut mechanism. 
-The evaluation results in Table~\ref{tb:adapt-imp} shows again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
+$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. 
+The evaluation results in Table~\ref{tb:adapt-generalization} shows again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
 
 $  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of the logistic regression with gradient decedent
 algorithm into three-dimensional and four-dimensional data set of size $n$.
@@ -187,12 +186,12 @@ algorithm into three-dimensional and four-dimensional data set of size $n$.
 The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds are still $k$ for these two programs.
 Instantiating $k$ and $n$ with $1000$ and $1000$,
 %  the heuristics in Theorem~\ref{thm:gaussiannoise} and Theorem~\ref{thm:gaussiannoise2},
-our tool chooses the Gaussian mechanism which still reduce the generalization error the most.
+our tool chooses the Gaussian mechanism which still reduces the generalization error the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well as shown in Table~\ref{tb:adapt-generalization}. 
 
-We have four data analysis which are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
+We have four data analyses which are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
 % is the
 % repeated query subroutine algorithm with $n\times 2^n$ adaptivity rounds and $n\times 2^n$ query requests in total;
-Program $\kw{lil-UCB}$ and $\kw{best-arm}$ are the algorithms to solve the best arm problem in the stochastic multi-armed bandit (MAB) setting
+Program $\kw{lilUCB}$ and $\kw{bestArm}$ are the algorithms to solve the best arm problem in the stochastic multi-armed bandit (MAB) setting
 with $m$ total number of arms in order to identify the longest arm through sampling at most $n$ times.
 Our tool identifies the number of sampling times $n$ is the adaptivity rounds.
 %  with $n$ adaptivity rounds and $n$ query requests in total;
@@ -208,6 +207,10 @@ In this situation, $1000* \sqrt{\log(1000^2)}$ and $\sqrt{1000^2}$ are close to 
 % According to the large adaptivity rounds and the query numbers, 
 our tool chooses the Thresholdout mechanism.
 Evaluation results in Table~\ref{tb:adapt-generalization} shows that both Thresholdout and Gaussian mechanism can reduce the rmse the most.
+When we look at a smaller $n$ and $m$ ($n,m=10$), because the query number is $m \times n$ and our $A_{est}$ is either $m$ or $n$ in these examples,
+our heuristic still chooses ThresholdOut mechanism in three of the four examples in the \emph{Guess and Check} framework, $\kw{lilUCB}$, $\kw{nDimPairwise}$ and $\kw{bestArm}$ and our recommendation performs well. The only
+exception is the $\kw{repeatedQuery}$ example, whose $A_{est}$ and query number are both quite big as $m \times 2^m$, and out tool
+then chooses Gaussian mechanism, which does not perform well($6.01$).
 
 
 For the four data analysis programs, 
@@ -220,14 +223,12 @@ and the grid search hyperparameter selects an algorithm for each classifier with
 hyperparameter space of constant size $c$.
 The next two programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ are
 the implementations of the decision tree, logistic regression, equipped with one v.s. rest model with $k$ fitting depth for classifying the dataset with $m$ classes.
-They are evaluated to classify a uniformly generated data set with $m$ randomly selected classes label.
-
-For these programs, we translate them manually into our syntax and evaluate their adaptivity.
+They are evaluated to classify a uniformly generated data set with $m$ randomly selected classes label. For these programs, we translate them manually into our syntax and evaluate their adaptivity.
 By adaptivity analysis, our tool identified that the fitting depth is indeed the adaptivity rounds of these programs.
 % The program $\kw{decisionTree}$ with only $5$ fitting depth has adaptivity rounds $5$,
 % the Thresholdout mechanism performs best in terms of reducing the generalization error.
 Programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ 
-have $k*m$ adaptivity rounds, by instantiating $k = 1000$ and $m = 1000$, {\THESYSTEM} choose Gaussian mechanism, although it is not optimal for the decision tree example.
+have $k*m$ adaptivity rounds, by instantiating $k = 1000$ and $m = 1000$, {\THESYSTEM} chooses Gaussian mechanism, although it is not optimal for the decision tree example. While when we have a smaller $k$ and $m$ ($k,m=10$), the choice of our tool is reliable.
 
 
 In summary, our experimental result shows that most of the time the knowledge of the adaptivity and the number of queries of a data analysis allow us to choose the best mechanism to  reduce the generalization error. We expect that this situation can be further improved by using more precise heuristic than the ones we use here. 
