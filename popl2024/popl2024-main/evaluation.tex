@@ -106,11 +106,11 @@ adaptivity upper bounds.
 
 \paragraph{Effectiveness Evaluation}
 \input{eval-table-generalization}
-We also evaluate the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs.
+With our last evaluation we want to show the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs.
 %  from Sklearn machine learn benchmark sets and research paper~\cite{Jamieson2015TheAO}.
 
-These programs include 
-the nine real-world data analyses from our examples in Table~\ref{tb:adapt-imp} instantiated with different parameters,
+To do this we consider a set of benchmarks including 
+nine real-world data analyses from our examples in Table~\ref{tb:adapt-imp} instantiated with different parameters,
 four programs implementing the algorithms from~\cite{Jamieson2015TheAO}
 and four data analysis programs 
 from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark.
@@ -133,59 +133,64 @@ from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}
 % These programs are evaluated for classifying a demography dataset from 
 % the USA census database~\cite{CensusDatabase}.
 
-{We use acronyms for these programs to have a better presentation of our evaluation, tR for twoRounds,
+{We use acronyms for these programs to have a better presentation of our evaluation in a single table. We use tR for twoRounds,
 mRsgl for mRSingle, 3(4)DeLRGD for 3(4)DegreeLRGD,RQ for repeatedQuery, nDPair for nDimPairwise,
 DT for decisionTree, LR for logisticRegression, LROVR for logisticRegressionOVR and 
 DTOVR for decisionTreeOVR. Similarly, we shorten the mechanisms: GS for Gaussian, DS for Data Split,
 TS for Threshold.  }
 
-For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when running without a mechanism
-and running with different mechanisms over uniformly generated training data.
-The average generalization error of each program is measured by root-mean-square error.
-The root-mean-square error without any mechanism is shown in column ``rmse without mechanism''.
-Re-running these programs by equipping them with different mechanisms, we present the results
-in the columns ``rmse with mechanisms''.
-After adaptivity analysis by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
-According to Theorem~\ref{thm:gaussiannoise}, Theorem~\ref{thm:gaussiannoise2} and Theorem~\ref{thm:nonadapt-adapt}.
-we compare the value of $\sqrt{\query \#}$ and $\progA\sqrt{\log(\query \#)}$
-and choose DataSplit if $\sqrt{\query \#} \gg \progA\sqrt{\log(\query \#)}$ and Gaussian mechanism if
-$\sqrt{\query \#} \ll \progA\sqrt{\log(\query \#)}$ and Thresholdout mechanism if these two quantities are close.
+For each program, we show in Table~\ref{tb:adapt-generalization} the
+generalization errors when running without a mechanism and running
+with different mechanisms over uniformly generated training data.  The
+average generalization error of each program is measured by
+root-mean-square error.  The root-mean-square error without any
+mechanism is shown in column ``None''.  we mark in bold the rmse
+produced by the mechanism chosen by {\THESYSTEM} using the following
+heuristics.  According to Theorem~\ref{thm:gaussiannoise},
+Theorem~\ref{thm:gaussiannoise2} and Theorem~\ref{thm:nonadapt-adapt}.
+we compare the value of $\sqrt{\query \#}$ and
+$\progA\sqrt{\log(\query \#)}$ and choose DataSplit if
+$\sqrt{\query \#} \gg \progA\sqrt{\log(\query \#)}$ and Gaussian
+mechanism if $\sqrt{\query \#} \ll \progA\sqrt{\log(\query \#)}$ and
+Thresholdout mechanism if these two quantities are close.  It is worth
+to stress that these are rough heuristics since we are omitting the
+constants hidden in these theorems. We leave the problem to identify
+the best heuristic to future work.
 
-In short, all these data analysis programs behave overfitting when running over randomly generated data sets. 
-To obtain good data analysis result with low generalization error,
-one needs to run programs multiple times with different mechanisms.
-This takes much longer time than just training a data analysis program with one run.
-However, by using our tool in the first step, an analyst can directly equip the program with a chosen mechanism to get good
-analysis results.
+
+%% In short, all these data analysis programs behave overfitting when running over randomly generated data sets. 
+%% To obtain good data analysis result with low generalization error,
+%% one needs to run programs multiple times with different mechanisms.
+%% This takes much longer time than just training a data analysis program with one run.
+%% However, by using our tool in the first step, an analyst can directly equip the program with a chosen mechanism to get good
+%% analysis results.
 
 
 We first evaluate example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
-$\kw{twoRound}$ is trained to classifying a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
+$\kw{twoRound}$ is trained to classify a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
 With only two adaptive rounds, by instantiating $k = 1000$ and $n = 1000$, this algorithm overfitted and produce the generalization error 
 $0.0502245$.
 Since $2* \sqrt{\log(1000)} \ll \sqrt{1000}$, \THESYSTEM choose the DataSplit mechanism.
 Evaluation result shows that we choose the best.
 Then by instantiating $k = 1$, we have $2 * \sqrt{\log(2)} > \sqrt{2}$ and choose Gaussian mechanism, while Gaussian mechanism performs best.
-As shown in Fig.~\ref{fig:generalization_errors}(a) and (c), with smaller query number, Gaussian mechanism performs best and the DataSplit mechanism outperforms others when the query number increase.
 
-The $2^{nd}$ to $5^{th}$ program is evaluated to fitting a two-dimensional data set of size $n$ into a $1$ degree linear relation.
-The fitting depth is $k$.
-Our tool identifies the adaptivity rounds are $O(k)$ for these programs.
+The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
+The number of iterations is $k$ and our tool identifies this as the  adaptivity  for these programs.
 %  and chooses the Gaussian mechanism.
-By instantiating $k = 1000$ and $n = 1000$, 
-$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ and chooses the Gaussian mechanism.
+By instantiating $k = 1000$ and $n = 1000$, we have
+$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead our tool choses the ThresholdOut mechanism. 
 The evaluation results in Table~\ref{tb:adapt-imp} shows again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
 
-$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of logistic regression with gradient decedent
+$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of the logistic regression with gradient decedent
 algorithm into three-dimensional and four-dimensional data set of size $n$.
-$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
-algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
-The fitting depth is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds are still $k$ for these two programs.
-Instantiating $k$ and $k$ with $1000$ and $1000$,
+%$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
+%algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
+The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds are still $k$ for these two programs.
+Instantiating $k$ and $n$ with $1000$ and $1000$,
 %  the heuristics in Theorem~\ref{thm:gaussiannoise} and Theorem~\ref{thm:gaussiannoise2},
-our tool chooses the DataSplit mechanism which still reduce the generalization error the most.
+our tool chooses the Gaussian mechanism which still reduce the generalization error the most.
 
-The next four data analysis programs are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
+We have four data analysis which are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
 % is the
 % repeated query subroutine algorithm with $n\times 2^n$ adaptivity rounds and $n\times 2^n$ query requests in total;
 Program $\kw{lil-UCB}$ and $\kw{best-arm}$ are the algorithms to solve the best arm problem in the stochastic multi-armed bandit (MAB) setting
@@ -223,10 +228,10 @@ By adaptivity analysis, our tool identified that the fitting depth is indeed the
 % The program $\kw{decisionTree}$ with only $5$ fitting depth has adaptivity rounds $5$,
 % the Thresholdout mechanism performs best in terms of reducing the generalization error.
 Programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ 
-have $k*m$ adaptivity rounds, by instantiating $k = 1000$ and $m = 500$, {\THESYSTEM} choose Gaussian mechanism.
-Experimental result shows that we choose the best mechanism in reducing the generalization error.
-The reason behind this improvement refers back to the Thm.~\ref{thm:gaussiannoise2}, where
-we can achieve better generalization error by equipping the Gaussian mechanism with proper parameters when the algorithm has ``large'' adaptivity.
+have $k*m$ adaptivity rounds, by instantiating $k = 1000$ and $m = 1000$, {\THESYSTEM} choose Gaussian mechanism, although it is not optimal for the decision tree example.
+
+
+In summary, our experimental result shows that most of the time the knowledge of the adaptivity and the number of queries of a data analysis allow us to choose the best mechanism to  reduce the generalization error. We expect that this situation can be further improved by using more precise heuristic than the ones we use here. 
 
 
 
