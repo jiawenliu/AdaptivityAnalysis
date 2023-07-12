@@ -9,39 +9,37 @@ abstract control flow graph generation,
 edge estimation (as presented in Section~\ref{sec:alg_edgegen}), and weight estimation (as presented in Section~\ref{sec:alg_weightgen}) in Ocaml, 
 and the adaptivity computation algorithm shown in Section~\ref{sec:alg_adaptcompute} in Python.
 The OCaml program takes the labeled command as input and outputs the program-based dependency graph and
-the abstract transition graph,
-feeds into the Python program and the Python program provides the adaptivity upper bound and the query number as the final output.
+the abstract transition graph, which we
+feed into the Python program and the Python program provides the adaptivity upper bound and the query number as the final output.
 
 
 \paragraph{Accuracy and Performance}
 \input{eval-table}
-We evaluated this implementation on $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
+We first evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity. To do this we consider $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
 
 In this table,
-the first column is the name of each program.
-For each program $c$, the second column is its intuitive adaptivity rounds,
-and the third column is the output of the $\THESYSTEM$ implementation, which consists of two expressions.
-The first one is the upper bound for adaptivity and the second one is the 
-upper bound for the total number of query requests in the program. And the last column is the performance evaluation w.r.t. the program size.
-
-The last column is the performance evaluation.
-The time contains three parts. The first part is the running time of the Ocaml code, which parses the program and generates the $\progG(c)$.
+the first column is the name of each program, the second column is the program adaptivity,
+the third column is the output of the $\THESYSTEM$ implementation, which consists of two expressions:
+the first one is the upper bound for adaptivity and the second one is the 
+upper bound for the total number of query requests in the program. And the last column is the performance evaluation w.r.t. the program size in terms of lines of code.
+The performance evaluation contains three parts. The first part is the running time of the Ocaml code, which parses the program and generates the $\progG(c)$.
 The second and third parts are the running times of the reachability bound analysis algorithm
 and the adaptivity computation algorithm, $\pathsearch(c)$.
 
-The first five programs are adapted from real-world data analysis algorithms.
+The examples show a wide range of values for their adaptivity. 
 The first two programs $\kw{twoRounds(k)}$, $ \kw{mR(k)}$ are the same as Fig.~\ref{fig:overview-example}(a) and Fig.~\ref{fig:multipleRounds}(a).
 $\THESYSTEM$ computes tight adaptivity bound for the first three examples.
-For the fourth program $\kw{mROdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $1 + \max(1, 2k)$ 
+The third example is a logistic regression algorithm with gradient decent (short for LRGD).
+For the fourth program $\kw{mROdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound $2 + \max(1, 2k)$ 
 % for the $A(c)$, which is consistent with our expectation 
-because of the path insensitivity. 
+because of the path insensitive nature of the weight estimation algorithm, as discussed in Section~\ref{sec:examples}. 
 The $5^{th}$ program, $\kw{mRSingle(k)}$ is the example program in Fig.~\ref{ex:multiRoundsS}.
-$\THESYSTEM$ outputs the $ $, which is tight with respect to our adaptvitiy definition in Def.~\ref{def:trace_adapt}.
+$\THESYSTEM$ outputs $1 + \max(1, k) $, which is tight with respect to our adaptvitiy definition in Def.~\ref{def:trace_adapt}.
 However, because Def.~\ref{def:trace_adapt} is a loose definition of $\kw{mRSingle(k)}$'s actual adaptivity rounds,
 the result is still an over-approximation.
 %
 
-The next thirteen programs in Table~\ref{tb:adapt-imp} from $6^{th}$ to $19^{th}$ row are handcrafted programs based on the code pieces extracted from the C library. They all have small sizes but complex structures in order to test the programs under different situations including
+The next thirteen programs in Table~\ref{tb:adapt-imp} from $6^{th}$ to $19^{th}$ row are handcrafted programs based on benchmarks from the work by Gulwani et al.~\cite{GulwaniJK09}. They all have small sizes but complex structures in order to test the programs under different situations including
 data, control dependency,
 the multiple paths nested loop with related counters, etc.
 The names of these programs obey the convention that,
@@ -52,33 +50,37 @@ $\kw{D}$ for Dependency; $\kw{V}$ for Variable;
 $\kw{M}$ for Multiple; $\kw{P}$ for Path and $\kw{R}$ for Related.
 
 
-The algorithm computes the tight bound for the adaptivity of programs from row six, $\kw{seqRV()}$ to fourteen, $\kw{loop2MPRV(k)}$
-and over-approximate the \emph{adaptivity} for the $15^{th}$ and $16^{th}$ examples in the table due to path-insensitivity.
+Our algorithm computes tight bounds for the adaptivity of programs from row six, $\kw{seqRV()}$ to row fourteen, $\kw{loop2MPRV(k)}$
+and over-approximate the \emph{adaptivity} for the  examples in row fifteen and sixteen because of the path-insensitive nature of the algorithm computing the weights.
 
 The last six programs are synthesized programs composed of the previous programs in order to test the performance limitation when the input program is large. 
-From the evaluation results, the performance bottleneck is the reachability bound analysis algorithm.
+From the evaluation results, the performance bottleneck is the reachability bound analysis algorithm used to compute the weights.
 
-
-By implementing the reachability-bound analysis algorithm in Section~\ref{sec:alg_weightgen}, we are timed out when evaluating the examples $\kw{tRCom(k)}$,  $\kw{jumbo}$ and ${\kw{big(k)}} $ in $5$ minutes.
+The reachability-bound analysis algorithm presented in Section~\ref{sec:alg_weightgen} time out after $5$ minutes when evaluating the examples $\kw{tRCom(k)}$,  $\kw{jumbo}$ and ${\kw{big(k)}}$.
 
 \paragraph{Alternative Implementations}
 \input{eval-table-alternatives}
-Alternatively, we implement three different versions of {\THESYSTEM} and show the alternative implement evaluation results in Table~\ref{tb:adapt-imp-alternatives}. To compare with {\THESYSTEM},
-we
-evaluate them using the same example programs as Table~\ref{tb:adapt-imp} and present
-their estimated adaptivity rounds, query numbers and the running time.
-For each alternative implementation, we marked the result in red if it is imprecise w.r.t. the true value.
+With our second evaluation we show the need of the 
+components of {\THESYSTEM}. For this, we implement three alternative
+versions of {\THESYSTEM} where different components are omitted or
+replaced with components with weaker guarantees. We show the
+results  of the comparison in
+Table~\ref{tb:adapt-imp-alternatives}. We use the same set of example programs as in
+Table~\ref{tb:adapt-imp} and present their estimated adaptivity
+rounds, query numbers and the running time.  For each alternative
+implementation, we marked the result in red if it is imprecise
+w.r.t. the true value.
 
 1. In column {\THESYSTEM}-I, the implementation replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen} with a light reachability bound analysis algorithm and computes the \emph{adaptivity} for
 $\kw{jumboS}, \kw{jumbo}$ and $\kw{big}$ effectively.
-The results show that the alternative implementation computes the tight bound for all the examples from line:1 to line:14
-and over-approximate the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to path-insensitivity similar to the
+The results show that the alternative one computes tight bounds for all the examples from line:1 to line:14
+and over-approximates the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to path-insensitivity similar to the
 $\THESYSTEM$.
-For the $17^{th}$ example ($\kw{loop2R}$), {\THESYSTEM} gives a tight upper bound while the alternative implementation gives a loose bound, so we keep both implementations.
+For the $17^{th}$ example ($\kw{loop2R}$), {\THESYSTEM} gives a tight upper bound while the alternative one gives a loose bound, so we keep both.
 
 2. In {\THESYSTEM}-II, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
 The estimated data dependency only considers the data flow.
-However, the adaptivity should consider both the data and control flow, results produced from this version are unsound.
+However, the adaptivity should consider both the data and control flow, so results here are unsound.
 For example, program $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $ and $\kw{loopVCD(k)} $ all have control dependency.
 However, the alternative implementation II in Table~\ref{tb:adapt-imp-alternatives} estimates the adapvitiy rounds of $2$ because it fails to identify the dependency through control flow.
 
@@ -89,26 +91,25 @@ However, the alternative implementation II in Table~\ref{tb:adapt-imp-alternativ
 3. In {\THESYSTEM}-III, we remove the reachability bound estimation from Section~\ref{sec:alg_weightgen}.
 We assign the weight $1$ to every labeled variable on the estimated dependency graph.
 The adaptivity estimation results are all integers and does not depend on any program inputs.
-When instantiating the input variable with different values, this estimated result is either greater than or smaller than the true adaptivity.
+When instantiating the input variable with varied values, this estimated result is either greater or smaller than the true adaptivity.
 
 In the last column, we present only the performance of the {\THESYSTEM}-I to compare the
 light reachability-bound analysis implementation with the original reachability-bound analysis.
 The performance of {\THESYSTEM}-II is similar to {\THESYSTEM} because they are based on the same
 reachability-bound analysis implementation. For the same reason, the {\THESYSTEM}-III has slightly better
 running time than {\THESYSTEM}-I.
-
-Overall, {\THESYSTEM} gives the accurate estimated
-adaptivity upper bound and our adaptivity formalization also gives precise adaptivity definition w.r.t. the intuitive \emph{adaptivity rounds}.
+Overall, {\THESYSTEM} gives accurate estimated
+adaptivity upper bounds.
 % and analysis framework $\THESYSTEM$.
 
 
 \paragraph{Effectiveness Evaluation}
 \input{eval-table-generalization}
-We also evaluate the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs.
+With our last evaluation we want to show the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs.
 %  from Sklearn machine learn benchmark sets and research paper~\cite{Jamieson2015TheAO}.
 
-These programs include 
-the nine real-world data analyses from our examples in Table~\ref{tb:adapt-imp} instantiated with different parameters,
+To do this we consider a set of benchmarks including 
+nine real-world data analyses from our examples in Table~\ref{tb:adapt-imp} instantiated with different parameters,
 four programs implementing the algorithms from~\cite{Jamieson2015TheAO}
 and four data analysis programs 
 from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark.
@@ -131,56 +132,65 @@ from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}
 % These programs are evaluated for classifying a demography dataset from 
 % the USA census database~\cite{CensusDatabase}.
 
-For each program, we show in Table~\ref{tb:adapt-generalization} the generalization errors when running without a mechanism
-and running with different mechanisms over uniformly generated training data.
-The average generalization error of each program is measured by root-mean-square error.
-The root-mean-square error without any mechanism is shown in column ``rmse without mechanism''.
-Re-running these programs by equipping them with different mechanisms, we present the results
-in the columns ``rmse with mechanisms''.
-After adaptivity analysis by {\THESYSTEM}, we highlight the rmse produced by the mechanism chosen by our tool.
-According to Theorem~\ref{thm:gaussiannoise}, Theorem~\ref{thm:gaussiannoise2} and Theorem~\ref{thm:nonadapt-adapt}.
-we compare the value of $\sqrt{\query \#}$ and $\progA\sqrt{\log(\query \#)}$
-and choose DataSplit if $\sqrt{\query \#} \gg \progA\sqrt{\log(\query \#)}$ and Gaussian mechanism if
-$\sqrt{\query \#} \ll \progA\sqrt{\log(\query \#)}$ and Thresholdout mechanism if these two quantities are close.
+{We use acronyms for these programs to have a better presentation of our evaluation in a single table. We use
+ 3(4)DeLRGD for 3(4)DegreeLRGD, RQ for repeatedQuery, nDPair for nDimPairwise,
+DT, DTOVR for decisionTree(OVR), LR, LROVR for logisticRegression(OVR). Similarly, we shorten the mechanisms: GS for Gaussian, DS for Data Split,
+TS for ThresholdOut.  }
 
-In short, all these data analysis programs behave overfitting when running over randomly generated data sets. 
-To obtain good data analysis result with low generalization error,
-one needs to run programs multiple times with different mechanisms.
-This takes much longer time than just training a data analysis program with one run.
-However, by using our tool in the first step, an analyst can directly equip the program with a chosen mechanism to get good
-analysis results.
+For each program, we show in Table~\ref{tb:adapt-generalization} the
+generalization errors when running without a mechanism and running
+with different mechanisms over uniformly generated training data.  The
+average generalization error of each program is measured by
+root-mean-square error.  The root-mean-square error without any
+mechanism is shown in column ``None''.  we mark in bold the rmse
+produced by the mechanism chosen by {\THESYSTEM} using the following
+heuristics.  According to Theorem~\ref{thm:gaussiannoise},
+Theorem~\ref{thm:gaussiannoise2} and Theorem~\ref{thm:nonadapt-adapt}.
+we compare the value of $\sqrt{\query \#}$ and
+$\progA\sqrt{\log(\query \#)}$ and choose DataSplit if
+$\sqrt{\query \#} \gg \progA\sqrt{\log(\query \#)}$ and Gaussian
+mechanism if $\sqrt{\query \#} \ll \progA\sqrt{\log(\query \#)}$ and
+Thresholdout mechanism if these two quantities are close.  It is worth
+stressing that these are rough heuristics since we are omitting the
+constants hidden in these theorems. We leave the problem to identify
+the best heuristic to future work.
+
+
+%% In short, all these data analysis programs behave overfitting when running over randomly generated data sets. 
+%% To obtain good data analysis result with low generalization error,
+%% one needs to run programs multiple times with different mechanisms.
+%% This takes much longer time than just training a data analysis program with one run.
+%% However, by using our tool in the first step, an analyst can directly equip the program with a chosen mechanism to get good
+%% analysis results.
 
 
 We first evaluate example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
-$\kw{twoRound}$ is trained to classifying a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
-With only two adaptive rounds, by instantiating $k = 1000$ and $n = 1000$, this algorithm overfitted and produce the generalization error 
-$0.0502245$.
-Since $2* \sqrt{\log(1000)} \ll \sqrt{1000}$, \THESYSTEM choose the DataSplit mechanism.
-Evaluation result shows that we choose the best.
-Then by instantiating $k = 1$, we have $2 * \sqrt{\log(2)} > \sqrt{2}$ and choose Gaussian mechanism, while Gaussian mechanism performs best.
-As shown in Fig.~\ref{fig:generalization_errors}(a) and (c), with smaller query number, Gaussian mechanism performs best and the DataSplit mechanism outperforms others when the query number increase.
+$\kw{twoRound}$ is trained to classify a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
+With only two adaptive rounds, by instantiating $k = 1000$ and $n = 1000$, this algorithm overfitted and produced the generalization error 
+$0.050$.
+Since $2* \sqrt{\log(1000)} \ll \sqrt{1000}$, {\THESYSTEM} chooses the DataSplit mechanism.
+Evaluation result(\textbf{0.028}) shows that we choose the best.
+Then by instantiating $k = 10$, we see that $10 * \sqrt{\log(10)}$ is close to $\sqrt{10}$ and our tool chooses ThresholdOut, while Gaussian and ThresholdOut mechanism both perform well.
 
-The $2^{nd}$ to $5^{th}$ program is evaluated to fitting a two-dimensional data set of size $n$ into a $1$ degree linear relation.
-The fitting depth is $k$.
-Our tool identifies the adaptivity rounds are $O(k)$ for these programs.
+The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
+The number of iterations is $k$ and our tool identifies this as the  adaptivity  for these programs.
 %  and chooses the Gaussian mechanism.
-By instantiating $k = 1000$ and $n = 1000$, 
-$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ and chooses the Gaussian mechanism.
-The evaluation results in Table~\ref{tb:adapt-imp} shows again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
+By instantiating $k = 1000$ and $n = 1000$, we have
+$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. 
+The evaluation results in Table~\ref{tb:adapt-generalization} show again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
 
-$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of logistic regression with gradient decedent
-algorithm into three-dimensional and four-dimensional data set of size $n$.
-$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
-algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
-The fitting depth is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds are still $k$ for these two programs.
-Instantiating $k$ and $k$ with $1000$ and $1000$,
+$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of LRGD into 3D and 4D data set of size $n$.
+%$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
+%algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
+The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds $k$ for these two programs.
+Instantiating $k$ and $n$ with $1000$ and $1000$,
 %  the heuristics in Theorem~\ref{thm:gaussiannoise} and Theorem~\ref{thm:gaussiannoise2},
-our tool chooses the DataSplit mechanism which still reduce the generalization error the most.
+our tool chooses the Gaussian mechanism which still reduces rmse the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well in Table~\ref{tb:adapt-generalization}. 
 
-The next four data analysis programs are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
+We have four data analyses which are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
 % is the
 % repeated query subroutine algorithm with $n\times 2^n$ adaptivity rounds and $n\times 2^n$ query requests in total;
-Program $\kw{lil-UCB}$ and $\kw{best-arm}$ are the algorithms to solve the best arm problem in the stochastic multi-armed bandit (MAB) setting
+Program $\kw{lilUCB}$ and $\kw{bestArm}$ are the algorithms to solve the best arm problem in the stochastic multi-armed bandit (MAB) setting
 with $m$ total number of arms in order to identify the longest arm through sampling at most $n$ times.
 Our tool identifies the number of sampling times $n$ is the adaptivity rounds.
 %  with $n$ adaptivity rounds and $n$ query requests in total;
@@ -196,6 +206,10 @@ In this situation, $1000* \sqrt{\log(1000^2)}$ and $\sqrt{1000^2}$ are close to 
 % According to the large adaptivity rounds and the query numbers, 
 our tool chooses the Thresholdout mechanism.
 Evaluation results in Table~\ref{tb:adapt-generalization} shows that both Thresholdout and Gaussian mechanism can reduce the rmse the most.
+When we look at a smaller $n$ and $m$ ($n,m=10$), because the query number is $m \times n$ and our $A_{est}$ is either $m$ or $n$ in these examples,
+our heuristic still chooses ThresholdOut mechanism in three of the four examples in the \emph{Guess and Check} framework, $\kw{lilUCB}$, $\kw{nDimPairwise}$ and $\kw{bestArm}$ and our recommendation performs well. The only
+exception is the $\kw{repeatedQuery}$ example, whose $A_{est}$ and query number are both quite big as $m \times 2^m$, and out tool
+then chooses Gaussian mechanism, which does not perform well($6.01$).
 
 
 For the four data analysis programs, 
@@ -208,17 +222,15 @@ and the grid search hyperparameter selects an algorithm for each classifier with
 hyperparameter space of constant size $c$.
 The next two programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ are
 the implementations of the decision tree, logistic regression, equipped with one v.s. rest model with $k$ fitting depth for classifying the dataset with $m$ classes.
-They are evaluated to classify a uniformly generated data set with $m$ randomly selected classes label.
-
-For these programs, we translate them manually into our syntax and evaluate their adaptivity.
+They are evaluated to classify a uniformly generated data set with $m$ randomly selected classes label. For these programs, we translate them manually into our syntax and evaluate their adaptivity.
 By adaptivity analysis, our tool identified that the fitting depth is indeed the adaptivity rounds of these programs.
 % The program $\kw{decisionTree}$ with only $5$ fitting depth has adaptivity rounds $5$,
 % the Thresholdout mechanism performs best in terms of reducing the generalization error.
 Programs $\kw{decisionTreeOVR}$ and $\kw{logisticRegressionOVR}$ 
-have $k*m$ adaptivity rounds, by instantiating $k = 1000$ and $m = 500$, {\THESYSTEM} choose Gaussian mechanism.
-Experimental result shows that we choose the best mechanism in reducing the generalization error.
-The reason behind this improvement refers back to the Thm.~\ref{thm:gaussiannoise2}, where
-we can achieve better generalization error by equipping the Gaussian mechanism with proper parameters when the algorithm has ``large'' adaptivity.
+have $k*m$ adaptivity rounds, by instantiating $k = 1000$ and $m = 1000$, {\THESYSTEM} chooses Gaussian mechanism, although it is not optimal for the decision tree example. While when we have a smaller $k$ and $m$ ($k,m=10$), the choice of our tool is reliable.
+
+
+In summary, our experimental result shows that most of the time the knowledge of the adaptivity and the number of queries of a data analysis allow us to choose the best mechanism to  reduce the generalization error. We expect that this situation can be further improved by using more precise heuristic than the ones we use here. 
 
 
 
