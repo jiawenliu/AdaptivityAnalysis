@@ -60,7 +60,7 @@ standard arithmetic (with value $n \in \mathbb{N}\cup \{ \infty \}$) and boolean
 A query expression $\qexpr$ can be either a simple arithmetic expression $a$, an expression of the form $\chi[\aexpr]$ where $\chi$ represents a row of the database  and  $\aexpr$ represents an index used to identify a specific attribute of the row $\chi$, a combination of two query expressions, $\qexpr \oplus_{a} \qexpr$, or a normal form $\qval$.
 For example, the query expression $\chi[3] + 5$  denotes the computation that
 obtains
-the value in the $3$rd column of $\chi$ in one row and then add $5$ to it.
+the value in the $3$rd column of $\chi$ in one row and then adds $5$ to it.
 \\
 Command are the typical ones from while languages with an additional command $\assign{x}{\query(\qexpr)}$ for query requests which can be used to interrogate the database and compute the linear query corresponding to $\qexpr$.
 Each command is annotated with a label $l$, we will use natural numbers as labels and we will use them to record
@@ -80,7 +80,7 @@ We denote by  $\qvar(c)$ the set of labeled variables that are assigned to the r
 
 \subsection{ Trace-based Operational Semantics}
 %  \wq{Our operational semantics uses the trace $\trace \in \mathcal{T}$ to track the history of the program execution, we use $\mathcal{T} $ for the set of traces. To be precise, the trace is a list of events and an event tracks the useful information about one step of the evaluation. When a program $c$ is evaluated in our operational semantics$\config{c, \trace} \to \config{c', \trace'} $, it starts with an initial trace $\trace$, evaluates to $c'$ , and along with the program evaluation, events are collected in the evaluation order and appended to $\trace$, and then we get the result trace $\trace'$. We can easily get the history of the evaluation of the program $c$ by looking at these newly added events in $\trace$ with respect to the initial trace $\trace$.  }
-We use a trace based operational semantics tracking the history of programs execution. The operational semantics is parameterized by a database that can be access only through queries. Since this database is fixed, we omit it from the semantics but it is important to keep in mind that this database exists and it is what allow us to evaluate queries.
+We use a trace-based operational semantics tracking the history of program execution. The operational semantics is parameterized by a database that can be accessed only through queries. Since this database is fixed, we omit it from the semantics but it is important to keep in mind that this database exists and it is what allows us to evaluate queries.
 A \emph{trace}
 $\trace$ is a list of \emph{events} generated when executing specific commands. We denote by $\mathcal{T}$ the set of traces and we will use list notation for traces, where $[]$ is the empty trace, the operator $\traceadd$ combines an event and a trace in a new event, 
 and the operator $\tracecat$ concatenates two traces. 
@@ -98,7 +98,7 @@ $ \begin{array}{lllll}
 \end{array}$
 \end{center}
 An assignment event tracks the execution of an assignment  or a query request and consists of the assigned variable, the label of the command that generates it, the value assigned to the variable, and the normal form  $\qval$ of the query expression that has been requested, if this command is a query request, otherwise a default value $\bullet$.
-A testing event tracks the execution of if and while commands and consists of the guard of the command, the label of the command, the result of evaluating the guard, while the last element is $\bullet$.  We use the operator $\env (\trace) x$ to fetch the latest value assigned to  $x$ in the trace $\trace$. We use the operator
+A testing event tracks the execution of if or while command and consists of the guard of the command, the label of the command, the result of evaluating the guard, while the last element is $\bullet$.  We use the operator $\env (\trace) x$ to fetch the latest value assigned to  $x$ in the trace $\trace$. We use the operator
 $\vcounter$ to count the occurrence of a labeled variable in the trace.
 We denote by $\tlabel(\trace) \subseteq \ldom$ the set of the labels occurring in $\trace$.
 Finally, we use $\mathcal{T}_0(c) \subseteq \mathcal{T}$ to denote the set of \emph{initial traces}, the ones
@@ -107,7 +107,7 @@ which assign a value to the input variables.
 
 
 
-The trace based operational semantics is described in terms of a small step evaluation relation
+The trace-based operational semantics is described in terms of a small step evaluation relation
 $\config{c, \trace} \to \config{c', \trace}'$  describing how a configuration program-trace evaluates to another
 configuration program-state. The rules for the operational semantics are described in Fig.~\ref{fig:os}.
 The rules for assignment and query generate assignment events, while the rules for while and if generate testing events. 
@@ -115,7 +115,7 @@ The rules for the standard while language constructs correspond to the usual rul
 We have relations $\config{\trace, \expr} \earrow v $  and $\config{\trace, \bexpr} \barrow v $  to evaluate expressions and boolean expressions, respectively. Their definitions are in the supplementary material.
 %   \mg{Can you please confirm that this is true?} Yes
 The only rule that is non-standard is the $\textbf{query}$ rule. When evaluating a query, the query expression $\qexpr$ is first simplified to its normal form $\alpha$ using an evaluation relation $\config{\trace, \qexpr} \qarrow \qval$. 
-Then normal form $\qval$ characterize the linear query that is run against the database. The query result $v$ is the expected value of the function $\lambda \chi.\qval$ applied to each row of the dataset. We summarize this process with the notation $\query(\qval) = v$ which we use in the rule $\textbf{query}$. Once the answer of the query is computed, the rules record all the needed information in the trace. As usual, we will use $\to^*$ for the reflexive and transitive closure of $\to$. 
+Then normal form $\qval$ characterizes the linear query that is run against the database. The query result $v$ is the expected value of the function $\lambda \chi.\qval$ applied to each row of the dataset. We summarize this process with the notation $\query(\qval) = v$ which we use in the rule $\textbf{query}$. Once the answer of the query is computed, the rules record all the needed information in the trace. As usual, we will use $\to^*$ for the reflexive and transitive closure of $\to$. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Explaining the Event %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % First of all, as the key component of the program evaluation history, an event $\event$ stores necessary information on the evaluation results of commands. Depending on the types of commands, there are two kinds of events: the assignment event which is generated in the standard assignment and query request assignment commands, and the testing event which is generated in an if or while command. Both assignment and testing events are quadruples, but store different contents. 
