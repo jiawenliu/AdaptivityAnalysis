@@ -35,7 +35,12 @@ Yes.
 
 > Please give an example to illustrate lines 749-762
 line 749-762 describes how our reachability bound TB(e,c) returns an symbolic upper bound for an edge e in the set of edges absE(c). The local bound of this edge e is computed using difference constraint described in last step between line 738-748. TB(e,c) calculated local bound of e, if e is an symbolic constant(short for SC, either a nature number such as 3, or infinity, or input variable such as k in the running example, or a symbol Q_m representing a query request), TB(e,c) just return this symbolic constant. Let us look at Fig.6(b), the edge e1 (0, top, 1) has local bound 1 so TB(e1,c) returns 1 as shown in the node 0 and 1 in Fig.6(c) with bound 1.  
-Otherwise, local bound of e is not SC, it will be a variable. For instance, still Fig.6(b), the edge e4 (4, j' <= j -1 ,5), the local bound is variable j.  @Jiawen, can you explain how to calculate TB(e4,c) here?     
+Otherwise, local bound of e is not SC, it will be a variable. For instance, still Fig.6(b), the edge e4 (4, j' <= j -1 ,5) is in an SCC appearing in the while loop, the local bound is variable j, not a symbolic constant. 
+Then, to get TB(e4,c), it calculates two quantities: the first one is the sum of the reachability bound TB(e,c) of all the edges that may increment j, such as of the form (l, j' <= j + v ,l') plus the increment v, v is a SC.  For the edge e4, Fig.6(b) does not have any edge that increment j, so the first quantity is 0. 
+The second one is the sum of the reachability bound of edge which reset j, such as of the form (l, j <  v ,l') multiplied with maximal value of this symbolic expression v. For the edge e4, Fig.6(b), the only edge that resets j is e2(1,j' <= k ,2), TB(e2,c) = 1 and maximal value of k is k. So the second quantity is k.
+In this case, TB(e4,c) = k. It shows that the edges e4 will be executed at most k times.
+
+@Jiawen, can you verity what the example I illustrate?    
 
 
 Response to comments
