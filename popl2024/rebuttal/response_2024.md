@@ -1,20 +1,37 @@
-We would like to sincerely thank all the reviewers for their precious time to carefully reading the paper and giving their constructive and detailed comments.
+We would like to sincerely thank all the reviewers for their
+constructive and detailed comments.
+
 
 - Overview
 
-
-We agree some of our sentences or presentation will cause confusion, we plan to eliminate these confusing sentences by carefully rewriting.  Our evaluation can be improved as the reviewers suggests, we will add the 
-necessary of the evaluation. The key proof in the appendix will also be checked and we will make it easier to read. 
-
+We agree that the presentation can be improved and we thank the
+reviewer for pointing out in details where improvements are needed. We
+plan to carefully revise the paper by adding explanations and
+examples, as suggested, and we will also work on improving the writing
+overall, including in the appendix. We will also improve the
+experiments and their presentation following the reviewers
+suggestions. We are confident that these changes can be done in the
+available timeframe and using a few more pages.
 
 - Change List
- 1. We will add some more examples to make the presentation easy to follow up, we plan to add one example(running example twoRounds) to show how we calculate the estimated weight using reachability bound algorithm TB(e,c) for an edge and a command c, one example (the running example) to show how AdaptBD_scc works, add the algorithm adpatBD and shows how it uses adaptBD_scc, more details of example of "monitor argument", moving examples clarification before the definition 5, 6 when we introduce walk and query length concepts.
+ 
+ 1. We will add more examples to make the presentation easier to
+ follow. In particular, we plan to add one example (taking it from the
+ ones we already have in the paper) to show how we calculate the
+ estimated weight using the reachability bound algorithm TB(e,c) and one
+ example to show how the algorithm AdaptBD_scc works.
 
- 2. Make our evaluation clearer by adding the actual generation error, describing how to calculating it, and highlight and stress the mechanism our heuristic chooses, add more statements and evaluation on comparing our choices with the best mechanism to show the power of our tool.
+ 2. We will add the algorithm adpatBD and discuss it more, we will
+ explain in more details the "monitor argument" and we will move
+ clarifications accordingly to the suggestions of the reviewers.
 
- 3. Carefully rewrite the sentences which causes confusions, such as the abuse of query(P) at line 193, the query answer a in a = query(P), the discussion of query expression and values and add concrete examples to explain the empirical means the query(chi[i].chi[k]). At line 864 in Alg.1, The sentences "first collects all the paths in $SCC_i$." is confusing and not precise, will change the presentation.  Be consistent with nodes and vertices, make sure the definition shows up when it is used such as event set $Epsilon$ with respect to Def 1. 
+ 3. We will improve our evaluation by adding the actual generation
+ error, and by highlighting the mechanism our heuristic chooses. We
+ will also improve the comparison between our choices of mechanisms
+ with the best mechanism.
+
+ 4. We will carefully rewrite the sentences which causes confusions.
   
-
 
 - Detailed Response
 
