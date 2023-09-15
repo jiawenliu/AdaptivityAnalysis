@@ -183,24 +183,39 @@ Review B
 
 Thanks for your detailed suggestion.
 
-
-
 Detailed comments for authors
 -----------------------------
-(1) A high-level question I had is as follows: is it possible to describe the approach in the simple steps I describe above? is there any more nuance than the above description? If so, you could plainly state it that way, and your paper will still be a useful contribution. I think you have a lot of notation to capture control and data dependence etc which are well-known concepts and there is no need to describe these in the level of detail you have done.
-Yes, it is. agree that we can save more space by omitting some well-know control and data dependence to add more examples for better presentation. 
+(1) A high-level question I had is as follows: is it possible to describe the approach 
+in the simple steps I describe above? is there any more nuance than the above description? 
+If so, you could plainly state it that way, and your paper will still be a 
+useful contribution. I think you have a lot of notation to capture control 
+and data dependence etc which are well-known concepts and there is no need to describe 
+these in the level of detail you have done.
+
+Yes, this is definitely a good summary. We will improve the presentation by omitting some of 
+the well-known concepts as pointed out by the reviewer.
 
 
-(2) In Table 3, can you add an extra column for the actual generalization error? How would you estimate the actual generalization error?
-Yes, we will.   @Jiawen, can you describe how we estimate the generation error?
+(2) In Table 3, can you add an extra column for the actual generalization error? How would you 
+estimate the actual generalization error?
+
+Yes, we will add the actual generalization error.   @Jiawen, can you describe how we estimate the generation error?
 
 
-(4) Is there value in combining different mechanisms for different queries. That is, use split data for some queries, gaussian noise for some queries etc.
-Not sure if it is possible.  @Marco
+(4) Is there value in combining different mechanisms for different queries. That is, use split data for 
+some queries, gaussian noise for some queries etc.
+
+This is something we plan to explore in the future. In principle, instead of the adaptivity of a set of 
+queries to be just a number, one could also consider the dependency graph directly and try to identify 
+sets of dependent queries and sets of independent queries and then apply to different sets different mechanisms. 
+However, there are some practical trae-offs between the complexity of this approach and the gain in generalization 
+that one needs to understand in order to say if this is useful in practice. 
 
 
-(3) In Table 2 it will be good to also add the actual adaptivity (as in Table 1) - - it will make it easier to compare, rather than flip back and forth with Table 1.
-Agree. Thanks for the suggestion.
+(3) In Table 2 it will be good to also add the actual adaptivity (as in Table 1) - - it will make it easier 
+to compare, rather than flip back and forth with Table 1.
+
+Thanks for the suggestion. We will add it.
 
 
 Review C
@@ -210,67 +225,122 @@ Questions to be addressed by author response
 --------------------------------------------
 - How common is it that an adaptive data analysis algorithm does not have its adaptivity set by design?
 
+We are afraid that we cannot answer this question. To answer properly this question we think that one 
+would require a large scale study of how people design their data analyses. Without such study we cannot 
+claim that this is common as well as we cannot claim that this is uncommon.
+
+We do agree that in our experiments several program have their adaptivity set by design but mostly because
+we were interested in showing the performance of our approach rather than in testing the hypothesis above. 
+
+We agree also that in an ideal word, data analysts should know the adaptivity of their analysis, like in an 
+ideal world, programmers should know the runtime cost of their program. But like reasoning about the runtime
+cost of a program can be tricky for most programmers, and this motivates the study of cost analysis techniques, 
+similarly we think that also reasoning about the adaptivity of an analysis can be tricky and requires some form 
+of program analysis. We did face some surprising values of adaptivity in some of our larger examples, which 
+are obtained by putting together simpler analyses. 
+
+One additional challenge in data analysis comes from the fact that parameter and hyper-parameter tuning are 
+the norm, and essential parts of the overall method. These processes do affect the concrete adaptivity of the 
+analysis and we think that having a tool that provides data analysts with a symbolic expression of the adaptivity 
+of their program can be useful to help them in these processes.  
+
 
 - What is the complexity of Algorithm 1?
 
+The complexity is |V|^2 + |V|*|E|. This because the complexity of depth first search is V + E and we 
+perform it for every node. 
 
 ------------------------------
 
 Detailed comments
 
-> The exposition in Section 2.1 presents the problem of coming up with an estimate $a$ of the population mean $query(P)$. Then the text writes "...test depends on the prefix $query_1, a_1,...$", which creates some confusion around these $a_j$, which seem to appear out of nowhere. Are we instead in an online setting where a new estimate is given after each query?
-> In Theorems 2.1, 2.2, 2.3, what are the $a_j$? The bounds should depend on the way the $a_j$ are computed, yet this is not specified. I suppose these are empirical means, like $a$ earlier (lines 199-200)?
+> The exposition in Section 2.1 presents the problem of coming up with an estimate $a$ of the population 
+  mean $query(P)$. Then the text writes "...test depends on the prefix $query_1, a_1,...$", which creates 
+  some confusion around these $a_j$, which seem to appear out of nowhere. Are we instead in an online 
+  setting where a new estimate is given after each query?
+> In Theorems 2.1, 2.2, 2.3, what are the $a_j$? The bounds should depend on the way the $a_j$ are 
+  computed, yet this is not specified. I suppose these are empirical means, like $a$ earlier (lines 199-200)?
 
-Sorry for the confusion, $a_j$ stands for the result of the jth query, similar as a = query(P) in the previous sentence of this text, we will make it explicit.
+Sorry for the confusion. The $a_j$ stand for the results of the jth query. We will clarify this and we will improve the explanation. 
 
-> line 300, "However, capturing this concept formally is surprisingly difficult". I don't see why this is more difficult than standard dependency analysis. You write "the difficulty comes from the fact that a query can depend on the result of another query in multiple ways, by means of data dependency or control flow dependency". These are standard challenges in dependency analyses, why are they labeled as new here?
-The challenge also covers the formal definition of adaptivity, not just dependency analysis.
+> line 300, "However, capturing this concept formally is surprisingly difficult". I don't see why this is 
+  more difficult than standard dependency analysis. You write "the difficulty comes from the fact 
+  that a query can depend on the result of another query in multiple ways, by means of data dependency 
+  or control flow dependency". These are standard challenges in dependency analyses, why are 
+  they labeled as new here?
 
+Thanks for pointing out that this is unclear. We agree that this does not reflect the difficulties we 
+faced in coming up with the right definition  that we were trying to communicate. We went through 
+several trial and errors in trying to combine the definition of data/control flow dependency and the 
+quantitative aspects given by adaptivity. We will explain this better, perhaps also discussing some of these 
+failed attempts.
 
 - line 353, "we consider the walk that visits...". Why is such a walk uniquely defined? I suspect it is not.
-It is not uniquely defined. To get the definition of adaptivity, we only care about one walk with most number of queries. 
 
-- line 355, "the number of query nodes visited", are these distinct nodes or not? Consider disambiguating here. The paper also mixes the terms "node" and "vertex", consider sticking to one.
-The nodes will be distinct. Thanks for the suggestion, we will be consistent.
+You are right: itt is not uniquely defined. For our definition, we need only any walk with maximal number of queries.
+We will fix this.
 
+- line 355, "the number of query nodes visited", are these distinct nodes or not? Consider disambiguating 
+  here. The paper also mixes the terms "node" and "vertex", consider sticking to one.
+
+The nodes are distinct, we will be explicit. Thanks for the suggestion, we will be consistent.
 
 - line 357, why don't you take the path $l^6 \to x^3$ as the one defining adaptivity? Why go through $a^5$?
-Good point! Based on our definition, either going through $a^5$ or not will not affect the definition, we will explain that both will be fine to get the adaptivity.
 
+Good point. Based on our definition, either going through $a^5$ or not will not affect the result. We will 
+explain that both are fine to get the right adaptivity.
 
 - line 412, a small discussion on query values would help here.
-Indeed, we plan to add a concrete example to make it clear.
+
+Thanks for pointing this out. We plan to add a concrete example to make it clear.
 
 
-- Defintion 1, I could not see a definition of $\mathcal{E}$ (perhaps I missed it). I suppose it denotes the events of the program. Similarly with $\mathcal{C}$ in Definition 2.
-At line 431, we define the set of events. Sorry for the confusion, we should clarify the definition near the definition and we will.
+- Defintion 1, I could not see a definition of $\mathcal{E}$ (perhaps I missed it). I suppose it 
+denotes the events of the program. Similarly with $\mathcal{C}$ in Definition 2.
 
+Thanks for pointing this out, we will fix it.
 
-> line 543, "whether the change in $\epsilon_1$ affects the appearance in the computation..". Which change? The appearance of what?
-It is not clear. To understand it, the change of value in the event $\epsilon_1$ (maybe the assignment assigns a different value to some variable) affects the appearance of the event $\epsilon_2$.
+> line 543, "whether the change in $\epsilon_1$ affects the appearance in the computation..". Which 
+  change? The appearance of what?
+
+Sorry, this is indee unclear. We meant that the change of value in the assignment of event $\epsilon_1$ may affect 
+the control flow, and so the appearance of the event $\epsilon_2$. 
 
 > line 644 (also other places). Perhaps "upper bound" is a better term than "estimate", since you are stating soundness.
+
 Agree.
 
 
-- line 659, "if the command with label $l'$ can execute right after". Though I likely understand what you mean here (simple control-flow), this statement is technically ambiguous ("can execute" refers to your formal semantics, and cannot be computed).
+- line 659, "if the command with label $l'$ can execute right after". Though I likely understand what
+you mean here (simple control-flow), this statement is technically ambiguous ("can execute" refers to 
+your formal semantics, and cannot be computed).
+
 Good point. We will rewrite this sentence to make it unambiguous!
 
-
 - line 840, "The algorithm uses another algorithm AdaptBD_{SCC} recursively..". I don't see the recursion.
-The algorithm AdaptBD is not shown in the paper. We will add it. @Jiawen, not recursively, right?
 
-- line 864, "first collects all the paths". Which data structure collects all the paths? What do you mean by "all the paths"? There are infinitely many of those. Perhaps all simple paths/simple cycles?
-"first collects all the paths in $SCC_i$",  from line 13 to line 15, every vertex v represents a path because we say "paths collected in step 1 are all simple cycles
-with same starting and ending vertex", so at line 13, every v representing a path from v to v. Sorry for the confusion, to be precise, the algorithm handles paths on the fly, one by one. "collect all the paths" is implicit and not precise. We will change the sentence.   
+The algorithm AdaptBD is not shown in the paper. We will add it.
+
+- line 864, "first collects all the paths". Which data structure collects all the paths? What 
+do you mean by "all the paths"? There are infinitely many of those. Perhaps all simple paths/simple cycles?
+
+  As we said to Reviewer A, we see that this sentence is confusing and we will rephrase it. In fact, in the loop 
+  at lines 13-15 every vertex v represents a path because they are all simple cycles
+  with the same starting and ending vertex, so at line 13, every v represents a path 
+  from v to v. Also we don't need a data structure because the algorithm handles paths 
+  on the fly, one by one. We will clarify this. 
 
 
 - line 867, "by the property of SCC", which property?
 
-- line 872, a comment on how you compute the maximum over symbolic expressions (or what types of symbolic expressions you can handle) would be helpful.
+Sorry for the confusion. We meant the property that in a SCC there is a path from each vertex to another 
+vertex on the component.
 
+- line 872, a comment on how you compute the maximum over symbolic expressions (or what types of symbolic 
+  expressions you can handle) would be helpful.
 
+Thanks for pointing this out. We will add it.
 
-Monor: 
-Thanks for pointing typos out, we will fix them.
+Minor: 
+Thanks for pointing out typos and inconsistencies, we will fix them.
 
