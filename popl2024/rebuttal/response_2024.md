@@ -23,7 +23,8 @@ available timeframe and using a few more pages.
 
  2. We will add the algorithm adpatBD and discuss it more, we will
  explain in more details the "monitor argument" and we will move
- clarifications accordingly to the suggestions of the reviewers.
+ the clarifications and examples accordingly to the suggestions 
+ of the reviewers.
 
  3. We will improve our evaluation by adding the actual generation
  error, and by highlighting the mechanism our heuristic chooses. We
@@ -37,96 +38,144 @@ available timeframe and using a few more pages.
 
 Review A  
 
-First of all, thanks for the detailed comments, section by section and your constructive suggestion on using more examples to clarify some key concepts. We will make the changes to make our paper easier to follow up!  
+First of all, thanks for the detailed comments, section by section 
+and your constructive suggestion on using more examples to clarify 
+some key concepts. We will make the recommended changes to improve
+our paper and make it easier to follow.
 
 Question to be address by this response:
 ------------------------------------------
-> Please clarify Figs. 2(a) and 2(c).  The ``last adaptive query'' is the 401st in Fig. 2(a), which for Gaussian noise has RMSE 0.37.
-  But in the x=400 position of Fig. 2(c), RMSE for Gaussian noise appears to be 0.028, which is wildly different.  Clearly, I'm not
+> Please clarify Figs. 2(a) and 2(c).  The ``last adaptive query'' is the 
+  401st in Fig. 2(a), which for Gaussian noise has RMSE 0.37.
+  But in the x=400 position of Fig. 2(c), RMSE for Gaussian noise appears 
+  to be 0.028, which is wildly different.  Clearly, I'm not
   understanding what you meant to convey.
 
+  Thanks for pointing out this. With Fig. 2(c) we want to show that the generalization error
+  is also affected by the number of queries, and how different mechanism affect the analysis 
+  in a different way. To do this we fixed the data analysis to be the tworounds example as in 
+  Fig 2(a) and we run it with multiple queries and multiple mechanisms. One essential difference
+  that we did not emphasize is that in the two figures we use a different data sizes, mostly 
+  to account for the fact that we run many more queries. Using a larger data set in Fig. 2(c), 
+  as we know, also has the result of affecting the magnitude of the error.  
+  We will make sure to put the two plots on a similar scale and we will discuss the parameters
+  of these two experiments in more details.
 
-  Thanks for pointing out this confusion. Fig. (c) is experimenting under different number of underlying data size, which  we do not explicitly give in overview. We will add the experiments' settings then.
 
+> Shouldn't Theorems 2.1-2.3 all contain the clause ``with high probability'' 
+  (as do the informal statements of theorems in [18])?
 
-> Shouldn't Theorems 2.1-2.3 all contain the clause ``with high probability'' (as do the informal statements of theorems in [18])?
-
-Yes.
+  Yes, indeed. We had at first more precise statements at first and when we changed them we 
+  erroneously left this out. We will revise them. 
 
 > Please give an example to illustrate lines 749-762
 
-line 749-762 describes how our reachability bound TB(e,c) returns an symbolic upper bound for an edge e in the set of edges absE(c). The local bound of this edge e is computed using difference constraint described in last step between line 738-748. TB(e,c) calculated local bound of e, if e is an symbolic constant(short for SC, either a nature number such as 3, or infinity, or input variable such as k in the running example, or a symbol Q_m representing a query request), TB(e,c) just return this symbolic constant. Let us look at Fig.6(b), the edge e1 (0, top, 1) has local bound 1 so TB(e1,c) returns 1 as shown in the node 0 and 1 in Fig.6(c) with bound 1.  
-Otherwise, local bound of e is not SC, it will be a variable. For instance, still Fig.6(b), the edge e4 (4, j' <= j -1 ,5) is in an SCC appearing in the while loop, the local bound is variable j, not a symbolic constant. 
-Then, to get TB(e4,c), it calculates two quantities: the first one is the sum of the reachability bound TB(e,c) of all the edges that may increment j, such as of the form (l, j' <= j + v ,l') plus the increment v, v is a SC.  For the edge e4, Fig.6(b) does not have any edge that increment j, so the first quantity is 0. 
-The second one is the sum of the reachability bound of edge which reset j, such as of the form (l, j <  v ,l') multiplied with maximal value of this symbolic expression v. For the edge e4, Fig.6(b), the only edge that resets j is e2(1,j' <= k ,2), TB(e2,c) = 1 and maximal value of k is k. So the second quantity is k.
-In this case, TB(e4,c) = k. It shows that the edges e4 will be executed at most k times.
-
+  Thanks for pointing out that this part is unclear. We will use Fig 6 to make it more clear as follow. 
+  Lines 749-762 describe how our reachability bound function TB(e,c) returns a 
+  symbolic upper bound for an edge e. This is used to compute the weights of each node.
+  TB(e,c) calculate the local bound of e, as described in lines 738-748. If the local bound
+  is a symbolic constant TB(e,c) just return it. For example, in Fig.6(b), the edge e1=(0, top, 1) 
+  has local bound 1 so TB(e1,c) returns 1 as shown in the node 0 in Fig.6(c) with weight 1 (node 0
+  has only one edge, so the weight coincide with TB(e1,c) ).  
+  Otherwise, if the local bound of e is not SC, it will be a variable. For instance, still in Fig.6(b), 
+  the edge e4=(4, j' <= j -1 ,5) is in an SCC appearing in a while loop, so the local bound is the
+  variable j. Then, to get TB(e4,c), we calculate two quantities: the first one is the sum of the 
+  reachability bound of all the edges that may increment j, such as edges of the form 
+  (l, j' <= j + v ,l') plus the increment v, v is a SC. In this example ther is no edge that 
+  increments j, so the first quantity is 0. 
+  The second one is the sum of the reachability bound of edges which reset j, such as edges 
+  of the form (l, j' <  v ,l'), multiplied by the maximal value of the associated symbolic 
+  expression v. For the edge e4, the only edge that resets j is e2=(1,j' <= k ,2), for which we 
+  have TB(e2,c) = 1 and the maximal value of k is k. So the second quantity is k.
+  In this case, TB(e4,c) = k. It shows that the edges e4 will be executed at most k times. This 
+  also corresponds to the weight of the node 4, since there is only one edge outgoing from it. 
+  Notice that also TB((5,T,2),c) = k since also in this case the local bound is the variable j.
+  We will also consider adding more explicit computations of the reachability bound in Figure 6.
    
-
 
 Response to comments
 ----------------------------------------------------------
 > The explanation is confusing at several key points (749, Alg. 1, explanation of Alg. 1, 899)
 > There are several places that would be helped by examples.
-> 5. Algorithm, lines 749-762: unclear.  Please add an example.
-We will add an example, for instance, the running example in section Overview to show how we can calculate the symbolic weight by using the reachability bound analysis.
- 
-The explanation of Alg 1 is not clear. We use the algorithm AdaptBD to estimate the adaptivity, and AdaptBD_scc to estimate the Strong connected component of the graph. AdaptBD uses AdaptBD_scc. We will add the algorithm of AdaptBD as All 2, and add an example to show how Alg1(AdaptBD_scc) calculates the result. 
 
-- There are several places where the presentation would be helped by providing the explanatory text/example *before* the definition/theorem.  One example: Definition 5.
-Definition 5, the walk can be better understood if we discuss the an example, the one in Fig.3(b), before the definition. We will arrange to move the explaining examples before Definition 5.
-Same for Definition 6, the query length, we will move the explanation of Fig.3(b) before the definition 6. 
+  We will improve the explanation of Alg 1 and add mode examples. Thanks for pointing this out.
 
+> There are several places where the presentation would be helped by 
+  providing the explanatory text/example *before* the definition/theorem.  
+  One example: Definition 5.
+
+  We will move explanatory text and examples before definition 5 and we will do the same in other 
+  similar places.
+
+
+ 2. Overview
+
+> I'm confused by lines 284-288: you use $\Chi$ to ``abstract a possible row'' (where 
+  row is used in the singular), but then say that query($\Chi[j], \Chi[k]$) computes an 
+  empirical mean.  I think the problem is the abuse of notation on line 193.  There, 
+  ``query(P)'' returns an expectation.  However, in your programming language, the similar-looking 
+  program statement ``query(P)'' computes an empirical mean (and involves an implicit loop that 
+  you never talk about or represent in your IR).
+  
+  Thanks for pointing this out. Indeed we use "query" with two different meanings and two different
+  types. We will change the notation to avoid confusion. 
+  
+> lines 289-290: ``compute an approximation of the product of the empirical mean of the 
+  first $k$ attributes.''  I'm even more mystified: in Fig. 3(a), statement 5 accumulates 
+  $a$ as a running sum.  You've added together emperical means of products of the 
+  $j$-th attribute with the $k$-th attribute.
+
+  We agree, this sentence is wrong. What we do is adding together the empirical means of 
+  products of the $j$-th attribute with the $k$-th attribute. We will fix this.
 
 5. Algorithm
 
-> lines 864-866, breakdown of the steps of Algorithm 1: please refer to specific line numbers (or ranges of line numbers)
-It is nice to refer to specific line numbers between lines 864 - 866, thanks.
 
-> line 864: ``first collects all the paths in $SCC_i$''.  First, you probably mean ``all simple cycles.''  Second, I don't see any code in Algorithm 1 that creates a data structure that collects any set of paths.
-"first collects all the paths in $SCC_i$",  from line 13 to line 15, every vertex v represents a path because we say "paths collected in step 1 are all simple cycles
-with same starting and ending vertex", so at line 13, every v representing a path from v to v. Sorry for the confusion, to be precise, the algorithm handles paths on the fly, one by one. "collect all the paths" is implicit and not precise. We will change the sentence.   
-  
+> line 864: ``first collects all the paths in $SCC_i$''.  First, you probably mean 
+  ``all simple cycles.''  Second, I don't see any code in Algorithm 1 that creates a 
+  data structure that collects any set of paths.
 
- 2. Overview
-> Shouldn't Theorems 2.1-2.3 all contain the clause ``with high probability'' (as do the informal statements of theorems in [18])?
-
-  Yes, thanks for pointing it out.
-
-> I'm confused by lines 284-288: you use $\Chi$ to ``abstract a possible row'' (where row is used in the singular), but then say that query($\Chi[j], \Chi[k]$) computes an empirical mean.  I think the problem is the abuse of notation on line 193.  There, ``query(P)'' returns an expectation.  However, in your programming language, the similar-looking program statement ``query(P)'' computes an empirical mean (and involves an implicit loop that you never talk about or represent in your IR).
-> lines 289-290: ``compute an approximation of the product of the empirical mean of the first $k$ attributes.''  I'm even more mystified: in Fig. 3(a), statement 5 accumulates $a$ as a running sum.  You've added together emperical means of products of the $j$-th attribute with the $k$-th attribute.
-
-
-The abuse of notation of query does cause some confusion, we will modify it. For the example in Fig. 3(a), statement 5 accumulates $a$ as a running sum, statement 3, x<- query(chi[j].chi[k]), returns the empirical means of products of the $j$-th attribute with the $k$-th attribute. Since j starting from k to 0, a will finally store sum of the means of row k times row k, row (k-1) times row k, until row 0 times row k. The sum a will be used to construct another query at line 6. This is how two rounds algorithm is designed. We realize the sentences may cause confusion, will rewrite it with concrete details.  
+  We see that this sentence is confusing and we will rephrase it. In fact, in the loop 
+  at lines 13-15 every vertex v represents a path because they are all simple cycles
+  with the same starting and ending vertex, so at line 13, every v represents a path 
+  from v to v. Also we don't need a data structure because the algorithm handles paths 
+  on the fly, one by one. We will clarify this.
 
 
 6. Examples
 
-> A poor explanation in lines 899-917: What is the goal of the ``monitor argument''?  You haven't said enough, and suddenly introduce a ``hidden database D'' in lin 903.
+> A poor explanation in lines 899-917: What is the goal of the ``monitor argument''?  
+  You haven't said enough, and suddenly introduce a ``hidden database D'' in lin 903.
 
-  More details about "monitor argument" is worth to showing up and then a hidden database D will be accepted in a natural way. We will make the change to make the example easier to follow up.
-
+  The monitor argument is a technique to estimate the accuracy of a
+  set of potentially adaptive queries over the population by using only the answer of the
+  accuracy of a carefully chosen query. We will provide more details in the revised version
+  of the paper.
 
 7. Implementation
 
-> Change the section title to ``Evaluation.'' The section is not much about the implementation per se
-> Table 1: In the $A_{est}$ column, it would help to put in bold font the entries that match the ground truth adaptivity in column 2.
-> line 1020: Change paragraph title to ``Ablation studies''
-Agree, thanks for the advice.
-
 > line 1017-19: How about a much longer time out for the three examples, like 120 minutes?
 
-
-   jumbo takes around 40 mins. the long time is for weight, AdaptBD is fast. For the other 2, more than 120 mins, still caused by getting the weight.
-
-
-> Table 3: in line 1105 to the end of the section, you give a lot of text discussing the circumstances in which the heuristic in your tool would choose one mechanism or another.  You should indicate the choice in the table, then then the reader would easily see how the choices (based on your analysis) agreed with the best generalization error, shown in bold.  You've only given us half the story in Table 1, and make the reader hunt for insight in the text from line 1105 to the end of the section!
-
-Thanks for the feedback. In table 3, the bold results are the one chosen by our heuristic. Some of them is not the best, for instance, RQ, nDPair, our choice(in bold) in Table 3 is not the best among the 3 mechanisms but still acceptable. We should clarify that our choice is highlighted in Table 3 to make it clear. 
+   jumbo takes around 40 mins. The long time is for computing the weights, AdaptBD is fast. 
+   For the other two examples, the weights cannot be computed in 120mins. We will try to 
+   experiment more with them to see if we can have longer time outs for them.
 
 
-minor:
-Thanks for pointing out the minor, we will fix them.
+> Table 3: in line 1105 to the end of the section, you give a lot of text discussing 
+  the circumstances in which the heuristic in your tool would choose one mechanism or 
+  another.  You should indicate the choice in the table, then then the reader would 
+  easily see how the choices (based on your analysis) agreed with the best generalization 
+  error, shown in bold.  You've only given us half the story in Table 1, and make 
+  the reader hunt for insight in the text from line 1105 to the end of the section!
+
+  Thanks for the feedback. In fact, as written in 1097-1098 the bold is used to 
+  identify the results chosen by our heuristic. Some of them are not the best, 
+  for instance, for RQ and nDPair, our choice (in bold) in Table 3 is not 
+  the best among the 3 mechanisms but still acceptable. We will clarify that our 
+  choice is highlighted in Table 3 to make it clear. 
+
+Thanks for all the other comments, which we will also address, and for pointing out 
+the minor points, we will fix them.
 
 
 
