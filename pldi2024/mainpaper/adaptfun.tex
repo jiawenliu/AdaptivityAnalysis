@@ -499,11 +499,25 @@ For an arbitrary $\trace_0 \in \mathcal{T}_0(c)$, we know that $\config{\trace_0
 by the weight $w_k$ for the vertex $a^5$ (as in Fig.~\ref{fig:overview-example}(b)) we know 
 $w_k(\trace_0) = \env(\trace_0) k$. 
 %
+\subsubsection{\highlight{Formal Definition of Estimted Dependency Graph}}
+\highlight{\begin{defn}
+  [Estimated Dependency Graph]
+  \label{def:prog_graph}
+  Given a program $c$ 
+  with the feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$, 
+  and reachability-bound, $\absclr(e, c)$ for every edge $e \in \absE(c)$ on the abstract transition graph,
+  the estimated dependency graph of $c$ has four components:
+  \[\progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))\]
+\end{defn}
+}
 \remove{\subsection{Dependency Graph Estimation}
 \input{adaptfun-graphgen}}
 \subsection{Adaptivity Upper Bound Computation}
 \label{sec:alg_adaptcompute}
-We estimate the adaptivity upper bound, $\progA(c)$ for a program $c$ as the maximum query length over all finite walks in its \emph{estimated dependency graph}, $\progG({c})$.
+We estimate the adaptivity upper bound, 
+$\progA(c)$ for a program $c$ as the maximum query length over all finite walks 
+in its \emph{estimated dependency graph}, $\progG({c})$,
+\highlight{where $\qlen$ and $\walks$ are defined in Section~\ref{sec:sematnic_adaptivity}.}
 %
 % $\walks(\progG(c))$ represents the set of all finite walks on
 %  $\progG({c})$.
@@ -544,6 +558,21 @@ $
 \end{center}
 \end{thm}
 
+\highlight{We propose a program analysis algorithm $\pathsearch$ which 
+provides a tight upper bound on the estimated adaptivity. 
+\begin{thm}[Soundness of $\pathsearch$]
+  \label{thm:adaptalg_soundness}
+  For every program $c$, we have
+\begin{center}
+$
+\pathsearch(\progG({c})) \geq \progA(c).
+$
+\end{center}
+\end{thm}
+}
+
+\highlight{\subsection{$\pathsearch$ Algorithm}}
+\subsubsection{\highlight{Challenges}}
 Symbolic expressions as used in the weight  are great to express symbolic bounds but make the computation of 
 a maximal walk harder. Specifically, one has to face two challenges. The first is non-termination.
 A naive traversing strategy leads to non-termination
@@ -555,19 +584,57 @@ the finite walk with the weight as
 its visiting time. However, these approach would face the second challenge: approximation.
 It would consistently and considerably over-approximate the adaptivity.
 
-To address these two challenges we design an algorithm $\pathsearch$  combining 
+\subsubsection{\highlight{$\pathsearch$ overview}}To address these two challenges,  $\pathsearch$  combines
 % DFS and BFS algorithm 
-Depth First Search and Breadth First Search.
-The idea of this algorithm is to reduce the task of computing the
+Depth First Search and Breadth First Search. 
+\highlight{The idea of this algorithm is to reduce the task of computing the
+walk with the maximal query length in the dependency graph to the task of
+finding the longest weighted path in a simplified dependency graph which is a Directed Acyclic Graph(DAG).
+To get the simplified graph, the following steps are performed in $\pathsearch$:
+\begin{enumerate}
+  \item the original dependency graph will be partitioned into  
+  its strongly connected components (SCCs) using the standard Kosaraju’s algorithm. SCCs are
+  maximal strongly connected subgraphs. 
+  \item  for each SCC, we compute a local adaptivity bound by the algorithm $\pathsearch_{\kw{SCC}}$.
+  \item  $\pathsearch$ shrinks the estimated dependency graph into a directed acyclic graph
+  (DAG) by reducing each SCC into a vertex with the weight equal to its adaptivity local bound.
+\end{enumerate}
+After simplifying the graph, $\pathsearch$ uses the standard breath first search strategy to find the longest
+weighted path on this DAG and return this length as the adaptivity upper bound, whose 
+complexity is O(V+E) where $V$ and $E$ represents the number of vertices and the number of edges 
+in the simplified graph.
+}
+\remove{The idea of this algorithm is to reduce the task of computing the
 walk with the maximal query length to the task of computing local versions of the adaptivity on the maximal strongly connected components of the graph $\progG(c)$ and then compose them into the program adaptivity. 
 The algorithm  uses  
-another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which finds the {walk} for a strong connected component of $\progG(c)$. The pseudocode of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adaptscc}
+another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which finds the {walk} for a strong connected component of $\progG(c)$. 
+}
+\subsubsection{\highlight{Into $\pathsearch_{\kw{SCC}}$}}
+\highlight{The high level idea of $\pathsearch_{\kw{SCC}}$ is the following:
+To provide an upper bound on the local adaptivity of a Strong Connected Component of a graph,
+we need to find out the walk with maximal query length in this SCC. 
+Suppose we have an SCC with just three vertices $a^{3}_{1}$, $b^{2}_{1}$,
+$c^{3}_{0}$, $a$ with weight $3$ and query annotation marked as $1$, similar for $b$ and $c$. 
+The walk we are looking for, $a \to b \to c \to a \to b \to c \to a$, can be approximated by finding a path in this SCC
+which starts from a vertex and stops when it reaches the same vertex, such as $a \to b \to c$, by the product of 
+ the minimal weight along the path (min(3,2,3)) and the number of queries of this path 2 ($a$ and $c$ are query nodes). 
+ Because we are
+ traversing in an SCC, if we start from one vertex, it will finally go back to the same vertex.   
+ $\pathsearch_{\kw{SCC}}$ uses the above intuition and traverses an SCC starting from every possible
+ vertex, keeps track of the minimal weight (line: 7 in Algorithm~\ref{alg:adaptscc} ) and the number of queries (line: 8 in Algorithm~\ref{alg:adaptscc}) and 
+ stops when it goes back to itself (line: 11 in Algorithm~\ref{alg:adaptscc}).
+ The traverse is performed by a Depth First Search, whose complexity is O(V+E), where $V$ and $E$ 
+ represents the number of vertices and edges in this SCC.  $\pathsearch_{\kw{SCC}}$ performs such 
+ as traverse for every vertex so the total complexity for $\pathsearch_{\kw{SCC}}$ is O((V+E)*V).
+ }
+
+The pseudocode of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adaptscc}
 
 %%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 1: %%%%%%%%%%%%%%%%%%%%%%
 % The ${\pathsearch}$ and  detail introduction is in supplementary material.
 %%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 2: %%%%%%%%%%%%%%%%%%%%%%
 {\footnotesize
-\vspace{-0.3cm}
+% \vspace{-0.3cm}
 \begin{algorithm}
             \caption{
             {\small Adaptivity Bound Algorithm on An SCC ({$\kw{\pathsearch_{scc}(c, SCC_i)}$})}
@@ -592,9 +659,9 @@ another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which finds the {walk} 
             \STATE \qquad {\bf for} every vertex $v$ 
             connected by a directed edge from $s$:
             \STATE \qquad \qquad {\bf if} $\kw{visited}[v] = \efalse$:
-            \STATE \qquad \qquad \qquad {$\kw{flowcapacity[v] = \min(\weights_i(v), {flowcapacity}[s])}$};
-            \quad {$\kw{querynum[v] = querynum[s] + \qflag_i(v)}$};
-            \STATE \qquad \qquad \qquad {$\kw{r[v] =  \max(r[v], flowcapacity[v] \times querynum[v]}) $}; 
+            \STATE \qquad \qquad \qquad {$\kw{flowcapacity[v] = \min(\weights_i(v), {flowcapacity}[s])}$}; \qquad \qquad \#\{\highlight{track minimal weight so far}\}
+            \STATE \qquad \qquad \qquad {$\kw{querynum[v] = querynum[s] + \qflag_i(v)}$}; \qquad \qquad \qquad \qquad\#\{\highlight{track numbers of queries so far} \}
+            \STATE \qquad \qquad \qquad {$\kw{r[v] =  \max(r[v], flowcapacity[v] \times querynum[v]}) $}; \#\{\highlight{track adaptivity upper bound so far} \}
             \STATE \qquad \qquad \qquad  $\kw{visited}[v] = 1$; %\#\{mark $v$ as visited\}
             \quad $\kw{dfs(G, v, visited)}$;
             \STATE \qquad \qquad {\bf else}: \#\{There is a cycle finished\}
@@ -607,7 +674,7 @@ another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which finds the {walk} 
             \RETURN  $\kw{r_{scc}}$
             \end{algorithmic}
             \end{algorithm}
-            \vspace{-0.3cm}
+            % \vspace{-0.3cm}
 }           
 
 % The \emph{Adaptivity Computation Algorithm on An SCC ($\kw{\pathsearch_{scc}}$)}
@@ -616,13 +683,14 @@ $\progG(c)$, and outputs an adaptivity bound for $\kw{SCC_i}$.
 If $\kw{SCC_i}$ contains only one vertex, $x^l$ without any edge, $\kw{\pathsearch_{scc}}$ returns the query annotation of $x^l$ as the adaptivity.
 If $\kw{SCC_i}$ contains at least one edge, 
 $\kw{\pathsearch_{scc}}$:
-\begin{enumerate}
+\remove{\begin{enumerate}
 \item first collects all the paths in $\kw{SCC_i}$; 
 \item it then calculates the adaptivity of every path by the method $\kw{dfs}$; 
 \item in the end, it outputs the maximal adaptivity among all paths as the adaptivity of $\kw{SCC_i}$.
 \end{enumerate}
 By the property of SCC, the paths collected in step 1 are all simple cycles with the same starting and ending vertex. 
-Step 2 is the key step. It recursively computes the adaptivity upper bound on the fly of paths collected through a DFS procedure $\kw{dfs}$ (lines: 4-13). This procedure guarantees that the visiting times of each vertex is upper bounded by its weight, and addresses the approximation challenge,
+Step 2 is the key step. It }
+recursively computes the adaptivity upper bound on the fly of paths collected through a DFS procedure $\kw{dfs}$ (lines: 4-13). This procedure guarantees that the visiting times of each vertex is upper bounded by its weight, and addresses the approximation challenge,
 via two special lists parameters $\kw{flowcapacity}$ and $\kw{querynum}$ (lines:7-11).
  
  
@@ -636,14 +704,14 @@ It tracks the total number of vertices with query annotation $1$
 along the path.
 %
 The operation
-at line: 8 and line: 11 implements the operation  $\kw{flowcapacity[v] \times querynum[v]}$.
+at line: 9 and line: 12 implements the operation  $\kw{flowcapacity[v] \times querynum[v]}$.
 Because $\kw{flowcapacity[v]}$ is the minimum weight over this path,
 this guarantees that every vertex on the estimated walk is allowed to be visited at most $\kw{flowcapacity[v]}$, and this walk is a valid finite walk.
 Then $\kw{querynum[v]}$ guarantees that $\kw{flowcapacity[v] \times querynum[v]}$ computes an accurate query length
 because $\kw{querynum[v]}$ is only the number of the vertices with query annotation $1$,
 giving a tight bound without losing the soundness.
 
-\begin{thm}[Soundness of $\pathsearch$]
+\remove{\begin{thm}[Soundness of $\pathsearch$]
     \label{thm:adaptalg_soundness}
     For every program $c$, we have
 \begin{center}
@@ -652,7 +720,7 @@ $
 $
 \end{center}
 \end{thm}
-
+}
 
 % This step also guarantees the termination through a boolean list, $\kw{visited}$ in line:6 and line:9.
 
