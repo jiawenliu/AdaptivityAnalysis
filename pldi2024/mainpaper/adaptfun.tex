@@ -515,7 +515,7 @@ $w_k(\trace_0) = \env(\trace_0) k$.
 \subsection{Adaptivity Upper Bound Computation}
 \label{sec:alg_adaptcompute}
 We estimate the adaptivity upper bound, 
-$\progA(c)$ for a program $c$ as the maximum query length over all finite walks 
+$\progA(c)$ for a program $c$ as the maximal query length over all finite walks 
 in its \emph{estimated dependency graph}, $\progG({c})$,
 \highlight{where $\qlen$ and $\walks$ are defined in Section~\ref{sec:sematnic_adaptivity}.}
 %
@@ -542,7 +542,9 @@ $
 % The full definition for $\walks(\progG(c))$ and $\qlen$ over $\walks(\progG(c))$ are in the appendix.
 
 
-Notice that different from a walk on $\traceG(c)$, a walk $k \in \walks(\progG(c))$ on the graph $\progG(c)$  does not rely on an initial trace. This because, similarly to what we did for the weights in $\progW(c)$ in the previous section, we use symbolic expressions over input variables. Similarly, the adaptivity bound $\progA(c)$ will also be a symbolic arithmetic expression over the input variables. With this symbolic expression we can prove the upper bound sound with respect to any initial trace. 
+Different from a walk on $\traceG(c)$, a walk $k \in \walks(\progG(c))$ on the graph $\progG(c)$
+ does not rely on an initial trace. 
+ The reason is that we use symbolic expressions over input variables, similarly to what we did for the weights in $\progW(c)$ in the previous section. Thus the adaptivity bound $\progA(c)$ will also be a symbolic arithmetic expression over the input variables. With this symbolic expression we can prove the upper bound sound with respect to any initial trace. 
 
 % We prove our estimated adaptivity is a sound upper bound of program's adaptivity in appendix.
 %
@@ -581,7 +583,7 @@ is a symbolic expression containing input variables.
 We could try to use a depth first search strategy
 using the longest weighted path to approximate
 the finite walk with the weight as
-its visiting time. However, these approach would face the second challenge: approximation.
+its visiting time. However, these approachs would face the second challenge: approximation.
 It would consistently and considerably over-approximate the adaptivity.
 
 \subsubsection{\highlight{$\pathsearch$ overview}}To address these two challenges,  $\pathsearch$  combines
@@ -593,7 +595,7 @@ finding the longest weighted path in a simplified dependency graph which is a Di
 To get the simplified graph, the following steps are performed in $\pathsearch$:
 \begin{enumerate}
   \item the original dependency graph will be partitioned into  
-  its strongly connected components (SCCs) using the standard Kosaraju’s algorithm. SCCs are
+  its strongly connected components (SCCs) using the standard Kosaraju’s algorithm. The SCCs are
   maximal strongly connected subgraphs. 
   \item  for each SCC, we compute a local adaptivity bound by the algorithm $\pathsearch_{\kw{SCC}}$.
   \item  $\pathsearch$ shrinks the estimated dependency graph into a directed acyclic graph
@@ -611,12 +613,12 @@ another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which finds the {walk} 
 }
 \subsubsection{\highlight{Into $\pathsearch_{\kw{SCC}}$}}
 \highlight{The high level idea of $\pathsearch_{\kw{SCC}}$ is the following:
-To provide an upper bound on the local adaptivity of a Strong Connected Component of a graph,
-we need to find out the walk with maximal query length in this SCC. 
+to provide an upper bound on the local adaptivity of an Strong Connected Component of a graph,
+we need to find out the walk with the maximal query length in this SCC. 
 Suppose we have an SCC with just three vertices $a^{3}_{1}$, $b^{2}_{1}$,
-$c^{3}_{0}$, $a$ with weight $3$ and query annotation marked as $1$, similar for $b$ and $c$. 
-The walk we are looking for, $a \to b \to c \to a \to b \to c \to a$, can be approximated by finding a path in this SCC
-which starts from a vertex and stops when it reaches the same vertex, such as $a \to b \to c$, by the product of 
+$c^{3}_{0}$, $a$ with weight $3$ and query annotation marked as $1$, similarly for $b$ and $c$. 
+The walk we are looking for, for instance, $a \to b \to c \to a \to b \to c \to a$, can be approximated by finding a path in this SCC
+which starts from a vertex and stops when it reaches the same vertex(exclusive), such as $a \to b \to c$, by the product of 
  the minimal weight along the path (min(3,2,3)) and the number of queries of this path 2 ($a$ and $c$ are query nodes). 
  Because we are
  traversing in an SCC, if we start from one vertex, it will finally go back to the same vertex.   
@@ -625,7 +627,7 @@ which starts from a vertex and stops when it reaches the same vertex, such as $a
  stops when it goes back to itself (line: 11 in Algorithm~\ref{alg:adaptscc}).
  The traverse is performed by a Depth First Search, whose complexity is O(V+E), where $V$ and $E$ 
  represents the number of vertices and edges in this SCC.  $\pathsearch_{\kw{SCC}}$ performs such 
- as traverse for every vertex so the total complexity for $\pathsearch_{\kw{SCC}}$ is O((V+E)*V).
+ a traverse for every vertex so the total complexity for $\pathsearch_{\kw{SCC}}$ is O((V+E)*V).
  }
 
 The pseudocode of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adaptscc}
@@ -662,11 +664,11 @@ The pseudocode of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adapts
             \STATE \qquad \qquad \qquad {$\kw{flowcapacity[v] = \min(\weights_i(v), {flowcapacity}[s])}$}; \qquad \qquad \#\{\highlight{track minimal weight so far}\}
             \STATE \qquad \qquad \qquad {$\kw{querynum[v] = querynum[s] + \qflag_i(v)}$}; \qquad \qquad \qquad \qquad\#\{\highlight{track numbers of queries so far} \}
             \STATE \qquad \qquad \qquad {$\kw{r[v] =  \max(r[v], flowcapacity[v] \times querynum[v]}) $}; \#\{\highlight{track adaptivity upper bound so far} \}
-            \STATE \qquad \qquad \qquad  $\kw{visited}[v] = 1$; %\#\{mark $v$ as visited\}
+            \STATE \qquad \qquad \qquad  $\kw{visited}[v] = 1(\highlight{True})$; %\#\{mark $v$ as visited\}
             \quad $\kw{dfs(G, v, visited)}$;
             \STATE \qquad \qquad {\bf else}: \#\{There is a cycle finished\}
             \STATE \qquad \qquad \qquad 
-            {\small{$\kw{r[v] =  \max(r[v], r[s] +\min(\weights_i(v), {flowcapacity}[s]) * (querynum[s] + \qflag_i(v)))}$}};
+            {\small{$\kw{r[v] =  \max(r[v], r[s] +\min(\weights_i(v), {flowcapacity}[s]) \times (querynum[s] + \qflag_i(v)))}$}};
             \STATE \qquad {\bf return}  $\kw{r[c]}$
             \STATE  {\bf for} every vertex $v$ in $\vertxs_i$:
             \STATE  \qquad initialize the $\kw{visited, r, flowcapacity, querynum}$ with the same value at line:2.
