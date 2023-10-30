@@ -1,34 +1,34 @@
 \subsection{Some results in Adaptive Data Analysis}
 %\wq{I think we can move this subsection into appendix. Maybe just leave theorm 1.2 and 1.3}
 %\jl{I don't agree}
-In Adaptive Data Analysis an \emph{analyst} is interested in studying some distribution $\dist$ over some domain $\univ$.  Following previous works~\cite{DworkFHPRR15,HardtU14,BassilyNSSSU16}, we focus on the setting where the analyst is interested in answers to \emph{statistical queries} (also known as \emph{linear queries}) over the distribution.  A statistical query is usually defined by some function $\query \from \univ \to [-1,1]$ (often other codomains such as $[0,1]$ or $[-R,+R]$, for some $R$, are considered).  The analyst wants to learn the \emph{population mean}, which (abusing notation) is defined as 
-$\query(\dist) = \ex{\sample \sim \dist}{\query(\sample)}$. 
+In Adaptive Data Analysis an \emph{analyst} is interested in studying some distribution $\dist$ over some domain $\univ$.  Following previous works~\cite{DworkFHPRR15,HardtU14,BassilyNSSSU16}, we focus on the setting where the analyst is interested in answers to \emph{statistical queries} (also known as \emph{linear queries}) over the distribution.  A statistical query is usually defined by some function $\qquery \from \univ \to [-1,1]$ (often other codomains such as $[0,1]$ or $[-R,+R]$, for some $R$, are considered).  The analyst wants to learn the \emph{population mean}, which is defined as 
+$\qquery(\dist) = \ex{\sample \sim \dist}{\qquery(\sample)}$. 
 %
 We assume that the distribution $\dist$ can only be accessed via a set of \emph{samples} $\sample_1,\dots,\sample_n$ drawn independently and identically distributed (i.i.d.) from $\dist$.  These samples are held by a mechanism $\mech(\sample_1,\dots,\sample_n)$ who receives the query $\query$ and computes an answer 
-$\answer \approx \query(\dist)$.
+$\answer \approx \qquery(\dist)$.
 %
 The na\"ive way to approximate the population mean is to use the \emph{empirical mean}, which (abusing notation) is defined as 
-$\query(\sample_1,\dots,\sample_n) = \frac{1}{n} \sum_{i=1}^{n} \query(X_i)$.
-However, the mechanism $M$ can adopt some methods for improving the generalization error $| a- \query(\dist)|$.
+$\qquery(\sample_1,\dots,\sample_n) = \frac{1}{n} \sum_{i=1}^{n} \qquery(X_i)$.
+However, the mechanism $M$ can adopt some methods for improving the generalization error $| a- \qquery(\dist)|$.
 
-In this work we consider analysts that ask a sequence of $k$ queries $\query_1,\dots,\query_k$.  If the queries are all chosen in advance, independently of the answers of each other, then we say they are \emph{non-adaptive}.  If the choice of each query $\query_j$ depends on the prefix $\query_1,\answer_1,\dots,\query_{j-1},\answer_{j-1}$ then they are \emph{fully adaptive}.  An important intermediate notion is \emph{$\qrounds$-round adaptive}, where the sequence can be partitioned into $\qrounds$ batches of non-adaptive queries.  Note that non-adaptive queries are $1$-round and fully adaptive queries are $k$-round adaptive.
+In this work we consider analysts that ask a sequence of $k$ queries $\qquery_1,\dots,\qquery_k$.  If the queries are all chosen in advance, independently of the answers \highlight{$a_1,\dots,a_k$} of each other, then we say they are \emph{non-adaptive}.  If the choice of each query $\qquery_j$ depends on the prefix $\qquery_1,\answer_1,\dots,\qquery_{j-1},\answer_{j-1}$ then they are \emph{fully adaptive}.  An important intermediate notion is \emph{$\qrounds$-round adaptive}, where the sequence can be partitioned into $\qrounds$ batches of non-adaptive queries.  Note that non-adaptive queries are $1$-round and fully adaptive queries are $k$-round adaptive.
 
 We now review what is known about the problem of answering $r$-round adaptive queries.  
 \begin{thm}[\cite{BassilyNSSSU16}] 
 \label{thm:nonadapt-adapt}
 \begin{enumerate}
 
-\item For any distribution $\dist$, and any $k$ \emph{non-adaptive} statistical queries, 
+\item For any distribution $\dist$, and any $k$ \emph{non-adaptive} statistical queries, \highlight{with high probablity,} 
 % $$
 $
-\max_{j=1,\dots,k} | \answer_j - \query_j(\dist) | = O\left( \sqrt{\frac{\log k}{n}}  \right)
+\max_{j=1,\dots,k} | \answer_j - \qquery_j(\dist) | = O\left( \sqrt{\frac{\log k}{n}}  \right)
 % $$
 $.
 %
-\item For any distribution $\dist$, and  any $k$  \emph{$\qrounds$-round adaptive} statistical queries, with $\qrounds \geq 2$, the empirical mean (rounded to an appropriate number of bits of precision)\footnote{With infinite precision even two queries may give unbounded error, when the first query's result encodes the whole data.} satisfies:\\
+\item For any distribution $\dist$, and  any $k$  \emph{$\qrounds$-round adaptive} statistical queries, with $\qrounds \geq 2$, \highlight{with high probablity,} the empirical mean (rounded to an appropriate number of bits of precision)\footnote{With infinite precision even two queries may give unbounded error, when the first query's result encodes the whole data.} satisfies:\\
 % $$
 $
-\max_{j=1,\dots,k} | \answer_j - \query_j(\dist) | = O\left( \sqrt{\frac{k}{n}}  \right)
+\max_{j=1,\dots,k} | \answer_j - \qquery_j(\dist) | = O\left( \sqrt{\frac{k}{n}}  \right)
 % $$
 $
 \end{enumerate}
@@ -37,19 +37,19 @@ In fact, these bounds are tight (up to constant factors) which means that even a
 
 \citet{DworkFHPRR15} and \citet{BassilyNSSSU16} showed that by using carefully calibrated Gaussian noise in order to limit the dependency of a single query on the specific data instance, one 
 can actually achieve much stronger generalization error as a function of the number of queries, specifically.
-\begin{thm}[\cite{DworkFHPRR15, BassilyNSSSU16}] \label{thm:gaussiannoise} For any distribution $\dist$, any $k$, any $\qrounds \geq 2$ and any \emph{$\qrounds$-round adaptive} statistical queries, if we answer queries with carefully calibrated Gaussian noise we have:
+\begin{thm}[\cite{DworkFHPRR15, BassilyNSSSU16}] \label{thm:gaussiannoise} For any distribution $\dist$, any $k$, any $\qrounds \geq 2$ and any \emph{$\qrounds$-round adaptive} statistical queries, if we answer queries with carefully calibrated Gaussian noise, \highlight{with high probablity,}  we have:
 \begin{center}
   $
-\max_{j=1,\dots,k} | \answer_j - \query_j(\dist) | = O\left( \frac{\sqrt[4]{k}}{\sqrt{n}}  \right)
+\max_{j=1,\dots,k} | \answer_j - \qquery_j(\dist) | = O\left( \frac{\sqrt[4]{k}}{\sqrt{n}}  \right)
 $  
 \end{center}
 \end{thm}
 % Notice that in order to Theorem~\ref{thm:gaussiannoise} has different quantification in that the optimal choice of mechanism depends on the number of queries.  Thus, we need to know the number of queries \emph{a priori} to choose the best mechanism.
 More interestingly, \citet{DworkFHPRR15}
-also gave a refined bounds that can be achieved with different mechanisms depending on the number of rounds of adaptivity.   \begin{thm}[\cite{DworkFHPRR15}] \label{thm:gaussiannoise2} For any $r$ and $k$, there exists a mechanism such that for any distribution $\dist$, and any $\qrounds \geq 2$ any \emph{$\qrounds$-round adaptive} statistical queries, it satisfies
+also gave a refined bounds that can be achieved with different mechanisms depending on the number of rounds of adaptivity.   \begin{thm}[\cite{DworkFHPRR15}] \label{thm:gaussiannoise2} For any $r$ and $k$, there exists a mechanism such that for any distribution $\dist$, and any $\qrounds \geq 2$ any \emph{$\qrounds$-round adaptive} statistical queries, \highlight{with high probablity,} it satisfies
 \begin{center}
   $
-\max_{j=1,\dots,k} | \answer_j - \query_j(\dist) | = O\left( \frac{r \sqrt{\log k}}{\sqrt{n}}  \right)
+\max_{j=1,\dots,k} | \answer_j - \qquery_j(\dist) | = O\left( \frac{r \sqrt{\log k}}{\sqrt{n}}  \right)
 $  
 \end{center}
 \end{thm}
@@ -82,8 +82,8 @@ representing a function $\from \univ \to U$ on rows \highlight{of the hidden dat
 We use $U$ to denote the codomain of queries and it could be $[-1,1]$, $[0,1]$ or $[-R,+R]$, for some $R$ we consider. This function characterizes the linear query we are interested in running. Indeed, as we discussed in the previous section, linear queries compute the empirical mean of a function on rows 
 --- we use $\chi$ to abstract a possible row in the database \highlight{which distinguishes $\univ$ for a domain of a row}.
  As an example, $x \leftarrow \query(\chi[j] \cdot \chi[k])$ computes an approximation, according to the used mechanism, of the empirical mean of the product of the $j^{th}$ attribute and $k^{th}$ attribute, identified by $\chi[j] \cdot \chi[k]$. Notice that we don't materialize the mechanism but we assume that it is implicitly run when we execute the query. 
- In Fig.~\ref{fig:overview-example}(a), the queries inside the while loop correspond to the first phase of the data analysis and compute an approximation of 
-the product of the empirical mean of the first $k$ attributes. 
+ In Fig.~\ref{fig:overview-example}(a), the queries inside the while loop correspond to the first phase of the data analysis and compute \highlight{the sum of the empirical mean of
+the product of the $j$th attribute with the $k$th attribute}. 
 The query outside the loop corresponds to the second phase and computes an approximation of the empirical mean where each record is weighted by the sum of the empirical mean of the first $k$ attributes.
 
 
@@ -188,10 +188,10 @@ For example, the vertex $l^{6}$ has weight {$\lambda \trace.1$} since for every 
 Third, we can finally define adaptivity using the semantics-based dependency graph. We actually define this notion with respect to an initial state $\tau$, since different states can give very different adaptivities.  
 We consider 
 % the longest walk  that visits each vertex $v$ of the semantics-based dependency graph no more than the value that the weight $w_v$ assign to $\tau$, and visits as many query nodes as possible. 
-the walk  that visits each vertex $v$ of the semantics-based dependency graph no more than the value that the weight $w_v$ applying to the initial state $\tau$, and visits the maximal number of query nodes.
-The number of query nodes visited is the adaptivity of the program with respect to $\tau$.
+\highlight{any} \remove{the} walk  that visits each vertex $v$ of the semantics-based dependency graph no more than the value that the weight $w_v$ applying to the initial state $\tau$, and visits the \highlight{maximal} number of query vertices.
+The number of query vertices visited is the adaptivity of the program with respect to $\tau$.
 Looking again at Fig.~\ref{fig:overview-example}(b), and assuming that $\tau(k) \geq 1$, we can see that the 
-walk along the dashed arrows,  $l^{6} \to a^5 \to x^3 $ has two vertices with query annotation $1$, and we cannot find another walk having more than $2$ vertices with query annotation $1$. So the adaptivity of the program in Fig.~\ref{fig:overview-example}(a) with respect to $\tau$ is $2$. If we consider an initial state $\tau$ such that $\tau(k)=0$ we have that the adaptivity with respect to $\tau$ is instead $1$. 
+walk along the dashed arrows,  $l^{6} \to a^5 \to x^3 $ has two vertices with query annotation $1$, and we cannot find another walk having more than $2$ query vertices,\highlight{ ( $l^{6} \to x^3 $  with $2$ query vertices as well)}. So the adaptivity of the program in Fig.~\ref{fig:overview-example}(a) with respect to $\tau$ is $2$. If we consider an initial state $\tau$ such that $\tau(k)=0$ we have that the adaptivity with respect to $\tau$ is instead $1$. 
 %%%%%%Gap: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % \begin{figure}
 %     \centering   
@@ -231,7 +231,7 @@ The first algorithm generates the \emph{estimated dependency graph} using severa
 % This combined analysis allow us to obtain more accurate upper bounds than what we would obtain by using any of these single analysis technique in isolation.
 The second algorithm estimates the
 % longest 
-walk which respects the weights and which visits the maximal number of query nodes.
+walk which respects the weights and which visits the maximal number of query vertices.
 %  as possible. 
 The two algorithms together gives us an  upper bound on the program's \emph{adaptivity}.
 
