@@ -10,23 +10,65 @@ edge estimation (as presented in Section~\ref{sec:alg_edgegen}), and weight esti
 and the adaptivity computation algorithm shown in Section~\ref{sec:alg_adaptcompute} in Python.
 The OCaml program takes the labeled command as input and outputs the program-based dependency graph and
 the abstract transition graph, which we
-feed into the Python program and the Python program provides the adaptivity upper bound and the query number as the final output.
+feed into the Python program and the Python program provides the adaptivity upper bound and the query number \highlight{upper bound} as the final output.
 
 
 \paragraph{Accuracy and Performance}
 \input{eval-table}
-We first evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity. To do this we consider $23$ example programs with the evaluation results shown in Table~\ref{tb:adapt-imp}.
+\highlight{We evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity
+through $25$ example programs in Table~\ref{tb:adapt-imp}.
+We show the accuracy of our tool by the adapativity, the estimated adaptivity and query number upper bound $A_{est}$ and $query\#$ of these $25$ examples,
+the performance through the size of examples (L.O.C) and running time which consists of graph construction (graph), weight estimation (weight) and adaptivity computation ($\pathsearch$).
+Examples include the ones we have seen such as two rounds $\kw{twoRounds(k)}$ in
+Fig.~\ref{fig:overview-example}(a) and multiple rounds in $ \kw{mR(k)}$ Fig.~\ref{fig:multipleRounds}(a) and its variants $\kw{mROdd(k)}$ $\kw{mROdd(k)}$,
+the logistic regression algorithm with gradient decent (short for $\kw{LRGD}$) used in machine learning area,
+handcrafted programs from the $6^{th}$ ($\kw{seqRV}$) to $19^{th}$ ($\kw{loop2R}$) based on benchmarks from the work by Gulwani et al.~\cite{GulwaniJK09}. These examples have small sizes but complex structures to test the programs under different situations including
+data, control dependency, the multiple paths nested loop with related counters, etc. The names of these programs obey the convention that,
+$\kw{if}$ means there is an if control in the program;
+$\kw{loop}$ means there is while loop and $\kw{loop2}$ represents two levels nested loop in the program;
+$\kw{C}$ denotes Control;
+$\kw{D}$ for Dependency; $\kw{V}$ for Variable;
+$\kw{M}$ for Multiple; $\kw{P}$ for Path and $\kw{R}$ for Related.
+The last six programs are synthesized programs composed of the previous programs in order to test the performance limitation when the input program is large. 
+}
 
-In this table,
+\highlight{From the perspective of accuracy, our tool provides the tight
+upper bound on the adaptivity for the most examples. 
+ For the $4^{th}$ program $\kw{mROdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound 
+ $2 + \max(1, 2k)$ because of the path insensitive nature of the weight estimation algorithm, as discussed in Section~\ref{sec:examples}. 
+ Similarly for the $17^{th}$ example $\kw{loopM}$. 
+$\THESYSTEM$ outputs $1 + \max(1, k) $ for the $5^{th}$ program $\kw{mRSingle(k)}$, which is tight with respect to our adaptvitiy definition in Def.~\ref{def:trace_adapt}.
+However, because Def.~\ref{def:trace_adapt} is a loose definition of $\kw{mRSingle(k)}$'s actual adaptivity rounds,
+the result is still an over-approximation.
+}
+
+\highlight{From the perspective of performance, our tool can quickly construct the graph, estimate the weight,
+and provide the adpativity upper bound for the first $19$ examples.
+ However, when it comes to complicated examples with multiple high-level nest loops such as $tRCom$ (two $2-$level and three single level while loops), $jumbo$ (one $2-$level and two single level while loops) and $big$ (two $3-$level, three $2-$level and one single level while loops),
+our tool can not handle them. The performance bottleneck is the reachability bound analysis algorithm used to compute the weights.
+We can see how the time grows dramaticaly from $85.9$ seconds for the $20^{th}$ example $mR(k,N)$ with only one $3-$level nest while loop,
+to $5104$ seconds ($85$ minutes) for the $21^{th}$ example $\kw{mRCom}$ who has two $3-$level nest while loops. The more while loops the examples contain, the higher level of these loops 
+ the much longer time neeeded for weight estimation.
+Notice, even though the example $\kw{seqCom}$ has the largest size of $502$ lines 
+of code, our tool can still quickly handle it because $\kw{seqCom}$ does not have loops, the time is only $1.27$ seconds
+for the weight estimation. Fortunately, examples with so many multiple loops
+is not realistic in the data analysis area. 
+}
+
+\remove{We first evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity
+To do this we consider {through} $23$ example programs with the evaluation results shown in  Table~\ref{tb:adapt-imp}.
+We show the accuracy of our tool by the adapativity, the estimated adaptivity and query number upper bound $A_{est}$ and $query\#$ of these $23$ examples,
+the performance through the size of examples(L.O.C) and running time which consists of graph construction(graph), weight estimation(weight) and adaptivity computation ($\pathsearch$).   } 
+\remove{In this table,
 the first column is the name of each program, the second column is the program adaptivity,
 the third column is the output of the $\THESYSTEM$ implementation, which consists of two expressions:
 the first one is the upper bound for adaptivity and the second one is the 
 upper bound for the total number of query requests in the program. And the last column is the performance evaluation w.r.t. the program size in terms of lines of code.
 The performance evaluation contains three parts. The first part is the running time of the Ocaml code, which parses the program and generates the $\progG(c)$.
 The second and third parts are the running times of the reachability bound analysis algorithm
-and the adaptivity computation algorithm, $\pathsearch(c)$.
+and the adaptivity computation algorithm, $\pathsearch(c)$.}
 
-The examples show a wide range of values for their adaptivity. 
+\remove{The examples show a wide range of values for their adaptivity. 
 The first two programs $\kw{twoRounds(k)}$, $ \kw{mR(k)}$ are the same as Fig.~\ref{fig:overview-example}(a) and Fig.~\ref{fig:multipleRounds}(a).
 $\THESYSTEM$ computes tight adaptivity bound for the first three examples.
 The third example is a logistic regression algorithm with gradient decent (short for LRGD).
@@ -36,10 +78,10 @@ because of the path insensitive nature of the weight estimation algorithm, as di
 The $5^{th}$ program, $\kw{mRSingle(k)}$ is the example program in Fig.~\ref{ex:multiRoundsS}.
 $\THESYSTEM$ outputs $1 + \max(1, k) $, which is tight with respect to our adaptvitiy definition in Def.~\ref{def:trace_adapt}.
 However, because Def.~\ref{def:trace_adapt} is a loose definition of $\kw{mRSingle(k)}$'s actual adaptivity rounds,
-the result is still an over-approximation.
+the result is still an over-approximation.}
 %
 
-The next thirteen programs in Table~\ref{tb:adapt-imp} from $6^{th}$ to $19^{th}$ row are handcrafted programs based on benchmarks from the work by Gulwani et al.~\cite{GulwaniJK09}. They all have small sizes but complex structures in order to test the programs under different situations including
+\remove{The next thirteen programs in Table~\ref{tb:adapt-imp} from $6^{th}$ to $19^{th}$ row are handcrafted programs based on benchmarks from the work by Gulwani et al.~\cite{GulwaniJK09}. They all have small sizes but complex structures in order to test the programs under different situations including
 data, control dependency,
 the multiple paths nested loop with related counters, etc.
 The names of these programs obey the convention that,
@@ -47,16 +89,16 @@ $\kw{if}$ means there is an if control in the program;
 $\kw{loop}$ means there is while loop and $\kw{loop2}$ represents two levels nested loop in the program;
 $\kw{C}$ denotes Control;
 $\kw{D}$ for Dependency; $\kw{V}$ for Variable;
-$\kw{M}$ for Multiple; $\kw{P}$ for Path and $\kw{R}$ for Related.
+$\kw{M}$ for Multiple; $\kw{P}$ for Path and $\kw{R}$ for Related.}
 
 
-Our algorithm computes tight bounds for the adaptivity of programs from row six, $\kw{seqRV()}$ to row fourteen, $\kw{loop2MPRV(k)}$
-and over-approximate the \emph{adaptivity} for the  examples in row fifteen and sixteen because of the path-insensitive nature of the algorithm computing the weights.
+\remove{Our algorithm computes tight bounds for the adaptivity of programs from row six, $\kw{seqRV()}$ to row fourteen, $\kw{loop2MPRV(k)}$
+and over-approximate the \emph{adaptivity} for the  examples in row fifteen and sixteen because of the path-insensitive nature of the algorithm computing the weights.}
 
-The last six programs are synthesized programs composed of the previous programs in order to test the performance limitation when the input program is large. 
-From the evaluation results, the performance bottleneck is the reachability bound analysis algorithm used to compute the weights.
+\remove{The last six programs are synthesized programs composed of the previous programs in order to test the performance limitation when the input program is large. 
+From the evaluation results, the performance bottleneck is the reachability bound analysis algorithm used to compute the weights.}
 
-The reachability-bound analysis algorithm presented in Section~\ref{sec:alg_weightgen} time out after $5$ minutes when evaluating the examples $\kw{tRCom(k)}$,  $\kw{jumbo}$ and ${\kw{big(k)}}$.
+\remove{The reachability-bound analysis algorithm presented in Section~\ref{sec:alg_weightgen} time out after $5$ minutes when evaluating the examples $\kw{tRCom(k)}$,  $\kw{jumbo}$ and ${\kw{big(k)}}$.}
 
 \paragraph{Alternative Implementations}
 \input{eval-table-alternatives}
