@@ -121,6 +121,9 @@ w.r.t. the true value. The first one {\THESYSTEM}-I replaces the reachability bo
 with a light one that handles nested while loop effectively but coarsely so it can quickly take care of examples $\kw{jumbo}$ and $\kw{big}$.
 In general, {\THESYSTEM}-I gives a tight upper bound in most cases as {\THESYSTEM} does.
  The exception is the $17^{th}$ example ($\kw{loop2R}$): {\THESYSTEM} gives a tight upper bound $1+3k$ while the alternative one gives a loose bound$2+3k+k^2$.
+ We show the influence of the control flow analysis in Definition~\ref{def:feasible_flowsto} by 
+ removing it in the second implementation {\THESYSTEM}-II. The results are unsound (not upper bounds) for examples such as $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $ and $\kw{loopVCD(k)} $ because 
+ of the missing consideration of control dependency.
  }
 
 
@@ -131,20 +134,20 @@ and over-approximates the \emph{adaptivity} for $15^{th}$ and $16^{th}$ due to p
 $\THESYSTEM$.
 For the $17^{th}$ example ($\kw{loop2R}$), {\THESYSTEM} gives a tight upper bound $1+3k$ while the alternative one gives a loose bound$2+3k+k^2$,comparing both tables }.
 
-2. In {\THESYSTEM}-II, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
+\remove{2. In {\THESYSTEM}-II, we remove the control flow analysis from Definition~\ref{def:feasible_flowsto}.
 The estimated data dependency only considers the data flow.
 However, the adaptivity should consider both the data and control flow, so results here are unsound.
 For example, program $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $ and $\kw{loopVCD(k)} $ all have control dependency.
 However, the alternative implementation II in Table~\ref{tb:adapt-imp-alternatives} estimates the adapvitiy rounds of $2$ because it fails to identify the dependency through control flow.
-
+}
 % 3. In {\THESYSTEM}-III, we remove the reaching definition analysis from Section~\ref{sec:alg_edgegen}.
 % The Definition~\ref{def:feasible_flowsto} is replaced by a simple data flow analysis without looking into the variable liveness.
 % As a result, the estimated data dependency result contains the dependency relation between variables that is ``dead''. In other words, it over-approximates the variable may-dependency relation.
 
-3. In {\THESYSTEM}-III, we remove the reachability bound estimation from Section~\ref{sec:alg_weightgen}.
+\remove{3. In {\THESYSTEM}-III, we remove the reachability bound estimation from Section~\ref{sec:alg_weightgen}.
 We assign the weight $1$ to every labeled variable on the estimated dependency graph.
 The adaptivity estimation results are all integers and does not depend on any program inputs.
-When instantiating the input variable with varied values, this estimated result is either greater or smaller than the true adaptivity.
+When instantiating the input variable with varied values, this estimated result is either greater or smaller than the true adaptivity.}
 
 In the last column, we present only the performance of the {\THESYSTEM}-I to compare the
 light reachability-bound analysis implementation with the original reachability-bound analysis.
@@ -220,38 +223,54 @@ the best heuristic to future work.
 %% However, by using our tool in the first step, an analyst can directly equip the program with a chosen mechanism to get good
 %% analysis results.
 
+\highlight{
+    According to our heuristics, our examples fall into three categories: 
+    $\progA$ is much larger than $\query \#$, $\progA$ is close to  $\query \#$,
+    and $\progA$ is much smaller than $\query \#$. 
+    Since both $\progA$ and $\query \#$ are symbolic, the decision of our heursitic relies on 
+    the instantiation of input parameters such as $k,m, n$. To better present the 
+    robustness of our heuristics, we present two different instantiatons $k,m,n=10$ and $k,m, n =1000$ so that
+    for the same example, our tool will choose different mechanisms and it turns out that our choice is the best in most cases shown in 
+    Table~\ref{tb:adapt-generalization}.
+}
 
 We first evaluate example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
-$\kw{twoRound}$ is trained to classify a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
+$\kw{twoRounds}$ is trained to classify a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
 With only two adaptive rounds, by instantiating $k = 1000$ and $n = 1000$, this algorithm overfitted and produced the generalization error 
 $0.050$.
 Since $2* \sqrt{\log(1000)} \ll \sqrt{1000}$, {\THESYSTEM} chooses the DataSplit mechanism.
-The evaluation result(\textbf{0.028}) shows that we choose the best.
+The evaluation result (\textbf{0.028}) shows that our choice is the best.
 Then by instantiating $k = 10$, we see that $10 * \sqrt{\log(10)}$ is close to $\sqrt{10}$ and our tool chooses ThresholdOut, while Gaussian and ThresholdOut mechanism both perform well.
 
-The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
+\highlight{The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
+ $  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of LRGD into 3D and 4D data set of size $n$.
+ The number of iterations (i.e., the fitting depth) is $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds $k$ for these programs.
+ By instantiating $k = 1000$ and $n = 1000$, we have
+$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. }
+
+\remove{The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
 The number of iterations is $k$ and our tool identifies this as the  adaptivity  for these programs.
 %  and chooses the Gaussian mechanism.
 By instantiating $k = 1000$ and $n = 1000$, we have
 $1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. 
-The evaluation results in Table~\ref{tb:adapt-generalization} show again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.
+The evaluation results in Table~\ref{tb:adapt-generalization} show again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.}
 
-$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of LRGD into 3D and 4D data set of size $n$.
+\remove{$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of LRGD into 3D and 4D data set of size $n$.
 %$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
 %algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
 The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds $k$ for these two programs.
 Instantiating $k$ and $n$ with $1000$ and $1000$,
 %  the heuristics in Theorem~\ref{thm:gaussiannoise} and Theorem~\ref{thm:gaussiannoise2},
-our tool chooses the Gaussian mechanism which still reduces rmse the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well in Table~\ref{tb:adapt-generalization}. 
+our tool chooses the Gaussian mechanism which still reduces rmse the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well in Table~\ref{tb:adapt-generalization}. }
 
-We have four data analyses which are the implementation of algorithms from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
+We have four data analyses \remove{which are the implementation of algorithms} from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
 % is the
 % repeated query subroutine algorithm with $n\times 2^n$ adaptivity rounds and $n\times 2^n$ query requests in total;
-Program $\kw{lilUCB}$ and $\kw{bestArm}$ are the algorithms to solve the best arm problem in the stochastic multi-armed bandit (MAB) setting
+Programs $\kw{lilUCB}$ and $\kw{bestArm}$ are the algorithms to solve the best arm problem in the stochastic multi-armed bandit (MAB) setting
 with $m$ total number of arms in order to identify the longest arm through sampling at most $n$ times.
 Our tool identifies the number of sampling times $n$ is the adaptivity rounds.
 %  with $n$ adaptivity rounds and $n$ query requests in total;
-Program $\kw{repeatedQuery}$ and $\kw{nDimPairwise}$ are the algorithms for ranking
+Programs $\kw{repeatedQuery}$ and $\kw{nDimPairwise}$ are the algorithms for ranking
 a $1$-demensional dataset of size $n$ via querying the data $m$ times.
 Our tool identifies the adaptvitiy w.r.t. the sampling times for these two programs as $m$ and $m \times 2^m$.
 
@@ -262,9 +281,9 @@ By instantiating $n = 1000$ and $m = 1000$, these programs produce large general
 In this situation, $1000* \sqrt{\log(1000^2)}$ and $\sqrt{1000^2}$ are close to each other,
 % According to the large adaptivity rounds and the query numbers, 
 our tool chooses the Thresholdout mechanism.
-Evaluation results in Table~\ref{tb:adapt-generalization} shows that both Thresholdout and Gaussian mechanism can reduce the rmse the most.
+\remove{Evaluation results in Table~\ref{tb:adapt-generalization} shows that both Thresholdout and Gaussian mechanism can reduce the rmse the most.}
 When we look at a smaller $n$ and $m$ ($n,m=10$), because the query number is $m \times n$ and our $A_{est}$ is either $m$ or $n$ in these examples,
-our heuristic still chooses ThresholdOut mechanism in three of the four examples in the \emph{Guess and Check} framework, $\kw{lilUCB}$, $\kw{nDimPairwise}$ and $\kw{bestArm}$ and our recommendation performs well. The only
+our tool still chooses ThresholdOut mechanism in three of the four examples \remove{in the \emph{Guess and Check} framework, $\kw{lilUCB}$, $\kw{nDimPairwise}$ and $\kw{bestArm}$} and our recommendation performs well. The only
 exception is the $\kw{repeatedQuery}$ example, whose $A_{est}$ and query number are both quite big as $m \times 2^m$, and out tool
 then chooses Gaussian mechanism, which does not perform well($6.01$).
 
