@@ -1,39 +1,38 @@
 In this section, we present our program analysis {\THESYSTEM} for
 computing an upper bound on the \emph{adaptivity} of a given program
-$c$.  \remove{The high level idea behind {\THESYSTEM} is to first build
-an \emph{estimated dependency graph} \progG(c) of a program $c$
-(Section~\ref{sec:alg_weightedgegen}) which overapproximates the
-semantics-based dependency graph in two dimensions: it
-overapproximates the dependencies between assigned variables (Section~\ref{sec:alg_edgegen}), and, it
-overapproximates the weights (Section~\ref{sec:alg_weightgen}). Then, {\THESYSTEM} uses a custom algorithm to estimate the 
-walk of maximal query length on this graph, providing in this way an upper bound on the adaptivity of the
-program.} 
-\highlight{ 
-  The high level idea behind {\THESYSTEM} is the following:
+$c$.
+%
+%% \remove{The high level idea behind {\THESYSTEM} is to first build
+%% an \emph{estimated dependency graph} \progG(c) of a program $c$
+%% (Section~\ref{sec:alg_weightedgegen}) which overapproximates the
+%% semantics-based dependency graph in two dimensions: it
+%% overapproximates the dependencies between assigned variables (Section~\ref{sec:alg_edgegen}), and, it
+%% overapproximates the weights (Section~\ref{sec:alg_weightgen}). Then, {\THESYSTEM} uses a custom algorithm to estimate the 
+%% walk of maximal query length on this graph, providing in this way an upper bound on the adaptivity of the
+%% program.} 
+%\highlight{ 
+ The high level idea behind {\THESYSTEM} is the following:
   \begin{enumerate}
     \item construct
     an \emph{estimated program dependency graph} \progG(c) of a program $c$
     (Section~\ref{sec:alg_weightedgegen});
-    \item use the reachability-bound algorithm adapts to our setting inspired from previous work~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity} 
-    to find out the upper bound
-    on how many times each vertex can be executed, as the weight for every vertex in the dependency graph;
-    \item  use our algorithm AdaptBD to estimate an upper bound on, the number of queries in the walk over the weighted dependency graph that visits most query vertices 
-    , which is adaptivity. In particualr, a walk is allowed to visit a vertex multiple times but not exceed the weight.
+    \item use a reachability-bound algorithm to estimate the weight of every vertex in the graph;
+    \item  use an algorithm, which we call AdaptBD, to estimate an upper bound on the number of queries in the walk over the weighted dependency graph that visits most query vertices. %This in turns gives us an upper bound to the adaptivity. 
   \end{enumerate}
   The \emph{estimated dependency graph} overapproximates the
   semantics-based dependency graph in two dimensions: it
   overapproximates the dependencies between assigned variables (Section~\ref{sec:alg_edgegen}), and, it
-  overapproximates the weights (Section~\ref{sec:alg_weightgen}). In this sense, 
+  overapproximates the weights (Section~\ref{sec:alg_weightgen}). Thanks to this, 
  we prove the upper bound provided by AdaptBD is a sound upper bound
-  over the semantic-based adaptivity in Definition~\ref{def:trace_adapt} in Theorem\ref{thm:adaptalg_soundness}.  
-}
+  over the semantic-based adaptivity in Definition~\ref{def:trace_adapt} in Theorem~\ref{thm:adaptalg_soundness}.  
+%}
 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Edge And Weight Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-\highlight{\subsection{Weighted Dependency Graph Construction}}
+\subsection{Weighted Dependency Graph Construction}
 Given a program $c$, the set of vertices $\progV(c)$ and query annotations $\progF(c)$ of the \emph{estimated dependency graph} can be computed by simply
 scanning the program $c$. These sets can be computed precisely and correspond to
 the same sets in the semantics-based dependency graph.
@@ -44,186 +43,186 @@ the semantics-based graph $\traceG(c)$. The differences will be in the sets of e
 
 
 
-\remove{\subsection{Weight and Edge Estimation}}
-\label{sec:alg_weightedgegen}
-\remove{The set of edges $\progE(c)$ and the set of weights $\progW(c)$ of the estimated dependency graph are estimated through an analysis combining control flow, data flow, 
-and loop bound analysis. These analyses are naturally described over an  \emph{Abstract Transition Graph} of the input program, which we describe next.}
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Abstract Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-\subsubsection{\remove{Abstract Transition Graph}}
-\label{sec:abscfg}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version For Reference %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% An \emph{Abstract Transition Graph}, $\absG(c)$ for a program $c$ is composed of
-% a vertex set $\absV(c)$ and an edge set $\absE(c)$, $\absG(c) \triangleq (\absV(c), \absE(c))$.
-% \\
-% Every 
-% vertex $l \in \absV(c)$ is the label of a labeled command in $c$, which is unique.
-% \\
-% Each edge $(l \xrightarrow{dc} l') \in \absE(c)$ is an abstract transition
-% between two program points $l, l'$. 
-% There is an edge from $l$ to $l'$ if and only if
-% the command with label $l'$ can execute right after the execution of the command with label $l$.
-% % if and only if there is a control flow between two program points.
-% Each edge is annotated by a constraint $dc \in \dcdom^{\top}$, which is generated from the command with label $l$.
-% This constraint describes the abstract execution of the command with $l$. 
-% The edge set is constructed in three steps summarized as follows (with detail in Apdix.).
-% \begin{enumerate}
-%     \item Computing \textbf{constrains} over the expression for every program's labeled command,
-%   which is used as the annotation of an edge.
-%   Its domain $\dcdom^{\top}$ is composed of the \emph{Difference Constraints} $DC(\mathcal{VAR}  \cup \constdom)$, the \emph{Boolean Expressions} $\booldom$ and $\top$.
-% %
-% \begin{itemize}
-% \item The difference constraints $DC(\mathcal{VAR}  \cup \constdom)$ is the set of all the inequality of
-% form $x' \leq y + v$ where $x \in \mathcal{VAR} $, 
-% $y \in \mathcal{VAR}$ and $v \in \constdom$.
-% The \emph{Symbolic Constant} set $\constdom = \mathbb{N} \cup \inpvar \cup{\infty \cup{Q_m}}$
-% is the set of natural numbers with $\infty$, the input variables, and a symbol $Q_m$ representing the abstract value of a query request.
-% An inequality $x' \leq y + v$ describes that the value of $x$ in the current state is
-% at most the value of $y$ in the previous state plus some constant $v$.
-% When a difference constrain shows up as an edge annotation, $l \xrightarrow{x' \leq y + v} l'$,
-% it denotes that
-% the value of variable $x$
-% after executing the command at $l$ is at most
-% the value of variable $y$ plus $v$ before the execution.
-% For every expression in each of the label command, it is computed in three steps via program abstraction method adopted from the Section~6 in \cite{sinn2017complexity}. 
-% %
-% \item The Boolean Expressions $b$ from the set $\booldom$.
-% $b$ on an edge $l \xrightarrow{b} l'$ describes
-% that after evaluating the guard with label $l$,
-% $b$ holds and the command with label $l$ will execute right after.
-% %
-% \item The top constraint, $\top$ denotes true. It is preserved for $\eskip$ command.
-% %
-% \end{itemize}
-%     \item \textbf{Initial and final state} computation step generates two sets for each labeled command in $c$. 
-%   The initial state contains the
-%   label where this command {starts} executing, 
-%   and the final state is a set
-%   that contains the constraint of this command
-%   and the continuation labels after the execution of this command.
-%  \item \textbf{abstract event} computation step generates a set of edges for the $c$, by computing the initial state and finial state interactively and recursively.
-% \end{enumerate}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version Above %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-\remove{We say that we have a \emph{transition} from a program point $l$ to a
-program point $l'$ if and only if the command with label $l'$ can
-execute right after the execution of the command with label $l$.
-The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
-graph with the set of labels of program points in $c$  (including a 
-label $\lex$ for the exit point) as the set of
-vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
-edges $\absE(c)$. Each edge of the graph is annotated with either
-the symbol $\top$, a boolean expression or a \emph{difference
-constraint}~\cite{sinn2017complexity}.
-A difference constraint is an inequality of the form $x' \leq y + v$ {or $x' \leq v$}
-where $x, y$ are variables and $v \in \constdom$ is a symbolic
-constant: either a natural number, the symbol $\infty$, an input
-variable or a symbol $Q_m$ representing a query request.  We denote by
-$\dcdom$ the set of difference constraints.
-A difference constraint on an edge, $l \xrightarrow{x' \leq y + v}
-l'$ {or $l \xrightarrow{x' \leq v} l'$}, denotes that after executing the command at location $l$ the
-value of the variable $x$ is at most the value of the expression $y +
-v$ {resp. $v$} before the execution of the command $l'$.
-A boolean value $b$ on an
-edge, $l \xrightarrow{b} l'$, denotes that after evaluating the guard
-of an if or a while command with label $l$, $b$ holds and the next
-command to be executed is the one with label $l'$.  A $\top$ symbol on
-an edge, $l \xrightarrow{\top} l'$ denotes that the command with label
-$l$ is a $\eskip$, {and the commands that do not interfere with any loop counter variable}.
-We compute difference constraints and the other annotation via a
-simple program abstraction method adopted
-from \cite{sinn2017complexity}, described in details in the
-supplementary material. }
-% \mg{It would be good to have a simple short sketch.}
-%\\
-%% \jl{   
-%% 2. Computing the \textbf{Initial and final state} for each labeled command in $c$. 
-%%   The initial state contains the
-%%   label where this command {starts} executing, 
-%%   and the final state is a set
-%%   that contains the constraint of this command
-%%   and the continuation labels after this command.
-%%   \\ 
-%% %  \item 
-%% 3. computing \textbf{abstract event}s and generating a set of edges for the $c$, by computing the initial state and finial state interactively and recursively.
-%% %   Each edge is a pair of initial and finial state.
+%% \remove{\subsection{Weight and Edge Estimation}}
+%% \label{sec:alg_weightedgegen}
+%% \remove{The set of edges $\progE(c)$ and the set of weights $\progW(c)$ of the estimated dependency graph are estimated through an analysis combining control flow, data flow, 
+%% and loop bound analysis. These analyses are naturally described over an  \emph{Abstract Transition Graph} of the input program, which we describe next.}
+%% %
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Abstract Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %
+%% \subsubsection{\remove{Abstract Transition Graph}}
+%% \label{sec:abscfg}
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version For Reference %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% % An \emph{Abstract Transition Graph}, $\absG(c)$ for a program $c$ is composed of
+%% % a vertex set $\absV(c)$ and an edge set $\absE(c)$, $\absG(c) \triangleq (\absV(c), \absE(c))$.
+%% % \\
+%% % Every 
+%% % vertex $l \in \absV(c)$ is the label of a labeled command in $c$, which is unique.
+%% % \\
+%% % Each edge $(l \xrightarrow{dc} l') \in \absE(c)$ is an abstract transition
+%% % between two program points $l, l'$. 
+%% % There is an edge from $l$ to $l'$ if and only if
+%% % the command with label $l'$ can execute right after the execution of the command with label $l$.
+%% % % if and only if there is a control flow between two program points.
+%% % Each edge is annotated by a constraint $dc \in \dcdom^{\top}$, which is generated from the command with label $l$.
+%% % This constraint describes the abstract execution of the command with $l$. 
+%% % The edge set is constructed in three steps summarized as follows (with detail in Apdix.).
+%% % \begin{enumerate}
+%% %     \item Computing \textbf{constrains} over the expression for every program's labeled command,
+%% %   which is used as the annotation of an edge.
+%% %   Its domain $\dcdom^{\top}$ is composed of the \emph{Difference Constraints} $DC(\mathcal{VAR}  \cup \constdom)$, the \emph{Boolean Expressions} $\booldom$ and $\top$.
+%% % %
+%% % \begin{itemize}
+%% % \item The difference constraints $DC(\mathcal{VAR}  \cup \constdom)$ is the set of all the inequality of
+%% % form $x' \leq y + v$ where $x \in \mathcal{VAR} $, 
+%% % $y \in \mathcal{VAR}$ and $v \in \constdom$.
+%% % The \emph{Symbolic Constant} set $\constdom = \mathbb{N} \cup \inpvar \cup{\infty \cup{Q_m}}$
+%% % is the set of natural numbers with $\infty$, the input variables, and a symbol $Q_m$ representing the abstract value of a query request.
+%% % An inequality $x' \leq y + v$ describes that the value of $x$ in the current state is
+%% % at most the value of $y$ in the previous state plus some constant $v$.
+%% % When a difference constrain shows up as an edge annotation, $l \xrightarrow{x' \leq y + v} l'$,
+%% % it denotes that
+%% % the value of variable $x$
+%% % after executing the command at $l$ is at most
+%% % the value of variable $y$ plus $v$ before the execution.
+%% % For every expression in each of the label command, it is computed in three steps via program abstraction method adopted from the Section~6 in \cite{sinn2017complexity}. 
+%% % %
+%% % \item The Boolean Expressions $b$ from the set $\booldom$.
+%% % $b$ on an edge $l \xrightarrow{b} l'$ describes
+%% % that after evaluating the guard with label $l$,
+%% % $b$ holds and the command with label $l$ will execute right after.
+%% % %
+%% % \item The top constraint, $\top$ denotes true. It is preserved for $\eskip$ command.
+%% % %
+%% % \end{itemize}
+%% %     \item \textbf{Initial and final state} computation step generates two sets for each labeled command in $c$. 
+%% %   The initial state contains the
+%% %   label where this command {starts} executing, 
+%% %   and the final state is a set
+%% %   that contains the constraint of this command
+%% %   and the continuation labels after the execution of this command.
+%% %  \item \textbf{abstract event} computation step generates a set of edges for the $c$, by computing the initial state and finial state interactively and recursively.
 %% % \end{enumerate}
-%% }
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version Above %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %
+%% \remove{We say that we have a \emph{transition} from a program point $l$ to a
+%% program point $l'$ if and only if the command with label $l'$ can
+%% execute right after the execution of the command with label $l$.
+%% The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
+%% graph with the set of labels of program points in $c$  (including a 
+%% label $\lex$ for the exit point) as the set of
+%% vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
+%% edges $\absE(c)$. Each edge of the graph is annotated with either
+%% the symbol $\top$, a boolean expression or a \emph{difference
+%% constraint}~\cite{sinn2017complexity}.
+%% A difference constraint is an inequality of the form $x' \leq y + v$ {or $x' \leq v$}
+%% where $x, y$ are variables and $v \in \constdom$ is a symbolic
+%% constant: either a natural number, the symbol $\infty$, an input
+%% variable or a symbol $Q_m$ representing a query request.  We denote by
+%% $\dcdom$ the set of difference constraints.
+%% A difference constraint on an edge, $l \xrightarrow{x' \leq y + v}
+%% l'$ {or $l \xrightarrow{x' \leq v} l'$}, denotes that after executing the command at location $l$ the
+%% value of the variable $x$ is at most the value of the expression $y +
+%% v$ {resp. $v$} before the execution of the command $l'$.
+%% A boolean value $b$ on an
+%% edge, $l \xrightarrow{b} l'$, denotes that after evaluating the guard
+%% of an if or a while command with label $l$, $b$ holds and the next
+%% command to be executed is the one with label $l'$.  A $\top$ symbol on
+%% an edge, $l \xrightarrow{\top} l'$ denotes that the command with label
+%% $l$ is a $\eskip$, {and the commands that do not interfere with any loop counter variable}.
+%% We compute difference constraints and the other annotation via a
+%% simple program abstraction method adopted
+%% from \cite{sinn2017complexity}, described in details in the
+%% supplementary material. }
+%% % \mg{It would be good to have a simple short sketch.}
+%% %\\
+%% %% \jl{   
+%% %% 2. Computing the \textbf{Initial and final state} for each labeled command in $c$. 
+%% %%   The initial state contains the
+%% %%   label where this command {starts} executing, 
+%% %%   and the final state is a set
+%% %%   that contains the constraint of this command
+%% %%   and the continuation labels after this command.
+%% %%   \\ 
+%% %% %  \item 
+%% %% 3. computing \textbf{abstract event}s and generating a set of edges for the $c$, by computing the initial state and finial state interactively and recursively.
+%% %% %   Each edge is a pair of initial and finial state.
+%% %% % \end{enumerate}
+%% %% }
 
-\remove{\textbf{Example.}
-We show in Fig.~\ref{fig:abscfg_tworound}(b) the  abstract control flow graph,
- $\absG(\kw{twoRounds(k)})$ of the $\kw{twoRounds(k)}$ program we gave in 
-  Fig.~\ref{fig:overview-example}(a) and which we also report in 
-   Fig.~\ref{fig:abscfg_tworound}(a).}
-% \mg{This example has many issues. First, many nodes do not respect the format that 
-% we say difference constraint have. So, either we gave the wrong definition of difference constraints or we are being sloppy or we are using some shortening without telling it to the reader. In any case we need to fix this. Also, why one of the query is bound by $Q_m$ and the other one is instead bound by $k*a$? I think this example needs some serious reworking.}
-% \jl{
-% The edge $(1 \xrightarrow{j' \leq k} 2)$ on the top tells us the command 
-% $\clabel{\assign{j}{k}}^1$ is executed with a continuation point $2$ such that the
-% % where the 
-% guard $\clabel{j > 0}^2$ will be evaluated next.
-% The annotation $j' \leq k$ is a difference constraint 
-% computed for
-% % by abstracting
-% the expression $k$ from the assignment command $\assign{j}{k}$.
-% %  from the function $\absexpr(0)$.
-% It represents that the value of $j$ is less than or equal to value of input variable $k$ after the
-% execution of $\clabel{\assign{a}{0}}^0$ and before executing the loop.
-% % Another example edge $5 \xrightarrow{a' \leq a + x } 2$ describes the execution of
-% %  the command
-% % $\clabel{\assign{a}{x + a}}^{5}$.
-% The boolean constraint $j \leq 0 $ on the edge $2 \xrightarrow{j \leq 0} 6$
-% represents the negation of the testing guard $j > 0$
-% of the $\ewhile$ command with header at label $2$.
-% }
-% \mg{ The next sentence need a pass after we fix the example:
-% The edge $(0 \xrightarrow{a' \leq 0} 1)$ on the top tells us the command 
-% $\clabel{\assign{a}{0}}^0$ is executed with a continuation point $1$ such that the
-% command $\clabel{\assign{j}{k}}^1$ will be executed next.
-% % The annotation $a' \leq 0$ is a difference constraint 
-% % computed for
-% % the expression $0$ in the assignment command $\assign{a}{0}$.
-% $a' \leq 0$ represents that the value of $a$ is less than or equal to $0$ after the
-% execution of $\clabel{\assign{a}{0}}^0$ and before executing $\clabel{\assign{j}{k}}^1$.
-% % Another example edge $5 \xrightarrow{a' \leq a + x } 2$ describes the execution of
-% %  the command at line $5$
-% % $\clabel{\assign{a}{x + a}}^{5}$.
-% % This edge has difference constraint $a' \leq a+x $.
-% % The $a'$ on the left side of $a' \leq a+x$ represents the value of $a$ after executing this assignment command.
-% $j \leq 0 $ on the edge $2 \xrightarrow{j \leq 0} 6$
-% represents the negation of the testing guard $j > 0$
-% of the $\ewhile$ command with header at label $2$.
-% The edge from $3$ to $4$ comes from the query request command $\clabel{\assign{x}{\query(\chi[j])} }^{3}$.
-% The constraint over this edge, $x' < Q_m$ describes after executing $\assign{x}{\query(\chi[j])}$,
-% % $\clabel{\assign{x}{\query(\chi[j])} }^{3}$, 
-% the query request results stored in $x$ is bounded by $Q_m$. 
-% }
-\input{examples/abscfg_tworound}
-%
+%% \remove{\textbf{Example.}
+%% We show in Fig.~\ref{fig:abscfg_tworound}(b) the  abstract control flow graph,
+%%  $\absG(\kw{twoRounds(k)})$ of the $\kw{twoRounds(k)}$ program we gave in 
+%%   Fig.~\ref{fig:overview-example}(a) and which we also report in 
+%%    Fig.~\ref{fig:abscfg_tworound}(a).}
+%% % \mg{This example has many issues. First, many nodes do not respect the format that 
+%% % we say difference constraint have. So, either we gave the wrong definition of difference constraints or we are being sloppy or we are using some shortening without telling it to the reader. In any case we need to fix this. Also, why one of the query is bound by $Q_m$ and the other one is instead bound by $k*a$? I think this example needs some serious reworking.}
+%% % \jl{
+%% % The edge $(1 \xrightarrow{j' \leq k} 2)$ on the top tells us the command 
+%% % $\clabel{\assign{j}{k}}^1$ is executed with a continuation point $2$ such that the
+%% % % where the 
+%% % guard $\clabel{j > 0}^2$ will be evaluated next.
+%% % The annotation $j' \leq k$ is a difference constraint 
+%% % computed for
+%% % % by abstracting
+%% % the expression $k$ from the assignment command $\assign{j}{k}$.
+%% % %  from the function $\absexpr(0)$.
+%% % It represents that the value of $j$ is less than or equal to value of input variable $k$ after the
+%% % execution of $\clabel{\assign{a}{0}}^0$ and before executing the loop.
+%% % % Another example edge $5 \xrightarrow{a' \leq a + x } 2$ describes the execution of
+%% % %  the command
+%% % % $\clabel{\assign{a}{x + a}}^{5}$.
+%% % The boolean constraint $j \leq 0 $ on the edge $2 \xrightarrow{j \leq 0} 6$
+%% % represents the negation of the testing guard $j > 0$
+%% % of the $\ewhile$ command with header at label $2$.
+%% % }
+%% % \mg{ The next sentence need a pass after we fix the example:
+%% % The edge $(0 \xrightarrow{a' \leq 0} 1)$ on the top tells us the command 
+%% % $\clabel{\assign{a}{0}}^0$ is executed with a continuation point $1$ such that the
+%% % command $\clabel{\assign{j}{k}}^1$ will be executed next.
+%% % % The annotation $a' \leq 0$ is a difference constraint 
+%% % % computed for
+%% % % the expression $0$ in the assignment command $\assign{a}{0}$.
+%% % $a' \leq 0$ represents that the value of $a$ is less than or equal to $0$ after the
+%% % execution of $\clabel{\assign{a}{0}}^0$ and before executing $\clabel{\assign{j}{k}}^1$.
+%% % % Another example edge $5 \xrightarrow{a' \leq a + x } 2$ describes the execution of
+%% % %  the command at line $5$
+%% % % $\clabel{\assign{a}{x + a}}^{5}$.
+%% % % This edge has difference constraint $a' \leq a+x $.
+%% % % The $a'$ on the left side of $a' \leq a+x$ represents the value of $a$ after executing this assignment command.
+%% % $j \leq 0 $ on the edge $2 \xrightarrow{j \leq 0} 6$
+%% % represents the negation of the testing guard $j > 0$
+%% % of the $\ewhile$ command with header at label $2$.
+%% % The edge from $3$ to $4$ comes from the query request command $\clabel{\assign{x}{\query(\chi[j])} }^{3}$.
+%% % The constraint over this edge, $x' < Q_m$ describes after executing $\assign{x}{\query(\chi[j])}$,
+%% % % $\clabel{\assign{x}{\query(\chi[j])} }^{3}$, 
+%% % the query request results stored in $x$ is bounded by $Q_m$. 
+%% % }
+%% \input{examples/abscfg_tworound}
+%% %
 
 
-\subsubsection{\remove{Edge Estimation}}
-\label{sec:alg_edgegen}
-\remove{The set of edges $\progE(c)$ is estimated through a combined data and 
-control flow analysis with three components.}
+%% \subsubsection{\remove{Edge Estimation}}
+%% \label{sec:alg_edgegen}
+%% \remove{The set of edges $\progE(c)$ is estimated through a combined data and 
+%% control flow analysis with three components.}
 
-\remove{\noindent\textbf{Reaching definition analysis:} 
-{The first component is a reaching definition analysis computing for each label $l$ in the graph $\absG(c)$ the set of labeled variables that may reach $l$ as follows.}
-% \mg{Can we sketch how this analysis is performed?}
-% \todo{I shortened, can you double check}
-\\
-{
-(1). 
-% For each label $l$, generating two sets of labeled variables
-% % $gen(l)$, $kill(l)$ 
-% where they are newly generated or destroyed by command $l$,
-% \\
-For each label $l$, the analysis generates two initial sets of labeled variables, $in$ and $out$, 
-containing all the labeled variables $x^l$ that are newly generated but not yet reassigned before and after executing the command $l$.
-\\
-(2). The analysis iterates over $\absG(c)$, and updates $in(l)$ and $out(l)$ until they  are stable.
-The final $in(l)$ is the set of reaching definitions $\live(l, c)$ for $l$.}}
+%% \remove{\noindent\textbf{Reaching definition analysis:} 
+%% {The first component is a reaching definition analysis computing for each label $l$ in the graph $\absG(c)$ the set of labeled variables that may reach $l$ as follows.}
+%% % \mg{Can we sketch how this analysis is performed?}
+%% % \todo{I shortened, can you double check}
+%% \\
+%% {
+%% (1). 
+%% % For each label $l$, generating two sets of labeled variables
+%% % % $gen(l)$, $kill(l)$ 
+%% % where they are newly generated or destroyed by command $l$,
+%% % \\
+%% For each label $l$, the analysis generates two initial sets of labeled variables, $in$ and $out$, 
+%% containing all the labeled variables $x^l$ that are newly generated but not yet reassigned before and after executing the command $l$.
+%% \\
+%% (2). The analysis iterates over $\absG(c)$, and updates $in(l)$ and $out(l)$ until they  are stable.
+%% The final $in(l)$ is the set of reaching definitions $\live(l, c)$ for $l$.}}
   
 \subsubsection{\highlight{Edge Construction}}
 \highlight{The set of edges $\progE(c)$ is constructed through a \textbf{feasible data-flow analysis}, 
