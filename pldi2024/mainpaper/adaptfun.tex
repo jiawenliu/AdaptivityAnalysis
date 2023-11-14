@@ -224,24 +224,23 @@ the semantics-based graph $\traceG(c)$. The differences will be in the sets of e
 %% (2). The analysis iterates over $\absG(c)$, and updates $in(l)$ and $out(l)$ until they  are stable.
 %% The final $in(l)$ is the set of reaching definitions $\live(l, c)$ for $l$.}}
   
-\subsubsection{\highlight{Edge Construction}}
-\highlight{The set of edges $\progE(c)$ is constructed through a \textbf{feasible data-flow analysis}, 
+\subsubsection{Edge Construction}
+The set of edges $\progE(c)$ is built usingh a \textbf{feasible data-flow analysis}, 
 a data flow analysis over 
-our query language, combined with the reaching definition analysis.
-We denote the results of reaching definition analysis, $\live(l, c)$ for a set of reachable 
-variables at line $l$ with respect to the program $c$, which plays the role of removing redundent edges 
-in data flow analysis. }
+our query language, combined with a reaching definition analysis.
+The reaching definition analysis computes a set $\live(l, c)$ of reachable 
+variables at line $l$ in the program $c$.
+%This analysis helps removing redundent edges 
+%in the data-flow analysis. 
 
-\highlight{\textbf{Feasible data-flow analysis} computes for every pair $x^i, y^j \in \lvar(c)$
+The {\em feasible data-flow analysis} computes for every pair $x^i, y^j \in \lvar(c)$
  whether there is a flow from $x^i$ to $y^j$. 
  This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. 
- This relation is defined  as:
-}
-
-\remove{\noindent\textbf{Feasible data-flow analysis:} The second component is a \textbf{feasible data-flow analysis} computing for every pair $x^i, y^j \in \lvar(c)$
- whether there is a flow from $x^i$ to $y^j$. 
- This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. 
- This relation is defined  as:}
+ This relation is defined  as follows:
+%% \remove{\noindent\textbf{Feasible data-flow analysis:} The second component is a \textbf{feasible data-flow analysis} computing for every pair $x^i, y^j \in \lvar(c)$
+%%  whether there is a flow from $x^i$ to $y^j$. 
+%%  This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. 
+%%  This relation is defined  as:}
 \begin{defn}[Feasible Data-Flow]
   \label{def:feasible_flowsto}
   Given a program $c$ and two labeled variables $x^i, y^j$  in this program, 
@@ -304,11 +303,11 @@ This relation gives us an overapproximation of the \emph{variable may-dependency
 % \]
 % \end{thm}
 %}
-
-\remove{\noindent\textbf{Edge Construction:} The third component constructs}
-
-\highlight{we can construct} an edge by computing a transitive closure (through other variables) of the  
- $\flowsto$ relation. There is a directed edge from  $x^i$ to $y^j$ if and only if there is chain of of variables 
+%
+%\remove{\noindent\textbf{Edge Construction:} The third component constructs}
+%
+We can now identifying edges of the dependency graph by computing a transitive closure (through other variables) of the  
+ $\flowsto$ relation. There is a directed edge from  $x^i$ to $y^j$ if and only if there is chain of variables 
     in the $\flowsto$ relation between $x^i$ and $y^j$. This is defined as follows:
    \begin{center}
 $
@@ -363,15 +362,14 @@ The edge $l^6 \to x^3$ is produced by the transitivity of $\flowsto(l^6, a^5, c)
 \subsubsection{Weight Estimation}
 \label{sec:alg_weightgen}
 
-\highlight{The weight of every vertex is obtained as an upper bound on 
+The weight of every vertex is obtained as an upper bound on 
 the number of times the corresponding command can be executed,
 which can be statically estimated by \emph{reachability-bound analysis}~\cite{GulwaniZ10}.
-Our reachability-bound analysis adapts previous work~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity} 
-to our query language setting. Similarly as these work, we first need to 
-construct an abstraction transition graph in order to perform the 
-reachability-bound analysis.}
+Our reachability-bound analysis adapts ideas from previous works~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity} 
+to our query language setting. Similarly to these work, we first need to 
+construct an abstract transition graph.
 
-\highlight{The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
+The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
 graph with the set of labels of program points in $c$  (including a 
 label $\lex$ for the exit point) as the set of
 vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
@@ -396,45 +394,42 @@ $l$ is a $\eskip$, {and the commands that do not interfere with any loop counter
 We compute difference constraints and the other annotation via a
 simple program abstraction method adopted
 from \cite{sinn2017complexity}, described in details in the
-supplementary material.}
+supplementary material.
 
-\highlight{We show in Fig.~\ref{fig:abscfg_tworound}(b) the  abstract control flow graph,
+We show in Fig.~\ref{fig:abscfg_tworound}(b) the  abstract control flow graph,
 $\absG(\kw{twoRounds(k)})$ of the $\kw{twoRounds(k)}$ program we gave in 
  Fig.~\ref{fig:overview-example}(a) and which we also report in 
-  Fig.~\ref{fig:abscfg_tworound}(a).}
+  Fig.~\ref{fig:abscfg_tworound}(a).
 
 
 
-\remove{The set $\progW(c)$ of weights for the estimated dependency graph is estimated from 
-the Abstract Transition Graph $\absG(c)$ of $c$ using \emph{reachability-bound analysis}~\cite{GulwaniZ10}.
- Specifically, we estimate as the weight of a vertex with label $l$ a symbolic upper bound on the 
- execution times of the command with label $l$ obtained by reachability-bound analysis. 
+%% \remove{The set $\progW(c)$ of weights for the estimated dependency graph is estimated from 
+%% the Abstract Transition Graph $\absG(c)$ of $c$ using \emph{reachability-bound analysis}~\cite{GulwaniZ10}.
+%%  Specifically, we estimate as the weight of a vertex with label $l$ a symbolic upper bound on the 
+%%  execution times of the command with label $l$ obtained by reachability-bound analysis. 
+%%  These symbolic upper bounds are expressions with the input variables as free variables, 
+%%  hence they correspond to the weight functions in the semantics-based dependency graphs. 
+%% Our reachability-bound algorithm adapts to our setting ideas from 
+%% previous work~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity}.
+%% Specifically, it provides an upper bound on the number of times every command can be executed by
+%%  using three steps.
+%% \begin{enumerate}
+%% \item This step assigns to each edge  $l \xrightarrow{dc} l'\in \absE(c)$ a \emph{local bound} as follows. We look at the strongly connected components of $\absG(c)$. If the edge does not belong to any strongly connected components, then the local bound is $1$, representing the fact that the edge is not in a loop and so it gets executed at most once. If the edge belongs to a strongly connected component and one of the variables $x$ in $dc$ decreases, then the local bound is $x$. Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and if by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$. Otherwise, the local bound is $\infty$. Notice that the output is either a symbolic constant in $\constdom$ or a variable that is not an input variable.
+%% % assigns a local bound $c$ ($c \in \constdom \cup \mathcal{V}$), if $c$ decreases in $dc$.
+%% \item This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e \in \absE(c)$. Every bound is a symbolic expression from the set $\mathcal{A}_{in}$ built out of symbols in $\constdom$ and the operations $+, *, \max$. For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. If instead the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. In order to do this, this step will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment; second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached. To compute these two quantities we use two mutually recursive procedures.
+%% \end{enumerate}
+%% }
+
+The set $\progW(c)$ of weights for the estimated dependency graph is estimated from 
+the Abstract Transition Graph $\absG(c)$ of $c$ using reachability-bound analysis.
+ Specifically, we use the weight of a vertex with label $l$ the \emph{symbolic upper bound} on the 
+ execution times of the command with label $l$ that we obtain using our reachability-bound analysis. 
  These symbolic upper bounds are expressions with the input variables as free variables, 
- hence they correspond to the weight functions in the semantics-based dependency graphs. 
-Our reachability-bound algorithm adapts to our setting ideas from 
-previous work~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity}.
-Specifically, it provides an upper bound on the number of times every command can be executed by
- using three steps.
-\begin{enumerate}
-\item This step assigns to each edge  $l \xrightarrow{dc} l'\in \absE(c)$ a \emph{local bound} as follows. We look at the strongly connected components of $\absG(c)$. If the edge does not belong to any strongly connected components, then the local bound is $1$, representing the fact that the edge is not in a loop and so it gets executed at most once. If the edge belongs to a strongly connected component and one of the variables $x$ in $dc$ decreases, then the local bound is $x$. Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and if by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$. Otherwise, the local bound is $\infty$. Notice that the output is either a symbolic constant in $\constdom$ or a variable that is not an input variable.
-% assigns a local bound $c$ ($c \in \constdom \cup \mathcal{V}$), if $c$ decreases in $dc$.
-\item This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e \in \absE(c)$. Every bound is a symbolic expression from the set $\mathcal{A}_{in}$ built out of symbols in $\constdom$ and the operations $+, *, \max$. For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. If instead the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. In order to do this, this step will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment; second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached. To compute these two quantities we use two mutually recursive procedures.
-\end{enumerate}
-}
-
-\highlight{The set $\progW(c)$ of weights for the estimated dependency graph is estimated from 
-the Abstract Transition Graph $\absG(c)$ of $c$ using our reachability-bound analysis.
- Specifically, we estimate as the weight of a vertex with label $l$ a symbolic upper bound on the 
- execution times of the command with label $l$ obtained by reachability-bound analysis. 
- These symbolic upper bounds are expressions with the input variables as free variables, 
- hence they correspond to the weight functions in the semantics-based dependency graphs. }
-
-\highlight{When performing our reachablity-bound analysis on the abstract transition graph $\absG(c)$
-of a program $c$, we donte the reachability-bound $\absclr(e, c)$ 
-for every edge $e = (l, dc, l') \in \absE(c)$.} 
+ hence they can be used to upper bound the weight functions of the semantics-based dependency graphs.
+We denote the reachability-bound of an edge $e = (l, dc, l') \in \absE(c)$ as $\absclr(e, c)$.
    
-\remove{using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$, we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
-  which is also the estimated weight of this vertex.}
+%% \remove{using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$, we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
+%%   which is also the estimated weight of this vertex.}
 \begin{defn}[Weight Estimation]
  \label{def:adaptfun-weight}
 The estimated weight set $\progW(c)$ of program $c$ is a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \constdom)$.
@@ -498,8 +493,8 @@ For an arbitrary $\trace_0 \in \mathcal{T}_0(c)$, we know that $\config{\trace_0
 by the weight $w_k$ for the vertex $a^5$ (as in Fig.~\ref{fig:overview-example}(b)) we know 
 $w_k(\trace_0) = \env(\trace_0) k$. 
 %
-\subsubsection{\highlight{Formal Definition of Estimted Dependency Graph}}
-\highlight{\begin{defn}
+\subsubsection{Definition of Estimted Dependency Graph}
+\begin{defn}
   [Estimated Dependency Graph]
   \label{def:prog_graph}
   Given a program $c$ 
@@ -508,15 +503,15 @@ $w_k(\trace_0) = \env(\trace_0) k$.
   the estimated dependency graph of $c$ has four components:
   \[\progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))\]
 \end{defn}
-}
-\remove{\subsection{Dependency Graph Estimation}
-\input{adaptfun-graphgen}}
+
+%% \remove{\subsection{Dependency Graph Estimation}
+%% \input{adaptfun-graphgen}}
 \subsection{Adaptivity Upper Bound Computation}
 \label{sec:alg_adaptcompute}
 We estimate the adaptivity upper bound, 
 $\progA(c)$ for a program $c$ as the maximal query length over all finite walks 
 in its \emph{estimated dependency graph}, $\progG({c})$,
-\highlight{where $\qlen$ and $\walks$ are defined in Section~\ref{sec:sematnic_adaptivity}.}
+where $\qlen$ and $\walks$ are defined in Section~\ref{sec:sematnic_adaptivity}.
 %
 % $\walks(\progG(c))$ represents the set of all finite walks on
 %  $\progG({c})$.
@@ -559,7 +554,7 @@ $
 \end{center}
 \end{thm}
 
-\highlight{We propose a program analysis algorithm $\pathsearch$ which 
+\highlight{In the next subsection we present an algorithm $\pathsearch$ which 
 provides a tight upper bound on the estimated adaptivity. 
 \begin{thm}[Soundness of $\pathsearch$]
   \label{thm:adaptalg_soundness}
@@ -572,7 +567,7 @@ $
 \end{thm}
 }
 
-\highlight{\subsection{$\pathsearch$ Algorithm}}
+\subsection{$\pathsearch$ Algorithm}
 \subsubsection{\highlight{Challenges}}
 Symbolic expressions as used in the weight  are great to express symbolic bounds but make the computation of 
 a maximal walk harder. Specifically, one has to face two challenges. The first is non-termination.
