@@ -1,4 +1,4 @@
- In this section, we formally present the definition of adaptivity for a given program. As we discussed in Section~\ref{sec:adaptivity-informal}, we first define a dependency relation between program variables, we then define a semantics-based dependency graph, and finally look at the walk visiting the maximal number of query nodes in this graph. 
+ In this section, we formally present the definition of adaptivity for a given program. We first define a dependency relation between program variables, then define a semantics-based dependency graph, and finally look at the walk visiting the maximal number of query vertices in this graph. 
  % We first present the construction of the semantics-based dependency graph before the introduction of the formal definition of adaptivity. 
 
 \subsection{May-dependency between variables}
@@ -76,7 +76,7 @@ the query $\query(\chi[2])$  depends on the query $\query(\chi[1])$ via the \emp
 
 To define dependency between program variables we will consider two events that are generated from the same command, hence they have the same variable name or boolean expression and label, but have either different value or different query expression.
 %% \highlight{we use $\eventset$ to denote the set of all events, $\cdom$ for a set of all the programs.}
-This is captured by the following definition. 
+This is captured by the following. 
 
 \begin{defn}
 \label{def:diff}
@@ -106,16 +106,16 @@ Two events $\event_1, \event_2 \in \eventset$ are in the relation $\diff(\event_
 where $\qexpr_1 =_{q} \qexpr_2$ denotes the semantics equivalence between query values\footnote{The formal definition is in the supplementary material},
 and $\pi_i$ projects the $i$-th element from the quadruple of an event.
 \end{defn}
-It is worth stressing that in the definition above, if two events are both generated from query requests, we are not comparing the query answers (the element in the third position of the tuple), but the query expressions (the element in the fourth position of the tuple).
+It is worth stressing that in the definition above, if two events are both generated from query requests, we are not comparing the query answers (the third element of the tuple), but the query expressions (the fourth element of the tuple).
 For example in the running program in Fig.~\ref{fig:overview-example}(a), given different inputs $k = 1$ and $k = 2$
 both events $\event_1 = (x, 3, 0, \chi[0] \cdot \chi[1])$ and $\event_2 = (x, 3, 0, \chi[0] \cdot \chi[2])$ can be generated from query request
 $\clabel{\assign{x}{\query(\chi[j] \cdot \chi[k])} }^{3}$.
 Even though $\pi_3(\event_1) = \pi_3(\event_2)$, these two events are still different by our definition.
 The Equation~\ref{eq:diff}(b) captures this by first checking
-$\pi_4(\event_1) \neq \bullet \land \pi_4(\event_1) \neq \bullet$ to guarantee
+$\pi_4(\event_1) \neq \bullet \land \pi_4(\event_2) \neq \bullet$ to guarantee
 both events are from query requests.
 Then we check again the forth element $\pi_4(\event_1) \neq_q \pi_4(\event_2)$ to guarantee
-that the two events come from different query requests.
+the two events come from different query requests.
 
 We can now define when an event \emph{may depend} on another one\footnote{We consider here dependencies between assignment events. This simplifies the definition and is enough for the stating the following definitions. The full definition is in the supplementary material.}.
 \begin{defn}[Event May-Dependency]
@@ -185,20 +185,20 @@ in order to guarantee that the computation goes through a control flow guard.
 Similarly to the previous condition, we additionally check that the two test events we consider appear the same number of times in the two traces.
 % 
 
-Looking  again to the running example in Fig.~\ref{fig:overview-example}(a), given the initial trace $[ (k, \lin, 1, \bullet)]$,
+In running example in Fig.~\ref{fig:overview-example}(b), given the initial trace $[ (k, \lin, 1, \bullet)]$,
 the program execution generates an
-event $\event_1 = (x, 3, v_1, \chi[0] \cdot \chi[1])$ corresponding to the query request
+event $\event_1 = (x, 3, v_1, \chi[0] \cdot \chi[1])$ for
 $\clabel{\assign{x}{\query(\chi[j] \cdot \chi[k])} }^{3}$,
 and another event
-$\event_2 = (l, 6, v_2, \chi[1] \cdot v_1 )$ corresponding to the query request
+$\event_2 = (l, 6, v_2, \chi[1] \cdot v_1 )$ for
 $\clabel{\assign{l}{\query(\chi[k] \cdot a)} }^{6}$.
-In order to check if we have a may-dependency, we replace $\event_1$ with another event $\event_1' = (x, 3, v_1', \chi[0] \cdot \chi[1])$
+To check a may-dependency, we replace $\event_1$ with another event $\event_1' = (x, 3, v_1', \chi[0] \cdot \chi[1])$
 where $v_1 \neq v_1'$.
 We then continue to execute the program. The $6^{th}$ command generates $\event_2 = (l, 3, v_2, \chi[1] \cdot v_1' )$.
 Since $\pi_4(\event_2) \neq_1 \pi_4(\event_2')$, we have  $\diff(\event_2, \event_2')$ according to Definition~\ref{def:diff} and then the dependency relation $\eventdep(\event_1, \event_2, \kw{twoRounds(k)})$.
 
 
-We can now extend the dependency relation to variables by considering all the assignment events generated during the program's execution. 
+ The dependency relation to variables can be extended by considering all the assignment events generated during the program's execution. Notice two variables can be the same in the following definition, this allows us to capture self-dependencies.
 \begin{defn}[Variable May-Dependency]
   \label{def:var_dep}
 A variable ${x}_2^{l_2} \in \lvar(c)$  \emph{may-depend} on the 
@@ -219,9 +219,9 @@ $
 $
 \end{center}
   \end{defn}
-Notice that in the definition above we can also have that the two variables are the same, this allows us to capture self-dependencies.
+%Notice that in the definition above we can also have that the two variables are the same, this allows us to capture self-dependencies.
 
-Going back to the running example in Fig.~\ref{fig:overview-example}(a), we have already discussed how  $\event_1 = (x, 3, v_1, \chi[0] \cdot \chi[1])$ and $\event_2 = (l, 6, v_2, \chi[1] \cdot v_1 )$ are in the event may-dependency relation. Moreover, we have that $x^3$ and $l^6$ are in the variable may-dependency relation by Definition~\ref{def:var_dep}.
+%Going back to the running example in Fig.~\ref{fig:overview-example}(a), we have already discussed how  $\event_1 = (x, 3, v_1, \chi[0] \cdot \chi[1])$ and $\event_2 = (l, 6, v_2, \chi[1] \cdot v_1 )$ are in the event may-dependency relation. Moreover, we have that $x^3$ and $l^6$ are in the variable may-dependency relation by Definition~\ref{def:var_dep}.
 
 \subsection{Semantics-based Dependency Graph}
 \label{sec:design_choice}
@@ -282,31 +282,29 @@ $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is def
 A semantics-based dependency graph $\traceG({c})= (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is \emph{well-formed} if and only if $ \{x^l \ |\ (x^l,w)\in \traceW({c})\} = \traceV({c}) $.
 }
 \end{defn}
-As we discussed before, vertices and query annotations are just read out from the program $c$. We have an edge in $\traceE(c)$ if we have a may-dependency between two labeled variables in $c$.
-
-For the dependency graph of our running example in Fig.~\ref{fig:overview-example}(b),
-the subscript in vertices $x^3$ and $l^6$ is $1$ because they both come from query requests.
-There is a directed edge from $x^3$ and $l^6$ because we identify the variable may-dependency relation, $\dep(x^3, l^6, \kw{twoRounds(k)})$ according to Definition~\ref{def:var_dep}.
-
+ Vertices and query annotations are just read out from the program $c$. We have an edge in $\traceE(c)$ if we have a may-dependency between two labeled variables in $c$.
+% For the dependency graph of our running example in Fig.~\ref{fig:overview-example}(b),
+% the subscript in vertices $x^3$ and $l^6$ is $1$ because they both come from query requests.
+% There is a directed edge from $x^3$ and $l^6$ because we identify the variable may-dependency relation, $\dep(x^3, l^6, \kw{twoRounds(k)})$ according to Definition~\ref{def:var_dep}.
 A weight function $w \in \traceW(c)$ is a function that for every starting trace $\trace_0 \in \mathcal{T}_0(c)$ 
 gives the number of times the assignment of the corresponding vertex $x^l$ is visited. Notice that weight functions are total and with range $\mathbb{N}$. This means that if a program $c$ has some non-terminating behavior, the set $\traceW(c)$ will be empty. 
-To rule out this situation, we consider as well-formed only graphs which have a weight for every vertex. 
+To rule out this situation, we consider as well-formed only graphs with a weight for every vertex. 
 %\highlight{This is also because programs that have non-terminating behaviors do not have the intuitive adaptivity.}
 %MG: I don't think this sentence is clear
-In the rest of the paper we will implicitly consider only well-formed semantics-based dependency graphs. 
+In the rest of the paper we  implicitly consider only well-formed semantics-based dependency graphs. 
 
-Going back to the example in Fig.~\ref{fig:overview-example}(b), the vertices $a^0$, $j^1$ and $l^6$ have weight function $\lambda \trace \st 1$ because commands $0, 1$ and $6$ are executed only once, given any arbitrary initial trace.
-The vertices corresponding to commands inside the loop body have weight function $\lambda \trace \st \env(\trace) k$ because they  will be executed the same number of times as the loop iteration times.
+% Going back to the example in Fig.~\ref{fig:overview-example}(b), the vertices $a^0$, $j^1$ and $l^6$ have weight function $\lambda \trace \st 1$ because commands $0, 1$ and $6$ are executed only once, given any arbitrary initial trace.
+% The vertices corresponding to commands inside the loop body have weight function $\lambda \trace \st \env(\trace) k$ because they  will be executed the same number of times as the loop iteration times.
 
   \subsection{Adaptivity of a Program}
   \label{sec:sematnic_adaptivity}
-We can now define the adaptivity of a program formally. This notion is formulated in terms of an initial trace, specifying the value of the input variables, and of the walk on the graph $\traceG({c})$ which has the largest number of query requests.
+ This notion of adaptivity is formulated in terms of an initial trace, specifying the value of the input variables, and of the walk on the graph $\traceG({c})$ which has the largest number of query requests.
 
 In Fig.~\ref{fig:overview-example}(b), $\lambda \trace_0 \st (l^6 \to x^3)$ is a walk with two vertices and where each vertex is visited only once. 
-With the assumption that $k \geq 1$, $\lambda \trace_0 \st (l^6 \to \underbrace{a^5 \to a^5 \to \ldots}_{\env(\trace) k} \to x^3)$ is a walk where the vertex $a^5$ is visited $\env(\trace) k$ times.
+With the assumption that $k \geq 1$, $\lambda \trace_0 \st (l^6 \to {a^5 \to a^5 \to \ldots} \to x^3)$ is a walk where the vertex $a^5$ is visited $\env(\trace) k$ times.
 However, $\lambda \trace_0 \st (l^6 \to a^5 \to x^3 \to x^3)$ is not a walk because there is no edge from $x^3$ to $x^3$.
+%\underbrace{a^5 \to a^5 \to \ldots}_{\env(\trace) k} 
 The formal defintion of a walk is the following:
-
 \begin{defn}[Walk]
 \label{def:finitewalk}
 Given a well-formed program $c$ with its semantics-based dependency graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$, a \emph{walk} $k$ is a function that maps an initial trace $\trace_0$ to a sequence of vertices $(v_1, \ldots, v_{n})$
@@ -320,7 +318,6 @@ for which there is a sequence of edges $(e_1 \ldots e_{n - 1})$  satisfying
 We denote by $\walks(\traceG(c))$
 the set of all the walks $k$ in $\traceG(c)$.
 \end{defn} 
-
 Because for the adaptivity
 % is intuitively 
 we are interested in the dependency between queries,
@@ -350,10 +347,10 @@ where the notation $| (\ldots) |$ gives the number of vertices in a sequence.
 \end{defn}
 % \todo{Referring the running example}
 
-Under the assumption that $k \geq 1$, both walks $\lambda \trace_0 \st (l^6 \to x^3)$ and  $\lambda \trace_0 \st (l^6 \to \underbrace{a^5 \to a^5 \to \ldots}_{\env(\trace) k} \to x^3)$ in Fig.~\ref{fig:overview-example}(b) have query length $\lambda\trace_0 \st 2$ because only
-vertices $x^3$ and $l^6$ come from query requests.
+% Under the assumption that $k \geq 1$, both walks $\lambda \trace_0 \st (l^6 \to x^3)$ and  $\lambda \trace_0 \st (l^6 \to \underbrace{a^5 \to a^5 \to \ldots}_{\env(\trace) k} \to x^3)$ in Fig.~\ref{fig:overview-example}(b) have query length $\lambda\trace_0 \st 2$ because only
+% vertices $x^3$ and $l^6$ come from query requests.
 
-We can now define the adaptivity of a well-formed program as follows.
+ We can now define the adaptivity of a well-formed program as follows.
 \begin{defn}
     [Adaptivity of a Program]
     \label{def:trace_adapt}
@@ -368,6 +365,6 @@ $
 $
 \end{center}
 \end{defn}
-Again, we define the adaptivity by considering only well-formed semantics-based dependency graphs. In Fig.~\ref{fig:overview-example}(b), the two dotted edges represent a finite walk with maximal query length, since it contains the only two query requests.
-  Each query request can be visited at most once, and so the adaptivity of this program is $\lambda \trace_0  \st 2$.
+% Again, we define the adaptivity by considering only well-formed semantics-based dependency graphs. In Fig.~\ref{fig:overview-example}(b), the two dotted edges represent a finite walk with maximal query length, since it contains the only two query requests.
+%   Each query request can be visited at most once, and so the adaptivity of this program is $\lambda \trace_0  \st 2$.
 
