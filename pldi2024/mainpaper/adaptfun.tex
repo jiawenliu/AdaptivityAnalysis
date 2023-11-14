@@ -353,7 +353,7 @@ $
 Consider Fig.~3(c),  
 the edge $l^6 \to a^5$ is built by the $\flowsto(l^6, a^5, c)$ relation because
 $a$ is used directly in the query expression $\chi[k]*a$
-and we also have $a^5 \in \live(6, \kw{twoRounds(k)})$ from the reaching definition analysis.
+and $a^5 \in \live(6, \kw{twoRounds(k)})$.
 The edge $x^3 \to j^5$  represents the control flow from $j^5$ to $x^3$, which is soundly approximated by our $\flowsto$ relation.
 The edge $l^6 \to x^3$ is produced by the transitivity of $\flowsto(l^6, a^5, c)$ and $\flowsto(a^5, x^3, c)$. 
 % }
@@ -366,7 +366,7 @@ The weight of every vertex is obtained as an upper bound on
 the number of times the corresponding command can be executed,
 which can be statically estimated by \emph{reachability-bound analysis}~\cite{GulwaniZ10}.
 Our reachability-bound analysis adapts ideas from previous works~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity} 
-to our query language setting. Similarly to these work, we first need to 
+to our query language setting. At frist, we need to 
 construct an abstract transition graph.
 
 The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
@@ -391,15 +391,13 @@ of an if or a while command with label $l$, $b$ holds and the next
 command to be executed is the one with label $l'$.  A $\top$ symbol on
 an edge, $l \xrightarrow{\top} l'$ denotes that the command with label
 $l$ is a $\eskip$, {and the commands that do not interfere with any loop counter variable}.
-We compute difference constraints and the other annotation via a
+We compute difference constraints via a
 simple program abstraction method adopted
-from \cite{sinn2017complexity}, described in details in the
-supplementary material.
+from \cite{sinn2017complexity}, details in the
+supplementary material. Fig.~\ref{fig:abscfg_tworound}(b) shows the abstract control flow graph of the running example (also in Fig.~\ref{fig:abscfg_tworound}(a)).
 
-We show in Fig.~\ref{fig:abscfg_tworound}(b) the  abstract control flow graph,
-$\absG(\kw{twoRounds(k)})$ of the $\kw{twoRounds(k)}$ program we gave in 
- Fig.~\ref{fig:overview-example}(a) and which we also report in 
-  Fig.~\ref{fig:abscfg_tworound}(a).
+\input{examples/abscfg_tworound}
+
 
 
 
@@ -426,7 +424,7 @@ the Abstract Transition Graph $\absG(c)$ of $c$ using reachability-bound analysi
  execution times of the command with label $l$ that we obtain using our reachability-bound analysis. 
  These symbolic upper bounds are expressions with the input variables as free variables, 
  hence they can be used to upper bound the weight functions of the semantics-based dependency graphs.
-We denote the reachability-bound of an edge $e = (l, dc, l') \in \absE(c)$ as $\absclr(e, c)$.
+We denote the reachability-bound of an edge $e = (l, dc, l') \in \absE(c)$ as $\absclr(e, c)$. Fig.~\ref{fig:abscfg_tworound}(c) has the bounds $\absclr(e, c)$ for each edge $e$. 
    
 %% \remove{using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$, we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
 %%   which is also the estimated weight of this vertex.}
@@ -437,7 +435,7 @@ Each pair maps
 a vertex $x^l \in\progV(c)\subseteq  \lvar(c)$ to a symbolic expression over $\constdom$,
 % is formally computed
 as follows.
- \[
+ $
  \progW(c) \triangleq
  \left\{ (x^l, \hat{w}) 
 \mid
@@ -446,11 +444,10 @@ x^l \in \progV(c)
 \hat{w} = 
 \sum\left\{ \absclr(e, c) \middle\vert e \in \absE(c) \land e = (l, \_, \_) \right\}
 \right\}.
-\]
+$
 \end{defn}
 %
-
-Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$. In particular, it may contain the input variables and so it may effectively be used as a function of the input - and capture loop bounds in terms of these inputs.
+%Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$. In particular, it may contain the input variables and so it may effectively be used as a function of the input - and capture loop bounds in terms of these inputs.
 % We guarantee that $\hat{w}$ for $x^l \in \progV(c)$ is a sound upper bound of 
 % the weight for the same vertex $x^l$ in the program's semantics-based dependency graph
 % in Theorem~\ref{thm:addweight_soundness}.
@@ -481,7 +478,8 @@ v \in \mathbb{N}\cup \{\infty\},
 \end{array}
 \]
 \end{thm}
-Notice that in this theorem, the evaluation $\config{\vtrace_0, \hat{w}} \earrow v$ is needed in order to obtain a concrete value $v$ from the symbolic weight $\hat{w}$ by specifying a value for the input variables through $\vtrace_0$.
+Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$. In particular, it may contain the input variables and so it may effectively be used as a function of the input - and capture loop bounds in terms of these inputs.
+Also in this theorem, the evaluation $\config{\vtrace_0, \hat{w}} \earrow v$ is needed to obtain a concrete value $v$ from the symbolic weight $\hat{w}$ by specifying a value for the input variables via $\vtrace_0$.
 
 
 \textbf{Example.} 
