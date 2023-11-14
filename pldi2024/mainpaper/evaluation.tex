@@ -6,11 +6,11 @@ We implemented $\THESYSTEM$ as a tool that takes a labeled command as input
 and outputs two upper bounds on the program adaptivity and the number of query requests respectively.
 This implementation consists of an 
 abstract control flow graph generation,
-edge estimation (as presented in Section~\ref{sec:alg_edgegen}), and weight estimation (as presented in Section~\ref{sec:alg_weightgen}) in Ocaml, 
-and the adaptivity computation algorithm shown in Section~\ref{sec:alg_adaptcompute} in Python.
-The OCaml program takes the labeled command as input and outputs the program-based dependency graph and
-the abstract transition graph, which we
-feed into the Python program and the Python program provides the adaptivity upper bound and the query number \highlight{upper bound} as the final output.
+edge estimation, and weight estimation in Ocaml, 
+and $\pathsearch$ algorithm in Python.
+% The OCaml program takes the labeled command as input and outputs the program-based dependency graph and
+% the abstract transition graph, which we
+% feed into the Python program and the Python program provides the adaptivity upper bound and the query number \highlight{upper bound} as the final output.
 
 
 \paragraph{Accuracy and Performance}
@@ -47,11 +47,9 @@ and provide the adpativity upper bound for the first $19$ examples.
  However, when it comes to complicated examples with multiple high-level nest loops such as $tRCom$ (two $2-$level and three single level while loops), $jumbo$ (one $2-$level and two single level while loops) and $big$ (two $3-$level, three $2-$level and one single level while loops),
 our tool can not handle them. The performance bottleneck is the reachability bound analysis algorithm used to compute the weights.
 We can see how the time grows dramaticaly from $85.9$ seconds for the $20^{th}$ example $mR(k,N)$ with only one $3-$level nest while loop,
-to $5104$ seconds ($85$ minutes) for the $21^{th}$ example $\kw{mRCom}$ who has two $3-$level nest while loops. The more while loops the examples contain, the higher level of these loops 
- the much longer time neeeded for weight estimation.
+to $5104$ seconds ($85$ minutes) for the $21^{th}$ example $\kw{mRCom}$ who has two $3-$level nest while loops. 
 Notice, even though the example $\kw{seqCom}$ has the largest size of $502$ lines 
-of code, our tool can still quickly handle it because $\kw{seqCom}$ does not have loops, the time is only $1.27$ seconds
-for the weight estimation. Fortunately, examples with so many multiple loops
+of code, our tool can still quickly handle it because $\kw{seqCom}$ does not have loops. Fortunately, examples with so many multiple loops
 is not realistic in the data analysis area. 
 }
 
@@ -113,17 +111,24 @@ rounds, query numbers and the running time.  For each alternative
 implementation, we marked the result in red if it is imprecise
 w.r.t. the true value.}
 
-\highlight{To this end, we present three alternative
+\highlight{To this end, we present {\THESYSTEM}-I which replaces the reachability bound analysis algorithm 
+with a light one that handles nested while loop effectively but coarsely to get results for examples $\kw{jumbo}$ and $\kw{big}$.
+In general, {\THESYSTEM}-I gives a tight upper bound in most examples as {\THESYSTEM} does, except the example $\kw{loop2R}$ ($2+3k+k^2$ versus $1+3k$).
+We also have another implementation {\THESYSTEM}-II by removing control flow analysis. The results are unsound (not upper bounds) for examples such as $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $. 
+We marked the result in red if it is imprecise in Table~\ref{tb:adapt-imp-alternatives}.
+}
+\remove{three alternative
 versions of {\THESYSTEM} with corresponding components omitted or
 replaced using ones with weaker guarantees in Table~\ref{tb:adapt-imp-alternatives}.
-We marked the result in red if it is imprecise
-w.r.t. the true value. The first one {\THESYSTEM}-I replaces the reachability bound analysis algorithm in Section~\ref{sec:alg_weightgen}
-with a light one that handles nested while loop effectively but coarsely so it can quickly take care of examples $\kw{jumbo}$ and $\kw{big}$.
+ The first one {\THESYSTEM}-I replaces the reachability bound analysis algorithm 
+with a light one that handles nested while loop effectively but coarsely for examples $\kw{jumbo}$ and $\kw{big}$.
 In general, {\THESYSTEM}-I gives a tight upper bound in most cases as {\THESYSTEM} does.
  The exception is the $17^{th}$ example ($\kw{loop2R}$): {\THESYSTEM} gives a tight upper bound $1+3k$ while the alternative one gives a loose bound$2+3k+k^2$.
  We show the influence of the control flow analysis in Definition~\ref{def:feasible_flowsto} by 
  removing it in the second implementation {\THESYSTEM}-II. The results are unsound (not upper bounds) for examples such as $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $ and $\kw{loopVCD(k)} $ because 
  of the missing consideration of control dependency.
+ We marked the result in red if it is imprecise
+w.r.t. the true value.
  }
 
 
@@ -149,23 +154,22 @@ We assign the weight $1$ to every labeled variable on the estimated dependency g
 The adaptivity estimation results are all integers and does not depend on any program inputs.
 When instantiating the input variable with varied values, this estimated result is either greater or smaller than the true adaptivity.}
 
-In the last column, we present only the performance of the {\THESYSTEM}-I to compare the
+\remove{In the last column, we present only the performance of the {\THESYSTEM}-I to compare the
 light reachability-bound analysis implementation with the original reachability-bound analysis.
 The performance of {\THESYSTEM}-II is similar to {\THESYSTEM} because they are based on the same
 reachability-bound analysis implementation. For the same reason, the {\THESYSTEM}-III has slightly better
 running time than {\THESYSTEM}-I.
 Overall, {\THESYSTEM} gives accurate estimated
-adaptivity upper bounds.
+adaptivity upper bounds.}
 % and analysis framework $\THESYSTEM$.
 
 
 \paragraph{Effectiveness Evaluation}
 \input{eval-table-generalization}
-With our last evaluation we want to show the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs.
+We show the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs
 %  from Sklearn machine learn benchmark sets and research paper~\cite{Jamieson2015TheAO}.
-
-To do this we consider a set of benchmarks including 
-nine real-world data analyses from our examples in Table~\ref{tb:adapt-imp} instantiated with different parameters,
+by a set of benchmarks including 
+nine real-world data analyses from examples in Table~\ref{tb:adapt-imp} instantiated with varied parameters,
 four programs implementing the algorithms from~\cite{Jamieson2015TheAO}
 and four data analysis programs 
 from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark} benchmark.
@@ -187,7 +191,6 @@ from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}
 % the implementations of the decision tree, logistic regression, naive Gaussian inference models equipped with one v.s. rest model with $O(n)$ fitting depth for classifying the dataset with $O(m)$ classes.
 % These programs are evaluated for classifying a demography dataset from 
 % the USA census database~\cite{CensusDatabase}.
-
 {We use acronyms for these programs to have a better presentation of our evaluation in a single table. We use
  3(4)DeLRGD for 3(4)DegreeLRGD, RQ for repeatedQuery, nDPair for nDimPairwise,
 DT, DTOVR for decisionTree(OVR), LR, LROVR for logisticRegression(OVR). Similarly, we shorten the mechanisms: GS for Gaussian, DS for Data Split,
@@ -201,15 +204,13 @@ root-mean-square error.  The root-mean-square error without any
 mechanism is shown in column ``None''. 
 We mark in bold the rmse
 produced by the mechanism chosen by {\THESYSTEM} using the following
-heuristics.  According to Theorem~\ref{thm:gaussiannoise},
-Theorem~\ref{thm:gaussiannoise2} and Theorem~\ref{thm:nonadapt-adapt},
+heuristics.  According to Theorem~\ref{thm:nonadapt-adapt},\ref{thm:gaussiannoise},
+\ref{thm:gaussiannoise2},
 we compare the value of $\sqrt{\query \#}$ and
 $\progA\sqrt{\log(\query \#)}$ and choose DataSplit if
 $\sqrt{\query \#} \gg \progA\sqrt{\log(\query \#)}$ and Gaussian
 mechanism if $\sqrt{\query \#} \ll \progA\sqrt{\log(\query \#)}$ and
-Thresholdout mechanism if these two quantities are close. \highlight{We mark the best rmse in red.
-It shows that in most cases, the choice of mechanism guided by our heuristics is the best one. 
-}
+Thresholdout mechanism if these two quantities are close. 
  It is worth
 stressing that these are rough heuristics since we are omitting the
 constants hidden in these theorems. We leave the problem to identify
@@ -228,10 +229,9 @@ the best heuristic to future work.
     $\progA$ is much larger than $\query \#$, $\progA$ is close to  $\query \#$,
     and $\progA$ is much smaller than $\query \#$. 
     Since both $\progA$ and $\query \#$ are symbolic, the decision of our heursitic relies on 
-    the instantiation of input parameters such as $k,m, n$. To better present the 
-    robustness of our heuristics, we present two different instantiatons $k,m,n=10$ and $k,m, n =1000$ so that
+    the instantiation of input parameters such as $k,m, n$. To better evaluate our heuristics, we present two different instantiatons $k,m,n=10$ and $k,m, n =1000$ so that
     for the same example, our tool will choose different mechanisms and it turns out that our choice is the best in most cases shown in 
-    Table~\ref{tb:adapt-generalization}.
+    Table~\ref{tb:adapt-generalization} (We mark the best rmse in red).
 }
 
 We first evaluate example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
@@ -248,20 +248,20 @@ Then by instantiating $k = 10$, we see that $10 * \sqrt{\log(10)}$ is close to $
  By instantiating $k = 1000$ and $n = 1000$, we have
 $1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. }
 
-\remove{The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
-The number of iterations is $k$ and our tool identifies this as the  adaptivity  for these programs.
-%  and chooses the Gaussian mechanism.
-By instantiating $k = 1000$ and $n = 1000$, we have
-$1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. 
-The evaluation results in Table~\ref{tb:adapt-generalization} show again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.}
+% \remove{The $2^{nd}$ to $5^{th}$ programs represent different algorithms for fitting a two-dimensional data set of size $n$ into a linear relation.
+% The number of iterations is $k$ and our tool identifies this as the  adaptivity  for these programs.
+% %  and chooses the Gaussian mechanism.
+% By instantiating $k = 1000$ and $n = 1000$, we have
+% $1000* \sqrt{\log(1000)} \gg \sqrt{1000}$ which means that our tool chooses the Gaussian mechanism. When $k=10$ and $n=10$ instead, our tool chooses the ThresholdOut mechanism. 
+% The evaluation results in Table~\ref{tb:adapt-generalization} show again that the chosen mechanism performs best among other mechanisms in reducing the generalization error.}
 
-\remove{$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of LRGD into 3D and 4D data set of size $n$.
-%$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
-%algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
-The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds $k$ for these two programs.
-Instantiating $k$ and $n$ with $1000$ and $1000$,
-%  the heuristics in Theorem~\ref{thm:gaussiannoise} and Theorem~\ref{thm:gaussiannoise2},
-our tool chooses the Gaussian mechanism which still reduces rmse the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well in Table~\ref{tb:adapt-generalization}. }
+% \remove{$  \kw{ 3DimLRGD }$ and $  \kw{ 4DimLRGD }$ are the generalizations of LRGD into 3D and 4D data set of size $n$.
+% %$  \kw{ 3DegreeLRGD }$ and $  \kw{ 4DegreeLRGD }$ are as well extending the logistic regression with gradient decedent
+% %algorithm into the fitting tasks of $3$ and $4$ degree polynomial relation on three-dimensional and four-dimensional data sets of size $n$ respectively.
+% The number of iterations (i.e., the fitting depth) is still $k$, and {\THESYSTEM} estimates correctly the adaptivity rounds $k$ for these two programs.
+% Instantiating $k$ and $n$ with $1000$ and $1000$,
+% %  the heuristics in Theorem~\ref{thm:gaussiannoise} and Theorem~\ref{thm:gaussiannoise2},
+% our tool chooses the Gaussian mechanism which still reduces rmse the most. When we instantiate $k$ and $n$ with $10$ and $10$, the ThresholdOut mechanism recommended by our tool also performs very well in Table~\ref{tb:adapt-generalization}. }
 
 We have four data analyses \remove{which are the implementation of algorithms} from~\cite{Jamieson2015TheAO} within the \emph{Guess and Check}~\cite{RogersRSSTW20} framework.
 % is the
