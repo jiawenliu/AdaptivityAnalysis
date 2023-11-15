@@ -120,6 +120,7 @@ the two events come from different query requests.
 We can now define when an event \emph{may depend} on another one\footnote{We consider here dependencies between assignment events. This simplifies the definition and is enough for the stating the following definitions. The full definition is in the supplementary material.}.
 \begin{defn}[Event May-Dependency]
 \label{def:event_dep}
+\vspace{-0.1cm}
 An event $\event_2\in \eventset^{\asn}$ \emph{may-depend} on an event $\event_1 \in \eventset^{\asn}$ in a program ${c}$ denoted
 $\eventdep(\event_1, \event_2, c)$, if and only if
 \begin{subequations}
@@ -172,6 +173,7 @@ $\eventdep(\event_1, \event_2, c)$, if and only if
 }
 \label{eq:eventdep}
 \end{subequations}
+\vspace{-0.3cm}
 % , $\event_2 \in \trace_3$ or $\event_2 \notin \trace_3$ denotes that $\event_2$ belongs to $\trace_3$ or not.
 \end{defn}
 There are several components in this definition. The part with label (2a) requires that $\event_1$ and $\event_1'$ differ in their values ($\diff(\event_1, \event_1')$).
@@ -201,6 +203,7 @@ Since $\pi_4(\event_2) \neq_1 \pi_4(\event_2')$, we have  $\diff(\event_2, \even
  The dependency relation to variables can be extended by considering all the assignment events generated during the program's execution. Notice two variables can be the same in the following definition, this allows us to capture self-dependencies.
 \begin{defn}[Variable May-Dependency]
   \label{def:var_dep}
+  \vspace{-0.2cm}
 A variable ${x}_2^{l_2} \in \lvar(c)$  \emph{may-depend} on the 
   variable ${x}_1^{l_1} \in \lvar(c)$ in a program ${c}$,
   %
@@ -217,6 +220,7 @@ $
   \end{array}
 }%
 $
+\vspace{-0.2cm}
 \end{center}
   \end{defn}
 %Notice that in the definition above we can also have that the two variables are the same, this allows us to capture self-dependencies.
@@ -234,54 +238,7 @@ $
 
 We can now define the \emph{semantics-based dependency graph} of a program $c$. We want this graph to combine quantitative reachability information with dependency information. 
 % For instance, the initial trace of $\kw{twoRounds(k)}$ example contains the initial value of the input variable $k$.
-\begin{defn}[Semantics-based Dependency Graph]
-\label{def:trace_graph}
-Given a program ${c}$,
-its \emph{semantics-based dependency graph} 
-$\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is defined as follows,
-{\small
-\[
-\begin{array}{lll}
-  \text{Vertices} &
-  \traceV({c}) & := \left\{ 
-  x^l
-  ~ \middle\vert ~ x^l \in \lvar(c)
-  \right\}
-  \\
-  \text{Directed Edges} &
-  \traceE({c}) & := 
-  \left\{ 
-  (x^i, y^j) 
-  ~ \middle\vert ~
-  x^i, y^j \in \lvar(c) \land \vardep(x^i, y^j, c) 
-  \right\}
-  \\
-  \text{Weights} &
-  \traceW({c}) & := 
-  \{ 
-  (x^l, w) 
-  ~ \vert ~ 
-  w : \tdom_0(c) \to \mathbb{N}
-  \land
-  x^l \in \lvar(c) \land
-  \forall \trace_0 \in \tdom_0(c), \trace' \in \tdom, l' \st
-  \\ & & \qquad \qquad
-  \config{{c}, \trace_0} \to^{*} 
-  \config{\clabel{\eskip}^{l'}, \trace_0 \tracecat \trace'} 
-  \land w(\trace_0) = \vcounter(\trace', l) \} 
-   \\
-  \text{Query Annotations} &
-  \traceF({c}) & := 
-\left\{(x^l, n)  
-~ \middle\vert ~
- x^l \in \lvar(c) \land
-(n = 1 \Leftrightarrow x^l \in \qvar(c))\land ( n = 0 \Leftrightarrow  x^l \notin \qvar(c))
-\right\}
-\end{array},
-\]
-A semantics-based dependency graph $\traceG({c})= (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is \emph{well-formed} if and only if $ \{x^l \ |\ (x^l,w)\in \traceW({c})\} = \traceV({c}) $.
-}
-\end{defn}
+
  Vertices and query annotations are just read out from the program $c$. We have an edge in $\traceE(c)$ if we have a may-dependency between two labeled variables in $c$.
 % For the dependency graph of our running example in Fig.~\ref{fig:overview-example}(b),
 % the subscript in vertices $x^3$ and $l^6$ is $1$ because they both come from query requests.
@@ -295,6 +252,55 @@ In the rest of the paper we  implicitly consider only well-formed semantics-base
 
 % Going back to the example in Fig.~\ref{fig:overview-example}(b), the vertices $a^0$, $j^1$ and $l^6$ have weight function $\lambda \trace \st 1$ because commands $0, 1$ and $6$ are executed only once, given any arbitrary initial trace.
 % The vertices corresponding to commands inside the loop body have weight function $\lambda \trace \st \env(\trace) k$ because they  will be executed the same number of times as the loop iteration times.
+
+\begin{defn}[Semantics-based Dependency Graph]
+  \label{def:trace_graph}
+  Given a program ${c}$,
+  its \emph{semantics-based dependency graph} 
+  $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is defined as follows,
+  {\small
+  \[
+  \begin{array}{lll}
+    \text{Vertices} &
+    \traceV({c}) & := \left\{ 
+    x^l
+    ~ \middle\vert ~ x^l \in \lvar(c)
+    \right\}
+    \\
+    \text{Directed Edges} &
+    \traceE({c}) & := 
+    \left\{ 
+    (x^i, y^j) 
+    ~ \middle\vert ~
+    x^i, y^j \in \lvar(c) \land \vardep(x^i, y^j, c) 
+    \right\}
+    \\
+    \text{Weights} &
+    \traceW({c}) & := 
+    \{ 
+    (x^l, w) 
+    ~ \vert ~ 
+    w : \tdom_0(c) \to \mathbb{N}
+    \land
+    x^l \in \lvar(c) \land
+    \forall \trace_0 \in \tdom_0(c), \trace' \in \tdom, l' \st
+    \\ & & \qquad \qquad
+    \config{{c}, \trace_0} \to^{*} 
+    \config{\clabel{\eskip}^{l'}, \trace_0 \tracecat \trace'} 
+    \land w(\trace_0) = \vcounter(\trace', l) \} 
+     \\
+    \text{Query Annotations} &
+    \traceF({c}) & := 
+  \left\{(x^l, n)  
+  ~ \middle\vert ~
+   x^l \in \lvar(c) \land
+  (n = 1 \Leftrightarrow x^l \in \qvar(c))\land ( n = 0 \Leftrightarrow  x^l \notin \qvar(c))
+  \right\}
+  \end{array},
+  \]
+  A semantics-based dependency graph $\traceG({c})= (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is \emph{well-formed} if and only if $ \{x^l \ |\ (x^l,w)\in \traceW({c})\} = \traceV({c}) $.
+  }
+  \end{defn}
 
   \subsection{Adaptivity of a Program}
   \label{sec:sematnic_adaptivity}

@@ -15,7 +15,7 @@ $c$.
   \begin{enumerate}
     \item construct
     an \emph{estimated program dependency graph} \progG(c) of a program $c$
-    (Section~\ref{sec:alg_weightedgegen});
+    ;
     \item use a reachability-bound algorithm to estimate the weight of every vertex in the graph;
     \item  use an algorithm, which we call AdaptBD, to estimate an upper bound on the number of queries in the walk over the weighted dependency graph that visits most query vertices. %This in turns gives us an upper bound to the adaptivity. 
   \end{enumerate}
@@ -225,6 +225,7 @@ the semantics-based graph $\traceG(c)$. The differences will be in the sets of e
 %% The final $in(l)$ is the set of reaching definitions $\live(l, c)$ for $l$.}}
   
 \subsubsection{Edge Construction}
+\label{sec:alg_edgegen}
 The set of edges $\progE(c)$ is built usingh a \textbf{feasible data-flow analysis}, 
 a data flow analysis over 
 our query language, combined with a reaching definition analysis.
@@ -367,9 +368,19 @@ the number of times the corresponding command can be executed,
 which can be statically estimated by \emph{reachability-bound analysis}~\cite{GulwaniZ10}.
 Our reachability-bound analysis adapts ideas from previous works~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity} 
 to our query language setting. At frist, we need to 
-construct an abstract transition graph.
+construct an abstract transition graph \highlight{ $\absG(c)$ of a program $c$, a
+graph with the set of labels of program points in $c$  (including a 
+label $\lex$ for the exit point) as the set of
+vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
+edges $\absE(c)$. Each edge of the graph is annotated with either
+the symbol $\top$, a boolean expression or a \emph{difference
+constraint}~\cite{sinn2017complexity}. A difference constraint is an inequality of the form $x' \leq y + v$ {or $x' \leq v$}
+where $x, y$ are variables and $v \in \constdom$ is a symbolic
+constant: either a natural number, the symbol $\infty$, an input
+variable or a symbol $Q_m$ representing a query request.  We denote by
+$\dcdom$ the set of difference constraints. }
 
-The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
+\remove{The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
 graph with the set of labels of program points in $c$  (including a 
 label $\lex$ for the exit point) as the set of
 vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
@@ -394,9 +405,9 @@ $l$ is a $\eskip$, {and the commands that do not interfere with any loop counter
 We compute difference constraints via a
 simple program abstraction method adopted
 from \cite{sinn2017complexity}, details in the
-supplementary material. Fig.~\ref{fig:abscfg_tworound}(b) shows the abstract control flow graph of the running example (also in Fig.~\ref{fig:abscfg_tworound}(a)).
+supplementary material. Fig.~\ref{fig:abscfg_tworound}(b) shows the abstract control flow graph of the running example (also in Fig.~\ref{fig:abscfg_tworound}(a)).}
 
-\input{examples/abscfg_tworound}
+%\input{examples/abscfg_tworound}
 
 
 
@@ -424,11 +435,12 @@ the Abstract Transition Graph $\absG(c)$ of $c$ using reachability-bound analysi
  execution times of the command with label $l$ that we obtain using our reachability-bound analysis. 
  These symbolic upper bounds are expressions with the input variables as free variables, 
  hence they can be used to upper bound the weight functions of the semantics-based dependency graphs.
-We denote the reachability-bound of an edge $e = (l, dc, l') \in \absE(c)$ as $\absclr(e, c)$. Fig.~\ref{fig:abscfg_tworound}(c) has the bounds $\absclr(e, c)$ for each edge $e$. 
+We denote the reachability-bound of an edge $e = (l, dc, l') \in \absE(c)$ as $\absclr(e, c)$. More details in the supplementary material.% Fig.~\ref{fig:abscfg_tworound}(c) has the bounds $\absclr(e, c)$ for each edge $e$. 
    
 %% \remove{using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$, we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
 %%   which is also the estimated weight of this vertex.}
 \begin{defn}[Weight Estimation]
+  \vspace{-0.1cm}
  \label{def:adaptfun-weight}
 The estimated weight set $\progW(c)$ of program $c$ is a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \constdom)$.
 Each pair maps
@@ -453,6 +465,7 @@ $
 % in Theorem~\ref{thm:addweight_soundness}.
 \begin{thm}[Soundness of the Weight Estimation]
  \label{thm:addweight_soundness}
+ \vspace{-0.1cm}
 Let ${c}$ be a program and $\progW(c)$ be its estimated weight set.
 Then, for every  $(x^l, w) \in \traceW(c) $,
 we have a corresponding estimated weight $(x^l, \hat{w}) \in \progW(c)$ and for every possible 
@@ -482,14 +495,14 @@ Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$
 Also in this theorem, the evaluation $\config{\vtrace_0, \hat{w}} \earrow v$ is needed to obtain a concrete value $v$ from the symbolic weight $\hat{w}$ by specifying a value for the input variables via $\vtrace_0$.
 
 
-\textbf{Example.} 
+\remove{\textbf{Example.} 
 Consider again
 Fig.~\ref{fig:overview-example}(c),
 the estimated weight for $a^5$ is $k$, and this is a sound estimation.
 % in estimated dependency Graph as $k$ as well.
 For an arbitrary $\trace_0 \in \mathcal{T}_0(c)$, we know that $\config{\trace_0, k} \earrow \env(\trace_0) k$ and
 by the weight $w_k$ for the vertex $a^5$ (as in Fig.~\ref{fig:overview-example}(b)) we know 
-$w_k(\trace_0) = \env(\trace_0) k$. 
+$w_k(\trace_0) = \env(\trace_0) k$. }
 %
 \subsubsection{Definition of Estimted Dependency Graph}
 \begin{defn}
