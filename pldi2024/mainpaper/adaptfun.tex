@@ -627,28 +627,29 @@ in the simplified graph. The pseudo-code for $\pathsearch$ can be found in the s
 %% }
 
 \subsubsection{Algorithm $\pathsearch_{\kw{SCC}}$}
-\highlight{The high level idea of $\pathsearch_{\kw{SCC}}$ is the following:
+The high level idea of $\pathsearch_{\kw{SCC}}$ is the following:
 to provide an upper bound on the local adaptivity of an Strong Connected Component of a graph, 
-we need to approximate an upper bound on the query length of the walk with the maximal query length in this SCC. 
-Suppose we have an SCC with just three vertices $a^{3}_{1}$, $b^{2}_{1}$,
-$c^{3}_{0}$, $a$ and $c$ are query vertices with weight $3$ and $b$ is a standard assignment vertex with weight $2$. 
-This SCC is a directed cycle where $a \to b \to c \to a \dots$.  
-The query length of the walk we are looking for, for instance, $a \to b \to c \to a \to b \to c \to a$, $5$, can be approximated by
- first finding such a path in this SCC
-which starts from a vertex and stops when it reaches the same vertex, such as $a \to b \to c \to a$. Then the product of 
- the minimal weight along the path ($\min(3,2,3,3)$) and the number of queries of this path $3$ ($a$ and $c$ are query vertices), $6$,
- will be the sound upper bound we are looking for. Because we are
+we need to compute an upper bound on the maximal query length of walks in this SCC. 
+For the sake of illustrate the algorithm, suppose we have an SCC with just three vertices $a^{3}_{1}$, $b^{2}_{1}$,
+$c^{3}_{0}$, where $a$ and $c$ are query vertices with weight $3$ and $b$ is a standard assignment vertex with weight $2$. Suppose the SCC is a cycle with edge $a^{3}_{1} \to b^{2}_{1}$, $b^{2}_{1} \to c^{3}_{0}$ and $c^{3}_{0}\to a^{3}_{1}$. 
+%
+%% Suppose we have an SCC with just three vertices $a^{3}_{1}$, $b^{2}_{1}$,
+%% $c^{3}_{0}$, where $a$ and $c$ are query vertices with weight $3$ and $b$ is a standard assignment vertex with weight $2$. Suppose the SCC is a cycle with edges here $a \to b$, $b \to c$ and $c \to a$.  
+A walk with maximal query length is for instance: $a \to b \to c \to a \to b \to c \to a$. The query length of this walk is $5$ and it can be approximated by
+ first finding a path which starts from a vertex and stops when it reaches the same vertex, such as $a \to b \to c \to a$. Then we can compute a sound upper bound by taking the product of 
+ the minimal weight along the path ($\min(3,2,3,3)$) and the number of queries of this path $3$ ($a$ and $c$ are query vertices). In this case, the upper bound is $6$.
+Because we are
  traversing an SCC, if we start from one vertex, it will finally go back to the same vertex.   
  $\pathsearch_{\kw{SCC}}$ uses the above intuition and traverses an SCC starting from every possible
  vertex, keeps track of the minimal weight (line: 7 in Algorithm~\ref{alg:adaptscc} ) and the number of queries (line: 8 in Algorithm~\ref{alg:adaptscc}) and 
- stops when it goes back to itself (line: 11 in Algorithm~\ref{alg:adaptscc}). When a cycle is detected,
+ stops when it goes back to the same vertex (line: 11 in Algorithm~\ref{alg:adaptscc}). When a cycle is detected,
  the upper bound is updated (line: 12 in Algorithm~\ref{alg:adaptscc}) by taking the maximal between the current upper bound and the product of the minimal weight
- and the number of query vertices along the visited path as we discussed in the above intuition. When all the traverses starting from 
- every vertex of this SCC are finished, the remaining upper bound will be the maximal approximated one. 
+ and the number of query vertices along the visited path as we discussed in the example above . When all the traverses starting from 
+ every vertex of this SCC are finished, the obtained upper bound will be the maximal approximated one. 
  The traverse is natually performed by a Depth First Search, whose complexity is O(V+E), where $V$ and $E$ 
  represent the number of vertices and edges in this SCC.  $\pathsearch_{\kw{SCC}}$ performs such 
  a traverse for every vertex so the total complexity for $\pathsearch_{\kw{SCC}}$ is O((V+E)*V).
- }
+ 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 1: %%%%%%%%%%%%%%%%%%%%%%
