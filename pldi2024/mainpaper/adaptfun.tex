@@ -236,49 +236,49 @@ variables at line $l$ in the program $c$.
 
 The {\em feasible data-flow analysis} computes for every pair $x^i, y^j \in \lvar(c)$
  whether there is a flow from $x^i$ to $y^j$. 
- This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. 
- This relation is defined  as follows:
+ This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$, whose definiton of is in the supplementary material.  
+%  This relation is defined  as follows:
 %% \remove{\noindent\textbf{Feasible data-flow analysis:} The second component is a \textbf{feasible data-flow analysis} computing for every pair $x^i, y^j \in \lvar(c)$
 %%  whether there is a flow from $x^i$ to $y^j$. 
 %%  This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. 
 %%  This relation is defined  as:}
-\begin{defn}[Feasible Data-Flow]
-  \label{def:feasible_flowsto}
-  Given a program $c$ and two labeled variables $x^i, y^j$  in this program, 
-  $\flowsto(x^i, y^j, c)$ is 
-  \\
-    {\footnotesize
-% \begin{center}
-$  \begin{array}{ll}
-  \flowsto(x^i, y^j, \clabel{\eskip}^{l}) 
-  &\triangleq \emptyset \\
-  \flowsto(x^i, y^j, \clabel{\assign{y}{\expr}}{}^j) 
-  & \triangleq (x^i, y^j) \in \{ (x^i, y^j) | x \in \kw{FV}(\expr) 
-  \land x^i \in \live(l, \clabel{\assign{y}{\expr}}^j) \} \\
-  \flowsto(x^i, y^j, \clabel{\assign{y}{\query(\qexpr)}}{}^j) 
-  & \triangleq (x^i, y^j) \in \{ (x^i, y^j) | x \in \kw{FV}(\qexpr) 
-  \land x^i \in \live(l,\clabel{\assign{y}{\query(\qexpr)}}^j) \} \\
-    \flowsto(x^i, y^j, \eif ([b]^l, c_1, c_2))  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\ 
-        & \lor (x^i, y^j) \in
-        \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
-      %  (x,i) 
-      x^i \in \live(l, \eif ([b]^l, c_1, c_2)) \land  y^j \in \lvar(c_1) \right\} \\
-    %   ([y = \_]^j) \in \mathsf{blk}(c_1) \} \\
-       &\lor (x^i, y^j) \in \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
-      %  (x,i) 
-      x^i\in \live(l, \eif ([b]^l, c_1, c_2))  \land  y^j \in \lvar(c_2)  \right\} \\
-    %   \land ([y = \_]^j) \in \mathsf{blk}(c_2) \} \\
-       \flowsto(x^i, y^j, \ewhile [b]^l \edo c_w)  & \triangleq  \flowsto(x^i, y^j, c_w)  \lor
-       \\ & 
-       (x^i, y^j) \in  \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
-      %  (x,i) 
-      x^i \in \live(l,   \ewhile [b]^l \edo c_w) \land  y^j \in \lvar(c_w) \right\} \\
-    %   ([y = \_]^j) \in \mathsf{blk}(c_w) \} \\
-       \flowsto(x^i, y^j, c_1 ;c_2)  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\
-   \end{array}$
-% \end{center}
-   }
-   \end{defn}
+% \begin{defn}[Feasible Data-Flow]
+%   \label{def:feasible_flowsto}
+%   Given a program $c$ and two labeled variables $x^i, y^j$  in this program, 
+%   $\flowsto(x^i, y^j, c)$ is 
+%   \\
+%     {\footnotesize
+% % \begin{center}
+% $  \begin{array}{ll}
+%   \flowsto(x^i, y^j, \clabel{\eskip}^{l}) 
+%   &\triangleq \emptyset \\
+%   \flowsto(x^i, y^j, \clabel{\assign{y}{\expr}}{}^j) 
+%   & \triangleq (x^i, y^j) \in \{ (x^i, y^j) | x \in \kw{FV}(\expr) 
+%   \land x^i \in \live(l, \clabel{\assign{y}{\expr}}^j) \} \\
+%   \flowsto(x^i, y^j, \clabel{\assign{y}{\query(\qexpr)}}{}^j) 
+%   & \triangleq (x^i, y^j) \in \{ (x^i, y^j) | x \in \kw{FV}(\qexpr) 
+%   \land x^i \in \live(l,\clabel{\assign{y}{\query(\qexpr)}}^j) \} \\
+%     \flowsto(x^i, y^j, \eif ([b]^l, c_1, c_2))  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\ 
+%         & \lor (x^i, y^j) \in
+%         \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
+%       %  (x,i) 
+%       x^i \in \live(l, \eif ([b]^l, c_1, c_2)) \land  y^j \in \lvar(c_1) \right\} \\
+%     %   ([y = \_]^j) \in \mathsf{blk}(c_1) \} \\
+%        &\lor (x^i, y^j) \in \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
+%       %  (x,i) 
+%       x^i\in \live(l, \eif ([b]^l, c_1, c_2))  \land  y^j \in \lvar(c_2)  \right\} \\
+%     %   \land ([y = \_]^j) \in \mathsf{blk}(c_2) \} \\
+%        \flowsto(x^i, y^j, \ewhile [b]^l \edo c_w)  & \triangleq  \flowsto(x^i, y^j, c_w)  \lor
+%        \\ & 
+%        (x^i, y^j) \in  \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
+%       %  (x,i) 
+%       x^i \in \live(l,   \ewhile [b]^l \edo c_w) \land  y^j \in \lvar(c_w) \right\} \\
+%     %   ([y = \_]^j) \in \mathsf{blk}(c_w) \} \\
+%        \flowsto(x^i, y^j, c_1 ;c_2)  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\
+%    \end{array}$
+% % \end{center}
+%    }
+%    \end{defn}
 This relation gives us an overapproximation of the \emph{variable may-dependency} relation for direct dependencies (dependencies that do not go through other variables).
 %\jl{The transitivity of $\flowsto$ relation is a sound approximation of the $\vardep$ relation over the same pair of labeled variables.
 % , in Appendix C in supplementary material
