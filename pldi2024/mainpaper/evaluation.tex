@@ -18,13 +18,13 @@ and of an implementation of the $\pathsearch$ algorithm in Python.
 We evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity
 through $25$ example programs (summary in Table~\ref{tb:adapt-imp}).
 For each example we compare the true accuracy with the estimated adaptivity, and we report the estimated number of queries, the L.O.C and the running time for the graph construction (graph), the weight estimation (weight) and the adaptivity computation ($\pathsearch$).
-The set of examples include the ones we have described before, such as two rounds $\kw{twoRounds(k)}$ in
+The set of examples includes the ones we have described before, such as two rounds $\kw{twoRounds(k)}$ in
 Fig.~\ref{fig:overview-example}(a) and multiple rounds $ \kw{mR(k)}$ and its variants $\kw{mROdd(k)}$ $\kw{mROdd(k)}$,
-a logistic regression algorithm with gradient decent (short for $\kw{LRGD}$),
+a logistic regression algorithm with gradient descent (short for $\kw{LRGD}$),
 handcrafted programs from the $6^{th}$ ($\kw{seqRV}$) to $19^{th}$ ($\kw{loop2R}$) based on benchmarks from the work by Gulwani et al.~\cite{GulwaniJK09}. These examples have small sizes but complex structures to test the programs under different situations including
 data, control dependency, the multiple paths nested loop with related counters, etc. The names of these programs obey the convention that,
 $\kw{if}$ means there is an if control in the program;
-$\kw{loop}$ means there is while loop and $\kw{loop2}$ represents two levels nested loop in the program;
+$\kw{loop}$ means there is a while loop and $\kw{loop2}$ represents two levels nested loop in the program;
 $\kw{C}$ denotes Control;
 $\kw{D}$ for Dependency; $\kw{V}$ for Variable;
 $\kw{M}$ for Multiple; $\kw{P}$ for Path and $\kw{R}$ for Related.
@@ -34,19 +34,19 @@ The last six programs are synthesized programs composed of the previous programs
 In terms of accuracy, our tool provides a tight
 upper bound on the adaptivity for the most examples. 
  For the $4^{th}$ program $\kw{mROdd(k)}$, $\THESYSTEM$ outputs an over-approximated upper bound 
- $2 + \max(1, 2k)$ because of the path insensitive nature of the weight estimation algorithm, as discussed in Section~\ref{sec:examples}. 
+ $2 + \max(1, 2k)$ because of the path-insensitive nature of the weight estimation algorithm, as discussed in Section~\ref{sec:examples}. 
  Similarly for the $17^{th}$ example $\kw{loopM}$. 
-$\THESYSTEM$ outputs $1 + \max(1, k) $ for the $5^{th}$ program $\kw{mRSingle(k)}$, which is tight with respect to our adaptvitiy definition in Def.~\ref{def:trace_adapt}.
-However, because Def.~\ref{def:trace_adapt} does not capture precisely the accuracy  of $\kw{mRSingle(k)}$,
+$\THESYSTEM$ outputs $1 + \max(1, k) $ for the $5^{th}$ program $\kw{mRSingle(k)}$,  tight by our adaptvitiy definition (Definition~\ref{def:trace_adapt}).
+However, Definition~\ref{def:trace_adapt} does not capture precisely the accuracy  of $\kw{mRSingle(k)}$,
 the result is still an over-approximation.
 
 In terms of performance, our tool can quickly construct the graph, estimate the weight,
-and provide the adpativity upper bound for the first $19$ examples.
- However, when it comes to complicated examples with multiple high-level nest loops such as $tRCom$ (two $2-$level and three single level while loops), $jumbo$ (one $2-$level and two single level while loops) and $big$ (two $3-$level, three $2-$level and one single level while loops),
+and provide the adaptivity upper bound for the first $19$ examples.
+ However, when it comes to complicated examples with multiple high-level nest loops such as $tRCom$ (two $2-$level and three single-level while loops), $jumbo$ (one $2-$level and two single-level while loops) and $big$ (two $3-$level, three $2-$level and one single-level while loops),
 our tool can not handle them. The performance bottleneck is the reachability bound analysis algorithm used to compute the weights.
-We can see how the time grows dramaticaly from $85.9$ seconds for the $20^{th}$ example $mR(k,N)$ with only one $3-$level nest while loop,
+We can see how the time grows dramatically from $85.9$ seconds for the $20^{th}$ example $mR(k,N)$ with only one $3-$level nest while loop,
 to $5104$ seconds ($85$ minutes) for the $21^{th}$ example $\kw{mRCom}$ who has two $3-$level nested while loops. 
-Notice, even though the example $\kw{seqCom}$ has the largest size of $502$ lines 
+Notice, that even though the example $\kw{seqCom}$ has the largest size of $502$ lines 
 of code, our tool can still quickly handle it because $\kw{seqCom}$ does not have loops. Fortunately, examples with many nested loops are not common in the data analysis area. 
 
 % \remove{We first evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity
@@ -111,7 +111,7 @@ To this end, we present {\THESYSTEM}-I which replaces the reachability bound ana
 with a simpler one that handles nested while loop effectively but coarsely. This allows us to get results for the $\kw{jumbo}$ and $\kw{big}$ examples.
 In general, {\THESYSTEM}-I gives tight upper bounds in most examples as {\THESYSTEM} does, except for the example $\kw{loop2R}$ ($2+3k+k^2$ versus $1+3k$).
 We also have another implementation {\THESYSTEM}-II obtained by removing the control flow analysis. The results are unsound (not upper bounds) for examples such as $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $. 
-We show the results of these algorithms Table~\ref{tb:adapt-imp-alternatives}, we highlight in red the results that are imprecise or unsound.
+We show the results of these algorithms in Table~\ref{tb:adapt-imp-alternatives}, we highlight in red the results that are imprecise or unsound.
 }
 % \remove{three alternative
 % versions of {\THESYSTEM} with corresponding components omitted or
@@ -162,7 +162,7 @@ We show the results of these algorithms Table~\ref{tb:adapt-imp-alternatives}, w
 
 \paragraph{Effectiveness Evaluation}
 \input{eval-table-generalization}
-In our last evaluation we consider the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs.
+In our last evaluation, we consider the effectiveness of {\THESYSTEM} in terms of reducing the generalization error of real-world data analysis programs.
 %  from Sklearn machine learn benchmark sets and research paper~\cite{Jamieson2015TheAO}.
 We do this by considering a set of benchmarks including 
 nine classical data analyses taken from examples in Table~\ref{tb:adapt-imp} instantiated with various parameters,
@@ -221,23 +221,23 @@ the best heuristic to future work.
     According to our heuristics, our examples fall into three categories: 
     $\progA$ is much larger than $\query \#$, $\progA$ is close to  $\query \#$,
     and $\progA$ is much smaller than $\query \#$. 
-    Since both $\progA$ and $\query \#$ are symbolic, the decision of our heursitic relies on 
-    the instantiation of input parameters such as $k,m, n$. To better evaluate our heuristics, we present two different instantiatons $k,m,n=10$ and $k,m, n =1000$ so that
+    Since both $\progA$ and $\query \#$ are symbolic, the decision of our heuristics relies on 
+    the instantiation of input parameters such as $k,m, n$. To better evaluate our heuristics, we present two different instantiations $k,m,n=10$ and $k,m, n =1000$ so that
     for the same example, our tool will choose different mechanisms.
 
 We can see in Table~\ref{tb:adapt-generalization} that the mechanism
-chosen by our heuristic (marked in bold) is the best in most cases.
-In the setting of small parameters $k,m,n=10$ our heuristic
-chooses most of the time ThresholdOut. Exceptions are examples such as $\kw{DTOVR}$,
+chosen by our heuristics (marked in bold) is the best in most cases.
+In the setting of small parameters $k,m,n=10$, our heuristics
+choose most of the time ThresholdOut. Exceptions are examples such as $\kw{DTOVR}$,
 $\kw{LROVR}$
 from \hyperlink{https://github.com/scikit-learn/scikit-learn/tree/main/examples}{sklearn}~\cite{SklearnBenchmark}
 benchmark, and $\kw{RQ}$ from~\cite{Jamieson2015TheAO}, for which our tool
-chooses Gaussian mechanism.  In the setting of large parameters
+chooses the Gaussian mechanism.  In the setting of large parameters
 $k,m,n=1000$, 
-for most examples our heuristic chooses the Gaussian mechanism.
-For $\kw{twoRounds}$ our heuristics suggest the DataSplit mechanism.For examples $\kw{lilUCB}$,
+for most examples our tool chooses the Gaussian mechanism.
+For $\kw{twoRounds}$, our heuristics suggest the DataSplit mechanism. For examples $\kw{lilUCB}$,
 $\kw{nDPair}$ and $\kw{bestArm}$ from~\cite{Jamieson2015TheAO} within
-the \emph{Guess and Check}~\cite{RogersRSSTW20} framework our heuristic chooses the Thresholdout mechanism.
+the \emph{Guess and Check}~\cite{RogersRSSTW20} framework, our tool chooses the Thresholdout mechanism.
 
 %% \remove{We first evaluate example programs from Table~\ref{tb:adapt-imp} as the baseline evaluation to show that our tool can choose the mechanism that performs best in reducing the generalization error as we claimed.
 %% $\kw{twoRounds}$ is trained to classify a uniformly generated data set of size $n$ and $k$ features and a randomly selected label from $\{0, 1\}$. 
