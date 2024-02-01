@@ -35,7 +35,15 @@ class twoRounds():
 		q_done = len(strategy.mech_ans_list)
 		# print("ANS OF ADAPTIVE QUERYS:", strategy.mech_ans_list)
 		# print("TRUE ANSWER OF ADAPTIVE QUERYS:", strategy.true_ans_list)
+		true_answer = strategy.true_ans_list[:q_done]
 		square_errors = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list))
+		print("true_answer",true_answer)
+		amax = np.amax(true_answer)
+		amin = np.amin(true_answer)
+		dif= amax - amin
+		mean = np.mean(true_answer)
+		print('diff:', dif)
+		# square_errors = square_errors/np.square(mean)
 		print("Complete one run, with Squre Errors: {}".format(square_errors))
 		return list(square_errors)
 
@@ -47,6 +55,8 @@ class twoRounds():
 				se_matrix = [(self.one_run_one_mech(n, q_max_list[i], q_adapt_list[i], mechanism)) for _ in range(runs)]
 				rmse_pair_list = [np.array([[l[i],1] if len(l) > i else [0, 0] for l in se_matrix]).sum(0) for i in range(max([len(l) for l in se_matrix]))]
 				rmse = [pl[0] / pl[1] for pl in rmse_pair_list]
+				print("se_m",se_matrix)
+				print("rmse_plist",rmse_pair_list)
 				print("ROOT MEAN SQUARE ERROR: ", rmse)
 				rmse_list.append(rmse)
 
@@ -85,7 +95,7 @@ class twoRounds():
 		GnC_DataSplit : 'Guess and Check' (GnC) query-answering mechanism instantiated by the Naive Data Splitting Mechanism (2nd mechanism above)
 		GnC_Baseline : 'Guess and Check' (GnC) query-answering mechanism instantiated by the Empirical Query Answer Mechanism (1st mechanism above)
 		'''
-		mech_name, mech_para, mech_rmse = mech_name, mech_name, [[0.0] * (q_max_list[i] / q_adapt_list[i]) for i in range(len(q_max_list))]
+		mech_name, mech_para, mech_rmse = mech_name, mech_name, [[0.0] * (q_max_list[i] // q_adapt_list[i]) for i in range(len(q_max_list))]
 		f = open('./'+ mech_name + "test.txt", 'w')
 	# ###################################### Emperical Result: ######################################
 		if mech_name == "Baseline":

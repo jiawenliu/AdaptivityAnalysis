@@ -70,10 +70,26 @@ def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechani
         pred_list.append(pred)
     
     mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
+    rmse = 	np.sqrt(mse)
+    true_data = eval_data[:,-1]
+    std = np.std(true_data)
+    amax = np.amax(true_data)
+    amin = np.amin(true_data)
+    dif= amax - amin  
+    mean = np.mean(true_data)
+    print("dif", dif)
+    print("mean", mean)
+    print("rmse",rmse)
+    nrmse = rmse/std
+    nrmse1 = rmse/dif
+    nrmse2 = rmse/mean
+    print("std", std)
+    print("nrmse",nrmse)
+    print("nrmse1", nrmse1)
+    print("nrmse2", nrmse2)
+    return rmse
 
-    return np.sqrt(mse)
-
-n = 100
+n = 10 # change to modify rounds
 cardinality = 2
 max_iteration = 500
 para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 5)

@@ -70,12 +70,29 @@ def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechani
         pred_list.append(pred)
     pred_list = np.sign(pred_list)
     mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
-    return np.sqrt(mse)
+    rmse = np.sqrt(mse)
+    true_data = eval_data[:,-1]
+    std = np.std(true_data)
+    amax = np.amax(true_data)
+    amin = np.amin(true_data)
+    dif= amax - amin  
+    mean = np.mean(true_data)
+    print("dif", dif)
+    print("mean", mean)
+    print("rmse",rmse)
+    nrmse = rmse/std
+    nrmse1 = rmse/dif
+    nrmse2 = rmse/mean
+    print("std", std)
+    print("nrmse",nrmse)
+    print("nrmse1", nrmse1)
+    print("nrmse2", nrmse2)
+    return rmse
  
-    pred_list = np.sign(pred_list)
-    mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
+    # pred_list = np.sign(pred_list)
+    # mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
     
-    return np.sqrt(mse)
+    # return np.sqrt(mse)
  
 n = 1000
 cardinality = 3

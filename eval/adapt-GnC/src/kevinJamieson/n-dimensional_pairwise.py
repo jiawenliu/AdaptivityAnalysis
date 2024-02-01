@@ -58,11 +58,28 @@ def eval_n_dim_pairwise(delta, n = DATA_SIZE, cardinality = CARDINALITY, q_max =
     q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
 
-    return np.sqrt(mse)
+    rmse = 	np.sqrt(mse)
+    true_data = strategy.true_ans_list[:q_done]
+    std = np.std(true_data)
+    amax = np.amax(true_data)
+    amin = np.amin(true_data)
+    dif= amax - amin  
+    mean = np.mean(true_data)
+    print("dif", dif)
+    print("mean", mean)
+    print("rmse",rmse)
+    nrmse = rmse/std
+    nrmse1 = rmse/dif
+    nrmse2 = rmse/mean
+    print("std", std)
+    print("nrmse",nrmse)
+    print("nrmse1", nrmse1)
+    print("nrmse2", nrmse2)
+    return rmse
 
-n = 10
-dimension = 10
-q_max = 10
+n = 1000
+dimension = 1000
+q_max = 1000
 runs = 10
 
 stepped_q_max = range(q_max//2, q_max, 10)

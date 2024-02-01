@@ -224,14 +224,19 @@ class MechanizedLogisticRegression(LogisticRegression):
         
         ################ Gaussian Noise Added to Labels ################
         y_noise = np.random.normal(0, self.mechanism.sigma, y_train.shape) 
-        noised_y = y_train + y_noise
+        noised_y = y_train  + y_noise
+        noised_y = list(map(lambda x : 0 if x < 0 else 1, noised_y))
+        # lab_enc = preprocessing.LabelEncoder()
+        # noised_y = lab_enc.fit_transform(noised_y) 
         print(noised_y)
 
 
         result = super(MechanizedLogisticRegression, self).fit(noised_x, noised_y)
         if isinstance(result, LogisticRegression):
+            print("yes, it is logistic regression")
             return self
         else:
+            print("no, it is result from Mechanized logistic regression")
             return result
 
 
