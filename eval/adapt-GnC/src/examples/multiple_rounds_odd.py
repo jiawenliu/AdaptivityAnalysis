@@ -89,7 +89,7 @@ def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechani
     print("nrmse2", nrmse2)
     return rmse
 
-n = 10 # change to modify rounds
+n = 1000 # change to modify rounds
 cardinality = 2
 max_iteration = 500
 para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 5)

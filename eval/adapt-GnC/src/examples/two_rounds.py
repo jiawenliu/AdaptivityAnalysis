@@ -43,7 +43,7 @@ class twoRounds():
 		dif= amax - amin
 		mean = np.mean(true_answer)
 		print('diff:', dif)
-		# square_errors = square_errors/np.square(mean)
+		square_errors = square_errors/np.square(mean)
 		print("Complete one run, with Squre Errors: {}".format(square_errors))
 		return list(square_errors)
 
@@ -308,11 +308,12 @@ class twoRounds():
 
 
 r = twoRounds()
-DataSplit_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "DataSplit")
-Baseline_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Baseline")
+n_k_m = 10
+DataSplit_rmse = r.runandplot_with_one_mech(q_max_list = [n_k_m], q_adapt_list = [2], mech_name = "DataSplit")
+Baseline_rmse = r.runandplot_with_one_mech(q_max_list = [n_k_m], q_adapt_list = [2], mech_name = "Baseline")
 
-Thresh_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Thresh")
-Gauss_rmse = r.runandplot_with_one_mech(q_max_list = [10], q_adapt_list = [2], mech_name = "Gauss")
+Thresh_rmse = r.runandplot_with_one_mech(q_max_list = [n_k_m], q_adapt_list = [2], mech_name = "Thresh")
+Gauss_rmse = r.runandplot_with_one_mech(q_max_list = [n_k_m], q_adapt_list = [2], mech_name = "Gauss")
 # r.plot_from_data()
 
 

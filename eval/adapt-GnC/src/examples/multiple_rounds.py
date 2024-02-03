@@ -80,11 +80,11 @@ def eval_multiple_rounds(n = DATA_SIZE, cardinality = CARDINALITY, para = Para()
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return rmse
+    return nrmse2
 
 
-n = 10
-cardinality = 2
+n = 1000
+cardinality = n
 runs = 10
 
 beta, tau = 0.05, 1.0

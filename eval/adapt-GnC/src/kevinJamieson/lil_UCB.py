@@ -122,7 +122,7 @@ Parameters of Strategies
 '''
 n = 10
 dimension = 1
-q_max = 10
+q_max = n
 
 
 '''

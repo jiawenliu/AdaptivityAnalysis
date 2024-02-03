@@ -58,6 +58,7 @@ def eval_repeated_query_subroutine(delta, n = DATA_SIZE, cardinality = CARDINALI
 
     rmse = 	np.sqrt(mse)
     true_data = strategy.true_ans_list[:q_done]
+    print("true_Data",true_data)
     std = np.std(true_data)
     amax = np.amax(true_data)
     amin = np.amin(true_data)
@@ -73,12 +74,12 @@ def eval_repeated_query_subroutine(delta, n = DATA_SIZE, cardinality = CARDINALI
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return rmse
+    return nrmse2
     
 
-n = 7
-dimension = 7
-q_max = 7
+n = 10
+dimension = n
+q_max = n
 runs = 10
 
 stepped_q_max = range(q_max//2, q_max, 10)

@@ -75,11 +75,11 @@ def eval_n_dim_pairwise(delta, n = DATA_SIZE, cardinality = CARDINALITY, q_max =
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return rmse
+    return nrmse2
 
 n = 1000
-dimension = 1000
-q_max = 1000
+dimension = n
+q_max = n
 runs = 10
 
 stepped_q_max = range(q_max//2, q_max, 10)

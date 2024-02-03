@@ -225,18 +225,18 @@ class MechanizedLogisticRegression(LogisticRegression):
         ################ Gaussian Noise Added to Labels ################
         y_noise = np.random.normal(0, self.mechanism.sigma, y_train.shape) 
         noised_y = y_train  + y_noise
-        noised_y = list(map(lambda x : 0 if x < 0 else 1, noised_y))
+        # noised_y = list(map(lambda x : 0 if x < 0 else 1, noised_y))
         # lab_enc = preprocessing.LabelEncoder()
         # noised_y = lab_enc.fit_transform(noised_y) 
-        print(noised_y)
+        # print(noised_y)
 
 
         result = super(MechanizedLogisticRegression, self).fit(noised_x, noised_y)
         if isinstance(result, LogisticRegression):
-            print("yes, it is logistic regression")
+            # print("yes, it is logistic regression")
             return self
         else:
-            print("no, it is result from Mechanized logistic regression")
+            # print("no, it is result from Mechanized logistic regression")
             return result
 
 
@@ -256,7 +256,9 @@ class MechanizedLogisticRegression(LogisticRegression):
         elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
             print("in Threshold Mechanized Logistic Regression")
             return self.fit_threshold(x_train, y_train)
-            
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.DATASPLIT:
+            print("in DataSplit Mechanized Logistic Regression")
+            return self.fit_data_split(x_train, y_train)
         else:
             result = super(MechanizedLogisticRegression, self).fit(x_train, y_train)
             if isinstance(result, LogisticRegression):
@@ -326,6 +328,9 @@ class MechanizedOneVSRest(OneVsRestClassifier):
         elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.THRESHOLD:
             print("in Threshold Mechanized One v.s. Rest")
             return self.fit_threshold(x_train, y_train)
+        elif self.mechanism.mechanism_type ==  Mechanism.MechanismType.DATASPLIT:
+            print("in DataSplit Mechanized OVS")
+            return self.fit_data_split(x_train, y_train)
         else:
             result = super(MechanizedOneVSRest, self).fit(x_train, y_train)
             if isinstance(result, OneVsRestClassifier):

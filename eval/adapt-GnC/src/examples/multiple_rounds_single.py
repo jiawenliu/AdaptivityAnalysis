@@ -92,9 +92,9 @@ def eval_mr_single(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mech
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return rmse
+    return nrmse2
 
-n = 100
+n = 10
 cardinality = 2
 para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 10)
 runs = 10

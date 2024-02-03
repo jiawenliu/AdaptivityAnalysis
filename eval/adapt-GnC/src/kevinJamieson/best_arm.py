@@ -119,11 +119,11 @@ def eval_best_arm(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NU
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return rmse	
+    return nrmse2	
 
-q_max = 10
+q_max = 1000
 n = q_max
-dimension = 10
+dimension = n
 
 
 beta, tau = 0.05, 1.0

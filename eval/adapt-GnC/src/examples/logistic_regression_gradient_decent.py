@@ -53,7 +53,7 @@ def lrgd (strategy, mechanism, para = Para()):
 
 
 def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechanism()):
-    para = Para(4, None, max_degree = cardinality, learning_rate = 0.5, max_iteration = 10)
+    para = Para(1, None, max_degree = cardinality, learning_rate = 0.5, max_iteration = 10)
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "n_dim_lrgd", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
@@ -87,7 +87,7 @@ def eval_lrgd(n = DATA_SIZE, cardinality = CARDINALITY, mechanism = mech.Mechani
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return rmse
+    return nrmse2
  
     # pred_list = np.sign(pred_list)
     # mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
