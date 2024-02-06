@@ -1,0 +1,228 @@
+PLDI 2024 Paper #195 Reviews and Comments
+===========================================================================
+Paper #195 Program Analysis for Adaptive Data Analysis
+
+
+Review #195A
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+This paper presents a static analysis of programs that do statistical
+data analysis. The static analysis goal is to estimate the
+"adaptivity" that is a kind of dependcy measure between repetitive
+samplings in the described data analysis. In data analyses using
+samples to estimate some property of the entire population, it is
+important to lower the degree of generalization error. Adaptivity is
+assumed to be the reason for high generalization error. Statically estimating
+the adaptivity of the input data analysis method is thus important in order to
+predict its generalization error. 
+
+The framework consists of three parts. (1) Translating a
+generation-preserving mechanism into a program written in while-like
+language. (2) Compose a dependency graph based on reachability bound
+analysis and feasible data-flow analysis, done by using the traces of
+program events such as assignment, boolean testing. (3) Calculate the
+upper bound of adaptivity by searching the longest walk in this
+graph. It computes local adaptivity for each strongly connected
+components, and its time complexity is bounded by overestimation.
+
+Comments for authors
+--------------------
+- Theoretical soundness and empirical results are good. Theoretically,
+this paper defines what does adaptivity means, how it should be
+measured, and how it could be computed from a given program. The
+methods used in this paper are proven correct in previous studies. For
+actual implementation and results, the authors had written example
+programs with distinctive features for testing its accuracy and used
+classical data analyses for testing its effectiveness as a mechanism
+choosing heuristics.
+
+- As the authors mentioned, the paper's method works only for linear queries. Also, it does not seem to work on high-level multi loops. 
+
+- Demonstrations in the paper are a bit confusing. For example, in
+semantics-based dependency graph, there are too much information
+packed in a small graph, and lambda tau.rho(tau)k notation is hard to understand at
+first sight.
+
+
+
+Review #195B
+===========================================================================
+
+Overall merit
+-------------
+3. Weak accept
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+The paper presents a formalized program analysis to estimate error for adaptive data analysis problems.  The primary goal of the framework is to help data analysts select appropriate mechanisms for minimizing cumulative error.  The paper presents results on both synthetic and realistic benchmarks, demonstrating that the approach is effective and (for most cases) reasonably efficient.
+
+Comments for authors
+--------------------
+This paper targets an interesting problem.  It presents an application of classic PL approaches (dataflow analysis) to a new problem in an important and current outside area (privacy in data analysis).  Thus, it is likely to be of interest to the PLDI community spanning these areas, including those working with differential privacy and fairness criteria in programs.
+
+I appreciated the citation of differential privacy work.  Work on program fairness properties and differential privacy in software topics (e.g., profiling) is loosely related and may be worth citing if space allows.
+
+The introduction was thorough, but could have perhaps used some simpler examples.  I had a hard time understanding Figure 2 with just the introduction context.
+
+In section 2, the co-domain for AdaptFun is defined to be any of [-1, 1], [0, 1], or [-R, +R].  Does this choice matter, whether for correctness or performance?
+
+A lot of notation is provided in section 3.1, some standard and some less-so.  A table to summarize would be helpful for the reader to orient themselves during the rest of the paper.  On a minor note: the combine operator (::) is used only once (in figure 5) which the concat operator (++) is used everywhere else (e.g., definitions 2 and 4) with singleton traces.
+
+When reading the definition of "well-formed" graphs (end of section 4.2), I was left wondering: Is this restrictive in any way for real-world graphs?  Does the database being defined as finite make a difference here?
+
+There is no direct proof provided for Lemma 5.1 (including in the appendix, from what I could decipher).  Even if trivial, it would be helpful to note something.
+
+The text description of Algorithm 1 was helpful.  An example would make the lists (especially flowcapacity) clearer.
+
+The direct claim of section 6 could be stated more clearly: AdaptFun is not path-sensitive in the general case.
+
+Results show good promise, and tables were well-formatted.  I was able to follow the table data despite the many abbreviations.  I also appreciated the synthetic evaluation to test scalability.  However, the discussion on alternative implementations was very brief.  I wasn't sure what conclusion to draw regarding AdaptFun-I (is it the best? is the one case pathological?).  More could also be said regarding the claim (855) that "examples with many nested loops are not common".  Are they important real-world examples, though?  What type of examples would fit this profile?
+
+Small nitpicks/typos:
+- Various commas should be either replaced with "and" or periods (e.g., 135, 397, 399, 694, 726, 844)
+- 13: bring to a high generalization error
+- 15: no comma
+- 63: no comma (perhaps a colon)
+- 81: as data splitting mechanism
+- 109: four hundreds rounds
+- 118: would permit to formulate
+- 144: walk visiting *the* most query-related
+- 235: It is worth to stress that
+- 301: We call this graph *the/a* semantics-...
+- 409: an event and a trace in a new event
+- 583: that visits *the* most query vertices
+- 626: label l the symbolic upper bound
+- 705: the number of queries of this path 3
+- 716: such a traver*sal*
+- 756: (I'm not sure how to reformulate the second half of this sentence...see note above)
+- 824: data dependency
+- 830: for most (of the) examples
+- 910: our heuristics choose most of the time
+- 925: approach to dependency graph similar
+- 933: use a weighted edges
+- 954: functional language that distinguish
+- 971: our work (no s)
+
+
+
+Review #195C
+===========================================================================
+
+Overall merit
+-------------
+4. Accept
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+Statistical analysis often involves a sequence of queries against the same dataset, with subsequent queries being dynamically chosen in light of results from previous queries. Of course, if done without discipline, this can compromise the validity of conclusions. In response, statisticans have developed a set of mechanisms that regulate access to the data while still providing guarantees on expected error. This can be done either by adding noise to the results of each query, or by randomly splitting the dataset and using disjoint fragments to answer different queries. In order to apply these techniques, one needs to know the number of rounds of adaptivity, or the longest sequence of queries where each query depends on the result of the previous query in the sequence.
+
+1. This paper's first contribution is a programming model for these adaptive data analysis pipelines. The language is a simple variant of a while language with the ability to query a mechanism for the expected value of some arithmetic combination of columns.
+
+2. Second, the paper formalizes the notion of adaptivity by considering the trace-based semantics of the language.
+
+3. Third, the paper develops an algorithm to establish upper bounds on the adaptivity of the data analysis pipeline. This algorithm proceeds by first constructing the dependency graph among variable assignments (through a simple variant of a reaching definitions analysis), computing an upper bound on the number of times each query statement may be executed, and finally combining the results of these two steps to determine the longest potential walk among inter-query dependencies.
+
+4. Finally, the paper includes experiments on a number of analysis programs. The paper includes comparisons of the ground truth adaptivity of the program with the results obtained from static analysis, along with some estimates of the running time. Notably, the analysis algorithm is sound, but not complete: the experiments show that the upper bounds on adaptivity obtained by analysis are close to the ground truth adaptivity.
+
+Strengths
+---------
+
+1. The (in-)validity of a lot of modern statistical analyses is one of the fundamental challenges in contemporary science (see p-hacking, etc.). While adaptive data analysis presents algorithmic techniques to address these challenges, this paper presents a compelling step towards building programming language infrastructure to help data analysts.
+
+2. The analysis is non-trivial, requiring understanding both patterns of data flow and some simple runtime bound estimation.
+
+3. The experiments appear comprehensive, and the proposed algorithm appears to perform well. Using the estimated adaptivity is also shown to greatly improve the generalization error of the data analysis pipeline in question.
+
+Weaknesses
+----------
+
+1. The paper is difficult to read. A more approachable motivation and discussion of important definitions (such as Definition 2) and more descriptive figure captions (such as for Figure 3) would greatly improve readability.
+
+Assessment
+----------
+
+I was a reviewer for a previous version of this paper. I believe (as I previously did as well) that this is a strong paper, and presents a technically challenging contribution to a fundamental scientific problem. While I am not an expert in the paper's topic, I vote for an accept.
+
+Comments for authors
+--------------------
+1. The fonts in Figure 2 are unreadably small.
+
+2. Theorem 2.1: Typo in the word probability.
+
+3. Why is there an (l6, x3) edge in Figure 3b? Is the graph implicitly the transitive closure of data dependencies?
+
+4. Line 310: ... we use dashed arrows for two edges that will be highlighted in the next step. Please include a callout in the text when you explain the dashed arrows.
+
+5. Line 328: We consider any walk that visits a vertex v ... This sentence is hard to parse; please rephrase it.
+
+6. Given that the reachability bound analysis is based on difference constraints, is it correct for me to assume that the algorithm can at most derive linear bounds on the number of times each statement may be executed? In that case, I was surprised that the algorithm was able to derive quadratic adaptivity estimates (such as for loop2VD in Table 1). Can the authors please clarify?
+
+7. Why not benchmark the simpler baseline algorithms, AdaptFun-1 and AdaptFun-2, for all programs in Table 1, rather than the smaller subset presented in Table 2?
+
+8. The paper mentions that selecting the optimal underlying adaptive data release mechanism is out of scope of this paper (Lines 902 and 903). I'm okay with this, but a more interesting question is how accurate the entire pipeline would have been if the ground truth adaptivity had been used instead of Aest? Given that the ground truth and Aest columns are identical in many cases in Table 1, I assume that not much accuracy is lost because AdaptFun is conservative?
+
+9. Can you elaborate on why AdaptFun times out for the last three benchmark programs?
+
+
+
+Review #195D
+===========================================================================
+
+Overall merit
+-------------
+2. Weak reject
+
+Reviewer expertise
+------------------
+2. Some familiarity
+
+Paper summary
+-------------
+
+This paper presents a framework to compute "adaptivity" for a series of queries on data: given a simple query language, the objective is to quantify the expected adaptivity of the queries to unseen data, that is a notion of generalizability. The paper formalizes this notion and builds a dataflow-style analysis on a purpose-built dependence graph to estimate adaptivity of a set/sequence of queries, and can help to order queries to improve adaptivity.
+
+
+Strengths:
+
+- Interesting application area for PL: "adaptivity" in a statistical sense is not a concept traditionally reasoned about.
+
+
+Weaknesses:
+
+- The paper is particularly hard to read, even for an expert in PL/dependence graphs/dataflow analyses. Likely the writing can be simplified of many greek letters while still carrying the core ideas in a readable way for the average PLDI audience.
+
+- It is unclear how realistic/practical are the benchmarks evaluated.
+
+Comments for authors
+--------------------
+Detailed comments:
+
+This is an interesting problem to target. But unfortunately the paper writing did not allow me to properly understand the PL contributions: how the dependence graph, dataflow/reachability analyses, etc. differ from standard analyses on programs? Is the key contribution to recognize well-known compiler techniques are sufficient for this problem, or was it to adapt them for this particular problem of propagating adaptivity information? Overall the notion of a weighted dependence graph and finding paths in it, for some purpose (e.g. SIMD vectorization) is not a new concept, and likely the paper can be simpler to understand if it was relating to known concepts in compilers and the differences, if any, of the proposed approach vs. these known concepts.
+
+One issue that impacts my evaluation is my near unability to understand the paper formalism. Sec 1 reads nicely. Sec. 2 is ok-ish, but a brief reminder on stats notation would be helpful for the average PLDI audience, but an example would already help: the ex. in 2.2 is not related to the theorems displayed earlier in a clear way. Serious problems kick in Sec 4: Definition 1 is hard to digest, for what seems a simple independence / non-existence condition. Definition 2 is where I stopped being able to read the formalism: many symbols are undefined, for example what "++" means? eg. how to read tau_1 ++ [ e1 ] ++ tau ++ [ e2 ]?
+
+Overall my confidence in my review is very low, my expertise level and my score reflects my low confidence in having understood the contributions of this paper and assessed its correctness.
+
+Finally, you are encouraged to create an ArXiv version of your paper, listing the anonymized PDFs on the personal webpage of the author is not ideal practice.
+
+Questions for rebuttal:
+
+None in particular.

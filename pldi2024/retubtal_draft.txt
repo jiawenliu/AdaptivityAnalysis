@@ -1,0 +1,101 @@
+We would like to sincerely thank all the reviewers for their precious time to carefully reading the paper and giving their constructive and detailed comments.
+
+- Overview
+We agree we can improve our presentation by clearly having a list of all the notations we used in the paper to help the understanding of
+the concepts, definitions, and the running exmaples. We plan to put more space to explain the evaluation, providing text description of the 
+our algorithm 1, explaining how this algorithm will handle complicated exmaples with high level multi loops and produces quadratic adaptivity upper bound,
+how will the alternative implementation AdaptFun-I works as a complement of AdaptFun in handling "complicated" examples. We will also point out the location 
+of corresponding content in the appendix in the paper, such as the proof of some lemma, some definitions, notations if not shown in the paper due to space limit.
+ 
+
+
+
+
+- Detailed Resoponse
+
+---------------------------------------------------------------
+Reviewer A
+
+Thanks for your suggestions on the demonstration of the paper.
+
+-"Demonstrations in the paper are a bit confusing. For example, in
+semantics-based dependency graph, there are too much information
+packed in a small graph, and lambda tau.rho(tau)k notation is hard to understand at
+first sight."
+
+We agree lambda tau.rho(tau)k in the running examples and the presentation of certain sections such as 
+semantics-based dependency graph may contain many information to follow up. We plan to put back some explanation of
+certain concepts such as lambda tau.rho(tau)k, trace, definition of semantics-based dependency graph, defintion of 
+adpativity connecting to the running examples that we removed due to space in the final version.  
+
+-"As the authors mentioned, the paper's method works only for linear queries. Also, it does not seem to work on high-level multi loops. "
+
+As we discussed in evaluation part in the Seciton 7, our implementation does have performace issue to estimate the weight using 
+reachability bound analysis for examples with high level mutli-loops. To overcome this, we implementation an alternative 
+implemenation AdaptFun-I which adopts a simpler reachability bound analysis that handles high level multi loops efficiently at 
+the price of losing some precision. The results and performance of AdaptFun-I are presented in Table 2, which shows that 
+the alternative version AdaptFun-I can be used as a complement for AdaptFun for "complicated" examples. Thanks for pointing
+it out. 
+Yes, we start from linear quereis, which is widely used in data analysis. Supporting other types of queries definitely allows
+our tools to cover more data analaysis algorithms and we will leave them as our future work. 
+
+------------------------------------------------------------------
+Reviewer B
+
+Thanks for your detailed and careful review and constructive suggestions and pointing out these small typos, we will fix these typos. We agree that we can improve our presentation by having a simpler example in the introduction, a list of notations in section 3, some text description for Algorithm 1, more discussion on the alternative implemetation AdaptFun-I, a clear claim that AdaptFun is not path-sensitive in the general case and so on. We plan to put more explanations and discussions when we have more space in the final version. 
+
+
+-"I appreciated the citation of differential privacy work.  Work on program fairness properties and differential privacy in software topics (e.g., profiling) is loosely related and may be worth citing if space allows."
+
+Thanks for pointing it out, we agree and will cite more work on program fariness properties and DP in software topics in the related work section. 
+
+
+-"In section 2, the co-domain for AdaptFun is defined to be any of [-1, 1], [0, 1], or [-R, +R].  Does this choice matter, whether for correctness or performance?"
+
+It does not matter. We use [-1,1] since it is frequenlty used in data analysis algorithms.
+
+-"When reading the definition of "well-formed" graphs (end of section 4.2), I was left wondering: Is this restrictive in any way for real-world graphs?  Does the database being defined as finite make a difference here?"
+
+We define the "well-formed" graph to restrict the program we analyze to rule out programs with non-terminating behaviors, that we think adaptivity analysis is not suitable for, such as ones with infinite loops.
+It is restrictive for real-world graphs (programs) that allows us only focus on terminating programs. 
+Defining the database as finite should not make a difference here.  
+
+-"There is no direct proof provided for Lemma 5.1 (including in the appendix, from what I could decipher).  Even if trivial, it would be helpful to note something."
+
+Sorry for the inconvenience. The proof for Lemma 5.1 is actually in appendix Lemma B.2 in page 44, we are sorry that we did not point it out in the paper.
+
+-" I wasn't sure what conclusion to draw regarding AdaptFun-I (is it the best? is the one case pathological?).  More could also be said regarding the claim (855) that "examples with many nested loops are not common".  Are they important real-world examples, though?  What type of examples would fit this profile?"
+
+The alternative implementation of AdaptFun-I is used to analyse some "complicated" examples with high level multi loops that AdaptFun can not handle due to the performance bottleneck of the underlying implementation
+of reachability bound analysis (show in Table 1, 3 examoples whose running time is * meaning too long). AdaptFun-I provides a coarser but efficient analysis for these "complicated" examples, using very little time (shown in table 2), but still not path-sensitive. It can be seen as a complement of AdaptFun when it can not handle "complicate" programs.
+
+The data analysis algorithms ususally do not contain many high level multi loops so that is what we mean "these examples are not common". If there are important real-world examples which are very complicated including many high level nest loops, AdaptFun may not work and we will use AdaptFun-I instead.
+
+-------------------------------------------------------------------------
+Reviewer C
+
+Thanks for your careful review and detailed suggestions. We will work on improving the presentation of the paper, adjusting the font of Figure 2, fix typos, rephrase some sentences, better present the tables in evaluation section,
+
+-"3. Why is there an (l6, x3) edge in Figure 3b? Is the graph implicitly the transitive closure of data dependencies?"
+Foramlly, the edge (l6, x3) in Fig 3b of the semantic-based dependency graph shows up when we follow on the definitino 3 and get the DEP relation. That is right, this edge appears because of the transitive clousure of data dependencies.
+
+-"Given that the reachability bound analysis is based on difference constraints, is it correct for me to assume that the algorithm can at most derive linear bounds on the number of times each statement may be executed? In that case, I was surprised that the algorithm was able to derive quadratic adaptivity estimates (such as for loop2VD in Table 1). Can the authors please clarify?"
+
+The reachability bound analysis is based on previous work from Sinn and Zuleger etc[37], we can assume the reachability bound analysis can provides linear bounds or weight (the weight used in our weighted dependency graph in Section 5.1.2). To get the estimation of adaptivity upper bound, our algorithm estimates the length of the longest path in the weighted depenendency graph by approximating the local adaptivity of every Strong Connect Componenet (SCC) of the weighted graph by the number of vertices times the minimum weight of all the vertex in a path of this SCC. For instance, even reachability bound analysis gives linear weight k for every statement is a loop(SCC in the graph), then the estimated local adaptivity of this SCC is k * [number of vertices in the path of this SCC]. If there are nested while loops, then the estimated adaptivity for this nested while loop will be quadratic (k*k). We should stress this in the evaluation as well as in the adaptBD algorithm in 5.3. In table 1, loop2VD contains a nested loop in the form of 
+    j = k; i=k; while [j>0] { j--; while [i > 0] {i--, ...} ... }  . Our adaptBD will then return a quadratic adaptivity estimation.
+
+-"but a more interesting question is how accurate the entire pipeline would have been if the ground truth adaptivity had been used instead of Aest? Given that the ground truth and Aest columns are identical in many cases in Table 1, I assume that not much accuracy is lost because AdaptFun is conservative?"
+We think not much accuracy is lost using AdaptFun, however, as the examples discussed in Section 6, path sensitive, Adaptfun will give looser adaptivity Aest than the ground truch one.
+
+-"9. Can you elaborate on why AdaptFun times out for the last three benchmark programs?"
+These three examples have multiple nested loops, which requires very long time to do reachanbility bound anlaysis based on [37]. This is the motivation we simplify the reachability bound analysis in AdaptFun-I, which is not precise as AdaptFun but will not time out, as shown in Table 2.
+
+
+---------------------------------------------------------------------------------
+
+Reviewr D
+
+Thanks for your suggestion on the demonstration of the paper. We will worker harder to simplify the presentation of the paper, such as providing a table of all the notations used in the paper, while giving more example explanations in the introducation and the technique parts. Due to the space limit, we remove some corresponding explanations in Section 4, 5 into the appendix, which may affect the understaning of these sections, we sincerely appology for the confusion and we will add more explanation on these definitions in the paper, such as "++" means and so on.
+
+
+
