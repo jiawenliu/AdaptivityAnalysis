@@ -11,6 +11,8 @@ import cw_funcs as cw
 import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
+x = int(sys.argv[1])
+
 
 # strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, para=para)
 DATA_SIZE = 1000
@@ -31,6 +33,7 @@ def mr_single (strategy, mechanism, para = Para()):
 	para.degree = 0
 	pre_ans = [{"para" : para}]
 	k = 0
+	# print("max_iter:",para.max_iteration)
 	while k < para.max_iteration:
 		new_coefficient = pre_ans[0]["para"].coefficient + []
 		for i in range(para.max_degree):
@@ -45,7 +48,7 @@ def mr_single (strategy, mechanism, para = Para()):
 				q = None
 				break
 		pre_ans[0]["para"].coefficient = new_coefficient
-		print(new_coefficient)
+		# print(new_coefficient)
 		k = k + 1
 
 
@@ -74,29 +77,29 @@ def eval_mr_single(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mech
     # print(len(eval_data))
     # print("pred",pred_list)
     mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
-    print("mse",mse)
+    # print("mse",mse)
     rmse = 	np.sqrt(mse)
-    true_data = eval_data[:,-1]
-    std = np.std(true_data)
-    amax = np.amax(true_data)
-    amin = np.amin(true_data)
-    dif= amax - amin  
-    mean = np.mean(true_data)
-    print("dif", dif)
-    print("mean", mean)
-    print("rmse",rmse)
-    nrmse = rmse/std
-    nrmse1 = rmse/dif
-    nrmse2 = rmse/mean
-    print("std", std)
-    print("nrmse",nrmse)
-    print("nrmse1", nrmse1)
-    print("nrmse2", nrmse2)
-    return nrmse2
+    # true_data = eval_data[:,-1]
+    # std = np.std(true_data)
+    # amax = np.amax(true_data)
+    # amin = np.amin(true_data)
+    # dif= amax - amin  
+    # mean = np.mean(true_data)
+    # print("dif", dif)
+    # print("mean", mean)
+    # print("rmse",rmse)
+    # nrmse = rmse/std
+    # nrmse1 = rmse/dif
+    # nrmse2 = rmse/mean
+    # print("std", std)
+    # print("nrmse",nrmse)
+    # print("nrmse1", nrmse1)
+    # print("nrmse2", nrmse2)
+    return rmse
 
 n = 10
 cardinality = 2
-para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 10)
+para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = x)
 runs = 10
 
 beta, tau = 0.05, 1.0
