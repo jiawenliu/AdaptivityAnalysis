@@ -20,6 +20,8 @@ signal(SIGPIPE, SIG_DFL)
 import sys
 sys.path.append("..")
 
+x = int(sys.argv[1])
+
 DATA_SIZE = 1000
 CARDINALITY = 1
 MAX_QUERY_NUM = 1000
@@ -121,14 +123,14 @@ def eval_best_arm(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NU
     print("nrmse2", nrmse2)
     return nrmse2	
 
-q_max = 1000
-n = q_max
-dimension = n
+q_max = x
+n = 1000
+dimension = 10
 
 
 beta, tau = 0.05, 1.0
-sigma = 3.5
-hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
+sigma = .5
+hold_frac, threshold, check_data_frac = 0.5, 0.01, 0.05
 
 
 Baseline = mech.Mechanism()

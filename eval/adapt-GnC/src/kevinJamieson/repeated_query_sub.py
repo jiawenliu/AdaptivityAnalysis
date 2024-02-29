@@ -12,6 +12,8 @@ import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
 
+x = int(sys.argv[1])
+
 # strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, q_max=q_max)
 DATA_SIZE = 1000
 CARDINALITY = 1000
@@ -74,12 +76,12 @@ def eval_repeated_query_subroutine(delta, n = DATA_SIZE, cardinality = CARDINALI
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return nrmse2
+    return rmse
     
 
-n = 10
-dimension = n
-q_max = n
+n = 1000
+dimension = 100
+q_max = x
 runs = 10
 
 stepped_q_max = range(q_max//2, q_max, 10)

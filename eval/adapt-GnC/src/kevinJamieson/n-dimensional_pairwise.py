@@ -12,6 +12,8 @@ import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
 
+x = int(sys.argv[1])
+
 # strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, q_max=q_max)
 DATA_SIZE = 1000
 CARDINALITY = 1000
@@ -75,17 +77,17 @@ def eval_n_dim_pairwise(delta, n = DATA_SIZE, cardinality = CARDINALITY, q_max =
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return nrmse2
+    return rmse
 
 n = 1000
-dimension = n
-q_max = n
+dimension = 1000
+q_max = x
 runs = 10
 
 stepped_q_max = range(q_max//2, q_max, 10)
 
 beta, tau = 0.05, 1.0
-sigma = 0.35
+sigma = .35
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 repeated_query_sub_delta = 0.1
