@@ -20,6 +20,9 @@ signal(SIGPIPE, SIG_DFL)
 import sys
 sys.path.append("..")
 
+ 
+x = int(sys.argv[1])
+
 DATA_SIZE = 1000
 CARDINALITY = 1
 MAX_QUERY_NUM = 1000
@@ -118,11 +121,11 @@ def eval_lil_ucb(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NUM
 
 
 '''
-Parameters of Strategies
+Parameters of Strategies, q_max is k in table 3 in the paper. 
 '''
 n = 1000
 dimension = 1
-q_max = 10
+q_max = x 
 runs = 10
 
 
