@@ -11,11 +11,13 @@ import cw_funcs as cw
 import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
+x = int(sys.argv[1])
+
 
 # strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, para=para)
 DATA_SIZE = 1000
 CARDINALITY = 1000
-MAX_QUERY_NUM = 1000
+MAX_QUERY_NUM = x
 MAX_EPOCH = 100
 MEAN = 0.5
 class Para:
@@ -80,15 +82,15 @@ def eval_multiple_rounds(n = DATA_SIZE, cardinality = CARDINALITY, para = Para()
     print("nrmse",nrmse)
     print("nrmse1", nrmse1)
     print("nrmse2", nrmse2)
-    return nrmse2
+    return rmse
 
 
 n = 1000
-cardinality = n
+cardinality = 10
 runs = 10
 
 beta, tau = 0.05, 1.0
-sigma = 0.015
+sigma = .015
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
 

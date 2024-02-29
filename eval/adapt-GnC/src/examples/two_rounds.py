@@ -8,6 +8,7 @@ import scipy as sc
 import matplotlib.pyplot as plt
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
+x = int(sys.argv[1])
 
 
 class twoRounds():
@@ -43,7 +44,7 @@ class twoRounds():
 		dif= amax - amin
 		mean = np.mean(true_answer)
 		print('diff:', dif)
-		square_errors = square_errors/np.square(mean)
+		# square_errors = square_errors/np.square(mean)  uncomment if we want to support normalized rmse
 		print("Complete one run, with Squre Errors: {}".format(square_errors))
 		return list(square_errors)
 
@@ -242,7 +243,7 @@ class twoRounds():
 
 
 	def main(self):
-		q_max_list = [2]
+		q_max_list = [x]
 		q_adapt_list = [1]
 			
 	##################################################################################################################
@@ -308,7 +309,7 @@ class twoRounds():
 
 
 r = twoRounds()
-n_k_m = 10
+n_k_m = x
 DataSplit_rmse = r.runandplot_with_one_mech(q_max_list = [n_k_m], q_adapt_list = [2], mech_name = "DataSplit")
 Baseline_rmse = r.runandplot_with_one_mech(q_max_list = [n_k_m], q_adapt_list = [2], mech_name = "Baseline")
 
