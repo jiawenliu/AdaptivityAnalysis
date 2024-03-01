@@ -11,13 +11,15 @@ import cw_funcs as cw
 import helper_funcs as hf
 import strategies as stg
 import mechanisms as mech
+x = int(sys.argv[1])
+
 
 # strategy = stg.Strategy(n,  ada_freq = {"method": "additive", "method_param": q_adapt}, para=para)
 DATA_SIZE = 1000
 CARDINALITY = 1000
 MAX_QUERY_NUM = 1000
 MAX_EPOCH = 100
-MEAN = 0.1
+MEAN = 0.01
 class Para:
 	def __init__(self, degree = 0, coefficient = None, max_degree = 0, learning_rate = 0.1, max_iteration = MAX_EPOCH):
 		self.degree = degree
@@ -30,6 +32,7 @@ def mr_odd (strategy, mechanism, para = Para()):
 	para.degree = 0
 	pre_ans = [{"para" : para}]
 	k = 0
+	print("max_item",para.max_iteration)
 	while k < para.max_iteration:
 		new_coefficient = pre_ans[0]["para"].coefficient + []
 		for i in range(para.max_degree):
@@ -44,7 +47,7 @@ def mr_odd (strategy, mechanism, para = Para()):
 				q = None
 				break
 		pre_ans[0]["para"].coefficient = new_coefficient
-		# print(new_coefficient)
+		print(new_coefficient)
 		k = k + 1
 
 
@@ -58,7 +61,7 @@ def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechani
     print (strategy.cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
-    para = Para(0, None, max_degree = cardinality, learning_rate = 0.1, max_iteration = 5)
+    para = Para(0, None, max_degree = cardinality, learning_rate = 0.000001, max_iteration = x)
     coefficient = mr_odd(strategy, mechanism, para)
     
     pred_list = []
@@ -71,30 +74,30 @@ def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechani
     
     mse = (np.square(np.subtract(eval_data[:, -1], pred_list)))
     rmse = 	np.sqrt(mse)
-    true_data = eval_data[:,-1]
-    std = np.std(true_data)
-    amax = np.amax(true_data)
-    amin = np.amin(true_data)
-    dif= amax - amin  
-    mean = np.mean(true_data)
-    print("dif", dif)
-    print("mean", mean)
-    print("rmse",rmse)
-    nrmse = rmse/std
-    nrmse1 = rmse/dif
-    nrmse2 = rmse/mean
-    print("std", std)
-    print("nrmse",nrmse)
-    print("nrmse1", nrmse1)
-    print("nrmse2", nrmse2)
+    # true_data = eval_data[:,-1]
+    # std = np.std(true_data)
+    # amax = np.amax(true_data)
+    # amin = np.amin(true_data)
+    # dif= amax - amin  
+    # mean = np.mean(true_data)
+    # print("dif", dif)
+    # print("mean", mean)
+    # print("rmse",rmse)
+    # nrmse = rmse/std
+    # nrmse1 = rmse/dif
+    # nrmse2 = rmse/mean
+    # print("std", std)
+    # print("nrmse",nrmse)
+    # print("nrmse1", nrmse1)
+    # print("nrmse2", nrmse2)
     return rmse
 
-n = 1000 # change to modify rounds
+n = 1000
 cardinality = 2
-max_iteration = 500
-para = Para(0, None, max_degree = 2, learning_rate = 0.1, max_iteration = 5)
+max_iteration = 100
+para = Para(0, None, max_degree = 2, learning_rate = 0.5, max_iteration = 10)
 
-beta, tau = 0.05, 1.0
+beta, tau = 0.5, 1.0
 sigma = 0.015
 hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 
@@ -102,7 +105,7 @@ hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
 Baseline_rmse = eval_mr_odd(n = n*n, cardinality = cardinality, para = para, mechanism = Baseline)
-print(Baseline_rmse)
+# print(Baseline_rmse)
 
 DataSplit = mech.Mechanism(max_q = max_iteration)
 DataSplit.add_params(beta=beta, tau=tau)
@@ -118,7 +121,10 @@ Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_mr_odd(cardinality, para, Gauss).mean() for para in stepped_para]
 Gauss_rmse = eval_mr_odd(n = n, cardinality = cardinality, para = para, mechanism = Gauss)
-
+print(Baseline_rmse)
+print(DataSplit_rmse)
+print(Gauss_rmse)
+print(Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 '''

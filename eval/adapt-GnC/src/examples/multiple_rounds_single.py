@@ -19,7 +19,7 @@ DATA_SIZE = 1000
 CARDINALITY = 1000
 MAX_QUERY_NUM = 1000
 MAX_EPOCH = 100
-MEAN = 0.1
+MEAN = 0.05
 class Para:
 	def __init__(self, degree = 0, coefficient = None, max_degree = 0, learning_rate = 0.1, max_iteration = MAX_EPOCH):
 		self.degree = degree
@@ -126,7 +126,10 @@ Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_mr_single(cardinality, para, Gauss).mean() for para in stepped_para]
 Gauss_rmse = eval_mr_single(n = n, cardinality = cardinality, para = para, mechanism = Gauss)
-
+print(Baseline_rmse)
+print(DataSplit_rmse)
+print(Gauss_rmse)
+print(Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 
