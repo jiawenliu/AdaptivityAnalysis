@@ -19,7 +19,7 @@ DATA_SIZE = 1000
 CARDINALITY = 1000
 MAX_QUERY_NUM = x
 MAX_EPOCH = 100
-MEAN = 0.5
+MEAN = 0.01
 class Para:
 	def __init__(self, max_iteration = MAX_EPOCH, population = CARDINALITY, control_size = CARDINALITY):
 		self.traced = set()
@@ -55,50 +55,50 @@ def multiple_rounds (strategy, mechanism, para = Para()):
 
 
 def eval_multiple_rounds(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechanism = mech.Mechanism()):
-    para = Para(max_iteration = 10, population = 200, control_size = 10)
+    para = Para(max_iteration = x, population = 2, control_size = 10)
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "multiple_rounds", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = para.population)
     mechanism.reset()
     mechanism.max_q = para.max_iteration
     mechanism.add_data({'data': strategy.gen_data_integer()})
 
     multiple_rounds(strategy, mechanism, para)
-    print(len(para.traced))
+    # print(len(para.traced))
     q_done = min(len(strategy.true_ans_list), len(strategy.mech_ans_list))
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
     rmse = np.sqrt(mse)[-1]
-    true_data = strategy.true_ans_list[:q_done]
-    std = np.std(true_data)
-    amax = np.amax(true_data)
-    amin = np.amin(true_data)
-    dif= amax - amin  
-    mean = np.mean(true_data)
-    print("dif", dif)
-    print("mean", mean)
-    print("rmse",rmse)
-    nrmse = rmse/std
-    nrmse1 = rmse/dif
-    nrmse2 = rmse/mean
-    print("std", std)
-    print("nrmse",nrmse)
-    print("nrmse1", nrmse1)
-    print("nrmse2", nrmse2)
+    # true_data = strategy.true_ans_list[:q_done]
+    # std = np.std(true_data)
+    # amax = np.amax(true_data)
+    # amin = np.amin(true_data)
+    # dif= amax - amin  
+    # mean = np.mean(true_data)
+    # print("dif", dif)
+    # print("mean", mean)
+    # print("rmse",rmse)
+    # nrmse = rmse/std
+    # nrmse1 = rmse/dif
+    # nrmse2 = rmse/mean
+    # print("std", std)
+    # print("nrmse",nrmse)
+    # print("nrmse1", nrmse1)
+    # print("nrmse2", nrmse2)
     return rmse
 
 
 n = 1000
-cardinality = 10
+cardinality = 2
 runs = 10
 
 beta, tau = 0.05, 1.0
-sigma = .015
-hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
+sigma = .15
+hold_frac, threshold, check_data_frac = 0.5, 0.05, 0.05
 
 
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
 Baseline_rmse = np.mean([eval_multiple_rounds(n = n, cardinality = cardinality, mechanism = Baseline) for _ in range(runs)])
 # Baseline_rmse = eval_multiple_rounds(n = n, cardinality = cardinality, para = para, mechanism = Baseline)
-print(Baseline_rmse)
+# print(Baseline_rmse)
 
 DataSplit = mech.Mechanism()
 DataSplit.add_params(beta=beta, tau=tau)
@@ -117,8 +117,10 @@ Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 Gauss_rmse = np.mean([eval_multiple_rounds(n = n, cardinality = cardinality, mechanism = Gauss) for _ in range(runs)])
 # Gauss_rmse = eval_multiple_rounds(n = n, cardinality = cardinality, para = para, mechanism = Gauss)
+print(Baseline_rmse)
+print(DataSplit_rmse)
 print(Gauss_rmse)
-
+print(Thresh_rmse)
 print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
 
 '''
