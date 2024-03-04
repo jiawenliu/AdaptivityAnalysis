@@ -350,13 +350,14 @@ $
 	\end{lem}
 
   \highlight{To do: modify the following proof sketch}
+  Lemma~\ref{lem:edge_map} is proved by Theorem~\ref{thm:flowsto_soundness}, which shows that for arbitrary two $x^i, y^j \in \lvar_c$, there exists a static "$\flowsto$ chain" from $x^i$ to $y^j$ when $\vardep(x^i, y^j, c)$.
   \begin{thm}[$\vardep$ implies $\flowsto$]
     \label{thm:flowsto_soundness}
     Given a program ${c}$, for all  $ x^i, y^j \in \lvar_{{c}}$, if $\vardep(x^i, y^j, {c})$,
     then
     %  either $\flowsto(x^i, y^j, c)$ 
     % or 
-    there exist $z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
+    there exist $z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
     $\flowsto(x^i,  z_1^{r_1}, c) 
     \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$
     %
@@ -365,166 +366,71 @@ $
       \forall x^i, y^j \in \lvar_{{c}}.
       \vardep(x^i, y^j, {c})
       \\ \quad \implies
-      \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+      \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
       \flowsto(x^i,  z_1^{r_1}, c) 
       \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
     \end{array}
     \]
     \end{thm}
-    Proof Summary, for  arbitrary two $x^i, y^j \in \lvar_c$, with \emph{Variable May-Dependency} relation, in order to show there exists a 
-    "flows-to chain" relation from the static analysis results from $x^i$ to $y^j$, it is sufficient to show:
-      \\
+    In summary, for arbitrary two $x^i, y^j \in \lvar_c$ with \emph{Variable May-Dependency} relation, in order to show they have 
+    $\flowsto(x^i, y^j, c)$ relation, it is sufficient to show two cases:
       1. $x^i$ is directly used in the expression of the assignment command associated to $y^j$, or a boolean
       expression of the guard for a $\eif$ or $\ewhile$ command with the assignment command associated to $y^j$ showing up in the body of that command, 
       we call it, $x^i$ directly flows to $y^j$,
       i.e.,
       $ \flowsto(x^i, y^j, {c})$;
-      \\
       2. otherwise, there exists another labelled variable $z^l$ with \emph{variable May-Dependency} relation on $x^i$ and 
-      $z^l$ directly flows to $y^j$, where the \emph{variable May-Dependency} relation between $x^i$ and $z^l$
-       implies a "sub flowsto-chain" from $z^i$ to $z^l$, 
-      i.e., 
-      \\
+      $z^l$ directly flows to $y^j$, where the \emph{variable May-Dependency} relation between $x^i$ and $z^l$ implies a "sub $\flowsto$-chain" from $x^i$ to $z^l$, 
+      formally, 
       $\Big(
         \exists z^l \in \lvar_{{c}}.
-      \left(\vardep(x^i, z^l, {c})   
+      (\vardep(x^i, z^l, {c})   
       \implies
-       \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-      \flowsto(x^i,  z_1^{r_1}, c) 
-      \land \cdots \land \flowsto(z_n^{r_n}, z^l, c)
-      \right)
+       \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+      \flowsto(x^i,  z_1^{r_1}, c)$ 
+      $\land \cdots \land \flowsto(z_n^{r_n}, z^l, c)
+      )
       \land  \flowsto(z^l, y^j, {c})
       \Big)$.
+      \\
       By definition of $\vardep(x^i, y^j, {c})$, 
-let $D \in \dbdom$ be the dataset,
-and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the trace and two events satisfying the definition, 
-with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$,
-%  then informally it is sufficient to show:
-% then it is sufficient to show:
-%     \[
-%       \begin{array}{l}
-%       \Big(
-%          \exists \trace \in \mathcal{T} \st 
-%         \eventdep^{val}(\event_x, \event_y, \trace, c, D) \lor 
-%         (\exists \event_b \in \eventset^{\test} \st 
-%         \eventdep^{val}(\event_x, \event_b, \trace, c, D)
-%         \land \eventdep^{\ctl}(\event_b, \event_y, c, D))  
-%         \Big)
-%         \\ \quad \implies
-%   \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-%   \flowsto(x^i,  z_1^{r_1}, c) 
-%   \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
-%       \end{array}
-%     \]
-%     \[
-%         (\exists \event_b \in \eventset^{\test} \st x^i \in VAR(\pi_1(\event_b)) 
-%         \land \eventdep^{\ctl}(\event_b, \event_y, c, D))    
-%     \implies
-%   \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-%   \flowsto(x^i,  z_1^{r_1}, c) 
-%   \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
-% \]
-% Proved by applying Theorem.~\ref{thm:algvardep_sound} and Correctness of $\mathcal{A}$ in Theorem.~\ref{thm:alg_correct}.
-% \[
-% 	\begin{array}{l}
-% 		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
-% 		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
-% 		\implies
-% 		\eventdep(\event_1, \event_2, \trace, c, D) 
-% 		\\ \quad 
-% 		\implies 
-% 		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-% 		\\ \qquad \quad \lor
-% 		\exists \event \in \trace' \st 
-% 		\left( 		
-% 			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
-% 		\land 
-% 		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-% 	\right) 
-% 		% \\ \qquad \qquad \lor
-% 		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-% 	\end{array}
-% 	\]
+      let $D \in \dbdom$ be the dataset,
+      and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the trace and two events satisfying the definition, 
+      with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$,
+    $$
+    \begin{array}{l}
+    (\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
+    \\ \quad 
+    \lor 
+    (\exists \event_z \in \trace' \st \event_z \in \eventset^{\asn} \land 
+        \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
+        \\ \qquad 
+        \implies 
+        \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+    \flowsto(x^i,  z_1^{r_1}, c) 
+    \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
+        )
+        \\ \quad
+        \land 
+        \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+    \end{array}
+    $$
 %
-$$
-\begin{array}{l}
-(\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c)
-\\ \quad 
-\lor 
-(\exists \event_z \in \trace' \st \event_z \in \eventset^{\asn} \land 
-    \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
-    \\ \qquad 
-    \implies 
-    \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-\flowsto(x^i,  z_1^{r_1}, c) 
-\land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
-    )
-    \\ \quad
-    \land 
-    \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-\end{array}
-$$
-%
-It is clearer to show it in two lemmas:
+These two cases are then proved by the following two lemmas:
 \\
 1. Existence of a middle event:
-% \[
-% 	\begin{array}{l}
-% 		\forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
-% 		 \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
-% 		\implies
-% 		\eventdep(\event_1, \event_2, \trace, c, D) 
-% 		\\ \quad 
-% 		\implies 
-% 		\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-% 		\\ \qquad \quad \lor
-% 		\exists \event \in \trace' \st 
-% 		\left( 		\event_z \in \eventset^{\asn} \land 
-% 			\eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
-% 		\land 
-% 		\flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-% 	\right) 
-% 		% \\ \qquad \qquad \lor
-% 		% \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
-% 	\end{array}
-% \]
-% Proved by showing a contradiction, with detail 
 in Lemma~\ref{lem:depevents_exist}.
 %
 \\
-2. The middle event with a sub-trace implies a "sub flowsto-chain", 
-% informally:
-% %
-% \[
-%   \begin{array}{l}
-%     \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
-%     \\ \qquad 
-%     \implies 
-%     \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
-% \flowsto(x^i,  z_1^{r_1}, c) 
-% \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
-% \end{array}
-% \]
-% %
-% Proved formally as follows with detail in Theorem~\ref{thm:alg_correct},
+2. The middle event with a sub-trace implies a "sub $\flowsto$-chain", 
  by induction on the trace $\trace$ and the Theorem~\ref{thm:flowsto_event_soundness}
-% \textbf{Example.}
-% Consider Fig.~3(c),  
-% the edge $l^6 \to a^5$ is built by the $\flowsto(l^6, a^5, c)$ relation because
-% $a$ is used directly in the query expression $\chi[k]*a$
-% and $a^5 \in \live(6, \kw{twoRounds(k)})$.
-% The edge $x^3 \to j^5$  represents the control flow from $j^5$ to $x^3$, which is soundly approximated by our $\flowsto$ relation.
-% The edge $l^6 \to x^3$ is produced by the transitivity of $\flowsto(l^6, a^5, c)$ and $\flowsto(a^5, x^3, c)$. 
-% }
-
-
 \begin{thm}[$\eventdep$ implies $\flowsto$]
   \label{thm:flowsto_event_soundness}
   For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset \st
   \event_1, \event_2 \in \eventset^{\asn}$, 
   if $\exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$ and 
   $\eventdep(\event_1, \event_2, \trace, c, D) $, then
-   $z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
+   $z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
   $\flowsto(x^i,  z_1^{r_1}, c) 
   \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$
   %
@@ -537,13 +443,12 @@ in Lemma~\ref{lem:depevents_exist}.
       \eventdep(\event_1, \event_2, \trace, c, D) 
       \\ \quad 
       \implies 
-      \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+      \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
       \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)},  z_1^{r_1}, c) 
       \land \cdots \land \flowsto(z_n^{r_n}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
     \end{array}
   \]
   \end{thm}
-
 
   \begin{lem}[The Multiple-Steps Event Dependency Inversion]
     \label{lem:depevents_exist}
