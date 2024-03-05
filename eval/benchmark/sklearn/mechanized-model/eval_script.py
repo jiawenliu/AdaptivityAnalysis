@@ -17,7 +17,8 @@ from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, confusion_m
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.naive_bayes import GaussianNB
-
+import sys
+x = int(sys.argv[1])
 
 
 
@@ -295,8 +296,8 @@ def eval_const_rounds_dt(round, mechanism, stepped_non_adaptive_num):
     return generalization_error_list
 
 
-stepped_non_adaptive_num = [10]
-round = 1000
+stepped_non_adaptive_num = [1000]
+round = x
 # stepped_non_adaptive_num = range(10, 100, 20)
 # stepped_non_adaptive_num = range(1000, 1010, 10)
 
@@ -329,7 +330,99 @@ threshold_generalization_error_list_dt = eval_const_rounds_dt(round, Mechanism(m
 datasplit_generalization_error_list_dt = eval_const_rounds_dt(round, Mechanism(mechanism_type = Mechanism.MechanismType.DATASPLIT), stepped_non_adaptive_num)
 
 
-# In[187]:
+
+
+
+
+
+# # # Evaluate the O(n*m) Adaptivity Program
+
+
+def eval_nm(round, train_size, mechanism):
+    # f1_scores, acc_scores, models = [], [], [], [], []
+    x_train, y_train = x_population[:train_size], y_population[:train_size]
+    
+    estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = round, mechanism = mechanism, solver = 'lbfgs', random_state = np.random.randint(1000000))
+    model = MechanizedOneVSRest(estimator, mechanism = mechanism)
+
+    model.fit(x_train, y_train)
+    # Predict
+    y_pred = model.predict(x_valid)
+    mean = np.mean(y_train)
+    ## Here it returns MSE, if we want to have RMSE, we need to give mean_squared_error(y_valid, y_pred, squared = false)
+    rmse = mean_squared_error(y_valid, y_pred, squared=False)
+    # print(rmse)
+    # print(mean)
+    nrmse = rmse/mean
+    return rmse
+    
+
+
+def eval_nm_rounds(stepped_rounds, mechanism, non_adaptive_num):
+    generalization_error_list = []
+    for r in stepped_rounds:
+        # estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = r, mechanism = mechanism, solver = 'sag')
+        generalization_error_list.append(eval_nm(r, non_adaptive_num, mechanism))
+    return generalization_error_list
+
+def eval_nm_dt(round, train_size, mechanism):
+    # f1_scores, acc_scores, models = [], [], [], [], []
+    x_train, y_train = x_population[:train_size], y_population[:train_size]
+    
+    estimator = MechanizedDecisionTree( mechanism = mechanism,)
+    model = MechanizedOneVSRest(estimator, mechanism = mechanism)
+
+    model.fit(x_train, y_train)
+    # Predict
+    y_pred = model.predict(x_valid)
+    mean = np.mean(y_train)
+    ## Here it returns MSE, if we want to have RMSE, we need to give mean_squared_error(y_valid, y_pred, squared = false)
+    rmse = mean_squared_error(y_valid, y_pred, squared=False)
+    # print(rmse)
+    # print(mean)
+    nrmse = rmse/mean
+    return rmse
+    
+
+
+def eval_nm_rounds_dt(stepped_rounds, mechanism, non_adaptive_num):
+    generalization_error_list = []
+    for r in stepped_rounds:
+        # estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = r, mechanism = mechanism, solver = 'sag')
+        generalization_error_list.append(eval_nm_dt(r, non_adaptive_num, mechanism))
+    return generalization_error_list
+
+
+# # In[206]:
+
+
+stepped_rounds = [x] #k
+non_adaptive_num = 1000 
+
+
+
+
+baseline_generalization_error_list_lrovr = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.NONE), non_adaptive_num)
+# print((baseline_generalization_error_list))
+gaussian_generalization_error_list_lrovr = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.GAUSSIAN, sigma = 0.08), non_adaptive_num)
+# print(gaussian_generalization_error_list) 
+# = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
+threshold_generalization_error_list_lrovr = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.THRESHOLD, sigma = 0.08, hold_frac = 0.7, threshold = 0.9), non_adaptive_num)
+# gaussian_generalization_error_list = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
+
+datasplit_generalization_error_list_lrovr = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.DATASPLIT), non_adaptive_num)
+
+
+baseline_generalization_error_list_dtovr = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.NONE), non_adaptive_num)
+
+gaussian_generalization_error_list_dtovr = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.GAUSSIAN, sigma = 0.08), non_adaptive_num)
+
+# = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
+threshold_generalization_error_list_dtovr = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.THRESHOLD, sigma = 0.08, hold_frac = 0.7, threshold = 0.9), non_adaptive_num)
+# gaussian_generalization_error_list = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
+
+datasplit_generalization_error_list_dtovr = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.DATASPLIT), non_adaptive_num)
+
 
 
 print("THE OUTPUT OF DT")
@@ -347,123 +440,19 @@ print(np.mean(gaussian_generalization_error_list_lr))
 print(np.mean(threshold_generalization_error_list_lr))
 
 
-
-
-# # # Evaluate the O(n*m) Adaptivity Program
-
-# # In[199]:
-
-
-# def eval_nm(round, train_size, mechanism):
-#     # f1_scores, acc_scores, models = [], [], [], [], []
-#     x_train, y_train = x_population[:train_size], y_population[:train_size]
-    
-#     estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = round, mechanism = mechanism, solver = 'lbfgs', random_state = np.random.randint(1000000))
-#     model = MechanizedOneVSRest(estimator, mechanism = mechanism)
-
-#     model.fit(x_train, y_train)
-#     # Predict
-#     y_pred = model.predict(x_valid)
-#     mean = np.mean(y_train)
-#     ## Here it returns MSE, if we want to have RMSE, we need to give mean_squared_error(y_valid, y_pred, squared = false)
-#     rmse = mean_squared_error(y_valid, y_pred, squared=False)
-#     # print(rmse)
-#     # print(mean)
-#     nrmse = rmse/mean
-#     return rmse
-    
-
-
-# def eval_nm_rounds(stepped_rounds, mechanism, non_adaptive_num):
-#     generalization_error_list = []
-#     for r in stepped_rounds:
-#         # estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = r, mechanism = mechanism, solver = 'sag')
-#         generalization_error_list.append(eval_nm(r, non_adaptive_num, mechanism))
-#     return generalization_error_list
-
-# def eval_nm_dt(round, train_size, mechanism):
-#     # f1_scores, acc_scores, models = [], [], [], [], []
-#     x_train, y_train = x_population[:train_size], y_population[:train_size]
-    
-#     estimator = MechanizedDecisionTree( mechanism = mechanism,)
-#     model = MechanizedOneVSRest(estimator, mechanism = mechanism)
-
-#     model.fit(x_train, y_train)
-#     # Predict
-#     y_pred = model.predict(x_valid)
-#     mean = np.mean(y_train)
-#     ## Here it returns MSE, if we want to have RMSE, we need to give mean_squared_error(y_valid, y_pred, squared = false)
-#     rmse = mean_squared_error(y_valid, y_pred, squared=False)
-#     # print(rmse)
-#     # print(mean)
-#     nrmse = rmse/mean
-#     return rmse
-    
-
-
-# def eval_nm_rounds_dt(stepped_rounds, mechanism, non_adaptive_num):
-#     generalization_error_list = []
-#     for r in stepped_rounds:
-#         # estimator = MechanizedLogisticRegression(C = BEST_C, max_iter = r, mechanism = mechanism, solver = 'sag')
-#         generalization_error_list.append(eval_nm_dt(r, non_adaptive_num, mechanism))
-#     return generalization_error_list
-
-
-# # In[206]:
-
-
-# stepped_rounds = [1000] #k
-# non_adaptive_num = 1000 # train size
-
-
-# # In[ ]:
-
-
-# baseline_generalization_error_list = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.NONE), non_adaptive_num)
-# print((baseline_generalization_error_list))
-# gaussian_generalization_error_list = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.GAUSSIAN, sigma = 0.08), non_adaptive_num)
-# print(gaussian_generalization_error_list) 
-# # = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
-# threshold_generalization_error_list = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.THRESHOLD, sigma = 0.08, hold_frac = 0.7, threshold = 0.9), non_adaptive_num)
-# # gaussian_generalization_error_list = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
-
-# print(threshold_generalization_error_list)
-
-# datasplit_generalization_error_list = eval_nm_rounds(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.DATASPLIT), non_adaptive_num)
-
-
-# # In[ ]:
-
-
-# baseline_generalization_error_list_dt = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.NONE), non_adaptive_num)
-
-# gaussian_generalization_error_list_dt = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.GAUSSIAN, sigma = 0.08), non_adaptive_num)
-
-# # = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
-# threshold_generalization_error_list_dt = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.THRESHOLD, sigma = 0.08, hold_frac = 0.7, threshold = 0.9), non_adaptive_num)
-# # gaussian_generalization_error_list = [0.3984241178485783, 0.4035628639945187, 0.39482699554642003, 0.3977389516957862, 0.3977389516957862, 0.3917437478588558, 0.3975676601575882, 0.39585474477560806, 0.38866050017129156, 0.3970537855429942, 0.39568345323741005, 0.3857485440219253, 0.38506337786913325, 0.39157245632065774, 0.3871188763275094]
-
-# datasplit_generalization_error_list_dt = eval_nm_rounds_dt(stepped_rounds, Mechanism(mechanism_type = Mechanism.MechanismType.DATASPLIT), non_adaptive_num)
-
-
-# # In[205]:
-
-
 # #The result of DTOVR and LROVR
 
 
-# # In[209]:
-
-
-# print(np.mean(baseline_generalization_error_list))
-# print(np.mean(datasplit_generalization_error_list))
-# print(np.mean(gaussian_generalization_error_list))
-# print(np.mean(threshold_generalization_error_list))
-
-# print(np.mean(baseline_generalization_error_list_dt))
-# print(np.mean(datasplit_generalization_error_list_dt))
-# print(np.mean(gaussian_generalization_error_list_dt))
-# print(np.mean(threshold_generalization_error_list_dt))
+print("The reusult of LROVR")
+print(np.mean(baseline_generalization_error_list_lrovr))
+print(np.mean(datasplit_generalization_error_list_lrovr))
+print(np.mean(gaussian_generalization_error_list_lrovr))
+print(np.mean(threshold_generalization_error_list_lrovr))
+print("The reusult of DTOVR")
+print(np.mean(baseline_generalization_error_list_dtovr))
+print(np.mean(datasplit_generalization_error_list_dtovr))
+print(np.mean(gaussian_generalization_error_list_dtovr))
+print(np.mean(threshold_generalization_error_list_dtovr))
 
 # # plt.figure()
 # # x_range = stepped_rounds
