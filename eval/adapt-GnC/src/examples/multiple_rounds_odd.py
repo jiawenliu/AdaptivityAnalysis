@@ -32,7 +32,6 @@ def mr_odd (strategy, mechanism, para = Para()):
 	para.degree = 0
 	pre_ans = [{"para" : para}]
 	k = 0
-	print("max_item",para.max_iteration)
 	while k < para.max_iteration:
 		new_coefficient = pre_ans[0]["para"].coefficient + []
 		for i in range(para.max_degree):
@@ -47,7 +46,6 @@ def mr_odd (strategy, mechanism, para = Para()):
 				q = None
 				break
 		pre_ans[0]["para"].coefficient = new_coefficient
-		print(new_coefficient)
 		k = k + 1
 
 
@@ -58,7 +56,7 @@ def mr_odd (strategy, mechanism, para = Para()):
 
 def eval_mr_odd(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechanism = mech.Mechanism()):
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "mr_odd", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
-    print (strategy.cardinality)
+    # print (strategy.cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
     para = Para(0, None, max_degree = cardinality, learning_rate = 0.000001, max_iteration = x)
@@ -121,10 +119,10 @@ Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_mr_odd(cardinality, para, Gauss).mean() for para in stepped_para]
 Gauss_rmse = eval_mr_odd(n = n, cardinality = cardinality, para = para, mechanism = Gauss)
-print(Baseline_rmse)
-print(DataSplit_rmse)
-print(Gauss_rmse)
-print(Thresh_rmse)
+# print(Baseline_rmse)
+# print(DataSplit_rmse)
+# print(Gauss_rmse)
+# print(Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 '''

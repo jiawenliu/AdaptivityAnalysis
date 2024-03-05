@@ -59,7 +59,7 @@ def mr_single (strategy, mechanism, para = Para()):
 
 def eval_mr_single(n = DATA_SIZE, cardinality = CARDINALITY, para = Para(), mechanism = mech.Mechanism()):
     strategy = stg.Strategy(n, q_mean = MEAN, ada_freq = {"method": "mr_single", "method_param": para}, q_max = MAX_QUERY_NUM, cardinality = cardinality)
-    print (strategy.cardinality)
+    # print (strategy.cardinality)
     mechanism.reset()
     mechanism.add_data({'data': strategy.gen_data_decimal()})
 
@@ -110,7 +110,7 @@ hold_frac, threshold, check_data_frac = 0.7, 0.05, 0.05
 Baseline = mech.Mechanism()
 Baseline.add_params(beta=beta, tau=tau, check_for_width=None)
 Baseline_rmse = eval_mr_single(n = n, cardinality = cardinality, para = para, mechanism = Baseline)
-print(Baseline_rmse)
+# print(Baseline_rmse)
 
 DataSplit = mech.Mechanism()
 DataSplit.add_params(beta=beta, tau=tau)
@@ -126,10 +126,10 @@ Gauss = mech.Gaussian_Mechanism(sigma=sigma)
 Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_mr_single(cardinality, para, Gauss).mean() for para in stepped_para]
 Gauss_rmse = eval_mr_single(n = n, cardinality = cardinality, para = para, mechanism = Gauss)
-print(Baseline_rmse)
-print(DataSplit_rmse)
-print(Gauss_rmse)
-print(Thresh_rmse)
+# print(Baseline_rmse)
+# print(DataSplit_rmse)
+# print(Gauss_rmse)
+# print(Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 

@@ -31,7 +31,6 @@ def lrgd (strategy, mechanism, para = Para()):
 	para.degree = 0
 	pre_ans = [{"para" : para}]
 	k = 0
-	print("max_iter:",para.max_iteration)
 	while k < para.max_iteration:
 		new_coefficient = pre_ans[0]["para"].coefficient + []
 		for i in range(para.max_degree):
@@ -131,10 +130,6 @@ Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_lrgd(cardinality, para, Gauss).mean() for para in stepped_para]
 Gauss_rmse = eval_lrgd(n = n, cardinality = cardinality, mechanism = Gauss)
 Gauss_rmse = np.array([eval_lrgd(n = n, cardinality = cardinality, mechanism = Gauss).mean() for _ in runs])
-print(Baseline_rmse)
-print(DataSplit_rmse)
-print(Gauss_rmse)
-print(Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 '''

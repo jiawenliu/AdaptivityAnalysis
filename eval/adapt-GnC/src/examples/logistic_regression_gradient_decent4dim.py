@@ -31,7 +31,6 @@ def lrgd (strategy, mechanism, para = Para()):
 	para.degree = 0
 	pre_ans = [{"para" : para}]
 	k = 0
-	print("max_iter:",para.max_iteration)
 	while k < para.max_iteration:
 		new_coefficient = pre_ans[0]["para"].coefficient + []
 		for i in range(para.max_degree):

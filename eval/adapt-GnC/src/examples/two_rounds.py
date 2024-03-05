@@ -38,14 +38,14 @@ class twoRounds():
 		# print("TRUE ANSWER OF ADAPTIVE QUERYS:", strategy.true_ans_list)
 		true_answer = strategy.true_ans_list[:q_done]
 		square_errors = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list))
-		print("true_answer",true_answer)
-		amax = np.amax(true_answer)
-		amin = np.amin(true_answer)
-		dif= amax - amin
-		mean = np.mean(true_answer)
-		print('diff:', dif)
+		# print("true_answer",true_answer)
+		# amax = np.amax(true_answer)
+		# amin = np.amin(true_answer)
+		# dif= amax - amin
+		# mean = np.mean(true_answer)
+		# print('diff:', dif)
 		# square_errors = square_errors/np.square(mean)  uncomment if we want to support normalized rmse
-		print("Complete one run, with Squre Errors: {}".format(square_errors))
+		# print("Complete one run, with Squre Errors: {}".format(square_errors))
 		return list(square_errors)
 
 	def runs_one_mech(self, n_list = range(500, 1001, 100), q_max_list = range(500, 1001, 100), q_adapt_list = range(500, 1001, 100), runs = 1, mechanism = mech.Mechanism()):
@@ -56,13 +56,13 @@ class twoRounds():
 				se_matrix = [(self.one_run_one_mech(n, q_max_list[i], q_adapt_list[i], mechanism)) for _ in range(runs)]
 				rmse_pair_list = [np.array([[l[i],1] if len(l) > i else [0, 0] for l in se_matrix]).sum(0) for i in range(max([len(l) for l in se_matrix]))]
 				rmse = [pl[0] / pl[1] for pl in rmse_pair_list]
-				print("se_m",se_matrix)
-				print("rmse_plist",rmse_pair_list)
-				print("ROOT MEAN SQUARE ERROR: ", rmse)
+				# print("se_m",se_matrix)
+				# print("rmse_plist",rmse_pair_list)
+				# print("ROOT MEAN SQUARE ERROR: ", rmse)
 				rmse_list.append(rmse)
 
-		print("DATA SIZE RANGE: ", n_list)
-		print("RMSE: ", rmse_list)
+		# print("DATA SIZE RANGE: ", n_list)
+		# print("RMSE: ", rmse_list)
 		return rmse_list
 
 	def runandplot_with_one_mech(self, q_max_list = [200], q_adapt_list = [20], mech_name = "Baseline"):
@@ -105,7 +105,7 @@ class twoRounds():
 			Baseline_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Baseline)
 			mech_para = "Baseline: DATA SIZE: {}, RUNS: {}".format((n_list), runs)
 			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Baseline)
-			print(mech_para, mech_rmse)
+			# print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
@@ -120,7 +120,7 @@ class twoRounds():
 			DataSplit.add_params(beta=beta, tau=tau)
 			mech_rmse = self.runs_one_mech(np.array(n_list)*3, q_max_list, q_adapt_list, runs, DataSplit)
 			mech_para = "DATA SPLIT : BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(beta, tau, (n_list), runs)
-			print(mech_para, mech_rmse)
+			# print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
@@ -135,7 +135,7 @@ class twoRounds():
 			Thresh.add_params(beta=beta, tau=tau, check_for_width=None)
 			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Thresh)
 			mech_para = "THRESH : HOLD_FRAC: {}, T: {}, SIGMA: {}, BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(hold_frac, threshold, sigma, beta, tau, n_list, runs)
-			print(mech_para, mech_rmse)
+			# print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
@@ -150,7 +150,7 @@ class twoRounds():
 			Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, Gauss)
 			mech_para = "GAUSS : SIGMA: {}, BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(sigma, beta, tau, n_list, runs)
-			print(mech_para, mech_rmse)
+			# print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
@@ -170,7 +170,7 @@ class twoRounds():
 			GnC_gauss.add_params(beta = beta, tau = tau)
 			mech_rmse = self.runs_one_mech(np.array(n_list), q_max_list, q_adapt_list, runs, GnC_gauss)
 			mech_para = "GnC_gauss : SIGMA: {}, CHECK_FRAC: {}, BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(sigma, check_data_frac, beta, tau, n_list, runs)
-			print(mech_para, mech_rmse)
+			# print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
@@ -209,7 +209,7 @@ class twoRounds():
 			GnC_DataSplit.add_params(beta = beta, tau = tau)
 			mech_rmse = self.runs_one_mech(np.array(n_list), q_max_list, q_adapt_list, runs, GnC_DataSplit)
 			mech_para = "GnC_DataSplit : BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(check_data_frac, beta, tau, n_list, runs)
-			print(mech_para, mech_rmse)
+			# print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
@@ -228,7 +228,7 @@ class twoRounds():
 			GnC_Baseline.add_params(beta = beta, tau = tau)
 			mech_rmse = self.runs_one_mech(n_list, q_max_list, q_adapt_list, runs, GnC_Baseline)
 			mech_para = "GnC_Baseline : BETA: {}, TAU: {}, DATA SIZE: {}, RUNS: {}".format(check_data_frac, beta, tau, n_list, runs)
-			print(mech_para, mech_rmse)
+			# print(mech_para, mech_rmse)
 			f.write(mech_para + ": " + str(mech_rmse) + '\n')
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
@@ -266,7 +266,7 @@ class twoRounds():
 			for i in range(len(q_max_list)):
 				querys = range(q_adapt_list[i], q_max_list[i]+1, q_adapt_list[i])
 				l = min(len(rmse[i]), len(querys))
-				print(l, querys)
+				# print(l, querys)
 				plt.plot(querys[:l], rmse[i][:l], label= m)
 		
 		plt.xlabel("Queries")
