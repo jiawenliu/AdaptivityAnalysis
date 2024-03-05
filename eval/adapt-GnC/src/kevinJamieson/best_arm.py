@@ -105,23 +105,23 @@ def eval_best_arm(n = DATA_SIZE, cardinality = CARDINALITY, q_max = MAX_QUERY_NU
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
     
     rmse = 	np.sqrt(mse)
-    true_data = strategy.true_ans_list[:q_done]
-    std = np.std(true_data)
-    amax = np.amax(true_data)
-    amin = np.amin(true_data)
-    dif= amax - amin  
-    mean = np.mean(true_data)
-    print("dif", dif)
-    print("mean", mean)
-    print("rmse",rmse)
-    nrmse = rmse/std
-    nrmse1 = rmse/dif
-    nrmse2 = rmse/mean
-    print("std", std)
-    print("nrmse",nrmse)
-    print("nrmse1", nrmse1)
-    print("nrmse2", nrmse2)
-    return nrmse2	
+    # true_data = strategy.true_ans_list[:q_done]
+    # std = np.std(true_data)
+    # amax = np.amax(true_data)
+    # amin = np.amin(true_data)
+    # dif= amax - amin  
+    # mean = np.mean(true_data)
+    # print("dif", dif)
+    # print("mean", mean)
+    # print("rmse",rmse)
+    # nrmse = rmse/std
+    # nrmse1 = rmse/dif
+    # nrmse2 = rmse/mean
+    # print("std", std)
+    # print("nrmse",nrmse)
+    # print("nrmse1", nrmse1)
+    # print("nrmse2", nrmse2)
+    return rmse	
 
 q_max = x
 n = 1000
@@ -153,7 +153,7 @@ Gauss.add_params(beta=beta, tau=tau, check_for_width=None)
 # Gauss_rmse = [eval_best_arm(n, dimension, q_max, Gauss).mean() for q_max in stepped_q_max]
 Gauss_rmse = eval_best_arm(n, dimension, q_max, Gauss)
 
-print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
+# print(Baseline_rmse, DataSplit_rmse, Gauss_rmse, Thresh_rmse)
 print(Baseline_rmse.mean(), DataSplit_rmse.mean(), Gauss_rmse.mean(), Thresh_rmse.mean())
 
 

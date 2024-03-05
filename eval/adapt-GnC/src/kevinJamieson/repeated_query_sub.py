@@ -59,23 +59,23 @@ def eval_repeated_query_subroutine(delta, n = DATA_SIZE, cardinality = CARDINALI
     mse = np.square(np.subtract(strategy.true_ans_list[:q_done], strategy.mech_ans_list[:q_done]))
 
     rmse = 	np.sqrt(mse)
-    true_data = strategy.true_ans_list[:q_done]
-    print("true_Data",true_data)
-    std = np.std(true_data)
-    amax = np.amax(true_data)
-    amin = np.amin(true_data)
-    dif= amax - amin  
-    mean = np.mean(true_data)
-    print("dif", dif)
-    print("mean", mean)
-    print("rmse",rmse)
-    nrmse = rmse/std
-    nrmse1 = rmse/dif
-    nrmse2 = rmse/mean
-    print("std", std)
-    print("nrmse",nrmse)
-    print("nrmse1", nrmse1)
-    print("nrmse2", nrmse2)
+    # true_data = strategy.true_ans_list[:q_done]
+    # # print("true_Data",true_data)
+    # std = np.std(true_data)
+    # amax = np.amax(true_data)
+    # amin = np.amin(true_data)
+    # dif= amax - amin  
+    # mean = np.mean(true_data)
+    # print("dif", dif)
+    # print("mean", mean)
+    # print("rmse",rmse)
+    # nrmse = rmse/std
+    # nrmse1 = rmse/dif
+    # nrmse2 = rmse/mean
+    # print("std", std)
+    # print("nrmse",nrmse)
+    # print("nrmse1", nrmse1)
+    # print("nrmse2", nrmse2)
     return rmse
     
 
