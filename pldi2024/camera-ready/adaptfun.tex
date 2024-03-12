@@ -1,0 +1,953 @@
+In this section, we present our program analysis {\THESYSTEM} for
+computing an upper bound on the \emph{adaptivity} of a given program
+$c$.
+%
+%% \remove{The high level idea behind {\THESYSTEM} is to first build
+%% an \emph{estimated dependency graph} \progG(c) of a program $c$
+%% (Section~\ref{sec:alg_weightedgegen}) which overapproximates the
+%% semantics-based dependency graph in two dimensions: it
+%% overapproximates the dependencies between assigned variables (Section~\ref{sec:alg_edgegen}), and, it
+%% overapproximates the weights (Section~\ref{sec:alg_weightgen}). Then, {\THESYSTEM} uses a custom algorithm to estimate the 
+%% walk of maximal query length on this graph, providing in this way an upper bound on the adaptivity of the
+%% program.} 
+%\highlight{ 
+ The high-level idea behind {\THESYSTEM} is the following:
+  \begin{enumerate}
+    \item construct
+    an \emph{estimated program dependency graph} \progG(c) of a program $c$;
+    \item use a reachability-bound algorithm to estimate the weight of every vertex in the graph;
+    \item  use an algorithm, which we call AdaptBD, to estimate an upper bound on the number of queries in the walk over the weighted dependency graph that visits the most query vertices. %This in turns gives us an upper bound to the adaptivity. 
+  \end{enumerate}
+  The \emph{estimated dependency graph} overapproximates the
+  semantics-based dependency graph in two dimensions: it
+  overapproximates the dependencies between assigned variables (Section~\ref{sec:alg_edgegen}), and, it
+  overapproximates the weights (Section~\ref{sec:alg_weightgen}). Thanks to this, 
+ we prove the upper bound provided by AdaptBD is a sound upper bound
+  over the semantic-based adaptivity in Definition~\ref{def:trace_adapt} in Theorem~\ref{thm:adaptalg_soundness}.  
+%}
+
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Edge And Weight Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+\subsection{Weighted Dependency Graph Construction}
+Given a program $c$, the set of vertices $\progV(c)$ and query annotations $\progF(c)$ of the \emph{estimated dependency graph} can be computed by simply
+scanning the program $c$. These sets can be computed precisely and correspond to
+the same sets in the semantics-based dependency graph.
+This means that $\progG(c)$ has the same underlying vertex structure as 
+the semantics-based graph $\traceG(c)$. The differences will be in the sets of edges and weights. 
+
+
+
+
+
+%% \remove{\subsection{Weight and Edge Estimation}}
+%% \label{sec:alg_weightedgegen}
+%% \remove{The set of edges $\progE(c)$ and the set of weights $\progW(c)$ of the estimated dependency graph are estimated through an analysis combining control flow, data flow, 
+%% and loop bound analysis. These analyses are naturally described over an  \emph{Abstract Transition Graph} of the input program, which we describe next.}
+%% %
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Abstract Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %
+%% \subsubsection{\remove{Abstract Transition Graph}}
+%% \label{sec:abscfg}
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version For Reference %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% % An \emph{Abstract Transition Graph}, $\absG(c)$ for a program $c$ is composed of
+%% % a vertex set $\absV(c)$ and an edge set $\absE(c)$, $\absG(c) \triangleq (\absV(c), \absE(c))$.
+%% % \\
+%% % Every 
+%% % vertex $l \in \absV(c)$ is the label of a labeled command in $c$, which is unique.
+%% % \\
+%% % Each edge $(l \xrightarrow{dc} l') \in \absE(c)$ is an abstract transition
+%% % between two program points $l, l'$. 
+%% % There is an edge from $l$ to $l'$ if and only if
+%% % the command with label $l'$ can execute right after the execution of the command with label $l$.
+%% % % if and only if there is a control flow between two program points.
+%% % Each edge is annotated by a constraint $dc \in \dcdom^{\top}$, which is generated from the command with label $l$.
+%% % This constraint describes the abstract execution of the command with $l$. 
+%% % The edge set is constructed in three steps summarized as follows (with detail in Apdix.).
+%% % \begin{enumerate}
+%% %     \item Computing \textbf{constrains} over the expression for every program's labeled command,
+%% %   which is used as the annotation of an edge.
+%% %   Its domain $\dcdom^{\top}$ is composed of the \emph{Difference Constraints} $DC(\mathcal{VAR}  \cup \constdom)$, the \emph{Boolean Expressions} $\booldom$ and $\top$.
+%% % %
+%% % \begin{itemize}
+%% % \item The difference constraints $DC(\mathcal{VAR}  \cup \constdom)$ is the set of all the inequality of
+%% % form $x' \leq y + v$ where $x \in \mathcal{VAR} $, 
+%% % $y \in \mathcal{VAR}$ and $v \in \constdom$.
+%% % The \emph{Symbolic Constant} set $\constdom = \mathbb{N} \cup \inpvar \cup{\infty \cup{Q_m}}$
+%% % is the set of natural numbers with $\infty$, the input variables, and a symbol $Q_m$ representing the abstract value of a query request.
+%% % An inequality $x' \leq y + v$ describes that the value of $x$ in the current state is
+%% % at most the value of $y$ in the previous state plus some constant $v$.
+%% % When a difference constrain shows up as an edge annotation, $l \xrightarrow{x' \leq y + v} l'$,
+%% % it denotes that
+%% % the value of variable $x$
+%% % after executing the command at $l$ is at most
+%% % the value of variable $y$ plus $v$ before the execution.
+%% % For every expression in each of the label command, it is computed in three steps via program abstraction method adopted from the Section~6 in \cite{sinn2017complexity}. 
+%% % %
+%% % \item The Boolean Expressions $b$ from the set $\booldom$.
+%% % $b$ on an edge $l \xrightarrow{b} l'$ describes
+%% % that after evaluating the guard with label $l$,
+%% % $b$ holds and the command with label $l$ will execute right after.
+%% % %
+%% % \item The top constraint, $\top$ denotes true. It is preserved for $\eskip$ command.
+%% % %
+%% % \end{itemize}
+%% %     \item \textbf{Initial and final state} computation step generates two sets for each labeled command in $c$. 
+%% %   The initial state contains the
+%% %   label where this command {starts} executing, 
+%% %   and the final state is a set
+%% %   that contains the constraint of this command
+%% %   and the continuation labels after the execution of this command.
+%% %  \item \textbf{abstract event} computation step generates a set of edges for the $c$, by computing the initial state and finial state interactively and recursively.
+%% % \end{enumerate}
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version Above %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% %
+%% \remove{We say that we have a \emph{transition} from a program point $l$ to a
+%% program point $l'$ if and only if the command with label $l'$ can
+%% execute right after the execution of the command with label $l$.
+%% The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
+%% graph with the set of labels of program points in $c$  (including a 
+%% label $\lex$ for the exit point) as the set of
+%% vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
+%% edges $\absE(c)$. Each edge of the graph is annotated with either
+%% the symbol $\top$, a boolean expression or a \emph{difference
+%% constraint}~\cite{sinn2017complexity}.
+%% A difference constraint is an inequality of the form $x' \leq y + v$ {or $x' \leq v$}
+%% where $x, y$ are variables and $v \in \constdom$ is a symbolic
+%% constant: either a natural number, the symbol $\infty$, an input
+%% variable or a symbol $Q_m$ representing a query request.  We denote by
+%% $\dcdom$ the set of difference constraints.
+%% A difference constraint on an edge, $l \xrightarrow{x' \leq y + v}
+%% l'$ {or $l \xrightarrow{x' \leq v} l'$}, denotes that after executing the command at location $l$ the
+%% value of the variable $x$ is at most the value of the expression $y +
+%% v$ {resp. $v$} before the execution of the command $l'$.
+%% A boolean value $b$ on an
+%% edge, $l \xrightarrow{b} l'$, denotes that after evaluating the guard
+%% of an if or a while command with label $l$, $b$ holds and the next
+%% command to be executed is the one with label $l'$.  A $\top$ symbol on
+%% an edge, $l \xrightarrow{\top} l'$ denotes that the command with label
+%% $l$ is a $\eskip$, {and the commands that do not interfere with any loop counter variable}.
+%% We compute difference constraints and the other annotation via a
+%% simple program abstraction method adopted
+%% from \cite{sinn2017complexity}, described in details in the
+%% supplementary material. }
+%% % \mg{It would be good to have a simple short sketch.}
+%% %\\
+%% %% \jl{   
+%% %% 2. Computing the \textbf{Initial and final state} for each labeled command in $c$. 
+%% %%   The initial state contains the
+%% %%   label where this command {starts} executing, 
+%% %%   and the final state is a set
+%% %%   that contains the constraint of this command
+%% %%   and the continuation labels after this command.
+%% %%   \\ 
+%% %% %  \item 
+%% %% 3. computing \textbf{abstract event}s and generating a set of edges for the $c$, by computing the initial state and finial state interactively and recursively.
+%% %% %   Each edge is a pair of initial and finial state.
+%% %% % \end{enumerate}
+%% %% }
+
+%% \remove{\textbf{Example.}
+%% We show in Fig.~\ref{fig:abscfg_tworound}(b) the  abstract control flow graph,
+%%  $\absG(\kw{twoRounds(k)})$ of the $\kw{twoRounds(k)}$ program we gave in 
+%%   Fig.~\ref{fig:overview-example}(a) and which we also report in 
+%%    Fig.~\ref{fig:abscfg_tworound}(a).}
+%% % \mg{This example has many issues. First, many nodes do not respect the format that 
+%% % we say difference constraint have. So, either we gave the wrong definition of difference constraints or we are being sloppy or we are using some shortening without telling it to the reader. In any case we need to fix this. Also, why one of the query is bound by $Q_m$ and the other one is instead bound by $k*a$? I think this example needs some serious reworking.}
+%% % \jl{
+%% % The edge $(1 \xrightarrow{j' \leq k} 2)$ on the top tells us the command 
+%% % $\clabel{\assign{j}{k}}^1$ is executed with a continuation point $2$ such that the
+%% % % where the 
+%% % guard $\clabel{j > 0}^2$ will be evaluated next.
+%% % The annotation $j' \leq k$ is a difference constraint 
+%% % computed for
+%% % % by abstracting
+%% % the expression $k$ from the assignment command $\assign{j}{k}$.
+%% % %  from the function $\absexpr(0)$.
+%% % It represents that the value of $j$ is less than or equal to value of input variable $k$ after the
+%% % execution of $\clabel{\assign{a}{0}}^0$ and before executing the loop.
+%% % % Another example edge $5 \xrightarrow{a' \leq a + x } 2$ describes the execution of
+%% % %  the command
+%% % % $\clabel{\assign{a}{x + a}}^{5}$.
+%% % The boolean constraint $j \leq 0 $ on the edge $2 \xrightarrow{j \leq 0} 6$
+%% % represents the negation of the testing guard $j > 0$
+%% % of the $\ewhile$ command with header at label $2$.
+%% % }
+%% % \mg{ The next sentence need a pass after we fix the example:
+%% % The edge $(0 \xrightarrow{a' \leq 0} 1)$ on the top tells us the command 
+%% % $\clabel{\assign{a}{0}}^0$ is executed with a continuation point $1$ such that the
+%% % command $\clabel{\assign{j}{k}}^1$ will be executed next.
+%% % % The annotation $a' \leq 0$ is a difference constraint 
+%% % % computed for
+%% % % the expression $0$ in the assignment command $\assign{a}{0}$.
+%% % $a' \leq 0$ represents that the value of $a$ is less than or equal to $0$ after the
+%% % execution of $\clabel{\assign{a}{0}}^0$ and before executing $\clabel{\assign{j}{k}}^1$.
+%% % % Another example edge $5 \xrightarrow{a' \leq a + x } 2$ describes the execution of
+%% % %  the command at line $5$
+%% % % $\clabel{\assign{a}{x + a}}^{5}$.
+%% % % This edge has difference constraint $a' \leq a+x $.
+%% % % The $a'$ on the left side of $a' \leq a+x$ represents the value of $a$ after executing this assignment command.
+%% % $j \leq 0 $ on the edge $2 \xrightarrow{j \leq 0} 6$
+%% % represents the negation of the testing guard $j > 0$
+%% % of the $\ewhile$ command with header at label $2$.
+%% % The edge from $3$ to $4$ comes from the query request command $\clabel{\assign{x}{\query(\chi[j])} }^{3}$.
+%% % The constraint over this edge, $x' < Q_m$ describes after executing $\assign{x}{\query(\chi[j])}$,
+%% % % $\clabel{\assign{x}{\query(\chi[j])} }^{3}$, 
+%% % the query request results stored in $x$ is bounded by $Q_m$. 
+%% % }
+%% \input{examples/abscfg_tworound}
+%% %
+
+
+%% \subsubsection{\remove{Edge Estimation}}
+%% \label{sec:alg_edgegen}
+%% \remove{The set of edges $\progE(c)$ is estimated through a combined data and 
+%% control flow analysis with three components.}
+
+%% \remove{\noindent\textbf{Reaching definition analysis:} 
+%% {The first component is a reaching definition analysis computing for each label $l$ in the graph $\absG(c)$ the set of labeled variables that may reach $l$ as follows.}
+%% % \mg{Can we sketch how this analysis is performed?}
+%% % \todo{I shortened, can you double check}
+%% \\
+%% {
+%% (1). 
+%% % For each label $l$, generating two sets of labeled variables
+%% % % $gen(l)$, $kill(l)$ 
+%% % where they are newly generated or destroyed by command $l$,
+%% % \\
+%% For each label $l$, the analysis generates two initial sets of labeled variables, $in$ and $out$, 
+%% containing all the labeled variables $x^l$ that are newly generated but not yet reassigned before and after executing the command $l$.
+%% \\
+%% (2). The analysis iterates over $\absG(c)$, and updates $in(l)$ and $out(l)$ until they  are stable.
+%% The final $in(l)$ is the set of reaching definitions $\live(l, c)$ for $l$.}}
+  
+\subsubsection{Edge Construction}
+\label{sec:alg_edgegen}
+The set of edges $\progE(c)$ is built using a {\em feasible data-flow analysis}, 
+a data flow analysis over 
+our query language, combined with a reaching definition analysis.
+The reaching definition analysis computes a set $\live(l, c)$ of reachable 
+variables at line $l$ in the program $c$.
+%This analysis helps removing redundent edges 
+%in the data-flow analysis. 
+
+The {\em feasible data-flow analysis} computes for every pair $x^i, y^j \in \lvar(c)$
+ whether there is a flow from $x^i$ to $y^j$. 
+ This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. Its formal definiton is in the supplementary material.  
+%  This relation is defined  as follows:
+%% \remove{\noindent\textbf{Feasible data-flow analysis:} The second component is a \textbf{feasible data-flow analysis} computing for every pair $x^i, y^j \in \lvar(c)$
+%%  whether there is a flow from $x^i$ to $y^j$. 
+%%  This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. 
+%%  This relation is defined  as:}
+% \begin{defn}[Feasible Data-Flow]
+%   \label{def:feasible_flowsto}
+%   Given a program $c$ and two labeled variables $x^i, y^j$  in this program, 
+%   $\flowsto(x^i, y^j, c)$ is 
+%   \\
+%     {\footnotesize
+% % \begin{center}
+% $  \begin{array}{ll}
+%   \flowsto(x^i, y^j, \clabel{\eskip}^{l}) 
+%   &\triangleq \emptyset \\
+%   \flowsto(x^i, y^j, \clabel{\assign{y}{\expr}}{}^j) 
+%   & \triangleq (x^i, y^j) \in \{ (x^i, y^j) | x \in \kw{FV}(\expr) 
+%   \land x^i \in \live(l, \clabel{\assign{y}{\expr}}^j) \} \\
+%   \flowsto(x^i, y^j, \clabel{\assign{y}{\query(\qexpr)}}{}^j) 
+%   & \triangleq (x^i, y^j) \in \{ (x^i, y^j) | x \in \kw{FV}(\qexpr) 
+%   \land x^i \in \live(l,\clabel{\assign{y}{\query(\qexpr)}}^j) \} \\
+%     \flowsto(x^i, y^j, \eif ([b]^l, c_1, c_2))  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\ 
+%         & \lor (x^i, y^j) \in
+%         \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
+%       %  (x,i) 
+%       x^i \in \live(l, \eif ([b]^l, c_1, c_2)) \land  y^j \in \lvar(c_1) \right\} \\
+%     %   ([y = \_]^j) \in \mathsf{blk}(c_1) \} \\
+%        &\lor (x^i, y^j) \in \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
+%       %  (x,i) 
+%       x^i\in \live(l, \eif ([b]^l, c_1, c_2))  \land  y^j \in \lvar(c_2)  \right\} \\
+%     %   \land ([y = \_]^j) \in \mathsf{blk}(c_2) \} \\
+%        \flowsto(x^i, y^j, \ewhile [b]^l \edo c_w)  & \triangleq  \flowsto(x^i, y^j, c_w)  \lor
+%        \\ & 
+%        (x^i, y^j) \in  \left\{(x^i,y^j) | x \in \mathsf{FV}(b) \land 
+%       %  (x,i) 
+%       x^i \in \live(l,   \ewhile [b]^l \edo c_w) \land  y^j \in \lvar(c_w) \right\} \\
+%     %   ([y = \_]^j) \in \mathsf{blk}(c_w) \} \\
+%        \flowsto(x^i, y^j, c_1 ;c_2)  & \triangleq \flowsto(x^i, y^j, c_1) \lor \flowsto(x^i, y^j, c_2) \\
+%    \end{array}$
+% % \end{center}
+%    }
+%    \end{defn}
+It gives us an overapproximation of the \emph{variable may-dependency} relation for direct dependencies (dependencies that do not go through other variables).
+%\jl{The transitivity of $\flowsto$ relation is a sound approximation of the $\vardep$ relation over the same pair of labeled variables.
+% , in Appendix C in supplementary material
+% \begin{thm}[$\vardep$ implies $\flowsto$]
+% \label{thm:flowsto_soundness}
+% Given a program ${c}$, for all  $ x^i, y^j \in \lvar_{{c}}$, if $\vardep(x^i, y^j, {c})$,
+% then
+% %  either $\flowsto(x^i, y^j, c)$ 
+% % or 
+% there exist $z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
+% $\flowsto(x^i,  z_1^{r_1}, c) 
+% \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$
+% %
+% \[
+% \begin{array}{l}
+%   \forall x^i, y^j \in \lvar_{{c}}.
+%   \vardep(x^i, y^j, {c})
+%   \\ \quad \implies
+%   \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \cdots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+%   \flowsto(x^i,  z_1^{r_1}, c) 
+%   \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
+% \end{array}
+% \]
+% \end{thm}
+%}
+%
+%\remove{\noindent\textbf{Edge Construction:} The third component constructs}
+%
+We can now identify edges of the dependency graph by computing a transitive closure (through other variables) of the  
+ $\flowsto$ relation. There is a directed edge from  $x^i$ to $y^j$ if and only if there is chain of variables 
+    in the $\flowsto$ relation between $x^i$ and $y^j$, defined as follows:
+   \begin{center}
+$
+\begin{array}{cl}
+    \progE(c) \triangleq &
+    % \left
+    \{ 
+    (y^j, x^i)  ~ \vert ~ y^j, x^i \in \progV(c)
+    \land
+      % \\
+      \exists n, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar(c) \st 
+    %   
+    \\ 
+    & \qquad \qquad
+      n \geq 0 \land
+    %   \\
+      \flowsto(x^i,  z_1^{r_1}, c) 
+      \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) 
+    % \end{array}
+    % \right
+    \}
+    \end{array}
+$
+\end{center}    
+% \mg{I think we should state the soundness of this analysis, at least semi-formally}
+% \jl{
+We prove that the set $\progE(c)$ soundly approximates the set $\traceG(c)$.
+	\begin{lem}[Mapping from Egdes of $\traceG$ to $\progG$]
+	\label{lem:edge_map}
+	For every program $c$ we have:
+   \begin{center}
+$
+	\begin{array}{l}
+	\forall e = (v_1, v_2) \in \traceE(c)
+	\st 
+	\exists e' \in \progE(c) \st e' = (v_1, v_2)
+	\end{array}
+$
+\end{center} 
+	\end{lem}
+
+  \highlight{To do: modify the following proof sketch}
+  The complete proof is in supplementary material Appendix~C. Below we show a proof sketch. This lemma is proved by Theorem~\ref{thm:flowsto_soundness}, which shows that for arbitrary two $x^i, y^j \in \lvar_c$, there exists a static ``$\flowsto$ chain'' from $x^i$ to $y^j$ when $\vardep(x^i, y^j, c)$.
+  \begin{thm}[$\vardep$ implies $\flowsto$]
+    \label{thm:flowsto_soundness}
+    Given a program ${c}$, for all  $ x^i, y^j \in \lvar_{{c}}$, if $\vardep(x^i, y^j, {c})$,
+    then
+    %  either $\flowsto(x^i, y^j, c)$ 
+    % or 
+    there exist $z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
+    $\flowsto(x^i,  z_1^{r_1}, c) 
+    \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$
+    %
+    \[
+    \begin{array}{l}
+      \forall x^i, y^j \in \lvar_{{c}}.
+      \vardep(x^i, y^j, {c})
+      \\ \quad \implies
+      \Big( \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+      \flowsto(x^i,  z_1^{r_1}, c) 
+      \land \cdots \land \flowsto(z_n^{r_n}, y^j, c) \Big)
+    \end{array}
+    \]
+    \end{thm}
+      Here is the informal proof of Theorem~\ref{thm:flowsto_soundness}. For arbitrary two $x^i, y^j \in \lvar_c$ with \emph{Variable May-Dependency} relation, in order to show they have 
+      $\flowsto(x^i, y^j, c)$ relation, it is sufficient to show two cases:
+      1. $x^i$ is directly used in the expression of the assignment command associated to $y^j$, or a boolean
+      expression of the guard for a $\eif$ or $\ewhile$ command with the assignment command associated to $y^j$ showing up in the body of that command, 
+      we call it, $x^i$ directly flows to $y^j$,
+      i.e.,
+      $ \flowsto(x^i, y^j, {c})$;
+      2. otherwise, there exists another labelled variable $z^l$ with \emph{variable May-Dependency} relation on $x^i$ and 
+      $z^l$ directly flows to $y^j$, where the \emph{variable May-Dependency} relation between $x^i$ and $z^l$ implies a ``sub $\flowsto$-chain'' from $x^i$ to $z^l$, 
+      formally, 
+      $\Big(
+        \exists z^l \in \lvar_{{c}}.
+      (\vardep(x^i, z^l, {c})   
+      \implies
+       \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+      \flowsto(x^i,  z_1^{r_1}, c)$ 
+      $\land \cdots \land \flowsto(z_n^{r_n}, z^l, c)
+      )
+      \land  \flowsto(z^l, y^j, {c})
+      \Big)$.
+      \\
+      We use the complete \emph{Event May-Dependency} Definition in supplementary material Section~3.2 with a witness trace $\trace$ and a witness database $D \in \dbdom$,
+      $\eventdep(x^i, y^j, \trace, c, D)$.
+      By definition of $\vardep(x^i, y^j, {c})$, 
+      let $D \in \dbdom$ be the dataset,
+      and $\trace \in \mathcal{T}$, $\event_x, \event_y$ be the witness trace and two events satisfying the definition, 
+      with $\pi_1(\event_x) = x$ and $\pi_1(\event_y) = y$. The two cases above are formally described as follows,
+{\small 
+   \[ \begin{array}{l}
+      \Big(\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) \Big)
+    \lor 
+    \Big(\exists \event_z \in \trace' \st \event_z \in \eventset^{\asn} \land 
+        \eventdep(\event_x, \event_z, \trace[\event_x: \event_z], c, D)
+        \\ \qquad 
+        \implies 
+        \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+    \flowsto(x^i,  z_1^{r_1}, c) 
+    \land \cdots \land \flowsto(z_n^{r_n},  \pi_1(\event_z)^{\pi_2(\event_z)}, c)
+        \\ \qquad \qquad
+        \land 
+        \flowsto(\pi_1(\event_z)^{\pi_2(\event_z)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) \Big)
+    \end{array}
+    \]
+    }
+%
+The first case is proved by the base case of induction on the trace, and the inversion on expression and event.
+The second case is proved by proving the following two lemmas:
+\\
+1. Lemma~\ref{lem:depevents_exist}: existence of a middle event. This is proved by showing a contradiction, with detail in supplementary material Appendix~C.2.%
+\\
+2. Theorem~\ref{thm:flowsto_event_soundness}: the middle event with a sub-trace implies a ``sub $\flowsto$-chain''. 
+ This is proved by induction on the trace $\trace$ and applying the induction hypothesis.
+%
+  \begin{lem}[The Multiple-Steps Event Dependency Inversion]
+    \label{lem:depevents_exist}
+  For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T}$, and two assignment events 
+  $\event_1, \event_2 \in \eventset^{\asn}$,
+  if the trace $trace$ has the form $\trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$ with $\trace' \in \mathcal{T}$, and $\eventdep(\event_1, \event_2, \trace, c, D)$
+  then $\flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) $,
+  or otherwise there exists
+  $\event \in \trace'$ such that
+  $\left( 		
+     \eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
+  \land 
+  \flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+  \right)$.
+  %
+  {\small 
+  \[
+    \begin{array}{l}
+      \forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset^{\asn} \st
+       \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+      \implies
+      \eventdep(\event_1, \event_2, \trace, c, D) 
+      \implies 
+      \\
+      \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+      \lor
+      \exists \event \in \trace' \st 
+      ( 		
+        \eventdep(\event_1, \event, \trace[\event_1:\event], c, D)
+      \land 
+      \flowsto(\pi_1(\event)^{\pi_2(\event)}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+    ) 
+    \end{array}
+    \]
+  }
+  \end{lem}
+
+  \begin{thm}[$\eventdep$ implies $\flowsto$]
+    \label{thm:flowsto_event_soundness}
+    For every $D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset \st
+    \event_1, \event_2 \in \eventset^{\asn}$, 
+    if $\exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]$ and 
+    $\eventdep(\event_1, \event_2, \trace, c, D) $, then
+     $z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}}$ with $n \geq 0$ such that   
+    $\flowsto(x^i,  z_1^{r_1}, c) 
+    \land \cdots \land \flowsto(z_n^{r_n}, y^j, c)$
+    %
+ {\small   \[
+      \begin{array}{l}
+        \forall D \in \dbdom , c \in \cdom, \trace \in \mathcal{T} \st \forall \event_1, \event_2 \in \eventset \st
+        \event_1, \event_2 \in \eventset^{\asn} \land 
+         \exists \trace' \in \mathcal{T} \st \trace = [\event_1] \tracecat \trace' \tracecat [\event_2]
+        \implies
+        \eventdep(\event_1, \event_2, \trace, c, D) 
+        \\ \quad 
+        \implies 
+        \exists n \in \mathbb{N}, z_1^{r_1}, \ldots, z_n^{r_n} \in \lvar_{{c}} \st n \geq 0 \land
+        \flowsto(\pi_1(\event_1)^{\pi_2(\event_1)},  z_1^{r_1}, c) 
+        \land \cdots \land \flowsto(z_n^{r_n}, \pi_1(\event_2)^{\pi_2(\event_2)}, c) 
+      \end{array}
+    \]}
+    \end{thm}
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Reachability Bound Analysis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsubsection{Weight Estimation}
+\label{sec:alg_weightgen}
+
+The weight of every vertex is obtained as an upper bound on 
+the number of times the corresponding command can be executed,
+which can be statically estimated by \emph{reachability-bound analysis}~\cite{GulwaniZ10}.
+Our reachability-bound analysis adapts ideas from previous works~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity} 
+to our query language setting. First, we need to 
+construct an abstract transition graph $\absG(c)$ of a program $c$, a
+graph with the set of labels of program points in $c$  (including a 
+label $\lex$ for the exit point) as the set of
+vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
+edges $\absE(c)$. Each edge of the graph is annotated with either
+the symbol $\top$, a boolean expression or a \emph{difference
+constraint}~\cite{sinn2017complexity}. A difference constraint is an
+inequality of the form $x' \leq y + v$ {or $x' \leq v$}
+where $x, y$ are variables and $v \in \constdom$ is a symbolic
+constant: either a natural number, the symbol $\infty$, an input
+variable or a symbol $Q_m$ representing a query request. Difference constraints describe
+quantitative conditions that are guaranteed by the execution of the command with
+the corresponding label. We denote by
+$\dcdom$ the set of difference constraints.
+%
+%More details are in the supplementary material.
+
+%% \remove{The \emph{Abstract Transition Graph} $\absG(c)$ of a program $c$ is a
+%% graph with the set of labels of program points in $c$  (including a 
+%% label $\lex$ for the exit point) as the set of
+%% vertices $\absV(c)$, and with the set of transitions in $c$ as the set of
+%% edges $\absE(c)$. Each edge of the graph is annotated with either
+%% the symbol $\top$, a boolean expression or a \emph{difference
+%% constraint}~\cite{sinn2017complexity}.
+%% A difference constraint is an inequality of the form $x' \leq y + v$ {or $x' \leq v$}
+%% where $x, y$ are variables and $v \in \constdom$ is a symbolic
+%% constant: either a natural number, the symbol $\infty$, an input
+%% variable or a symbol $Q_m$ representing a query request.  We denote by
+%% $\dcdom$ the set of difference constraints.
+%% A difference constraint on an edge, $l \xrightarrow{x' \leq y + v}
+%% l'$ {or $l \xrightarrow{x' \leq v} l'$}, denotes that after executing the command at location $l$ the
+%% value of the variable $x$ is at most the value of the expression $y +
+%% v$ {resp. $v$} before the execution of the command $l'$.
+%% A boolean value $b$ on an
+%% edge, $l \xrightarrow{b} l'$, denotes that after evaluating the guard
+%% of an if or a while command with label $l$, $b$ holds and the next
+%% command to be executed is the one with label $l'$.  A $\top$ symbol on
+%% an edge, $l \xrightarrow{\top} l'$ denotes that the command with label
+%% $l$ is a $\eskip$, {and the commands that do not interfere with any loop counter variable}.
+%% We compute difference constraints via a
+%% simple program abstraction method adopted
+%% from \cite{sinn2017complexity}, details in the
+%% supplementary material. Fig.~\ref{fig:abscfg_tworound}(b) shows the abstract control flow graph of the running example (also in Fig.~\ref{fig:abscfg_tworound}(a)).}
+
+%\input{examples/abscfg_tworound}
+
+
+
+
+%% \remove{The set $\progW(c)$ of weights for the estimated dependency graph is estimated from 
+%% the Abstract Transition Graph $\absG(c)$ of $c$ using \emph{reachability-bound analysis}~\cite{GulwaniZ10}.
+%%  Specifically, we estimate as the weight of a vertex with label $l$ a symbolic upper bound on the 
+%%  execution times of the command with label $l$ obtained by reachability-bound analysis. 
+%%  These symbolic upper bounds are expressions with the input variables as free variables, 
+%%  hence they correspond to the weight functions in the semantics-based dependency graphs. 
+%% Our reachability-bound algorithm adapts to our setting ideas from 
+%% previous work~\cite{ZulegerGSV11,SinnZV14,sinn2017complexity}.
+%% Specifically, it provides an upper bound on the number of times every command can be executed by
+%%  using three steps.
+%% \begin{enumerate}
+%% \item This step assigns to each edge  $l \xrightarrow{dc} l'\in \absE(c)$ a \emph{local bound} as follows. We look at the strongly connected components of $\absG(c)$. If the edge does not belong to any strongly connected components, then the local bound is $1$, representing the fact that the edge is not in a loop and so it gets executed at most once. If the edge belongs to a strongly connected component and one of the variables $x$ in $dc$ decreases, then the local bound is $x$. Otherwise, if the edge belongs to a strongly connected component and there is a variable $y$ that decreases in the difference constraint of some other edge, and if by removing this other edge, the original edge does not belong anymore to the strongly connected components of $\absG(c)$, then the local bound is $y$. Otherwise, the local bound is $\infty$. Notice that the output is either a symbolic constant in $\constdom$ or a variable that is not an input variable.
+%% % assigns a local bound $c$ ($c \in \constdom \cup \mathcal{V}$), if $c$ decreases in $dc$.
+%% \item This step aims at determining the \emph{reachability-bound} $\absclr(e, c)$ of every edge $e \in \absE(c)$. Every bound is a symbolic expression from the set $\mathcal{A}_{in}$ built out of symbols in $\constdom$ and the operations $+, *, \max$. For every edge, if the local bound of this edge computed at the previous step is a symbol in $\constdom$ then this is already the reachability-bound. If instead the local bound of the edge is a variable $y$ which is not an input variable, this step will eliminate it and replace it with a symbolic expression. In order to do this, this step will compute two quantities: first, it will recursively sum the reachability-bounds of all the edges whose difference constraint may increment the variable $y$, plus the corresponding increment; second, it will recursively sum the reachability-bounds of all the edges whose difference constraint may reset the variable $y$ to a (symbolic) expression that doesn't depend on it, multiplied by the maximal value of this symbolic expression. The sum of these two quantities provides the symbolic expression that is an upper bound on the number of times the edge can be reached. To compute these two quantities we use two mutually recursive procedures.
+%% \end{enumerate}
+%% }
+
+The set $\progW(c)$ of weights for the estimated dependency graph is estimated from 
+the Abstract Transition Graph $\absG(c)$ of $c$ using reachability-bound analysis.
+ Specifically, we use the weight of a vertex with label $l$ as the \emph{symbolic upper bound} on the 
+ execution times of the command with label $l$ that we obtain using our reachability-bound analysis. 
+ These symbolic upper bounds are expressions with the input variables as free variables, 
+ hence they can be used to upper bound the weight functions of the semantics-based dependency graphs.
+We denote the reachability-bound of an edge $e = (l, dc, l') \in \absE(c)$ as $\absclr(e, c)$.
+More details are in the supplementary material.% Fig.~\ref{fig:abscfg_tworound}(c) has the bounds $\absclr(e, c)$ for each edge $e$. 
+   
+%% \remove{using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$, we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
+%%   which is also the estimated weight of this vertex.}
+\begin{defn}[Weight Estimation]
+  \vspace{-0.1cm}
+ \label{def:adaptfun-weight}
+The estimated weight set $\progW(c)$ of program $c$ is a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \constdom)$.
+Each pair maps
+a vertex $x^l \in\progV(c)\subseteq  \lvar(c)$ to a symbolic expression over $\constdom$,
+% is formally computed
+as follows.
+ $
+ \progW(c) \triangleq
+ \left\{ (x^l, \hat{w}) 
+\mid
+x^l \in \progV(c) 
+\land 
+\hat{w} = 
+\sum\left\{ \absclr(e, c) \middle\vert e \in \absE(c) \land e = (l, \_, \_) \right\}
+\right\}.
+$
+\end{defn}
+%
+%Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$. In particular, it may contain the input variables and so it may effectively be used as a function of the input - and capture loop bounds in terms of these inputs.
+% We guarantee that $\hat{w}$ for $x^l \in \progV(c)$ is a sound upper bound of 
+% the weight for the same vertex $x^l$ in the program's semantics-based dependency graph
+% in Theorem~\ref{thm:addweight_soundness}.
+\begin{thm}[Soundness of the Weight Estimation]
+ \label{thm:addweight_soundness}
+ \vspace{-0.1cm}
+For a program ${c}$ and its estimated weight set $\progW(c)$, for every  $(x^l, w) \in \traceW(c) $,
+we have a corresponding estimated weight $(x^l, \hat{w}) \in \progW(c)$ and for every possible 
+$\vtrace_0 \in \tdom_0(c),
+v \in \mathbb{N}$,
+if $\config{\vtrace_0, \hat{w}} \earrow v$,
+then $v$ is an upper bound on ${w}(\trace_0)$. In symbols:
+ %
+\[
+ \begin{array}{l}
+ \forall c \in \cdom, x^l \in \lvar(c),w\in \tdom_0(c)\to \mathbb{N},\trace_0 \in \tdom_0(c), 
+v \in \mathbb{N}\cup \{\infty\}, 
+\\ \qquad
+(x^l, w) \in \traceW(c) \st \Longrightarrow
+\exists
+(x^l, \hat{w}) \in \progW(c) 
+\land
+% \config{{c}, \trace_0} \to^{*} \config{\clabel{\eskip}^{l'}, \trace_0 \tracecat\vtrace} 
+% \land 
+\big(
+ \config{\vtrace_0, \hat{w}} \earrow v \implies w(\trace_0) \leq v
+\big)
+\end{array}
+\]
+\end{thm}
+Notice that $\hat{w} \in \constdom$ is an expression over symbols in $\constdom$. In particular, it may contain the input variables and so it may effectively be used as a function of the input - and capture loop bounds in terms of these inputs.
+Also in this theorem, the evaluation $\config{\vtrace_0, \hat{w}} \earrow v$ is needed to obtain a concrete value $v$ from the symbolic weight $\hat{w}$ by specifying a value for the input variables via $\vtrace_0$.
+
+
+% \textbf{Example.} 
+% Consider again
+% Fig.~\ref{fig:overview-example}(c),
+% the estimated weight for $a^5$ is $k$, and this is a sound estimation.
+% % in estimated dependency Graph as $k$ as well.
+% For an arbitrary $\trace_0 \in \mathcal{T}_0(c)$, we know that $\config{\trace_0, k} \earrow \env(\trace_0) k$ and
+% by the weight $w_k$ for the vertex $a^5$ (as in Fig.~\ref{fig:overview-example}(b)) we know 
+% $w_k(\trace_0) = \env(\trace_0) k$.
+%
+% \subsubsection{Definition of Estimted Dependency Graph}
+
+\begin{defn}
+  [Estimated Dependency Graph]
+  \label{def:prog_graph}
+  Given a program $c$ 
+  with the feasible data flow relation $\flowsto(x^i, y^j, c)$ for every $x^i, y^j \in \lvar(c)$, 
+  and reachability-bound, $\absclr(e, c)$ for every edge $e \in \absE(c)$ on the abstract transition graph,
+  the estimated dependency graph of $c$ has four components:
+  \[\progG(c) = (\progV(c), \progE(c), \progW(c), \progF(c))\]
+\end{defn}
+
+%% \remove{\subsection{Dependency Graph Estimation}
+%% \input{adaptfun-graphgen}}
+\subsection{Adaptivity Upper Bound Computation}
+\label{sec:alg_adaptcompute}
+We estimate the adaptivity upper bound, 
+$\progA(c)$ for a program $c$ as the maximal query length over all finite walks 
+in its \emph{estimated dependency graph}, $\progG({c})$.
+%where $\qlen$ and $\walks$ are defined in Section~\ref{sec:sematnic_adaptivity}.
+%
+% $\walks(\progG(c))$ represents the set of all finite walks on
+%  $\progG({c})$.
+
+\begin{defn}
+[{Estimated Adaptivity}]
+\label{def:prog_adapt}
+{
+Given a program ${c}$ and its estimated dependency graph 
+$\progG({c})$
+the estimated adaptivity for $c$ is 
+\begin{center}
+$
+\progA({c})
+\triangleq \max
+\left\{ \qlen(k) \ \mid \  k \in \walks(\progG(c))\right \}.
+$
+\end{center}
+}
+\end{defn}
+
+% The full definition for $\walks(\progG(c))$ and $\qlen$ over $\walks(\progG(c))$ are in the appendix.
+
+
+Different from a walk on $\traceG(c)$, a walk $k \in \walks(\progG(c))$ on the graph $\progG(c)$
+ does not rely on an initial trace. 
+ The reason is that we use symbolic expressions over input variables, similarly to what we did for the weights in $\progW(c)$ in the previous section. Thus the adaptivity bound $\progA(c)$ will also be a symbolic arithmetic expression over the input variables. With this symbolic expression, we can prove the upper bound sound with respect to any initial trace. 
+
+% We prove our estimated adaptivity is a sound upper bound of program's adaptivity in appendix.
+%
+\begin{thm}[Soundness of $\progA(c)$]
+    \label{thm:sound_progadapt}
+    For every program $c$, 
+    its estimated adaptivity is a sound upper bound of its adaptivity.
+\begin{center}
+$
+     \forall \trace_0 \in \tdom_{0}(c), v \in \mathbb{N}\cup \{\infty\} \st 
+\config{\progA(c), \trace_0} \earrow v \implies A(c)(\trace_0) \leq v.
+$
+\end{center}
+\end{thm}
+
+% \highlight{We have an algorithm $\pathsearch$ which 
+% provides a tight upper bound on the estimated adaptivity. 
+% \begin{thm}[Soundness of $\pathsearch$]
+%   \label{thm:adaptalg_soundness}
+%   For every program $c$, we have
+% \begin{center}
+% $
+% \pathsearch(\progG({c})) \geq \progA(c).
+% $
+% \end{center}
+% \end{thm}
+% }
+Symbolic expressions as used in the weight are great to express symbolic bounds but make the direct computation of 
+a maximal walk harder. Specifically, to directly compute the estimated adaptivity $\progA$,
+one has to traverse the estimated dependency graph.
+A naive traversing strategy leads to non-termination
+because the weight of each vertex in $\progG({c})$
+is a symbolic expression containing input variables.
+We could try to use a depth first search strategy
+using the longest weighted path to approximate
+the finite walk with the weight as
+its visiting time. However, this approach would  consistently and considerably over-approximate the adaptivity. These challenges 
+motivated us to develop an algorithm,   $\pathsearch$,  that provides a sound upper bound 
+on $\progA$. 
+
+\subsection{$\pathsearch$ Algorithm}
+
+\subsubsection{$\pathsearch$ overview} 
+% To address the two challenges we discussed above,  $\pathsearch$  combines
+% Depth First Search and Breadth First Search. 
+The idea of the $\pathsearch$ algorithm is to reduce the task of computing the
+walk with the maximal query length in the dependency graph to the task of
+finding the longest weighted path in a simplified dependency graph which happens to be a directed acyclic graph (DAG).
+To get the simplified graph, the following steps are performed in $\pathsearch$:
+\begin{enumerate}
+  \item The original dependency graph is partitioned into  
+  its strongly connected components (SCCs) using the standard Kosaraju’s algorithm. 
+  %The SCCs are maximal strongly connected subgraphs. 
+  \item  For each SCC, we compute a local adaptivity bound using an helper algorithm $\pathsearch_{\kw{SCC}}$, which we describe in the next section.
+  \item  $\pathsearch$ shrinks the estimated dependency graph into a directed acyclic graph
+  by reducing each SCC into a vertex with the weight equal to its adaptivity local bound.
+\end{enumerate}
+After simplifying the graph, $\pathsearch$ uses breadth first search  to find the longest
+weighted path on this DAG and return this length as the adaptivity upper bound. Notice that the problem of computing the longest weighted path is in general unfeasible but since we are in a DAG the complexity is O(V+E) where $V$ and $E$ represent the number of vertices and the number of edges 
+in the simplified graph. The pseudo-code for $\pathsearch$ can be found in the supplementary material. In the next section we present the helper algorithm $\pathsearch_{\kw{SCC}}$.
+
+%% \remove{The idea of this algorithm is to reduce the task of computing the
+%% walk with the maximal query length to the task of computing local versions of the adaptivity on the maximal strongly connected components of the graph $\progG(c)$ and then compose them into the program adaptivity. 
+%% The algorithm  uses  
+%% another algorithm $\pathsearch_{\kw{SCC}}$  recursively, which finds the {walk} for a strong connected component of $\progG(c)$. 
+%% }
+
+\subsubsection{Algorithm $\pathsearch_{\kw{SCC}}$}
+The high level idea of $\pathsearch_{\kw{SCC}}$ is the following:
+to provide an upper bound on the local adaptivity of an Strong Connected Component of a graph, 
+we need to compute an upper bound on the maximal query length of walks in this SCC. 
+For the sake of illustrating the algorithm, suppose we have an SCC with just three vertices $a^{3}_{1}$, $b^{2}_{0}$,
+$c^{3}_{1}$, where $a$ and $c$ are query vertices with weight $3$ and $b$ is a standard assignment vertex with weight $2$. Suppose the SCC is a cycle with edge $a^{3}_{1} \to b^{2}_{0}$, $b^{2}_{0} \to c^{3}_{1}$ and $c^{3}_{1}\to a^{3}_{1}$. 
+%
+%% Suppose we have an SCC with just three vertices $a^{3}_{1}$, $b^{2}_{1}$,
+%% $c^{3}_{0}$, where $a$ and $c$ are query vertices with weight $3$ and $b$ is a standard assignment vertex with weight $2$. Suppose the SCC is a cycle with edges here $a \to b$, $b \to c$ and $c \to a$.  
+A walk with maximal query length is for instance: $a \to b \to c \to a \to b \to c \to a$. The query length of this walk is $5$ and it can be approximated by
+ first finding a path which starts from a vertex and stops when it reaches the same vertex, such as $a \to b \to c \to a$. Then we can compute a sound upper bound by taking the product of 
+ the minimal weight along the path ($\min(3,2,3,3)$) and the number of queries of this path, $3$ ($a$ and $c$ are query vertices). In this case, the upper bound is $6$.
+Because we are
+ traversing an SCC, if we start from one vertex, it will finally go back to the same vertex.   
+ $\pathsearch_{\kw{SCC}}$ uses the above intuition and traverses an SCC starting from every possible
+ vertex, keeps track of the minimal weight (line: 7 in Algorithm~\ref{alg:adaptscc}) and the number of queries (line: 8 in Algorithm~\ref{alg:adaptscc}) and 
+ stops when it goes back to the same vertex (line: 11 in Algorithm~\ref{alg:adaptscc}). When a cycle is detected,
+ the upper bound is updated (line: 12 in Algorithm~\ref{alg:adaptscc}) by taking the maximal between the current upper bound and the product of the minimal weight
+ and the number of query vertices along the visited path as we discussed in the example above. When all the traversals starting from 
+ every vertex of this SCC are finished, the obtained upper bound will be the maximal approximated one. 
+ The traversal is naturally performed by a Depth First Search, whose complexity is O(V+E), where $V$ and $E$ 
+ represent the number of vertices and edges in this SCC.  $\pathsearch_{\kw{SCC}}$ performs such 
+ a traversal for every vertex so the total complexity for $\pathsearch_{\kw{SCC}}$ is O((V+E)*V).
+ 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 1: %%%%%%%%%%%%%%%%%%%%%%
+% The ${\pathsearch}$ and  detail introduction is in supplementary material.
+%%%%%%%%%%%%%%%%%%%%%%%%% INTRODUCTION OF ADAPTIVITY COMPUTATION ALGORITHM 2: %%%%%%%%%%%%%%%%%%%%%%
+{\footnotesize
+% \vspace{-0.3cm}
+\begin{algorithm}
+            \caption{
+            {\small Adaptivity Bound Algorithm on An SCC ({$\kw{\pathsearch_{scc}(c, SCC_i)}$})}
+            \label{alg:adaptscc}
+            }
+            \begin{algorithmic}[1]
+              \REQUIRE The program $c$, 
+              A strong connected component of $\progG(c)$: $ \kw{SCC_i} = (\vertxs_i, \edges_i, \weights_i, \qflag_i)$
+            \STATE {\bf init.} 
+            % \\
+            $\kw{r_{scc}}$: $\mathcal{A}_{\lin}$ List with initial value $0$.
+            \STATE {\bf init.} 
+            % \\ \qquad  
+            $\kw{visited}$ : $\{0, 1\}$ List with initial value $0$;
+            $\kw{r}$ : $\mathcal{A}_{\lin}$ List, initial value $\infty$;
+            \\ \qquad  
+            $\kw{flowcapacity}$: $\mathcal{A}_{\lin}$ List, initial value $\infty$;
+            $\kw{querynum}$: INT List, initial value $\qflag_i(v)$.
+            \STATE {\bf if} $|\vertxs_i| = 1$ and $|\edges_i| = 0$:
+            \quad {\bf return}  $\qflag(v)$
+            \STATE  {\bf def} {$\kw{dfs(G,s,visited)}$}:
+            \STATE \qquad {\bf for} every vertex $v$ 
+            connected by a directed edge from $s$:
+            \STATE \qquad \qquad {\bf if} $\kw{visited}[v] = \efalse$:
+            \STATE \qquad \qquad \qquad {$\kw{flowcapacity[v] = \min(\weights_i(v), {flowcapacity}[s])}$}; \qquad \qquad \#\{{track minimal weight so far}\}
+            \STATE \qquad \qquad \qquad {$\kw{querynum[v] = querynum[s] + \qflag_i(v)}$}; \qquad \qquad \qquad \qquad\#\{{track numbers of queries so far} \}
+            \STATE \qquad \qquad \qquad {$\kw{r[v] =  \max(r[v], flowcapacity[v] \times querynum[v]}) $}; \#\{{track adaptivity upper bound so far} \}
+            \STATE \qquad \qquad \qquad  $\kw{visited}[v] = \etrue$; %\#\{mark $v$ as visited\}
+            \quad $\kw{dfs(G, v, visited)}$;
+            \STATE \qquad \qquad {\bf else}: \#\{There is a cycle finished\}
+            \STATE \qquad \qquad \qquad 
+            {\small{$\kw{r[v] =  \max(r[v], r[s] +\min(\weights_i(v), {flowcapacity}[s]) \times (querynum[s] + \qflag_i(v)))}$}};
+            \STATE \qquad {\bf return}  $\kw{r[c]}$
+            \STATE  {\bf for} every vertex $v$ in $\vertxs_i$:
+            \STATE  \qquad initialize the $\kw{visited, r, flowcapacity, querynum}$ with the same value at line:2.
+            \STATE  \qquad $\kw{r_{scc} = \max(r_{scc}, dfs(SCC_i, v, \kw{visited} ))}$;
+            \RETURN  $\kw{r_{scc}}$
+            \end{algorithmic}
+            \end{algorithm}
+            %  \vspace{-0.1cm}
+}           
+
+% The \emph{Adaptivity Computation Algorithm on An SCC ($\kw{\pathsearch_{scc}}$)}
+The pseudo-code of $\pathsearch_{\kw{SCC}}$ is given as Algorithm~\ref{alg:adaptscc}.
+This algorithm takes as input the program $c$ and a $\kw{SCC_i}$ of
+$\progG(c)$, and outputs an adaptivity bound for $\kw{SCC_i}$. 
+If $\kw{SCC_i}$ contains only one vertex, $x^l$ without any edge, $\kw{\pathsearch_{scc}}$ returns the query annotation of $x^l$ as the adaptivity.
+If $\kw{SCC_i}$ contains at least one edge, 
+$\kw{\pathsearch_{scc}}$
+% \remove{\begin{enumerate}
+% \item first collects all the paths in $\kw{SCC_i}$; 
+% \item it then calculates the adaptivity of every path by the method $\kw{dfs}$; 
+% \item in the end, it outputs the maximal adaptivity among all paths as the adaptivity of $\kw{SCC_i}$.
+% \end{enumerate}
+% By the property of SCC, the paths collected in step 1 are all simple cycles with the same starting and ending vertex. 
+% Step 2 is the key step. It }
+recursively computes the adaptivity upper bound on the fly of paths collected through a DFS procedure $\kw{dfs}$ (lines: 4-13). This procedure guarantees that the visiting times of each vertex are upper bounded by its weight, and addresses the approximation challenge,
+via two special lists parameters $\kw{flowcapacity}$ and $\kw{querynum}$ (lines:7-11).
+ 
+ 
+$\kw{flowcapacity}$ is a list of symbolic expressions $\mathcal{A}_{in}$ which tracks the minimum weight
+when searching a path,
+and updates the weight when the path reaches a certain vertex. It guarantees that every vertex on the estimated walk is allowed to be visited at most $\kw{flowcapacity[v]}$ times, and this walk is a valid finite walk.
+%
+$\kw{querynum}$ is a list of integer
+initialized with the value of the query annotation $\qflag_i(v)$ for every vertex. 
+It tracks the total number of vertices with query annotation $1$
+along the path. It guarantees that $\kw{flowcapacity[v] \times querynum[v]}$ computes an accurate query length
+because $\kw{querynum[v]}$ is only the number of the vertices with query annotation $1$.
+% giving a tight bound without losing the soundness.
+%
+% \remove{The operation
+% at line: 9 and line: 12 implements the operation  $\kw{flowcapacity[v] \times querynum[v]}$.
+% Because $\kw{flowcapacity[v]}$ is the minimum weight over this path,
+% Then $\kw{querynum[v]}$ guarantees that $\kw{flowcapacity[v] \times querynum[v]}$ computes an accurate query length
+% because $\kw{querynum[v]}$ is only the number of the vertices with query annotation $1$,
+% giving a tight bound without losing the soundness.}
+
+{\begin{thm}[Soundness of $\pathsearch$]
+    \label{thm:adaptalg_soundness}
+    For every program $c$, we have
+\begin{center}
+$
+\pathsearch(\progG({c})) \geq \progA(c).
+$
+\end{center}
+\end{thm}
+}
+
+% This step also guarantees the termination through a boolean list, $\kw{visited}$ in line:6 and line:9.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version For Reference %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \textbf{Example.}
+% The example program in Fig.~\ref{fig:alg_adaptsearch_nestedwhile} illustrates how these special
+% operations computes accurate and sound adaptivity for the program.
+% $\pathsearch$ first find the SCC contains vertices $y^6$ and $x^9$, $\kw{SCC} = (\vertxs, \edges)$ where $\vertxs = \{y^6, x^9\}$ and
+% $\edges = \{(y^6, y^6), (x^9, x^9), (x^9, y^6), (y^6, x^9)\}$.
+% Then $\kw{\pathsearch_{SCC}(SCC, nestedW(k))}$ takes $\kw{SCC}$ as input,
+% and starts run $\kw{dfs}$ from vertex $y^6$, 
+% It first finds the path $y^6 \to y^6$. By updating parameters through Line:10 and 14, it computes the longest query length for this path as 
+% $k$.
+% As highlighted in Line:14, we do not update
+% $\kw{querynum}$ and $\kw{flowcapacity}$ when we identify the simple cycle $y^6 \to y^6$.
+% This improves the accuracy and still guarantees the soundness.
+% Because in the following recursions, we continuously search for walks heading out from $y^6$, 
+% the $\kw{flowcapacity}$ of this simple cycle does not restrict the walks going out of this vertex that do not interleave with the cycle $y^6 \to y^6$.
+% However, if we keep updating the minimum weight, then we
+% restrict the visiting times of vertices on a walk by
+% using the minimum weight of vertices that do not on this walk.
+% This leads to the unsoundness in computing adpativity.
+% For example, if we update the $\kw{flowcapacity}[y^6]$ as $k$ after
+% the $2$nd visit of $y^6$
+% and visit $x^9$ via the walk $y^6 \to y^6 \to x^9$,
+% then the $\kw{flowcapacity[k]}$ is 
+% updated as $\min(k, k^2)$.
+% So
+% % 
+% the visiting times of $x^9$ is restricted by $k$ on this walk.
+% This restriction excludes the finite walk 
+% $y^6 \to  \cdots \to y^6 \to x^9 \to \cdots \to y^9$ where $x^9$ is visited by $k^2$ times
+% in the computation. 
+% However, this finite walk is a valid walk and it has exactly the longest query length $1 + k + k^2$.
+% In order to 
+% In this sense, to guarantee the soundness,
+% we don't update $\kw{flowcapacity}$ after $2$nd visits of a vertex.
+% Line: 15 returns the adaptivity heading out from its input vertex.
+% Line:16-18 applies $\kw{dfs}$ on every vertex of this SCC and 
+% computes the adaptivity of this SCC by taking the maximum 
+% value.%    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version Above %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Previous Version Below, Removed for the Page Limitation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \jl{
+% \textbf{Example.}
+% The example program in Fig.~\ref{fig:alg_adaptsearch_nestedwhile} illustrates how these special
+% operations computes accurate and sound adaptivity for the program.
+% $\pathsearch$ first find the SCC contains vertices $y^6$ and $x^9$, $\kw{SCC} = (\vertxs, \edges)$ where $\vertxs = \{y^6, x^9\}$ and
+% $\edges = \{(y^6, y^6), (x^9, x^9), (x^9, y^6), (y^6, x^9)\}$.
+% Then $\kw{\pathsearch_{SCC}(SCC, nestedW(k))}$ runs $\kw{dfs}$ with vertex $y^6$ firstly, 
+% and finds the path $y^6 \to y^6$. 
+% By updating parameters through Line:8 and 11, it computes the query length for this path as $k$.
+% As highlighted in Line:11, we do not update
+% $\kw{querynum}$ and $\kw{flowcapacity}$ when we identify the simple cycle $y^6 \to y^6$.
+% This improves the accuracy and still guarantees the soundness.
+% Because in the following recursions, we continuously search for walks heading out from $y^6$, 
+% the $\kw{flowcapacity}$ of $y^6 \to y^6$ does not restrict the walks going out of $y^6$ that do not interleave with this simple cycle.
+% However, if we keep updating the minimum weight, we
+% restrict the visiting times of vertices on all the other walks
+% using the weights of vertices that do not on this walk.
+% This leads to the unsoundness in computing adpativity.
+% For example, if we update the $\kw{flowcapacity}[y^6]$ as $k$ after
+% the $2$nd visit of $y^6$
+% and visit $x^9$ via the walk $y^6 \to y^6 \to x^9$,
+% then the $\kw{flowcapacity[k]}$ is 
+% updated as $\min(k, k^2)$.
+% So
+% % 
+% the visiting times of $x^9$ is restricted by $k$ on this walk, and the estimated adaptivity is only $1 + 2 * k$.
+% However,  $x^9$ can be visited $k^2$ times and the longest finite walk is
+% $y^6 \to  \cdots \to y^6 \to x^9 \to \cdots \to y^6 \to y^2$ where $y^6$ and $x^9$ is visited $k$ and $k^2$ times with query length $1 + k + k^2$.
+% In this sense, to guarantee the soundness,
+% we don't update $\kw{flowcapacity}$ after $2$nd visits of a vertex.
+% Line: 15 returns the adaptivity heading out from its input vertex.
+% Line:16-18 applies $\kw{dfs}$ on every vertex of this SCC and 
+% computes the adaptivity of this SCC by taking the maximum 
+% value.%    %
+% }

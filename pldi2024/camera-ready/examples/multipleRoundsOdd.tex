@@ -1,0 +1,149 @@
+
+\highlight{In general, $\THESYSTEM$ is not path-sensitive.} We show this in one example, $\kw{multiRoundsOdd(k)}$, presented in Fig.~\ref{fig:multiRoundsOdd}(a). %% For this program, $\THESYSTEM$ over-approximate the adaptivity.
+% The $\THESYSTEM$ comes across an over-approximation due to its path-insensitive nature. 
+The problem witnessed by this example occurs when the control flow is more sophisticated than what the static analysis can handle. 
+$\kw{multiRoundsOdd}(k)$
+has adaptivity $1 + k$ and a  while loop with two paths.
+In each iteration, the queries $\clabel{\assign{y}{\query(\chi[x])}}^{5}$
+and $\clabel{\assign{p}{\query(\chi[x])}}^{6}$ are based on the results of previous queries stored in $x$.
+Only the query answer from $\clabel{\assign{y}{\query(\chi[x])}}^{5}$ in the first branch
+is used in the query request command at line $7$, $\clabel{\assign{x}{\query(\chi(\ln(y)))} }^{7}$.
+However, this branch is only executed in even iterations ($j = 0, 2, \cdots $).
+From the semantics-based dependency graph in Figure~\ref{fig:multiRoundsOdd}(b),
+% \footnote{We omit some edges which are constructed by the transition of $\flowsto$ relation
+% for concise, but these edges exist
+% in $\traceG(\kw{multiRoundsO(k)})$ because they can be constructed directly by $\vardep$ relation.
+% These omissions don't affect the illustration and adaptivity computation.} 
+the weight function $\lambda \trace_0 \st \env(\trace_0) \frac{k}{2}$ for the vertex $y^5$ counts the
+number of times $\clabel{\assign{y}{\query(\chi[x])}}^{5}$ is evaluated during the program execution under an initial trace $\trace_0$, i.e., half of the initial value of $k$ from $\trace_0$.
+However, {\THESYSTEM} fails to realize that all the odd iterations only execute the first branch
+and that only even iterations execute the second branch. 
+So it considers both branches for every iteration when estimating the adaptivity. 
+In this sense, the weight estimated for $y^5$ and $p^6$ are both 
+$k$ as in Figure~\ref{fig:multiRoundsOdd}(c).
+As a result, {\THESYSTEM} computes $y^5  \to x^7  \to y^5  \to \cdots \to x^7 $
+as the walk of maximal query length in Figure~\ref{fig:multiRoundsOdd}(c)
+where each vertex is visited $k$ times, and so the estimated adaptivity is $1 + 2 * k$, instead of $1 + k$. 
+%
+
+
+
+{ \small
+\begin{figure}
+    % \vspace{-0.5cm}
+\centering
+    \begin{subfigure}{0.24\textwidth}
+\centering
+\small{
+    \[
+    %
+    \begin{array}{l}
+        \kw{multiRoundsOdd}(k) \triangleq \\
+        \clabel{ \assign{j}{k}}^{0} ; \\
+        \clabel{ \assign{x}{\query(\chi[0])} }^{1} ; \\
+            \ewhile ~ \clabel{j > 0}^{2} ~ \edo ~ 
+            \Big(  \\
+             \clabel{\assign{j}{j-1}}^{3} ; \\
+             \eif(\clabel{j \% 2 == 0}^{4}, \\
+             \clabel{\assign{y}{\query(\chi[x])}}^{5}, \\
+             \clabel{\assign{p}{\query(\chi[x])}}^{6});  \\                        
+             \clabel{\assign{x}{\query(\chi(\ln(y)))} }^{7} \Big)
+        \end{array}
+    \]
+}
+\vspace{-0.4cm}
+\caption{}
+    \end{subfigure}
+%
+\begin{subfigure}{.4\textwidth}
+    \begin{centering}
+    \begin{tikzpicture}[scale=\textwidth/15cm,samples=200]
+% Variables Initialization
+\draw[] (9, 1) circle (0pt) node{{ $x^1: {}^{\lambda \trace_0 . 1}_{1}$}};
+% Variables Inside the Loop
+ \draw[] (0, 7) circle (0pt) node{{ $y^5: {}^{\lambda \trace_0 . \env(\trace_0) \lceil \frac{k}{2}\rceil}_{1} $}};
+ \draw[] (0, 4) circle (0pt) node{{ $p^6: {}^{\lambda \trace_0 . \env(\trace_0) \lfloor \frac{k}{2}\rfloor }_{1} $}};
+ \draw[] (0, 1) circle (0pt) node{{ $x^7: {}^{\lambda \trace_0 . \env(\trace_0) k }_{1}$}};
+ % Counter Variables
+ \draw[] (9, 7) circle (0pt) node {{$j^0: {}^{\lambda \trace_0 . 1}_{0}$}};
+ \draw[] (9, 4) circle (0pt) node {{ $j^3: {}^{ \lambda \trace_0 . \env(\trace_0) k}_{0}$}};
+ %
+ % Value Dependency Edges:
+ \draw[  -latex,]  (0, 3.5) -- (0, 1.5) ;
+ \draw[  -Straight Barb] (6.5, 4.5) arc (150:-150:1);
+ \draw[  -latex] (8, 4.5)  -- (8, 6.5) ;
+%  \draw[  -Straight Barb] (1., 1.5) arc (120:-200:1);
+ % Value Dependency Edges on Initial Values:
+ %
+\draw[ thick,  -latex, densely dotted] (-0.6, 1.5)  to  [out=-220,in=220]  (-0.5, 6.5);
+\draw[ thick, -latex, densely dotted]  (0.5, 6.5) to  [out=-30,in=30] (0.6, 1.6) ;
+ % Control Dependency
+ \draw[ -latex] (2.0, 7)  -- (7, 6.5) ;
+ \draw[ -latex] (2.0, 4)  -- (7, 6.5) ;
+ \draw[ -latex] (2.0, 1)  -- (7, 6.5) ;
+% Control Dependency
+\draw[ -latex] (2.0, 7)  -- (7, 4) ;
+\draw[ -latex] (2.0, 4)  -- (7, 4) ;
+\draw[ -latex] (2.0, 1)  -- (7, 4) ;
+% Edges produced by the transivity
+\draw[ -latex] (2.0, 7)  -- (7, 1.5) ;
+\draw[ -latex] (2.0, 4)  -- (7, 1.5) ;
+\draw[  -latex,] (2.0, 1)  -- (7, 1.5) ;
+\draw[ -latex ]  (0, 4.5) -- (0, 6.5) ;
+\draw[ -latex ] (0.8, 7.5) arc (220:-100:1);
+\draw[ -latex ] (1.2, 1.0) arc (120:-200:1);
+\end{tikzpicture}
+\vspace{-0.55cm}
+\caption{}
+    \end{centering}
+    \end{subfigure}
+    \begin{subfigure}{.33\textwidth}
+        \begin{centering}
+        \begin{tikzpicture}[scale=\textwidth/15cm,samples=200]
+    % Variables Initialization
+    \draw[] (5, 1) circle (0pt) node{{ $x^1: {}^1_{1}$}};
+    % Variables Inside the Loop
+     \draw[] (0, 7) circle (0pt) node{{ $y^5: {}^{k}_{1}$}};
+     \draw[] (0, 4) circle (0pt) node{{ ${p^6: {}^{k}_{1}}$}};
+     \draw[] (0, 1) circle (0pt) node{{ ${x^7: {}^{k}_{1}}$}};
+     % Counter Variables
+     \draw[] (5, 7) circle (0pt) node {{$j^0: {}^{1}_{0}$}};
+     \draw[] (5, 4) circle (0pt) node {{ $j^3: {}^{k}_{0}$}};
+     %
+% Value Dependency Edges:
+ \draw[  -latex,]  (0, 3.5) -- (0, 1.5) ;
+ \draw[  -Straight Barb] (6.5, 4.5) arc (150:-150:1);
+ \draw[  -latex] (5, 4.5)  -- (5, 6.5) ;
+ % Value Dependency Edges on Initial Values:
+ \draw[  -latex,] (1.5, 1)  -- (4, 1) ;
+ %
+    \draw[thick, -latex, densely dotted] (-0.6, 1.5)  to  [out=-220,in=220]  (-0.5, 6.5);
+    \draw[thick, -latex, densely dotted]  (0.5, 6.5) to  [out=-30,in=30] (0.6, 1.6) ;
+ % Control Dependency
+ \draw[ -latex] (1.5, 7)  -- (4, 6) ;
+ \draw[ -latex] (1.5, 4)  -- (4, 6) ;
+ \draw[ -latex] (1.5, 1)  -- (4, 6) ;
+% Control Dependency
+\draw[ -latex] (1.5, 7)  -- (4, 4) ;
+\draw[ -latex] (1.5, 4)  -- (4, 4) ;
+\draw[ -latex] (1.5, 1)  -- (4, 4) ;
+% Edges produced by the transivity
+\draw[ -latex] (1.5, 7)  -- (4, 1) ;
+\draw[ -latex] (1.5, 4)  -- (4, 1) ;
+\draw[ -latex ]  (0, 4.5) -- (0, 6.5) ;
+\draw[ -latex ] (0.8, 7.5) arc (220:-100:1);
+\draw[ -latex ] (1.2, 1.0) arc (120:-200:1);
+     \end{tikzpicture}
+     \vspace{-0.55cm}
+     \caption{}
+        \end{centering}
+        \end{subfigure}
+        \vspace{-0.4cm}
+\caption{(a) The multiple rounds odd example 
+(b) The semantics-based dependency graph
+(c) The estimated dependency graph from $\THESYSTEM$.}
+    \label{fig:multiRoundsOdd}
+    \vspace{-0.25cm}
+\end{figure}
+}
+%

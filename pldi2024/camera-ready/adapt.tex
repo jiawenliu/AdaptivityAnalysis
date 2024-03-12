@@ -1,0 +1,379 @@
+ In this section, we formally present the definition of adaptivity for a given program. We first define a dependency relation between program variables, then define a semantics-based dependency graph, and finally look at the walk visiting the maximal number of query vertices in this graph. 
+ % We first present the construction of the semantics-based dependency graph before the introduction of the formal definition of adaptivity. 
+
+\subsection{May-dependency between variables}
+\label{sec:dep}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detail Explanation of Variable May-Dependency and Motivation on How to define it %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \wq{we think the query $\query(\chi[2])$ (assigned variable $y^3$) may depend on the query $\query(\chi[1]$ (assigned variable $x^1$). 
+  %  but vulnerable to queries request protected by differential privacy mechanisms. In our loop language, a query $q(e)$ represents a query request to the database through a mechanism, which add random noise to protect the return results. In this setting, the results of one query will be randomized due to the noise attached by the mechanism which fails the first candidate because witnessing the results of one query can no longer tells whether the change of the results comes from another query or the change of noise of the differential privacy mechanism. For example, suppose we have a program $p$ which requests two simple queries $q_1()$ and $q_2()$ with no arguments as follows.
+%   \[
+%   c_1 =\assign{x}{\query(\chi[2])} ;\assign{y}{\query(\chi[3] + x)}.
+%   \]
+%  $ c = \assign{x}{\query(\chi[1])} ; \assign{y}{\query(\chi[2])}$,
+%  and 
+% Specifically, in the {\tt Query While} language, the query request is composed by two components: a symbol $\query$ representing a linear query type and 
+% % an argument
+% the query expression $\qexpr$ as an argument, 
+% which represents the function specifying what the query asks. 
+% From our perspective, $\query(\chi[1])$ is different from $\query(\chi[2]))$. Informally,  
+%
+% in this example: $c_1 = \assign{x}{\query(0)}; \assign{z}{\query(\chi[x])}$.
+% This candidate definition works well 
+% Nevertheless, the first definition fails to catch control dependency because it just monitors the changes to a query, but misses the appearance of the query when the answers of its previous queries change. For instance, it fails to handle $}
+%       c_2 = \assign{x}{\query(\chi[1])} ; \eif( x > 2 , \assign{y}{\query(\chi[2])}, \eskip )
+%   $, but the second definition can. However, it only considers the control dependency and misses the data dependency. This reminds us to define a \emph{may-dependency} relation between labeled variables by combining the two definitions to capture the two situations.
+%  $ p = \assign{x}{\query(\chi[1])} ; \assign{y}{\query(\chi[2])}$. 
+% This candidate definition works well with respect to data dependency. However, if fails to handle control dependency since it just monitors the changes to the answer of a query when the answer of previous queries returned change. The key point is that this query may also not be asked because of an analyst decision which depend on the answers of previous queries. An example of this situation is shown in program $p_1$ as follows.
+% There are two possible situations that a query will be "affected" by previous queries' results,  
+% either when the query expression directly uses the results of previous queries (data dependency), or when the control flow of the program with respect to a query (whether to ask this query or not) depends on the results of previous queries (control flow dependency). To this end, our assigned variable dependency definition has the following two cases.   
+% {
+% \begin{enumerate}
+%     \item One variable may depend on a previous variable if and only if a change of the value assigned to the previous variable may also change the value assigned to the variable.
+%     \item One variable may depend on a previous variable if and only if a change of the value assigned to the previous variable may also change the appearance of the assignment command to this variable 
+%     % in\wq{during?} 
+%     during execution.
+% \end{enumerate}
+% }
+%
+%  The first case captures the data dependency. 
+% For instance, in a simple program $c_1 =[\assign{x}{\query(\chi[2])}]^1 ;[\assign{y}{\query(\chi[3] + x)}]^2$, we think $\query(\chi[3] + x)$ (variable $y^2$) may depend on the query $\query(\chi[2]))$ (variable $x^1$), because the equipped function of the former $\chi[3] + x$ may depend on the data stored in x assigned with the result of $\query(\chi[2]))$. From our perspective, $\query(\chi[1])$ is different from $\query(\chi[2]))$. The second case captures the control dependency, for instance, in the program $
+%       c_2 = [\assign{x}{\query(\chi[1])}]^1 ; \eif( [x > 2]^2 , [\assign{y}{\query(\chi[2])}]^3, [\eskip]^4 )
+%
+% There are two possible situations that a query will be ``influenced'' by previous queries' results,
+% where either the query request is changed when the results of previous queries are changed (data dependency),
+% or the  query request is disappeared when the results of previous queries are changed (control dependency). In this sense, our formal dependency definition considers both the two cases:
+We are interested in defining a notion of dependency between program variables since assigned variables are a good proxy to study dependencies between queries---we can recover query requests from variables associated with queries. We consider dependencies that can be generated by either data or control flow.
+% as follows,
+% \begin{enumerate}
+For example, in the program 
+\[c_1 =[\assign{x}{\query(\chi[2])}]^1 ;[\assign{y}{\query(\chi[3] + x)}]^2\]
+the query $\query(\chi[3] + x)$  depends on the query $\query(\chi[2]))$ through a \emph{value dependency} via  $x^1$.
+% ), because $\chi[3] + x$ may depend on the data stored in x assigned by the result of $\query(\chi[2]))$. 
+% From our perspective, $\query(\chi[1])$ is different from $\query(\chi[2]))$.
+% \\
+% (2). One query may depend on a previous query if and only if a change of the value returned
+%     to the previous query request may also change the appearance of this query quest.
+%     This captures the control influence.
+Conversely, in the program
+\[c_2 = [\assign{x}{\query(\chi[1])}]^1 ; \eif( [x > 2]^2 , [\assign{y}{\query(\chi[2])}]^3, [\eskip]^4 )\] 
+the query $\query(\chi[2])$  depends on the query $\query(\chi[1])$ via the \emph{control dependency} of the guard of the if command involving the labeled variable $x^1$.
+% \end{enumerate}
+% \\
+% \\
+% The first case captures the data dependency. 
+% For instance, in a simple program $c_1 =[\assign{x}{\query(\chi[2])}]^1 ;[\assign{y}{\query(\chi[3] + x)}]^2$, we think $\query(\chi[3] + x)$ (variable $y^2$) may depend on the query $\query(\chi[2]))$ (variable $x^1$), because the equipped function of the former $\chi[3] + x$ may depend on the data stored in x assigned with the result of $\query(\chi[2]))$. From our perspective, $\query(\chi[1])$ is different from $\query(\chi[2]))$.
+% \\
+% The second case captures the control dependency.
+% For instance, in the program
+% $c_2 = [\assign{x}{\query(\chi[1])}]^1 ; \eif( [x > 2]^2 , [\assign{y}{\query(\chi[2])}]^3, [\eskip]^4 )$, 
+% we think the query $\query(\chi[2])$ ( or the labeled variable $y^3$) may depend on the query $\query(\chi[1])$ (via the labeled variable $x^1$). 
+% \jl{ 
+% Since both \emph{influences} are passing through variables, we choose to define the \emph{may-dependency}
+% relation over all labeled variables, and then recover the query requests from query-associated variables, $\qvar(c)$.
+% It relies on formal observation of the \emph{influences} via events in Def.~\ref{def:diff} and the \emph{may-dependency} between events in Def.~\ref{def:event_dep}.
+% }
+
+To define dependency between program variables we will consider two events that are generated from the same command, hence they have the same variable name or boolean expression and label, but have either different values or different query expressions.
+%% \highlight{we use $\eventset$ to denote the set of all events, $\cdom$ for a set of all the programs.}
+This is captured by the following \highlight{ relation $\diff(\event_1, \event_2)$, read as differing 
+colocated events $\event_1$ and $\event_2$}. 
+
+\begin{defn}
+\label{def:diff}
+Two events $\event_1, \event_2 \in \eventset$ are in the relation $\diff(\event_1, \event_2)$, if and only if:
+{\small
+\begin{subequations}
+\begin{align}
+& \pi_1(\event_1) = \pi_1(\event_2) 
+  \land  
+  \pi_2(\event_1) = \pi_2(\event_2) \\
+& \land  
+  \big(
+   (\pi_3(\event_1) \neq \pi_3(\event_2)
+  \land 
+  \pi_{4}(\event_1) = \pi_{4}(\event_2) = \bullet )
+  \lor 
+  (\pi_4(\event_1) \neq \bullet
+  \land 
+  \pi_4(\event_2) \neq \bullet
+  \land 
+  \pi_{4}(\event_1) \neq_q \pi_{4}(\event_2)) 
+  \big)
+\end{align}
+\label{eq:diff}
+\end{subequations}
+}
+where $\qexpr_1 =_{q} \qexpr_2$ denotes the semantics equivalence between query values\footnote{The formal definition is in the supplementary material},
+and $\pi_i$ projects the $i$-th element from the quadruple of an event.
+\end{defn}
+It is worth stressing that in the definition above, if two events are both generated from query requests, we are not comparing the query answers (the third element of the tuple), but the query expressions (the fourth element of the tuple).
+For example in the running program in Fig.~\ref{fig:overview-example}(a), given different inputs $k = 1$ and $k = 2$
+both events $\event_1 = (x, 3, 0, \chi[0] \cdot \chi[1])$ and $\event_2 = (x, 3, 0, \chi[0] \cdot \chi[2])$ can be generated from query request
+$\clabel{\assign{x}{\query(\chi[j] \cdot \chi[k])} }^{3}$.
+Even though $\pi_3(\event_1) = \pi_3(\event_2)$, these two events are still different by our definition.
+%% \remove{The Equation~\ref{eq:diff}(b) captures this by first checking
+%% $\pi_4(\event_1) \neq \bullet \land \pi_4(\event_2) \neq \bullet$ to guarantee
+%% both events are from query requests.
+%% Then we check again the forth element $\pi_4(\event_1) \neq_q \pi_4(\event_2)$ to guarantee
+%% the two events come from different query requests.}
+
+We can now define when an event \emph{may depend} on another one in Definition~\ref{def:event_dep}\footnote{We consider here dependencies between assignment events. This simplifies the definition and is enough for the stating the following definitions. The full definition is in the supplementary material.}.
+
+There are several components in Definition~\ref{def:event_dep}. The part with label (2a) requires that $\event_1$ and $\event_1'$ differ in their values ($\diff(\event_1, \event_1')$).
+The next two parts (2b) and (2c) capture the value dependency and control dependency, respectively.
+As in the literature on non-interference, and following~\cite{Cousot19a}, we formulate these dependencies as relational properties, in terms of two different traces of execution. 
+We force these two traces to differ by using the event $\event_1$ in one and $\event_1'$ in the other. 
+For the value dependency we check whether the change also creates a change in the value of $\event_2$ or not. We additionally check that the two events we consider appear the same number of times in the two traces - this to make sure that if the events are generated by assignments in a loop, we consider the same iteration. 
+For the control dependency we check whether the change of the value in the assignment of event $\event_1$ affects the occurrence of event $\event_2$ or not. 
+For this we require the presence of a test event whose value is affected by the change in $\event_1$
+in order to guarantee that the computation goes through a control flow guard.
+Similarly to the previous condition, we additionally check that the two test events we consider appear the same number of times in the two traces.
+% 
+
+\begin{defn}[Event May-Dependency]
+  \label{def:event_dep}
+  \vspace{-0.1cm}
+  An event $\event_2\in \eventset^{\asn}$ \emph{may-depend} on an event $\event_1 \in \eventset^{\asn}$ in a program ${c}$ denoted
+  $\eventdep(\event_1, \event_2, c)$, if and only if
+  \begin{subequations}
+  {\small 
+  \vspace{-0.1cm}
+  \begin{align}
+  &  
+  \exists \trace, \trace_0, \trace_1, \trace' \in \mathcal{T},\event_1' \in \eventset^{\asn}, {c}_1, {c}_2  \in \cdom  \st \diff(\event_1, \event_1') \land \\
+  & 
+  \quad (\exists  \event_2' \in \eventset \st 
+  \left(
+  \begin{array}{ll}   
+    & \config{{c}, \trace_0} \rightarrow^{*} 
+    \config{{c}_1, \trace_1 \tracecat [\event_1]}  \rightarrow^{*} 
+    \config{{c}_2,  \trace_1 \tracecat [\event_1] \tracecat \trace \tracecat [\event_2] } 
+     \\ 
+     \bigwedge &
+     \config{{c}_1, \trace_1 \tracecat [\event_1']}  \rightarrow^{*}
+      \config{{c}_2,  \trace_1 \tracecat[ \event_1'] \tracecat \trace' \tracecat [\event_2'] } 
+    \\
+    \bigwedge & 
+    \diff(\event_2,\event_2' ) \land 
+    \vcounter(\trace, \pi_2(\event_2))
+    = 
+    \vcounter(\trace', \pi_2(\event_2'))\\
+    \end{array}
+    \right)\\ 
+    & 
+    \quad
+    \lor 
+    \left(
+    \begin{array}{l} 
+    \exists \trace_3, \trace_3'  \in \mathcal{T}, \event_b \in \eventset^{\test} \st 
+    \\
+     \quad \config{{c}, \trace_0} \rightarrow^{*} \config{{c}_1, \trace_1 \tracecat [\event_1]}  \rightarrow^{*}
+     \config{c_2,  \trace_1 \tracecat [\event_1] \tracecat
+     \trace \tracecat [\event_b] \tracecat  \trace_3} 
+  \\ \quad \land
+  \config{{c}_1, \trace_1 \tracecat [\event_1']}  \rightarrow^{*} 
+  \config{c_2,  \trace_1 \tracecat [\event_1'] \tracecat \trace' \tracecat [(\neg \event_b)] \tracecat \trace_3'} 
+  \\
+  \quad \land \tlabel({\trace_3}) \cap \tlabel({\trace_3'})
+  = \emptyset
+  \land \vcounter(\trace', \pi_2(\event_b)) = \vcounter(\trace, \pi_2(\event_b)) 
+      \land \event_2 \in \trace_3
+      \land \event_2 \not\in \trace_3'
+    \end{array}
+    \right)
+    ),
+  \end{align}
+  }
+  \label{eq:eventdep}
+  \end{subequations}
+  \vspace{-0.3cm}
+  % , $\event_2 \in \trace_3$ or $\event_2 \notin \trace_3$ denotes that $\event_2$ belongs to $\trace_3$ or not.
+  \end{defn}
+
+In the running example in Fig.~\ref{fig:overview-example}(b), given the initial trace $[ (k, \lin, 1, \bullet)]$,
+the program execution generates an
+event $\event_1 = (x, 3, v_1, \chi[0] \cdot \chi[1])$ for
+$\clabel{\assign{x}{\query(\chi[j] \cdot \chi[k])} }^{3}$,
+and another event
+$\event_2 = (l, 6, v_2, \chi[1] \cdot v_1 )$ for
+$\clabel{\assign{l}{\query(\chi[k] \cdot a)} }^{6}$.
+To check a may-dependency, we replace $\event_1$ with another event $\event_1' = (x, 3, v_1', \chi[0] \cdot \chi[1])$
+where $v_1 \neq v_1'$.
+We then continue to execute the program. The $6^{th}$ command generates $\event_2 = (l, 3, v_2, \chi[1] \cdot v_1' )$.
+Since $\pi_4(\event_2) \neq_1 \pi_4(\event_2')$, we have  $\diff(\event_2, \event_2')$ according to Definition~\ref{def:diff} and then the dependency relation $\eventdep(\event_1, \event_2, \kw{twoRounds(k)})$.
+
+
+ The dependency relation to variables can be extended by considering all the assignment events generated during the program's execution. Notice two variables can be the same in the following definition, this allows us to capture self-dependencies.
+\begin{defn}[Variable May-Dependency]
+  \label{def:var_dep}
+  \vspace{-0.2cm}
+A variable ${x}_2^{l_2} \in \lvar(c)$  \emph{may-depend} on the 
+  variable ${x}_1^{l_1} \in \lvar(c)$ in a program ${c}$,
+  %
+  $\vardep({x}_1^{l_1}, {x}_2^{l_2}, {c})$, if and only if
+\begin{center}
+$
+{\small   \begin{array}{l}
+\exists \event_1, \event_2 \in \eventset^{\asn}, \trace \in \mathcal{T} \st
+\pi_{1}{(\event_1)}^{\pi_{2}{(\event_1)}} = {x}_1^{l_1}
+\land
+\pi_{1}{(\event_2)}^{\pi_{2}{(\event_2)}} = {x}_2^{l_2}% \\ \quad 
+\land 
+\eventdep(\event_1, \event_2, \trace, c) 
+  \end{array}
+}%
+$
+\vspace{-0.2cm}
+\end{center}
+  \end{defn}
+%Notice that in the definition above we can also have that the two variables are the same, this allows us to capture self-dependencies.
+
+%Going back to the running example in Fig.~\ref{fig:overview-example}(a), we have already discussed how  $\event_1 = (x, 3, v_1, \chi[0] \cdot \chi[1])$ and $\event_2 = (l, 6, v_2, \chi[1] \cdot v_1 )$ are in the event may-dependency relation. Moreover, we have that $x^3$ and $l^6$ are in the variable may-dependency relation by Definition~\ref{def:var_dep}.
+
+\subsection{Semantics-based Dependency Graph}
+\label{sec:design_choice}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Introducing The Dependency Graph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% we formally define the semantics-based dependency graph as follows. There are some notations used in the definition. The labeled variables of a program $c$  
+% is a subset of the labeled  variables $\mathcal{LV}$, denoted by $\lvar(c) \in \mathcal{P}(\mathcal{VAR} \times \mathcal{L}) \subseteq \mathcal{LV}$.
+% \wq{I think LV(c) means all the labeled assigned variables, because in Fig.3.b, j2 is not in the graph so j2 is not in LV(tworounds), please verify. If so, maybe LV(c) is not a good name, people may think it means all the label variables, instead of just assigned ones.}
+% The set of query-associated variables (in query request assignments) for a program $c$ is denoted as $\qvar(c)$, where $\qvar: \cdom \to 
+% \mathcal{P}(\mathcal{LV})$. The set of initial traces of a program $c$ is a subset of the  trace universe $\trace$, in which every initial trace contains the value for all the input variables of $c$. For instance, the initial trace $\trace_0$ contains the value of input variable $k$ in the $\kw{twoRounds(k)}$ example.
+\begin{defn}[Semantics-based Dependency Graph]
+  \label{def:trace_graph}
+  Given a program ${c}$,
+  its \emph{semantics-based dependency graph} 
+  $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is defined as follows,
+  {\small
+  \[
+  \begin{array}{lll}
+    \text{Vertices} &
+    \traceV({c}) & := \left\{ 
+    x^l
+    ~ \middle\vert ~ x^l \in \lvar(c)
+    \right\}
+    \\
+    \text{Directed Edges} &
+    \traceE({c}) & := 
+    \left\{ 
+    (x^i, y^j) 
+    ~ \middle\vert ~
+    x^i, y^j \in \lvar(c) \land \vardep(x^i, y^j, c) 
+    \right\}
+    \\
+    \text{Weights} &
+    \traceW({c}) & := 
+    \{ 
+    (x^l, w) 
+    ~ \vert ~ 
+    w : \tdom_0(c) \to \mathbb{N}
+    \land
+    x^l \in \lvar(c) \land
+    \forall \trace_0 \in \tdom_0(c), \trace' \in \tdom, l' \st
+    \\ & & \qquad \qquad
+    \config{{c}, \trace_0} \to^{*} 
+    \config{\clabel{\eskip}^{l'}, \trace_0 \tracecat \trace'} 
+    \land w(\trace_0) = \vcounter(\trace', l) \} 
+     \\
+    \text{Query Annotations} &
+    \traceF({c}) & := 
+  \left\{(x^l, n)  
+  ~ \middle\vert ~
+   x^l \in \lvar(c) \land
+  (n = 1 \Leftrightarrow x^l \in \qvar(c))\land ( n = 0 \Leftrightarrow  x^l \notin \qvar(c))
+  \right\}
+  \end{array},
+  \]
+  A semantics-based dependency graph $\traceG({c})= (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ is \emph{well-formed} if and only if $ \{x^l \ |\ (x^l,w)\in \traceW({c})\} = \traceV({c}) $.
+  }
+  \end{defn}
+We can now define the \emph{semantics-based dependency graph} of a program $c$ in Definition~\ref{def:trace_graph}. We want this graph to combine quantitative reachability information with dependency information. 
+% For instance, the initial trace of $\kw{twoRounds(k)}$ example contains the initial value of the input variable $k$.
+
+ Vertices and query annotations are just read out from the program $c$. We have an edge in $\traceE(c)$ if we have a may-dependency between two labeled variables in $c$.
+% For the dependency graph of our running example in Fig.~\ref{fig:overview-example}(b),
+% the subscript in vertices $x^3$ and $l^6$ is $1$ because they both come from query requests.
+% There is a directed edge from $x^3$ and $l^6$ because we identify the variable may-dependency relation, $\dep(x^3, l^6, \kw{twoRounds(k)})$ according to Definition~\ref{def:var_dep}.
+A weight function $w \in \traceW(c)$ is a function that for every starting trace $\trace_0 \in \mathcal{T}_0(c)$ 
+gives the number of times the assignment of the corresponding vertex $x^l$ is visited. Notice that weight functions are total and with range $\mathbb{N}$. This means that if a program $c$ has some non-terminating behavior, the set $\traceW(c)$ will be empty. 
+To rule out this situation, we consider as well-formed only graphs with a weight for every vertex. 
+%\highlight{This is also because programs that have non-terminating behaviors do not have the intuitive adaptivity.}
+%MG: I don't think this sentence is clear
+In the rest of the paper we  implicitly consider only well-formed semantics-based dependency graphs. 
+
+% Going back to the example in Fig.~\ref{fig:overview-example}(b), the vertices $a^0$, $j^1$ and $l^6$ have weight function $\lambda \trace \st 1$ because commands $0, 1$ and $6$ are executed only once, given any arbitrary initial trace.
+% The vertices corresponding to commands inside the loop body have weight function $\lambda \trace \st \env(\trace) k$ because they  will be executed the same number of times as the loop iteration times.
+
+
+
+  \subsection{Adaptivity of a Program}
+  \label{sec:sematnic_adaptivity}
+ This notion of adaptivity is formulated in terms of an initial trace, specifying the value of the input variables, and of the walk on the graph $\traceG({c})$ which has the largest number of query requests.
+
+In Fig.~\ref{fig:overview-example}(b), $\lambda \trace_0 \st (l^6 \to x^3)$ is a walk with two vertices and where each vertex is visited only once. 
+With the assumption that $k \geq 1$, $\lambda \trace_0 \st (l^6 \to {a^5 \to a^5 \to \ldots} \to x^3)$ is a walk where the vertex $a^5$ is visited $\env(\trace) k$ times.
+However, $\lambda \trace_0 \st (l^6 \to a^5 \to x^3 \to x^3)$ is not a walk because there is no edge from $x^3$ to $x^3$.
+%\underbrace{a^5 \to a^5 \to \ldots}_{\env(\trace) k} 
+The formal defintion of a walk is the following:
+\begin{defn}[Walk]
+\label{def:finitewalk}
+Given a well-formed program $c$ with its semantics-based dependency graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$, a \emph{walk} $k$ is a function that maps an initial trace $\trace_0$ to a sequence of vertices $(v_1, \ldots, v_{n})$
+for which there is a sequence of edges $(e_1 \ldots e_{n - 1})$  satisfying
+\begin{itemize}
+\item $e_i = (v_{i},v_{i + 1}) \in \traceE$ for every $1 \leq i < n$,
+\item and $v_i$ appears in $(v_1, \ldots, v_{n})$ at most $w_i(\trace_0)$ times for every $v_i \in \traceV$ and $(v_i, w_i) \in \traceW$.  
+\end{itemize}
+% $k(\trace_0) = (v_1, \ldots, v_{n})$
+% and w
+We denote by $\walks(\traceG(c))$
+the set of all the walks $k$ in $\traceG(c)$.
+\end{defn} 
+Because for the adaptivity
+% is intuitively 
+we are interested in the dependency between queries,
+we calculate a special ``length'' of a walk, the \emph{query length},  by counting only the vertices
+corresponding to queries.
+\begin{defn}[Query Length]
+\label{def:qlen}
+Given 
+the semantics-based dependency graph $\traceG({c})$ of a well-formed program $c$,
+ and a \emph{walk} 
+ $k \in \walks(\traceG(c))$, 
+%  with vertex sequence $(v_1, \ldots, v_{n})$, 
+the \emph{query length} of $k$ is a function $\qlen(k):\tdom_0(c) \to \mathbb{N}$ that 
+given an initial trace $\trace_0\in \tdom_0(c)$ 
+gives
+the number of vertices that correspond to query variables in the vertex sequence of $k(\trace_0)$.
+It is defined as follows.
+\begin{center}
+   $
+  \qlen(k) = \lambda \trace_0 \st |\big( v \mid v \in (v_1, \ldots, v_{n}) \land (v, 1) \in \traceF(c) 
+%   \land
+%   k \in \walks(\traceG(c)) 
+  \land k(\trace_0) = (v_1, \ldots, v_{n}) \big)|,
+$
+\end{center}
+where the notation $| (\ldots) |$ gives the number of vertices in a sequence.
+\end{defn}
+% \todo{Referring the running example}
+
+% Under the assumption that $k \geq 1$, both walks $\lambda \trace_0 \st (l^6 \to x^3)$ and  $\lambda \trace_0 \st (l^6 \to \underbrace{a^5 \to a^5 \to \ldots}_{\env(\trace) k} \to x^3)$ in Fig.~\ref{fig:overview-example}(b) have query length $\lambda\trace_0 \st 2$ because only
+% vertices $x^3$ and $l^6$ come from query requests.
+
+ We can now define the adaptivity of a well-formed program as follows.
+\begin{defn}
+    [Adaptivity of a Program]
+    \label{def:trace_adapt}
+    Given a well-formed program ${c}$, 
+    its adaptivity $A(c)$ is a function 
+    $A(c) : \tdom_0(c)\to \mathbb{N}$
+    defined as follows.
+\begin{center}
+$
+    A(c) = \lambda \trace_0 \st \max \big 
+    \{ \qlen(k)(\trace_0) \mid k \in \walks(\traceG(c)) \big \} 
+$
+\end{center}
+\end{defn}
+% Again, we define the adaptivity by considering only well-formed semantics-based dependency graphs. In Fig.~\ref{fig:overview-example}(b), the two dotted edges represent a finite walk with maximal query length, since it contains the only two query requests.
+%   Each query request can be visited at most once, and so the adaptivity of this program is $\lambda \trace_0  \st 2$.
+

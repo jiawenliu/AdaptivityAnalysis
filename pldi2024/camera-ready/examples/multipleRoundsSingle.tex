@@ -1,0 +1,99 @@
+   \begin{figure}[h]
+     \centering
+     \captionsetup[subfigure]{position=b}
+    \begin{subfigure}[][100pt][b]{.4\textwidth}
+    \begin{centering}
+{\footnotesize
+    $ \begin{array}{l}
+            \kw{multiRoundsS(k)}\\
+               \clabel{ \assign{j}{0}}^{0} ; 
+                \clabel{\assign{z}{\query(0)} }^{1} ;             
+                \clabel{\assign{p}{0} }^{2} ; \\
+                \eif(\clabel{ k = 0}^{3}, 
+                \clabel{ \assign{y}{\query(z)}}^{4}, \clabel{\eskip}^5);\\
+                \ewhile ~ \clabel{j \neq k}^{6} ~ \edo ~ \\
+                \Big(
+                 \clabel{\assign{p}{\query(\chi[y]+p)} }^{7}  ; 
+                 \clabel{\assign{j}{j + 1}}^{8}\\
+              \eif(\clabel{ j \neq k - 2}^{9}, 
+              \clabel{ \assign{p}{0}}^{10} ,\clabel{\eskip}^{10})
+         \Big);\\
+            \end{array}
+    $       
+}
+\vspace{-0.2cm}
+\caption{}
+    \end{centering}
+    \end{subfigure}
+    \begin{subfigure}[][100pt][b]{.55\textwidth}
+        \begin{centering}
+        \begin{tikzpicture}[scale=\textwidth/20cm,samples=120]
+           % Variables Initialization
+           \draw[] (-5, 2) circle (0pt) node{{ $z^1: {}^{w_{z^1}}_{1}$}};
+           \draw[] (-5, 7) circle (0pt) node{{$p^2: {}^{w_{p^2}}_{0}$}};
+           \draw[] (-5, 4) circle (0pt) node{{ $y^4: {}^{w_{y^4}}_{1}$}};
+           % Variables Inside the Loop
+            \draw[] (0, 6) circle (0pt) node{{ $p^7: {}^{w_{p^7}}_{1}$}};
+            \draw[] (0, 2) circle (0pt) node{{ $p^{10}: {}^{w_{p^{10}}}_{0}$}};
+            % Counter Variables
+            \draw[] (5, 6) circle (0pt) node {{$j^0: {}^{w_{j^0}}_{0}$}};
+            \draw[] (5, 2) circle (0pt) node {{ $j^8: {}^{w_{j^8}}_{0}$}};
+            %
+            % Value Dependency Edges:
+            \draw[ thick, -Straight Barb, densely dotted,] (0.8, 7.5) arc (220:-100:1);
+            \draw[  -latex] (-1.5, 6)  to  [out=-130,in=130]  (-1.5, 2);
+            % Value Dependency Edges on Initial Values:
+            \draw[ thick, -latex, densely dotted,] (-5, 3.5)  -- (-5, 2.5) ;
+            \draw[  -latex,] (-1.5, 6)  -- (-4, 7) ;
+            \draw[  thick, -latex, densely dotted,] (-1.5, 6)  -- (-4, 4.7) ;
+            %
+            % Value Dependency For Control Variables:
+            \draw[  -Straight Barb] (6.5, 2.5) arc (150:-150:1);
+            % Control Dependency
+            \draw[  -latex] (5, 2.5)  -- (5, 5.5) ;
+            \draw[ -latex] (1.5, 6)  -- (3.5, 6) ;
+            \draw[ -latex] (1.5, 6)  -- (3.5, 2) ;
+            \draw[ -latex] (1.5, 1.8)  -- (3.5, 2) ; 
+            % Edges Produced by Transitivity
+            \draw[  -latex,] (-1.5, 6)  -- (-3.5, 2) ;
+            \draw[ -latex] (1.5, 1.8)  -- (3.5, 6) ; 
+    \end{tikzpicture}
+    \vspace{-0.2cm}
+     \caption{}
+        \end{centering}
+        \end{subfigure}
+    \vspace{-0.4cm}
+     \caption{(a) The multi rounds single example
+     (b) The semantics-based dependency graph.}
+    \label{fig:multiRoundsS}
+    \vspace{-0.5cm}
+    \end{figure}
+    We want to show an example where our definition of adaptivity (Def.~\ref{def:trace_adapt}) itself
+    over-approximates the intuitive adaptivity.
+    Our second example $\kw{multiRoundsS(k)}$ in Fig.~\ref{fig:multiRoundsS}(a) demonstrates this over-approximation.
+        It is a variant of the multiple rounds strategy with input $k$.
+        In each iteration, the query $\query(\chi[y] + p)$ in line $7$ is based on previous query results stored in $p$ and $y$.
+        Different from Ex.~\ref{ex:multipleRounds},
+        only the query answer from the $(k - 2)^{th}$ iteration is used in the query request
+        $\clabel{\assign{p}{\query(\chi[y]+p)} }^{7}$.
+        This is because the execution will reset
+        the value of $p$ to $0$ in all the other iterations
+        after this query request (line $10$).
+        In this way, all the query answers stored in $p$ are erased and are not used
+        in the query request at the next iteration, except the one at the $(k - 2)^{th}$ iteration.
+        So $\kw{multiRoundsS(k)}$'s \emph{adaptivity} rounds is only $2$. 
+        However, our Def.~\ref{def:trace_adapt} fails to realize that there is only dependency relation 
+        between $p^7$ and $p^7$ in one iteration, 
+        but not in others. 
+        As the $\traceG(\kw{multiRoundsS(k)})$ in Fig.~\ref{fig:multiRoundsS}(b) shows, 
+        there is an edge from $p^7$ to itself representing \emph{Variable May-Dependency} of $p^7$ on itself,
+        and  $p^7$'s visiting times,
+        $w_{}(\trace_0)$. $w_{}(\trace_0)$ counts the execution times of command $\clabel{\assign{p}{\query(\chi[y]+p)} }^{7}$. It equals to the loop iteration numbers, i.e., $k$'s initial value.
+        Then, as the dotted arrows, 
+        longest walk
+        % query length 
+        is $p^7  \to \cdots \to p^7 \to y^4  \to z^1 $
+        % with the vertex $p^7$ visited $w_{p^7}(\trace_0)$, as the dotted arrows. 
+        % The adaptivity based on this walk
+        computes $2 + w_{p^7}(\trace_0)$, instead of $2$. It is worth to stress that our algorithm still compute an  accurate bound w.r.t this definition, even if the definition itself is over-approximating. Indeed, the $\THESYSTEM$  give us adaptivity $2 + k$.
+     
