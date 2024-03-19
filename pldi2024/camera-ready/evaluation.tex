@@ -41,13 +41,11 @@ However, Definition~\ref{def:trace_adapt} does not capture precisely the accurac
 and the result is still an over-approximation.
 
 In terms of performance, our tool can quickly construct the graph, estimate the weight,
-and provide the adaptivity upper bound for the first $19$ examples.
- However, when it comes to complicated examples with multiple high-level nest loops such as $tRCom$ (two $2-$level and three single-level while loops), $jumbo$ (one $2-$level and two single-level while loops) and $big$ (two $3-$level, three $2-$level and one single-level while loops),
-our tool can not handle them. The performance bottleneck is the reachability bound analysis algorithm used to compute the weights.
-We can see how the time grows dramatically from $85.9$ seconds for the $20^{th}$ example $mR(k,N)$ with only one $3-$level nest while loop,
-to $5104$ seconds ($85$ minutes) for the $21^{th}$ example $\kw{mRCom}$ who has two $3-$level nested while loops. 
-Notice, that even though the example $\kw{seqCom}$ has the largest size of $502$ lines 
-of code, our tool can still quickly handle it because $\kw{seqCom}$ does not have loops. Fortunately, examples with many nested loops are not common in the data analysis area. 
+and provide the adaptivity upper bound for the first $19$ examples. \highlight{ $\THESYSTEM$ uses only one second
+for the example $\kw{seqCom}$ with the largest size of $502$ lines 
+of code. However, when it comes to complicated examples with multiple high-level nest loops such as $tRCom$ (two $2-$level and three single-level while loops), $jumbo$ (one $2-$level and two single-level while loops) and $big$ (two $3-$level, three $2-$level and one single-level while loops),
+$\THESYSTEM$ will take too long to handle them. As shown in Table~\ref{tb:adapt-imp}, these three examples have the running time $*$ meaning too long to compute. 
+The performance bottleneck is the reachability bound analysis algorithm used in $\THESYSTEM$ to compute the weights.}
 
 % \remove{We first evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity
 % To do this we consider {through} $23$ example programs with the evaluation results shown in  Table~\ref{tb:adapt-imp}.
@@ -97,8 +95,8 @@ of code, our tool can still quickly handle it because $\kw{seqCom}$ does not hav
 {\paragraph{Alternative Implementations}
 \input{eval-table-alternatives}
 \review{improve the description of our evaluation, providing more details of the timeout and the motivations for the alternative implementation AdaptFun-I}
- Our second evaluation shows the need of the 
-components of {\THESYSTEM}. 
+%  Our second evaluation shows the need of the 
+% components of {\THESYSTEM}. 
 % \remove{For this, we implement three alternative
 % versions of {\THESYSTEM} where different components are omitted or
 % replaced with components with weaker guarantees. We show the
@@ -108,12 +106,20 @@ components of {\THESYSTEM}.
 % rounds, query numbers and the running time.  For each alternative
 % implementation, we marked the result in red if it is imprecise
 % w.r.t. the true value.}
-To this end, we present {\THESYSTEM}-I which replaces the reachability bound analysis algorithm 
-with a simpler one that handles nested while loop effectively but coarsely. This allows us to get results for the $\kw{jumbo}$ and $\kw{big}$ examples.
-In general, {\THESYSTEM}-I gives tight upper bounds in most examples as {\THESYSTEM} does, except for the example $\kw{loop2R}$ ($2+3k+k^2$ versus $1+3k$).
+\highlight{To overcome the performance bottleneck of the underlying implementation of reachability bound analysis, 
+we implemented {\THESYSTEM}-I, which replaces the reachability bound analysis algorithm 
+with a simpler one that handles nested while loop effectively but coarsely. 
+{\THESYSTEM}-I provides a less precise but efficient analysis for these three examples as shown in Table~\ref{tb:adapt-imp-alternatives}.
+As for the examples without complicated nest loops, in general, {\THESYSTEM}-I gives tight upper bounds in most examples as {\THESYSTEM} does, 
+except for the example $\kw{loop2R}$ ($2+3k+k^2$ versus $1+3k$).}
+
+\highlight{To conclude, we treat the alternative implementation {\THESYSTEM}-I as a complement to 
+$\THESYSTEM$ when the latter cannot handle "complicated" examples with multi-level nested loops.
+We do not expect these complex multi-level nested loops to appear in many realistic examples, 
+but it is an option we can resort to if needed.}
 We also have another implementation {\THESYSTEM}-II obtained by removing the control flow analysis. The results are unsound (not upper bounds) for examples such as $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $. 
 We show the results of these algorithms in Table~\ref{tb:adapt-imp-alternatives}, we highlight in red the results that are imprecise or unsound.
-}
+
 % \remove{three alternative
 % versions of {\THESYSTEM} with corresponding components omitted or
 % replaced using ones with weaker guarantees in Table~\ref{tb:adapt-imp-alternatives}.
