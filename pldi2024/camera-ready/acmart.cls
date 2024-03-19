@@ -38,7 +38,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{acmart}
-[2023/10/14 v1.92 Typesetting articles for the Association for Computing Machinery]
+[2024/02/04 v2.03 Typesetting articles for the Association for Computing Machinery]
 \def\@classname{acmart}
 \InputIfFileExists{acmart-preload-hook.tex}{%
   \ClassWarning{\@classname}{%
@@ -179,6 +179,7 @@
 \newif\if@ACM@manuscript
 \newif\if@ACM@journal
 \newif\if@ACM@journal@bibstrip
+\newif\if@ACM@journal@bibstrip@or@tog
 \newif\if@ACM@sigchiamode
 \newif\if@ACM@engage
 \@ACM@engagefalse
@@ -224,6 +225,7 @@
   \@ACM@journaltrue
 \or % acmtog
   \@ACM@journaltrue
+  \@ACM@journal@bibstrip@or@togtrue
 \or % sigconf
   \@ACM@journalfalse
 \or % siggraph
@@ -244,7 +246,8 @@
   \AtBeginDocument{\@ACM@printacmreffalse}%
 \fi
 \if@ACM@journal
- \@ACM@journal@bibstriptrue
+  \@ACM@journal@bibstriptrue
+  \@ACM@journal@bibstrip@or@togtrue
 \else
  \@ACM@journal@bibstripfalse
 \fi
@@ -1093,6 +1096,7 @@
   PACMMOD,%
   PACMNET,%
   PACMPL,%
+  PACMSE,%
   POMACS,%
   TAAS,%
   TACCESS,%
@@ -1200,7 +1204,7 @@
   \def\@journalNameShort{ACM J. Data Inform. Quality}%
   \def\@permissionCodeOne{1936-1955}%
 \or % JDS
-  \def\@journalName{ACM/JMS Journal of Data Science}%
+  \def\@journalName{ACM/IMS Journal of Data Science}%
   \def\@journalNameShort{ACM/IMS J. Data Sci.}%
   \def\@permissionCodeOne{2831-3194}%
   \def\@permissionCodeTwo{2831-3194}%
@@ -1249,6 +1253,12 @@
   \def\@journalName{Proceedings of the ACM on Programming Languages}%
   \def\@journalNameShort{Proc. ACM Program. Lang.}%
   \def\@permissionCodeOne{2475-1421}%
+  \@ACM@screentrue
+  \PackageInfo{\@classname}{Using screen mode due to \@journalCode}%
+\or % PACMSE
+  \def\@journalName{Proceedings of the ACM on Software Engineering}%
+  \def\@journalNameShort{Proc. ACM Softw. Eng.}%
+  \def\@permissionCodeOne{2994-970X}%
   \@ACM@screentrue
   \PackageInfo{\@classname}{Using screen mode due to \@journalCode}%
 \or % POMACS
@@ -1455,7 +1465,8 @@
   \ClassError{\@classname}{Incorrect journal #1}%
 }%
 \def\acmJournal#1{\setkeys{ACM}{acmJournal=#1}%
-  \global\@ACM@journal@bibstriptrue}
+  \global\@ACM@journal@bibstriptrue
+  \global\@ACM@journal@bibstrip@or@togtrue}
 \def\@journalCode@nr{0}
 \def\@journalName{}%
 \def\@journalNameShort{\@journalName}%
@@ -1470,6 +1481,11 @@
     \gdef\acmConference@shortname{#2}%
   \fi
   \global\@ACM@journal@bibstripfalse
+  \ifx\@acmBooktitle\@empty\relax
+    \acmBooktitle{Proceedings of \acmConference@name
+      \ifx\acmConference@name\acmConference@shortname\else
+      \ (\acmConference@shortname)\fi}%
+  \fi
 }
 \if@ACM@journal\else
 \acmConference[Conference'17]{ACM Conference}{July 2017}{Washington,
@@ -1477,11 +1493,6 @@
 \fi
 \def\acmBooktitle#1{\gdef\@acmBooktitle{#1}}
 \acmBooktitle{}
-\ifx\acmConference@name\@undefined\else
-\acmBooktitle{Proceedings of \acmConference@name
-       \ifx\acmConference@name\acmConference@shortname\else
-       \ (\acmConference@shortname)\fi}
-\fi
 \def\@editorsAbbrev{(Ed.)}
 \def\@acmEditors{}
 \def\editor#1{\ifx\@acmEditors\@empty
@@ -1635,8 +1646,8 @@
   January\or February\or March\or April\or May\or June\or
   July\or August\or September\or October\or November\or
   December\fi~\@acmYear}
-\def\acmPrice#1{\def\@acmPrice{#1}}
-\acmPrice{15.00}
+\def\acmPrice#1{\ClassWarning{\@classname}{The macro \string\acmPrice
+    is obsolete.  ACM no longer prints the price in bibstrip.}}
 \def\acmSubmissionID#1{\def\@acmSubmissionID{#1}}
 \acmSubmissionID{}
 \def\acmISBN#1{\def\@acmISBN{#1}}
@@ -1853,13 +1864,11 @@
   \fi
   \ifnum\acm@copyrightmode=3\relax % rightsretained
    \@acmownedfalse
-   \AtBeginDocument{\acmPrice{}}%
   \fi
   \ifnum\acm@copyrightmode=4\relax % usgov
    \@printpermissiontrue
    \@printcopyrightfalse
    \@acmownedfalse
-   \AtBeginDocument{\acmPrice{}}%
   \fi
   \ifnum\acm@copyrightmode=6\relax % cagov
    \@acmownedfalse
@@ -1881,18 +1890,15 @@
   \fi
   \ifnum\acm@copyrightmode=13\relax % iw3c2w3
    \@acmownedfalse
-   \AtBeginDocument{\acmPrice{}}%
   \fi
   \ifnum\acm@copyrightmode=14\relax % iw3c2w3g
    \@acmownedfalse
-   \AtBeginDocument{\acmPrice{}}%
   \fi
   \ifnum\acm@copyrightmode=15\relax % cc
    \@acmownedfalse
-   \AtBeginDocument{\acmPrice{}}%
   \fi}
 \def\setcopyright#1{\setkeys{ACM@}{acmcopyrightmode=#1}}
-\setcopyright{acmcopyright}
+\setcopyright{acmlicensed}
 \newcommand\setcctype[2][4.0]{%
   \def\ACM@cc@version{#1}%
   \def\ACM@cc@type{#2}}
@@ -1900,7 +1906,7 @@
 \def\@copyrightowner{%
   \ifcase\acm@copyrightmode\relax % none
   \or % acmcopyright
-  Association for Computing Machinery.
+  ACM\@.
   \or % acmlicensed
   Copyright held by the owner/author(s). Publication rights licensed to
   ACM\@.
@@ -1908,22 +1914,21 @@
   Copyright held by the owner/author(s).
   \or % usgov
   \or % usgovmixed
-  Association for Computing Machinery.
+  Copyright held by the owner/author(s).
   \or % cagov
-  Crown in Right of Canada.
+  Copyright Crown in Right of Canada.
   \or %cagovmixed
-  Association for Computing Machinery.
+  Copyright held by the owner/author(s).
   \or %licensedusgovmixed
   Copyright held by the owner/author(s). Publication rights licensed to
   ACM\@.
   \or % licensedcagov
-  Crown in Right of Canada. Publication rights licensed to
-  ACM\@.
+  Copyright held by the owner/author(s).
   \or %licensedcagovmixed
   Copyright held by the owner/author(s). Publication rights licensed to
   ACM\@.
   \or % othergov
-  Association for Computing Machinery.
+  Copyright held by the owner/author(s).
   \or % licensedothergov
   Copyright held by the owner/author(s). Publication rights licensed to
   ACM\@.
@@ -1946,7 +1951,7 @@
         \ClassInfo{\@classname}{Using CC license with ACM Enage
           material}%
       \else
-      \ClassError{\@classname}{%
+      \ClassWarning{\@classname}{%
         Sorry, Creative Commons licenses are\MessageBreak
         currently not used with ACM publications\MessageBreak
         typeset by the authors}{Please use nonacm
@@ -1962,10 +1967,10 @@
    advantage and that copies bear this notice and the full citation on
    the first page. Copyrights for components of this work owned by
    others than ACM must be honored. Abstracting with credit is
-   permitted. To copy otherwise, or republish, to post on servers or to
-   redistribute to lists, requires prior specific permission
-   and\hspace*{.5pt}/or  a fee. Request permissions from
-   permissions@acm.org.
+   permitted. To copy otherwise, or republish, to post on servers or
+   to redistribute to lists, requires prior specific permission
+   and\hspace*{.5pt}/or
+   a fee. Request permissions from permissions@acm.org.
   \or % acmlicensed
    Permission to make digital or hard copies of all or part of this
    work for personal or classroom use is granted without fee provided
@@ -1973,97 +1978,102 @@
    advantage and that copies bear this notice and the full citation on
    the first page. Copyrights for components of this work owned by
    others than the author(s) must be honored. Abstracting with credit
-   is permitted.  To copy otherwise, or republish, to post on servers
-   or to  redistribute to lists, requires prior specific permission
-   and\hspace*{.5pt}/or  a fee. Request permissions from
+   is permitted. To copy otherwise, or republish, to post on servers
+   or to redistribute to lists, requires prior specific permission
+   and\hspace*{.5pt}/or a fee. Request permissions from
    permissions@acm.org.
   \or % rightsretained
-   Permission to make digital or hard copies of part or all of this work
-   for personal or classroom use is granted without fee provided that
-   copies are not made or distributed for profit or commercial advantage
-   and that copies bear this notice and the full citation on the first
-   page. Copyrights for third-party components of this work must be
-   honored. For all other uses, contact the
+   Permission to make digital or hard copies of part or all of this
+   work for personal or classroom use is granted without fee provided
+   that copies are not made or distributed for profit or commercial
+   advantage and that copies bear this notice and the full citation on
+   the first page. Copyrights for third-party components of this work
+   must be honored. For all other uses, contact the
    owner\hspace*{.5pt}/author(s).
   \or % usgov
    This paper is authored by an employee(s) of the United States
    Government and is in the public domain. Non-exclusive copying or
    redistribution is allowed, provided that the article citation is
    given and the authors and agency are clearly identified as its
-   source.
+   source. All others Request permissions from
+   owner\hspace*{.5pt}/author(s).
   \or % usgovmixed
    ACM acknowledges that this contribution was authored or co-authored
    by an employee, contractor, or affiliate of the United States
    government. As such, the United States government retains a
    nonexclusive, royalty-free right to publish or reproduce this
-   article, or to allow others to do so, for government purposes only.
+   article, or to allow others to do so, for government purposes
+   only. Request permissions from owner\hspace*{.5pt}/author(s).
   \or % cagov
-   This article was authored by employees of the Government of Canada.
-   As such, the Canadian government retains all interest in the
-   copyright to this work and grants to ACM a nonexclusive,
-   royalty-free right to publish or reproduce this article, or to allow
-   others to do so, provided that clear attribution is given both to
-   the authors and the Canadian government agency employing them.
-   Permission to make digital or hard copies for personal or classroom
-   use is granted. Copies must bear this notice and the full citation
-   on the first page.  Copyrights for components of this work owned by
-   others than the Canadian Government must be honored. To copy
-   otherwise, distribute, republish, or post, requires prior specific
-   permission and\hspace*{.5pt}/or a fee. Request permissions from
-   permissions@acm.org.
+   This article was authored by employees of the Government of
+   Canada. As such, the Canadian government retains all interest in
+   the copyright to this work and grants to ACM a nonexclusive,
+   royalty-free right to publish or reproduce this article, or to
+   allow others to do so, provided that clear attribution is given
+   both to the authors and the Canadian government agency employing
+   them. Permission to make digital or hard copies for personal or
+   classroom use is granted. Copies must bear this notice and the full
+   citation on the first page. Copyrights for components of this work
+   owned by others than the Canadian Government must be honored. To
+   copy otherwise, distribute, republish, or post, requires prior
+   specific permission and/or a fee. Request permissions from
+   owner\hspace*{.5pt}/author(s).
   \or % cagovmixed
    ACM acknowledges that this contribution was co-authored by an
    affiliate of the national government of Canada. As such, the Crown
-   in Right of Canada retains an equal interest in the copyright.
-   Reprints must include clear attribution to ACM and the author's
-   government agency affiliation.  Permission to make digital or hard
-   copies for personal or classroom use is granted.  Copies must bear
-   this notice and the full citation on the first page. Copyrights for
-   components of this work owned by others than ACM must be honored.
-   To copy otherwise, distribute, republish, or post, requires prior
-   specific permission and\hspace*{.5pt}/or a fee. Request permissions
-   from permissions@acm.org.
+   in Right of Canada retains an equal interest in the
+   copyright. Reprints must include clear attribution to ACM and the
+   author’s government agency affiliation. Permission to make digital
+   or hard copies for personal or classroom use is granted. Copies
+   must bear this notice and the full citation on the first
+   page. Copyrights for components of this work owned by others than
+   ACM must be honored. To copy otherwise, distribute, republish, or
+   post, requires prior specific permission and/or a fee. Request
+   permissions from owner\hspace*{.5pt}/author(s).
   \or % licensedusgovmixed
    Publication rights licensed to ACM\@. ACM acknowledges that this
    contribution was authored or co-authored by an employee, contractor
    or affiliate of the United States government. As such, the
    Government retains a nonexclusive, royalty-free right to publish or
    reproduce this article, or to allow others to do so, for Government
-   purposes only.
+   purposes only. Request permissions from
+   owner\hspace*{.5pt}/author(s).
   \or % licensedcagov
-   This article was authored by employees of the Government of Canada.
-   As such, the Canadian government retains all interest in the
-   copyright to this work and grants to ACM a nonexclusive,
-   royalty-free right to publish or reproduce this article, or to allow
-   others to do so, provided that clear attribution is given both to
-   the authors and the Canadian government agency employing them.
-   Permission to make digital or hard copies for personal or classroom
-   use is granted. Copies must bear this notice and the full citation
-   on the first page.  Copyrights for components of this work owned by
-   others than the Canadian Government must be honored. To copy
-   otherwise, distribute, republish, or post, requires prior specific
-   permission and\hspace*{.5pt}/or a fee. Request permissions from
-   permissions@acm.org.
+   This article was authored by employees of the Government of
+   Canada. As such, the Canadian government retains all interest in
+   the copyright to this work and grants to ACM a nonexclusive,
+   royalty-free right to publish or reproduce this article, or to
+   allow others to do so, provided that clear attribution is given
+   both to the authors and the Canadian government agency employing
+   them. Permission to make digital or hard copies for personal or
+   classroom use is granted. Copies must bear this notice and the full
+   citation on the first page. Copyrights for components of this work
+   owned by others than the Canadian Government must be honored. To
+   copy otherwise, distribute, republish, or post, requires prior
+   specific permission and/or a fee. Request permissions from
+   owner\hspace*{.5pt}/author(s).
   \or % licensedcagovmixed
-   Publication rights licensed to ACM\@. ACM acknowledges that this
+   Publication rights licensed to ACM. ACM acknowledges that this
    contribution was authored or co-authored by an employee, contractor
    or affiliate of the national government of Canada. As such, the
    Government retains a nonexclusive, royalty-free right to publish or
    reproduce this article, or to allow others to do so, for Government
-   purposes only.
+   purposes only. Request permissions from
+   owner\hspace*{.5pt}/author(s).
   \or % othergov
    ACM acknowledges that this contribution was authored or co-authored
-   by an employee, contractor or affiliate of a national government. As
-   such, the Government retains a nonexclusive, royalty-free right to
-   publish or reproduce this article, or to allow others to do so, for
-   Government purposes only.
+   by an employee, contractor or affiliate of a national
+   government. As such, the Government retains a nonexclusive,
+   royalty-free right to publish or reproduce this article, or to
+   allow others to do so, for Government purposes only. Request
+   permissions from owner\hspace*{.5pt}/author(s).
   \or % licensedothergov
    Publication rights licensed to ACM\@. ACM acknowledges that this
    contribution was authored or co-authored by an employee, contractor
    or affiliate of a national government. As such, the Government
    retains a nonexclusive, royalty-free right to publish or reproduce
    this article, or to allow others to do so, for Government purposes
-   only.
+   only. Request permissions from owner\hspace*{.5pt}/author(s).
  \or % iw3c2w3
    This paper is published under the Creative Commons Attribution~4.0
    International (CC-BY~4.0) license. Authors reserve their rights to
@@ -2154,7 +2164,7 @@
   \if@ACM@acmcp\else
     \ifx\@empty\@authorsaddresses\else
        \if@ACM@anonymous\else
-         \if@ACM@journal@bibstrip
+         \if@ACM@journal@bibstrip@or@tog
            \footnotetextauthorsaddresses{%
              \def\par{\let\par\@par}\parindent\z@\@setauthorsaddresses}%
          \fi
@@ -2211,12 +2221,10 @@
         \else
           \if@ACM@nonacm\else
             \if@ACM@journal@bibstrip
-              \@permissionCodeOne/\@acmYear/\@acmMonth-ART\@acmArticle
-              \ifx\@acmPrice\@empty\else\ \$\@acmPrice\fi\\
+              ACM~\@permissionCodeOne/\@acmYear/\@acmMonth-ART\@acmArticle\\
               \@formatdoi{\@acmDOI}%
             \else % Conference
-              \ifx\@acmISBN\@empty\else ACM~ISBN~\@acmISBN
-              \ifx\@acmPrice\@empty.\else\dots\$\@acmPrice\fi\\\fi
+              \ifx\@acmISBN\@empty\else ACM~ISBN~\@acmISBN\\\fi
               \ifx\@acmDOI\@empty\else\@formatdoi{\@acmDOI}\fi%
             \fi
           \fi
@@ -2958,7 +2966,7 @@
       \@acmArticle\if@ACM@printfolios:\thepage\fi%
     \fi%
   }%
-  \if@ACM@journal@bibstrip
+  \if@ACM@journal@bibstrip@or@tog
     \ifcase\ACM@format@nr
     \relax % manuscript
       \fancyhead[LE]{\ACM@linecountL\if@ACM@printfolios\thepage\fi}%
@@ -2994,9 +3002,15 @@
       \fancyhead[RE]{\ACM@linecountR}%
       \fancyhead[RO]{\@headfootfont
         \shorttitle\quad\textbullet\quad\@acmArticlePage\ACM@linecountR}%
-      \if@ACM@nonacm\else%
-        \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
-        \@acmNumber, Article \@acmArticle.  Publication date: \@acmPubDate.}%
+      \if@ACM@nonacm\else
+        \if@ACM@journal@bibstrip
+          \fancyfoot[RO,LE]{\footnotesize \@journalNameShort,
+            Vol. \@acmVolume, No.~\@acmNumber, Article \@acmArticle.
+            Publication date: \@acmPubDate.}%
+        \else
+          \fancyfoot[RO,LE]{\footnotesize \acmConference@shortname,
+            \acmConference@date, \acmConference@venue.}%
+         \fi
       \fi
     \else % Proceedings
       \fancyfoot[C]{\if@ACM@printfolios\footnotesize\thepage\fi}%
@@ -3070,52 +3084,12 @@
 }%
 \pagestyle{standardpagestyle}
 }
-\newdimen\@folio@wd
-\@folio@wd=\z@
-\newdimen\@folio@ht
-\@folio@ht=\z@
-\newdimen\@folio@voffset
-\@folio@voffset=\z@
-\def\@folio@max{1}
-\ifcase\ACM@format@nr
-\relax % manuscript
-\or % acmsmall
-  \@folio@wd=45.75pt\relax
-  \@folio@ht=1.25in\relax
-  \@folio@voffset=.2in\relax
-  \def\@folio@max{8}
-\or % acmlarge
-  \@folio@wd=43.25pt\relax
-  \@folio@ht=79pt\relax
-  \@folio@voffset=.55in\relax
-  \def\@folio@max{10}
-\fi
-\def\@folioblob{\@tempcnta=0\@acmArticleSeq\relax
-  \ifnum\@tempcnta=0\relax\else
-  \loop
-     \ifnum\@tempcnta>\@folio@max\relax
-      \advance\@tempcnta by - \@folio@max
-   \repeat
-    \advance\@tempcnta by -1\relax
-    \@tempdima=\@folio@ht\relax
-    \multiply\@tempdima by \the\@tempcnta\relax
-    \advance\@tempdima by -\@folio@voffset\relax
-    \begin{picture}(0,0)
-    \makebox[\z@]{\raisebox{-\@tempdima}{%
-        \rlap{%
-          \raisebox{-0.45\@folio@ht}[\z@][\z@]{%
-            \rule{\@folio@wd}{\@folio@ht}}}%
-        \parbox{\@folio@wd}{%
-          \centering
-          \textcolor{white}{\LARGE\sffamily\bfseries\@acmArticle}}}}
-  \end{picture}\fi}
-
 \AtBeginDocument{%
 \fancypagestyle{firstpagestyle}{%
   \fancyhf{}%
   \renewcommand{\headrulewidth}{\z@}%
   \renewcommand{\footrulewidth}{\z@}%
-  \if@ACM@journal@bibstrip
+  \if@ACM@journal@bibstrip@or@tog
     \ifcase\ACM@format@nr
     \relax % manuscript
       \fancyhead[L]{\ACM@linecountL\@acmBadgeL}%
@@ -3130,27 +3104,30 @@
         \@acmNumber, Article \@acmArticle.  Publication date:
         \@acmPubDate.}%
       \fi%
-      \fancyhead[LE]{\ACM@linecountL\@folioblob\@acmBadgeL}%
+      \fancyhead[LE]{\ACM@linecountL\@acmBadgeL}%
       \fancyhead[LO]{\ACM@linecountL\@acmBadgeL}%
-      \fancyhead[RO]{\@acmBadgeR\@folioblob}%
+      \fancyhead[RO]{\@acmBadgeR}%
       \fancyhead[RE]{\@acmBadgeR}%
-      \fancyheadoffset[RO,LE]{0.6\@folio@wd}%
     \or % acmlarge
       \if@ACM@nonacm\else%
         \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
         \@acmNumber, Article \@acmArticle.  Publication date:
         \@acmPubDate.}%
       \fi%
-      \fancyhead[RO]{\@acmBadgeR\@folioblob}%
+      \fancyhead[RO]{\@acmBadgeR}%
       \fancyhead[RE]{\@acmBadgeR}%
-      \fancyhead[LE]{\ACM@linecountL\@folioblob\@acmBadgeL}%
+      \fancyhead[LE]{\ACM@linecountL\@acmBadgeL}%
       \fancyhead[LO]{\ACM@linecountL\@acmBadgeL}%
-      \fancyheadoffset[RO,LE]{1.4\@folio@wd}%
     \or % acmtog
       \if@ACM@nonacm\else%
-        \fancyfoot[RO,LE]{\footnotesize \@journalNameShort, Vol. \@acmVolume, No.
-        \@acmNumber, Article \@acmArticle.  Publication date:
-        \@acmPubDate.}%
+        \if@ACM@journal@bibstrip
+          \fancyfoot[RO,LE]{\footnotesize \@journalNameShort,
+            Vol. \@acmVolume, No.~\@acmNumber, Article \@acmArticle.
+            Publication date: \@acmPubDate.}%
+        \else
+          \fancyfoot[RO,LE]{\footnotesize \acmConference@shortname,
+            \acmConference@date, \acmConference@venue.}%
+         \fi
       \fi%
       \fancyhead[L]{\ACM@linecountL\@acmBadgeL}%
       \fancyhead[R]{\@acmBadgeR\ACM@linecountR}%
