@@ -115,11 +115,26 @@ we gave in Fig.~\ref{fig:overview-example}(a) is described in Fig.~\ref{fig:over
 \review{More explanation of the semantics-based dependency graph in Figure 3, including the lambda tau. rho (tau) k notation. Also, consider replacing it with notation that is easier to search using PDF readers such as lastVal(tau, k).}
 We have all the variables that are assigned in the program with their labels, and edges representing dependency relations between them. 
 For example, we have two edges $(l^6, a^5)$ and $(a^5, x^3)$ describing the dependency between the variables assigned by queries. The vertices $l^6$ and $x^3$ are the only ones with query annotation $1$ (the subscript), since they are the only two variables that are in assignments involving  queries. Notice that the graph contains cycles---in this example it contains two self-loops. These cycles capture the fact that the variables $a^5$ and $j^4$ are updated at every iteration of the loop using their previous values. Cycles are essential to capture mutual dependencies like the ones that are generated in loops. Adaptivity is a quantitative notion, so capturing this form of dependencies is not enough. 
-This is why we also use weights. \highlight{The weight of a vertex is a function that given an initial state returns a natural number representing 
-the number of times this vertex is visited during the program execution starting in this initial state.  }
-% \highlight{To do: more explanation about weight, {$\lambda \trace.1$}, and replacing it}
-For example, the vertex $l^{6}$ has weight {$\lambda \trace.1$} since for every initial state {$\trace$} the corresponding statement will be executed one time. The vertex $a^5$ on the other hand has weight {$\lambda \trace. \env(\trace) k$ since the corresponding assignment will be executed a number of times that correspond to the value of $k$ in the initial state $\trace$, and $\env$ is the operator reading value of $k$ from $\trace$.
+This is why we also use weights. 
+\highlight{The weight of a vertex is a function that given an initial state returns a natural number representing 
+the number of times this vertex is visited during the program execution starting in this initial state, which relies on 
+the actual value of the input variables defined in the initial trace. 
+For instance, in the running example in Fig.~\ref{fig:overview-example}(b), the times of the vertex $a^5$ will be visited depends on actual value of 
+the input variable $k$. To capture this, we define a function
+$\kw{lastVal}(\tau, x)$ that will return the latest value of variable $x$ in the initial trace $\trace$. Also,
+it is natural that some vertex will be visited only in constant times, such as the vertex $l^{6}$ being executed only once.
+ To express this, our $\kw{lastVal}$ function also accepts constant numbers besides input variables, such that we use $\kw{lastVal}(\tau, 1)$ as the weight for  the vertex $l^{6}$.
+ In Fig.~\ref{fig:overview-example}(b), we use either a variable $x$ or a constant number $1$ as the short notation for 
+ $\kw{lastVal}(\tau, x)$ and $\kw{lastVal}(\tau, 1)$. 
 }
+\highlight{WQ: I would like to remove fig3.c because if we use short notation for $lastVal(\tau, k)$, fig3.b and c are the same.}
+% on the other hand has weight {$\lambda \trace. \env(\trace) k$ since the corresponding assignment will be executed a number of times that correspond to the value of $k$ in the initial state $\trace$, and $\env$ is the operator reading value of $k$ from $\trace$.
+
+% Intuitively, the number of times of a vertex 
+
+% % \highlight{To do: more explanation about weight, {$\lambda \trace.1$}, and replacing it}
+% For example, the vertex $l^{6}$ has weight {$\lambda \trace.1$} since for every initial state {$\trace$} the corresponding statement will be executed one time. The vertex $a^5$ on the other hand has weight {$\lambda \trace. \env(\trace) k$ since the corresponding assignment will be executed a number of times that correspond to the value of $k$ in the initial state $\trace$, and $\env$ is the operator reading value of $k$ from $\trace$.} }
+
 
 % It is a function which takes an initial state, $\trace_0$ as input,
 % then executes the program, and counts the evaluation times of the query request $\clabel{\assign{l}{\query(\chi[k]*a)} }^{6}$ during the execution.
@@ -258,7 +273,7 @@ Vertices and query annotations are the same as the ones in Fig.~\ref{fig:overvie
 The weight of every vertex is computed using a reachability-bound estimation algorithm which outputs a symbolic expression over the input variables, representing an upper bound on the number of times each assignment is executed.
 % \wq{symbolic and provide a sound upper bound on its execution-based weight of the corresponding vertex in the execution-based dependency graph.
 % $w_k(\trace) \leq \trace(k)$. $\trace(k)$ means getting the value of variable $k$ in the trace $\trace$. The soundness of this step is proved in Theorem~\ref{thm:addweight_soundness}.}
-For example, consider the vertex $x^{3}$, its weight is $k$ and this provides an upper bound on the value returned by the weight function $\lambda \trace. \rho(\trace)k$ associated with vertex $x^{3}$ in Fig.~\ref{fig:overview-example}(b) for any initial state. 
+For example, consider the vertex $x^{3}$, its weight is $k$ and this provides an upper bound on the value returned by the weight function \highlight{$\kw{lastVal}(\trace,k)$} associated with vertex $x^{3}$ in Fig.~\ref{fig:overview-example}(b) for any initial state. 
 % Indeed, 
 % for any initial trace $\trace_0$, when $w_{x^{3}}(\trace_0)$ executes the program and counts the
 % execution times of command $3$,

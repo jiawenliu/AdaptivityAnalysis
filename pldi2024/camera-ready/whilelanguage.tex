@@ -114,14 +114,16 @@ and we use $\eventset^{\asn}$ and $\eventset^{\test}$ to denote the set of all a
 An assignment event tracks the execution of an assignment  or a query request and consists of the assigned variable, the label of the command that generates it, the value assigned to the variable, and the normal form  $\qval$ of the query expression that has been requested, if this command is a query request, otherwise a default value $\bullet$.
 A testing event tracks the execution of an if or while command and consists of the guard of the command, the label, the result of evaluating the guard, the last element $\bullet$. 
  We use the operator $\env (\trace) x$ to fetch the latest value assigned to  $x$ in the trace $\trace$, the operator
-$\vcounter$ to count the occurrence of a labeled variable in the trace.
+$\vcounter$ to count the occurrence of a labeled variable in the trace. \highlight{ The function $\kw{lastVal}(\tau, x)$ mentioned in Section~\ref{sec:adaptivity-informal} can be 
+expressed as $\lambda \trace. \env (\trace) x$. For any initial trace $\trace$, $\kw{lastVal}(\tau, x)$ returns the latest value of $x$ in $\trace$.
+}
 We denote by $\tlabel(\trace) \subseteq \ldom$ the set of the labels occurring in $\trace$.
 Finally, we use $\mathcal{T}_0(c) \subseteq \mathcal{T}$ to denote the set of \emph{initial traces}, the ones
 which assign a value to the input variables. We use $\eventset$ to denote the set of all events.
 
 
 
-
+\highlight{WQ: I propose to remove most rules in Fig5, only have query rule.}
 The trace-based operational semantics is described in terms of a small step evaluation relation
 $\config{c, \trace} \to \config{c', \trace}'$  describing how a configuration program-trace evaluates to another
 configuration program-state. The rules for the operational semantics are described in Fig.~\ref{fig:os}.
@@ -346,10 +348,10 @@ c; \ewhile [b]^{l} \edo c,
           \hline 
           $\mathcal{LV}$   & universe of labeled variables  & $\qvar(c)$ & labeled query variables in $c$\\ 
           $\cdom$  & set of all programs &  $\trace$ &   trace, a list of \emph{events}\\  
-          $\mathcal{T}$  &  set of traces & $[]$ &  empty trace \\
-          $\ldom$ & set of labels  & $\trace \traceadd \event$  & combine a trace and an event \\
-          $\tlabel(\trace) \subseteq \ldom$  &set of the labels occurring in $\trace$  &  $\env (\trace) x$  & fetch the latest value of  $x$ in  $\trace$ \\
-          $\mathcal{T}_0(c) \subseteq \mathcal{T}$ &  set of \emph{initial traces} & $\trace \tracecat \trace'$ &  trace concatenation\\
+          $\mathcal{T}$  &  set of traces &  $\trace \traceadd \event$  & combine a trace and an event  \\
+          $\ldom$ & set of labels  & $\trace \tracecat \trace'$ &  trace concatenation \\
+          $\tlabel(\trace) \subseteq \ldom$  &set of the labels occurring in $\trace$  &  $ \env (\trace) x$  & fetch the latest value of  $x$ in a given $\trace$ \\
+          $\mathcal{T}_0(c) \subseteq \mathcal{T}$ &  set of \emph{initial traces} & $\kw{lastVal} (\trace, x)$  & fetch the latest value of  $x$ in any $\trace$\\
           $\mathbb{LV}(c)$  & labeled variables in $c$ & $\vcounter(\trace, x^i)$ & occurrence of $x^i$ in the trace $\trace$\\
           \hline 
         \end{tabular}
