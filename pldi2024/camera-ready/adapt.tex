@@ -80,12 +80,12 @@ To define dependency between program variables we will consider two events that 
 
 \begin{defn}
 \label{def:diff}
-\highlight{Two colocated events $\event_1, \event_2 $ differ in their values,  if they are either, 
+\highlight{Two events $\event_1, \event_2 $ at the same location differ in their values,  if they are either, 
 \begin{enumerate}
   \item  of the form $\event_1 = (x, l, v_1, \bullet)$ and $event_1 = (x, l, v_2, \bullet)$, for a common variable (or Boolean expression) $x$ and program location $l$, and $v_1 \neq v_2$.
   \item  or of the form $\event_1 = (x, l, v_1, q_1)$ and $\event_1 = (x, l, v_2, q_2)$, where $q_1 \neq \bullet, q_2 \neq \bullet,$ and $q_1 \neq_q q2$.
 \end{enumerate}
-denoted as $\diff(\event_1, \event_2)$ as follows:}
+It is denoted as $\diff(\event_1, \event_2)$ as follows:}
 {\small
 \begin{subequations}
 \begin{align}
@@ -143,13 +143,13 @@ Similarly to the previous condition, we additionally check that the two test eve
   \label{def:event_dep}
   \vspace{-0.1cm}
   \highlight{An assignment event $\event_2\in \eventset^{\asn}$ \emph{may-depend} on another assignment event $\event_1 \in \eventset^{\asn}$ in a program ${c}$ \highlight{with a witness trace $\trace$} 
-  , if and only if there exists an assignment event $\event_1'$ which colocate $\event_1$ but differs in values, either 
+  , if and only if there exists an assignment event $\event_1'$ with the same location as $\event_1$ but differs in values, either 
   \begin{enumerate}
-    \item replacing $\event_1$ with $\event_1'$ in the execution trace will trigger a new execution trace whose newly generated event $\event_2'$ that colocateds $\event_2$ differs in vaue with $\event_2$, which corresponds to capturing the data dependency.
-    \item replacing $\event_1$ with $\event_1'$ in the execution trace will trigger a new execution trace in which a test event after $\event_1$ in the original trace will be flipped , which corresponds to capturing the control dependency.
+    \item replacing $\event_1$ with $\event_1'$ in the execution trace will trigger a new execution trace whose newly generated event $\event_2'$ with the same location as $\event_2$ differs in value with $\event_2$, capturing the data dependency.
+    \item replacing $\event_1$ with $\event_1'$ in the execution trace will trigger a new execution trace in which a test event after $\event_1$ in the original trace will be flipped, capturing the control dependency.
   \end{enumerate}
-  It is denoted
-  $\eventdep(\event_1, \event_2, \highlight{\trace},  c)$}
+  It is denoted as
+  $\eventdep(\event_1, \event_2, \highlight{\trace}, c)$, formally defined as follows.}
   \begin{subequations}
   {\small 
   \vspace{-0.1cm}
@@ -262,7 +262,7 @@ $
   its \emph{semantics-based dependency graph} 
   $\traceG({c}) = (\traceV({c}), \traceE({c}), \traceW({c}), \traceF({c}))$ \highlight{consists of four components: vertices are all the 
   labelled variables in the program $c$; directed edges are those pairs of vertices that one may depend on the other; weight $w$ of any vertex $x^l$ 
-  is a function which takes an intial trace $\trace_0$ as input and returns the number of times $x^l$ appears in the execution trace of the program $c$ when starting from $\trace_0$; query annotation on any vertex 
+  is a function which takes an initial trace $\trace_0$ as input and returns the number of times $x^l$ appears in the execution trace of the program $c$ when starting from $\trace_0$; query annotation on any vertex 
   can be see as a flag indicating if the command associated with this vertex is a query assignment or not.
   }
   The formal definiton is defined as follows,
@@ -336,7 +336,7 @@ In Fig.~\ref{fig:overview-example}(b), $\lambda \trace_0 \st (l^6 \to x^3)$ is a
 With the assumption that $k \geq 1$, $\lambda \trace_0 \st (l^6 \to {a^5 \to a^5 \to \ldots} \to x^3)$ is a walk where the vertex $a^5$ is visited $\env(\trace) k$ times.
 However, $\lambda \trace_0 \st (l^6 \to a^5 \to x^3 \to x^3)$ is not a walk because there is no edge from $x^3$ to $x^3$.
 %\underbrace{a^5 \to a^5 \to \ldots}_{\env(\trace) k} 
-The formal defintion of a walk is the following:
+The formal definition of a walk is the following:
 \begin{defn}[Walk]
 \label{def:finitewalk}
 Given a well-formed program $c$ with its semantics-based dependency graph $\traceG({c}) = (\traceV, \traceE, \traceW, \traceF)$, a \emph{walk} $k$ is a function that maps an initial trace $\trace_0$ to a sequence of vertices $(v_1, \ldots, v_{n})$
