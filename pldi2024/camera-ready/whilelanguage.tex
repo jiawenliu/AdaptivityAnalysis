@@ -123,17 +123,14 @@ Finally, we use $\mathcal{T}_0(c) \subseteq \mathcal{T}$ to denote the set of \e
 which assign a value to the input variables. We use $\eventset$ to denote the set of all events.
 
 
-
-\highlight{WQ: I propose to remove most rules in Fig5, only have query rule.}
 The trace-based operational semantics is described in terms of a small step evaluation relation
 $\config{c, \trace} \to \config{c', \trace}'$  describing how a configuration program-trace evaluates to another
-configuration program-state. The rules for the operational semantics are described in Fig.~\ref{fig:os}.
+configuration program-state. Selected rules are shown in Fig.~\ref{fig:os}.
 The rules for assignment and query generate assignment events, while the rules for while and if generate testing events. 
-The rules for the standard while language constructs correspond to the usual rules extended to deal with traces. 
-We have relations $\config{\trace, \expr} \earrow v $  and $\config{\trace, \bexpr} \barrow v $  to evaluate expressions and boolean expressions, respectively. Their definitions are in the supplementary material.
+We have relations $\config{\trace, \expr} \earrow v $  and $\config{\trace, \bexpr} \barrow v $  to evaluate expressions and boolean expressions, respectively. 
 %   \mg{Can you please confirm that this is true?} Yes
 The only rule that is non-standard is the $\textbf{query}$ rule. When evaluating a query, the query expression $\qexpr$ is first simplified to its normal form $\alpha$ using an evaluation relation $\config{\trace, \qexpr} \qarrow \qval$. 
-Then normal form $\qval$ characterizes the linear query that is run against the database. The query result $v$ is the expected value of the function $\lambda \chi.\qval$ applied to each row of the dataset. We summarize this process with the notation $\query(\qval) = v$ in the rule $\textbf{query}$. 
+The normal form $\qval$ characterizes the linear query that is run against the database. The query result $v$ is the expected value of the function $\lambda \chi.\qval$ applied to each row of the dataset. We summarize this process with the notation $\query(\qval) = v$ in the rule $\textbf{query}$. 
 Once the answer of the query is computed, the rules record all the needed information in the trace.  We will use $\to^*$ for the reflexive and transitive closure of $\to$. 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% The Detailed Version in Explaining the Event %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % First of all, as the key component of the program evaluation history, an event $\event$ stores necessary information on the evaluation results of commands. Depending on the types of commands, there are two kinds of events: the assignment event which is generated in the standard assignment and query request assignment commands, and the testing event which is generated in an if or while command. Both assignment and testing events are quadruples, but store different contents. 
@@ -214,20 +211,20 @@ The query expression evaluation relation  $\config{\trace, \qexpr} \qarrow \qval
 \config{{c',  \trace'}}
 }
 \\
-\inferrule
-{
-\config{\trace, \expr} \earrow v 
-\and
-\event = ({x}, l, v, \bullet)
-}
-{
-\config{[\assign{{x}}{\expr}]^{l},  \trace } 
-\xrightarrow{} 
-\config{\clabel{\eskip}^l, \trace \traceadd \event}
-}
-~\textbf{assn}
-%
-\and
+% \inferrule
+% {
+% \config{\trace, \expr} \earrow v 
+% \and
+% \event = ({x}, l, v, \bullet)
+% }
+% {
+% \config{[\assign{{x}}{\expr}]^{l},  \trace } 
+% \xrightarrow{} 
+% \config{\clabel{\eskip}^l, \trace \traceadd \event}
+% }
+% ~\textbf{assn}
+% %
+% \and
 %
 {
 \inferrule
@@ -264,61 +261,61 @@ c; \ewhile [b]^{l} \edo c,
 ~\textbf{while-t}
 %
 %
-\quad
-%
-\inferrule
-{
- \trace, b \barrow \efalse
- \and 
- \event = (b, l, \efalse, \bullet)
-}
-{
-\config{{\ewhile [b]^{l}, \edo c, \trace}}
-\xrightarrow{} 
-\config{{
-  \clabel{\eskip}^l,
-\trace \traceadd \event}}
-}
-~\textbf{while-f}
-%
-%
-\and
-\inferrule
-{
-\config{{c_1, \trace}}
-\xrightarrow{}
-\config{{c_1',  \trace'}}
-}
-{
-\config{{c_1; c_2, \trace}} 
-\xrightarrow{} 
-\config{{c_1'; c_2, \trace'}}
-}
-~\textbf{seq1}
-\and
-\inferrule
-{
-  \config{{c_2, \trace}}
-  \xrightarrow{}
-  \config{{c_2',  \trace'}}
-}
-{
-\config{{\clabel{\eskip}^l; c_2, \trace}} \xrightarrow{} \config{{ c_2', \trace'}}
-}
-~\textbf{seq2}
-\quad
-\inferrule
-{
- \trace, b \barrow \etrue \and \event = (b, l, \etrue, \bullet)
-}
-{
- \config{{
-\eif([b]^{l}, c_1, c_2), 
-\trace}}
-\xrightarrow{} 
-\config{{c_1, \trace \traceadd \event}}
-}
-~\textbf{if-t}
+% \quad
+% %
+% \inferrule
+% {
+%  \trace, b \barrow \efalse
+%  \and 
+%  \event = (b, l, \efalse, \bullet)
+% }
+% {
+% \config{{\ewhile [b]^{l}, \edo c, \trace}}
+% \xrightarrow{} 
+% \config{{
+%   \clabel{\eskip}^l,
+% \trace \traceadd \event}}
+% }
+% ~\textbf{while-f}
+% %
+% %
+% \and
+% \inferrule
+% {
+% \config{{c_1, \trace}}
+% \xrightarrow{}
+% \config{{c_1',  \trace'}}
+% }
+% {
+% \config{{c_1; c_2, \trace}} 
+% \xrightarrow{} 
+% \config{{c_1'; c_2, \trace'}}
+% }
+% ~\textbf{seq1}
+% \and
+% \inferrule
+% {
+%   \config{{c_2, \trace}}
+%   \xrightarrow{}
+%   \config{{c_2',  \trace'}}
+% }
+% {
+% \config{{\clabel{\eskip}^l; c_2, \trace}} \xrightarrow{} \config{{ c_2', \trace'}}
+% }
+% ~\textbf{seq2}
+% \quad
+% \inferrule
+% {
+%  \trace, b \barrow \etrue \and \event = (b, l, \etrue, \bullet)
+% }
+% {
+%  \config{{
+% \eif([b]^{l}, c_1, c_2), 
+% \trace}}
+% \xrightarrow{} 
+% \config{{c_1, \trace \traceadd \event}}
+% }
+% ~\textbf{if-t}
 % \and
 % %
 % \inferrule
@@ -332,7 +329,7 @@ c; \ewhile [b]^{l} \edo c,
 % \xrightarrow{} 
 % \config{{c_2, \trace \traceadd \event}}
 % }
-~\textbf{if-f}
+% ~\textbf{if-f}
 \end{mathpar}
   \vspace{-0.5cm}
     \caption{Trace-based Operational Semantics for Language.}
