@@ -125,7 +125,7 @@ class TransitionBound:
             if dc_var and self.var_invariant[dc_var] == "":
                 self.compute_var_invariant(dc_var)
             var_reset = "max(" + var_reset + ", " + (self.var_invariant[dc_var] if dc_var else "0") + " + " + dc_const + ")"
-
+        # print("var_inc",var_inc)
         self.var_incs_bound[v] = var_inc
         self.var_invariant[v] = var_inc + " + " + var_reset
 
@@ -142,7 +142,8 @@ class TransitionBound:
             if dc_var and self.var_invariant[dc_var] == "":
                 self.compute_var_invariant_optimal(dc_var)
             var_reset = "max(" + var_reset + ", " + (self.var_invariant[dc_var] if dc_var else "0") + " + " + dc_const + ")"
-
+        
+        # print("var_inc",var_inc)
         self.var_incs_bound[v] = var_inc
         self.var_invariant[v] = var_inc + " + " + var_reset
 
@@ -172,14 +173,32 @@ class TransitionBound:
                     if self.transition_bounds[reset_t] == "":
                         self.compute_transition_bound_closure_optimal(reset_t)
                     min_transition = self.transition_bounds[reset_t] if min_transition == "" else  "min( " + self.transition_bounds[reset_t] + ", " + min_transition + ")"
+                    # print("Min_tra", min_transition, "<>",self.transition_bounds[reset_t])
                     if dc_var: 
                         if dc_var not in self.var_invariant.keys():
                             self.compute_var_invariant(dc_var)
                         # if (chain_in == ""):
                         #     chain_in = self.var_invariant[dc_var]
                     chain_const = dc_const if chain_const == "" else chain_const + " + " + dc_const
-                tb_temp += " + " + min_transition + " * (" +  chain_const + ")" if chain_in == "" else " + " + min_transition + " * (" +  chain_in + " + " + chain_const + ")"
-            self.transition_bounds[t_index] = str(int(tb_temp)/int(c)) if isinstance(c, int) and isinstance(tb_temp, int)else  (tb_temp + "/" + c)
+                if is_number(tb_temp) and int(tb_temp)==0:
+                    tb_temp = ""
+                if chain_in == "":
+                    if is_number(min_transition) and int(min_transition) == 1:
+                        tb_temp +=  chain_const if tb_temp == "" else " + " +  chain_const
+                    else:
+                        tb_temp +=  min_transition + " * (" +  chain_const + ")" if tb_temp == "" else " + " + min_transition + " * (" +  chain_const + ")"
+                else:
+                    if is_number(min_transition) and int(min_transition) == 1:
+                        tb_temp += " (" +  chain_in + " + " + chain_const + ")"  if tb_temp == "" else  " + "  + " (" +  chain_in + " + " + chain_const + ")"
+                    else:  
+                        tb_temp += min_transition + " * (" +  chain_in + " + " + chain_const + ")" if tb_temp == "" else  " + " + min_transition + " * (" +  chain_in + " + " + chain_const + ")"
+            if isinstance(c, int) and isinstance(tb_temp, int): 
+                self.transition_bounds[t_index] = str(int(tb_temp)/int(c))
+            elif is_number(c) and int(c) == 1:
+                self.transition_bounds[t_index] = tb_temp
+            else :
+                self.transition_bounds[t_index] = (tb_temp + "/" + c)
+        # print("TB", tb_temp, "<>", self.transition_bounds[t_index])
         return self.transition_bounds[t_index]
 
 
@@ -210,7 +229,7 @@ class TransitionBound:
                         self.compute_var_invariant(dc_var)
                     tb_temp += " + " + self.transition_bounds[reset_t] + " * (" +  self.var_invariant[dc_var] + " + " + dc_const + ")"              
             self.transition_bounds[t_index] = str(int(tb_temp)/int(c)) if isinstance(c, int) and isinstance(tb_temp, int)else  (tb_temp + "/" + c)
-
+            # print("TB2", self.transition_bounds[t_index])
 
     def compute_transition_bounds(self):
         self.collect_var_modifications()
@@ -231,3 +250,11 @@ class TransitionBound:
                     for dc in dc_set:
                         if not (dc.dc_type == DifferenceConstraint.DCType.ASUM) :
                             print( "weight for Variable: " + dc.get_var() + " of label " + str(var_vertex) + " is: " + str(b))
+
+
+def is_number(s):
+    try:
+        int(s)  # Try to convert the string to a float
+        return True  # If it succeeds, return True
+    except ValueError:  # If a ValueError occurs, it means the conversion failed
+        return False  # Thus, return False

@@ -105,6 +105,7 @@ class AdaptSearchAlg:
 
 
     def get_adapt(self):
+        # print("The Adaptivity value: ", self.adaptivity)
         return self.adaptivity.value
     
     def search_adapt(self):

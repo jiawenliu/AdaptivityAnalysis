@@ -1,3 +1,10 @@
+def is_number(s):
+    try:
+        int(s)  # Try to convert the string to a float
+        return True  # If it succeeds, return True
+    except ValueError:  # If a ValueError occurs, it means the conversion failed
+        return False  # Thus, return False
+
 class AdaptType:
     value = 0
     def __init__(self, value = 0) -> None:
@@ -41,7 +48,13 @@ class AdaptType:
         if (isinstance(self.value, str)) and isinstance(other.value, str):
             if (isinstance(self.value, int) and int(self.value) == 0):
                 return other
+            if (is_number(self.value)) and (int(self.value) == 0 or int(self.value) ==1): 
+                return other
             if (isinstance(other.value, int) and int(other.value) == 0):
+                return self
+            if is_number(other.value) and (int(self.value) == 0 or int(self.value) ==1):
+                return self
+            if other.value == self.value:
                 return self
             return AdaptType("max(" + str(self.value) + ", " + str(other.value) + ")")
         elif (isinstance(self.value, str)) or (isinstance(other.value, str)):
@@ -56,8 +69,14 @@ class AdaptType:
         if (isinstance(self.value, str)) and isinstance(other.value, str):
             if (isinstance(self.value, int) and int(self.value) == 0):
                 return self
+            if (is_number(self.value)) and int(self.value) == 0: 
+                return self
             if (isinstance(other.value, int) and int(other.value) == 0):
                 return other
+            if (is_number(other.value)) and int(other.value) == 0: 
+                return other
+            if other.value == self.value:
+                return self
             return AdaptType("min(" + str(self.value) + ", " + str(other.value) + ")")
         elif (isinstance(self.value, str)) or (isinstance(other.value, str)):
             return self  if other.value == 0 else other if self.value == 0 else AdaptType("min(" + str(self.value) + ", " + str(other.value) + ")")
