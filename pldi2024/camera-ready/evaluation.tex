@@ -2,9 +2,9 @@
 % \label{sec:adapt-impleval}
 
 \paragraph{Set Up}
-We implemented $\THESYSTEM$ as a tool that takes a labeled command as input 
+We implemented $\THESYSTEM$ that takes a labeled command as input 
 and outputs two upper bounds on the program adaptivity and the number of query requests, respectively.
-This implementation consists of components for the 
+It consists of components for the 
 abstract control flow graph generation,
 the edge estimation, and the weight estimation in Ocaml, 
 and of an implementation of the $\pathsearch$ algorithm in Python.
@@ -16,10 +16,10 @@ and of an implementation of the $\pathsearch$ algorithm in Python.
 \paragraph{Accuracy and Performance}
 \input{eval-table}
 We evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity
-through $25$ example programs (summary in Table~\ref{tb:adapt-imp}).
-For each example we compare the true accuracy with the estimated adaptivity, and we report the estimated number of queries, the L.O.C and the running time for the graph construction (graph), the weight estimation (weight) and the adaptivity computation ($\pathsearch$).
-The set of examples includes the ones we have described before, such as two rounds $\kw{twoRounds(k)}$ in
-Fig.~\ref{fig:overview-example}(a) and multiple rounds $ \kw{mR(k)}$ and its variants $\kw{mROdd(k)}$ $\kw{mROdd(k)}$,
+through $25$ example programs (in Table~\ref{tb:adapt-imp}).
+ We compare the true accuracy with the estimated adaptivity, and report the estimated number of queries, the L.O.C and the running time for the graph construction (graph), the weight estimation (weight) and the adaptivity computation ($\pathsearch$).
+The set of examples includes two rounds $\kw{twoRounds(k)}$ in
+Fig.~\ref{fig:overview-example}(a), multiple rounds $ \kw{mR(k)}$ and its variants $\kw{mROdd(k)}$ $\kw{mROdd(k)}$,
 a logistic regression algorithm with gradient descent (short for $\kw{LRGD}$),
 handcrafted programs from the $6^{th}$ ($\kw{seqRV}$) to $19^{th}$ ($\kw{loop2R}$) based on benchmarks from the work by Gulwani et al.~\cite{GulwaniJK09}. These examples have small sizes but complex structures to test the programs under different situations including
 data dependency, control dependency, and the multiple paths nested loop with related counters, etc. The names of these programs obey the convention that,
@@ -28,7 +28,7 @@ $\kw{loop}$ means there is a while loop and $\kw{loop2}$ represents two levels n
 $\kw{C}$ denotes Control;
 $\kw{D}$ for Dependency; $\kw{V}$ for Variable;
 $\kw{M}$ for Multiple; $\kw{P}$ for Path and $\kw{R}$ for Related.
-The last six programs are synthesized programs composed of the previous programs in order to test the performance limitation when the input program is large. 
+The last six large programs are synthesized, composed of previous programs to test the performance limitation. 
 
 
 In terms of accuracy, our tool provides a tight
@@ -45,7 +45,7 @@ and provide the adaptivity upper bound for the first $19$ examples. \highlight{ 
 for the example $\kw{seqCom}$ with the largest size of $502$ lines 
 of code. However, when it comes to examples with complex nested loops such as $tRCom$ (two $2-$level and three single-level while loops), $jumbo$ (one $2-$level and two single-level while loops) and $big$ (two $3-$level, three $2-$level and one single-level while loops),
 $\THESYSTEM$ will timeout.  In Table~\ref{tb:adapt-imp}, we denote the timeout of these three examples by $*$. 
-The performance bottleneck is the reachability bound analysis algorithm used in $\THESYSTEM$.}
+The performance bottleneck is the reachability bound analysis algorithm.}
 
 % \remove{We first evaluate our implementation in terms of its accuracy and performance in estimating the adaptivity
 % To do this we consider {through} $23$ example programs with the evaluation results shown in  Table~\ref{tb:adapt-imp}.
@@ -92,7 +92,7 @@ The performance bottleneck is the reachability bound analysis algorithm used in 
 
 % \remove{The reachability-bound analysis algorithm presented in Section~\ref{sec:alg_weightgen} time out after $5$ minutes when evaluating the examples $\kw{tRCom(k)}$,  $\kw{jumbo}$ and ${\kw{big(k)}}$.}
 
-{\paragraph{Alternative Implementations}
+\paragraph{Alternative Implementations}
 \input{eval-table-alternatives}
 %  Our second evaluation shows the need of the 
 % components of {\THESYSTEM}. 
@@ -105,19 +105,21 @@ The performance bottleneck is the reachability bound analysis algorithm used in 
 % rounds, query numbers and the running time.  For each alternative
 % implementation, we marked the result in red if it is imprecise
 % w.r.t. the true value.}
-\highlight{To overcome the performance bottleneck of the underlying implementation of reachability bound analysis, 
+\highlight{To overcome the performance bottleneck,
+%  of the underlying implementation of reachability bound analysis, 
 we implemented {\THESYSTEM}-I, which replaces the reachability bound analysis algorithm 
-with a simpler one that handles nested while loop effectively but coarsely. 
+with a simpler one handling nested while loop effectively but coarsely. 
 {\THESYSTEM}-I provides a less precise but efficient analysis for these three examples as shown in Table~\ref{tb:adapt-imp-alternatives}.
 As for the examples without complex nested loops, in general, {\THESYSTEM}-I gives tight upper bounds in most examples as {\THESYSTEM} does, 
-except for the example $\kw{loop2R}$ ($2+3k+k^2$ versus $1+3k$).}
+except for $\kw{loop2R}$.}
 
-\highlight{We consider {\THESYSTEM}-I as a possible complement to 
+{We consider {\THESYSTEM}-I as a possible complement to 
 $\THESYSTEM$ when the latter cannot handle "complex" examples with multiple-levels nested loops.
 We do not expect these complex patterns to appear in many realistic examples, 
 but it is an option we can resort to if needed.}
-We also have another implementation {\THESYSTEM}-II obtained by removing the control flow analysis. The results are unsound (not upper bounds) for examples such as $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $. 
-We show the results of these algorithms in Table~\ref{tb:adapt-imp-alternatives}, we highlight in red the results that are imprecise or unsound.
+We also have another implementation {\THESYSTEM}-II obtained by removing the control flow analysis. 
+% The results are unsound (not upper bounds) for examples such as $\kw{ifCD}$, $ \kw{loopMPVCD(k)} $. 
+% We show the results of these algorithms in Table~\ref{tb:adapt-imp-alternatives}, we highlight in red the results that are imprecise or unsound.
 
 % \remove{three alternative
 % versions of {\THESYSTEM} with corresponding components omitted or
@@ -212,9 +214,13 @@ $\progA\sqrt{\log(\query \#)}$ and choose DataSplit if
 $\sqrt{\query \#} \gg \progA\sqrt{\log(\query \#)}$ and Gaussian
 mechanism if $\sqrt{\query \#} \ll \progA\sqrt{\log(\query \#)}$ and
 Thresholdout mechanism if these two quantities are close. 
+Since both $\progA$ and $\query \#$ are symbolic, the decision of our heuristics relies on 
+    the instantiation of input parameters such as $k,m, n$. To better evaluate our heuristics, 
+    we present two different instantiations $k,m,n=10$ and $k,m, n =1000$ so that
+    for the same example, our tool will choose different mechanisms.
  It is worth
 stressing that these are rough heuristics since we are omitting the
-constants hidden in these theorems. We leave the problem to identify
+constants hidden in these theorems. We leave the problem to find
 the best heuristic to future work.
 
 %% In short, all these data analysis programs behave overfitting when running over randomly generated data sets. 
@@ -224,12 +230,12 @@ the best heuristic to future work.
 %% However, by using our tool in the first step, an analyst can directly equip the program with a chosen mechanism to get good
 %% analysis results.
 
-    According to our heuristics, our examples fall into three categories: 
-    $\progA$ is much larger than $\query \#$, $\progA$ is close to  $\query \#$,
-    and $\progA$ is much smaller than $\query \#$. 
-    Since both $\progA$ and $\query \#$ are symbolic, the decision of our heuristics relies on 
-    the instantiation of input parameters such as $k,m, n$. To better evaluate our heuristics, we present two different instantiations $k,m,n=10$ and $k,m, n =1000$ so that
-    for the same example, our tool will choose different mechanisms.
+    % According to our heuristics, our examples fall into three categories: 
+    % $\progA$ is much larger than $\query \#$, $\progA$ is close to  $\query \#$,
+    % and $\progA$ is much smaller than $\query \#$. 
+    % Since both $\progA$ and $\query \#$ are symbolic, the decision of our heuristics relies on 
+    % the instantiation of input parameters such as $k,m, n$. To better evaluate our heuristics, we present two different instantiations $k,m,n=10$ and $k,m, n =1000$ so that
+    % for the same example, our tool will choose different mechanisms.
 
 We can see in Table~\ref{tb:adapt-generalization} that the mechanism
 chosen by our heuristics (marked in bold) is the best in most cases.

@@ -32,10 +32,11 @@ $c$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 \subsection{Weighted Dependency Graph Construction}
-Given a program $c$, the set of vertices $\progV(c)$ and query annotations $\progF(c)$ of the \emph{estimated dependency graph} can be computed by simply
-scanning the program $c$. These sets can be computed precisely and correspond to
-the same sets in the semantics-based dependency graph.
-This means that $\progG(c)$ has the same underlying vertex structure as 
+Given a program $c$, the set of vertices $\progV(c)$ and query annotations $\progF(c)$ of the \emph{estimated graph} can be computed by a simple
+scan. 
+% These sets can be computed precisely and correspond to
+% the same sets in the semantics-based dependency graph.
+ $\progG(c)$ has the same underlying vertex structure as 
 the semantics-based graph $\traceG(c)$. The differences will be in the sets of edges and weights. 
 
 
@@ -227,12 +228,10 @@ the semantics-based graph $\traceG(c)$. The differences will be in the sets of e
 \label{sec:alg_edgegen}
 The set of edges $\progE(c)$ is built using a {\em feasible data-flow analysis}, 
 a data flow analysis over 
-our query language, combined with a reaching definition analysis.
-The reaching definition analysis computes a set $\live(l, c)$ of reachable 
+our query language, combined with a reaching definition analysis, which computes a set $\live(l, c)$ of reachable 
 variables at line $l$ in the program $c$.
 %This analysis helps removing redundent edges 
 %in the data-flow analysis. 
-
 The {\em feasible data-flow analysis} computes for every pair of variables $x^i, y^j \in \lvar(c)$
  whether there is a flow from $x^i$ to $y^j$. 
  This analysis is based on a relation $\flowsto(x^i, y^j, c)$ built over the sets $\live(l, c)$ for every location $l$. Its formal definition is in the supplementary material.  
@@ -335,9 +334,9 @@ $
 % \mg{I think we should state the soundness of this analysis, at least semi-formally}
 % \jl{
   \highlight{
-In order to prove that the set $\progE(c)$ soundly approximates the set $\traceG(c)$, we first show that
-if a variable $x$ at location $i$ may depend on the variable $y$ at location $j$
-there exists a ``$\flowsto$ chain'' from $x^i$ to $y^j$. This is formalized in the following theorem.
+To prove that $\progE(c)$ soundly approximates $\traceG(c)$, we show that
+if variable $x$ at location $i$ may depend on variable $y$ at location $j$,
+there exists a ``$\flowsto$ chain'' from $x^i$ to $y^j$, formalized below.
 %
 \begin{thm}[$\vardep$ implies $\flowsto$]
   \label{thm:flowsto_soundness}
@@ -363,7 +362,7 @@ there exists a ``$\flowsto$ chain'' from $x^i$ to $y^j$. This is formalized in t
   \begin{proof}
       The proof proceeds by induction. It is sufficient to consider two cases:
     \begin{enumerate}
-      \item  $x^i$ directly affects the execution of $y^j$, either through an assignment or a control flow command;
+      \item  $x^i$ directly affects the execution of $y^j$, either via an assignment or a control flow command;
       \item there exists another labelled variable $z^l$ with \emph{variable May-Dependency} relation on $x^i$ and 
       $z^l$ directly flows to $y^j$, where the \emph{variable May-Dependency} relation between $x^i$ and $z^l$ implies a ``sub $\flowsto$-chain'' from $x^i$ to $z^l$.
     \end{enumerate}
@@ -551,7 +550,7 @@ More details are in the supplementary material.% Fig.~\ref{fig:abscfg_tworound}(
 %% \remove{using the reachability-bound $\absclr(e, c)$ for every edge $e = (l, dc, l') \in \absE(c)$, we can provide an upper bound on the visiting times of each vertex $x^l \in \absV(c)$,
 %%   which is also the estimated weight of this vertex.}
 \begin{defn}[Weight Estimation]
-  \vspace{-0.1cm}
+  % \vspace{-0.1cm}
  \label{def:adaptfun-weight}
 The estimated weight set $\progW(c)$ of program $c$ is a set of pairs $\progW(c) \in \mathcal{P}(\mathcal{LV} \times \constdom)$.
 Each pair maps
@@ -576,7 +575,7 @@ $
 % in Theorem~\ref{thm:addweight_soundness}.
 \begin{thm}[Soundness of the Weight Estimation]
  \label{thm:addweight_soundness}
- \vspace{-0.1cm}
+%  \vspace{-0.1cm}
 For a program ${c}$ and its estimated weight set $\progW(c)$, for every  $(x^l, w) \in \traceW(c) $,
 we have a corresponding estimated weight $(x^l, \hat{w}) \in \progW(c)$ and for every possible 
 $\vtrace_0 \in \tdom_0(c),
@@ -703,7 +702,7 @@ on $\progA$.
 
 \subsection{$\pathsearch$ Algorithm}
 
-\subsubsection{$\pathsearch$ overview} 
+\subsubsection{$\pathsearch$ Overview} 
 % To address the two challenges we discussed above,  $\pathsearch$  combines
 % Depth First Search and Breadth First Search. 
 The idea of the $\pathsearch$ algorithm is to reduce the task of computing the
@@ -832,9 +831,8 @@ because $\kw{querynum[v]}$ is only the number of the vertices with query annotat
 \highlight{It is worth to stress that our algorithm can produce non-linear bounds for the adaptivity of a program. This is useful for example for programs  with 
 nested while loops, such as $\kw{loop2VD}$ in Table~\ref{tb:adapt-imp} in Section~\ref*{sec:implementation}. The program $\kw{loop2VD}$ includes a  nested while loop of the following form:
 $$ \assign{j}{k}; \assign{i}{k}; \ewhile ~[j>0]~ \edo~ \big( \assign{j}{j-1}; ~\ewhile~[i > 0]~\edo~( \assign{i}{i-1}; ~\dots~)~\dots~ \big)  $$
-The corresponding dependency graph contains an outside SCC corresponding to the outer loop, and inside this SCC, there 
-exists an inner SCC corresponding to the inner loop. With the help of the reachability bound analysis, we can have linear bound as
-the weight in SCCs, that is $k$ for both loops in the example. Then, using our Algorithm~\ref{alg:adaptscc}, the inner SCC will be 
+The corresponding dependency graph contains an outside SCC for the outer loop, and inside this SCC, there 
+exists an inner SCC for the inner loop. By the reachability bound analysis, we have linear weights for SCCs, $k$ for both loops in the example. Then, using Algorithm~\ref{alg:adaptscc}, the inner SCC will be 
 simplified as one vertex with weight $k$ and the bound for the outer SCC will become $k*k$.       }
 % giving a tight bound without losing the soundness.
 %
